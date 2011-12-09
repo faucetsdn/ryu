@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+from optparse import OptionParser
+
+from ryu.app.client import OFPClient
+
+
+def client_test():
+    parser = OptionParser(usage="Usage: %prog [OPTIONS] <command> [args]")
+    parser.add_option("-H", "--host", dest="host", type="string",
+                      default="127.0.0.1", help="ip address rest api service")
+    parser.add_option("-p", "--port", dest="port", type="int", default="8080")
+
+    options, args = parser.parse_args()
+    if len(args) == 0:
+        parser.print_help()
+        sys.exit(1)
+
+    client = OFPClient(options.host + ':' + str(options.port))
+    commands = {
+        'list_nets': lambda a: sys.stdout.write(client.get_networks()),
+        'create_net': lambda a: client.create_network(a[1]),
+        'update_net': lambda a: client.update_network(a[1]),
+        'delete_net': lambda a: client.delete_network(a[1]),
+        'list_ports': lambda a: sys.stdout.write(client.get_ports(a[1])),
+        'create_port': lambda a: client.create_port(a[1], a[2], a[3]),
+        'update_port': lambda a: client.update_port(a[1], a[2], a[3]),
+        'delete_port': lambda a: client.delete_port(a[1], a[2], a[3])
+        }
+
+    # allow '-', instead of '_'
+    commands.update(dict([(k.replace('_', '-'), v)
+                          for (k, v) in commands.items()]))
+
+    cmd = args[0]
+    commands[cmd](args)
+
+if __name__ == "__main__":
+    client_test()

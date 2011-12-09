@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import gevent
+import gflags
+import logging
+import sys
+
+from gevent import monkey
+monkey.patch_all()
+
+from ryu import log
+log.earlyInitLog(logging.DEBUG)
+
+from ryu import flags
+from ryu import utils
+from ryu.base.app_manager import AppManager
+from ryu.controller import controller
+from ryu.app import wsapi
+from ryu.app import rest
+from ryu.controller import network
+
+
+FLAGS = gflags.FLAGS
+gflags.DEFINE_multistring('app_lists',
+                          ['ryu.app.simple_isolation.SimpleIsolation',
+                           'ryu.app.rest.restapi'],
+                          'application module name to run')
+
+
+def main():
+    utils.find_flagfile()
+    args = FLAGS(sys.argv)
+    log.initLog()
+
+    nw = network.network()
+
+    app_mgr = AppManager()
+    app_mgr.load_apps(FLAGS.app_lists, network=nw)
+
+    services = []
+
+    ctlr = controller.OpenFlowController()
+    thr = gevent.spawn_later(0, ctlr)
+    services.append(thr)
+
+    # NOX webservice API
+    ws = wsapi.wsapi()
+    thr = gevent.spawn_later(0, ws)
+    services.append(thr)
+
+    gevent.joinall(services)
+
+if __name__ == "__main__":
+    main()

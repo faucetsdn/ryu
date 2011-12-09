@@ -1,0 +1,10 @@
+*.py[co]
+*~
+*.egg-info/
+build/
+dist/
+
+GTAGS
+GRTAGS
+GPATH
+GSYMS
