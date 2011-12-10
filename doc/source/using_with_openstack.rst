@@ -108,7 +108,7 @@ from the source, please refer to OpenStack document and get back here again.
     * configure nova-network
        * --fixed_ranges=<setup here>
        * --network_size=<setup here>
-       * --network_manager=nova.network.quantum.manager.QuantumManage
+       * --network_manager=nova.network.quantum.manager.QuantumManager
        * --quantum_connection_host=<quantume server ip address>
        * --firewall_driver=nova.virt.libvirt.firewall.NopFirewallDriver
 
