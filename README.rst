@@ -26,7 +26,8 @@ We aim at the de facto OSS NOS implementation and NOS API.
 Currently, Ryu is shipped with one control application for `OpenStack
 <http://openstack.org/.>`_ network management L2 segregation of
 tenants without using VLAN. The application includes changes to
-OpenStack (nova, quantum ovs plugin, etc).
+OpenStack (nova, quantum ovs plugin, etc). We aim to merge Ryu into
+OpenStack mainline.
 
 The project goal is to develop an OSS Network Operating System that
 has high quality enough for use in large production environment in
