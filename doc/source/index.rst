@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-**********************************
-Welcome to RYU the Network OS(NOS)
-**********************************
+************************************************
+Welcome to RYU the Network Operating System(NOS)
+************************************************
 
 Contents:
 

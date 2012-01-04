@@ -1,8 +1,8 @@
 .. _using_with_openstack:
 
-***************************************************************
-Using Ryu Network OS with with OpenStack as OpenFlow controller
-***************************************************************
+*****************************************************************************
+Using Ryu Network Operating System with with OpenStack as OpenFlow controller
+*****************************************************************************
 This section describes how to setup openstack (nova, quantum) and
 ryu-manager.
 It is assumed that kvm with libvirt is used and each host machines that run
@@ -170,7 +170,7 @@ from the source, please refer to OpenStack document and get back here again.
 
 Testing
 =======
-Yay, now you have ryu network OS set up.
+Yay, now you have ryu network Operating System set up.
 You would want to really they are L2-segregated.
 
 * create multi projects and run instances.
@@ -197,7 +197,7 @@ gw-xxx and gw-yyy, not directly.
 Caveats
 =======
 * Run the following daemons in this order
-   #. Run Ryu network OS
+   #. Run Ryu network Operating System
    #. Run quantum with OVS plugin
    #. Run quantum OVS agent
    #. run your guest instance
@@ -223,7 +223,8 @@ setting. If you success it, please report it.
 single NIC/All-in-One setting
 -----------------------------
 If your host machines have only single NIC, it would be possible to use
-Ryu network OS with Linux bridge. However we haven't tested such setups.
+Ryu network Operating System with Linux bridge. However we haven't tested such
+setups.
 
     .. image:: /images/compute-node.png
 

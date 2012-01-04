@@ -4,9 +4,9 @@
 Getting Started
 ***************
 
-Overview/What's Ryu the Network OS
-==================================
-Ryu is an open-sourced Network OS which is licensed under GPL v3.
+Overview/What's Ryu the Network Operating System
+================================================
+Ryu is an open-sourced Network Operating System which is licensed under GPL v3.
 It supports openflow protocol.
 
 If you are not familiar with Software Defined Network(SDN) and
@@ -17,8 +17,8 @@ The mailing list is available at
 `ryu-devel ML <https://lists.sourceforge.net/lists/listinfo/ryu-devel>`_
 
 
-Installing Ryu Network OS
-=========================
+Installing Ryu Network Operating System
+=======================================
 Extract source code and just type::
 
    % python ./setup.py install
