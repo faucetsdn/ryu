@@ -1,8 +1,8 @@
 .. _using_with_openstack:
 
-*****************************************************************************
-Using Ryu Network Operating System with with OpenStack as OpenFlow controller
-*****************************************************************************
+************************************************************************
+Using Ryu Network Operating System with OpenStack as OpenFlow controller
+************************************************************************
 This section describes how to setup openstack (nova, quantum) and
 ryu-manager.
 It is assumed that kvm with libvirt is used and each host machines that run
@@ -220,8 +220,8 @@ with single machine.
 It would be possible as the following pictures, but we haven't tested those
 setting. If you success it, please report it.
 
-single NIC/All-in-One setting
------------------------------
+single NIC setup
+----------------
 If your host machines have only single NIC, it would be possible to use
 Ryu network Operating System with Linux bridge. However we haven't tested such
 setups.
