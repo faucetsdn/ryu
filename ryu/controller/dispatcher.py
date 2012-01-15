@@ -15,7 +15,7 @@
 
 import copy
 import logging
-from gevent import queue
+from gevent.queue import Queue
 
 LOG = logging.getLogger('ryu.controller.dispatcher')
 
@@ -24,7 +24,7 @@ class EventQueue(object):
     def __init__(self, dispatcher):
         self.dispatcher = dispatcher
         self.is_dispatching = False
-        self.ev_q = queue.Queue()
+        self.ev_q = Queue()
 
     def set_dispatcher(self, dispatcher):
         self.dispatcher = dispatcher
