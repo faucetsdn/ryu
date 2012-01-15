@@ -68,7 +68,6 @@ class Datapath(object):
         ofproto_v1_0.OFP_VERSION: (ofproto_v1_0,
                                    ofproto_v1_0_parser),
         }
-    default_ofp_version = ofproto_v1_0.OFP_VERSION
 
     def __init__(self, socket, address):
         super(Datapath, self).__init__()
@@ -86,7 +85,7 @@ class Datapath(object):
         self.version_sent = None
         self.version_recv = None
         self.version_used = None
-        self.set_version(self.default_ofp_version)
+        self.set_version(max(self.supported_ofp_version))
         self.id = None  # datapath_id is unknown yet
         self.ports = None
 
