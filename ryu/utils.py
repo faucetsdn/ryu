@@ -20,6 +20,7 @@ import sys
 
 LOG = logging.getLogger('ryu.utils')
 
+
 def import_module(modname):
     (f, s, t) = modname.rpartition('.')
     mod = __import__(modname, fromlist=[f])
