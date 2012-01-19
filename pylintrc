@@ -1,0 +1,5 @@
+[Messages Control]
+# C0111: Don't require docstrings on every method
+# W0511: TODOs in code comments are fine.
+# W0142: *args and **kwargs are fine.
+disable=C0111,W0511,W0142
