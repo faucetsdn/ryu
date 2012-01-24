@@ -1,5 +1,5 @@
 # Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2011,2012 Isaku Yamahata <yamahata at valinux co jp>
+# Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,17 +18,13 @@ import httplib
 import urlparse
 
 
-class OFPClientV1_0(object):
-    version = 'v1.0'
-
-    # /networks/{network_id}/{dpid}_{port}
-    network_path = 'networks/%s'
-    port_path = 'networks/%s/%s_%s'
-
-    def __init__(self, address):
-        r = urlparse.SplitResult('', address, '', '', '')
-        self.host = r.hostname
-        self.port = r.port
+class RyuClientBase(object):
+    def __init__(self, version, address):
+        super(RyuClientBase, self).__init__()
+        self.version = version
+        res = urlparse.SplitResult('', address, '', '', '')
+        self.host = res.hostname
+        self.port = res.port
         self.url_prefix = '/' + self.version + '/'
 
     def _do_request(self, method, action):
@@ -46,31 +42,44 @@ class OFPClientV1_0(object):
             res, 'code %d reason %s' % (res.status, res.reason),
             res.getheaders(), res.read())
 
-    def get_networks(self):
-        res = self._do_request('GET', '')
+    def _do_request_read(self, method, action):
+        res = self._do_request(method, action)
         return res.read()
+
+
+class OFPClientV1_0(RyuClientBase):
+    version = 'v1.0'
+
+    # /networks/{network_id}/{dpid}_{port}
+    path_networks = 'networks/%s'
+    path_port = path_networks + '/%s_%s'
+
+    def __init__(self, address):
+        super(OFPClientV1_0, self).__init__(OFPClientV1_0.version, address)
+
+    def get_networks(self):
+        return self._do_request_read('GET', '')
 
     def create_network(self, network_id):
-        self._do_request('POST', self.network_path % network_id)
+        self._do_request('POST', self.path_networks % network_id)
 
     def update_network(self, network_id):
-        self._do_request('PUT', self.network_path % network_id)
+        self._do_request('PUT', self.path_networks % network_id)
 
     def delete_network(self, network_id):
-        self._do_request('DELETE', self.network_path % network_id)
+        self._do_request('DELETE', self.path_networks % network_id)
 
     def get_ports(self, network_id):
-        res = self._do_request('GET', self.network_path % network_id)
-        return res.read()
+        return self._do_request_read('GET', self.path_networks % network_id)
 
     def create_port(self, network_id, dpid, port):
-        self._do_request('POST', self.port_path % (network_id, dpid, port))
+        self._do_request('POST', self.path_port % (network_id, dpid, port))
 
     def update_port(self, network_id, dpid, port):
-        self._do_request('PUT', self.port_path % (network_id, dpid, port))
+        self._do_request('PUT', self.path_port % (network_id, dpid, port))
 
     def delete_port(self, network_id, dpid, port):
-        self._do_request('DELETE', self.port_path % (network_id, dpid, port))
+        self._do_request('DELETE', self.path_port % (network_id, dpid, port))
 
 
 OFPClient = OFPClientV1_0
