@@ -83,9 +83,9 @@ class MsgBase(object):
         assert self.msg_type is None
         assert self.buf is None
 
-        self.version = ofproto_v1_0.OFP_VERSION
+        self.version = self.datapath.ofproto.OFP_VERSION
         self.msg_type = self.cls_msg_type
-        self.buf = bytearray().zfill(ofproto_v1_0.OFP_HEADER_SIZE)
+        self.buf = bytearray().zfill(self.datapath.ofproto.OFP_HEADER_SIZE)
 
     def _serialize_header(self):
         # buffer length is determined after trailing data is formated.
@@ -94,12 +94,12 @@ class MsgBase(object):
         assert self.msg_len is None
         assert self.xid is None
         assert self.buf is not None
-        assert len(self.buf) >= ofproto_v1_0.OFP_HEADER_SIZE
+        assert len(self.buf) >= self.datapath.ofproto.OFP_HEADER_SIZE
 
         self.msg_len = len(self.buf)
         self.xid = 0  # TODO:XXX
 
-        struct.pack_into(ofproto_v1_0.OFP_HEADER_PACK_STR, self.buf, 0,
+        struct.pack_into(self.datapath.ofproto.OFP_HEADER_PACK_STR, self.buf, 0,
                          self.version, self.msg_type, self.msg_len, self.xid)
 
     def _serialize_body(self):
