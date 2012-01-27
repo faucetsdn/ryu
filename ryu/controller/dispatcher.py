@@ -39,7 +39,7 @@ class EventQueue(object):
         def __enter__(self):
             self.ev_q.is_dispatching = True
 
-        def __exit__(self, type, value, traceback):
+        def __exit__(self, type_, value, traceback):
             self.ev_q.is_dispatching = False
             return False
 
