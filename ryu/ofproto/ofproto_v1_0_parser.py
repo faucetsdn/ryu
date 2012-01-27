@@ -17,6 +17,7 @@ import collections
 import struct
 
 from ofproto_parser import MsgBase
+from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
 
@@ -90,6 +91,18 @@ class OFPMatch(collections.namedtuple('OFPMatchBase', (
             'wildcards', 'in_port', 'dl_src', 'dl_dst', 'dl_vlan',
             'dl_vlan_pcp', 'dl_type', 'nw_tos', 'nw_proto',
             'nw_src', 'nw_dst', 'tp_src', 'tp_dst'))):
+
+    def __new__(cls, *args):
+        # for convenience when dl_src/dl_dst are wildcard
+        if args[2] != 0 and args[3] != 0:
+            return super(cls, OFPMatch).__new__(cls, *args)
+
+        tmp = list(args)
+        if tmp[2] == 0:
+            tmp[2] = mac.DONTCARE
+        if tmp[3] == 0:
+            tmp[3] = mac.DONTCARE
+        return super(cls, OFPMatch).__new__(cls, *tmp)
 
     def serialize(self, buf, offset):
         _pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset, *self)
