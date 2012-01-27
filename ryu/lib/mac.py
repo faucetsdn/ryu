@@ -14,6 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+DONTCARE = '\x00' * 6
+BROADCAST = '\xff' * 6
+
+
+def is_multicast(addr):
+    return bool(ord(addr[0]) & 0x01)
+
+
 def haddr_to_str(addr):
     return ''.join(['%02x:' % ord(char) for char in addr[0:6]])[:-1]
 
