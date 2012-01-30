@@ -15,6 +15,9 @@
 
 from struct import calcsize
 
+
+MAX_XID = 0xffffffff
+
 # define constants
 OFP_VERSION = 0x01
 OFP_MAX_TABLE_NAME_LEN = 32
