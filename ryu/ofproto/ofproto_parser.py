@@ -66,6 +66,10 @@ class MsgBase(object):
         self.msg_len = msg_len
         self.xid = xid
 
+    def set_xid(self, xid):
+        assert self.xid is None
+        self.xid = xid
+
     def set_buf(self, buf):
         self.buf = buffer(buf)
 
@@ -95,12 +99,12 @@ class MsgBase(object):
         assert self.version is not None
         assert self.msg_type is not None
         assert self.msg_len is None
-        assert self.xid is None
         assert self.buf is not None
         assert len(self.buf) >= self.datapath.ofproto.OFP_HEADER_SIZE
 
         self.msg_len = len(self.buf)
-        self.xid = 0  # TODO:XXX
+        if self.xid is None:
+            self.xid = 0
 
         struct.pack_into(self.datapath.ofproto.OFP_HEADER_PACK_STR, self.buf, 0,
                          self.version, self.msg_type, self.msg_len, self.xid)

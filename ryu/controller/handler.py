@@ -106,6 +106,7 @@ class EchoHandler(object):
         # LOG.debug('echo request msg %s %s', msg, str(msg.data))
         datapath = msg.datapath
         echo_reply = datapath.ofproto_parser.OFPEchoReply(datapath)
+        echo_reply.xid = msg.xid
         echo_reply.data = msg.data
         datapath.send_msg(echo_reply)
 

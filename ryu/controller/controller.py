@@ -16,6 +16,7 @@
 import gflags
 import logging
 import gevent
+import random
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
@@ -86,6 +87,7 @@ class Datapath(object):
         self.version_recv = None
         self.version_used = None
         self.set_version(max(self.supported_ofp_version))
+        self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
         self.ports = None
 
@@ -128,8 +130,16 @@ class Datapath(object):
     def send(self, buf):
         self.send_q.put(buf)
 
+    def set_xid(self, msg):
+        self.xid += 1
+        self.xid &= self.ofproto.MAX_XID
+        msg.set_xid(self.xid)
+        return self.xid
+
     def send_msg(self, msg):
         assert isinstance(msg, self.ofproto_parser.MsgBase)
+        if msg.xid is None:
+            self.set_xid(msg)
         msg.serialize()
         # LOG.debug('send_msg %s', msg)
         self.send(msg.buf)
