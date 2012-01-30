@@ -16,7 +16,7 @@
 import collections
 import struct
 
-from ofproto_parser import MsgBase
+from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
@@ -71,30 +71,6 @@ def _set_msg_reply(msg_reply):
     return _set_cls_msg_reply
 
 
-def _pack_into(fmt, buf, offset, *args):
-    if len(buf) < offset:
-        buf += bytearray().zfill(offset - len(buf))
-
-    if len(buf) == offset:
-        buf += struct.pack(fmt, *args)
-        return
-
-    needed_len = offset + struct.calcsize(fmt)
-    if len(buf) < needed_len:
-        buf += bytearray().zfill(needed_len - len(buf))
-
-    struct.pack_into(fmt, buf, offset, *args)
-
-
-def _str_attr(msg, buf, attr_list):
-    for attr in attr_list:
-        val = getattr(msg, attr, None)
-        if val is not None:
-            buf += ' %s %s' % (attr, val)
-
-    return buf
-
-
 #
 # common structures
 #
@@ -128,7 +104,7 @@ class OFPMatch(collections.namedtuple('OFPMatchBase', (
         return super(cls, OFPMatch).__new__(cls, *tmp)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset, *self)
+        msg_pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset, *self)
 
     @classmethod
     def parse(cls, buf, offset):
@@ -143,8 +119,8 @@ class OFPActionHeader(object):
         self.len = len_
 
     def serlize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
-                   buf, offset, self.type, self.len)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
+                      buf, offset, self.type, self.len)
 
 
 class OFPAction(OFPActionHeader):
@@ -189,8 +165,8 @@ class OFPActionOutput(OFPAction):
         return cls(port, max_len)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR,
-                   buf, offset, self.type, self.len, self.port, self.max_len)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR,
+                      buf, offset, self.type, self.len, self.port, self.max_len)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_VLAN_VID,
@@ -600,8 +576,8 @@ class OFPErrorMsg(MsgBase):
 
     def _serialize_body(self):
         assert self.data is not None
-        _pack_into(ofproto_v1_0.OFP_ERROR_MSG_PACK_STR, self.buf,
-                   ofproto_v1_0.OFP_HEADER_SIZE, self.type, self.code)
+        msg_pack_into(ofproto_v1_0.OFP_ERROR_MSG_PACK_STR, self.buf,
+                      ofproto_v1_0.OFP_HEADER_SIZE, self.type, self.code)
         self.buf += self.data
 
 
@@ -663,8 +639,8 @@ class OFPVendor(MsgBase):
 
     def _serialize_body(self):
         assert self.data is not None
-        _pack_into(ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.vendor)
+        msg_pack_into(ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.vendor)
         self.buf += self.data
 
 
@@ -737,8 +713,8 @@ class OFPPacketIn(MsgBase):
 
     def __str__(self):
         buf = super(OFPPacketIn, self).__str__()
-        return _str_attr(self, buf,
-                         ('buffer_id', 'total_len', 'in_port', 'reason'))
+        return msg_str_attr(self, buf,
+                            ('buffer_id', 'total_len', 'in_port', 'reason'))
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -785,10 +761,10 @@ class OFPFlowRemoved(MsgBase):
 
     def __str__(self):
         buf = super(OFPFlowRemoved, self).__str__()
-        return _str_attr(self, buf,
-                         ('match', 'cookie', 'priority', 'reason',
-                          'duration_sec', 'duration_nsec',
-                          'idle_timeout', 'packet_count', 'idle_count'))
+        return msg_str_attr(self, buf,
+                            ('match', 'cookie', 'priority', 'reason',
+                             'duration_sec', 'duration_nsec',
+                             'idle_timeout', 'packet_count', 'idle_count'))
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -992,9 +968,9 @@ class OFPSetConfig(MsgBase):
     def _serialize_body(self):
         assert self.flags is not None
         assert self.miss_send_len is not None
-        _pack_into(ofproto_v1_0.OFP_SWITCH_CONFIG_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
-                   self.flags, self.miss_send_len)
+        msg_pack_into(ofproto_v1_0.OFP_SWITCH_CONFIG_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+                      self.flags, self.miss_send_len)
 
 
 @_set_msg_type(ofproto_v1_0.OFPT_PACKET_OUT)
@@ -1025,9 +1001,9 @@ class OFPPacketOut(MsgBase):
             assert self.buffer_id == -1
             self.buf += self.data
 
-        _pack_into(ofproto_v1_0.OFP_PACKET_OUT_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
-                   self.buffer_id, self.in_port, self.actions_len)
+        msg_pack_into(ofproto_v1_0.OFP_PACKET_OUT_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+                      self.buffer_id, self.in_port, self.actions_len)
 
 
 @_set_msg_type(ofproto_v1_0.OFPT_FLOW_MOD)
@@ -1053,11 +1029,11 @@ class OFPFlowMod(MsgBase):
         self.match.serialize(self.buf, offset)
 
         offset += ofproto_v1_0.OFP_MATCH_SIZE
-        _pack_into(ofproto_v1_0.OFP_FLOW_MOD_PACK_STR0, self.buf, offset,
-                   self.cookie, self.command,
-                   self.idle_timeout, self.hard_timeout,
-                   self.priority, self.buffer_id, self.out_port,
-                   self.flags)
+        msg_pack_into(ofproto_v1_0.OFP_FLOW_MOD_PACK_STR0, self.buf, offset,
+                      self.cookie, self.command,
+                      self.idle_timeout, self.hard_timeout,
+                      self.priority, self.buffer_id, self.out_port,
+                      self.flags)
 
         offset = ofproto_v1_0.OFP_FLOW_MOD_SIZE
         if self.actions is not None:

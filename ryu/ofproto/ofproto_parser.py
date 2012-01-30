@@ -117,3 +117,25 @@ class MsgBase(object):
         self._serialize_body()
         self._serialize_header()
 
+
+def msg_pack_into(fmt, buf, offset, *args):
+    if len(buf) < offset:
+        buf += bytearray().zfill(offset - len(buf))
+
+    if len(buf) == offset:
+        buf += struct.pack(fmt, *args)
+        return
+
+    needed_len = offset + struct.calcsize(fmt)
+    if len(buf) < needed_len:
+        buf += bytearray().zfill(needed_len - len(buf))
+
+    struct.pack_into(fmt, buf, offset, *args)
+
+def msg_str_attr(msg, buf, attr_list):
+    for attr in attr_list:
+        val = getattr(msg, attr, None)
+        if val is not None:
+            buf += ' %s %s' % (attr, val)
+
+    return buf
