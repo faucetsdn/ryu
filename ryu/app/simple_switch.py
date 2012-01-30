@@ -20,7 +20,6 @@ from ryu.controller import mac_to_port
 from ryu.controller.handler import main_dispatcher
 from ryu.controller.handler import set_ev_cls
 from ryu.lib.mac import haddr_to_str
-from ryu.lib.mac import haddr_to_bin
 
 
 LOG = logging.getLogger('ryu.app.simple_switch')
@@ -66,7 +65,7 @@ class SimpleSwitch(object):
                            ofproto.OFPFW_NW_TOS)
             match = datapath.ofproto_parser.OFPMatch(
                 wildcards, msg.in_port,
-                haddr_to_bin('00:00:00:00:00:00'), dst,
+                0, dst,
                 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
             datapath.send_flow_mod(

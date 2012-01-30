@@ -28,7 +28,6 @@ from ryu.ofproto import ofproto_v1_0_parser
 from ryu.controller import dispatcher
 from ryu.controller import event
 from ryu.controller import handler
-from ryu.lib.mac import haddr_to_bin
 
 LOG = logging.getLogger('ryu.controller.controller')
 
@@ -189,9 +188,8 @@ class Datapath(object):
         self.send_msg(flow_mod)
 
     def send_delete_all_flows(self):
-        addr = haddr_to_bin('00:00:00:00:00:00')
         match = self.ofproto_parser.OFPMatch(self.ofproto.OFPFW_ALL,
-                                             0, addr, addr, 0, 0,
+                                             0, 0, 0, 0, 0,
                                              0, 0, 0, 0, 0, 0, 0)
         self.send_flow_mod(
             match=match, cookie=0, command=self.ofproto.OFPFC_DELETE,
