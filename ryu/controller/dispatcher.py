@@ -61,6 +61,13 @@ class EventDispatcher(object):
     def __init__(self, name):
         self.name = name
         self.events = {}
+        self.all_handlers = []
+
+    def register_all_handler(self, all_handler):
+        self.all_handlers.append(all_handler)
+
+    def unregister_all_handler(self, all_handler):
+        del self.all_handlers[all_handler]
 
     def register_handler(self, ev_cls, handler):
         assert callable(handler)
@@ -90,6 +97,17 @@ class EventDispatcher(object):
 
     def dispatch(self, ev):
         #LOG.debug('dispatch %s', ev)
+
+        # copy handler list because the list is not stable.
+        # event handler may block/switch thread execution
+        # and un/register other handlers. And more,
+        # handler itself may un/register handlers.
+        all_handlers = copy.copy(self.all_handlers)
+        for h in all_handlers:
+            ret = h(ev)
+            if ret is False:
+                break
+
         if ev.__class__ not in self.events:
             LOG.info('unhandled event %s', ev)
             return
