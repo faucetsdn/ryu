@@ -32,6 +32,8 @@ DISPATCHER_NAME_OFP_CONFIG = 'ofp_config'
 config_dispatcher = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_CONFIG)
 DISPATCHER_NAME_OFP_MAIN = 'ofp_main'
 main_dispatcher = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_MAIN)
+DISPATCHER_NAME_OFP_DEAD = 'ofp_dead'
+DEAD_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_DEAD)
 
 
 def set_ev_cls(ev_cls, dispatchers=None):

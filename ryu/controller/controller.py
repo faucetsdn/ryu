@@ -17,6 +17,7 @@ import gflags
 import logging
 import gevent
 import random
+import weakref
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
@@ -209,4 +210,8 @@ def DatapathConnectionFactory(socket, address):
     LOG.debug('connected socket:%s address:%s', socket, address)
 
     datapath = Datapath(socket, address)
-    datapath.serve()
+    try:
+        datapath.serve()
+    finally:
+        # tell this datapath is dead
+        datapath.ev_q.set_dispatcher(handler.DEAD_DISPATCHER)
