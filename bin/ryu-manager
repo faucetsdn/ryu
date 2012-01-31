@@ -28,17 +28,19 @@ log.earlyInitLog(logging.DEBUG)
 
 from ryu import flags
 from ryu import utils
+from ryu.app import wsapi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
-from ryu.app import wsapi
-from ryu.app import rest
+from ryu.controller import dpset
 from ryu.controller import network
 
 
 FLAGS = gflags.FLAGS
 gflags.DEFINE_multistring('app_lists',
                           ['ryu.app.simple_isolation.SimpleIsolation',
-                           'ryu.app.rest.restapi'],
+                           'ryu.app.rest.restapi',
+                           # 'ryu.app.event_dumper.EventDumper',
+                           ],
                           'application module name to run')
 
 
@@ -48,9 +50,10 @@ def main():
     log.initLog()
 
     nw = network.network()
+    dpset_ = dpset.create_dpset()
 
     app_mgr = AppManager()
-    app_mgr.load_apps(FLAGS.app_lists, network=nw)
+    app_mgr.load_apps(FLAGS.app_lists, network=nw, dpset=dpset_)
 
     services = []
 
