@@ -68,7 +68,7 @@ class EventQueue(object):
 
     def set_dispatcher(self, dispatcher):
         old = self.dispatcher
-        new = dispatcher.clone()
+        new = dispatcher.clone(old)
         self.dispatcher = new
         self._queue_q_ev(EventDispatcherChange(self, old, new))
 
@@ -113,16 +113,22 @@ class EventDispatcher(object):
         self.children = weakref.WeakSet()
         self.name = name
         self.events = {}
+        self.inheritable_events = {}
         self.all_handlers = []
 
         self.event_dispatchers.add(self)
 
-    def clone(self):
+    def clone(self, old_dispatcher=None):
         cloned = EventDispatcher(self.name)
         for ev_cls, h in self.events.items():
             cloned.events[ev_cls] = copy.copy(h)
         cloned.all_handlers = copy.copy(self.all_handlers)
         self.children.add(cloned)
+
+        if old_dispatcher is not None:
+            cloned.inheritable_events = old_dispatcher.inheritable_events
+            old_dispatcher.inheritable_events = {}
+
         return cloned
 
     def _foreach_children(self, call, *args, **kwargs):
@@ -130,6 +136,7 @@ class EventDispatcher(object):
             call(c, *args, **kwargs)
 
     def register_all_handler(self, all_handler):
+        assert callable(all_handler)
         self.all_handlers.append(all_handler)
         self._foreach_children(EventDispatcher.register_all_handler,
                                all_handler)
@@ -137,7 +144,15 @@ class EventDispatcher(object):
     def unregister_all_handler(self, all_handler):
         self._foreach_children(EventDispatcher.unregister_all_handler,
                                all_handler)
-        del self.all_handlers[all_handler]
+        self.all_handlers.remove(all_handler)
+
+    def register_inheritable_handler(self, ev_cls, inheritable_handler):
+        assert callable(inheritable_handler)
+        self.inheritable_events.setdefault(ev_cls, [])
+        self.inheritable_events[ev_cls].append(inheritable_handler)
+
+    def unregister_inheritable_handler(self, ev_cls, inheritable_handler):
+        self.inheritable_events[ev_cls].remove(inheritable_handler)
 
     def register_handler(self, ev_cls, handler):
         assert callable(handler)
@@ -153,7 +168,7 @@ class EventDispatcher(object):
     def unregister_handler(self, ev_cls, handler):
         self._foreach_children(EventDispatcher.unregister_handler,
                                ev_cls, handler)
-        del self.events[ev_cls][handler]
+        self.events[ev_cls].remove(handler)
 
     def register_static(self, ev_cls):
         '''helper decorator to statically register handler for event class'''
@@ -169,35 +184,36 @@ class EventDispatcher(object):
     def __call__(self, ev):
         self.dispatch(ev)
 
-    def dispatch(self, ev):
-        #LOG.debug('dispatch %s', ev)
+    @staticmethod
+    def _dispatch(ev, handlers):
+        if len(handlers) == 0:
+            return False
 
-        # copy handler list because the list is not stable.
-        # event handler may block/switch thread execution
-        # and un/register other handlers. And more,
-        # handler itself may un/register handlers.
-        all_handlers = copy.copy(self.all_handlers)
-        for h in all_handlers:
-            ret = h(ev)
-            if ret is False:
-                break
-
-        if ev.__class__ not in self.events:
-            LOG.info('unhandled event %s', ev)
-            return
-
-        # Is this necessary?
-        #
         # copy handler list because the list is not stable.
         # event handler may block/switch thread execution
         # and un/register other handlers.
-        #
-        handlers = copy.copy(self.events[ev.__class__])
-
+        # handler itself may un/register handlers.
+        handlers = copy.copy(handlers)
         for h in handlers:
             ret = h(ev)
             if ret is False:
                 break
+        return True
+
+    def dispatch(self, ev):
+        #LOG.debug('dispatch %s', ev)
+        handled = False
+
+        self._dispatch(ev, self.all_handlers)
+
+        ret = self._dispatch(ev, self.inheritable_events.get(ev.__class__, []))
+        handled = handled or ret
+
+        ret = self._dispatch(ev, self.events.get(ev.__class__, []))
+        handled = handled or ret
+
+        if not handled:
+            LOG.info('unhandled event %s', ev)
 
 
 class EventQueueBase(event.EventBase):
