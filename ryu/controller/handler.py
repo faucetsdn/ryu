@@ -24,6 +24,7 @@ from ryu.lib.mac import haddr_to_bin
 
 LOG = logging.getLogger('ryu.controller.handler')
 
+QUEUE_NAME_OFP_MSG = 'ofp_msg'
 handshake_dispatcher = dispatcher.EventDispatcher('handshake')
 config_dispatcher = dispatcher.EventDispatcher('config')
 main_dispatcher = dispatcher.EventDispatcher('main')

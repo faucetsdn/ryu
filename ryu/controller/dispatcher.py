@@ -12,16 +12,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import copy
 import logging
+import weakref
+
 from gevent.queue import Queue
+
 
 LOG = logging.getLogger('ryu.controller.dispatcher')
 
 
 class EventQueue(object):
-    def __init__(self, dispatcher):
+    # WeakSet: This set is populated by __init__().
+    #          So need to use weak reference in order to make instances
+    #          freeable by avoiding refrence count.
+    #          Otherwise, instances can't be freed.
+    event_queues = weakref.WeakSet()
+
+    def __init__(self, name, dispatcher):
+        self.event_queues.add(self)
+
+        self.name = name
         self.dispatcher = dispatcher
         self.is_dispatching = False
         self.ev_q = Queue()
@@ -58,7 +69,15 @@ class EventQueue(object):
 
 
 class EventDispatcher(object):
+    # WeakSet: This set is populated by __init__().
+    #          So need to use weak reference in order to make instances
+    #          freeable by avoiding refrence count.
+    #          Otherwise, instances can't be freed.
+    event_dispatchers = weakref.WeakSet()
+
     def __init__(self, name):
+        self.event_dispatchers.add(self)
+
         self.name = name
         self.events = {}
         self.all_handlers = []

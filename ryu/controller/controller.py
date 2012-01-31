@@ -80,7 +80,8 @@ class Datapath(object):
         self.recv_q = Queue()
         self.send_q = Queue()
 
-        self.ev_q = dispatcher.EventQueue(handler.handshake_dispatcher)
+        self.ev_q = dispatcher.EventQueue(handler.QUEUE_NAME_OFP_MSG,
+                                          handler.handshake_dispatcher)
 
         self.version_sent = None
         self.version_recv = None
