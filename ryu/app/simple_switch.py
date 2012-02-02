@@ -15,8 +15,8 @@
 import logging
 import struct
 
-from ryu.controller import event
 from ryu.controller import mac_to_port
+from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib.mac import haddr_to_str
@@ -36,7 +36,7 @@ class SimpleSwitch(object):
     def __init__(self, *_args, **_kwargs):
         self.mac2port = mac_to_port.MacToPortTable()
 
-    @set_ev_cls(event.EventOFPPacketIn, MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
@@ -75,7 +75,7 @@ class SimpleSwitch(object):
 
         datapath.send_packet_out(msg.buffer_id, msg.in_port, actions)
 
-    @set_ev_cls(event.EventOFPPortStatus, MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
         msg = ev.msg
         reason = msg.reason

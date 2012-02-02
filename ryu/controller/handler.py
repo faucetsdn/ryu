@@ -17,8 +17,8 @@ import copy
 import inspect
 import logging
 
-from ryu.controller import event
 from ryu.controller import dispatcher
+from ryu.controller import ofp_event
 
 LOG = logging.getLogger('ryu.controller.handler')
 
@@ -105,7 +105,7 @@ def register_instance(i, dispatchers=None):
 @register_cls([HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
 class EchoHandler(object):
     @staticmethod
-    @set_ev_cls(event.EventOFPEchoRequest)
+    @set_ev_cls(ofp_event.EventOFPEchoRequest)
     def echo_request_handler(ev):
         msg = ev.msg
         # LOG.debug('echo request msg %s %s', msg, str(msg.data))
@@ -116,7 +116,7 @@ class EchoHandler(object):
         datapath.send_msg(echo_reply)
 
     @staticmethod
-    @set_ev_cls(event.EventOFPEchoReply)
+    @set_ev_cls(ofp_event.EventOFPEchoReply)
     def echo_reply_handler(ev):
         # do nothing
         # msg = ev.msg
@@ -127,7 +127,7 @@ class EchoHandler(object):
 @register_cls([HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
 class ErrorMsgHandler(object):
     @staticmethod
-    @set_ev_cls(event.EventOFPErrorMsg)
+    @set_ev_cls(ofp_event.EventOFPErrorMsg)
     def error_msg_handler(ev):
         msg = ev.msg
         LOG.debug('error msg ev %s type 0x%x code 0x%x %s',
@@ -138,7 +138,7 @@ class ErrorMsgHandler(object):
 @register_cls(HANDSHAKE_DISPATCHER)
 class HandShakeHandler(object):
     @staticmethod
-    @set_ev_cls(event.EventOFPHello)
+    @set_ev_cls(ofp_event.EventOFPHello)
     def hello_handler(ev):
         LOG.debug('hello ev %s', ev)
         msg = ev.msg
@@ -170,7 +170,7 @@ class HandShakeHandler(object):
 @register_cls(CONFIG_DISPATCHER)
 class ConfigHandler(object):
     @staticmethod
-    @set_ev_cls(event.EventOFPSwitchFeatures)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures)
     def switch_features_handler(ev):
         msg = ev.msg
         datapath = msg.datapath
@@ -194,15 +194,15 @@ class ConfigHandler(object):
 
         datapath.send_barrier()
 
-    # The above OFPC_DELETE request may trigger flow removed event.
+    # The above OFPC_DELETE request may trigger flow removed ofp_event.
     # Just ignore them.
     @staticmethod
-    @set_ev_cls(event.EventOFPFlowRemoved)
+    @set_ev_cls(ofp_event.EventOFPFlowRemoved)
     def flow_removed_handler(ev):
         LOG.debug("flow removed ev %s msg %s", ev, ev.msg)
 
     @staticmethod
-    @set_ev_cls(event.EventOFPBarrierReply)
+    @set_ev_cls(ofp_event.EventOFPBarrierReply)
     def barrier_reply_handler(ev):
         LOG.debug('barrier reply ev %s msg %s', ev, ev.msg)
 
@@ -214,12 +214,12 @@ class ConfigHandler(object):
 @register_cls(MAIN_DISPATCHER)
 class MainHandler(object):
     @staticmethod
-    @set_ev_cls(event.EventOFPFlowRemoved)
+    @set_ev_cls(ofp_event.EventOFPFlowRemoved)
     def flow_removed_handler(ev):
         pass
 
     @staticmethod
-    @set_ev_cls(event.EventOFPPortStatus)
+    @set_ev_cls(ofp_event.EventOFPPortStatus)
     def port_status_handler(ev):
         msg = ev.msg
         LOG.debug('port status %s', msg.reason)

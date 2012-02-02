@@ -27,8 +27,8 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_0_parser
 
 from ryu.controller import dispatcher
-from ryu.controller import event
 from ryu.controller import handler
+from ryu.controller import ofp_event
 
 LOG = logging.getLogger('ryu.controller.controller')
 
@@ -165,7 +165,7 @@ class Datapath(object):
         while self.is_active:
             msg = self.recv_q.get()
             #LOG.debug('_event_loop ev %s cls %s', msg, msg.__class__)
-            self.ev_q.queue(event.ofp_msg_to_ev(msg))
+            self.ev_q.queue(ofp_event.ofp_msg_to_ev(msg))
 
     def send_ev(self, ev):
         #LOG.debug('send_ev %s', ev)

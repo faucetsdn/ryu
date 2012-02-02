@@ -19,9 +19,9 @@ import struct
 from ryu.app.rest_nw_id import NW_ID_UNKNOWN, NW_ID_EXTERNAL
 from ryu.exception import MacAddressDuplicated
 from ryu.exception import PortUnknown
-from ryu.controller import event
 from ryu.controller import mac_to_network
 from ryu.controller import mac_to_port
+from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
@@ -36,12 +36,12 @@ class SimpleIsolation(object):
         self.mac2port = mac_to_port.MacToPortTable()
         self.mac2net = mac_to_network.MacToNetwork(self.nw)
 
-    @set_ev_cls(event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         self.mac2port.dpid_add(ev.msg.datapath_id)
         self.nw.add_datapath(ev.msg)
 
-    @set_ev_cls(event.EventOFPBarrierReply)
+    @set_ev_cls(ofp_event.EventOFPBarrierReply)
     def barrier_reply_handler(self, ev):
         LOG.debug('barrier reply ev %s msg %s', ev, ev.msg)
 
@@ -106,7 +106,7 @@ class SimpleIsolation(object):
         else:
             self._flood_to_nw_id(msg, src, dst, dst_nw_id)
 
-    @set_ev_cls(event.EventOFPPacketIn, MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         # LOG.debug('packet in ev %s msg %s', ev, ev.msg)
         msg = ev.msg
@@ -238,6 +238,6 @@ class SimpleIsolation(object):
         datapath.send_delete_all_flows()
         datapath.send_barrier()
 
-    @set_ev_cls(event.EventOFPBarrierReply, MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
     def barrier_replay_handler(self, ev):
         pass
