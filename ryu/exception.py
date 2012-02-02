@@ -24,7 +24,7 @@ class RyuException(Exception):
 
         try:
             msg = msg % kwargs
-        except Exception as e:
+        except Exception:
             msg = self.message
 
         super(RyuException, self).__init__(msg)
@@ -34,7 +34,7 @@ class OFPUnknownVersion(RyuException):
     message = 'unknown version %(version)x'
 
 
-class OFPMalformedMessage:
+class OFPMalformedMessage(RyuException):
     message = 'malformed message'
 
 

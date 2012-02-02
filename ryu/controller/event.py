@@ -23,6 +23,7 @@ class EventBase(object):
 
 class EventOFPMsgBase(EventBase):
     def __init__(self, msg):
+        super(EventOFPMsgBase, self).__init__()
         self.msg = msg
 
 
@@ -57,10 +58,10 @@ def _create_ofp_msg_ev_class(msg_cls):
 
 
 def _create_ofp_msg_ev_from_module(modname):
-    (f, s, t) = modname.rpartition('.')
+    (f, _s, _t) = modname.rpartition('.')
     mod = __import__(modname, fromlist=[f])
     print mod
-    for k, cls in mod.__dict__.items():
+    for _k, cls in mod.__dict__.items():
         if not inspect.isclass(cls):
             continue
         if 'cls_msg_type' not in cls.__dict__:

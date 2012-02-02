@@ -22,7 +22,7 @@ from ryu.app.rest_nw_id import NW_ID_UNKNOWN
 LOG = logging.getLogger('ryu.controller.network')
 
 
-class network(object):
+class Network(object):
     def __init__(self, nw_id_unknown=NW_ID_UNKNOWN):
         self.nw_id_unknown = nw_id_unknown
         self.networks = {}

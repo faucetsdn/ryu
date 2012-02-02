@@ -24,9 +24,8 @@ from gevent import monkey
 monkey.patch_all()
 
 from ryu import log
-log.earlyInitLog(logging.DEBUG)
+log.early_init_log(logging.DEBUG)
 
-from ryu import flags
 from ryu import utils
 from ryu.app import wsapi
 from ryu.base.app_manager import AppManager
@@ -46,10 +45,10 @@ gflags.DEFINE_multistring('app_lists',
 
 def main():
     utils.find_flagfile()
-    args = FLAGS(sys.argv)
-    log.initLog()
+    _args = FLAGS(sys.argv)
+    log.init_log()
 
-    nw = network.network()
+    nw = network.Network()
     dpset_ = dpset.create_dpset()
 
     app_mgr = AppManager()

@@ -16,7 +16,9 @@
 import json
 from ryu.exception import NetworkNotFound, NetworkAlreadyExist
 from ryu.exception import PortNotFound, PortAlreadyExist
-from ryu.app.wsapi import *
+from ryu.app.wsapi import WSPathComponent
+from ryu.app.wsapi import WSPathExtractResult
+from ryu.app.wsapi import wsapi
 
 # REST API
 
@@ -62,7 +64,7 @@ class WSPathNetwork(WSPathComponent):
     def __str__(self):
         return "{network-id}"
 
-    def extract(self, pc, data):
+    def extract(self, pc, _data):
         if pc == None:
             return WSPathExtractResult(error="End of requested URI")
 
@@ -75,7 +77,7 @@ class WSPathPort(WSPathComponent):
     def __str__(self):
         return "{dpid}_{port-id}"
 
-    def extract(self, pc, data):
+    def extract(self, pc, _data):
         if pc == None:
             return WSPathExtractResult(error="End of requested URI")
 
@@ -91,13 +93,13 @@ class WSPathPort(WSPathComponent):
 
 class restapi:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *_args, **kwargs):
         self.ws = wsapi()
         self.api = self.ws.get_version("1.0")
         self.nw = kwargs['network']
         self.register()
 
-    def list_networks_handler(self, request, data):
+    def list_networks_handler(self, request, _data):
         request.setHeader("Content-Type", 'application/json')
         return json.dumps(self.nw.list_networks())
 
@@ -111,7 +113,7 @@ class restapi:
 
         return ""
 
-    def update_network_handler(self, request, data):
+    def update_network_handler(self, _request, data):
         network_id = data['{network-id}']
         self.nw.update_network(network_id)
         return ""

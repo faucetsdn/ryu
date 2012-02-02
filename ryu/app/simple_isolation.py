@@ -22,8 +22,8 @@ from ryu.exception import PortUnknown
 from ryu.controller import event
 from ryu.controller import mac_to_network
 from ryu.controller import mac_to_port
-from ryu.controller.handler import main_dispatcher
-from ryu.controller.handler import config_dispatcher
+from ryu.controller.handler import MAIN_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib.mac import haddr_to_str
 
@@ -31,21 +31,22 @@ LOG = logging.getLogger('ryu.app.simple_isolation')
 
 
 class SimpleIsolation(object):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *_args, **kwargs):
         self.nw = kwargs['network']
         self.mac2port = mac_to_port.MacToPortTable()
         self.mac2net = mac_to_network.MacToNetwork(self.nw)
 
-    @set_ev_cls(event.EventOFPSwitchFeatures, config_dispatcher)
+    @set_ev_cls(event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         self.mac2port.dpid_add(ev.msg.datapath_id)
         self.nw.add_datapath(ev.msg)
 
     @set_ev_cls(event.EventOFPBarrierReply)
-    def barrier_reply_handler(ev):
+    def barrier_reply_handler(self, ev):
         LOG.debug('barrier reply ev %s msg %s', ev, ev.msg)
 
-    def _modflow_and_send_packet(self, msg, src, dst, actions):
+    @staticmethod
+    def _modflow_and_send_packet(msg, src, dst, actions):
         datapath = msg.datapath
 
         #
@@ -105,13 +106,13 @@ class SimpleIsolation(object):
         else:
             self._flood_to_nw_id(msg, src, dst, dst_nw_id)
 
-    @set_ev_cls(event.EventOFPPacketIn, main_dispatcher)
+    @set_ev_cls(event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         # LOG.debug('packet in ev %s msg %s', ev, ev.msg)
         msg = ev.msg
         datapath = msg.datapath
 
-        dst, src, eth_type = struct.unpack_from('!6s6sH', buffer(msg.data), 0)
+        dst, src, _eth_type = struct.unpack_from('!6s6sH', buffer(msg.data), 0)
 
         try:
             port_nw_id = self.nw.get_network(datapath.id, msg.in_port)
@@ -230,13 +231,13 @@ class SimpleIsolation(object):
             # drop packets?
             assert port_nw_id == NW_ID_UNKNOWN
 
-    @set_ev_cls(event.EventOFPPortStatus, main_dispatcher)
+    @set_ev_cls(event.EventOFPPortStatus, MAIN_DISPATCHER)
     def port_status_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
         datapath.send_delete_all_flows()
         datapath.send_barrier()
 
-    @set_ev_cls(event.EventOFPBarrierReply, main_dispatcher)
+    @set_ev_cls(event.EventOFPBarrierReply, MAIN_DISPATCHER)
     def barrier_replay_handler(self, ev):
         pass

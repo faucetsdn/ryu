@@ -32,15 +32,15 @@ gflags.DEFINE_string('log_file', None, 'log file name')
 gflags.DEFINE_string('log_file_mode', '0644', 'default log file permission')
 
 
-_early_log_handler = None
+_EARLY_LOG_HANDLER = None
 
 
-def earlyInitLog(level=None):
-    global _early_log_handler
-    _early_log_handler = logging.StreamHandler(sys.stderr)
+def early_init_log(level=None):
+    global _EARLY_LOG_HANDLER
+    _EARLY_LOG_HANDLER = logging.StreamHandler(sys.stderr)
 
     log = logging.getLogger()
-    log.addHandler(_early_log_handler)
+    log.addHandler(_EARLY_LOG_HANDLER)
     if level is not None:
         log.setLevel(level)
 
@@ -54,15 +54,15 @@ def _get_log_file():
     return None
 
 
-def initLog():
-    global _early_log_handler
+def init_log():
+    global _EARLY_LOG_HANDLER
 
     log = logging.getLogger()
     if FLAGS.use_stderr:
         log.addHandler(logging.StreamHandler(sys.stderr))
-    if _early_log_handler is not None:
-        log.removeHandler(_early_log_handler)
-        _early_log_handler = None
+    if _EARLY_LOG_HANDLER is not None:
+        log.removeHandler(_EARLY_LOG_HANDLER)
+        _EARLY_LOG_HANDLER = None
 
     if FLAGS.use_syslog:
         syslog = logging.handlers.SysLogHandler(address='/dev/log')

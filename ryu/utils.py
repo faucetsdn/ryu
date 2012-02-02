@@ -22,7 +22,7 @@ LOG = logging.getLogger('ryu.utils')
 
 
 def import_module(modname):
-    (f, s, t) = modname.rpartition('.')
+    (f, _s, _t) = modname.rpartition('.')
     mod = __import__(modname, fromlist=[f])
     return mod
 
@@ -31,7 +31,7 @@ def import_object(modname):
     try:
         return import_module(modname)
     except ImportError:
-        (from_mod, sep, target) = modname.rpartition('.')
+        (from_mod, _sep, target) = modname.rpartition('.')
         mod = import_module(from_mod)
         return getattr(mod, target)
 
@@ -45,7 +45,7 @@ def find_flagfile(default_path=RYU_DEFAULT_FLAG_FILE):
 
     script_dir = os.path.dirname(inspect.stack()[-1][1])
 
-    for filename in RYU_DEFAULT_FLAG_FILE:
+    for filename in default_path:
         if not os.path.abspath(filename):
             if os.path.exists(filename):
                 # try relative to current path
