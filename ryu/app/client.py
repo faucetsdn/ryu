@@ -41,8 +41,9 @@ class OFPClientV1_0(object):
                           httplib.NO_CONTENT):
             return res
 
-        raise httplib.HTTPException('code %d reason %s' %
-                                    (res.status, res.reason))
+        raise httplib.HTTPException(
+            res, 'code %d reason %s' % (res.status, res.reason),
+            res.getheaders(), res.read())
 
     def get_networks(self):
         res = self._do_request('GET', '')
