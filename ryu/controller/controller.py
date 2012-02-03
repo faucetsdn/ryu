@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -87,9 +87,6 @@ class Datapath(object):
                                           handler.HANDSHAKE_DISPATCHER,
                                           weakref.ref(self))
 
-        self.version_sent = None
-        self.version_recv = None
-        self.version_used = None
         self.set_version(max(self.supported_ofp_version))
         self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
@@ -153,7 +150,6 @@ class Datapath(object):
         ev_thr = gevent.spawn(self._event_loop)
 
         # send hello message immediately
-        self.version_sent = self.ofproto.OFP_VERSION
         hello = self.ofproto_parser.OFPHello(self)
         self.send_msg(hello)
 

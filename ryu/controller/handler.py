@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -155,8 +155,11 @@ class HandShakeHandler(object):
             datapath.send_msg(error_msg)
             return
 
-        datapath.version = min(datapath.version_sent, msg.version)
-        datapath.set_version(datapath.version)
+        # should we again send HELLO with the version that the switch
+        # supports?
+        # msg.version != datapath.ofproto.OFP_VERSION:
+
+        datapath.set_version(msg.version)
 
         # now send feature
         features_reqeust = datapath.ofproto_parser.OFPFeaturesRequest(datapath)
