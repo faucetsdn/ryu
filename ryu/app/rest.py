@@ -18,38 +18,39 @@ from ryu.exception import NetworkNotFound, NetworkAlreadyExist
 from ryu.exception import PortNotFound, PortAlreadyExist
 from ryu.app.wsapi import WSPathComponent
 from ryu.app.wsapi import WSPathExtractResult
+from ryu.app.wsapi import WSPathStaticString
 from ryu.app.wsapi import wsapi
 
 # REST API
 
 # get the list of networks
-# GET /v1.0/
+# GET /v1.0/networks/
 #
 # register a new network.
 # Fail if the network is already registered.
-# POST /v1.0/{network-id}
+# POST /v1.0/networks/{network-id}
 #
 # update a new network.
 # Success as nop even if the network is already registered.
 #
-# PUT /v1.0/{network-id}
+# PUT /v1.0/networks/{network-id}
 #
 # remove a network
-# DELETE /v1.0/{network-id}
+# DELETE /v1.0/networks/{network-id}
 #
 # get the list of sets of dpid and port
-# GET /v1.0/{network-id}/
+# GET /v1.0/networks/{network-id}/
 #
 # register a new set of dpid and port
 # Fail if the port is already registered.
-# POST /v1.0/{network-id}/{dpid}_{port-id}
+# POST /v1.0/networks/{network-id}/{dpid}_{port-id}
 #
 # update a new set of dpid and port
 # Success as nop even if same port already registered
-# PUT /v1.0/{network-id}/{dpid}_{port-id}
+# PUT /v1.0/networks/{network-id}/{dpid}_{port-id}
 #
 # remove a set of dpid and port
-# DELETE /v1.0/{network-id}/{dpid}_{port-id}
+# DELETE /v1.0/networks/{network-id}/{dpid}_{port-id}
 
 # We store networks and ports like the following:
 #
@@ -179,34 +180,37 @@ class restapi:
         return ""
 
     def register(self):
+        path_networks = (WSPathStaticString('networks'), )
         self.api.register_request(self.list_networks_handler, "GET",
-                                  [],
+                                  path_networks,
                                   "get the list of networks")
 
+        path_network = path_networks + (WSPathNetwork(), )
         self.api.register_request(self.create_network_handler, "POST",
-                                  [WSPathNetwork()],
+                                  path_network,
                                   "register a new network")
 
         self.api.register_request(self.update_network_handler, "PUT",
-                                  [WSPathNetwork()],
+                                  path_network,
                                   "update a network")
 
         self.api.register_request(self.remove_network_handler, "DELETE",
-                                  [WSPathNetwork()],
+                                  path_network,
                                   "remove a network")
 
         self.api.register_request(self.list_ports_handler, "GET",
-                                  [WSPathNetwork()],
+                                  path_network,
                                   "get the list of sets of dpid and port")
 
+        path_port = path_network + (WSPathPort(), )
         self.api.register_request(self.create_port_handler, "POST",
-                                  [WSPathNetwork(), WSPathPort()],
+                                  path_port,
                                   "register a new set of dpid and port")
 
         self.api.register_request(self.update_port_handler, "PUT",
-                                  [WSPathNetwork(), WSPathPort()],
+                                  path_port,
                                   "update a set of dpid and port")
 
         self.api.register_request(self.remove_port_handler, "DELETE",
-                                  (WSPathNetwork(), WSPathPort()),
+                                  path_port,
                                   "remove a set of dpid and port")

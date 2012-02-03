@@ -1,5 +1,5 @@
 # Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
+# Copyright (C) 2011,2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@ import urlparse
 class OFPClientV1_0(object):
     version = 'v1.0'
 
-    # /{network_id}/{dpid}_{port}
-    network_path = '%s'
-    port_path = '%s/%s_%s'
+    # /networks/{network_id}/{dpid}_{port}
+    network_path = 'networks/%s'
+    port_path = 'networks/%s/%s_%s'
 
     def __init__(self, address):
         r = urlparse.SplitResult('', address, '', '', '')
