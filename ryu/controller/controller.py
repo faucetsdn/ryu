@@ -154,6 +154,8 @@ class Datapath(object):
         self.send_msg(hello)
 
         self._recv_loop()
+        gevent.kill(ev_thr)
+        gevent.kill(send_thr)
         gevent.joinall([ev_thr, send_thr])
 
     @_deactivate
