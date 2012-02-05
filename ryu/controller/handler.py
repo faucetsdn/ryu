@@ -197,6 +197,20 @@ class ConfigHandler(object):
 
         datapath.send_barrier()
 
+        # We had better to move on to the main state after getting the
+        # response of the barrier since it guarantees that the switch
+        # is in the known state (all the flows were removed). However,
+        # cbench doesn't work because it ignores the barrier. Also,
+        # the above "known" state doesn't always work (for example,
+        # the secondary controller should not remove all the flows in
+        # the case of HA configuration). Let's move on to the main
+        # state here for now. I guess that we need API to enable
+        # applications to initialize switches in their own ways.
+
+        LOG.debug('move onto main mode')
+        ev.msg.datapath.ev_q.set_dispatcher(MAIN_DISPATCHER)
+
+
     # The above OFPC_DELETE request may trigger flow removed ofp_event.
     # Just ignore them.
     @staticmethod
@@ -208,10 +222,6 @@ class ConfigHandler(object):
     @set_ev_cls(ofp_event.EventOFPBarrierReply)
     def barrier_reply_handler(ev):
         LOG.debug('barrier reply ev %s msg %s', ev, ev.msg)
-
-        # move on to main state
-        LOG.debug('move onto main mode')
-        ev.msg.datapath.ev_q.set_dispatcher(MAIN_DISPATCHER)
 
 
 @register_cls(MAIN_DISPATCHER)
