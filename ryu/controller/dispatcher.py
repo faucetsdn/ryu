@@ -22,13 +22,20 @@ from . import event
 
 LOG = logging.getLogger('ryu.controller.dispatcher')
 
+# WeakSet is supported by python 2.7+. So WeakValueDictionary is used
+# instead for python 2.6 which is used by REHL6
+# e.g.
+# wvd = WeakValueDictionary()           ws = WeakSet()
+# wvd[id(value)] = value                ws = value
+# wvd.values()                          ws: iterator
+
 
 class EventQueue(object):
-    # WeakSet: This set is populated by __init__().
-    #          So need to use weak reference in order to make instances
-    #          freeable by avoiding refrence count.
-    #          Otherwise, instances can't be freed.
-    event_queues = weakref.WeakSet()
+    # WeakValueDictionary: This set is populated by __init__().
+    #                      So need to use weak reference in order to make
+    #                      instances freeable by avoiding refrence count.
+    #                      Otherwise, instances can't be freed.
+    event_queues = weakref.WeakValueDictionary()
 
     # weakref: break circular reference
     #          self._ev_q_weakref == weakref.ref(self)
@@ -55,7 +62,7 @@ class EventQueue(object):
         self.ev_q = Queue()
         self.aux = aux  # for EventQueueCreate event
 
-        self.event_queues.add(self)
+        self.event_queues[id(self)] = self
         self._queue_q_ev(EventQueueCreate(self, True))
 
     def __del__(self):
@@ -101,29 +108,29 @@ class EventQueue(object):
 
 
 class EventDispatcher(object):
-    # WeakSet: This set is populated by __init__().
-    #          So need to use weak reference in order to make instances
-    #          freeable by avoiding refrence count.
-    #          Otherwise, instances can't be freed.
-    event_dispatchers = weakref.WeakSet()
+    # WeakValueDictionary: This set is populated by __init__().
+    #                      So need to use weak reference in order to make
+    #                      instances freeable by avoiding refrence count.
+    #                      Otherwise, instances can't be freed.
+    event_dispatchers = weakref.WeakValueDictionary()
 
     def __init__(self, name):
-        # WeakSet: In order to let child to go away.
-        #          We are interested only in alive children.
-        self.children = weakref.WeakSet()
+        # WeakValueDictionary: In order to let child to go away.
+        #                      We are interested only in alive children.
+        self.children = weakref.WeakValueDictionary()
         self.name = name
         self.events = {}
         self.inheritable_events = {}
         self.all_handlers = []
 
-        self.event_dispatchers.add(self)
+        self.event_dispatchers[id(self)] = self
 
     def clone(self, old_dispatcher=None):
         cloned = EventDispatcher(self.name)
         for ev_cls, h in self.events.items():
             cloned.events[ev_cls] = copy.copy(h)
         cloned.all_handlers = copy.copy(self.all_handlers)
-        self.children.add(cloned)
+        self.children[id(cloned)] = cloned
 
         if old_dispatcher is not None:
             cloned.inheritable_events = old_dispatcher.inheritable_events
@@ -132,7 +139,7 @@ class EventDispatcher(object):
         return cloned
 
     def _foreach_children(self, call, *args, **kwargs):
-        for c in self.children:
+        for c in self.children.values():
             call(c, *args, **kwargs)
 
     def register_all_handler(self, all_handler):
