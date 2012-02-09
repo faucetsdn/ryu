@@ -231,7 +231,7 @@ class SimpleIsolation(object):
             # drop packets?
             assert port_nw_id == NW_ID_UNKNOWN
 
-    @set_ev_cls(event.EventOFPPortStatus, MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def port_status_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
