@@ -1,5 +1,5 @@
 # Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
+# Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@ from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib.mac import haddr_to_str
+from ryu.lib import mac
+
 
 LOG = logging.getLogger('ryu.app.simple_isolation')
 
@@ -33,6 +35,7 @@ LOG = logging.getLogger('ryu.app.simple_isolation')
 class SimpleIsolation(object):
     def __init__(self, *_args, **kwargs):
         self.nw = kwargs['network']
+        self.dpset = kwargs['dpset']
         self.mac2port = mac_to_port.MacToPortTable()
         self.mac2net = mac_to_network.MacToNetwork(self.nw)
 
@@ -106,6 +109,13 @@ class SimpleIsolation(object):
         else:
             self._flood_to_nw_id(msg, src, dst, dst_nw_id)
 
+    def _modflow_and_drop_packet(self, msg, src, dst):
+        self._modflow_and_send_packet(msg, src, dst, [])
+
+    def _drop_packet(self, msg):
+        datapath = msg.datapath
+        datapath.send_packet_out(msg.buffer_id, msg.in_port, [])
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         # LOG.debug('packet in ev %s msg %s', ev, ev.msg)
@@ -135,6 +145,7 @@ class SimpleIsolation(object):
                 #
                 # should we install drop action pro-actively for future?
                 #
+                self._drop_packet(msg)
                 return
 
         old_port = self.mac2port.port_add(datapath.id, msg.in_port, src)
@@ -159,8 +170,7 @@ class SimpleIsolation(object):
         dst_nw_id = self.mac2net.get_network(dst, NW_ID_UNKNOWN)
 
         # we handle multicast packet as same as broadcast
-        first_oct = struct.unpack_from('B', dst)[0]
-        broadcast = (dst == '\xff' * 6) or (first_oct & 0x01)
+        broadcast = (dst == mac.BROADCAST) or mac.is_multicast(dst)
         out_port = self.mac2port.port_get(datapath.id, dst)
 
         #
@@ -178,20 +188,29 @@ class SimpleIsolation(object):
         # Can the following logic be refined/shortened?
         #
 
+        # When NW_ID_UNKNOWN is found, registering ports might be delayed.
+        # So just drop only this packet and not install flow entry.
+        # It is expected that when next packet arrives, the port is registers
+        # with some network id
+
         if port_nw_id != NW_ID_EXTERNAL and port_nw_id != NW_ID_UNKNOWN:
             if broadcast:
                 # flood to all ports of external or src_nw_id
                 self._flood_to_nw_id(msg, src, dst, src_nw_id)
-            elif src_nw_id != NW_ID_EXTERNAL and src_nw_id != NW_ID_UNKNOWN:
+            elif src_nw_id == NW_ID_EXTERNAL:
+                self._modflow_and_drop_packet(msg, src, dst)
+                return
+            elif src_nw_id == NW_ID_UNKNOWN:
+                self._drop_packet(msg)
+                return
+            else:
+                # src_nw_id != NW_ID_EXTERNAL and src_nw_id != NW_ID_UNKNOWN:
+                #
                 # try learned mac check if the port is net_id
                 # or
                 # flood to all ports of external or src_nw_id
                 self._learned_mac_or_flood_to_nw_id(msg, src, dst,
                                                     src_nw_id, out_port)
-            else:
-                # NW_ID_EXTERNAL or NW_ID_UNKNOWN
-                # drop packets
-                return
 
         elif port_nw_id == NW_ID_EXTERNAL:
             if src_nw_id != NW_ID_EXTERNAL and src_nw_id != NW_ID_UNKNOWN:
@@ -211,6 +230,7 @@ class SimpleIsolation(object):
                     else:
                         # should not occur?
                         LOG.debug("should this case happen?")
+                        self._drop_packet(msg)
                 elif dst_nw_id == NW_ID_EXTERNAL:
                     # try learned mac
                     # or
@@ -219,24 +239,109 @@ class SimpleIsolation(object):
                                                         src_nw_id, out_port)
                 else:
                     assert dst_nw_id == NW_ID_UNKNOWN
-
+                    LOG.debug("Unknown dst_nw_id")
+                    self._drop_packet(msg)
             elif src_nw_id == NW_ID_EXTERNAL:
-                # drop packet
-                pass
+                self._modflow_and_drop_packet(msg, src, dst)
             else:
                 # should not occur?
-                # drop packets
                 assert src_nw_id == NW_ID_UNKNOWN
+                self._drop_packet(msg)
         else:
-            # drop packets?
+            # drop packets
             assert port_nw_id == NW_ID_UNKNOWN
+            self._drop_packet(msg)
+            # LOG.debug("Unknown port_nw_id")
+
+    def _port_add(self, ev):
+        #
+        # delete flows entries that matches with
+        # dl_dst == broadcast/multicast
+        # and dl_src = network id if network id of this port is known
+        # to send broadcast packet to this newly added port.
+        #
+        # Openflow v1.0 doesn't support masked match of dl_dst,
+        # so delete all flow entries. It's inefficient, though.
+        #
+        msg = ev.msg
+        datapath = msg.datapath
+
+        datapath.send_delete_all_flows()
+        datapath.send_barrier()
+        self.nw.port_added(datapath, msg.desc.port_no)
+
+    def _port_del(self, ev):
+        # free mac addresses associated to this VM port,
+        # and delete related flow entries for later reuse of mac address
+
+        dps_needs_barrier = set()
+
+        msg = ev.msg
+        datapath = msg.datapath
+        datapath_id = datapath.id
+        port_no = msg.desc.port_no
+
+        wildcards = datapath.ofproto.OFPFW_ALL
+        wildcards &= ~datapath.ofproto.OFPFW_IN_PORT
+        match = datapath.ofproto_parser.OFPMatch(wildcards, port_no, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        datapath.send_flow_del(match=match, cookie=0)
+
+        match = datapath.ofproto_parser.OFPMatch(
+            datapath.ofproto.OFPFW_ALL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        datapath.send_flow_del(match=match, cookie=0, out_port=port_no)
+        dps_needs_barrier.add(datapath)
+
+        try:
+            port_nw_id = self.nw.get_network(datapath_id, port_no)
+        except PortUnknown:
+            # race condition between rest api delete port
+            # and openflow port deletion ofp_event
+            pass
+        else:
+            if port_nw_id in (NW_ID_UNKNOWN, NW_ID_EXTERNAL):
+                datapath.send_barrier()
+                return
+
+        for mac_ in self.mac2port.mac_list(datapath_id, port_no):
+            for dp in self.dpset.get_all():
+                if self.mac2port.port_get(dp.id, mac_) is None:
+                    continue
+
+                wildcards = dp.ofproto.OFPFW_ALL
+                wildcards &= ~dp.ofproto.OFPFW_DL_SRC
+                match = dp.ofproto_parser.OFPMatch(
+                    wildcards, 0, mac_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                dp.send_flow_del(match=match, cookie=0)
+
+                wildcards = dp.ofproto.OFPFW_ALL
+                wildcards &= ~dp.ofproto.OFPFW_DL_DST
+                match = dp.ofproto_parser.OFPMatch(
+                    wildcards, 0, 0, mac_, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                dp.send_flow_del(match=match, cookie=0)
+                dps_needs_barrier.add(dp)
+
+                self.mac2port.mac_del(dp.id, mac_)
+
+            self.mac2net.del_mac(mac_)
+
+        self.nw.port_deleted(datapath.id, port_no)
+
+        for dp in dps_needs_barrier:
+            dp.send_barrier()
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def port_status_handler(self, ev):
         msg = ev.msg
-        datapath = msg.datapath
-        datapath.send_delete_all_flows()
-        datapath.send_barrier()
+        reason = msg.reason
+        ofproto = msg.datapath.ofproto
+
+        if reason == ofproto.OFPPR_ADD:
+            self._port_add(ev)
+        elif reason == ofproto.OFPPR_DELETE:
+            self._port_del(ev)
+        else:
+            assert reason == ofproto.OFPPR_MODIFY
 
     @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
     def barrier_replay_handler(self, ev):
