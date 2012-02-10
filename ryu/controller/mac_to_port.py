@@ -46,3 +46,10 @@ class MacToPortTable(object):
     def port_get(self, dpid, mac):
         # LOG.debug('dpid 0x%016x mac %s', dpid, haddr_to_str(mac))
         return self.mac_to_port[dpid].get(mac)
+
+    def mac_list(self, dpid, port):
+        return [mac for (mac, port_) in self.mac_to_port.get(dpid).items()
+                if port_ == port]
+
+    def mac_del(self, dpid, mac):
+        del self.mac_to_port[dpid][mac]

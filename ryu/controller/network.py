@@ -97,7 +97,12 @@ class Network(object):
         except ValueError:
             raise PortNotFound(network_id=network_id, dpid=dpid, port=port)
 
-        del self.dpids[dpid][port]
+        # self.dpids[dpid][port] can be already deleted by port_deleted()
+        self.dpids[dpid].pop(port, None)
+
+    #
+    # methods for simple_isolation
+    #
 
     def same_network(self, dpid, nw_id, out_port, allow_nw_id_external=None):
         assert nw_id != self.nw_id_unknown
@@ -128,14 +133,19 @@ class Network(object):
         dpid = ofp_switch_features.datapath_id
         ports = ofp_switch_features.ports
         self.dpids.setdefault(dpid, {})
-        dp = self.dpids[dpid]
         for port_no in ports:
-            if port_no == 0 or port_no >= datapath.ofproto.OFPP_MAX:
-                # skip fake output ports
-                continue
+            self.port_added(datapath, port_no)
 
-            if port_no not in dp:
-                dp[port_no] = self.nw_id_unknown
+    def port_added(self, datapath, port_no):
+        if port_no == 0 or port_no >= datapath.ofproto.OFPP_MAX:
+            # skip fake output ports
+            return
+
+        dp = self.dpids[datapath.id]
+        dp.setdefault(port_no, self.nw_id_unknown)
+
+    def port_deleted(self, dpid, port_no):
+        self.dpids[dpid].pop(port_no, None)
 
     def filter_ports(self, dpid, in_port, nw_id, allow_nw_id_external=None):
         assert nw_id != self.nw_id_unknown
