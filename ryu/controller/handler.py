@@ -210,7 +210,6 @@ class ConfigHandler(object):
         LOG.debug('move onto main mode')
         ev.msg.datapath.ev_q.set_dispatcher(MAIN_DISPATCHER)
 
-
     # The above OFPC_DELETE request may trigger flow removed ofp_event.
     # Just ignore them.
     @staticmethod
