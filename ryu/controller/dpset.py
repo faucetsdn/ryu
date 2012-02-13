@@ -108,5 +108,6 @@ DPSET_EV_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_DPSET)
 QUEUE_NAME_DPSET = 'datapath'
 _DPSET_EV_Q = dispatcher.EventQueue(QUEUE_NAME_DPSET, DPSET_EV_DISPATCHER)
 
+
 def create_dpset():
     return DPSet(_DPSET_EV_Q, DPSET_EV_DISPATCHER)
