@@ -106,7 +106,8 @@ class MsgBase(object):
         if self.xid is None:
             self.xid = 0
 
-        struct.pack_into(self.datapath.ofproto.OFP_HEADER_PACK_STR, self.buf, 0,
+        struct.pack_into(self.datapath.ofproto.OFP_HEADER_PACK_STR,
+                         self.buf, 0,
                          self.version, self.msg_type, self.msg_len, self.xid)
 
     def _serialize_body(self):
@@ -131,6 +132,7 @@ def msg_pack_into(fmt, buf, offset, *args):
         buf += bytearray().zfill(needed_len - len(buf))
 
     struct.pack_into(fmt, buf, offset, *args)
+
 
 def msg_str_attr(msg, buf, attr_list):
     for attr in attr_list:
