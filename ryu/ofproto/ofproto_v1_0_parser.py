@@ -165,8 +165,8 @@ class OFPActionOutput(OFPAction):
         return cls(port, max_len)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR,
-                      buf, offset, self.type, self.len, self.port, self.max_len)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR, buf,
+                      offset, self.type, self.len, self.port, self.max_len)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_VLAN_VID,
@@ -185,8 +185,8 @@ class OFPActionVlanVid(OFPAction):
         return cls(vlan_vid)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_VLAN_VID_PACK_STR,
-                   buf, offset, self.type, self.len, self.vlan_vid)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_VLAN_VID_PACK_STR,
+                      buf, offset, self.type, self.len, self.vlan_vid)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_VLAN_PCP,
@@ -205,8 +205,8 @@ class OFPActionVlanPcp(OFPAction):
         return cls(vlan_pcp)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_VLAN_PCP_PACK_STR,
-                   buf, offset, self.type, self.len, self.vlan_pcp)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_VLAN_PCP_PACK_STR,
+                      buf, offset, self.type, self.len, self.vlan_pcp)
 
 
 class OFPActionDlAddr(OFPAction):
@@ -224,8 +224,8 @@ class OFPActionDlAddr(OFPAction):
         return cls(dl_addr)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_DL_ADDR_PACK_STR,
-                   buf, offset, self.type, self.len, self.dl_addr)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_DL_ADDR_PACK_STR,
+                      buf, offset, self.type, self.len, self.dl_addr)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_DL_SRC,
@@ -257,8 +257,8 @@ class OFPActionNwAddr(OFPAction):
         return cls(nw_addr)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_NW_ADDR_PACK_STR,
-                   buf, offset, self.type, self.len, self.nw_addr)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_NW_ADDR_PACK_STR,
+                      buf, offset, self.type, self.len, self.nw_addr)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_NW_SRC,
@@ -291,8 +291,8 @@ class OFPActionSetNwTos(OFPAction):
         return cls(tos)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_NW_TOS_PACK_STR,
-                   buf, offset, self.type, self.len, self.tos)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_NW_TOS_PACK_STR,
+                      buf, offset, self.type, self.len, self.tos)
 
 
 class OFPActionTpPort(OFPAction):
@@ -310,8 +310,8 @@ class OFPActionTpPort(OFPAction):
         return cls(tp)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_TP_PORT_PACK_STR,
-                   buf, offset, self.type, self.len, self.tp)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_TP_PORT_PACK_STR,
+                      buf, offset, self.type, self.len, self.tp)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_TP_SRC,
@@ -345,8 +345,8 @@ class OFPActionEnqueue(OFPAction):
         return cls(port, queue_id)
 
     def serialize(self, buf, offset):
-        _pack_into(ofproto_v1_0.OFP_ACTION_ENQUEUE_PACK_STR,
-                   buf, offset, self.type, self.len, self.port, self.queue_id)
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_ENQUEUE_PACK_STR, buf, offset,
+                      self.type, self.len, self.port, self.queue_id)
 
 
 # TODO:XXX OFPActionVendor
@@ -474,7 +474,7 @@ class OFPQueuePropHeader(object):
 
     def __str__(self):
         buf = super(OFPQueuePropHeader, self).__str__()
-        return _str_attr(self, buf, ('property', 'len'))
+        return msg_str_attr(self, buf, ('property', 'len'))
 
     @classmethod
     def parser(cls, buf, offset):
@@ -508,7 +508,7 @@ class OFPQueuePropMinRate(OFPQueuePropHeader):
 
     def __str__(self):
         buf = super(OFPQueuePropMinRate, self).__str__()
-        return _str_attr(self, buf, ('rate'))
+        return msg_str_attr(self, buf, ('rate'))
 
     @classmethod
     def parser(cls, buf, offset):
@@ -1057,8 +1057,8 @@ class OFPQueueGetConfigRequest(MsgBase):
         self.port = port
 
     def _serialize_body(self):
-        _pack_into(ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.port)
+        msg_pack_into(ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.port)
 
 
 class OFPStatsRequest(MsgBase):
@@ -1073,9 +1073,9 @@ class OFPStatsRequest(MsgBase):
         pass
 
     def _serialize_body(self):
-        _pack_into(ofproto_v1_0.OFP_STATS_MSG_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
-                   self.type, self.flags)
+        msg_pack_into(ofproto_v1_0.OFP_STATS_MSG_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+                      self.type, self.flags)
         self._serialize_stats_body()
 
 
@@ -1099,8 +1099,8 @@ class OFPFlowStatsRequestBase(OFPStatsRequest):
         self.match.serialize(self.buf, offset)
 
         offset += ofproto_v1_0.OFP_MATCH_SIZE
-        _pack_into(ofproto_v1_0.OFP_FLOW_STATS_REQUEST_ID_PORT_STR,
-                   self.buf, offset, self.table_id, self.out_port)
+        msg_pack_into(ofproto_v1_0.OFP_FLOW_STATS_REQUEST_ID_PORT_STR,
+                      self.buf, offset, self.table_id, self.out_port)
 
 
 @_set_msg_reply(OFPFlowStatsReply)
@@ -1138,8 +1138,8 @@ class OFPPortStatsRequest(OFPStatsRequest):
         self.port_no = port_no
 
     def _serialize_stats_body(self):
-        _pack_into(ofproto_v1_0.OFP_PORT_STATS_REQUEST_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE, self.port_no)
+        msg_pack_into(ofproto_v1_0.OFP_PORT_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE, self.port_no)
 
 
 @_set_msg_reply(OFPQueueStatsReply)
@@ -1152,9 +1152,9 @@ class OFPQueueStatsRequest(OFPStatsRequest):
         self.queue_id = queue_id
 
     def _serialize_stats_body(self):
-        _pack_into(ofproto_v1_0.OFP_QUEUE_STATS_REQUEST_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
-                   self.port_no, self.queue_id)
+        msg_pack_into(ofproto_v1_0.OFP_QUEUE_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
+                      self.port_no, self.queue_id)
 
 
 @_set_msg_reply(OFPVendorStatsReply)
@@ -1167,7 +1167,7 @@ class OFPVendorStatsRequest(OFPStatsRequest):
         self.specific_data = specific_data
 
     def _serialize_stats_body(self):
-        _pack_into(ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR,
-                   self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
-                   self.vendor)
+        msg_pack_into(ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
+                      self.vendor)
         self.buf += self.specific_data
