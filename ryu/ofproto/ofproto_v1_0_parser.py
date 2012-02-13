@@ -480,7 +480,7 @@ class OFPQueuePropHeader(object):
     def parser(cls, buf, offset):
         property_, len_ = struct.unpack_from(
             ofproto_v1_0.OFP_QUEUE_PROP_HEADER_PACK_STR, buf, offset)
-        prop_cls = cls._QUEUEU_PROPERTIES[property_]
+        prop_cls = cls._QUEUE_PROPERTIES[property_]
         assert property_ == prop_cls.cls_prop_type
         assert len_ == prop_cls.cls_prop_len
 
