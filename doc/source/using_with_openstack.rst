@@ -86,13 +86,13 @@ from the source, please refer to OpenStack document and get back here again.
 
      clone them by typing the followings in an appropriate directory::
 
-      % git clone --branch ryu git://github.com/osrg/nova.git
-      % git clone --branch ryu git://github.com/osrg/quantum.git
+      % git clone git://github.com/osrg/nova.git
+      % git clone git://github.com/osrg/quantum.git
 
      If you prefer https, try those::
 
-      % git clone --branch ryu https://github.com/osrg/nova.git
-      % git clone --branch ryu https://github.com/osrg/quantum.git
+      % git clone https://github.com/osrg/nova.git
+      % git clone https://github.com/osrg/quantum.git
 
 
 * Install nova and quantum as usual.
@@ -242,7 +242,7 @@ You can setup the above environment quickly using DevStack.
   #. Download Ryu enabled DevStack from github
      ::
 
-     % git clone --branch ryu git://github.com/osrg/devstack.git
+     % git clone git://github.com/osrg/devstack.git
 
   #. Start the install
      ::
