@@ -109,8 +109,9 @@ from the source, please refer to OpenStack document and get back here again.
        * --fixed_ranges=<setup here>
        * --network_size=<setup here>
        * --network_manager=nova.network.quantum.manager.QuantumManager
-       * --quantum_connection_host=<quantume server ip address>
-       * --firewall_driver=nova.virt.libvirt.firewall.NopFirewallDriver
+       * --quantum_connection_host=<quantum server ip address>
+       * --firewall_driver=quantum.plugins.ryu.nova.firewall.NopFirewallDriver
+       * --quantum_use_dhcp
 
         NOP firewall driver is newly introduced for demonstrating Ryu
         capability.
@@ -119,7 +120,8 @@ from the source, please refer to OpenStack document and get back here again.
         because ryu directly controls packets to VM instance via OVS bypassing
         netfilter/iptables.
 
-       * --linuxnet_interface_driver=nova.network.linux_net.LinuxOVSOFInterfaceDriver
+       * --linuxnet_interface_driver=quantum.plugins.ryu.nova.linux_net.LinuxOVSRyuInterfaceDriver
+       * --linuxnet_ovs_ryu_api_host=<IP address of ryu server>:<Ryu rest API port>
     * set up OVS on each nova-compute node
 
       If Ubuntu is used, you can install it from packages as
@@ -140,28 +142,38 @@ from the source, please refer to OpenStack document and get back here again.
        * --libvirt_type=kvm
        * --libvirt_ovs_integration_bridge=<OVS bridge:br-int>
        * --libvirt_vif_type=ethernet
-       * --libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtOpenVswitchDriver
+       * --libvirt_vif_driver=quantum.plugins.ryu.nova.vif.LibvirtOpenVswitchOFPRyuDriver
+       * --libvirt_ovs_ryu_api_host=<IP address of ryu server>:<Ryu rest API port>
 
 * install quantum server and have quantum to use OVS pluging
    * Edit [PLUGIN] section of /etc/quantum/plugins.ini
-      * provider = quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPlugin
+      * provider = quantum.plugins.ryu.ryu_quantum_plugin.RyuQuantumPlugin
 
-   * Edit [OVS] section of
-     /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini
-     
-     In addition to normal quantum OVS settings, add the followings.
-      * integration-bridge = <OVS bridge name: br-int>
-      * plugin_driver = quantum.plugins.openvswitch.ovs_quantum_plugin.OFPRyuDriver
-      * agent_driver = OVSQuantumOFPRyuAgent
-      * openflow-controller = <ryu-manager IP address>:<ryu openflow port: default 6633>
-      * openflow-rest-api = <ryu-manager IP address>:<RYU reset API port: default 8080>
+   * Edit [DATABASE] and [OVS] section of /etc/quantum/plugins/ryu/ryu.ini
+
+     * [DATABASE] section
+
+       * sql_connection = <sql connection to your db>
+
+     * [OVS] section
+
+       * integration-bridge = <OVS bridge name: br-int>
+       * openflow-controller = <ryu-manager IP address>:<ryu openflow port: default 6633>
+       * openflow-rest-api = <ryu-manager IP address>:<RYU reset API port: default 8080>
 
    * Run quantum server
-* install quantum OVS agent on each nova-compute node
-   * Edit /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini
-   * Run ovs agent::
 
-     # ovs_quantum_agent.py -v ./etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini
+* install quantum OVS agent on each nova-compute node
+   * Edit /etc/quantum/plugins/ryu/ryu.ini
+   * copy the ryu_quantum_agent.py into nova-compute/network node.
+
+     The agent isn't installed by setup.py so that you have to copy it manually.
+     ryu_quantum_agent.py is located at
+     <quantum source base>/quantum/plugins/ryu/agent/ryu_quantum_agent.py
+
+   * Run ryu agent::
+
+     # ryu_quantum_agent.py -v /etc/quantum/plugins/ryu/ryu.ini
 
 * Then as usual openstack nova operation, create user, project, network and
   run instances.
@@ -198,8 +210,8 @@ Caveats
 =======
 * Run the following daemons in this order
    #. Run Ryu network Operating System
-   #. Run quantum with OVS plugin
-   #. Run quantum OVS agent
+   #. Run quantum with Ryu plugin
+   #. Run quantum Ryu agent
    #. run your guest instance
 
    For now, ryu-manager doesn't have persistent store, so if it's rebooted,
