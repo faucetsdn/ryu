@@ -67,7 +67,8 @@ def _create_ofp_msg_ev_from_module(modname):
 
 
 # TODO:XXX
-_PARSER_MODULE_LIST = ['ryu.ofproto.ofproto_v1_0_parser']
+_PARSER_MODULE_LIST = ['ryu.ofproto.ofproto_v1_0_parser',
+                       'ryu.ofproto.ofproto_v1_2_parser']
 
 for m in _PARSER_MODULE_LIST:
     # print 'loading module %s' % m

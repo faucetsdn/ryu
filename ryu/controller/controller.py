@@ -25,6 +25,8 @@ from ryu.ofproto import ofproto
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_0_parser
+from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_2_parser
 
 from ryu.controller import dispatcher
 from ryu.controller import handler
@@ -68,6 +70,8 @@ class Datapath(object):
     supported_ofp_version = {
         ofproto_v1_0.OFP_VERSION: (ofproto_v1_0,
                                    ofproto_v1_0_parser),
+        ofproto_v1_2.OFP_VERSION: (ofproto_v1_2,
+                                   ofproto_v1_2_parser),
         }
 
     def __init__(self, socket, address):
