@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import copy
 import logging
-import weakref
 
 from gevent.queue import Queue
 
@@ -22,13 +21,6 @@ from ryu.lib.track_instances import TrackInstances
 from . import event
 
 LOG = logging.getLogger('ryu.controller.dispatcher')
-
-# WeakSet is supported by python 2.7+. So WeakValueDictionary is used
-# instead for python 2.6 which is used by REHL6
-# e.g.
-# wvd = WeakValueDictionary()           ws = WeakSet()
-# wvd[id(value)] = value                ws = value
-# wvd.values()                          ws: iterator
 
 
 class EventQueue(TrackInstances):
@@ -50,7 +42,7 @@ class EventQueue(TrackInstances):
 
     def __init__(self, name, dispatcher, aux=None):
         self.name = name
-        self.dispatcher = dispatcher.clone()
+        self._dispatcher = dispatcher.clone()
         self.is_dispatching = False
         self.ev_q = Queue()
         self.aux = aux  # for EventQueueCreate event
@@ -65,6 +57,11 @@ class EventQueue(TrackInstances):
         ev_q = self._get_ev_q()
         if ev_q is not None and self != ev_q:
             self._queue_q_ev(EventQueueCreate(self, False))
+        self._dispatcher.close()
+
+    @property
+    def dispatcher(self):
+        return self._dispatcher
 
     def close(self):
         """
@@ -78,10 +75,11 @@ class EventQueue(TrackInstances):
         self.aux = None
 
     def set_dispatcher(self, dispatcher):
-        old = self.dispatcher
+        old = self._dispatcher
         new = dispatcher.clone()
-        self.dispatcher = new
+        self._dispatcher = new
         self._queue_q_ev(EventDispatcherChange(self, old, new))
+        old.close()
 
     def queue_raw(self, ev):
         self.ev_q.put(ev)
@@ -105,32 +103,39 @@ class EventQueue(TrackInstances):
         with self._EventQueueGuard(self):
             assert self.ev_q.empty()
 
-            self.dispatcher(ev)
+            self._dispatcher(ev)
             while not self.ev_q.empty():
                 ev = self.ev_q.get()
-                self.dispatcher(ev)
+                self._dispatcher(ev)
 
 
 class EventDispatcher(TrackInstances):
     def __init__(self, name):
-        # WeakValueDictionary: In order to let child to go away.
-        #                      We are interested only in alive children.
-        self.children = weakref.WeakValueDictionary()
+        self.parent = None
+        self.children = set()
         self.name = name
         self.events = {}
         self.all_handlers = []
+
+    def close(self):
+        if self.parent is None:
+            return
+        self.parent.children.remove(self)
+        self.parent = None
 
     def clone(self):
         cloned = EventDispatcher(self.name)
         for ev_cls, h in self.events.items():
             cloned.events[ev_cls] = copy.copy(h)
         cloned.all_handlers = copy.copy(self.all_handlers)
-        self.children[id(cloned)] = cloned
+
+        cloned.parent = self
+        self.children.add(cloned)
 
         return cloned
 
     def _foreach_children(self, call, *args, **kwargs):
-        for c in self.children.values():
+        for c in self.children:
             call(c, *args, **kwargs)
 
     def register_all_handler(self, all_handler):
