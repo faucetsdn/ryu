@@ -15,6 +15,7 @@
 
 import inspect
 
+from ryu import utils
 from . import event
 
 
@@ -55,9 +56,8 @@ def _create_ofp_msg_ev_class(msg_cls):
 
 
 def _create_ofp_msg_ev_from_module(modname):
-    (f, _s, _t) = modname.rpartition('.')
-    mod = __import__(modname, fromlist=[f])
-    print mod
+    mod = utils.import_module(modname)
+    # print mod
     for _k, cls in mod.__dict__.items():
         if not inspect.isclass(cls):
             continue
