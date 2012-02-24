@@ -32,18 +32,16 @@ LOG = logging.getLogger('ryu.controller.dispatcher')
 
 
 class EventQueue(TrackInstances):
-    # weakref: break circular reference
-    #          self._ev_q_weakref == weakref.ref(self)
-    _ev_q_weakref = None
+    _ev_q = None
 
     def set_ev_q(self):
-        self.__class__._ev_q_weakref = weakref.ref(self)
+        # Be careful: circular reference
+        # It is assumed that event queue for EventQueue is never freed.
+        self.__class__._ev_q = self
 
-    def _get_ev_q(self):
-        ev_q = self._ev_q_weakref
-        if ev_q is not None:
-            ev_q = ev_q()
-        return ev_q
+    @classmethod
+    def _get_ev_q(cls):
+        return cls._ev_q
 
     def _queue_q_ev(self, ev):
         ev_q = self._get_ev_q()
