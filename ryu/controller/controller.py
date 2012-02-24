@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
 import gflags
 import logging
 import gevent
 import random
-import weakref
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
@@ -85,16 +85,24 @@ class Datapath(object):
         self.recv_q = Queue()
         self.send_q = Queue()
 
-        # weakref: qv_q.aux refers to aux = self
-        # self.ev_q.aux == weakref.ref(self)
+        # circular reference self.ev_q.aux == self
         self.ev_q = dispatcher.EventQueue(handler.QUEUE_NAME_OFP_MSG,
                                           handler.HANDSHAKE_DISPATCHER,
-                                          weakref.ref(self))
+                                          self)
 
         self.set_version(max(self.supported_ofp_version))
         self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
         self.ports = None
+
+    def close(self):
+        """
+        Call this before discarding this datapath object
+        The circular refernce as self.ev_q.aux == self must be broken.
+        """
+        # tell this datapath is dead
+        self.ev_q.set_dispatcher(handler.DEAD_DISPATCHER)
+        self.ev_q.close()
 
     def set_version(self, version):
         assert version in self.supported_ofp_version
@@ -218,10 +226,5 @@ class Datapath(object):
 
 def datapath_connection_factory(socket, address):
     LOG.debug('connected socket:%s address:%s', socket, address)
-
-    datapath = Datapath(socket, address)
-    try:
+    with contextlib.closing(Datapath(socket, address)) as datapath:
         datapath.serve()
-    finally:
-        # tell this datapath is dead
-        datapath.ev_q.set_dispatcher(handler.DEAD_DISPATCHER)

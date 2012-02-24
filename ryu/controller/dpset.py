@@ -93,7 +93,7 @@ class DPSet(object):
         if ev.ev_q.name != handler.QUEUE_NAME_OFP_MSG:
             return
 
-        datapath = ev.ev_q.aux()
+        datapath = ev.ev_q.aux
         assert datapath is not None
         if ev.new_dispatcher.name == handler.DISPATCHER_NAME_OFP_MAIN:
             LOG.debug('DPSET: register datapath %s', datapath)

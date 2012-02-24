@@ -63,9 +63,21 @@ class EventQueue(TrackInstances):
         # This can be called when python interpreter exiting.
         # At that time, other object like EventQueueCreate can be
         # already destructed. So we can't call it blindly.
+        assert self.aux == None
         ev_q = self._get_ev_q()
         if ev_q is not None and self != ev_q:
             self._queue_q_ev(EventQueueCreate(self, False))
+
+    def close(self):
+        """
+        Call this function before discarding this object.
+        This function unset self.aux in order to break potential circular
+        reference.
+
+        Sometimes self.aux results in cyclic reference.
+        So we need to break it explicitly. (Or use weakref)
+        """
+        self.aux = None
 
     def set_dispatcher(self, dispatcher):
         old = self.dispatcher
