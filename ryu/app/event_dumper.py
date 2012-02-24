@@ -32,7 +32,7 @@ class EventDumper(object):
     def __init__(self, *_args, **_kwargs):
         # EventDispatcher can be created and cloned before us.
         # So register it explicitly
-        for ev_q in dispatcher.EventQueue.event_queues.values():
+        for ev_q in dispatcher.EventQueue.all_instances():
             if ev_q == dispatcher.QUEUE_EV_Q:
                 continue
             LOG.info('%s: registering q %s dispatcher %s',

@@ -18,6 +18,7 @@ import weakref
 
 from gevent.queue import Queue
 
+from ryu.lib.track_instances import TrackInstances
 from . import event
 
 LOG = logging.getLogger('ryu.controller.dispatcher')
@@ -30,13 +31,7 @@ LOG = logging.getLogger('ryu.controller.dispatcher')
 # wvd.values()                          ws: iterator
 
 
-class EventQueue(object):
-    # WeakValueDictionary: This set is populated by __init__().
-    #                      So need to use weak reference in order to make
-    #                      instances freeable by avoiding refrence count.
-    #                      Otherwise, instances can't be freed.
-    event_queues = weakref.WeakValueDictionary()
-
+class EventQueue(TrackInstances):
     # weakref: break circular reference
     #          self._ev_q_weakref == weakref.ref(self)
     _ev_q_weakref = None
@@ -62,7 +57,6 @@ class EventQueue(object):
         self.ev_q = Queue()
         self.aux = aux  # for EventQueueCreate event
 
-        self.event_queues[id(self)] = self
         self._queue_q_ev(EventQueueCreate(self, True))
 
     def __del__(self):
@@ -107,13 +101,7 @@ class EventQueue(object):
                 self.dispatcher(ev)
 
 
-class EventDispatcher(object):
-    # WeakValueDictionary: This set is populated by __init__().
-    #                      So need to use weak reference in order to make
-    #                      instances freeable by avoiding refrence count.
-    #                      Otherwise, instances can't be freed.
-    event_dispatchers = weakref.WeakValueDictionary()
-
+class EventDispatcher(TrackInstances):
     def __init__(self, name):
         # WeakValueDictionary: In order to let child to go away.
         #                      We are interested only in alive children.
@@ -121,8 +109,6 @@ class EventDispatcher(object):
         self.name = name
         self.events = {}
         self.all_handlers = []
-
-        self.event_dispatchers[id(self)] = self
 
     def clone(self):
         cloned = EventDispatcher(self.name)
