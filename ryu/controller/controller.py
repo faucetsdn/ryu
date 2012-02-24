@@ -157,10 +157,12 @@ class Datapath(object):
         hello = self.ofproto_parser.OFPHello(self)
         self.send_msg(hello)
 
-        self._recv_loop()
-        gevent.kill(ev_thr)
-        gevent.kill(send_thr)
-        gevent.joinall([ev_thr, send_thr])
+        try:
+            self._recv_loop()
+        finally:
+            gevent.kill(ev_thr)
+            gevent.kill(send_thr)
+            gevent.joinall([ev_thr, send_thr])
 
     @_deactivate
     def _event_loop(self):
