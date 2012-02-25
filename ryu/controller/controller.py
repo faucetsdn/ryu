@@ -114,6 +114,7 @@ class Datapath(object):
         buf = bytearray()
         required_len = ofproto.OFP_HEADER_SIZE
 
+        count = 0
         while self.is_active:
             ret = self.socket.recv(required_len)
             if len(ret) == 0:
@@ -133,6 +134,15 @@ class Datapath(object):
 
                 buf = buf[required_len:]
                 required_len = ofproto.OFP_HEADER_SIZE
+
+                # We need to schedule other greenlets. Otherwise, ryu
+                # can't accept new switches or handle the existing
+                # switches. The limit is arbitrary. We need the better
+                # approach in the future.
+                count += 1
+                if count > 2048:
+                    count = 0
+                    gevent.sleep(0)
 
     @_deactivate
     def _send_loop(self):
