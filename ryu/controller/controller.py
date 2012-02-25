@@ -81,8 +81,9 @@ class Datapath(object):
         self.address = address
         self.is_active = True
 
-        # XIX limit queue size somehow to prevent it from eating memory up
-        self.send_q = Queue()
+        # The limit is arbitrary. We need to limit queue size to
+        # prevent it from eating memory up
+        self.send_q = Queue(16)
 
         # circular reference self.ev_q.aux == self
         self.ev_q = dispatcher.EventQueue(handler.QUEUE_NAME_OFP_MSG,
