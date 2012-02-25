@@ -115,7 +115,7 @@ class Datapath(object):
         required_len = ofproto.OFP_HEADER_SIZE
 
         while self.is_active:
-            ret = self.socket.recv(ofproto.OFP_MSG_SIZE_MAX)
+            ret = self.socket.recv(required_len)
             if len(ret) == 0:
                 self.is_active = False
                 break
