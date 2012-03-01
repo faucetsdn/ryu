@@ -82,7 +82,6 @@ class Datapath(object):
         self.is_active = True
 
         # XIX limit queue size somehow to prevent it from eating memory up
-        self.recv_q = Queue()
         self.send_q = Queue()
 
         # circular reference self.ev_q.aux == self
@@ -129,7 +128,7 @@ class Datapath(object):
                 msg = ofproto_parser.msg(self,
                                          version, msg_type, msg_len, xid, buf)
                 #LOG.debug('queue msg %s cls %s', msg, msg.__class__)
-                self.recv_q.put(msg)
+                self.ev_q.queue(ofp_event.ofp_msg_to_ev(msg))
 
                 buf = buf[required_len:]
                 required_len = ofproto.OFP_HEADER_SIZE
@@ -159,7 +158,6 @@ class Datapath(object):
 
     def serve(self):
         send_thr = gevent.spawn(self._send_loop)
-        ev_thr = gevent.spawn(self._event_loop)
 
         # send hello message immediately
         hello = self.ofproto_parser.OFPHello(self)
@@ -168,16 +166,8 @@ class Datapath(object):
         try:
             self._recv_loop()
         finally:
-            gevent.kill(ev_thr)
             gevent.kill(send_thr)
-            gevent.joinall([ev_thr, send_thr])
-
-    @_deactivate
-    def _event_loop(self):
-        while self.is_active:
-            msg = self.recv_q.get()
-            #LOG.debug('_event_loop ev %s cls %s', msg, msg.__class__)
-            self.ev_q.queue(ofp_event.ofp_msg_to_ev(msg))
+            gevent.joinall([send_thr])
 
     def send_ev(self, ev):
         #LOG.debug('send_ev %s', ev)
