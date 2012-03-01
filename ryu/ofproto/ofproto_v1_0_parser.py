@@ -1089,7 +1089,7 @@ class OFPDescStatsRequest(OFPStatsRequest):
 
 class OFPFlowStatsRequestBase(OFPStatsRequest):
     def __init__(self, datapath, flags, match, table_id, out_port):
-        super(OFPFlowStatsRequest. self).__init__(datapath, flags)
+        super(OFPFlowStatsRequestBase, self).__init__(datapath, flags)
         self.match = match
         self.table_id = table_id
         self.out_port = out_port
