@@ -144,8 +144,9 @@ class OFPAction(OFPActionHeader):
     def parser(cls, buf, offset):
         type_, len_ = struct.unpack_from(
             ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR, buf, offset)
-        offset += ofproto_v1_0.OFP_ACTION_HEADER_SIZE
-        return cls.parser(buf, offset)
+        cls_ = cls._ACTION_TYPES.get(type_)
+        assert cls_ is not None
+        return cls_.parser(buf, offset)
 
 
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_OUTPUT,
