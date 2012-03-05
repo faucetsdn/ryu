@@ -381,7 +381,7 @@ class OFPFlowStats(object):
     def parser(cls, buf, offset):
         flow_stats = cls()
 
-        flow_stats.length, flow_stats.table_id = struct.unpack(
+        flow_stats.length, flow_stats.table_id = struct.unpack_from(
             ofproto_v1_0.OFP_FLOW_STATS_0_PACK_STR, buf, offset)
         offset += ofproto_v1_0.OFP_FLOW_STATS_0_SIZE
 
