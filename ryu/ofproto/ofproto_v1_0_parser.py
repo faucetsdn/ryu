@@ -397,6 +397,7 @@ class OFPFlowStats(object):
          flow_stats.packet_count,
          flow_stats.byte_conunt) = struct.unpack_from(
             ofproto_v1_0.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
+        offset += ofproto_v1_0.OFP_FLOW_STATS_1_SIZE
 
         flow_stats.actions = []
         length = ofproto_v1_0.OFP_FLOW_STATS_SIZE
