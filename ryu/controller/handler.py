@@ -82,6 +82,7 @@ def register_cls(dispatchers=None):
                 # LOG.debug('register dispatcher %s ev %s cls %s k %s f %s',
                 #          d.name, f.ev_cls, cls, k, f)
                 d.register_handler(f.ev_cls, f)
+        return cls
 
     return _register_cls_method
 
