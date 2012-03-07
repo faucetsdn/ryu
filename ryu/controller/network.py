@@ -28,6 +28,9 @@ class Network(object):
         self.networks = {}
         self.dpids = {}
 
+    def _dpids_setdefault(self, dpid):
+        return self.dpids.setdefault(dpid, {})
+
     def _check_nw_id_unknown(self, network_id):
         if network_id == self.nw_id_unknown:
             raise NetworkAlreadyExist(network_id=network_id)
@@ -80,7 +83,7 @@ class Network(object):
         except KeyError:
             raise NetworkNotFound(network_id=network_id)
 
-        self.dpids.setdefault(dpid, {})
+        self._dpids_setdefault(dpid)
         self.dpids[dpid][port] = network_id
 
     def create_port(self, network_id, dpid, port):
@@ -132,7 +135,7 @@ class Network(object):
         datapath = ofp_switch_features.datapath
         dpid = ofp_switch_features.datapath_id
         ports = ofp_switch_features.ports
-        self.dpids.setdefault(dpid, {})
+        self._dpids_setdefault(dpid)
         for port_no in ports:
             self.port_added(datapath, port_no)
 
@@ -141,7 +144,7 @@ class Network(object):
             # skip fake output ports
             return
 
-        dp = self.dpids[datapath.id]
+        dp = self._dpids_setdefault(datapath.id)
         dp.setdefault(port_no, self.nw_id_unknown)
 
     def port_deleted(self, dpid, port_no):
