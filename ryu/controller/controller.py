@@ -17,6 +17,7 @@ import contextlib
 import gflags
 import logging
 import gevent
+import traceback
 import random
 from gevent.server import StreamServer
 from gevent.queue import Queue
@@ -61,6 +62,9 @@ def _deactivate(method):
     def deactivate(self):
         try:
             method(self)
+        except:
+            traceback.print_stack()
+            raise
         finally:
             self.is_active = False
     return deactivate
@@ -228,4 +232,13 @@ class Datapath(object):
 def datapath_connection_factory(socket, address):
     LOG.debug('connected socket:%s address:%s', socket, address)
     with contextlib.closing(Datapath(socket, address)) as datapath:
-        datapath.serve()
+        try:
+            datapath.serve()
+        except:
+            # Something went wrong.
+            # Especially malicious switch can send malformed packet,
+            # the parser raise exception.
+            # Can we do anything more graceful?
+            LOG.error("Error in the datapath %s from %s",
+                      datapath.id, address)
+            raise
