@@ -20,6 +20,7 @@ from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
+from . import nx_match
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.ofproto_v1_0_parser')
@@ -671,6 +672,42 @@ class NXTSetFlowFormat(NXTRequest):
         self.serialize_header()
         msg_pack_into(ofproto_v1_0.NX_SET_FLOW_FORMAT_PACK_STR,
                       self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.format)
+
+
+class NXTFlowMod(NXTRequest):
+    def __init__(self, datapath, cookie, command, idle_timeout,
+                 hard_timeout, priority, buffer_id, out_port,
+                 flags, rule, actions):
+        super(NXTFlowMod, self).__init__(datapath)
+        self.subtype = ofproto_v1_0.NXT_FLOW_MOD
+        self.cookie = cookie
+        self.command = command
+        self.idle_timeout = idle_timeout
+        self.hard_timeout = hard_timeout
+        self.priority = priority
+        self.buffer_id = buffer_id
+        self.out_port = out_port
+        self.flags = flags
+        self.rule = rule
+        self.actions = actions
+
+    def _serialize_body(self):
+        self.serialize_header()
+
+        offset = ofproto_v1_0.NX_FLOW_MOD_SIZE
+        match_len = nx_match.serialize_nxm_match(self.rule, self.buf, offset)
+        offset += nx_match.round_up(match_len)
+
+        msg_pack_into(ofproto_v1_0.NX_FLOW_MOD_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+                      self.cookie, self.command, self.idle_timeout,
+                      self.hard_timeout, self.priority, self.buffer_id,
+                      self.out_port, self.flags, match_len)
+
+        if self.actions is not None:
+            for a in self.actions:
+                a.serialize(self.buf, offset)
+                offset += a.len
 
 
 #
