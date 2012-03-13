@@ -501,3 +501,18 @@ NX_SET_FLOW_FORMAT_PACK_STR = '!I'
 NX_SET_FLOW_FORMAT_SIZE = 20
 assert (calcsize(NX_SET_FLOW_FORMAT_PACK_STR) +
                  NICIRA_HEADER_SIZE == NX_SET_FLOW_FORMAT_SIZE)
+
+
+def nxm_header__(vendor, field, hasmask, length):
+    return (vendor << 16) | (field << 9) | (hasmask << 8) | length
+
+
+def nxm_header(vendor, field, length):
+    return nxm_header__(vendor, field, 0, length)
+
+
+def nxm_header_w(vendor, field, length):
+    return nxm_header__(vendor, field, 1, (length) * 2)
+
+
+NXM_HEADER_PACK_STRING = '!I'
