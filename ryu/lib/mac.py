@@ -16,6 +16,8 @@
 
 DONTCARE = '\x00' * 6
 BROADCAST = '\xff' * 6
+MULTICAST = '\xfe' + '\xff' * 5
+UNICAST = '\x01' + '\x00' * 5
 
 
 def is_multicast(addr):

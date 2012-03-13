@@ -17,6 +17,7 @@
 import struct
 
 from ryu import exception
+from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
 
@@ -27,10 +28,15 @@ LOG = logging.getLogger('ryu.ofproto.nx_match')
 UINT64_MAX = (1 << 64) - 1
 
 FWW_IN_PORT = 1 << 0
+FWW_DL_SRC = 1 << 2
+FWW_DL_DST = 1 << 3
+# No corresponding OFPFW_* bits
+FWW_ETH_MCAST = 1 << 1
 FWW_ALL = (1 << 13) - 1
 
 MF_PACK_STRING_BE64 = '!Q'
 MF_PACK_STRING_BE16 = '!H'
+MF_PACK_STRING_MAC = '!6s'
 
 _MF_FIELDS = {}
 
@@ -44,6 +50,44 @@ class FlowWildcards(object):
         self.tun_id_mask = 0
         self.wildcards = FWW_ALL
 
+    def set_dl_dst_mask(self, mask):
+        assert mask[0] in ['\x00', '\x01', '\xfe', '\xff']
+        if mask[0] == '\x00':
+            self.wildcards |= FWW_DL_DST | FWW_ETH_MCAST
+        elif mask[0] == '\x01':
+            self.wildcards = (self.wildcards | FWW_DL_DST) & ~FWW_ETH_MCAST
+        elif mask[0] == '\xfe':
+            self.wildcards = (self.wildcards & ~FWW_DL_DST) | FWW_ETH_MCAST
+        elif mask[0] == '\xff':
+            self.wildcards &= ~(FWW_DL_DST | FWW_ETH_MCAST)
+
+    def to_dl_dst_mask(self):
+        key = self.wildcards & (FWW_DL_DST | FWW_ETH_MCAST)
+        if key == 0:
+            return mac.BROADCAST
+        elif key == FWW_DL_DST:
+            return mac.UNICAST
+        elif key == FWW_ETH_MCAST:
+            return mac.MULTICAST
+        else:
+            return mac.DONTCARE
+
+
+def flow_wildcards_is_dl_dst_mask_valid(cls, mask):
+    # 00:00:00:00:00:00, 01:00:00:00:00:00, fe:ff:ff:ff:ff:ff or
+    # ff:ff:ff:ff:ff:ff
+    #
+    # The trailing octects should all be the same
+    # so the set of those values should only have one element
+    # which can be compared with the desired value
+    s = set(mask[1:])
+    if ((len(s) != 1) or
+        (mask[0] in ['\x00', '\x01']) and ('\x00' in s) or
+        (mask[0] in ['\xff', '\xfe']) and ('\xff' in s)):
+        return True
+    else:
+        return False
+
 
 class ClsRule(object):
     def __init__(self):
@@ -53,6 +97,17 @@ class ClsRule(object):
     def set_in_port(self, port):
         self.wc.wildcards &= ~FWW_IN_PORT
         self.flow.in_port = port
+
+    def set_dl_dst(self, dl_dst):
+        self.wc.wildcards &= ~(FWW_DL_DST | FWW_ETH_MCAST)
+        self.flow.dl_dst = dl_dst
+
+    def set_dl_dst_masked(self, dl_dst, mask):
+        self.wc.set_dl_dst_mask(mask)
+        # bit-wise and of the corresponding elements of dl_dst and mask
+        self.flow.dl_dst = reduce(lambda x, y: x + y,
+                                  map(lambda x: chr(ord(x[0]) & ord(x[1])),
+                                      zip(dl_dst, mask)))
 
     def set_tun_id(self, tun_id):
         self.set_tun_id_masked(tun_id, UINT64_MAX)
@@ -126,6 +181,25 @@ class MFInPort(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ETH_DST, ofproto_v1_0.NXM_OF_ETH_DST_W])
+class MFEthDst(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_MAC)
+
+    def put(self, buf, offset, rule):
+        mask = FWW_DL_DST | FWW_ETH_MCAST
+        key = rule.wc.wildcards & mask
+        if key == mask:
+            return 0
+        if key == 0:
+            return self._put(buf, offset, rule.flow.dl_dst)
+        else:
+            return self.putw(buf, offset, rule.flow.dl_dst,
+                             rule.wc.to_dl_dst_mask())
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_TUN_ID, ofproto_v1_0.NXM_NX_TUN_ID_W])
 class MFTunId(MFField):
     @classmethod
@@ -142,7 +216,10 @@ def serialize_nxm_match(rule, buf, offset):
     if not rule.wc.wildcards & FWW_IN_PORT:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_IN_PORT, rule)
 
-    # XXX: Ethernet.
+    # Ethernet.
+    offset += nxm_put_eth_dst(buf, offset, rule)
+    # XXX: Ethernet Source and Type
+
     # XXX: 802.1Q
     # XXX: L3
 
@@ -169,6 +246,18 @@ def nxm_put(buf, offset, header, rule):
     len = nxm.put_header(buf, offset)
     mf = mf_from_nxm_header(nxm.header)
     return len + mf.put(buf, offset + len, rule)
+
+
+def nxm_put_eth_dst(buf, offset, rule):
+    mask = FWW_DL_DST | FWW_ETH_MCAST
+    key = rule.wc.wildcards & mask
+    if key == mask:
+        return 0
+    elif key == 0:
+        header = ofproto_v1_0.NXM_OF_ETH_DST
+    else:
+        header = ofproto_v1_0.NXM_OF_ETH_DST_W
+    return nxm_put(buf, offset, header, rule)
 
 
 def round_up(length):

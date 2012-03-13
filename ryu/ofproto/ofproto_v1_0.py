@@ -517,6 +517,9 @@ def nxm_header_w(vendor, field, length):
 
 NXM_OF_IN_PORT = nxm_header(0x0000,  0, 2)
 
+NXM_OF_ETH_DST = nxm_header(0x0000,  1, 6)
+NXM_OF_ETH_DST_W = nxm_header_w(0x0000,  1, 6)
+
 NXM_NX_TUN_ID = nxm_header(0x0001, 16, 8)
 NXM_NX_TUN_ID_W = nxm_header_w(0x0001, 16, 8)
 
