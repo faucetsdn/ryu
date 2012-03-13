@@ -41,6 +41,7 @@ class Flow(object):
 
 class FlowWildcards(object):
     def __init__(self):
+        self.tun_id_mask = 0
         self.wildcards = FWW_ALL
 
 
@@ -52,6 +53,14 @@ class ClsRule(object):
     def set_in_port(self, port):
         self.wc.wildcards &= ~FWW_IN_PORT
         self.flow.in_port = port
+
+    def set_tun_id(self, tun_id):
+        self.set_tun_id_masked(tun_id, UINT64_MAX)
+
+    def set_tun_id_masked(self, tun_id, mask):
+        self.wc.tun_id_mask = mask
+        self.flow.tun_id = tun_id & mask
+
 
 def _set_nxm_headers(nxm_headers):
     '''Annotate corresponding NXM header'''
@@ -114,6 +123,17 @@ class MFInPort(MFField):
 
     def put(self, buf, offset, rule):
         return self._put(buf, offset, rule.flow.in_port)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_TUN_ID, ofproto_v1_0.NXM_NX_TUN_ID_W])
+class MFTunId(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE64)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.tun_id, rule.wc.tun_id_mask)
 
 
 def serialize_nxm_match(rule, buf, offset):

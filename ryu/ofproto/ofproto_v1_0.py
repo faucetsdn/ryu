@@ -517,4 +517,7 @@ def nxm_header_w(vendor, field, length):
 
 NXM_OF_IN_PORT = nxm_header(0x0000,  0, 2)
 
+NXM_NX_TUN_ID = nxm_header(0x0001, 16, 8)
+NXM_NX_TUN_ID_W = nxm_header_w(0x0001, 16, 8)
+
 NXM_HEADER_PACK_STRING = '!I'
