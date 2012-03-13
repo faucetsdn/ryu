@@ -352,6 +352,46 @@ class OFPActionEnqueue(OFPAction):
 
 
 # TODO:XXX OFPActionVendor
+# NXAction* is a partial implementatoin, only handling serilalisation
+# of a subset of Nicira vendor actions
+
+
+class NXActionHeader(object):
+    def __init__(self, subtype_, len_):
+        self.type = ofproto_v1_0.OFPAT_VENDOR
+        self.len = len_
+        self.vendor = ofproto_v1_0.NX_VENDOR_ID
+        self.subtype = subtype_
+
+    def serialise(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
+                      buf, offset, self.type, self.len)
+
+
+class NXActionSetTunnel(NXActionHeader):
+    def __init__(self, tun_id_):
+        self.tun_id = tun_id_
+        super(NXActionSetTunnel, self).__init__(
+            ofproto_v1_0.NXAST_SET_TUNNEL,
+            ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor, self.subtype,
+                      self.tun_id)
+
+
+class NXActionSetTunnel64(NXActionHeader):
+    def __init__(self, tun_id_):
+        self.tun_id = tun_id_
+        super(NXActionSetTunnel64, self).__init__(
+            ofproto_v1_0.NXAST_SET_TUNNEL64,
+            ofproto_v1_0.NX_ACTION_SET_TUNNEL64_SIZE)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor, self.subtype,
+                      self.tun_id)
 
 
 class OFPDescStats(collections.namedtuple('OFPDescStats',
