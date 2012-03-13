@@ -20,6 +20,7 @@ from ryu import exception
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
+from . import ofproto
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.nx_match')
@@ -56,7 +57,12 @@ _MF_FIELDS = {}
 
 
 class Flow(object):
-    pass
+    def __init__(self):
+        self.in_port = 0
+        self.dl_src = mac.DONTCARE
+        self.dl_dst = mac.DONTCARE
+        self.dl_type = 0
+        self.nw_tos = 0
 
 
 class FlowWildcards(object):
@@ -147,6 +153,47 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_NW_ECN
         self.flow.nw_tos &= ~IP_ECN_MASK
         self.flow.nw_tos |= nw_ecn & IP_ECN_MASK
+
+    def flow_format(self):
+        # Tunnel ID is only supported by NXM
+        if self.wc.tun_id_mask != 0:
+            return ofproto_v1_0.NXFF_NXM
+
+        # Masking DL_DST is only supported by NXM
+        mask = FWW_DL_DST | FWW_ETH_MCAST
+        key = self.wc.wildcards & mask
+        if key != mask and key != 0:
+            return ofproto_v1_0.NXFF_NXM
+
+        # ECN is only supported by NXM
+        if not self.wc.wildcards & FWW_NW_ECN:
+            return ofproto_v1_0.NXFF_NXM
+
+        return ofproto_v1_0.NXFF_OPENFLOW10
+
+    def match_tuple(self):
+        assert self.flow_format() == ofproto_v1_0.NXFF_OPENFLOW10
+        wildcards = ofproto.OFPFW_ALL
+
+        if not self.wc.wildcards & FWW_IN_PORT:
+            wildcards &= ~ofproto.OFPFW_IN_PORT
+
+        if not self.wc.wildcards & FWW_DL_SRC:
+            wildcards &= ~ofproto.OFPFW_DL_SRC
+
+        mask = FWW_DL_DST | FWW_ETH_MCAST
+        key = self.wc.wildcards & mask
+        if key == 0:
+            wildcards &= ~ofproto.OFPFW_DL_DST
+
+        if not self.wc.wildcards & FWW_DL_TYPE:
+            wildcards &= ~ofproto.OFPFW_DL_TYPE
+
+        # FIXME: Add support for dl_vlan, fl_vlan_pcp, nw_tos, nw_proto,
+        # nw_src, nw_dst, tp_src and dp_dst to self
+        return (wildcards, self.flow.in_port, self.flow.dl_src,
+                self.flow.dl_dst, 0, 0, self.flow.dl_type,
+                self.flow.nw_tos & IP_DSCP_MASK, 0, 0, 0, 0, 0)
 
 
 def _set_nxm_headers(nxm_headers):
