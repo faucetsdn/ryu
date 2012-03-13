@@ -639,11 +639,26 @@ class OFPVendor(MsgBase):
         msg.data = msg.buf[ofproto_v1_0.OFP_VENDOR_HEADER_SIZE:]
         return msg
 
-    def _serialize_body(self):
-        assert self.data is not None
+    def serialize_header(self):
         msg_pack_into(ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR,
                       self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.vendor)
+
+    def _serialize_body(self):
+        assert self.data is not None
+        self.serialize_header()
         self.buf += self.data
+
+
+class NXTRequest(OFPVendor):
+    def __init__(self, datapath):
+        super(NXTRequest, self).__init__(datapath)
+        self.vendor = ofproto_v1_0.NX_VENDOR_ID
+
+    def serialize_header(self):
+        super(NXTRequest, self).serialize_header()
+        msg_pack_into(ofproto_v1_0.NICIRA_HEADER_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+                      self.vendor, self.subtype)
 
 
 #
