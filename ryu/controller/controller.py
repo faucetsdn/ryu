@@ -28,6 +28,7 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_0_parser
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
+from ryu.ofproto import nx_match
 
 from ryu.controller import dispatcher
 from ryu.controller import handler
@@ -200,28 +201,38 @@ class Datapath(object):
             self, buffer_id, in_port, actions, data)
         self.send_msg(packet_out)
 
-    def send_flow_mod(self, match, cookie, command, idle_timeout, hard_timeout,
+    def send_flow_mod(self, rule, cookie, command, idle_timeout, hard_timeout,
                       priority, buffer_id=0xffffffff,
                       out_port=None, flags=0, actions=None):
         if out_port is None:
             out_port = self.ofproto.OFPP_NONE
-        flow_mod = self.ofproto_parser.OFPFlowMod(
-            self, match, cookie, command, idle_timeout, hard_timeout,
-            priority, buffer_id, out_port, flags, actions)
+        flow_format = rule.flow_format()
+        assert (flow_format == ofproto_v1_0.NXFF_OPENFLOW10 or
+                flow_format == ofproto_v1_0.NXFF_NXM)
+        if self.flow_format < flow_format:
+            self.send_nxt_set_flow_format(flow_format)
+        if flow_format == ofproto_v1_0.NXFF_OPENFLOW10:
+            match_tuple = rule.match_tuple()
+            match = self.ofproto_parser.OFPMatch(*match_tuple)
+            flow_mod = self.ofproto_parser.OFPFlowMod(
+                self, match, cookie, command, idle_timeout, hard_timeout,
+                priority, buffer_id, out_port, flags, actions)
+        else:
+            flow_mod = self.ofproto_parser.NXTFlowMod(
+                self, cookie, command, idle_timeout, hard_timeout,
+                priority, buffer_id, out_port, flags, rule, actions)
         self.send_msg(flow_mod)
 
-    def send_flow_del(self, match, cookie, out_port=None):
-        self.send_flow_mod(match=match, cookie=cookie,
+    def send_flow_del(self, rule, cookie, out_port=None):
+        self.send_flow_mod(rule=rule, cookie=cookie,
                            command=self.ofproto.OFPFC_DELETE,
                            idle_timeout=0, hard_timeout=0, priority=0,
                            out_port=out_port)
 
     def send_delete_all_flows(self):
-        match = self.ofproto_parser.OFPMatch(self.ofproto.OFPFW_ALL,
-                                             0, 0, 0, 0, 0,
-                                             0, 0, 0, 0, 0, 0, 0)
+        rule = nx_match.ClsRule()
         self.send_flow_mod(
-            match=match, cookie=0, command=self.ofproto.OFPFC_DELETE,
+            rule=rule, cookie=0, command=self.ofproto.OFPFC_DELETE,
             idle_timeout=0, hard_timeout=0, priority=0, buffer_id=0,
             out_port=self.ofproto.OFPP_NONE, flags=0, actions=None)
 

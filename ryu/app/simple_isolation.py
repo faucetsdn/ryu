@@ -25,6 +25,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+from ryu.ofproto import nx_match
 from ryu.lib.mac import haddr_to_str
 from ryu.lib import mac
 
@@ -55,16 +56,12 @@ class SimpleIsolation(object):
         #
         # install flow and then send packet
         #
-        wildcards = datapath.ofproto.OFPFW_ALL
-        wildcards &= ~(datapath.ofproto.OFPFW_IN_PORT |
-                       datapath.ofproto.OFPFW_DL_SRC |
-                       datapath.ofproto.OFPFW_DL_DST)
-        match = datapath.ofproto_parser.OFPMatch(wildcards,
-                                                 msg.in_port, src, dst,
-                                                 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
+        rule = nx_match.ClsRule()
+        rule.set_in_port(msg.in_port)
+        rule.set_dl_dst(dst)
+        rule.set_dl_src(src)
         datapath.send_flow_mod(
-            match=match, cookie=0, command=datapath.ofproto.OFPFC_ADD,
+            rule=rule, cookie=0, command=datapath.ofproto.OFPFC_ADD,
             idle_timeout=0, hard_timeout=0, priority=32768,
             buffer_id=0xffffffff, out_port=datapath.ofproto.OFPP_NONE,
             flags=datapath.ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
@@ -153,13 +150,9 @@ class SimpleIsolation(object):
             # We really overwrite already learned mac address.
             # So discard already installed stale flow entry which conflicts
             # new port.
-            wildcards = datapath.ofproto.OFPFW_ALL
-            wildcards &= ~datapath.ofproto.OFPFW_DL_DST
-            match = datapath.ofproto_parser.OFPMatch(wildcards,
-                                                     0, 0, src,
-                                                     0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-            datapath.send_flow_mod(match=match, cookie=0,
+            rule = nx_match.ClsRule()
+            rule.set_dl_dst(src)
+            datapath.send_flow_mod(rule=rule, cookie=0,
                 command=datapath.ofproto.OFPFC_DELETE, idle_timeout=0,
                 hard_timeout=0, priority=32768, out_port=old_port)
 
@@ -281,15 +274,12 @@ class SimpleIsolation(object):
         datapath_id = datapath.id
         port_no = msg.desc.port_no
 
-        wildcards = datapath.ofproto.OFPFW_ALL
-        wildcards &= ~datapath.ofproto.OFPFW_IN_PORT
-        match = datapath.ofproto_parser.OFPMatch(wildcards, port_no, 0, 0,
-                                                 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        datapath.send_flow_del(match=match, cookie=0)
+        rule = nx_match.ClsRule()
+        rule.set_in_port(port_no)
+        datapath.send_flow_del(rule=rule, cookie=0)
 
-        match = datapath.ofproto_parser.OFPMatch(
-            datapath.ofproto.OFPFW_ALL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        datapath.send_flow_del(match=match, cookie=0, out_port=port_no)
+        rule = nx_match.ClsRule()
+        datapath.send_flow_del(rule=rule, cookie=0, out_port=port_no)
         dps_needs_barrier.add(datapath)
 
         try:
@@ -308,17 +298,13 @@ class SimpleIsolation(object):
                 if self.mac2port.port_get(dp.id, mac_) is None:
                     continue
 
-                wildcards = dp.ofproto.OFPFW_ALL
-                wildcards &= ~dp.ofproto.OFPFW_DL_SRC
-                match = dp.ofproto_parser.OFPMatch(
-                    wildcards, 0, mac_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                dp.send_flow_del(match=match, cookie=0)
+                rule = nx_match.ClsRule()
+                rule.set_dl_src(mac_)
+                dp.send_flow_del(rule=rule, cookie=0)
 
-                wildcards = dp.ofproto.OFPFW_ALL
-                wildcards &= ~dp.ofproto.OFPFW_DL_DST
-                match = dp.ofproto_parser.OFPMatch(
-                    wildcards, 0, 0, mac_, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                dp.send_flow_del(match=match, cookie=0)
+                rule = nx_match.ClsRule()
+                rule.set_dl_dst(mac_)
+                dp.send_flow_del(rule=rule, cookie=0)
                 dps_needs_barrier.add(dp)
 
                 self.mac2port.mac_del(dp.id, mac_)

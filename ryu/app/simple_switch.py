@@ -19,6 +19,7 @@ from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+from ryu.ofproto import nx_match
 from ryu.lib.mac import haddr_to_str
 
 
@@ -59,17 +60,13 @@ class SimpleSwitch(object):
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
 
         if out_port != ofproto.OFPP_FLOOD:
-            wildcards = ofproto.OFPFW_ALL
-            wildcards &= ~(ofproto.OFPFW_IN_PORT |
-                           ofproto.OFPFW_DL_DST |
-                           ofproto.OFPFW_NW_TOS)
-            match = datapath.ofproto_parser.OFPMatch(
-                wildcards, msg.in_port,
-                0, dst,
-                0, 0, 0, 0, 0, 0, 0, 0, 0)
-
+            rule = nx_match.ClsRule()
+            rule.set_in_port(msg.in_port)
+            rule.set_dl_dst(dst)
+            rule.set_dl_type(nx_match.ETH_TYPE_IP)
+            rule.set_nw_dscp(0)
             datapath.send_flow_mod(
-                match=match, cookie=0, command=ofproto.OFPFC_ADD,
+                rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
                 idle_timeout=0, hard_timeout=0, priority=32768,
                 flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
 
