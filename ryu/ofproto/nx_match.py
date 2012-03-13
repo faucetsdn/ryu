@@ -49,6 +49,9 @@ class ClsRule(object):
         self.wc = FlowWildcards()
         self.flow = Flow()
 
+    def set_in_port(self, port):
+        self.wc.wildcards &= ~FWW_IN_PORT
+        self.flow.in_port = port
 
 def _set_nxm_headers(nxm_headers):
     '''Annotate corresponding NXM header'''
@@ -100,6 +103,17 @@ class MFField(object):
             return self._put(buf, offset, value)
         else:
             return self.putw(buf, offset, value, mask)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_IN_PORT])
+class MFInPort(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE16)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.in_port)
 
 
 def serialize_nxm_match(rule, buf, offset):
