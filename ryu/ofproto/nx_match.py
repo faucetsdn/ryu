@@ -33,6 +33,8 @@ FWW_DL_DST = 1 << 3
 FWW_DL_TYPE = 1 << 4
 # No corresponding OFPFW_* bits
 FWW_ETH_MCAST = 1 << 1
+FWW_NW_DSCP = 1 << 6
+FWW_NW_ECN = 1 << 7
 FWW_ALL = (1 << 13) - 1
 
 # Ethernet types, for set_dl_type()
@@ -42,9 +44,12 @@ ETH_TYPE_VLAN = 0x8100
 ETH_TYPE_IPV6 = 0x86dd
 ETH_TYPE_LACP = 0x8809
 
+IP_ECN_MASK = 0x03
+IP_DSCP_MASK = 0xfc
 
 MF_PACK_STRING_BE64 = '!Q'
 MF_PACK_STRING_BE16 = '!H'
+MF_PACK_STRING_8 = '!B'
 MF_PACK_STRING_MAC = '!6s'
 
 _MF_FIELDS = {}
@@ -126,12 +131,22 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_DL_TYPE
         self.flow.dl_type = dl_type
 
+    def set_nw_dscp(self, nw_dscp):
+        self.wc.wildcards &= ~FWW_NW_DSCP
+        self.flow.nw_tos &= ~IP_DSCP_MASK
+        self.flow.nw_tos |= nw_dscp & IP_DSCP_MASK
+
     def set_tun_id(self, tun_id):
         self.set_tun_id_masked(tun_id, UINT64_MAX)
 
     def set_tun_id_masked(self, tun_id, mask):
         self.wc.tun_id_mask = mask
         self.flow.tun_id = tun_id & mask
+
+    def set_nw_ecn(self, nw_ecn):
+        self.wc.wildcards &= ~FWW_NW_ECN
+        self.flow.nw_tos &= ~IP_ECN_MASK
+        self.flow.nw_tos |= nw_ecn & IP_ECN_MASK
 
 
 def _set_nxm_headers(nxm_headers):
@@ -239,6 +254,18 @@ class MFEthType(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_IP_TOS])
+class MFIPDSCP(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset,
+                         rule.flow.nw_tos & IP_DSCP_MASK)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_TUN_ID, ofproto_v1_0.NXM_NX_TUN_ID_W])
 class MFTunId(MFField):
     @classmethod
@@ -247,6 +274,18 @@ class MFTunId(MFField):
 
     def put(self, buf, offset, rule):
         return self.putm(buf, offset, rule.flow.tun_id, rule.wc.tun_id_mask)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_IP_ECN])
+class MFIPECN(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset,
+                         rule.flow.nw_tos & IP_ECN_MASK)
 
 
 def serialize_nxm_match(rule, buf, offset):
@@ -263,7 +302,15 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ETH_TYPE, rule)
 
     # XXX: 802.1Q
-    # XXX: L3
+
+    # L3
+    if not rule.wc.wildcards & FWW_NW_DSCP:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_IP_TOS, rule)
+    if not rule.wc.wildcards & FWW_NW_ECN:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IP_ECN, rule)
+    # XXX: IP Source and Destination
+    # XXX: IPv6
+    # XXX: ARP
 
     # Tunnel Id
     if rule.wc.tun_id_mask != 0:

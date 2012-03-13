@@ -522,7 +522,11 @@ NXM_OF_ETH_DST_W = nxm_header_w(0x0000,  1, 6)
 NXM_OF_ETH_SRC = nxm_header(0x0000,  2, 6)
 NXM_OF_ETH_TYPE = nxm_header(0x0000,  3, 2)
 
+NXM_OF_IP_TOS = nxm_header(0x0000,  5, 1)
+
 NXM_NX_TUN_ID = nxm_header(0x0001, 16, 8)
 NXM_NX_TUN_ID_W = nxm_header_w(0x0001, 16, 8)
+
+NXM_NX_IP_ECN = nxm_header(0x0001, 28, 1)
 
 NXM_HEADER_PACK_STRING = '!I'
