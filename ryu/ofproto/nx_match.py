@@ -30,9 +30,18 @@ UINT64_MAX = (1 << 64) - 1
 FWW_IN_PORT = 1 << 0
 FWW_DL_SRC = 1 << 2
 FWW_DL_DST = 1 << 3
+FWW_DL_TYPE = 1 << 4
 # No corresponding OFPFW_* bits
 FWW_ETH_MCAST = 1 << 1
 FWW_ALL = (1 << 13) - 1
+
+# Ethernet types, for set_dl_type()
+ETH_TYPE_IP = 0x0800
+ETH_TYPE_ARP = 0x0806
+ETH_TYPE_VLAN = 0x8100
+ETH_TYPE_IPV6 = 0x86dd
+ETH_TYPE_LACP = 0x8809
+
 
 MF_PACK_STRING_BE64 = '!Q'
 MF_PACK_STRING_BE16 = '!H'
@@ -112,6 +121,10 @@ class ClsRule(object):
     def set_dl_src(self, dl_src):
         self.wc.wildcards &= ~FWW_DL_SRC
         self.flow.dl_src = dl_src
+
+    def set_dl_type(self, dl_type):
+        self.wc.wildcards &= ~FWW_DL_TYPE
+        self.flow.dl_type = dl_type
 
     def set_tun_id(self, tun_id):
         self.set_tun_id_masked(tun_id, UINT64_MAX)
@@ -215,6 +228,17 @@ class MFEthSrc(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ETH_TYPE])
+class MFEthType(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE16)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.dl_type)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_TUN_ID, ofproto_v1_0.NXM_NX_TUN_ID_W])
 class MFTunId(MFField):
     @classmethod
@@ -235,7 +259,8 @@ def serialize_nxm_match(rule, buf, offset):
     offset += nxm_put_eth_dst(buf, offset, rule)
     if not rule.wc.wildcards & FWW_DL_SRC:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ETH_SRC, rule)
-    # XXX: Ethernet Type
+    if not rule.wc.wildcards & FWW_DL_TYPE:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ETH_TYPE, rule)
 
     # XXX: 802.1Q
     # XXX: L3
