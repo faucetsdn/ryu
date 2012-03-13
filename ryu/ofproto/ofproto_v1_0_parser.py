@@ -661,6 +661,18 @@ class NXTRequest(OFPVendor):
                       self.vendor, self.subtype)
 
 
+class NXTSetFlowFormat(NXTRequest):
+    def __init__(self, datapath, format):
+        super(NXTSetFlowFormat, self).__init__(datapath)
+        self.subtype = ofproto_v1_0.NXT_SET_FLOW_FORMAT
+        self.format = format
+
+    def _serialize_body(self):
+        self.serialize_header()
+        msg_pack_into(ofproto_v1_0.NX_SET_FLOW_FORMAT_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.format)
+
+
 #
 # asymmetric message (datapath -> controller)
 # parser only

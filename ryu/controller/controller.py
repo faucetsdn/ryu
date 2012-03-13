@@ -98,6 +98,7 @@ class Datapath(object):
         self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
         self.ports = None
+        self.flow_format = ofproto_v1_0.NXFF_OPENFLOW10
 
     def close(self):
         """
@@ -227,6 +228,21 @@ class Datapath(object):
     def send_barrier(self):
         barrier_request = self.ofproto_parser.OFPBarrierRequest(self)
         self.send_msg(barrier_request)
+
+    def send_nxt_set_flow_format(self, format):
+        assert (format == ofproto_v1_0.NXFF_OPENFLOW10 or
+                format == ofproto_v1_0.NXFF_NXM)
+        if self.flow_format == format:
+            # Nothing to do
+            return
+        self.flow_format = format
+        set_format = self.ofproto_parser.NXTSetFlowFormat(self, format)
+        # FIXME: If NXT_SET_FLOW_FORMAT or NXFF_NXM is not supported by
+        # the switch then an error message will be received. It may be
+        # handled by setting self.flow_format to
+        # ofproto_v1_0.NXFF_OPENFLOW10 but currently isn't.
+        self.send_msg(set_format)
+        self.send_barrier()
 
 
 def datapath_connection_factory(socket, address):
