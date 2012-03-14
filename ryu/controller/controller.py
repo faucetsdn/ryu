@@ -19,6 +19,7 @@ import logging
 import gevent
 import traceback
 import random
+import greenlet
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
@@ -63,6 +64,8 @@ def _deactivate(method):
     def deactivate(self):
         try:
             method(self)
+        except greenlet.GreenletExit:
+            pass
         except:
             traceback.print_stack()
             raise
