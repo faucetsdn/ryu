@@ -18,6 +18,19 @@ import httplib
 import urlparse
 
 
+def ignore_http_not_found(func):
+    """
+    Ignore http not found(404) with Ryu client library.
+    Ryu client raises httplib.HTTPException with an error in args[0]
+    """
+    try:
+        func()
+    except httplib.HTTPException as e:
+        res = e.args[0]
+        if res.status != httplib.NOT_FOUND:
+            raise
+
+
 class RyuClientBase(object):
     def __init__(self, version, address):
         super(RyuClientBase, self).__init__()
