@@ -22,7 +22,7 @@ README = os.path.join(os.path.dirname(__file__), 'README.rst')
 long_description = open(README).read() + '\n\n'
 
 setup(name='ryu',
-      version='0.1',
+      version='0.2',
       description=("Ryu Network Operating System"),
       long_description=long_description,
       keywords='openflow openvswitch openstack',
