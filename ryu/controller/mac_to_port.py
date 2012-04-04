@@ -24,6 +24,7 @@ class MacToPortTable(object):
     """MAC addr <-> (dpid, port name)"""
 
     def __init__(self):
+        super(MacToPortTable, self).__init__()
         self.mac_to_port = {}
 
     def dpid_add(self, dpid):

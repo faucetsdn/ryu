@@ -43,6 +43,7 @@ class EventQueue(TrackInstances):
             ev_q.queue(ev)
 
     def __init__(self, name, dispatcher, aux=None):
+        super(EventQueue, self).__init__()
         self.name = name
         self._dispatcher = dispatcher.clone()
         self.is_dispatching = False
@@ -113,6 +114,7 @@ class EventQueue(TrackInstances):
 
 class EventDispatcher(TrackInstances):
     def __init__(self, name):
+        super(EventDispatcher, self).__init__()
         self.parent = None
         self.children = set()
         self.name = name

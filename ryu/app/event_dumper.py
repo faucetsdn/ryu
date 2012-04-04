@@ -32,6 +32,7 @@ gflags.DEFINE_multistring('dump_dispatcher', [],
 
 class EventDumper(object):
     def __init__(self, *_args, **_kwargs):
+        super(EventDumper, self).__init__()
         # EventDispatcher can be created and cloned before us.
         # So register it explicitly
         for ev_q in dispatcher.EventQueue.all_instances():

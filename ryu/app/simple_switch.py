@@ -36,6 +36,7 @@ LOG = logging.getLogger('ryu.app.simple_switch')
 
 class SimpleSwitch(object):
     def __init__(self, *_args, **_kwargs):
+        super(SimpleSwitch, self).__init__()
         self.mac2port = mac_to_port.MacToPortTable()
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
