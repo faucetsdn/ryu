@@ -746,7 +746,9 @@ class NXTSetFlowFormat(NXTRequest):
 class NXTFlowMod(NXTRequest):
     def __init__(self, datapath, cookie, command, idle_timeout,
                  hard_timeout, priority, buffer_id, out_port,
-                 flags, rule, actions):
+                 flags, rule, actions=None):
+        if actions is None:
+            actions = []
         super(NXTFlowMod, self).__init__(datapath, ofproto_v1_0.NXT_FLOW_MOD)
         self.cookie = cookie
         self.command = command
@@ -1154,10 +1156,13 @@ class OFPPacketOut(MsgBase):
 
 @_set_msg_type(ofproto_v1_0.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
-    def __init__(self, datapath, match=None, cookie=None,
-                 command=None, idle_timeout=None, hard_timeout=None,
-                 priority=None, buffer_id=None, out_port=None,
-                 flags=None, actions=None):
+    def __init__(self, datapath, match, cookie=0,
+                 command=0, idle_timeout=0, hard_timeout=0,
+                 priority=ofproto_v1_0.OFP_DEFAULT_PRIORITY,
+                 buffer_id=0xffffffff, out_port=ofproto_v1_0.OFPP_NONE,
+                 flags=0, actions=None):
+        if actions is None:
+            actions = []
         super(OFPFlowMod, self).__init__(datapath)
         self.match = match
         self.cookie = cookie
