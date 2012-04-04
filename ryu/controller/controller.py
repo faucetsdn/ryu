@@ -206,8 +206,10 @@ class Datapath(object):
         self.send_msg(packet_out)
 
     def send_flow_mod(self, rule, cookie, command, idle_timeout, hard_timeout,
-                      priority, buffer_id=0xffffffff,
+                      priority=None, buffer_id=0xffffffff,
                       out_port=None, flags=0, actions=None):
+        if priority is None:
+            priority = self.ofproto.OFP_DEFAULT_PRIORITY
         if out_port is None:
             out_port = self.ofproto.OFPP_NONE
         flow_format = rule.flow_format()
