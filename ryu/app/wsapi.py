@@ -359,7 +359,7 @@ class WSPathExtractResult:
         self.error = error
 
 
-class WSPathComponent:
+class WSPathComponent(object):
     """Base class for WS path component extractors"""
 
     def __init__(self):
@@ -367,7 +367,7 @@ class WSPathComponent:
 
         Currently this does nothing but that may change in the future.
         Subclasses should call this to be sure."""
-        pass
+        super(WSPathComponent, self).__init__()
 
     def __str__(self):
         """Get the string representation of the path component
