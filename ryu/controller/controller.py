@@ -244,14 +244,14 @@ class Datapath(object):
         barrier_request = self.ofproto_parser.OFPBarrierRequest(self)
         self.send_msg(barrier_request)
 
-    def send_nxt_set_flow_format(self, format):
-        assert (format == ofproto_v1_0.NXFF_OPENFLOW10 or
-                format == ofproto_v1_0.NXFF_NXM)
-        if self.flow_format == format:
+    def send_nxt_set_flow_format(self, flow_format):
+        assert (flow_format == ofproto_v1_0.NXFF_OPENFLOW10 or
+                flow_format == ofproto_v1_0.NXFF_NXM)
+        if self.flow_format == flow_format:
             # Nothing to do
             return
-        self.flow_format = format
-        set_format = self.ofproto_parser.NXTSetFlowFormat(self, format)
+        self.flow_format = flow_format
+        set_format = self.ofproto_parser.NXTSetFlowFormat(self, flow_format)
         # FIXME: If NXT_SET_FLOW_FORMAT or NXFF_NXM is not supported by
         # the switch then an error message will be received. It may be
         # handled by setting self.flow_format to

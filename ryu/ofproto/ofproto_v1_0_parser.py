@@ -732,10 +732,10 @@ class NXTRequest(OFPVendor):
 
 
 class NXTSetFlowFormat(NXTRequest):
-    def __init__(self, datapath, format):
+    def __init__(self, datapath, flow_format):
         super(NXTSetFlowFormat, self).__init__(
             datapath, ofproto_v1_0.NXT_SET_FLOW_FORMAT)
-        self.format = format
+        self.format = flow_format
 
     def _serialize_body(self):
         self.serialize_header()
