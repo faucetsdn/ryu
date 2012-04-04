@@ -34,5 +34,5 @@ class Cbench(object):
         rule = nx_match.ClsRule()
         datapath.send_flow_mod(
             rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
-            idle_timeout=0, hard_timeout=0, priority=32768,
-            flags=0, actions=None)
+            idle_timeout=0, hard_timeout=0,
+            priority=ofproto.OFP_DEFAULT_PRIORITY, flags=0, actions=None)

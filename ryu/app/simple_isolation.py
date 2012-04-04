@@ -54,6 +54,7 @@ class SimpleIsolation(object):
     @staticmethod
     def _modflow_and_send_packet(msg, src, dst, actions):
         datapath = msg.datapath
+        ofproto = datapath.ofproto
 
         #
         # install flow and then send packet
@@ -64,9 +65,10 @@ class SimpleIsolation(object):
         rule.set_dl_src(src)
         datapath.send_flow_mod(
             rule=rule, cookie=0, command=datapath.ofproto.OFPFC_ADD,
-            idle_timeout=0, hard_timeout=0, priority=32768,
-            buffer_id=0xffffffff, out_port=datapath.ofproto.OFPP_NONE,
-            flags=datapath.ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
+            idle_timeout=0, hard_timeout=0,
+            priority=ofproto.OFP_DEFAULT_PRIORITY,
+            buffer_id=0xffffffff, out_port=ofproto.OFPP_NONE,
+            flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
 
         datapath.send_packet_out(msg.buffer_id, msg.in_port, actions)
 
@@ -156,7 +158,8 @@ class SimpleIsolation(object):
             rule.set_dl_dst(src)
             datapath.send_flow_mod(rule=rule, cookie=0,
                 command=datapath.ofproto.OFPFC_DELETE, idle_timeout=0,
-                hard_timeout=0, priority=32768, out_port=old_port)
+                hard_timeout=0, priority=datapath.ofproto.OFP_DEFAULT_PRIORITY,
+                out_port=old_port)
 
             # to make sure the old flow entries are purged.
             datapath.send_barrier()

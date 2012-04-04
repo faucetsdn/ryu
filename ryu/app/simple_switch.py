@@ -69,7 +69,8 @@ class SimpleSwitch(object):
             rule.set_nw_dscp(0)
             datapath.send_flow_mod(
                 rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
-                idle_timeout=0, hard_timeout=0, priority=32768,
+                idle_timeout=0, hard_timeout=0,
+                priority=ofproto.OFP_DEFAULT_PRIORITY,
                 flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
 
         datapath.send_packet_out(msg.buffer_id, msg.in_port, actions)
