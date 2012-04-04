@@ -751,6 +751,18 @@ class NXTFlowMod(NXTRequest):
                 offset += a.len
 
 
+class NXTFlowModTableId(NXTRequest):
+    def __init__(self, datapath, set_):
+        super(NXTFlowModTableId, self).__init__(
+            datapath, ofproto_v1_0.NXT_FLOW_MOD_TABLE_ID)
+        self.set = set_
+
+    def _serialize_body(self):
+        self.serialize_header()
+        msg_pack_into(ofproto_v1_0.NX_FLOW_MOD_TABLE_ID_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+                      self.set)
+
 #
 # asymmetric message (datapath -> controller)
 # parser only
