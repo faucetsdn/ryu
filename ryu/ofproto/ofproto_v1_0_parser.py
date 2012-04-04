@@ -744,9 +744,18 @@ class NXTSetFlowFormat(NXTRequest):
 
 
 class NXTFlowMod(NXTRequest):
-    def __init__(self, datapath, cookie, command, idle_timeout,
-                 hard_timeout, priority, buffer_id, out_port,
-                 flags, rule, actions=None):
+    def __init__(self, datapath, cookie, command,
+                 idle_timeout=0, hard_timeout=0,
+                 priority=ofproto_v1_0.OFP_DEFAULT_PRIORITY,
+                 buffer_id=0xffffffff, out_port=ofproto_v1_0.OFPP_NONE,
+                 flags=0, rule=None, actions=None):
+
+        # the argument, rule, is positioned at the one before the last due
+        # to the layout struct nxt_flow_mod.
+        # Although rule must be given, default argument to rule, None,
+        # is given to allow other default value of argument before rule.
+        assert rule is not None
+
         if actions is None:
             actions = []
         super(NXTFlowMod, self).__init__(datapath, ofproto_v1_0.NXT_FLOW_MOD)
@@ -1156,8 +1165,8 @@ class OFPPacketOut(MsgBase):
 
 @_set_msg_type(ofproto_v1_0.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
-    def __init__(self, datapath, match, cookie=0,
-                 command=0, idle_timeout=0, hard_timeout=0,
+    def __init__(self, datapath, match, cookie, command,
+                 idle_timeout=0, hard_timeout=0,
                  priority=ofproto_v1_0.OFP_DEFAULT_PRIORITY,
                  buffer_id=0xffffffff, out_port=ofproto_v1_0.OFPP_NONE,
                  flags=0, actions=None):
