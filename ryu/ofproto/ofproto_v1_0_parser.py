@@ -692,9 +692,10 @@ class OFPVendor(MsgBase):
 
 
 class NXTRequest(OFPVendor):
-    def __init__(self, datapath):
+    def __init__(self, datapath, subtype):
         super(NXTRequest, self).__init__(datapath)
         self.vendor = ofproto_v1_0.NX_VENDOR_ID
+        self.subtype = subtype
 
     def serialize_header(self):
         super(NXTRequest, self).serialize_header()
@@ -705,8 +706,8 @@ class NXTRequest(OFPVendor):
 
 class NXTSetFlowFormat(NXTRequest):
     def __init__(self, datapath, format):
-        super(NXTSetFlowFormat, self).__init__(datapath)
-        self.subtype = ofproto_v1_0.NXT_SET_FLOW_FORMAT
+        super(NXTSetFlowFormat, self).__init__(
+            datapath, ofproto_v1_0.NXT_SET_FLOW_FORMAT)
         self.format = format
 
     def _serialize_body(self):
@@ -719,8 +720,7 @@ class NXTFlowMod(NXTRequest):
     def __init__(self, datapath, cookie, command, idle_timeout,
                  hard_timeout, priority, buffer_id, out_port,
                  flags, rule, actions):
-        super(NXTFlowMod, self).__init__(datapath)
-        self.subtype = ofproto_v1_0.NXT_FLOW_MOD
+        super(NXTFlowMod, self).__init__(datapath, ofproto_v1_0.NXT_FLOW_MOD)
         self.cookie = cookie
         self.command = command
         self.idle_timeout = idle_timeout
