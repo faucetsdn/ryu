@@ -36,6 +36,7 @@ LOG = logging.getLogger('ryu.app.simple_isolation')
 
 class SimpleIsolation(object):
     def __init__(self, *_args, **kwargs):
+        super(SimpleIsolation, self).__init__()
         self.nw = kwargs['network']
         self.dpset = kwargs['dpset']
         self.mac2port = mac_to_port.MacToPortTable()
@@ -295,7 +296,7 @@ class SimpleIsolation(object):
                 return
 
         for mac_ in self.mac2port.mac_list(datapath_id, port_no):
-            for dp in self.dpset.get_all():
+            for (_dpid, dp) in self.dpset.get_all():
                 if self.mac2port.port_get(dp.id, mac_) is None:
                     continue
 
