@@ -369,6 +369,33 @@ class NXActionHeader(object):
                       buf, offset, self.type, self.len)
 
 
+class NXActionResubmitBase(NXActionHeader):
+    def __init__(self, subtype, in_port, table):
+        assert subtype in (ofproto_v1_0.NXAST_RESUBMIT,
+                           ofproto_v1_0.NXAST_RESUBMIT_TABLE)
+        super(NXActionResubmitBase, self).__init__(
+            subtype, ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE)
+        self.in_port = in_port
+        self.table = table
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR, buf, offset,
+                      self.type, self.len, self.vendor, self.subtype,
+                      self.in_port, self.table)
+
+
+class NXActionResubmit(NXActionResubmitBase):
+    def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT):
+        super(NXActionResubmit, self).__init__(
+            ofproto_v1_0.NXAST_RESUBMIT, in_port, 0)
+
+
+class NXActionResubmitTable(NXActionResubmitBase):
+    def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT, table=0xff):
+        super(NXActionResubmitTable, self).__init__(
+            ofproto_v1_0.NXAST_RESUBMIT_TABLE, in_port, table)
+
+
 class NXActionSetTunnel(NXActionHeader):
     def __init__(self, tun_id_):
         self.tun_id = tun_id_
