@@ -484,8 +484,8 @@ class WSPathArbitraryString(WSPathComponent):
         WSPathComponent.__init__(self)
         self._name = name
 
-        def __str__(self):
-            return self._name
+    def __str__(self):
+        return self._name
 
     def extract(self, pc, data):
         if pc == None:
