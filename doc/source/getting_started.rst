@@ -6,7 +6,7 @@ Getting Started
 
 Overview/What's Ryu the Network Operating System
 ================================================
-Ryu is an open-sourced Network Operating System which is licensed under GPL v3.
+Ryu is an open-sourced Network Operating System which is licensed under Apache v2.0.
 It supports openflow protocol.
 
 If you are not familiar with Software Defined Network(SDN) and

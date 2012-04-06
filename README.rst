@@ -14,7 +14,7 @@ Ryu Official site is `<http://www.osrg.net/ryu/>`_.
 Overview
 ========
 Ryu is an open-sourced Network Operating System (NOS) licensed under
-GPL v3. It's fully written in Python.
+Apache v2.0. It's fully written in Python.
 
 Ryu aims to provide a logically centralized control and well defined
 API that make it easy for operators to create new network management
