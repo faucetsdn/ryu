@@ -47,7 +47,7 @@ def find_flagfile(default_path=RYU_DEFAULT_FLAG_FILE):
     script_dir = os.path.dirname(inspect.stack()[-1][1])
 
     for filename in default_path:
-        if not os.path.abspath(filename):
+        if not os.path.isabs(filename):
             if os.path.exists(filename):
                 # try relative to current path
                 filename = os.path.abspath(filename)
