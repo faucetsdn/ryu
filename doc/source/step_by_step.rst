@@ -61,6 +61,27 @@ The more openstack way is possible, though.
 
    $ sudo nova-manage db sync
 
+#. setup quantum data base
+
+   Use mysql command to connect mysql server::
+
+   $ mysql -u <admin user name> -p
+
+   Then create the quantum db and allow the agents to access it::
+
+       mysql> CREATE DATABASE ovs_quantum;
+       mysql> GRANT USAGE ON *.* to <user name>@'yourremotehost' IDENTIFIED BY 'newpassword';
+       mysql> FLUSH PRIVILEGES;
+
+   Where the database name, ovs_quantum, the user name, <user name>, and
+   its password, newpassword, are the one defined in the ryu plugin
+   configuration file, ryu.ini.
+
+   If you are using multiple compute nodes, the GRANT sentence needs to
+   be repeated. Or wildcard, %, can be used like::
+
+       mysql> GRANT USAGE ON *.* to <user name>@'%' IDENTIFIED BY 'newpassword';
+
 #. Make sure all nova, quantum, ryu and other openstack components are
    installed and running
 
