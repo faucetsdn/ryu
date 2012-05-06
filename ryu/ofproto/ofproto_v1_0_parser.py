@@ -120,7 +120,7 @@ class OFPActionHeader(object):
         self.type = type_
         self.len = len_
 
-    def serlize(self, buf, offset):
+    def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
                       buf, offset, self.type, self.len)
 
