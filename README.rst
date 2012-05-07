@@ -7,6 +7,8 @@ make html (or make <format you prefer>). If you have any
 questions, suggestions, and patches, the mailing list is available at
 `ryu-devel ML
 <https://lists.sourceforge.net/lists/listinfo/ryu-devel>`_.
+`The ML archive at Gmane <http://dir.gmane.org/gmane.network.ryu.devel>`_
+is also available.
 
 Ryu Official site is `<http://www.osrg.net/ryu/>`_.
 
