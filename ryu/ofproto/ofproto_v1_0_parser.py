@@ -1176,7 +1176,7 @@ class OFPPacketOut(MsgBase):
             self.actions_len += a.len
 
         if self.data is not None:
-            assert self.buffer_id == -1
+            assert self.buffer_id == 0xffffffff
             self.buf += self.data
 
         msg_pack_into(ofproto_v1_0.OFP_PACKET_OUT_PACK_STR,
