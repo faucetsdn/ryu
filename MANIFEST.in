@@ -1,4 +1,4 @@
-include COPYING LICENSE
+include LICENSE
 include README.rst
 include MANIFEST.in
 graft contrib
