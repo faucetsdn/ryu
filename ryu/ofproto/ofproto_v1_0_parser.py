@@ -212,6 +212,21 @@ class OFPActionVlanPcp(OFPAction):
                       buf, offset, self.type, self.len, self.vlan_pcp)
 
 
+@OFPAction.register_action_type(ofproto_v1_0.OFPAT_STRIP_VLAN,
+                                ofproto_v1_0.OFP_ACTION_HEADER_SIZE)
+class OFPActionStripVlan(OFPAction):
+    def __init__(self):
+        super(OFPActionStripVlan, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_ = struct.unpack_from(
+            ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        assert type_ == ofproto_v1_0.OFPAT_STRIP_VLAN
+        assert len_ == ofproto_v1_0.OFP_ACTION_HEADER_SIZE
+        return cls()
+
+
 class OFPActionDlAddr(OFPAction):
     def __init__(self, dl_addr):
         super(OFPActionDlAddr, self).__init__()
