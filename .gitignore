@@ -8,4 +8,9 @@ GTAGS
 GRTAGS
 GPATH
 GSYMS
-pylint.log
+*.log
+.venv/
+.coverage
+covhtml/
+coverage.xml
+nosetests.xml
