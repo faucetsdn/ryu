@@ -420,6 +420,27 @@ class NXActionSetTunnel64(NXActionHeader):
         msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.tun_id)
+        
+
+class NXActionMultipath(NXActionHeader):
+    def __init__(self, fields, basis, algorithm, max_link, arg,
+                 ofs_nbits, dst):
+        super(NXActionMultipath, self).__init__(
+            ofproto_v1_0.NXAST_MULTIPATH,
+            ofproto_v1_0.NX_ACTION_MULTIPATH_SIZE)
+        self.fields = fields
+        self.basis = basis
+        self.algorithm = algorithm
+        self.max_link = max_link
+        self.arg = arg
+        self.ofs_nbits = ofs_nbits
+        self.dst = dst
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor, self.subtype,
+                      self.fields, self.basis, self.algorithm, self.max_link,
+                      self.arg, self.ofs_nbits, self.dst)
 
 
 class OFPDescStats(collections.namedtuple('OFPDescStats',
