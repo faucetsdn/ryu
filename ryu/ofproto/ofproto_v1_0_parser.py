@@ -367,12 +367,43 @@ class OFPActionEnqueue(OFPAction):
                       self.type, self.len, self.port, self.queue_id)
 
 
-# TODO:XXX OFPActionVendor
-# NXAction* is a partial implementatoin, only handling serilalisation
-# of a subset of Nicira vendor actions
+@OFPAction.register_action_type(ofproto_v1_0.OFPAT_VENDOR, 0)
+class OFPActionVendor(OFPAction):
+    _ACTION_VENDORS = {}
+
+    @staticmethod
+    def register_action_vendor(vendor):
+        def _register_action_vendor(cls):
+            cls.cls_vendor = vendor
+            OFPActionVendor._ACTION_VENDORS[cls.cls_vendor] = cls
+            return cls
+        return _register_action_vendor
+
+    def __init__(self, vendor):
+        super(OFPActionVendor, self).__init__()
+        self.vendor = vendor
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor = struct.unpack_from(
+            ofproto_v1_0.OFP_ACTION_VENDOR_HEADER_PACK_STR, buf, offset)
+        cls_ = cls._ACTION_VENDORS.get(vendor)
+        return cls_.parser(buf, offset)
 
 
+@OFPActionVendor.register_action_vendor(ofproto_v1_0.NX_VENDOR_ID)
 class NXActionHeader(object):
+    _NX_ACTION_SUBTYPES = {}
+
+    @staticmethod
+    def register_nx_action_subtype(subtype):
+        def _register_nx_action_subtype(cls):
+            cls.cls_subtype = subtype
+            NXActionHeader._NX_ACTION_SUBTYPES[cls.cls_subtype] = cls
+            return cls
+        return _register_nx_action_subtype
+
+
     def __init__(self, subtype_, len_):
         self.type = ofproto_v1_0.OFPAT_VENDOR
         self.len = len_
@@ -383,6 +414,12 @@ class NXActionHeader(object):
         msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
                       buf, offset, self.type, self.len)
 
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset)
+        cls_ = cls._NX_ACTION_SUBTYPES.get(subtype)
+        return cls_.parser(buf, offset)
 
 class NXActionResubmitBase(NXActionHeader):
     def __init__(self, subtype, in_port, table):
@@ -399,18 +436,33 @@ class NXActionResubmitBase(NXActionHeader):
                       self.in_port, self.table)
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_RESUBMIT)
 class NXActionResubmit(NXActionResubmitBase):
     def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT):
         super(NXActionResubmit, self).__init__(
             ofproto_v1_0.NXAST_RESUBMIT, in_port, 0)
 
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
+        return cls(in_port)
 
+
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_RESUBMIT_TABLE)
 class NXActionResubmitTable(NXActionResubmitBase):
     def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT, table=0xff):
         super(NXActionResubmitTable, self).__init__(
             ofproto_v1_0.NXAST_RESUBMIT_TABLE, in_port, table)
 
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
+        return cls(in_port, table)
 
+
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_TUNNEL)
 class NXActionSetTunnel(NXActionHeader):
     def __init__(self, tun_id_):
         self.tun_id = tun_id_
@@ -423,7 +475,14 @@ class NXActionSetTunnel(NXActionHeader):
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.tun_id)
 
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, tun_id = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf, offset)
+        return cls(tun_id)
 
+
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_TUNNEL64)
 class NXActionSetTunnel64(NXActionHeader):
     def __init__(self, tun_id_):
         self.tun_id = tun_id_
@@ -436,7 +495,14 @@ class NXActionSetTunnel64(NXActionHeader):
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.tun_id)
         
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_TUNNE64_PACK_STR, buf, offset)
+        return cls(in_port)
 
+
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_MULTIPATH)
 class NXActionMultipath(NXActionHeader):
     def __init__(self, fields, basis, algorithm, max_link, arg,
                  ofs_nbits, dst):
@@ -456,6 +522,14 @@ class NXActionMultipath(NXActionHeader):
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.fields, self.basis, self.algorithm, self.max_link,
                       self.arg, self.ofs_nbits, self.dst)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, fields, basis, algorithm,
+        max_link, arg, ofs_nbits, dst = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
+        return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
+                   dst)
 
 
 class OFPDescStats(collections.namedtuple('OFPDescStats',
