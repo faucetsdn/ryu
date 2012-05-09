@@ -1117,10 +1117,10 @@ class OFPStatsReply(MsgBase):
     def parser_stats_body_array(cls, buf, msg_len, offset, entry_size):
         body_cls = cls.cls_stats_body_cls
         body = []
-        while offset + entry_size <= msg_len:
+        while offset < msg_len:
             entry = body_cls.parser(buf, offset)
             body.append(entry)
-            offset += entry_size
+            offset += entry.length
         return body
 
     @classmethod
