@@ -506,6 +506,30 @@ class NXActionRegMove(NXActionHeader):
             ofprot_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
         return cls(n_bits, src_ofs, dst_ofs, src, dst)
 
+
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_REG_LOAD)
+class NXActionRegLoad(NXActionHeader):
+    def __init__(self, ofs_nbits, dst, value):
+        super(NXActionRegLoad, self).__init__(
+            ofproto_v1_0.NXAST_REG_LOAD,
+            ofproto_v1_0.NX_ACTION_REG_LOAD_SIZE)
+        self.ofs_nbits = ofs_nbits
+        self.dst = dst
+        self.value = value
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor,
+                      self.subtype, self.ofs_nbits, self.dst, self.value)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, ofs_nbits, dst,
+        value = struct.unpack_from(
+            ofprot_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
+        return cls(ofs_nbits, dst, value)
+
+
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_TUNNEL64)
 class NXActionSetTunnel64(NXActionHeader):
     def __init__(self, tun_id_):
