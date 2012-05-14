@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -234,6 +234,7 @@ OFP_ACTION_PACK_STR = '!H'
 # enum nx_action_subtype (truncated)
 NXAST_RESUBMIT = 1
 NXAST_SET_TUNNEL = 2
+NXAST_REG_MOVE = 6
 NXAST_SET_TUNNEL64 = 9
 NXAST_MULTIPATH = 10
 NXAST_RESUBMIT_TABLE = 14
@@ -245,6 +246,10 @@ assert calcsize(NX_ACTION_RESUBMIT_PACK_STR) == NX_ACTION_RESUBMIT_SIZE
 NX_ACTION_SET_TUNNEL_PACK_STR = '!HHIH2xI'
 NX_ACTION_SET_TUNNEL_SIZE = 16
 assert calcsize(NX_ACTION_SET_TUNNEL_PACK_STR) == NX_ACTION_SET_TUNNEL_SIZE
+
+NX_ACTION_REG_MOVE_PACK_STR = '!HHIHHHHII'
+NX_ACTION_REG_MOVE_SIZE = 24
+assert calcsize(NX_ACTION_REG_MOVE_PACK_STR) == NX_ACTION_REG_MOVE_SIZE
 
 NX_ACTION_SET_TUNNEL64_PACK_STR = '!HHIH6xQ'
 NX_ACTION_SET_TUNNEL64_SIZE = 24
@@ -555,17 +560,63 @@ def nxm_header_w(vendor, field, length):
     return nxm_header__(vendor, field, 1, (length) * 2)
 
 
-NXM_OF_IN_PORT = nxm_header(0x0000,  0, 2)
+NXM_OF_IN_PORT = nxm_header(0x0000, 0, 2)
 
-NXM_OF_ETH_DST = nxm_header(0x0000,  1, 6)
-NXM_OF_ETH_DST_W = nxm_header_w(0x0000,  1, 6)
-NXM_OF_ETH_SRC = nxm_header(0x0000,  2, 6)
-NXM_OF_ETH_TYPE = nxm_header(0x0000,  3, 2)
+NXM_OF_ETH_DST = nxm_header(0x0000, 1, 6)
+NXM_OF_ETH_DST_W = nxm_header_w(0x0000, 1, 6)
+NXM_OF_ETH_SRC = nxm_header(0x0000, 2, 6)
+NXM_OF_ETH_TYPE = nxm_header(0x0000, 3, 2)
 
-NXM_OF_IP_TOS = nxm_header(0x0000,  5, 1)
+NXM_OF_VLAN_TCI =  nxm_header(0x0000, 4, 2)
+NXM_OF_VLAN_TCI_W = nxm_header_w(0x0000, 4, 2)
+
+NXM_OF_IP_TOS = nxm_header(0x0000, 5, 1)
+
+NXM_OF_IP_PROTO = nxm_header(0x0000, 6, 1)
+
+NXM_OF_IP_SRC = nxm_header(0x0000,  7, 4)
+NXM_OF_IP_SRC_W = nxm_header_w(0x0000,  7, 4)
+NXM_OF_IP_DST = nxm_header(0x0000,  8, 4)
+NXM_OF_IP_DST_W = nxm_header_w(0x0000,  8, 4)
+
+NXM_OF_TCP_SRC = nxm_header(0x0000, 9, 2)
+NXM_OF_TCP_SRC_W = nxm_header_w(0x0000, 9, 2)
+NXM_OF_TCP_DST = nxm_header(0x0000, 10, 2)
+NXM_OF_TCP_DST_W = nxm_header_w(0x0000, 10, 2)
+
+NXM_OF_UDP_SRC = nxm_header(0x0000, 11, 2)
+NXM_OF_UDP_SRC_W = nxm_header_w(0x0000, 11, 2)
+NXM_OF_UDP_DST = nxm_header(0x0000, 12, 2)
+NXM_OF_UDP_DST_W = nxm_header_w(0x0000, 12, 2)
+
+NXM_OF_ICMP_TYPE = nxm_header(0x0000, 13, 1)
+NXM_OF_ICMP_CODE = nxm_header(0x0000, 14, 1)
+
+NXM_OF_ARP_OP = nxm_header(0x0000, 15, 2)
+
+NXM_OF_ARP_SPA = nxm_header(0x0000, 16, 4)
+NXM_OF_ARP_SPA_W = nxm_header_w(0x0000, 16, 4)
+NXM_OF_ARP_TPA = nxm_header(0x0000, 17, 4)
+NXM_OF_ARP_TPA_W = nxm_header_w(0x0000, 17, 4)
 
 NXM_NX_TUN_ID = nxm_header(0x0001, 16, 8)
 NXM_NX_TUN_ID_W = nxm_header_w(0x0001, 16, 8)
+
+NXM_NX_ARP_SHA = nxm_header(0x0001, 17, 6)
+NXM_NX_ARP_THA = nxm_header(0x0001, 18, 6)
+
+NXM_NX_ICMPV6_TYPE = nxm_header(0x0001, 21, 1)
+NXM_NX_ICMPV6_CODE = nxm_header(0x0001, 22, 1)
+
+NXM_NX_ND_SLL = nxm_header(0x0001, 24, 6)
+
+NXM_NX_ND_TLL = nxm_header(0x0001, 25, 6)
+
+def nxm_nx_reg(idx):
+    return nxm_header(0x0001, idx, 4)
+
+def nxm_nx_reg_w(idx):
+    return nxm_header_w(0x0001, idx, 4)
 
 NXM_NX_IP_ECN = nxm_header(0x0001, 28, 1)
 

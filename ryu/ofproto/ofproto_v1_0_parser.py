@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -481,6 +481,30 @@ class NXActionSetTunnel(NXActionHeader):
             ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf, offset)
         return cls(tun_id)
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_REG_MOVE)
+class NXActionRegMove(NXActionHeader):
+    def __init__(self, n_bits, src_ofs, dst_ofs, src, dst):
+        super(NXActionRegMove, self).__init__(
+            ofproto_v1_0.NXAST_REG_MOVE,
+            ofproto_v1_0.NX_ACTION_REG_MOVE_SIZE)
+        self.n_bits = n_bits
+        self.src_ofs = src_ofs
+        self.dst_ofs = dst_ofs
+        self.src = src
+        self.dst = dst
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor,
+                      self.subtype, self.n_bits, self.src_ofs, self.dst_ofs,
+                      self.src, self.dst)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, vendor, subtype, n_bits, src_ofs, dst_ofs,
+        src, dst = struct.unpack_from(
+            ofprot_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
+        return cls(n_bits, src_ofs, dst_ofs, src, dst)
 
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_TUNNEL64)
 class NXActionSetTunnel64(NXActionHeader):
