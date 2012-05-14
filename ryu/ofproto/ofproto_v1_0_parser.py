@@ -618,8 +618,8 @@ class NXActionBundleBase(NXActionHeader):
 
     @classmethod
     def parser(cls, action_cls, buf, offset):
-        type_, len_, vendor, subtype, algorithm, fields, basis,\
-            slave_type, n_slaves, ofs_nbits, dst = struct.unpack_from(
+        (type_, len_, vendor, subtype, algorithm, fields, basis,
+         slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
             ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
         slave_offset = offset + ofproto_v1_0.NX_ACTION_BUNDLE_SIZE
 
