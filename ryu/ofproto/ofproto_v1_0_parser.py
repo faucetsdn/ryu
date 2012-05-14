@@ -574,8 +574,8 @@ class NXActionMultipath(NXActionHeader):
 
     @classmethod
     def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, fields, basis, algorithm,
-        max_link, arg, ofs_nbits, dst = struct.unpack_from(
+        (type_, len_, vendor, subtype, fields, basis, algorithm,
+         max_link, arg, ofs_nbits, dst) = struct.unpack_from(
             ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
         return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
                    dst)
