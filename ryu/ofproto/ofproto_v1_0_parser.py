@@ -525,9 +525,9 @@ class NXActionRegLoad(NXActionHeader):
 
     @classmethod
     def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, ofs_nbits, dst,
-        value = struct.unpack_from(
-            ofprot_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
+        (type_, len_, vendor, subtype, ofs_nbits, dst,
+         value) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, value)
 
 
