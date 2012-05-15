@@ -499,8 +499,10 @@ class WSRequest:
         self.env = env
         self.start_response = start_response
         self.version = None
+        self.content = env.get('wsgi.input', None)
 
         req = Request(env)
+        self.req = req
         self.method = req.method
         self.path = req.path
         self.segs = [s for s in self.path.split('/') if s]
@@ -522,6 +524,9 @@ class WSRequest:
 
     def setHeader(self, name, value):
         self.rsp.headers[name] = value
+
+    def getHeader(self, name):
+        return self.req.headers[name]
 
     def setResponseCode(self, code, message=None):
         if not isinstance(code, (int, long)):
