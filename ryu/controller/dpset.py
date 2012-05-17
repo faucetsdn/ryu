@@ -25,6 +25,11 @@ from ryu.controller.handler import set_ev_cls
 LOG = logging.getLogger('ryu.controller.dpset')
 
 
+QUEUE_NAME_DPSET = 'dpset'
+DISPATCHER_NAME_DPSET = 'dpset'
+DPSET_EV_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_DPSET)
+
+
 class EventDPBase(event.EventBase):
     def __init__(self, dp):
         super(EventDPBase, self).__init__()
@@ -42,15 +47,16 @@ class EventDP(EventDPBase):
 
 # this depends on controller::Datapath and dispatchers in handler
 class DPSet(object):
-    def __init__(self, ev_q, dispatcher_):
+    def __init__(self):
+        super(DPSet, self).__init__()
+
         # dp registration and type setting can be occur in any order
         # Sometimes the sw_type is set before dp connection
         self.dp_types = {}
 
         self.dps = {}   # datapath_id => class Datapath
-        self.ev_q = ev_q
-        self.dispatcher = dispatcher_
-
+        self.ev_q = dispatcher.EventQueue(QUEUE_NAME_DPSET,
+                                          DPSET_EV_DISPATCHER)
         handler.register_instance(self)
 
     def register(self, dp):
@@ -102,13 +108,3 @@ class DPSet(object):
         elif ev.new_dispatcher.name == handler.DISPATCHER_NAME_OFP_DEAD:
             LOG.debug('DPSET: unregister datapath %s', datapath)
             self.unregister(datapath)
-
-
-DISPATCHER_NAME_DPSET = 'dpset'
-DPSET_EV_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_DPSET)
-QUEUE_NAME_DPSET = 'datapath'
-_DPSET_EV_Q = dispatcher.EventQueue(QUEUE_NAME_DPSET, DPSET_EV_DISPATCHER)
-
-
-def create_dpset():
-    return DPSet(_DPSET_EV_Q, DPSET_EV_DISPATCHER)
