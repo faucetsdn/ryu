@@ -841,12 +841,13 @@ class OFPQueuePropMinRate(OFPQueuePropHeader):
 
     def __str__(self):
         buf = super(OFPQueuePropMinRate, self).__str__()
-        return msg_str_attr(self, buf, ('rate'))
+        return msg_str_attr(self, buf, ('rate',))
 
     @classmethod
     def parser(cls, buf, offset):
-        rate = struct.pack_from(ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_PACK_STR,
-                                buf, offset)
+        (rate,) = struct.unpack_from(
+            ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_PACK_STR,
+            buf, offset)
         return cls(rate)
 
 
