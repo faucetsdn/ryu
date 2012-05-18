@@ -868,7 +868,7 @@ class OFPPacketQueue(object):
         while (cur_len + ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE <=
                packet_queue.len):
             prop = OFPQueuePropHeader.parser(buf, offset)
-            offset.properties.append(prop)
+            packet_queue.properties.append(prop)
 
             cur_len += prop.len
             offset += prop.len
