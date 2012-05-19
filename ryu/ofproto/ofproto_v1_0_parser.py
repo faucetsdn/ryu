@@ -1232,7 +1232,7 @@ class OFPQueueGetConfigReply(MsgBase):
             datapath, version, msg_type, msg_len, xid, buf)
 
         offset = ofproto_v1_0.OFP_HEADER_SIZE
-        msg.port = struct.unpack_from(
+        (msg.port,) = struct.unpack_from(
             ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR, msg.buf, offset)
 
         msg.queues = []
