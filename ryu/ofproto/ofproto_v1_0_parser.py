@@ -690,7 +690,9 @@ class OFPDescStats(collections.namedtuple('OFPDescStats',
     def parser(cls, buf, offset):
         desc = struct.unpack_from(ofproto_v1_0.OFP_DESC_STATS_PACK_STR,
                                   buf, offset)
-        return cls(*desc)
+        stats = cls(*desc)
+        stats.length = ofproto_v1_0.OFP_DESC_STATS_SIZE
+        return stats
 
 
 class OFPFlowStats(object):
@@ -749,7 +751,9 @@ class OFPAggregateStats(collections.namedtuple('OFPAggregateStats',
     def parser(cls, buf, offset):
         agg = struct.unpack_from(
             ofproto_v1_0.OFP_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
-        return cls(*agg)
+        stats = cls(*agg)
+        stats.length = ofproto_v1_0.OFP_AGGREGATE_STATS_REPLY_SIZE
+        return stats
 
 
 class OFPTableStats(collections.namedtuple('OFPTableStats',
@@ -759,7 +763,9 @@ class OFPTableStats(collections.namedtuple('OFPTableStats',
     def parser(cls, buf, offset):
         tbl = struct.unpack_from(ofproto_v1_0.OFP_TABLE_STATS_PACK_STR,
                                  buf, offset)
-        return cls(*tbl)
+        stats = cls(*tbl)
+        stats.length = ofproto_v1_0.OFP_TABLE_STATS_SIZE
+        return stats
 
 
 class OFPPortStats(collections.namedtuple('OFPPortStats',
@@ -770,7 +776,9 @@ class OFPPortStats(collections.namedtuple('OFPPortStats',
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_0.OFP_PORT_STATS_PACK_STR,
                                   buf, offset)
-        return cls(*port)
+        stats = cls(*port)
+        stats.length = ofproto_v1_0.OFP_PORT_STATS_SIZE
+        return stats
 
 
 class OFPQueueStats(collections.namedtuple('OFPQueueStats',
@@ -779,7 +787,9 @@ class OFPQueueStats(collections.namedtuple('OFPQueueStats',
     def parser(cls, buf, offset):
         queue = struct.unpack_from(ofproto_v1_0.OFP_QUEUE_STATS_PACK_STR,
                                    buf, offset)
-        return cls(*queue)
+        stats = cls(*queue)
+        stats.length = ofproto_v1_0.OFP_QUEUE_STATS_SIZE
+        return stats
 
 
 class OFPVendorStats(collections.namedtuple('OFPVendorStats',
