@@ -1260,12 +1260,12 @@ class OFPStatsReply(MsgBase):
     _STATS_MSG_TYPES = {}
 
     @staticmethod
-    def register_stats_type(body_cls_size=0):
+    def register_stats_type(body_single_struct=False):
         def _register_stats_type(cls):
             assert cls.cls_stats_type is not None
             assert cls.cls_stats_type not in OFPStatsReply._STATS_MSG_TYPES
             assert cls.cls_stats_body_cls is not None
-            cls.cls_stats_body_cls_size = body_cls_size
+            cls.cls_body_single_struct = body_single_struct
             OFPStatsReply._STATS_MSG_TYPES[cls.cls_stats_type] = cls
             return cls
         return _register_stats_type
@@ -1277,22 +1277,17 @@ class OFPStatsReply(MsgBase):
         self.body = None
 
     @classmethod
-    def parser_stats_body_array(cls, buf, msg_len, offset, entry_size):
+    def parser_stats_body(cls, buf, msg_len, offset):
         body_cls = cls.cls_stats_body_cls
         body = []
         while offset < msg_len:
             entry = body_cls.parser(buf, offset)
             body.append(entry)
             offset += entry.length
+
+        if cls.cls_body_single_struct:
+            return body[0]
         return body
-
-    @classmethod
-    def parser_stats_body(cls, buf, msg_len, offset):
-        if cls.cls_stats_body_cls_size == 0:
-            return cls.cls_stats_body_cls.parser(buf, offset)
-
-        return cls.parser_stats_body_array(buf, msg_len, offset,
-                                           cls.cls_stats_body_cls_size)
 
     @classmethod
     def parser_stats(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -1316,7 +1311,7 @@ class OFPStatsReply(MsgBase):
         return msg
 
 
-@OFPStatsReply.register_stats_type()
+@OFPStatsReply.register_stats_type(body_single_struct=True)
 @_set_stats_type(ofproto_v1_0.OFPST_DESC, OFPDescStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPDescStatsReply(OFPStatsReply):
@@ -1324,7 +1319,7 @@ class OFPDescStatsReply(OFPStatsReply):
         super(OFPDescStatsReply, self).__init__(datapath)
 
 
-@OFPStatsReply.register_stats_type(ofproto_v1_0.OFP_FLOW_STATS_SIZE)
+@OFPStatsReply.register_stats_type()
 @_set_stats_type(ofproto_v1_0.OFPST_FLOW, OFPFlowStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPFlowStatsReply(OFPStatsReply):
@@ -1332,7 +1327,7 @@ class OFPFlowStatsReply(OFPStatsReply):
         super(OFPFlowStatsReply, self).__init__(datapath)
 
 
-@OFPStatsReply.register_stats_type(ofproto_v1_0.OFP_AGGREGATE_STATS_REPLY_SIZE)
+@OFPStatsReply.register_stats_type()
 @_set_stats_type(ofproto_v1_0.OFPST_AGGREGATE, OFPAggregateStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPAggregateStatsReply(OFPStatsReply):
@@ -1340,7 +1335,7 @@ class OFPAggregateStatsReply(OFPStatsReply):
         super(OFPAggregateStatsReply, self).__init__(datapath)
 
 
-@OFPStatsReply.register_stats_type(ofproto_v1_0.OFP_TABLE_STATS_SIZE)
+@OFPStatsReply.register_stats_type()
 @_set_stats_type(ofproto_v1_0.OFPST_TABLE, OFPTableStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPTableStatsReply(OFPStatsReply):
@@ -1348,7 +1343,7 @@ class OFPTableStatsReply(OFPStatsReply):
         super(OFPTableStatsReply, self).__init__(datapath)
 
 
-@OFPStatsReply.register_stats_type(ofproto_v1_0.OFP_PORT_STATS_SIZE)
+@OFPStatsReply.register_stats_type()
 @_set_stats_type(ofproto_v1_0.OFPST_PORT, OFPPortStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPPortStatsReply(OFPStatsReply):
@@ -1356,7 +1351,7 @@ class OFPPortStatsReply(OFPStatsReply):
         super(OFPPortStatsReply, self).__init__(datapath)
 
 
-@OFPStatsReply.register_stats_type(ofproto_v1_0.OFP_QUEUE_STATS_SIZE)
+@OFPStatsReply.register_stats_type()
 @_set_stats_type(ofproto_v1_0.OFPST_QUEUE, OFPQueueStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPQueueStatsReply(OFPStatsReply):
