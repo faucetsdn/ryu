@@ -53,7 +53,7 @@ def msg_parser(datapath, version, msg_type, msg_len, xid, buf):
 
 # OFP_MSG_REPLY = {
 #     OFPFeaturesRequest: OFPSwitchFeatures,
-#     OFPBarrierRequest: OFPBarrierReplay,
+#     OFPBarrierRequest: OFPBarrierReply,
 #     OFPQueueGetConfigRequest: OFPQueueGetConfigReply,
 #
 #     # ofp_stats_request -> ofp_stats_reply
