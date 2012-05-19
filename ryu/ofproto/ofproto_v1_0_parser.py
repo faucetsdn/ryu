@@ -975,7 +975,7 @@ class OFPVendor(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPVendor, cls).parser(datapath, version, msg_type,
                                            msg_len, xid, buf)
-        msg.vendor = struct.unpack_from(
+        (msg.vendor,) = struct.unpack_from(
             ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR, msg.buf,
             ofproto_v1_0.OFP_HEADER_SIZE)
         msg.data = msg.buf[ofproto_v1_0.OFP_VENDOR_HEADER_SIZE:]
