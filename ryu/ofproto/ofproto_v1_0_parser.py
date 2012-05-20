@@ -991,20 +991,20 @@ class OFPVendor(MsgBase):
         self.buf += self.data
 
 
-class NXTRequest(OFPVendor):
+class NiciraHeader(OFPVendor):
     def __init__(self, datapath, subtype):
-        super(NXTRequest, self).__init__(datapath)
+        super(NiciraHeader, self).__init__(datapath)
         self.vendor = ofproto_v1_0.NX_VENDOR_ID
         self.subtype = subtype
 
     def serialize_header(self):
-        super(NXTRequest, self).serialize_header()
+        super(NiciraHeader, self).serialize_header()
         msg_pack_into(ofproto_v1_0.NICIRA_HEADER_PACK_STR,
                       self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
                       self.vendor, self.subtype)
 
 
-class NXTSetFlowFormat(NXTRequest):
+class NXTSetFlowFormat(NiciraHeader):
     def __init__(self, datapath, flow_format):
         super(NXTSetFlowFormat, self).__init__(
             datapath, ofproto_v1_0.NXT_SET_FLOW_FORMAT)
@@ -1016,7 +1016,7 @@ class NXTSetFlowFormat(NXTRequest):
                       self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.format)
 
 
-class NXTFlowMod(NXTRequest):
+class NXTFlowMod(NiciraHeader):
     def __init__(self, datapath, cookie, command,
                  idle_timeout=0, hard_timeout=0,
                  priority=ofproto_v1_0.OFP_DEFAULT_PRIORITY,
@@ -1062,7 +1062,7 @@ class NXTFlowMod(NXTRequest):
                 offset += a.len
 
 
-class NXTRoleRequest(NXTRequest):
+class NXTRoleRequest(NiciraHeader):
     def __init__(self, datapath, role):
         super(NXTRoleRequest, self).__init__(
             datapath, ofproto_v1_0.NXT_ROLE_REQUEST)
@@ -1074,7 +1074,7 @@ class NXTRoleRequest(NXTRequest):
                       self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.role)
 
 
-class NXTFlowModTableId(NXTRequest):
+class NXTFlowModTableId(NiciraHeader):
     def __init__(self, datapath, set_):
         super(NXTFlowModTableId, self).__init__(
             datapath, ofproto_v1_0.NXT_FLOW_MOD_TABLE_ID)
