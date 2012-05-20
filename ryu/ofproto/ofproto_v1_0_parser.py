@@ -1089,6 +1089,16 @@ class OFPVendor(MsgBase):
 
 
 class NiciraHeader(OFPVendor):
+    _NX_SUBTYPES = {}
+
+    @staticmethod
+    def register_nx_subtype(subtype):
+        def _register_nx_subtype(cls):
+            cls.cls_subtype = subtype
+            NiciraHeader._NX_SUBTYPES[cls.cls_subtype] = cls
+            return cls
+        return _register_nx_subtype
+
     def __init__(self, datapath, subtype):
         super(NiciraHeader, self).__init__(datapath)
         self.vendor = ofproto_v1_0.NX_VENDOR_ID
@@ -1099,6 +1109,15 @@ class NiciraHeader(OFPVendor):
         msg_pack_into(ofproto_v1_0.NICIRA_HEADER_PACK_STR,
                       self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
                       self.vendor, self.subtype)
+
+    @classmethod
+    def parser(cls, datapath, buf, offset):
+        vendor, subtype = struct.unpack_from(
+            ofproto_v1_0.NICIRA_HEADER_PACK_STR, buf,
+            offset + ofproto_v1_0.OFP_HEADER_SIZE)
+        cls_ = cls._NX_SUBTYPES.get(subtype)
+        return cls_.parser(datapath, buf,
+                           offset + ofproto_v1_0.NICIRA_HEADER_SIZE)
 
 
 class NXTSetFlowFormat(NiciraHeader):
