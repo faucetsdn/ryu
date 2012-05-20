@@ -1062,6 +1062,18 @@ class NXTFlowMod(NXTRequest):
                 offset += a.len
 
 
+class NXTRoleRequest(NXTRequest):
+    def __init__(self, datapath, role):
+        super(NXTRoleRequest, self).__init__(
+            datapath, ofproto_v1_0.NXT_ROLE_REQUEST)
+        self.role = role
+
+    def _serialize_body(self):
+        self.serialize_header()
+        msg_pack_into(ofproto_v1_0.NX_ROLE_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.role)
+
+
 class NXTFlowModTableId(NXTRequest):
     def __init__(self, datapath, set_):
         super(NXTFlowModTableId, self).__init__(
