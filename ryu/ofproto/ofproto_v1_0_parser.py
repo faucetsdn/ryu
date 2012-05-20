@@ -1088,6 +1088,7 @@ class OFPVendor(MsgBase):
         self.buf += self.data
 
 
+@OFPVendor.register_vendor(ofproto_v1_0.NX_VENDOR_ID)
 class NiciraHeader(OFPVendor):
     _NX_SUBTYPES = {}
 
@@ -1188,6 +1189,20 @@ class NXTRoleRequest(NiciraHeader):
         self.serialize_header()
         msg_pack_into(ofproto_v1_0.NX_ROLE_PACK_STR,
                       self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.role)
+
+
+@NiciraHeader.register_nx_subtype(ofproto_v1_0.NXT_ROLE_REPLY)
+class NXTRoleReply(NiciraHeader):
+    def __init__(self, datapath, role):
+        super(NXTRoleReply, self).__init__(
+            datapath, ofproto_v1_0.NXT_ROLE_REPLY)
+        self.role = role
+
+    @classmethod
+    def parser(cls, datapath, buf, offset):
+        (role,) = struct.unpack_from(
+            ofproto_v1_0.NX_ROLE_PACK_STR, buf, offset)
+        return cls(datapath, role)
 
 
 class NXTFlowModTableId(NiciraHeader):
