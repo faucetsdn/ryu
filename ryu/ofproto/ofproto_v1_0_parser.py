@@ -684,6 +684,24 @@ class NXActionOutputReg(NXActionHeader):
         return cls(ofs_nbits, src, max_len)
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_EXIT)
+class NXActionExit(NXActionHeader):
+    def __init__(self):
+        super(NXActionExit, self).__init__(
+            ofproto_v1_0.NXAST_EXIT,
+            ofproto_v1_0.NX_ACTION_HEADER_SIZE)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset,
+                      self.type, self.len, self.vendor, self.subtype)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, vendor, subtype) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
 class OFPDescStats(collections.namedtuple('OFPDescStats',
         ('mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
     @classmethod
