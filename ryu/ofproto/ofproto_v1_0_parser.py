@@ -546,9 +546,9 @@ class NXActionSetTunnel64(NXActionHeader):
 
     @classmethod
     def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_TUNNE64_PACK_STR, buf, offset)
-        return cls(in_port)
+        type_, len_, vendor, subtype, tun_id = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf, offset)
+        return cls(tun_id)
 
 
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_MULTIPATH)
