@@ -482,6 +482,26 @@ class NXActionSetTunnel(NXActionHeader):
         return cls(tun_id)
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_QUEUE)
+class NXActionSetQueue(NXActionHeader):
+    def __init__(self, queue_id):
+        super(NXActionSetQueue, self).__init__(
+            ofproto_v1_0.NXAST_SET_QUEUE,
+            ofproto_v1_0.NX_ACTION_SET_QUEUE_SIZE)
+        self.queue_id = queue_id
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_SET_QUEUE_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor,
+                      self.subtype, self.queue_id)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, vendor, subtype, queue_id) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_SET_QUEUE_PACK_STR, buf, offset)
+        return cls(queue_id)
+
+
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_REG_MOVE)
 class NXActionRegMove(NXActionHeader):
     def __init__(self, n_bits, src_ofs, dst_ofs, src, dst):
@@ -663,13 +683,13 @@ class NXActionBundleLoad(NXActionBundleBase):
 
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_AUTOPATH)
 class NXActionAutopath(NXActionHeader):
-    def __init__(self, ofs_nbits, dst, _id):
+    def __init__(self, ofs_nbits, dst, id_):
         super(NXActionAutopath, self).__init__(
             ofproto_v1_0.NXAST_AUTOPATH,
             ofproto_v1_0.NX_ACTION_AUTOPATH_SIZE)
         self.ofs_nbits = ofs_nbits
         self.dst = dst
-        self.id = _id
+        self.id = id_
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset,
@@ -679,9 +699,9 @@ class NXActionAutopath(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
-         _id) = struct.unpack_from(
+         id_) = struct.unpack_from(
             ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
-        return cls(ofs_nbits, dst, _id)
+        return cls(ofs_nbits, dst, id_)
 
 
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_OUTPUT_REG)
