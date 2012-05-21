@@ -681,7 +681,7 @@ class NXActionOutputReg(NXActionHeader):
         (type_, len_, vendor, subtype, ofs_nbits, src,
          max_len) = struct.unpack_from(
             ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
-        return cls(subtype, ofs_nbits, src)
+        return cls(ofs_nbits, src, max_len)
 
 
 class OFPDescStats(collections.namedtuple('OFPDescStats',
