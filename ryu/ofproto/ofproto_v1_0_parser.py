@@ -502,6 +502,25 @@ class NXActionSetQueue(NXActionHeader):
         return cls(queue_id)
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_POP_QUEUE)
+class NXActionPopQueue(NXActionHeader):
+    def __init__(self):
+        super(NXActionPopQueue, self).__init__(
+            ofproto_v1_0.NXAST_POP_QUEUE,
+            ofproto_v1_0.NX_ACTION_POP_QUEUE_SIZE)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor,
+                      self.subtype)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, vendor, subtype) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR, buf, offset)
+        return cls()
+
+
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_REG_MOVE)
 class NXActionRegMove(NXActionHeader):
     def __init__(self, n_bits, src_ofs, dst_ofs, src, dst):
