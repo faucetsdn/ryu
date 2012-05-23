@@ -1291,7 +1291,7 @@ class OFPFlowRemoved(MsgBase):
         return msg_str_attr(self, buf,
                             ('match', 'cookie', 'priority', 'reason',
                              'duration_sec', 'duration_nsec',
-                             'idle_timeout', 'packet_count', 'idle_count'))
+                             'idle_timeout', 'packet_count', 'byte_count'))
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
