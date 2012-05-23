@@ -86,7 +86,8 @@ class OFPSwitchFeatures(MsgBase):
         (msg.datapath_id,
          msg.n_buffers,
          msg.n_tables,
-         msg.capabilities, reserved) = struct.unpack_from(
+         msg.capabilities,
+         msg.reserved) = struct.unpack_from(
             ofproto_v1_2.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
             ofproto_v1_2.OFP_HEADER_SIZE)
 
