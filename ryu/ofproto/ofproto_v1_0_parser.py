@@ -876,7 +876,9 @@ class OFPVendorStats(collections.namedtuple('OFPVendorStats',
                                             ('specific_data'))):
     @classmethod
     def parser(cls, buf, offset):
-        return cls((buf[offset:], ))
+        stats = cls(buf[offset:])
+        stats.length = len(stats.specific_data)
+        return stats
 
 
 class OFPQueuePropHeader(object):
