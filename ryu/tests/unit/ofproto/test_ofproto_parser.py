@@ -2,9 +2,12 @@
 
 import binascii
 import unittest
-from nose.tools import ok_, eq_
+from nose.tools import *
+import struct
+from ryu import exception
 
-from ryu.ofproto import ofproto, ofproto_parser, ofproto_v1_0_parser
+from ryu.ofproto import ofproto, ofproto_parser
+from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 
 import logging
 LOG = logging.getLogger(__name__)
@@ -39,16 +42,29 @@ class TestOfproto_Parser(unittest.TestCase):
         pass
 
     def testHello(self):
-        (version, msg_type, msg_len, xid) = ofproto_parser.header(self.bufHello)
+        (version,
+         msg_type,
+         msg_len,
+         xid) = ofproto_parser.header(self.bufHello)
         eq_(version, 1)
         eq_(msg_type, 0)
         eq_(msg_len, 8)
         eq_(xid, 1)
 
     def testFeaturesReply(self):
-        (version, msg_type, msg_len, xid) = ofproto_parser.header(self.bufFeaturesReply)
-        msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, self.bufFeaturesReply)
+        (version,
+         msg_type,
+         msg_len,
+         xid) = ofproto_parser.header(self.bufFeaturesReply)
+
+        msg = ofproto_parser.msg(self,
+                                 version,
+                                 msg_type,
+                                 msg_len,
+                                 xid,
+                                 self.bufFeaturesReply)
         LOG.debug(msg)
+
         ok_(isinstance(msg, ofproto_v1_0_parser.OFPSwitchFeatures))
         LOG.debug(msg.ports[65534])
         ok_(isinstance(msg.ports[1], ofproto_v1_0_parser.OFPPhyPort))
@@ -56,7 +72,201 @@ class TestOfproto_Parser(unittest.TestCase):
         ok_(isinstance(msg.ports[65534], ofproto_v1_0_parser.OFPPhyPort))
 
     def testPacketIn(self):
-        (version, msg_type, msg_len, xid) = ofproto_parser.header(self.bufPacketIn)
-        msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, self.bufPacketIn)
+        (version,
+         msg_type,
+         msg_len,
+         xid) = ofproto_parser.header(self.bufPacketIn)
+
+        msg = ofproto_parser.msg(self,
+                                 version,
+                                 msg_type,
+                                 msg_len,
+                                 xid,
+                                 self.bufPacketIn)
         LOG.debug(msg)
         ok_(isinstance(msg, ofproto_v1_0_parser.OFPPacketIn))
+
+    @raises(AssertionError)
+    def test_check_msg_len(self):
+        (version,
+         msg_type,
+         msg_len,
+         xid) = ofproto_parser.header(self.bufPacketIn)
+
+        msg_len = len(self.bufPacketIn) + 1
+        ofproto_parser.msg(self,
+                           version,
+                           msg_type,
+                           msg_len,
+                           xid,
+                           self.bufPacketIn)
+
+    @raises(exception.OFPUnknownVersion)
+    def test_check_msg_parser(self):
+        (version,
+         msg_type,
+         msg_len,
+         xid) = ofproto_parser.header(self.bufPacketIn)
+
+        version = 0xff
+        ofproto_parser.msg(self,
+                           version,
+                           msg_type,
+                           msg_len,
+                           xid,
+                           self.bufPacketIn)
+
+
+class TestMsgBase(unittest.TestCase):
+    """ Test case for ofprotp_parser.MsgBase
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        pass
+
+    def _test_parser(self, msg_type=ofproto_v1_0.OFPT_HELLO):
+        xid = 2183948390
+        res = ofproto_v1_0_parser.OFPHello.parser(object, \
+                              ofproto_v1_0.OFP_VERSION, \
+                              msg_type, \
+                              ofproto_v1_0.OFP_HEADER_SIZE, \
+                              xid, \
+                              str().zfill(ofproto_v1_0.OFP_HEADER_SIZE))
+
+        eq_(ofproto_v1_0.OFP_VERSION, res.version)
+        eq_(ofproto_v1_0.OFPT_HELLO, res.msg_type)
+        eq_(ofproto_v1_0.OFP_HEADER_SIZE, res.msg_len)
+        eq_(xid, res.xid)
+
+        # test __str__()
+        list_ = ('version:', 'msg_type', 'xid')
+        check = {}
+        str_ = str(res)
+        str_ = str_.rsplit()
+
+        i = 0
+        for s in str_:
+            if s in list_:
+                check[str_[i]] = str_[i + 1]
+            i += 1
+
+        eq_(hex(ofproto_v1_0.OFP_VERSION).find(check['version:']), 0)
+        eq_(hex(ofproto_v1_0.OFPT_HELLO).find(check['msg_type']), 0)
+        eq_(hex(xid).find(check['xid']), 0)
+
+        return True
+
+    def test_parser(self):
+        ok_(self._test_parser())
+
+    @raises(AssertionError)
+    def test_parser_check_msg_type(self):
+        self._test_parser(ofproto_v1_0.OFPT_ERROR)
+
+    def _test_serialize(self, version=True, msg_type=True,
+                        msg_len=True, buf=True):
+
+        class Datapath(object):
+            ofproto = ofproto_v1_0
+            ofproto_parser = ofproto_v1_0_parser
+
+        c = ofproto_v1_0_parser.OFPHello(Datapath)
+
+        if not version:
+            c.version = ofproto_v1_0.OFP_VERSION
+
+        if not msg_type:
+            c.msg_type = ofproto_v1_0.OFPT_HELLO
+
+        if not msg_len:
+            c.msg_len = ofproto_v1_0.OFP_HEADER_PACK_STR
+
+        if not buf:
+            c.buf = bytearray()
+
+        c.serialize()
+        eq_(ofproto_v1_0.OFP_VERSION, c.version)
+        eq_(ofproto_v1_0.OFPT_HELLO, c.msg_type)
+        eq_(0, c.xid)
+
+        return True
+
+    def test_serialize(self):
+        ok_(self._test_serialize())
+
+    @raises(AssertionError)
+    def test_serialize_check_version(self):
+        self._test_serialize(version=False)
+
+    @raises(AssertionError)
+    def test_serialize_check_msg_type(self):
+        self._test_serialize(msg_type=False)
+
+    @raises(AssertionError)
+    def test_serialize_check_msg_len(self):
+        self._test_serialize(msg_len=False)
+
+    @raises(AssertionError)
+    def test_serialize_check_buf(self):
+        self._test_serialize(buf=False)
+
+
+class TestMsgPackInto(unittest.TestCase):
+    """ Test case for ofproto_parser.msg_pack_into
+    """
+
+    def _test_msg_pack_into(self, offset_type='e'):
+        fmt = '!HH'
+        len_ = struct.calcsize(fmt)
+        buf = bytearray().zfill(len_)
+        offset = len_
+        arg1 = 1
+        arg2 = 2
+
+        if offset_type == 'l':
+            offset += 1
+        elif offset_type == 'g':
+            offset -= 1
+
+        ofproto_parser.msg_pack_into(fmt, buf, offset, arg1, arg2)
+
+        check_offset = len(buf) - len_
+        res = struct.unpack_from(fmt, buffer(buf), check_offset)
+
+        eq_(arg1, res[0])
+        eq_(arg2, res[1])
+
+        return True
+
+    def test_msg_pack_into(self):
+        ok_(self._test_msg_pack_into())
+
+    def test_msg_pack_into_less(self):
+        ok_(self._test_msg_pack_into('l'))
+
+    def test_msg_pack_into_greater(self):
+        ok_(self._test_msg_pack_into('g'))
+
+
+class TestMsgStrAttr(unittest.TestCase):
+    """ Test case for ofproto_parser.msg_str_attr
+    """
+
+    def test_msg_str_attr(self):
+        class Check(object):
+            check = 'msg_str_attr_test'
+
+        c = Check()
+        buf = ''
+
+        res = ofproto_parser.msg_str_attr(c, buf, ('check',))
+        str_ = str(res)
+        str_ = str_.rsplit()
+        eq_('check', str_[0])
+        eq_('msg_str_attr_test', str_[1])
