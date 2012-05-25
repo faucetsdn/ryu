@@ -711,7 +711,7 @@ class NXActionAutopath(NXActionHeader):
         self.id = id_
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset,
+        msg_pack_into(ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.ofs_nbits, self.dst, self.id)
 
