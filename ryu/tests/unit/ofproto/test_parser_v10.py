@@ -1236,6 +1236,111 @@ class TestNXActionSetTunnel(unittest.TestCase):
         eq_(self.tun_id['val'], res[4])
 
 
+class TestNXActionSetQueue(unittest.TestCase):
+    """ Test case for ofprotp_v1_0_parser.NXActionSetQueue
+    """
+
+    # NX_ACTION_SET_QUEUE_PACK_STR
+    # '!HHIH2xI'...type, len, vendor, subtype, zfill, queue_id
+    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
+    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
+    subtype = {'buf': '\x00\x04', 'val': ofproto_v1_0.NXAST_SET_QUEUE}
+    zfill = '\x00' * 2
+    queue_id = {'buf': '\xde\xbe\xc5\x18', 'val': 3737044248}
+
+    buf = type_['buf'] \
+        + len_['buf'] \
+        + vendor['buf'] \
+        + subtype['buf'] \
+        + zfill \
+        + queue_id['buf']
+
+    c = NXActionSetQueue(queue_id['val'])
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        eq_(self.type_['val'], self.c.type)
+        eq_(self.len_['val'], self.c.len)
+        eq_(self.vendor['val'], self.c.vendor)
+        eq_(self.subtype['val'], self.c.subtype)
+        eq_(self.queue_id['val'], self.c.queue_id)
+
+    def test_parser(self):
+        res = self.c.parser(self.buf, 0)
+        eq_(self.queue_id['val'], res.queue_id)
+
+    def test_serialize(self):
+        buf = bytearray()
+        self.c.serialize(buf, 0)
+
+        fmt = ofproto_v1_0.NX_ACTION_SET_QUEUE_PACK_STR
+        res = struct.unpack(fmt, buffer(buf))
+
+        eq_(self.type_['val'], res[0])
+        eq_(self.len_['val'], res[1])
+        eq_(self.vendor['val'], res[2])
+        eq_(self.subtype['val'], res[3])
+        eq_(self.queue_id['val'], res[4])
+
+
+class TestNXActionPopQueue(unittest.TestCase):
+    """ Test case for ofprotp_v1_0_parser.NXActionPopQueue
+    """
+
+    # NX_ACTION_POP_QUEUE_PACK_STR
+    # '!HHIH6x'...type, len, vendor, subtype, zfill
+    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
+    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
+    subtype = {'buf': '\x00\x05', 'val': ofproto_v1_0.NXAST_POP_QUEUE}
+    zfill = '\x00' * 6
+
+    buf = type_['buf'] \
+        + len_['buf'] \
+        + vendor['buf'] \
+        + subtype['buf'] \
+        + zfill
+
+    c = NXActionPopQueue()
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        eq_(self.type_['val'], self.c.type)
+        eq_(self.len_['val'], self.c.len)
+        eq_(self.vendor['val'], self.c.vendor)
+        eq_(self.subtype['val'], self.c.subtype)
+
+    def test_parser(self):
+        res = self.c.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.vendor['val'], res.vendor)
+        eq_(self.subtype['val'], res.subtype)
+
+    def test_serialize(self):
+        buf = bytearray()
+        self.c.serialize(buf, 0)
+
+        fmt = ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR
+        res = struct.unpack(fmt, buffer(buf))
+
+        eq_(self.type_['val'], res[0])
+        eq_(self.len_['val'], res[1])
+        eq_(self.vendor['val'], res[2])
+        eq_(self.subtype['val'], res[3])
+
+
 class TestNXActionRegMove(unittest.TestCase):
     """ Test case for ofprotp_v1_0_parser.NXActionRegMove
     """
@@ -1756,6 +1861,77 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.dst['val'], res[10])
 
 
+class TestNXActionAutopath(unittest.TestCase):
+    """ Test case for ofprotp_v1_0_parser.NXActionAutopath
+    """
+
+    # NX_ACTION_AUTOPATH_PACK_STR
+    # '!HHIHHII4x'...type, len, vendor, subtype, ofs_nbits,
+    #                dst, id_, zfill
+    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
+    len_ = {'buf': '\x00\x20', 'val': ofproto_v1_0.NX_ACTION_OUTPUT_REG_SIZE}
+    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
+    subtype = {'buf': '\x00\x0b', 'val': ofproto_v1_0.NXAST_AUTOPATH}
+    ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
+    dst = {'buf': '\xf8\x55\x74\x95', 'val': 4166349973}
+    id_ = {'buf': '\x02\x2d\x37\xed', 'val': 36517869}
+    zfill = '\x00' * 4
+
+    buf = type_['buf'] \
+        + len_['buf'] \
+        + vendor['buf'] \
+        + subtype['buf'] \
+        + ofs_nbits['buf'] \
+        + dst['buf'] \
+        + id_['buf'] \
+        + zfill
+
+    c = NXActionAutopath(ofs_nbits['val'],
+                         dst['val'],
+                         id_['val'])
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        eq_(self.type_['val'], self.c.type)
+        eq_(self.len_['val'], self.c.len)
+        eq_(self.vendor['val'], self.c.vendor)
+        eq_(self.subtype['val'], self.c.subtype)
+        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
+        eq_(self.dst['val'], self.c.dst)
+        eq_(self.id_['val'], self.c.id)
+
+    def test_parser(self):
+        res = self.c.parser(self.buf, 0)
+
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.vendor['val'], res.vendor)
+        eq_(self.subtype['val'], res.subtype)
+        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.dst['val'], res.dst)
+        eq_(self.id_['val'], res.id)
+
+    def test_serialize(self):
+        buf = bytearray()
+        self.c.serialize(buf, 0)
+
+        fmt = ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR
+        res = struct.unpack(fmt, buffer(buf))
+
+        eq_(self.type_['val'], res[0])
+        eq_(self.len_['val'], res[1])
+        eq_(self.vendor['val'], res[2])
+        eq_(self.subtype['val'], res[3])
+        eq_(self.ofs_nbits['val'], res[4])
+        eq_(self.dst['val'], res[5])
+        eq_(self.id_['val'], res[6])
+
+
 class TestNXActionOutputReg(unittest.TestCase):
     """ Test case for ofprotp_v1_0_parser.NXActionOutputReg
     """
@@ -1825,6 +2001,56 @@ class TestNXActionOutputReg(unittest.TestCase):
         eq_(self.ofs_nbits['val'], res[4])
         eq_(self.src['val'], res[5])
         eq_(self.max_len['val'], res[6])
+
+
+class TestNXActionExit(unittest.TestCase):
+    """ Test case for ofprotp_v1_0_parser.NXActionExit
+    """
+
+    # NX_ACTION_HEADER_PACK_STR
+    # '!HHIH'...type, len, vendor, subtype
+    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
+    len_ = {'buf': '\x00\x0a', 'val': ofproto_v1_0.NX_ACTION_HEADER_SIZE}
+    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
+    subtype = {'buf': '\x00\x11', 'val': ofproto_v1_0.NXAST_EXIT}
+
+    buf = type_['buf'] \
+        + len_['buf'] \
+        + vendor['buf'] \
+        + subtype['buf']
+
+    c = NXActionExit()
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        eq_(self.type_['val'], self.c.type)
+        eq_(self.len_['val'], self.c.len)
+        eq_(self.vendor['val'], self.c.vendor)
+        eq_(self.subtype['val'], self.c.subtype)
+
+    def test_parser(self):
+        res = self.c.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.vendor['val'], res.vendor)
+        eq_(self.subtype['val'], res.subtype)
+
+    def test_serialize(self):
+        buf = bytearray()
+        self.c.serialize(buf, 0)
+
+        fmt = ofproto_v1_0.NX_ACTION_HEADER_PACK_STR
+        res = struct.unpack(fmt, buffer(buf))
+
+        eq_(self.type_['val'], res[0])
+        eq_(self.len_['val'], res[1])
+        eq_(self.vendor['val'], res[2])
+        eq_(self.subtype['val'], res[3])
 
 
 class TestOFPDescStats(unittest.TestCase):
@@ -3110,6 +3336,57 @@ class TestNXTFlowMod(unittest.TestCase):
         eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[16])
         eq_(self.port['val'], res[17])
         eq_(0, res[18])
+
+
+class TestNXTRoleRequest(unittest.TestCase):
+    """ Test case for ofprotp_v1_0_parser.NXTRoleRequest
+    """
+
+    # NX_ROLE_PACK_STR
+    # '!I'...role
+    role = {'buf': '\x62\x81\x27\x61', 'val': 1652631393}
+
+    class Datapath(object):
+        ofproto = ofproto_v1_0
+        ofproto_parser = ofproto_v1_0_parser
+
+    c = NXTRoleRequest(Datapath, role['val'])
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        eq_(self.role['val'], self.c.role)
+
+    def test_parser(self):
+        # Not used.
+        pass
+
+    def test_serialize(self):
+        self.c.serialize()
+
+        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
+        eq_(ofproto_v1_0.OFPT_VENDOR, self.c.msg_type)
+        eq_(0, self.c.xid)
+        eq_(ofproto_v1_0.NX_VENDOR_ID, self.c.vendor)
+
+        fmt = '!' \
+            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto_v1_0.NX_ROLE_PACK_STR.replace('!', '')
+
+        res = struct.unpack(fmt, str(self.c.buf))
+
+        eq_(ofproto_v1_0.OFP_VERSION, res[0])
+        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        eq_(len(self.c.buf), res[2])
+        eq_(0, res[3])
+        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
+        eq_(ofproto_v1_0.NXT_ROLE_REQUEST, res[5])
+        eq_(self.role['val'], res[6])
 
 
 class TestNXTFlowModTableId(unittest.TestCase):

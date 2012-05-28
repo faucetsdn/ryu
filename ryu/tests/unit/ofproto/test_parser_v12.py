@@ -10,6 +10,56 @@ from ryu.ofproto import ofproto_v1_2_parser
 LOG = logging.getLogger('test_ofproto_v12')
 
 
+class TestMsgParser(unittest.TestCase):
+    """ Test case for ofprotp_v1_2_parser.msg_parser
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_msg_parser(self):
+
+        class Datapath(object):
+            ofproto = ofproto_v1_2
+            ofproto_parser = ofproto_v1_2_parser
+
+        # OFP_HEADER_PACK_STR
+        # '!BBHI'...version, msg_type, msg_len, xid
+        version = {'buf': '\x03', 'val': ofproto_v1_2.OFP_VERSION}
+        msg_type = {'buf': '\x00', 'val': ofproto_v1_2.OFPT_HELLO}
+        msg_len = {'buf': '\x00\x08', 'val': ofproto_v1_2.OFP_HEADER_SIZE}
+        xid = {'buf': '\x50\x26\x6a\x4c', 'val': 1344694860}
+
+        buf = version['buf'] \
+            + msg_type['buf'] \
+            + msg_len['buf'] \
+            + xid['buf']
+
+        c = msg_parser(Datapath,
+                       version['val'],
+                       msg_type['val'],
+                       msg_len['val'],
+                       xid['val'],
+                       buf)
+
+        eq_(version['val'], c.version)
+        eq_(msg_type['val'], c.msg_type)
+        eq_(msg_len['val'], c.msg_len)
+        eq_(xid['val'], c.xid)
+
+        # buf
+        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        res = struct.unpack(fmt, c.buf)
+
+        eq_(version['val'], res[0])
+        eq_(msg_type['val'], res[1])
+        eq_(msg_len['val'], res[2])
+        eq_(xid['val'], res[3])
+
+
 class TestOFPPort(unittest.TestCase):
     """ Test case for ofprotp_v1_2_parser.OFPPort
     """

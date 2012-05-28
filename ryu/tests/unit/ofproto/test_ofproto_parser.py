@@ -130,6 +130,19 @@ class TestMsgBase(unittest.TestCase):
     def test_init(self):
         pass
 
+    def test_set_xid(self):
+        xid = 3841413783
+        c = ofproto_parser.MsgBase(object)
+        c.set_xid(xid)
+        eq_(xid, c.xid)
+
+    @raises(AssertionError)
+    def test_set_xid_check_xid(self):
+        xid = 2160492514
+        c = ofproto_parser.MsgBase(object)
+        c.xid = xid
+        c.set_xid(xid)
+
     def _test_parser(self, msg_type=ofproto_v1_0.OFPT_HELLO):
         xid = 2183948390
         res = ofproto_v1_0_parser.OFPHello.parser(object, \
