@@ -1048,6 +1048,15 @@ class OFPEchoReply(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_0.OFPT_VENDOR)
 class OFPVendor(MsgBase):
+    _VENDORS = {}
+
+    @staticmethod
+    def register_vendor(id_):
+        def _register_vendor(cls):
+            OFPVendor._VENDORS[id_] = cls
+            return cls
+        return _register_vendor
+
     def __init__(self, datapath):
         super(OFPVendor, self).__init__(datapath)
         self.data = None
@@ -1060,7 +1069,13 @@ class OFPVendor(MsgBase):
         (msg.vendor,) = struct.unpack_from(
             ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR, msg.buf,
             ofproto_v1_0.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto_v1_0.OFP_VENDOR_HEADER_SIZE:]
+
+        cls_ = cls._VENDORS.get(msg.vendor)
+        if cls_:
+            msg.data = cls_.parser(datapath, msg.buf, 0)
+        else:
+            msg.data = msg.buf[ofproto_v1_0.OFP_VENDOR_HEADER_SIZE:]
+
         return msg
 
     def serialize_header(self):
