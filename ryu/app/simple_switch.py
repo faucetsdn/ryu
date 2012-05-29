@@ -16,6 +16,7 @@
 import logging
 import struct
 
+from ryu.base import app_manager
 from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
@@ -34,10 +35,13 @@ LOG = logging.getLogger('ryu.app.simple_switch')
 # TODO: we need to move the followings to something like db
 
 
-class SimpleSwitch(object):
-    def __init__(self, *_args, **_kwargs):
-        super(SimpleSwitch, self).__init__()
-        self.mac2port = mac_to_port.MacToPortTable()
+class SimpleSwitch(app_manager.RyuApp):
+    _CONTEXETS = {
+        'mac2port': mac_to_port.MacToPortTable,
+        }
+    def __init__(self, *args, **kwargs):
+        super(SimpleSwitch, self).__init__(*args, **kwargs)
+        self.mac2port = kwargs['mac2port']
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):

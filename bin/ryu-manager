@@ -31,8 +31,6 @@ from ryu import utils
 from ryu.app import wsapi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
-from ryu.controller import dpset
-from ryu.controller import network
 
 
 FLAGS = gflags.FLAGS
@@ -49,17 +47,9 @@ def main():
     _args = FLAGS(sys.argv)
     log.init_log()
 
-    # to make non-converted apps work. Once all of them converted,
-    # this will be removed.
-    kwargs = {
-        'network': network.Network(),
-        'dpset': dpset.DPSet(),
-        }
-
     app_mgr = AppManager()
     app_mgr.load_apps(FLAGS.app_lists)
     contexts = app_mgr.create_contexts()
-    contexts.update(kwargs)
     app_mgr.instantiate_apps(**contexts)
 
     services = []

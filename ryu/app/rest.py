@@ -21,6 +21,8 @@ from ryu.app.wsapi import WSPathComponent
 from ryu.app.wsapi import WSPathExtractResult
 from ryu.app.wsapi import WSPathStaticString
 from ryu.app.wsapi import wsapi
+from ryu.base import app_manager
+from ryu.controller import network
 
 # REST API
 
@@ -93,9 +95,13 @@ class WSPathPort(WSPathComponent):
         return WSPathExtractResult(value={'dpid': dpid, 'port': port})
 
 
-class restapi:
+class restapi(app_manager.RyuApp):
+    _CONTEXTS = {
+        'network': network.Network,
+        }
 
-    def __init__(self, *_args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super(restapi, self).__init__(*args, **kwargs)
         self.ws = wsapi()
         self.api = self.ws.get_version("1.0")
         self.nw = kwargs['network']

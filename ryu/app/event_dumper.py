@@ -18,6 +18,7 @@
 import gflags
 import logging
 
+from ryu.base import app_manager
 from ryu.controller import dispatcher
 from ryu.controller.handler import set_ev_cls
 
@@ -30,9 +31,9 @@ gflags.DEFINE_multistring('dump_dispatcher', [],
                           'list of dispatcher name to dump event: default any')
 
 
-class EventDumper(object):
-    def __init__(self, *_args, **_kwargs):
-        super(EventDumper, self).__init__()
+class EventDumper(app_manager.RyuApp):
+    def __init__(self, *args, **kwargs):
+        super(EventDumper, self).__init__(*args, **kwargs)
         # EventDispatcher can be created and cloned before us.
         # So register it explicitly
         for ev_q in dispatcher.EventQueue.all_instances():

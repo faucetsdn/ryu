@@ -18,10 +18,13 @@ import logging
 import struct
 
 from ryu.app.rest_nw_id import NW_ID_UNKNOWN, NW_ID_EXTERNAL
+from ryu.base import app_manager
 from ryu.exception import MacAddressDuplicated
 from ryu.exception import PortUnknown
+from ryu.controller import dpset
 from ryu.controller import mac_to_network
 from ryu.controller import mac_to_port
+from ryu.controller import network
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
@@ -34,9 +37,14 @@ from ryu.lib import mac
 LOG = logging.getLogger('ryu.app.simple_isolation')
 
 
-class SimpleIsolation(object):
-    def __init__(self, *_args, **kwargs):
-        super(SimpleIsolation, self).__init__()
+class SimpleIsolation(app_manager.RyuApp):
+    _CONTEXTS = {
+        'network': network.Network,
+        'dpset': dpset.DPSet,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(SimpleIsolation, self).__init__(*args, **kwargs)
         self.nw = kwargs['network']
         self.dpset = kwargs['dpset']
         self.mac2port = mac_to_port.MacToPortTable()
