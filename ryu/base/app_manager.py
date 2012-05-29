@@ -23,24 +23,93 @@ from ryu.controller.handler import register_instance
 LOG = logging.getLogger('ryu.base.app_manager')
 
 
+class RyuAppContext(object):
+    """
+    Base class for Ryu application context
+    """
+    def __init__(self):
+        super(RyuAppContext, self).__init__()
+
+    def close(self):
+        """
+        teardown method
+        The method name, close, is chosen for python context manager
+        """
+        pass
+
+
+class RyuApp(object):
+    """
+    Base class for Ryu network application
+    """
+    _CONTEXTS = {}
+
+    @classmethod
+    def context_iteritems(cls):
+        """
+        Return iterator over the (key, contxt class) of application context
+        """
+        return cls._CONTEXTS.iteritems()
+
+    def __init__(self, *_args, **_kwargs):
+        super(RyuApp, self).__init__()
+
+    def close(self):
+        """
+        teardown method.
+        The method name, close, is chosen for python context manager
+        """
+        pass
+
+
 class AppManager(object):
     def __init__(self):
+        self.applications_cls = {}
         self.applications = {}
+        self.contexts_cls = {}
+        self.contexts = {}
 
-    def load(self, app_mod_name, *args, **kwargs):
-        # for now, only single instance of a given module
-        # Do we need to support multiple instances?
-        # Yes, maybe for slicing.
-        assert app_mod_name not in self.applications
+    def load_apps(self, app_lists):
+        for app_cls_name in itertools.chain.from_iterable([app_list.split(',')
+                                                           for app_list
+                                                           in app_lists]):
+            LOG.info('loading app %s', app_cls_name)
 
-        cls = utils.import_object(app_mod_name)
-        app = cls(*args, **kwargs)
-        register_instance(app)
+            # for now, only single instance of a given module
+            # Do we need to support multiple instances?
+            # Yes, maybe for slicing.
+            assert app_cls_name not in self.applications_cls
 
-        self.applications[app_mod_name] = app
+            cls = utils.import_object(app_cls_name)
+            self.applications_cls[app_cls_name] = cls
 
-    def load_apps(self, app_lists, *args, **kwargs):
-        for app in itertools.chain.from_iterable([app_list.split(',')
-                                                  for app_list in app_lists]):
-            self.load(app, *args, **kwargs)
-            LOG.info('loading app %s', app)
+            for key, context_cls in cls.context_iteritems():
+                cls = self.contexts_cls.setdefault(key, context_cls)
+                assert cls == context_cls
+
+    def create_contexts(self):
+        for key, cls in self.contexts_cls.items():
+            self.contexts[key] = cls()
+        return self.contexts
+
+    def instantiate_apps(self, *args, **kwargs):
+        for app_name, cls in self.applications_cls.items():
+            # for now, only single instance of a given module
+            # Do we need to support multiple instances?
+            # Yes, maybe for slicing.
+            LOG.info('instantiating app %s', app_name)
+            assert app_name not in self.applications
+            app = cls(*args, **kwargs)
+            register_instance(app)
+            self.applications[app_name] = app
+
+    def close(self):
+        def close_all(close_dict):
+            for app in close_dict:
+                close_method = getattr(app, 'close', None)
+                if callable(close_method):
+                    close_method()
+            close_dict.clear()
+
+        close_all(self.applications)
+        close_all(self.contexts)

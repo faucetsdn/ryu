@@ -49,11 +49,18 @@ def main():
     _args = FLAGS(sys.argv)
     log.init_log()
 
-    nw = network.Network()
-    dpset_ = dpset.DPSet()
+    # to make non-converted apps work. Once all of them converted,
+    # this will be removed.
+    kwargs = {
+        'network': network.Network(),
+        'dpset': dpset.DPSet(),
+        }
 
     app_mgr = AppManager()
-    app_mgr.load_apps(FLAGS.app_lists, network=nw, dpset=dpset_)
+    app_mgr.load_apps(FLAGS.app_lists)
+    contexts = app_mgr.create_contexts()
+    contexts.update(kwargs)
+    app_mgr.instantiate_apps(**contexts)
 
     services = []
 
@@ -67,6 +74,8 @@ def main():
     services.append(thr)
 
     gevent.joinall(services)
+    app_mgr.close()
+
 
 if __name__ == "__main__":
     main()
