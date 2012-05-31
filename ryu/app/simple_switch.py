@@ -36,7 +36,7 @@ LOG = logging.getLogger('ryu.app.simple_switch')
 
 
 class SimpleSwitch(app_manager.RyuApp):
-    _CONTEXETS = {
+    _CONTEXTS = {
         'mac2port': mac_to_port.MacToPortTable,
         }
     def __init__(self, *args, **kwargs):
