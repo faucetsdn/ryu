@@ -39,6 +39,7 @@ class SimpleSwitch(app_manager.RyuApp):
     _CONTEXTS = {
         'mac2port': mac_to_port.MacToPortTable,
         }
+
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch, self).__init__(*args, **kwargs)
         self.mac2port = kwargs['mac2port']
