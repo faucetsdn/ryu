@@ -3782,15 +3782,15 @@ class TestOFPPacketIn(unittest.TestCase):
         pass
 
 
-class TestOFPSwitchConfig(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPSwitchConfig
+class TestOFPGetConfigReply(unittest.TestCase):
+    """ Test case for ofprotp_v1_0_parser.OFPGetConfigReply
     """
 
     class Datapath(object):
         ofproto = ofproto_v1_0
         ofproto_parser = ofproto_v1_0_parser
 
-    c = OFPSwitchConfig(Datapath)
+    c = OFPGetConfigReply(Datapath)
 
     def setUp(self):
         pass
@@ -3820,12 +3820,12 @@ class TestOFPSwitchConfig(unittest.TestCase):
             + flags['buf'] \
             + miss_send_len['buf']
 
-        res = OFPSwitchConfig.parser(object,
-                                     version['val'],
-                                     msg_type['val'],
-                                     msg_len['val'],
-                                     xid['val'],
-                                     buf)
+        res = OFPGetConfigReply.parser(object,
+                                       version['val'],
+                                       msg_type['val'],
+                                       msg_len['val'],
+                                       xid['val'],
+                                       buf)
 
         eq_(version['val'], res.version)
         eq_(msg_type['val'], res.msg_type)

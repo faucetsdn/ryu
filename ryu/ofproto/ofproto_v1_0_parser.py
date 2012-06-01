@@ -1308,14 +1308,14 @@ class OFPPacketIn(MsgBase):
 
 @_register_parser
 @_set_msg_type(ofproto_v1_0.OFPT_GET_CONFIG_REPLY)
-class OFPSwitchConfig(MsgBase):
+class OFPGetConfigReply(MsgBase):
     def __init__(self, datapath):
-        super(OFPSwitchConfig, self).__init__(datapath)
+        super(OFPGetConfigReply, self).__init__(datapath)
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        msg = super(OFPSwitchConfig, cls).parser(datapath, version, msg_type,
-                                                 msg_len, xid, buf)
+        msg = super(OFPGetConfigReply, cls).parser(datapath, version, msg_type,
+                                                   msg_len, xid, buf)
         (msg.flags, msg.miss_send_len) = struct.unpack_from(
             ofproto_v1_0.OFP_SWITCH_CONFIG_PACK_STR,
             msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
