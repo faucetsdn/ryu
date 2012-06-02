@@ -2025,14 +2025,16 @@ class TestNXActionExit(unittest.TestCase):
     # NX_ACTION_HEADER_PACK_STR
     # '!HHIH'...type, len, vendor, subtype
     type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x0a', 'val': ofproto_v1_0.NX_ACTION_HEADER_SIZE}
+    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_HEADER_SIZE}
     vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
     subtype = {'buf': '\x00\x11', 'val': ofproto_v1_0.NXAST_EXIT}
+    zfill = '\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
         + vendor['buf'] \
-        + subtype['buf']
+        + subtype['buf'] \
+        + zfill
 
     c = NXActionExit()
 
