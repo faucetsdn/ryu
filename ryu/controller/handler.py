@@ -134,7 +134,6 @@ class ErrorMsgHandler(object):
         msg = ev.msg
         LOG.debug('error msg ev %s type 0x%x code 0x%x %s',
                   msg, msg.type, msg.code, str(msg.data))
-        msg.datapath.is_active = False
 
 
 @register_cls(HANDSHAKE_DISPATCHER)
