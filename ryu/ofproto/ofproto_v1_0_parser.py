@@ -16,6 +16,7 @@
 
 import collections
 import struct
+import binascii
 
 from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
 from ryu.lib import mac
@@ -618,6 +619,47 @@ class NXActionMultipath(NXActionHeader):
             ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
         return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
                    dst)
+
+
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_NOTE)
+class NXActionNote(NXActionHeader):
+    def __init__(self, note):
+        # should check here if the note is valid (only hex values)
+        pad = (len(note) + 10) % 8
+        if pad:
+            note += [0x0 for i in range(8 - pad)]
+        self.note = note
+        _len = len(note) + 10
+        super(NXActionNote, self).__init__(
+            ofproto_v1_0.NXAST_NOTE, _len)
+
+    def serialize(self, buf, offset):
+        note = self.note
+        extra = None
+        extra_len = len(self.note) - 6
+        if extra_len > 0:
+            extra = note[6:]
+        note = note[0:6]
+        msg_pack_into(ofproto_v1_0.NX_ACTION_NOTE_PACK_STR, buf,
+                      offset, self.type, self.len, self.vendor, self.subtype,
+                      *note)
+        if extra_len > 0:
+            msg_pack_into('B' * extra_len, buf,
+                          offset + ofproto_v1_0.NX_ACTION_NOTE_SIZE,
+                          *extra)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        note = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_NOTE_PACK_STR, buf, offset)
+        (type_, len_, vendor, subtype) = note[0:4]
+        note = [i for i in note[4:]]
+        if len_ > ofproto_v1_0.NX_ACTION_NOTE_SIZE:
+            note_start = offset + ofproto_v1_0.NX_ACTION_NOTE_SIZE
+            note_end = note_start + len_ - ofproto_v1_0.NX_ACTION_NOTE_SIZE
+            note += [int(binascii.b2a_hex(i), 16) for i
+                     in buf[note_start:note_end]]
+        return cls(note)
 
 
 class NXActionBundleBase(NXActionHeader):
