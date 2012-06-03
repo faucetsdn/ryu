@@ -1217,6 +1217,20 @@ class NXTFlowModTableId(NiciraHeader):
                       self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
                       self.set)
 
+
+class NXTSetControllerId(NiciraHeader):
+    def __init__(self, datapath, controller_id):
+        super(NXTSetControllerId, self).__init__(
+            datapath, ofproto_v1_0.NXT_SET_CONTROLLER_ID)
+        self.controller_id = controller_id
+
+    def _serialize_body(self):
+        self.serialize_header()
+        msg_pack_into(ofproto_v1_0.NX_CONTROLLER_ID_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+                      self.controller_id)
+
+
 #
 # asymmetric message (datapath -> controller)
 # parser only
