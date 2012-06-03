@@ -764,6 +764,24 @@ class NXActionExit(NXActionHeader):
         return cls()
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_DEC_TTL)
+class NXActionDecTtl(NXActionHeader):
+    def __init__(self):
+        super(NXActionDecTtl, self).__init__(
+            ofproto_v1_0.NXAST_DEC_TTL,
+            ofproto_v1_0.NX_ACTION_HEADER_SIZE)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset,
+                      self.type, self.len, self.vendor, self.subtype)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, vendor, subtype) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_CONTROLLER)
 class NXActionController(NXActionHeader):
     def __init__(self, max_len, controller_id, reason):
