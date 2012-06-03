@@ -787,6 +787,28 @@ class NXActionController(NXActionHeader):
         return cls(max_len, controller_id, reason)
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_FIN_TIMEOUT)
+class NXActionFinTimeout(NXActionHeader):
+    def __init__(self, fin_idle_timeout, fin_hard_timeout):
+        super(NXActionFinTimeout, self).__init__(
+            ofproto_v1_0.NXAST_FIN_TIMEOUT,
+            ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_SIZE)
+        self.fin_idle_timeout = fin_idle_timeout
+        self.fin_hard_timeout = fin_hard_timeout
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset,
+                      self.type, self.len, self.vendor, self.subtype,
+                      self.fin_idle_timeout, self.fin_hard_timeout)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, vendor, subtype, fin_idle_timeout,
+         fin_hard_timeout) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
+        return cls(fin_idle_timeout, fin_hard_timeout)
+
+
 class OFPDescStats(collections.namedtuple('OFPDescStats',
         ('mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
     @classmethod
