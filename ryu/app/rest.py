@@ -1,5 +1,5 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
+# Copyright (C) 2012 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2012 Isaku Yamahata <yamahata at private email ne jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
 # limitations under the License.
 
 import json
-from ryu.exception import NetworkNotFound, NetworkAlreadyExist
-from ryu.exception import PortNotFound, PortAlreadyExist
-from ryu.app.wsapi import WSPathComponent
-from ryu.app.wsapi import WSPathExtractResult
-from ryu.app.wsapi import WSPathStaticString
-from ryu.app.wsapi import wsapi
+from webob import Request, Response
+
 from ryu.base import app_manager
 from ryu.controller import network
+from ryu.exception import NetworkNotFound, NetworkAlreadyExist
+from ryu.exception import PortNotFound, PortAlreadyExist
+from ryu.app.wsgi import ControllerBase, WSGIApplication
+
+## TODO:XXX
+## define db interface and store those information into db
 
 # REST API
 
@@ -62,162 +64,120 @@ from ryu.controller import network
 #
 
 
-class WSPathNetwork(WSPathComponent):
-    """ Match a network id string """
+class NetworkController(ControllerBase):
+    def __init__(self, req, link, data, **config):
+        super(NetworkController, self).__init__(req, link, data, **config)
+        self.nw = data
 
-    def __str__(self):
-        return "{network-id}"
-
-    def extract(self, pc, _data):
-        if pc == None:
-            return WSPathExtractResult(error="End of requested URI")
-
-        return WSPathExtractResult(value=pc)
-
-
-class WSPathPort(WSPathComponent):
-    """ Match a {dpid}_{port-id} string """
-
-    def __str__(self):
-        return "{dpid}_{port-id}"
-
-    def extract(self, pc, _data):
-        if pc == None:
-            return WSPathExtractResult(error="End of requested URI")
-
+    def create(self, req, network_id, **_kwargs):
         try:
-            dpid_str, port_str = pc.split('_')
-            dpid = int(dpid_str, 16)
-            port = int(port_str)
-        except ValueError:
-            return WSPathExtractResult(error="Invalid format: %s" % pc)
+            self.nw.create_network(network_id)
+        except NetworkAlreadyExist:
+            return Response(status=409)
+        else:
+            return Response(status=200)
 
-        return WSPathExtractResult(value={'dpid': dpid, 'port': port})
+    def update(self, req, network_id, **_kwargs):
+        self.nw.update_network(network_id)
+        return Response(status=200)
+
+    def lists(self, req, **_kwargs):
+        body = json.dumps(self.nw.list_networks())
+        return Response(content_type='application/json', body=body)
+
+    def delete(self, req, network_id, **_kwargs):
+        try:
+            self.nw.remove_network(network_id)
+        except NetworkNotFound:
+            return Response(status=404)
+
+        return Response(status=200)
+
+
+class PortController(ControllerBase):
+    def __init__(self, req, link, data, **config):
+        super(PortController, self).__init__(req, link, data, **config)
+        self.nw = data
+
+    def create(self, req, network_id, dpid, port_id, **_kwargs):
+        try:
+            self.nw.create_port(network_id, int(dpid), int(port_id))
+        except NetworkNotFound:
+            return Response(status=404)
+        except PortAlreadyExist:
+            return Response(status=409)
+
+        return Response(status=200)
+
+    def update(self, req, network_id, dpid, port_id, **_kwargs):
+        try:
+            self.nw.update_port(network_id, int(dpid), int(port_id))
+        except NetworkNotFound:
+            return Response(status=404)
+
+        return Response(status=200)
+
+    def lists(self, req, network_id, **_kwargs):
+        try:
+            body = json.dumps(self.nw.list_ports(network_id))
+        except NetworkNotFound:
+            return Response(status=404)
+
+        return Response(content_type='application/json', body=body)
+
+    def delete(self, req, network_id, dpid, port_id, **_kwargs):
+        try:
+            self.nw.remove_port(network_id, int(dpid), int(port_id))
+        except (NetworkNotFound, PortNotFound):
+            return Response(status=404)
+
+        return Response(status=200)
 
 
 class restapi(app_manager.RyuApp):
     _CONTEXTS = {
         'network': network.Network,
+        'wsgi': WSGIApplication
         }
 
     def __init__(self, *args, **kwargs):
         super(restapi, self).__init__(*args, **kwargs)
-        self.ws = wsapi()
-        self.api = self.ws.get_version("1.0")
         self.nw = kwargs['network']
-        self.register()
+        wsgi = kwargs['wsgi']
+        mapper = wsgi.mapper
 
-    def list_networks_handler(self, request, _data):
-        request.setHeader("Content-Type", 'application/json')
-        return json.dumps(self.nw.list_networks())
+        wsgi.registory['NetworkController'] = self.nw
+        uri = '/v1.0/networks'
+        mapper.connect('networks', uri,
+                       controller=NetworkController, action='lists',
+                       conditions=dict(method=['GET', 'HEAD']))
 
-    def create_network_handler(self, request, data):
-        network_id = data['{network-id}']
+        uri += '/{network_id}'
+        mapper.connect('networks', uri,
+                       controller=NetworkController, action='create',
+                       conditions=dict(method=['POST']))
 
-        try:
-            self.nw.create_network(network_id)
-        except NetworkAlreadyExist:
-            request.setResponseCode(409)
+        mapper.connect('networks', uri,
+                       controller=NetworkController, action='update',
+                       conditions=dict(method=['PUT']))
 
-        return ""
+        mapper.connect('networks', uri,
+                       controller=NetworkController, action='delete',
+                       conditions=dict(method=['DELETE']))
 
-    def update_network_handler(self, _request, data):
-        network_id = data['{network-id}']
-        self.nw.update_network(network_id)
-        return ""
+        wsgi.registory['PortController'] = self.nw
+        mapper.connect('networks', uri,
+                       controller=PortController, action='lists',
+                       conditions=dict(method=['GET']))
 
-    def remove_network_handler(self, request, data):
-        network_id = data['{network-id}']
+        uri += '/{dpid}_{port_id}'
+        mapper.connect('ports', uri,
+                       controller=PortController, action='create',
+                       conditions=dict(method=['POST']))
+        mapper.connect('ports', uri,
+                       controller=PortController, action='update',
+                       conditions=dict(method=['PUT']))
 
-        try:
-            self.nw.remove_network(network_id)
-        except NetworkNotFound:
-            request.setResponseCode(404)
-
-        return ""
-
-    def list_ports_handler(self, request, data):
-        network_id = data['{network-id}']
-
-        try:
-            body = json.dumps(self.nw.list_ports(network_id))
-        except NetworkNotFound:
-            body = ""
-            request.setResponseCode(404)
-
-        request.setHeader("Content-Type", 'application/json')
-        return body
-
-    def create_port_handler(self, request, data):
-        network_id = data['{network-id}']
-        dpid = data['{dpid}_{port-id}']['dpid']
-        port = data['{dpid}_{port-id}']['port']
-
-        try:
-            self.nw.create_port(network_id, dpid, port)
-        except NetworkNotFound:
-            request.setResponseCode(404)
-        except PortAlreadyExist:
-            request.setResponseCode(409)
-
-        return ""
-
-    def update_port_handler(self, request, data):
-        network_id = data['{network-id}']
-        dpid = data['{dpid}_{port-id}']['dpid']
-        port = data['{dpid}_{port-id}']['port']
-
-        try:
-            self.nw.update_port(network_id, dpid, port)
-        except NetworkNotFound:
-            request.setResponseCode(404)
-
-        return ""
-
-    def remove_port_handler(self, request, data):
-        network_id = data['{network-id}']
-        dpid = data['{dpid}_{port-id}']['dpid']
-        port = data['{dpid}_{port-id}']['port']
-
-        try:
-            self.nw.remove_port(network_id, dpid, port)
-        except (NetworkNotFound, PortNotFound):
-            request.setResponseCode(404)
-
-        return ""
-
-    def register(self):
-        path_networks = (WSPathStaticString('networks'), )
-        self.api.register_request(self.list_networks_handler, "GET",
-                                  path_networks,
-                                  "get the list of networks")
-
-        path_network = path_networks + (WSPathNetwork(), )
-        self.api.register_request(self.create_network_handler, "POST",
-                                  path_network,
-                                  "register a new network")
-
-        self.api.register_request(self.update_network_handler, "PUT",
-                                  path_network,
-                                  "update a network")
-
-        self.api.register_request(self.remove_network_handler, "DELETE",
-                                  path_network,
-                                  "remove a network")
-
-        self.api.register_request(self.list_ports_handler, "GET",
-                                  path_network,
-                                  "get the list of sets of dpid and port")
-
-        path_port = path_network + (WSPathPort(), )
-        self.api.register_request(self.create_port_handler, "POST",
-                                  path_port,
-                                  "register a new set of dpid and port")
-
-        self.api.register_request(self.update_port_handler, "PUT",
-                                  path_port,
-                                  "update a set of dpid and port")
-
-        self.api.register_request(self.remove_port_handler, "DELETE",
-                                  path_port,
-                                  "remove a set of dpid and port")
+        mapper.connect('ports', uri,
+                       controller=PortController, action='delete',
+                       conditions=dict(method=['DELETE']))

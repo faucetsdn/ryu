@@ -28,7 +28,7 @@ from ryu import log
 log.early_init_log(logging.DEBUG)
 
 from ryu import utils
-from ryu.app import wsapi
+from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
 
@@ -58,10 +58,10 @@ def main():
     thr = gevent.spawn_later(0, ctlr)
     services.append(thr)
 
-    # NOX webservice API
-    ws = wsapi.wsapi()
-    thr = gevent.spawn_later(0, ws)
-    services.append(thr)
+    webapp = wsgi.start_service(app_mgr)
+    if webapp:
+        thr = gevent.spawn_later(0, webapp)
+        services.append(thr)
 
     gevent.joinall(services)
     app_mgr.close()
