@@ -62,11 +62,12 @@ please refer detailed documents under doc/ directory.
 
 Requirement
 ===========
-* python-setuptools
-* python-gevent >= 0.13
+* setuptools
+* gevent >= 0.13
 * python-gflags
-* python-sphinx
-
+* Sphinx
+* WebOb
+* Routes
 
 Project Members
 ===============
