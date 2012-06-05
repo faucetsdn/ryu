@@ -19,8 +19,7 @@ import os
 from setuptools import find_packages
 from setuptools import setup
 
-README = os.path.join(os.path.dirname(__file__), 'README.rst')
-long_description = open(README).read() + '\n\n'
+long_description = 'Ryu is an open-sourced network operating system licensed under Apache License v2. Ryu aims to provide logically centralized control and well defined API that makes it easy for cloud operators to implement network management applications on top of the Ryu. Currently, Ryu supports OpenFlow protocol to control the network devices.'
 
 setup(name='ryu',
       version='0.2',
@@ -28,12 +27,12 @@ setup(name='ryu',
       long_description=long_description,
       keywords='openflow openvswitch openstack',
       url='http://www.osrg.net/ryu/',
-#      author='',
+      author='Ryu project team',
       author_email='ryu-devel@lists.sourceforge.net',
       license='Apache License 2.0',
       packages=find_packages(),
       scripts=['bin/ryu-manager',
                'bin/ryu-client'],
-      data_files=[('etc/ryu', ['etc/ryu/ryu.conf'])],
+      data_files=[('/etc/ryu', ['etc/ryu/ryu.conf'])],
 #      install_requires=[]
       )
