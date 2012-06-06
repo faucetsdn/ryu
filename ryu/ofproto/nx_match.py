@@ -406,7 +406,7 @@ class NXMatch(object):
         self.header = header
 
     @classmethod
-    def parse(cls, buf, offset, match_len):
+    def parser(cls, buf, offset, match_len):
         if match_len < 4:
             raise exception.OFPMalformedMessage
         (header,) = struct.unpack_from(ofproto_v1_0.NXM_HEADER_PACK_STRING,
