@@ -1355,6 +1355,19 @@ class NXTFlowRemoved(NiciraHeader):
                    byte_count, match)
 
 
+class NXTSetPacketInFormat(NiciraHeader):
+    def __init__(self, datapath, packet_in_format):
+        super(NXTSetPacketInFormat, self).__init__(
+            datapath, ofproto_v1_0.NXT_SET_PACKET_IN_FORMAT)
+        self.format = packet_in_format
+
+    def _serialize_body(self):
+        self.serialize_header()
+        msg_pack_into(ofproto_v1_0.NX_SET_PACKET_IN_FORMAT_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+                      self.format)
+
+
 class NXTSetControllerId(NiciraHeader):
     def __init__(self, datapath, controller_id):
         super(NXTSetControllerId, self).__init__(
