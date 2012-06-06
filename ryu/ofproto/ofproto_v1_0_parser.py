@@ -1323,6 +1323,38 @@ class NXTFlowModTableId(NiciraHeader):
                       self.set)
 
 
+@NiciraHeader.register_nx_subtype(ofproto_v1_0.NXT_FLOW_REMOVED)
+class NXTFlowRemoved(NiciraHeader):
+    def __init__(self, datapath, cookie, priority, reason,
+                 duration_sec, duration_nsec, idle_timeout, match_len,
+                 packet_count, byte_count, match):
+        super(NXTFlowRemoved, self).__init__(
+            datapath, ofproto_v1_0.NXT_FLOW_REMOVED)
+        self.cookie = cookie
+        self.priority = priority
+        self.reason = reason
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.idle_timeout = idle_timeout
+        self.match_len = match_len
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+        self.match = match
+
+    @classmethod
+    def parser(cls, datapath, buf, offset):
+        (cookie, priority, reason, duration_sec, duration_nsec,
+         idle_timeout, match_len,
+         packet_count, byte_count) = struct.unpack_from(
+            ofproto_v1_0.NX_FLOW_REMOVED_PACK_STR, buf, offset)
+        offset += (ofproto_v1_0.NX_FLOW_REMOVED_SIZE
+                   - ofproto_v1_0.NICIRA_HEADER_SIZE)
+        match = nx_match.NXMatch.parser(buf, offset, match_len)
+        return cls(datapath, cookie, priority, reason, duration_sec,
+                   duration_nsec, idle_timeout, match_len, packet_count,
+                   byte_count, match)
+
+
 class NXTSetControllerId(NiciraHeader):
     def __init__(self, datapath, controller_id):
         super(NXTSetControllerId, self).__init__(
