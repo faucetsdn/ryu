@@ -1410,6 +1410,24 @@ class NXTFlowAge(NiciraHeader):
         self.serialize_header()
 
 
+class NXTSetAsyncConfig(NiciraHeader):
+    def __init__(self, datapath, packet_in_mask, port_status_mask,
+                 flow_removed_mask):
+        super(NXTSetAsyncConfig, self).__init__(
+            datapath, ofproto_v1_0.NXT_SET_ASYNC_CONFIG)
+        self.packet_in_mask = packet_in_mask
+        self.port_status_mask = port_status_mask
+        self.flow_removed_mask = flow_removed_mask
+
+    def _serialize_body(self):
+        self.serialize_header()
+        msg_pack_into(ofproto_v1_0.NX_ASYNC_CONFIG_PACK_STR,
+                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+                      self.packet_in_mask[0], self.packet_in_mask[1],
+                      self.port_status_mask[0], self.port_status_mask[1],
+                      self.flow_removed_mask[0], self.flow_removed_mask[1])
+
+
 class NXTSetControllerId(NiciraHeader):
     def __init__(self, datapath, controller_id):
         super(NXTSetControllerId, self).__init__(
