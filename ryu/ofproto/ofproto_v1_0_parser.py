@@ -1401,6 +1401,15 @@ class NXTPacketIn(NiciraHeader):
                    cookie, match_len, match, frame)
 
 
+class NXTFlowAge(NiciraHeader):
+    def __init__(self, datapath):
+        super(NXTFlowAge, self).__init__(
+            datapath, ofproto_v1_0.NXT_FLOW_AGE)
+
+    def _serialize_body(self):
+        self.serialize_header()
+
+
 class NXTSetControllerId(NiciraHeader):
     def __init__(self, datapath, controller_id):
         super(NXTSetControllerId, self).__init__(
