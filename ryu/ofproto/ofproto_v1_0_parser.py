@@ -1368,6 +1368,39 @@ class NXTSetPacketInFormat(NiciraHeader):
                       self.format)
 
 
+@NiciraHeader.register_nx_subtype(ofproto_v1_0.NXT_PACKET_IN)
+class NXTPacketIn(NiciraHeader):
+    def __init__(self, datapath, buffer_id, total_len, reason, table_id,
+                 cookie, match_len, match, frame):
+        super(NXTPacketIn, self).__init__(
+            datapath, ofproto_v1_0.NXT_PACKET_IN)
+        self.buffer_id = buffer_id
+        self.total_len = total_len
+        self.reason = reason
+        self.table_id = table_id
+        self.cookie = cookie
+        self.match_len = match_len
+        self.match = match
+        self.frame = frame
+
+    @classmethod
+    def parser(cls, datapath, buf, offset):
+        (buffer_id, total_len, reason, table_id,
+                 cookie, match_len) = struct.unpack_from(
+            ofproto_v1_0.NX_PACKET_IN_PACK_STR, buf, offset)
+
+        offset += (ofproto_v1_0.NX_PACKET_IN_SIZE
+                   - ofproto_v1_0.NICIRA_HEADER_SIZE)
+
+        match = nx_match.NXMatch.parser(buf, offset, match_len)
+        offset += (match_len + 7) / 8 * 8
+        frame = buf[offset:]
+        if total_len < len(frame):
+            frame = frame[:total_len]
+        return cls(datapath, buffer_id, total_len, reason, table_id,
+                   cookie, match_len, match, frame)
+
+
 class NXTSetControllerId(NiciraHeader):
     def __init__(self, datapath, controller_id):
         super(NXTSetControllerId, self).__init__(
