@@ -231,9 +231,10 @@ OFP_ACTION_PACK_STR = '!H'
 # OFP_ACTION_SIZE = 8
 # assert calcsize(OFP_ACTION_PACK_STR) == OFP_ACTION_SIZE
 
-# enum nx_action_subtype (truncated)
+# enum nx_action_subtype
 NXAST_RESUBMIT = 1
 NXAST_SET_TUNNEL = 2
+NXAST_DROP_SPOOFED_ARP__OBSOLETE = 3
 NXAST_SET_QUEUE = 4
 NXAST_POP_QUEUE = 5
 NXAST_REG_MOVE = 6
