@@ -824,6 +824,45 @@ class NXActionDecTtl(NXActionHeader):
         return cls()
 
 
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_LEARN)
+class NXActionLearn(NXActionHeader):
+    def __init__(self, idle_timeout, hard_timeout, priority, cookie, flags,
+                 table_id, fin_idle_timeout, fin_hard_timeout, spec):
+        len_ = len(spec) + ofproto_v1_0.NX_ACTION_LEARN_SIZE
+        pad_len = 8 - (len_ % 8)
+
+        super(NXActionLearn, self).__init__(
+            ofproto_v1_0.NXAST_LEARN, len_ + pad_len)
+        self.idle_timeout = idle_timeout
+        self.hard_timeout = hard_timeout
+        self.priority = priority
+        self.cookie = cookie
+        self.flags = flags
+        self.table_id = table_id
+        self.fin_idle_timeout = fin_idle_timeout
+        self.fin_hard_timeout = fin_hard_timeout
+        self.spec = spec + bytearray('\x00' * pad_len)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset,
+                      self.type, self.len, self.vendor, self.subtype,
+                      self.idle_timeout, self.hard_timeout, self.priority,
+                      self.cookie, self.flags, self.table_id,
+                      self.fin_idle_timeout, self.fin_hard_timeout)
+        buf += self.spec
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, vendor, subtype, idle_timeout, hard_timeout, priority,
+         cookie, flags, table_id, fin_idle_timeout,
+         fin_hard_timeout) = struct.unpack_from(
+            ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset)
+        spec = buf[offset + ofproto_v1_0.NX_ACTION_LEARN_SIZE:]
+        return cls(idle_timeout, hard_timeout, priority,
+                   cookie, flags, table_id, fin_idle_timeout,
+                   fin_hard_timeout, spec)
+
+
 @NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_CONTROLLER)
 class NXActionController(NXActionHeader):
     def __init__(self, max_len, controller_id, reason):
