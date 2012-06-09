@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,6 +69,16 @@ class AppManager(object):
         self.contexts_cls = {}
         self.contexts = {}
 
+    def load_app(self, name):
+        mod = utils.import_module(name)
+        for k, v in mod.__dict__.items():
+            try:
+                if issubclass(v, RyuApp):
+                    return getattr(mod, k)
+            except TypeError:
+                pass
+        return None
+
     def load_apps(self, app_lists):
         for app_cls_name in itertools.chain.from_iterable([app_list.split(',')
                                                            for app_list
@@ -80,7 +90,10 @@ class AppManager(object):
             # Yes, maybe for slicing.
             assert app_cls_name not in self.applications_cls
 
-            cls = utils.import_object(app_cls_name)
+            cls = self.load_app(app_cls_name)
+            if cls is None:
+                continue
+
             self.applications_cls[app_cls_name] = cls
 
             for key, context_cls in cls.context_iteritems():

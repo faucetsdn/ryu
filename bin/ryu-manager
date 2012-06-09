@@ -35,9 +35,8 @@ from ryu.controller import controller
 
 FLAGS = gflags.FLAGS
 gflags.DEFINE_multistring('app_lists',
-                          ['ryu.app.simple_isolation.SimpleIsolation',
-                           'ryu.app.rest.restapi',
-                           # 'ryu.app.event_dumper.EventDumper',
+                          ['ryu.app.simple_isolation',
+                           'ryu.app.rest',
                            ],
                           'application module name to run')
 
