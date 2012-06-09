@@ -24,7 +24,15 @@ LOG = logging.getLogger('ryu.utils')
 
 
 def import_module(modname):
-    __import__(modname)
+    try:
+        __import__(modname)
+    except:
+        sys.path.append(os.path.dirname(os.path.abspath(modname)))
+        name = os.path.basename(modname)
+        if name.endswith('.py'):
+            name = name[:-3]
+        __import__(name)
+        return sys.modules[name]
     return sys.modules[modname]
 
 

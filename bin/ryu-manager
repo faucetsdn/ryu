@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,16 +35,17 @@ from ryu.controller import controller
 
 FLAGS = gflags.FLAGS
 gflags.DEFINE_multistring('app_lists',
-                          ['ryu.app.simple_isolation',
-                           'ryu.app.rest',
-                           ],
+                          [],
                           'application module name to run')
 
 
 def main():
     utils.find_flagfile()
-    _args = FLAGS(sys.argv)
+    args = FLAGS(sys.argv)
     log.init_log()
+
+    if len(args) > 1:
+        FLAGS.app_lists += args[1:]
 
     app_mgr = AppManager()
     app_mgr.load_apps(FLAGS.app_lists)
