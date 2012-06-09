@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 # Copyright (C) 2012 Simon Horman <horms ad verge net au>
 #
@@ -28,6 +28,7 @@ LOG = logging.getLogger('ryu.ofproto.nx_match')
 
 
 UINT64_MAX = (1 << 64) - 1
+UINT16_MAX = (1 << 16) - 1
 
 FWW_IN_PORT = 1 << 0
 FWW_DL_SRC = 1 << 2
@@ -64,11 +65,13 @@ class Flow(object):
         self.dl_dst = mac.DONTCARE
         self.dl_type = 0
         self.nw_tos = 0
+        self.vlan_tci = 0
 
 
 class FlowWildcards(object):
     def __init__(self):
         self.tun_id_mask = 0
+        self.vlan_tci_mask = 0
         self.wildcards = FWW_ALL
 
     def set_dl_dst_mask(self, mask):
@@ -137,6 +140,13 @@ class ClsRule(object):
     def set_dl_type(self, dl_type):
         self.wc.wildcards &= ~FWW_DL_TYPE
         self.flow.dl_type = dl_type
+
+    def set_dl_tci(self, tci):
+        self.set_dl_tci_masked(tci, UINT16_MAX)
+
+    def set_dl_tci_masked(self, tci, mask):
+        self.wc.vlan_tci_mask = mask
+        self.flow.vlan_tci = tci
 
     def set_nw_dscp(self, nw_dscp):
         self.wc.wildcards &= ~FWW_NW_DSCP
@@ -302,6 +312,19 @@ class MFEthType(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_VLAN_TCI,
+                   ofproto_v1_0.NXM_OF_VLAN_TCI_W])
+class MFVlan(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE16)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.vlan_tci,
+                         rule.wc.vlan_tci_mask)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_OF_IP_TOS])
 class MFIPDSCP(MFField):
     @classmethod
@@ -349,7 +372,13 @@ def serialize_nxm_match(rule, buf, offset):
     if not rule.wc.wildcards & FWW_DL_TYPE:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ETH_TYPE, rule)
 
-    # XXX: 802.1Q
+    # 802.1Q
+    if rule.wc.vlan_tci_mask != 0:
+        if rule.wc.vlan_tci_mask == UINT16_MAX:
+            header = ofproto_v1_0.NXM_OF_VLAN_TCI
+        else:
+            header = ofproto_v1_0.NXM_OF_VLAN_TCI_W
+        offset += nxm_put(buf, offset, header, rule)
 
     # L3
     if not rule.wc.wildcards & FWW_NW_DSCP:
