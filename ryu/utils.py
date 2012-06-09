@@ -36,15 +36,6 @@ def import_module(modname):
     return sys.modules[modname]
 
 
-def import_object(modname):
-    try:
-        return import_module(modname)
-    except ImportError:
-        (from_mod, _sep, target) = modname.rpartition('.')
-        mod = import_module(from_mod)
-        return getattr(mod, target)
-
-
 RYU_DEFAULT_FLAG_FILE = ('ryu.conf', 'etc/ryu/ryu.conf' '/etc/ryu/ryu.conf')
 
 
