@@ -28,6 +28,7 @@ LOG = logging.getLogger('ryu.ofproto.nx_match')
 
 
 UINT64_MAX = (1 << 64) - 1
+UINT32_MAX = (1 << 32) - 1
 UINT16_MAX = (1 << 16) - 1
 
 FWW_IN_PORT = 1 << 0
@@ -52,6 +53,7 @@ IP_ECN_MASK = 0x03
 IP_DSCP_MASK = 0xfc
 
 MF_PACK_STRING_BE64 = '!Q'
+MF_PACK_STRING_BE32 = '!I'
 MF_PACK_STRING_BE16 = '!H'
 MF_PACK_STRING_8 = '!B'
 MF_PACK_STRING_MAC = '!6s'
@@ -73,6 +75,8 @@ class Flow(object):
         self.nw_proto = 0
         self.arp_sha = 0
         self.arp_tha = 0
+        self.nw_src = 0
+        self.nw_dst = 0
 
 
 class FlowWildcards(object):
@@ -81,6 +85,8 @@ class FlowWildcards(object):
         self.dl_dst_mask = 0
         self.tp_src_mask = 0
         self.tp_dst_mask = 0
+        self.nw_src_mask = 0
+        self.nw_dst_mask = 0
         self.tun_id_mask = 0
         self.vlan_tci_mask = 0
         self.wildcards = FWW_ALL
@@ -142,6 +148,20 @@ class ClsRule(object):
     def set_nw_proto(self, nw_proto):
         self.wc.wildcards &= ~FWW_NW_PROTO
         self.flow.nw_proto = nw_proto
+
+    def set_nw_src(self, nw_src):
+        self.set_nw_src_masked(nw_src, UINT32_MAX)
+
+    def set_nw_src_masked(self, nw_src, mask):
+        self.flow.nw_src = nw_src
+        self.wc.nw_src_mask = mask
+
+    def set_nw_dst(self, nw_dst):
+        self.set_nw_dst_masked(nw_dst, UINT32_MAX)
+
+    def set_nw_dst_masked(self, nw_dst, mask):
+        self.flow.nw_dst = nw_dst
+        self.wc.nw_dst_mask = mask
 
     def set_nw_dscp(self, nw_dscp):
         self.wc.wildcards &= ~FWW_NW_DSCP
@@ -351,6 +371,28 @@ class MFTunId(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_IP_SRC, ofproto_v1_0.NXM_OF_IP_SRC_W])
+class MFIPSrc(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE32)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.nw_src, rule.wc.nw_src_mask)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_IP_DST, ofproto_v1_0.NXM_OF_IP_DST_W])
+class MFIPDst(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE32)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.nw_dst, rule.wc.nw_dst_mask)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_IP_ECN])
 class MFIPECN(MFField):
     @classmethod
@@ -502,7 +544,22 @@ def serialize_nxm_match(rule, buf, offset):
             header = 0
         if header != 0:
             offset += nxm_put(buf, offset, header, rule)
-    # XXX: IP Source and Destination
+
+    # IP Source and Destination
+    if rule.flow.nw_src != 0:
+        if rule.wc.nw_src_mask == UINT32_MAX:
+            header = ofproto_v1_0.NXM_OF_IP_SRC
+        else:
+            header = ofproto_v1_0.NXM_OF_IP_SRC_W
+        offset += nxm_put(buf, offset, header, rule)
+
+    if rule.flow.nw_dst != 0:
+        if rule.wc.nw_dst_mask == UINT32_MAX:
+            header = ofproto_v1_0.NXM_OF_IP_DST
+        else:
+            header = ofproto_v1_0.NXM_OF_IP_DST_W
+        offset += nxm_put(buf, offset, header, rule)
+
     # XXX: IPv6
     # ARP
     if not rule.wc.wildcards & FWW_ARP_SHA:
