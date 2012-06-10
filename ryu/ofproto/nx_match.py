@@ -34,6 +34,7 @@ FWW_IN_PORT = 1 << 0
 FWW_DL_SRC = 1 << 2
 FWW_DL_DST = 1 << 3
 FWW_DL_TYPE = 1 << 4
+FWW_NW_PROTO = 1 << 5
 # No corresponding OFPFW_* bits
 FWW_ETH_MCAST = 1 << 1
 FWW_NW_DSCP = 1 << 6
@@ -68,6 +69,7 @@ class Flow(object):
         self.nw_tos = 0
         self.vlan_tci = 0
         self.nw_ttl = 0
+        self.nw_proto = 0
 
 
 class FlowWildcards(object):
@@ -149,6 +151,10 @@ class ClsRule(object):
     def set_dl_tci_masked(self, tci, mask):
         self.wc.vlan_tci_mask = mask
         self.flow.vlan_tci = tci
+
+    def set_nw_proto(self, nw_proto):
+        self.wc.wildcards &= ~FWW_NW_PROTO
+        self.flow.nw_proto = nw_proto
 
     def set_nw_dscp(self, nw_dscp):
         self.wc.wildcards &= ~FWW_NW_DSCP
@@ -376,6 +382,17 @@ class MFIPTTL(MFField):
         return self._put(buf, offset, rule.flow.nw_ttl)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_IP_PROTO])
+class MFIPProto(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.nw_proto)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -404,6 +421,8 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IP_ECN, rule)
     if not rule.wc.wildcards & FWW_NW_TTL:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IP_TTL, rule)
+    if not rule.wc.wildcards & FWW_NW_PROTO:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_IP_PROTO, rule)
     # XXX: IP Source and Destination
     # XXX: IPv6
     # XXX: ARP
