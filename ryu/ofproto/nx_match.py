@@ -34,8 +34,10 @@ FWW_IN_PORT = 1 << 0
 FWW_DL_TYPE = 1 << 4
 FWW_NW_PROTO = 1 << 5
 # No corresponding OFPFW_* bits
-FWW_NW_DSCP = 1 << 6
-FWW_NW_ECN = 1 << 7
+FWW_NW_DSCP = 1 << 1
+FWW_NW_ECN = 1 << 2
+FWW_ARP_SHA = 1 << 3
+FWW_ARP_THA = 1 << 6
 FWW_NW_TTL = 1 << 8
 FWW_ALL = (1 << 13) - 1
 
@@ -69,6 +71,8 @@ class Flow(object):
         self.vlan_tci = 0
         self.nw_ttl = 0
         self.nw_proto = 0
+        self.arp_sha = 0
+        self.arp_tha = 0
 
 
 class FlowWildcards(object):
@@ -159,6 +163,14 @@ class ClsRule(object):
     def set_nw_ttl(self, nw_ttl):
         self.wc.wildcards &= ~FWW_NW_TTL
         self.flow.nw_ttl = nw_ttl
+
+    def set_arp_sha(self, sha):
+        self.wc.wildcards &= ~FWW_ARP_SHA
+        self.flow.arp_sha = sha
+
+    def set_arp_tha(self, tha):
+        self.wc.wildcards &= ~FWW_ARP_THA
+        self.flow.arp_tha = tha
 
     def flow_format(self):
         # Tunnel ID is only supported by NXM
@@ -396,6 +408,28 @@ class MFTPSRC(MFField):
         return self.putm(buf, offset, rule.flow.tp_dst, rule.wc.tp_dst_mask)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_ARP_SHA])
+class MFArpSha(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_MAC)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.arp_sha)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_ARP_THA])
+class MFArpTha(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_MAC)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.arp_tha)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -470,7 +504,11 @@ def serialize_nxm_match(rule, buf, offset):
             offset += nxm_put(buf, offset, header, rule)
     # XXX: IP Source and Destination
     # XXX: IPv6
-    # XXX: ARP
+    # ARP
+    if not rule.wc.wildcards & FWW_ARP_SHA:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ARP_SHA, rule)
+    if not rule.wc.wildcards & FWW_ARP_THA:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ARP_THA, rule)
 
     # Tunnel Id
     if rule.wc.tun_id_mask != 0:
