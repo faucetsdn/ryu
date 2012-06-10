@@ -715,6 +715,8 @@ NXM_NX_ND_TLL = nxm_header(0x0001, 25, 6)
 
 NXM_NX_IP_ECN = nxm_header(0x0001, 28, 1)
 
+NXM_NX_IP_TTL = nxm_header(0x0001, 29, 1)
+
 
 def nxm_nx_reg(idx):
     return nxm_header(0x0001, idx, 4)

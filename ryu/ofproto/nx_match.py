@@ -38,6 +38,7 @@ FWW_DL_TYPE = 1 << 4
 FWW_ETH_MCAST = 1 << 1
 FWW_NW_DSCP = 1 << 6
 FWW_NW_ECN = 1 << 7
+FWW_NW_TTL = 1 << 8
 FWW_ALL = (1 << 13) - 1
 
 # Ethernet types, for set_dl_type()
@@ -66,6 +67,7 @@ class Flow(object):
         self.dl_type = 0
         self.nw_tos = 0
         self.vlan_tci = 0
+        self.nw_ttl = 0
 
 
 class FlowWildcards(object):
@@ -164,6 +166,10 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_NW_ECN
         self.flow.nw_tos &= ~IP_ECN_MASK
         self.flow.nw_tos |= nw_ecn & IP_ECN_MASK
+
+    def set_nw_ttl(self, nw_ttl):
+        self.wc.wildcards &= ~FWW_NW_TTL
+        self.flow.nw_ttl = nw_ttl
 
     def flow_format(self):
         # Tunnel ID is only supported by NXM
@@ -359,6 +365,17 @@ class MFIPECN(MFField):
                          rule.flow.nw_tos & IP_ECN_MASK)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_IP_TTL])
+class MFIPTTL(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.nw_ttl)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -385,6 +402,8 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_IP_TOS, rule)
     if not rule.wc.wildcards & FWW_NW_ECN:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IP_ECN, rule)
+    if not rule.wc.wildcards & FWW_NW_TTL:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IP_TTL, rule)
     # XXX: IP Source and Destination
     # XXX: IPv6
     # XXX: ARP
