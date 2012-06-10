@@ -31,7 +31,6 @@ UINT64_MAX = (1 << 64) - 1
 UINT16_MAX = (1 << 16) - 1
 
 FWW_IN_PORT = 1 << 0
-FWW_DL_SRC = 1 << 2
 FWW_DL_TYPE = 1 << 4
 FWW_NW_PROTO = 1 << 5
 # No corresponding OFPFW_* bits
@@ -72,6 +71,7 @@ class Flow(object):
 
 class FlowWildcards(object):
     def __init__(self):
+        self.dl_src_mask = 0
         self.dl_dst_mask = 0
         self.tun_id_mask = 0
         self.vlan_tci_mask = 0
@@ -98,8 +98,13 @@ class ClsRule(object):
                                       zip(dl_dst, mask)))
 
     def set_dl_src(self, dl_src):
-        self.wc.wildcards &= ~FWW_DL_SRC
         self.flow.dl_src = dl_src
+
+    def set_dl_src_masked(self, dl_src, mask):
+        self.wc.dl_src_mask = mask
+        self.flow.dl_src = reduce(lambda x, y: x + y,
+                                  map(lambda x: chr(ord(x[0]) & ord(x[1])),
+                                      zip(dl_src, mask)))
 
     def set_dl_type(self, dl_type):
         self.wc.wildcards &= ~FWW_DL_TYPE
@@ -159,7 +164,7 @@ class ClsRule(object):
         if not self.wc.wildcards & FWW_IN_PORT:
             wildcards &= ~ofproto.OFPFW_IN_PORT
 
-        if not self.wc.wildcards & FWW_DL_SRC:
+        if self.flow.dl_src != mac.DONTCARE:
             wildcards &= ~ofproto.OFPFW_DL_SRC
 
         if self.wc.dl_dst_mask:
@@ -254,14 +259,18 @@ class MFEthDst(MFField):
 
 
 @_register_make
-@_set_nxm_headers([ofproto_v1_0.NXM_OF_ETH_SRC])
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ETH_SRC, ofproto_v1_0.NXM_OF_ETH_SRC_W])
 class MFEthSrc(MFField):
     @classmethod
     def make(cls):
         return cls(MF_PACK_STRING_MAC)
 
     def put(self, buf, offset, rule):
-        return self._put(buf, offset, rule.flow.dl_src)
+        if rule.wc.dl_src_mask:
+            return self.putw(buf, offset, rule.flow.dl_src,
+                             rule.wc.dl_src_mask)
+        else:
+            return self._put(buf, offset, rule.flow.dl_src)
 
 
 @_register_make
@@ -359,8 +368,13 @@ def serialize_nxm_match(rule, buf, offset):
             header = ofproto_v1_0.NXM_OF_ETH_DST
         offset += nxm_put(buf, offset, header, rule)
 
-    if not rule.wc.wildcards & FWW_DL_SRC:
-        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ETH_SRC, rule)
+    if rule.flow.dl_src != mac.DONTCARE:
+        if rule.wc.dl_src_mask:
+            header = ofproto_v1_0.NXM_OF_ETH_SRC_W
+        else:
+            header = ofproto_v1_0.NXM_OF_ETH_SRC
+        offset += nxm_put(buf, offset, header, rule)
+
     if not rule.wc.wildcards & FWW_DL_TYPE:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ETH_TYPE, rule)
 

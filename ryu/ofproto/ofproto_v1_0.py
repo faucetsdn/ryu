@@ -666,6 +666,7 @@ NXM_OF_IN_PORT = nxm_header(0x0000, 0, 2)
 NXM_OF_ETH_DST = nxm_header(0x0000, 1, 6)
 NXM_OF_ETH_DST_W = nxm_header_w(0x0000, 1, 6)
 NXM_OF_ETH_SRC = nxm_header(0x0000, 2, 6)
+NXM_OF_ETH_SRC_W = nxm_header_w(0x0000, 2, 6)
 NXM_OF_ETH_TYPE = nxm_header(0x0000, 3, 2)
 
 NXM_OF_VLAN_TCI = nxm_header(0x0000, 4, 2)
