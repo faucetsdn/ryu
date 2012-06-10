@@ -49,6 +49,8 @@ ETH_TYPE_VLAN = 0x8100
 ETH_TYPE_IPV6 = 0x86dd
 ETH_TYPE_LACP = 0x8809
 
+IPPROTO_ICMP = 1
+
 IP_ECN_MASK = 0x03
 IP_DSCP_MASK = 0xfc
 
@@ -167,6 +169,12 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_NW_DSCP
         self.flow.nw_tos &= ~IP_DSCP_MASK
         self.flow.nw_tos |= nw_dscp & IP_DSCP_MASK
+
+    def set_icmp_type(self, icmp_type):
+        self.set_tp_src(icmp_type)
+
+    def set_icmp_code(self, icmp_code):
+        self.set_tp_dst(icmp_code)
 
     def set_tun_id(self, tun_id):
         self.set_tun_id_masked(tun_id, UINT64_MAX)
@@ -472,6 +480,28 @@ class MFArpTha(MFField):
         return self._put(buf, offset, rule.flow.arp_tha)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ICMP_TYPE])
+class MFICMPType(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.nw_src)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ICMP_CODE])
+class MFICMPCode(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.nw_dst)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -513,6 +543,16 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IP_TTL, rule)
     if not rule.wc.wildcards & FWW_NW_PROTO:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_IP_PROTO, rule)
+
+    if not rule.wc.wildcards & FWW_NW_PROTO and (rule.flow.nw_proto
+                                                 == IPPROTO_ICMP):
+        if rule.wc.tp_src_mask != 0:
+            offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ICMP_TYPE, rule)
+        elif rule.wc.tp_dst_mask != 0:
+            offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ICMP_CODE, rule)
+        else:
+            pass
+
     if rule.flow.tp_src != 0:
         if rule.flow.nw_proto == 6:
             if rule.wc.tp_src_mask == UINT16_MAX:
