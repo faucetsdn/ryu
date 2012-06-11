@@ -43,7 +43,7 @@ h1, h2, h3 {
 	/*color: #FAFAFA;*/
 }
 h1 {
-	font-size: 3.6em;	
+	font-size: 3.1em;	
 	font-weight: normal;
 	letter-spacing: -2px;
 	padding: 15px 10px 5px 10px;	
@@ -298,7 +298,7 @@ input.button {
 #main h2 {
 	padding: 5px 12px;
 	margin: 15px 5px 10px 5px;
-	font: bold 3.5em 'Trebuchet MS', Helvetica, Arial, sans-serif;				
+	font: bold 2.4em 'Trebuchet MS', Helvetica, Arial, sans-serif;				
 	color: #000000;
 	border-bottom: 1px solid #121212; 
 	/* background-image: url(pattern.gif);	 */
