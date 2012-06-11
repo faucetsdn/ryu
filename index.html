@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+<title>Ryu</title>
+
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="author" content="NTT Software Inovation Center" />
+<meta name="description" content="Ryu" />
+<meta name="keywords" content="OpenFlow, Software Defined Network, OpenStack, Quantum" />
+<meta name="robots" content="index, follow, noarchive" />
+<meta name="googlebot" content="noarchive" />
+
+<link rel="stylesheet" href="images/UrbanArtist.css" type="text/css" />
+
+</head>
+
+<body>
+
+<!-- wrap starts here -->
+<div id="wrap">
+
+	<!--header -->
+	<div id="header">			
+				
+		<h1 id="logo-text"><a href="index.html" title="">Ryu</a></h1>		
+		<p id="intro">
+		  Python-based OpenFlow controller but we aim for bigger pictures
+		</p>	
+		
+		<div  id="nav">
+			<ul>
+				<li id="current"><a href="index.html">Home</a></li>
+				<li><a href="http://github.com/osrg/ryu">Download</a></li>
+				<li><a href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">Mailing List</a></li>
+				<li><a href="https://github.com/osrg/ryu/wiki">Wiki</a></li>
+				<li><a href="http://www.osrg.net/ryu/">Documentation</a></li>
+				<!-- <li><a href="index.html">About</a></li> --!>
+			</ul>		
+		</div>	
+						
+	<!--header ends-->					
+	</div>
+	
+	<!-- content-wrap starts -->
+	<div id="content-wrap">
+				
+		<div id="main">
+				
+			<a name="What Is ryu"></a>
+			<h2><a href="index.html">What is Ryu?</a></h2>
+			
+				
+            <p><strong>Ryu</strong> is an Operating System for Software Defined Network.
+            
+Ryu aims to provide a logically centralized control and well defined
+API that make it easy for operators to create new network management
+and control applications. Currently, Ryu manages network devices by using <a href="http://www.openflow.org/">OpenFlow</a>. You can say that Ryu is an OpenFlow Controller.
+            </p>
+
+	    <p>
+	    <a href="http://www.ntt.co.jp/RD/OFIS/index_en.html">NTT laboratories</a> started Ryu project and the members are
+	    actively involved in the development. Our aim is
+	    developping an Operating System for SDN that has high
+	    quality enough for use in large production environment.
+
+            <p>
+            All of the code is freely available under the Apache 2.0
+            license. Ryu is developped openly.
+            </p>
+				
+			<h2><a href="index.html">Three reasons for Ryu</a></h2>
+
+			<p>
+			There are other options for SDN? Why use Ryu?
+						</p>
+
+			<h3>Operators</h3>
+			<ol>
+			  <li><a href="http://www.openstack.org">OpenStack</a> supports Ryu. You can create tens of thousands of isolated
+virtual networks without using VLAN. You manage virtual networks,
+OpenStack notfies of Ryu and Ryu configures <a href="http://openvswitch.org">OpenvSwitches</a> properly.</li>
+
+<li>You can try Now. <a href="https://github.com/osrg/ryu/wiki/OpenStack">Ryu's pre-configred VM iamge file</a> enables you to easily set up multi-node OpenStack environment.</li>
+
+			  <li>We try Ryu with software OpenFlow Switch (OpenvSwitch) and bunch of hardware OpenFlow Switches.</li>
+			  <!-- <li>There is no comercial version. NTT laboratories don't even have bisuness units.</li> -->
+
+			</ol>
+			
+			<h3>Developers</h3>
+			<ol>
+			  <li>You can write your Ryu application with Python, which you love, don't you? Ryu is fully implemented by Python. No language binding mess, easy to play with.</li>
+			  <li>Ryu fully supports OpenFlow v1.0 and Nicira Extensions. It enables you to implement whatever tricks you like to use with your network, GRE, IPv6, etc. We support OpenFlow v1.2 soon. Check out the latest status on <a href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">the mailing list</a>.</li>
+			  <li>The development is truely open. We
+			  openly discuss everything on the maling
+			  list. No CLA mess, just send a patch to the
+			  mailing list. We are ready to discuss the
+			  patch for merging.</li>
+			</ol>
+			
+			<h2><a href="index.html">Quick Start</a></h2>
+			
+			<p>
+			We are preparing distribution packages. Until it's done,
+			try the following.</p>
+
+			<p>
+			Get source code:
+			<code>
+			  % git clone git://github.com/osrg/ryu.git
+			</code>
+			Then just type:
+			<code>
+			  % cd ryu; python ./setup.py install
+			</code>
+
+			You can write your Ryu applicaiton then simply just type:
+			
+			<code>
+			  % ryu-manager yourapp.py
+			</code>
+
+			Wants to know how to write Ryu applications? Let's start with <a href="https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py" >a simple example</a>.
+			</p>
+
+		<!-- main ends -->	
+		</div>
+		
+		<!-- sidebar starts -->
+		<div id="sidebar">			
+		
+			<h3>About</h3>			
+			
+			<p>
+			  <a href="http://www.osrg.net">NTT laboratories OSRG members</a> have founded
+			  several OSS projects such as <a href="http://www.osrg.net/sheepdog/">Sheepdog</a>,
+			  <a href="http://www.osrg.net/nilfs/">NILFS</a>, <a href="http://stgt.sf.net/">tgt</a>, <a href="http://iscsitarget.sf.net">IET</a>, etc. We have benn also heavily
+			  involved in OSS projects such Linux kernel.
+			</p>
+
+
+			<h3>Ryu naming</h3>
+			<p>
+
+			<strong>Ryu</strong> means <strong>flow</strong> in Japanese. You know why we chose the name. We found that Japanese <strong>Ryu</strong> pronounceation is too hard for non Japanese. Please pronounce like <strong>raij</strong>. You are still interested in <a href="http://translate.google.com/#en|ja|ryu%0A">How to pronounce it</a> in Japanese properly? 
+
+			</p>
+			
+			<h3>Sidebar Menu</h3>
+			<ul class="sidemenu">				
+				<li><a href="index.html">Home</a></li>
+				<li><a href="http://github.com/osrg/ryu">Download</a></li>
+				<li><a href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">Mailing List</a></li>
+				<li><a href="https://github.com/osrg/ryu/wiki">Wiki</a></li>
+				<li><a href="http://www.osrg.net/ryu/">Documentation</a></li>
+			</ul>	
+				
+			<h3>Slides</h3>
+			<ul class="sidemenu">
+				<li><a href="">OpenStack Developer Conference 2012</a></li>
+				<li><a href="">LinuxCon Japan 2012</a></li>					
+			</ul>
+			
+						
+		<!-- sidebar ends -->		
+		</div>
+		
+	<!-- content-wrap ends-->	
+	</div>
+
+	<!-- footer starts here -->	
+	<div id="footer">
+	
+		<div id="footer-left">
+			<p>
+			&copy; Copyright Nippon Telegraph and Telephone Corporation. 2012 &nbsp;
+			<a href="http://www.bluewebtemplates.com/" title="Website Templates">website templates</a> by <a href="http://www.styleshout.com/">styleshout</a>	
+			</p>	
+		</div>
+		
+		<div id="footer-right">
+			<p class="align-right">
+			<a href="index.html">Home</a> <!-- | <a href="index.html">Sitemap</a> | <a href="index.html" class="rssfeed">RSS Feed</a> --!>
+			</p>
+		</div>
+		
+	</div>
+	<!-- footer ends here -->
+	
+<!-- wrap ends here -->
+</div>
+
+</body>
+</html>
