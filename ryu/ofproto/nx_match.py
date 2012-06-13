@@ -79,6 +79,7 @@ class Flow(object):
         self.arp_tha = 0
         self.nw_src = 0
         self.nw_dst = 0
+        self.tun_id = 0
 
 
 class FlowWildcards(object):
@@ -236,10 +237,10 @@ class ClsRule(object):
 
 def _set_nxm_headers(nxm_headers):
     '''Annotate corresponding NXM header'''
-    def _set_nxm_headers(self):
+    def _set_nxm_headers_dec(self):
         self.nxm_headers = nxm_headers
         return self
-    return _set_nxm_headers
+    return _set_nxm_headers_dec
 
 
 def _register_make(cls):
@@ -271,8 +272,8 @@ class MFField(object):
         return self.n_bytes
 
     def putw(self, buf, offset, value, mask):
-        len = self._put(buf, offset, value)
-        return len + self._put(buf, offset + len, mask)
+        len_ = self._put(buf, offset, value)
+        return len + self._put(buf, offset + len_, mask)
 
     def _is_all_ones(self, value):
         return value == (1 << self.n_bits) - 1
@@ -440,18 +441,6 @@ class MFTPSRC(MFField):
 
     def put(self, buf, offset, rule):
         return self.putm(buf, offset, rule.flow.tp_src, rule.wc.tp_src_mask)
-
-
-@_register_make
-@_set_nxm_headers([ofproto_v1_0.NXM_OF_TCP_DST, ofproto_v1_0.NXM_OF_TCP_DST_W,
-                   ofproto_v1_0.NXM_OF_UDP_DST, ofproto_v1_0.NXM_OF_UDP_DST_W])
-class MFTPSRC(MFField):
-    @classmethod
-    def make(cls):
-        return cls(MF_PACK_STRING_BE16)
-
-    def put(self, buf, offset, rule):
-        return self.putm(buf, offset, rule.flow.tp_dst, rule.wc.tp_dst_mask)
 
 
 @_register_make
@@ -623,9 +612,9 @@ def serialize_nxm_match(rule, buf, offset):
 
 def nxm_put(buf, offset, header, rule):
     nxm = NXMatch(header)
-    len = nxm.put_header(buf, offset)
+    len_ = nxm.put_header(buf, offset)
     mf = mf_from_nxm_header(nxm.header)
-    return len + mf.put(buf, offset + len, rule)
+    return len_ + mf.put(buf, offset + len, rule)
 
 
 def round_up(length):
