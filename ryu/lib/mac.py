@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+
+
 # Internal representation of mac address is string[6]
 _HADDR_LEN = 6
 
@@ -31,7 +34,7 @@ def haddr_to_str(addr):
     """Format mac address in internal representation into human readable
     form"""
     assert len(addr) == _HADDR_LEN
-    return ':'.join(['%02x' % ord(char) for char in addr])
+    return ':'.join('%02x' % ord(char) for char in addr)
 
 
 def haddr_to_bin(string):
@@ -40,4 +43,9 @@ def haddr_to_bin(string):
     hexes = string.split(':')
     if len(hexes) != _HADDR_LEN:
         ValueError('Invalid format for mac address: %s' % string)
-    return ''.join([chr(int(h, 16)) for h in hexes])
+    return ''.join(chr(int(h, 16)) for h in hexes)
+
+
+def haddr_bitand(addr, mask):
+    return ''.join(chr(ord(a) & ord(m)) for (a, m)
+                   in itertools.izip(addr, mask))

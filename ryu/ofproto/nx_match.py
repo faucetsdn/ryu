@@ -109,18 +109,14 @@ class ClsRule(object):
     def set_dl_dst_masked(self, dl_dst, mask):
         self.wc.dl_dst_mask = mask
         # bit-wise and of the corresponding elements of dl_dst and mask
-        self.flow.dl_dst = reduce(lambda x, y: x + y,
-                                  map(lambda x: chr(ord(x[0]) & ord(x[1])),
-                                      zip(dl_dst, mask)))
+        self.flow.dl_dst = mac.haddr_bitand(dl_dst, mask)
 
     def set_dl_src(self, dl_src):
         self.flow.dl_src = dl_src
 
     def set_dl_src_masked(self, dl_src, mask):
         self.wc.dl_src_mask = mask
-        self.flow.dl_src = reduce(lambda x, y: x + y,
-                                  map(lambda x: chr(ord(x[0]) & ord(x[1])),
-                                      zip(dl_src, mask)))
+        self.flow.dl_src = mac.haddr_bitand(dl_src, mask)
 
     def set_dl_type(self, dl_type):
         self.wc.wildcards &= ~FWW_DL_TYPE
