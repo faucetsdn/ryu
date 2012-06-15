@@ -774,3 +774,5 @@ assert (calcsize(OFP_EXPERIMENTER_HEADER_PACK_STR) + OFP_HEADER_SIZE ==
 # define constants
 OFP_VERSION = 0x03
 OFP_TCP_PORT = 6633
+
+MAX_XID = 0xffffffff
