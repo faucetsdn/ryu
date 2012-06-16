@@ -260,14 +260,14 @@ class OFPFlowRemoved(MsgBase):
         (msg.cookie, msg.priority, msg.reason,
          msg.table_id, msg.duration_sec, msg.duration_nsec,
          msg.idle_timeout, msg.hard_timeout, msg.packet_count,
-         msg.bypte_count) = struct.unpack_from(
-            ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR,
-            msg.buf, ofproto_v1_2.OFP_HEADER_SIZE)
+         msg.byte_count) = struct.unpack_from(
+            ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR0,
+            msg.buf, ofproto_v1_2.OFP_HEADER_SIZE + ofproto_v1_2.OFP_MATCH_SIZE)
 
         offset = (ofproto_v1_2.OFP_HEADER_SIZE +
                   ofproto_v1_2.OFP_FLOW_REMOVED_SIZE)
 
-        msg.match = OFPMatch(buf, offset - ofproto_v1_2.OFP_MATCH_SIZE)
+        msg.match = OFPMatch.parser(buf, offset - ofproto_v1_2.OFP_MATCH_SIZE)
 
         return msg
 
@@ -390,13 +390,13 @@ class OFPAction(OFPActionHeader):
                                 ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE)
 class OFPActionOutput(OFPAction):
     def __init__(self, port, max_len):
-        super(OFPAcitonOutput, self).__init__()
+        super(OFPActionOutput, self).__init__()
         self.port = port
         self.max_len = max_len
 
     @classmethod
     def parser(cls, buf, offset):
-        type_, len_, port, max_len = struct.upack_from(
+        type_, len_, port, max_len = struct.unpack_from(
             ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR, buf, offset)
         return cls(port, max_len)
 
