@@ -10,7 +10,7 @@ questions, suggestions, and patches, the mailing list is available at
 `The ML archive at Gmane <http://dir.gmane.org/gmane.network.ryu.devel>`_
 is also available.
 
-Ryu Official site is `<http://www.osrg.net/ryu/>`_.
+Ryu Official site is `<http://osrg.github.com/ryu/>`_.
 
 
 Overview
