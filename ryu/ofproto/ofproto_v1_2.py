@@ -92,7 +92,7 @@ OFPP_FLOOD = 0xfffffffb         # All physical ports except input port and
 OFPP_ALL = 0xfffffffc           # All physical ports except input port.
 OFPP_CONTROLLER = 0xfffffffd    # Send to controller.
 OFPP_LOCAL = 0xfffffffe         # Local openflow "port".
-OFPP_NONE = 0xffffffff 	        # Not associated with a physical port.
+OFPP_ANY = 0xffffffff 	        # Not associated with a physical port.
 
 # enum ofp_port_features
 OFPPF_10MB_HD = 1 << 0    # 10 Mb half-duplex rate support.

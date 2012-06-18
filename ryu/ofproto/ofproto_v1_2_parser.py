@@ -286,7 +286,7 @@ class OFPPortStatus(MsgBase):
             ofproto_v1_2.OFP_PORT_STATUS_PACK_STR, msg.buf,
             ofproto_v1_2.OFP_HEADER_SIZE)
         msg.desc = OFPPort.parser(msg.buf,
-                                  OFP_PORT_STATUS_DESC_OFFSET)
+                                  ofproto_v1_2.OFP_PORT_STATUS_DESC_OFFSET)
         return msg
 
 
