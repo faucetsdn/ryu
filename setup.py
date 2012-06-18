@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,19 @@
 # limitations under the License.
 
 import os
+import sys
 
 from setuptools import find_packages
 from setuptools import setup
 
-long_description = 'Ryu is an open-sourced network operating system licensed under Apache License v2. Ryu aims to provide logically centralized control and well defined API that makes it easy for cloud operators to implement network management applications on top of the Ryu. Currently, Ryu supports OpenFlow protocol to control the network devices.'
+doing_bdist = any(arg.startswith('bdist') for arg in sys.argv[1:])
+
+long_description = open('README.rst').read() + '\n\n'
+
+if doing_bdist:
+    start = long_description.find('=\n') + 2
+    long_description = long_description[
+        start:long_description.find('\n\n\n', start)]
 
 classifiers = [
     'License :: OSI Approved :: Apache Software License',
