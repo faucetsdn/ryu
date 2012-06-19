@@ -32,10 +32,9 @@ You can create tens of thousands of isolated virtual networks without
 using VLAN.  The Ryu application is included in OpenStack mainline as
 of Essex release.
 
-If you want to run your Ryu application, Let's start with
-`a simple example
- <https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py>`_.
-Just type::
+If you want to run your Ryu application, have a look at
+`a simple example <https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py>`_.
+After writing your application, just type::
 
    % ryu-manager yourapp.py
 
