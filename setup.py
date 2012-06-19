@@ -20,6 +20,8 @@ import sys
 from setuptools import find_packages
 from setuptools import setup
 
+from ryu import version
+
 doing_bdist = any(arg.startswith('bdist') for arg in sys.argv[1:])
 
 long_description = open('README.rst').read() + '\n\n'
@@ -38,7 +40,7 @@ classifiers = [
     ]
 
 setup(name='ryu',
-      version='0.2',
+      version=version,
       description=("Ryu Network Operating System"),
       long_description=long_description,
       classifiers=classifiers,
