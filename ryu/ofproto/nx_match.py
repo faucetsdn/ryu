@@ -473,7 +473,7 @@ class MFICMPType(MFField):
         return cls(MF_PACK_STRING_8)
 
     def put(self, buf, offset, rule):
-        return self._put(buf, offset, rule.flow.nw_src)
+        return self._put(buf, offset, rule.flow.tp_src)
 
 
 @_register_make
@@ -484,7 +484,7 @@ class MFICMPCode(MFField):
         return cls(MF_PACK_STRING_8)
 
     def put(self, buf, offset, rule):
-        return self._put(buf, offset, rule.flow.nw_dst)
+        return self._put(buf, offset, rule.flow.tp_dst)
 
 
 def serialize_nxm_match(rule, buf, offset):
@@ -533,10 +533,8 @@ def serialize_nxm_match(rule, buf, offset):
                                                  == IPPROTO_ICMP):
         if rule.wc.tp_src_mask != 0:
             offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ICMP_TYPE, rule)
-        elif rule.wc.tp_dst_mask != 0:
+        if rule.wc.tp_dst_mask != 0:
             offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ICMP_CODE, rule)
-        else:
-            pass
 
     if rule.flow.tp_src != 0:
         if rule.flow.nw_proto == 6:
