@@ -614,7 +614,7 @@ def nxm_put(buf, offset, header, rule):
     nxm = NXMatch(header)
     len_ = nxm.put_header(buf, offset)
     mf = mf_from_nxm_header(nxm.header)
-    return len_ + mf.put(buf, offset + len, rule)
+    return len_ + mf.put(buf, offset + len_, rule)
 
 
 def round_up(length):
