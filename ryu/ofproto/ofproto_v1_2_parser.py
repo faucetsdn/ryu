@@ -236,7 +236,7 @@ class OFPPacketIn(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPPacketIn, cls).parser(datapath, version, msg_type,
                                              msg_len, xid, buf)
-        (msg.buffer_in, msg.total_len, msg.reason,
+        (msg.buffer_id, msg.total_len, msg.reason,
          msg.table_id) = struct.unpack_from(
             ofproto_v1_2.OFP_PACKET_IN_PACK_STR,
             msg.buf, ofproto_v1_2.OFP_HEADER_SIZE)
@@ -276,7 +276,7 @@ class OFPFlowRemoved(MsgBase):
 @_set_msg_type(ofproto_v1_2.OFPT_PORT_STATUS)
 class OFPPortStatus(MsgBase):
     def __init__(self, datapath):
-        super(OFPPortStatus, self).__init__(datapaht)
+        super(OFPPortStatus, self).__init__(datapath)
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -292,8 +292,13 @@ class OFPPortStatus(MsgBase):
 
 @_set_msg_type(ofproto_v1_2.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
-    def __init__(self, datapath, in_port, buffer_id=None, actions=None,
+    def __init__(self, datapath, buffer_id=None, in_port=None, actions=None,
                  data=None):
+
+        # The in_port field is the ingress port that must be associated
+        # with the packet for OpenFlow processing.
+        assert in_port is not None
+
         super(OFPPacketOut, self).__init__(datapath)
         self.buffer_id = buffer_id
         self.in_port = in_port
@@ -302,10 +307,10 @@ class OFPPacketOut(MsgBase):
         self.data = data
 
     def _serialize_body(self):
-        self.actions = 0
+        self.actions_len = 0
         offset = ofproto_v1_2.OFP_PACKET_OUT_SIZE
         for a in self.actions:
-            a.serialize(self, buf, offset)
+            a.serialize(self.buf, offset)
             offset += a.len
             self.actions_len += a.len
 
@@ -414,7 +419,7 @@ class OFPActionGroup(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, len_, group_id) = struct.upack_from(
+        (type_, len_, group_id) = struct.unpack_from(
             ofproto_v1_2.OFP_ACTION_GROUP_PACK_STR, buf, offset)
         return cls(group_id)
 
@@ -432,7 +437,7 @@ class OFPActionSetQueue(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, len_, queue_id) = struct.upack_from(
+        (type_, len_, queue_id) = struct.unpack_from(
             ofproto_v1_2.OFP_ACTION_SET_QUEUE_PACK_STR, buf, offset)
         return cls(queue_id)
 
@@ -450,7 +455,7 @@ class OFPActionSetMplsTtl(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, len_, mpls_ttl) = struct.upack_from(
+        (type_, len_, mpls_ttl) = struct.unpack_from(
             ofproto_v1_2.OFP_ACTION_MPLS_TTL_PACK_STR, buf, offset)
         return cls(mpls_ttl)
 
@@ -480,7 +485,7 @@ class OFPActionSetNwTtl(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, len_, nw_ttl) = struct.upack_from(
+        (type_, len_, nw_ttl) = struct.unpack_from(
             ofproto_v1_2.OFP_ACTION_NW_TTL_PACK_STR, buf, offset)
         return cls(nw_ttl)
 
@@ -647,7 +652,7 @@ class OFPBucket(object):
         offset += ofproto_v1_2.OFP_BUCKET_SIZE
         msg.actions = []
         while length < msg.len:
-            aciton = OFPAction.parser(buf, offset)
+            action = OFPAction.parser(buf, offset)
             msg.actions.append(action)
             offset += action.len
             length += action.len
