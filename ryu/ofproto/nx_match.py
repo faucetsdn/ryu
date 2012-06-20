@@ -50,6 +50,7 @@ ETH_TYPE_IPV6 = 0x86dd
 ETH_TYPE_LACP = 0x8809
 
 IPPROTO_ICMP = 1
+IPPROTO_ICMPV6 = 58
 
 IP_ECN_MASK = 0x03
 IP_DSCP_MASK = 0xfc
@@ -196,6 +197,12 @@ class ClsRule(object):
     def set_arp_tha(self, tha):
         self.wc.wildcards &= ~FWW_ARP_THA
         self.flow.arp_tha = tha
+
+    def set_icmpv6_type(self, icmp_type):
+        self.set_tp_src(icmp_type)
+
+    def set_icmpv6_code(self, icmp_code):
+        self.set_tp_dst(icmp_code)
 
     def flow_format(self):
         # Tunnel ID is only supported by NXM
@@ -487,6 +494,28 @@ class MFICMPCode(MFField):
         return self._put(buf, offset, rule.flow.tp_dst)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_ICMPV6_TYPE])
+class MFICMPV6Type(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.tp_src)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_ICMPV6_CODE])
+class MFICMPV6Code(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_8)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.tp_dst)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -584,6 +613,15 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, header, rule)
 
     # XXX: IPv6
+    if not rule.wc.wildcards & FWW_NW_PROTO and (rule.flow.nw_proto
+                                                 == IPPROTO_ICMPV6):
+        if rule.wc.tp_src_mask != 0:
+            offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ICMPV6_TYPE,
+                              rule)
+        if rule.wc.tp_dst_mask != 0:
+            offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ICMPV6_CODE,
+                              rule)
+
     # ARP
     if not rule.wc.wildcards & FWW_ARP_SHA:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ARP_SHA, rule)
