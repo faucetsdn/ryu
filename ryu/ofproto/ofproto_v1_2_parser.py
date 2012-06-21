@@ -17,6 +17,7 @@
 import collections
 import struct
 
+from ryu.lib import mac
 from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
 from . import ofproto_parser
 from . import ofproto_v1_2
@@ -840,3 +841,503 @@ class OFPRoleReply(MsgBase):
             ofproto_v1_2.OFP_HEADER_SIZE)
 
         return msg
+
+
+FWW_IN_PORT = 1 << 0
+FWW_DL_TYPE = 1 << 4
+FWW_NW_PROTO = 1 << 5
+FWW_NW_DSCP = 1 << 1
+FWW_NW_ECN = 1 << 2
+FWW_ARP_SHA = 1 << 3
+FWW_ARP_THA = 1 << 6
+FWW_IN_PHY_PORT = 1 << 7
+FWW_NW_TTL = 1 << 8
+FWW_VLAN_PCP = 1 << 9
+FWW_MPLS_LABEL = 1 << 10
+FWW_MPLS_TC = 1 << 11
+FWW_ARP_OP = 1 << 12
+FWW_ALL = (1 << 32) - 1
+
+UINT64_MAX = (1 << 64) - 1
+UINT32_MAX = (1 << 32) - 1
+UINT16_MAX = (1 << 16) - 1
+
+
+class Flow(object):
+    def __init__(self):
+        self.in_port = 0
+        self.in_phy_port = 0
+        self.dl_dst = mac.DONTCARE
+        self.dl_src = mac.DONTCARE
+        self.dl_type = 0
+        self.vlan_vid = 0
+        self.vlan_pcp = 0
+        self.arp_op = 0
+        self.arp_spa = 0
+        self.arp_tpa = 0
+        self.arp_sha = 0
+        self.arp_tha = 0
+        self.mpls_lable = 0
+        self.mpls_tc = 0
+
+
+class FlowWildcards(object):
+    def __init__(self):
+        self.dl_dst_mask = 0
+        self.dl_src_mask = 0
+        self.vlan_vid_mask = 0
+        self.arp_spa_mask = 0
+        self.arp_tpa_mask = 0
+        self.arp_sha_mask = 0
+        self.arp_tha_mask = 0
+        self.wildcards = FWW_ALL
+
+
+class OFPMatch(object):
+    def __init__(self):
+        super(OFPMatch, self).__init__()
+        self.wc = FlowWildcards()
+        self.flow = Flow()
+        self.fields = []
+
+    def serialize(self, buf, offset):
+        if not self.wc.wildcards & FWW_IN_PORT:
+            self.fields.append(OFPMatchField.make(ofproto_v1_2.OXM_OF_IN_PORT))
+
+        if not self.wc.wildcards & FWW_IN_PHY_PORT:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_IN_PHY_PORT))
+
+        if self.flow.dl_dst != mac.DONTCARE:
+            if self.wc.dl_dst_mask:
+                header = ofproto_v1_2.OXM_OF_ETH_DST_W
+            else:
+                header = ofproto_v1_2.OXM_OF_ETH_DST
+            self.fields.append(OFPMatchField.make(header))
+
+        if self.flow.dl_src != mac.DONTCARE:
+            if self.wc.dl_src_mask:
+                header = ofproto_v1_2.OXM_OF_ETH_SRC_W
+            else:
+                header = ofproto_v1_2.OXM_OF_ETH_SRC
+            self.fields.append(OFPMatchField.make(header))
+
+        if not self.wc.wildcards & FWW_DL_TYPE:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ETH_TYPE))
+
+        if self.wc.vlan_vid_mask != 0:
+            if self.wc.vlan_vid_mask == UINT16_MAX:
+                header = ofproto_v1_2.OXM_OF_VLAN_VID
+            else:
+                header = ofproto_v1_2.OXM_OF_VLAN_VID_W
+            self.fields.append(OFPMatchField.make(header))
+
+        if not self.wc.wildcards & FWW_VLAN_PCP:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_VLAN_PCP))
+
+        if not self.wc.wildcards & FWW_ARP_OP:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_OP))
+
+        if self.flow.arp_spa != 0:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_SPA))
+
+        if self.flow.arp_tpa != 0:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_TPA))
+
+        if not self.wc.wildcards & FWW_ARP_SHA:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_SHA))
+
+        if not self.wc.wildcards & FWW_ARP_THA:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_THA))
+
+        if not self.wc.wildcards & FWW_MPLS_LABEL:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_MPLS_LABEL))
+
+        if not self.wc.wildcards & FWW_MPLS_TC:
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_MPLS_TC))
+
+        field_offset = offset + 4
+        for f in self.fields:
+            f.serialize(buf, field_offset, self)
+            field_offset += f.length
+
+        length = field_offset - offset
+        msg_pack_into('!HH', buf, offset, ofproto_v1_2.OFPMT_OXM, length)
+
+        pad_len = 8 - (length % 8)
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        match = OFPMatch()
+        type_, length = struct.unpack_from('!HH', buf, offset)
+
+        # ofp_match adjustment
+        offset += 4
+        length -= 4
+        while length > 0:
+            field = OFPMatchField.parser(buf, offset)
+            offset += field.length
+            length -= field.length
+            match.fields.append(field)
+
+        return match
+
+    def set_in_port(self, port):
+        self.wc.wildcards &= ~FWW_IN_PORT
+        self.flow.in_port = port
+
+    def set_in_phy_port(self, phy_port):
+        self.wc.wildcards &= ~FWW_IN_PHY_PORT
+        self.flow.in_phy_port = phy_port
+
+    def set_dl_dst(self, dl_dst):
+        self.flow.dl_dst = dl_dst
+
+    def set_dl_dst_masked(self, dl_dst, mask):
+        self.wc.dl_dst_mask = mask
+        # bit-wise and of the corresponding elements of dl_dst and mask
+        self.flow.dl_dst = mac.haddr_bitand(dl_dst, mask)
+
+    def set_dl_src(self, dl_src):
+        self.flow.dl_src = dl_src
+
+    def set_dl_src_masked(self, dl_src, mask):
+        self.wc.dl_src_mask = mask
+        self.flow.dl_src = mac.haddr_bitand(dl_src, mask)
+
+    def set_dl_type(self, dl_type):
+        self.wc.wildcards &= ~FWW_DL_TYPE
+        self.flow.dl_type = dl_type
+
+    def set_vlan_vid(self, vid):
+        self.set_vlan_vid_masked(vid, UINT16_MAX)
+
+    def set_vlan_vid_masked(self, vid, mask):
+        self.wc.vlan_vid_mask = mask
+        self.flow.vlan_vid = vid
+
+    def set_vlan_pcp(self, pcp):
+        self.wc.wildcards &= ~FWW_VLAN_PCP
+        self.flow.vlan_pcp = pcp
+
+    def set_arp_opcode(self, arp_op):
+        self.wc.wildcards &= ~FWW_ARP_OP
+        self.flow.arp_op = arp_op
+
+    def set_arp_spa(self, arp_spa):
+        self.set_arp_spa_masked(arp_spa, UINT32_MAX)
+
+    def set_arp_spa_masked(self, arp_spa, mask):
+        self.wc.arp_spa_mask = mask
+        self.flow.arp_spa = arp_spa
+
+    def set_arp_tpa(self, arp_tpa):
+        self.set_arp_tpa_masked(arp_tpa, UINT32_MAX)
+
+    def set_arp_tpa_masked(self, arp_tpa, mask):
+        self.wc.arp_tpa_mask = mask
+        self.flow.arp_tpa = arp_tpa
+
+    def set_arp_sha(self, arp_sha):
+        self.wc.wildcards &= ~FWW_ARP_SHA
+        self.flow.arp_sha = arp_sha
+
+    def set_arp_sha_masked(self, arp_sha, mask):
+        self.wc.wildcards &= ~FWW_ARP_SHA
+        self.wc.arp_sha_mask = mask
+        self.flow.arp_sha = mac.haddr_bitand(arp_sha, mask)
+
+    def set_arp_tha(self, arp_tha):
+        self.wc.wildcards &= ~FWW_ARP_THA
+        self.flow.arp_tha = arp_tha
+
+    def set_arp_tha_masked(self, arp_tha, mask):
+        self.wc.wildcards &= ~FWW_ARP_THA
+        self.wc.arp_tha_mask = mask
+        self.flow.arp_tha = mac.haddr_bitand(arp_tha, mask)
+
+    def set_mpls_label(self, mpls_label):
+        self.wc.wildcards &= ~FWW_MPLS_LABEL
+        self.flow.mpls_label = mpls_label
+
+    def set_mpls_tc(self, mpls_tc):
+        self.wc.wildcards &= ~FWW_MPLS_TC
+        self.flow.mpls_tc = mpls_tc
+
+
+class OFPMatchField(object):
+    _FIELDS_HEADERS = {}
+
+    @staticmethod
+    def register_field_header(headers):
+        def _register_field_header(cls):
+            for header in headers:
+                OFPMatchField._FIELDS_HEADERS[header] = cls
+            return cls
+        return _register_field_header
+
+    def __init__(self, header, pack_str):
+        self.header = header
+        self.pack_str = pack_str
+        self.n_bytes = struct.calcsize(pack_str)
+        self.length = 0
+
+    @staticmethod
+    def make(header):
+        cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
+        return cls_(header)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (header,) = struct.unpack_from('!I', buf, offset)
+        # TODO: handle unknown field
+        cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
+        field = cls_.parser(header, buf, offset)
+        field.length = (header & 0xff) + 4
+        return field
+
+    def _put_header(self, buf, offset):
+        ofproto_parser.msg_pack_into('!I', buf, offset, self.header)
+        self.length += 4
+
+    def _put(self, buf, offset, value):
+        ofproto_parser.msg_pack_into(self.pack_str, buf, offset, value)
+        self.length += self.n_bytes
+
+    def put_w(self, buf, offset, value, mask):
+        self._put_header(buf, offset)
+        self._put(buf, offset + self.length, value)
+        self._put(buf, offset + self.length, mask)
+
+    def put(self, buf, offset, value):
+        self._put_header(buf, offset)
+        self._put(buf, offset + self.length, value)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IN_PORT])
+class MTInPort(OFPMatchField):
+    def __init__(self, header):
+        super(MTInPort, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.in_port)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        # set in_port
+        return MTInPort(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IN_PHY_PORT])
+class MTInPhyPort(OFPMatchField):
+    def __init__(self, header):
+        super(MTInPhyPort, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.in_phy_port)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        # set in_port
+        return MTInPhyPort(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ETH_DST,
+                                      ofproto_v1_2.OXM_OF_ETH_DST_W])
+class MTEthDst(OFPMatchField):
+    def __init__(self, header):
+        super(MTEthDst, self).__init__(header, '!6s')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_ETH_DST_W:
+            self.put_w(buf, offset, match.flow.dl_dst,
+                       match.wc.dl_dst_mask)
+        else:
+            self.put(buf, offset, match.flow.dl_dst)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTEthDst(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ETH_SRC,
+                                      ofproto_v1_2.OXM_OF_ETH_SRC_W])
+class MTEthSrc(OFPMatchField):
+    def __init__(self, header):
+        super(MTEthSrc, self).__init__(header, '!6s')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_ETH_SRC_W:
+            self.put_w(buf, offset, match.flow.dl_src,
+                       match.wc.dl_src_mask)
+        else:
+            self.put(buf, offset, match.flow.dl_src)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTEthSrc(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ETH_TYPE])
+class MTEthType(OFPMatchField):
+    def __init__(self, header):
+        super(MTEthType, self).__init__(header, '!H')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.dl_type)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTEthType(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_VLAN_VID,
+                                      ofproto_v1_2.OXM_OF_VLAN_VID_W])
+class MTVlanVid(OFPMatchField):
+    def __init__(self, header):
+        super(MTVlanVid, self).__init__(header, '!H')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_VLAN_VID_W:
+            self.put_w(buf, offset, match.flow.vlan_vid,
+                       match.wc.vlan_vid_mask)
+        else:
+            self.put(buf, offset, match.flow.vlan_vid)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTVlanVid(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_VLAN_PCP])
+class MTVlanPcp(OFPMatchField):
+    def __init__(self, header):
+        super(MTVlanPcp, self).__init__(header, '!B')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.vlan_pcp)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTVlanPcp(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_OP])
+class MTArpOp(OFPMatchField):
+    def __init__(self, header):
+        super(MTArpOp, self).__init__(header, '!H')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.arp_op)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTArpOp(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_SPA,
+                                      ofproto_v1_2.OXM_OF_ARP_SPA_W])
+class MTArpSpa(OFPMatchField):
+    def __init__(self, header):
+        super(MTArpSpa, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_ARP_SPA_W:
+            self.put_w(buf, offset, match.flow.arp_spa,
+                       match.wc.arp_spa_mask)
+        else:
+            self.put(buf, offset, match.flow.arp_spa)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTArpSpa(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_TPA,
+                                      ofproto_v1_2.OXM_OF_ARP_TPA_W])
+class MTArpTpa(OFPMatchField):
+    def __init__(self, header):
+        super(MTArpTpa, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_ARP_TPA_W:
+            self.put_w(buf, offset, match.flow.arp_tpa,
+                       match.wc.arp_tpa_mask)
+        else:
+            self.put(buf, offset, match.flow.arp_tpa)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTArpTpa(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_SHA,
+                                      ofproto_v1_2.OXM_OF_ARP_SHA_W])
+class MTArpSha(OFPMatchField):
+    def __init__(self, header):
+        super(MTArpSha, self).__init__(header, '!6s')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_ARP_SHA_W:
+            self.put_w(buf, offset, match.flow.arp_sha,
+                       match.wc.arp_sha_mask)
+        else:
+            self.put(buf, offset, match.flow.arp_sha)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTArpSha(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_THA,
+                                      ofproto_v1_2.OXM_OF_ARP_THA_W])
+class MTArpTha(OFPMatchField):
+    def __init__(self, header):
+        super(MTArpTha, self).__init__(header, '!6s')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_ARP_THA_W:
+            self.put_w(buf, offset, match.flow.arp_tha,
+                       match.wc.arp_tha_mask)
+        else:
+            self.put(buf, offset, match.flow.arp_tha)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTArpTha(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_MPLS_LABEL])
+class MTMplsLabel(OFPMatchField):
+    def __init__(self, header):
+        super(MTMplsLabel, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.mpls_label)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTMplsLabel(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_MPLS_TC])
+class MTMplsTc(OFPMatchField):
+    def __init__(self, header):
+        super(MTMplsTc, self).__init__(header, '!B')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.mpls_tc)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTMplsTc(header)
