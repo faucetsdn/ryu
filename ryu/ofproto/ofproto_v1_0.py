@@ -714,6 +714,8 @@ NXM_NX_ND_SLL = nxm_header(0x0001, 24, 6)
 
 NXM_NX_ND_TLL = nxm_header(0x0001, 25, 6)
 
+NXM_NX_IPV6_LABEL = nxm_header(0x0001, 27, 4)
+
 NXM_NX_IP_ECN = nxm_header(0x0001, 28, 1)
 
 NXM_NX_IP_TTL = nxm_header(0x0001, 29, 1)

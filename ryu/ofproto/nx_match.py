@@ -39,6 +39,7 @@ FWW_NW_DSCP = 1 << 1
 FWW_NW_ECN = 1 << 2
 FWW_ARP_SHA = 1 << 3
 FWW_ARP_THA = 1 << 6
+FWW_IPV6_LABEL = 1 << 7
 FWW_NW_TTL = 1 << 8
 FWW_ALL = (1 << 13) - 1
 
@@ -83,6 +84,7 @@ class Flow(object):
         self.tun_id = 0
         self.arp_spa = 0
         self.arp_tpa = 0
+        self.ipv6_label = 0
 
 
 class FlowWildcards(object):
@@ -221,6 +223,10 @@ class ClsRule(object):
 
     def set_icmpv6_code(self, icmp_code):
         self.set_tp_dst(icmp_code)
+
+    def set_ipv6_label(self, label):
+        self.wc.wildcards &= ~FWW_IPV6_LABEL
+        self.flow.ipv6_label = label
 
     def flow_format(self):
         # Tunnel ID is only supported by NXM
@@ -556,6 +562,17 @@ class MFICMPV6Code(MFField):
         return self._put(buf, offset, rule.flow.tp_dst)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_LABEL])
+class MFICMPV6Label(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE32)
+
+    def put(self, buf, offset, rule):
+        return self._put(buf, offset, rule.flow.ipv6_label)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -661,6 +678,9 @@ def serialize_nxm_match(rule, buf, offset):
         if rule.wc.tp_dst_mask != 0:
             offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ICMPV6_CODE,
                               rule)
+
+    if not rule.wc.wildcards & FWW_IPV6_LABEL:
+        offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IPV6_LABEL, rule)
 
     # ARP
     if rule.flow.arp_spa != 0:
