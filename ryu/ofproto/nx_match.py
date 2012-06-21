@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import struct
+import itertools
 
 from ryu import exception
 from ryu.lib import mac
@@ -84,6 +85,8 @@ class Flow(object):
         self.tun_id = 0
         self.arp_spa = 0
         self.arp_tpa = 0
+        self.ipv6_src = []
+        self.ipv6_dst = []
         self.ipv6_label = 0
 
 
@@ -99,6 +102,8 @@ class FlowWildcards(object):
         self.arp_spa_mask = 0
         self.arp_tpa_mask = 0
         self.vlan_tci_mask = 0
+        self.ipv6_src_mask = []
+        self.ipv6_dst_mask = []
         self.wildcards = FWW_ALL
 
 
@@ -228,6 +233,20 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_IPV6_LABEL
         self.flow.ipv6_label = label
 
+    def set_ipv6_src_masked(self, src, mask):
+        self.wc.ipv6_src_mask = mask
+        self.flow.ipv6_src = [x & y for (x, y) in itertools.izip(src, mask)]
+
+    def set_ipv6_src(self, src):
+        self.flow.ipv6_src = src
+
+    def set_ipv6_dst_masked(self, dst, mask):
+        self.wc.ipv6_dst_mask = mask
+        self.flow.ipv6_dst = [x & y for (x, y) in itertools.izip(dst, mask)]
+
+    def set_ipv6_dst(self, dst):
+        self.flow.ipv6_dst = dst
+
     def flow_format(self):
         # Tunnel ID is only supported by NXM
         if self.wc.tun_id_mask != 0:
@@ -316,6 +335,17 @@ class MFField(object):
             return self._put(buf, offset, value)
         else:
             return self.putw(buf, offset, value, mask)
+
+    def _putv6(self, buf, offset, value):
+        ofproto_parser.msg_pack_into(self.pack_str, buf, offset,
+                                     *value)
+        return self.n_bytes
+
+    def putv6(self, buf, offset, value, mask):
+        len_ = self._putv6(buf, offset, value)
+        if len(mask):
+            return len_ + self._putv6(buf, offset + len_, mask)
+        return len_
 
 
 @_register_make
@@ -508,6 +538,34 @@ class MFArpSha(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_SRC,
+                   ofproto_v1_0.NXM_NX_IPV6_SRC_W])
+class MFIPV6Src(MFField):
+    @classmethod
+    def make(cls):
+        return cls('!4I')
+
+    def put(self, buf, offset, rule):
+        return self.putv6(buf, offset,
+                          rule.flow.ipv6_src,
+                          rule.wc.ipv6_src_mask)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_DST,
+                   ofproto_v1_0.NXM_NX_IPV6_DST_W])
+class MFIPV6Dst(MFField):
+    @classmethod
+    def make(cls):
+        return cls('!4I')
+
+    def put(self, buf, offset, rule):
+        return self.putv6(buf, offset,
+                          rule.flow.ipv6_dst,
+                          rule.wc.ipv6_dst_mask)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_ARP_THA])
 class MFArpTha(MFField):
     @classmethod
@@ -669,7 +727,7 @@ def serialize_nxm_match(rule, buf, offset):
             header = ofproto_v1_0.NXM_OF_IP_DST_W
         offset += nxm_put(buf, offset, header, rule)
 
-    # XXX: IPv6
+    # IPv6
     if not rule.wc.wildcards & FWW_NW_PROTO and (rule.flow.nw_proto
                                                  == IPPROTO_ICMPV6):
         if rule.wc.tp_src_mask != 0:
@@ -681,6 +739,20 @@ def serialize_nxm_match(rule, buf, offset):
 
     if not rule.wc.wildcards & FWW_IPV6_LABEL:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_IPV6_LABEL, rule)
+
+    if len(rule.flow.ipv6_src):
+        if len(rule.wc.ipv6_src_mask):
+            header = ofproto_v1_0.NXM_NX_IPV6_SRC_W
+        else:
+            header = ofproto_v1_0.NXM_NX_IPV6_SRC
+        offset += nxm_put(buf, offset, header, rule)
+
+    if len(rule.flow.ipv6_dst):
+        if len(rule.wc.ipv6_dst_mask):
+            header = ofproto_v1_0.NXM_NX_IPV6_DST_W
+        else:
+            header = ofproto_v1_0.NXM_NX_IPV6_DST
+        offset += nxm_put(buf, offset, header, rule)
 
     # ARP
     if rule.flow.arp_spa != 0:
