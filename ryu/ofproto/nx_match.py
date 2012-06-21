@@ -280,7 +280,7 @@ class MFField(object):
 
     def putw(self, buf, offset, value, mask):
         len_ = self._put(buf, offset, value)
-        return len + self._put(buf, offset + len_, mask)
+        return len_ + self._put(buf, offset + len_, mask)
 
     def _is_all_ones(self, value):
         return value == (1 << self.n_bits) - 1
