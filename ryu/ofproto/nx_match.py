@@ -44,6 +44,10 @@ FWW_IPV6_LABEL = 1 << 7
 FWW_NW_TTL = 1 << 8
 FWW_ALL = (1 << 13) - 1
 
+FLOW_NW_FRAG_ANY = 1 << 0
+FLOW_NW_FRAG_LATER = 1 << 1
+FLOW_NW_FRAG_MASK = FLOW_NW_FRAG_ANY | FLOW_NW_FRAG_LATER
+
 # Ethernet types, for set_dl_type()
 ETH_TYPE_IP = 0x0800
 ETH_TYPE_ARP = 0x0806
@@ -88,6 +92,7 @@ class Flow(object):
         self.ipv6_src = []
         self.ipv6_dst = []
         self.nd_target = []
+        self.nw_frag = 0
         self.ipv6_label = 0
 
 
@@ -106,6 +111,7 @@ class FlowWildcards(object):
         self.ipv6_src_mask = []
         self.ipv6_dst_mask = []
         self.nd_target_mask = []
+        self.nw_frag_mask = 0
         self.wildcards = FWW_ALL
 
 
@@ -203,6 +209,14 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_NW_TTL
         self.flow.nw_ttl = nw_ttl
 
+    def set_nw_frag(self, nw_frag):
+        self.wc.nw_frag_mask |= FLOW_NW_FRAG_MASK
+        self.flow.nw_frag = nw_frag
+
+    def set_nw_frag_masked(self, nw_frag, mask):
+        self.wc.nw_frag_mask = mask
+        self.flow.nw_frag = nw_frag & mask
+
     def set_arp_spa(self, spa):
         self.set_arp_spa_masked(spa, UINT32_MAX)
 
@@ -230,6 +244,10 @@ class ClsRule(object):
 
     def set_icmpv6_code(self, icmp_code):
         self.set_tp_dst(icmp_code)
+
+    def set_ipv6_label(self, label):
+        self.wc.wildcards &= ~FWW_IPV6_LABEL
+        self.flow.ipv6_label = label
 
     def set_ipv6_label(self, label):
         self.wc.wildcards &= ~FWW_IPV6_LABEL
@@ -590,6 +608,22 @@ class MFNdTarget(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_IP_FRAG,
+                   ofproto_v1_0.NXM_NX_IP_FRAG_W])
+class MFIpFrag(MFField):
+    @classmethod
+    def make(cls):
+        return cls('!B')
+
+    def put(self, buf, offset, rule):
+        if rule.wc.nw_frag_mask == FLOW_NW_FRAG_MASK:
+            return self._put(buf, offset, rule.flow.nw_frag)
+        else:
+            return self.putw(buf, offset, rule.flow.nw_frag,
+                             rule.wc.nw_frag_mask & FLOW_NW_FRAG_MASK)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_ARP_THA])
 class MFArpTha(MFField):
     @classmethod
@@ -804,6 +838,13 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ARP_SHA, rule)
     if not rule.wc.wildcards & FWW_ARP_THA:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ARP_THA, rule)
+
+    if rule.flow.nw_frag:
+        if rule.wc.nw_frag_mask == FLOW_NW_FRAG_MASK:
+            header = ofproto_v1_0.NXM_NX_IP_FRAG
+        else:
+            header = ofproto_v1_0.NXM_NX_IP_FRAG_W
+        offset += nxm_put(buf, offset, header, rule)
 
     # Tunnel Id
     if rule.wc.tun_id_mask != 0:
