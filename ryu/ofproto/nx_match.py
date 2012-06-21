@@ -81,6 +81,8 @@ class Flow(object):
         self.nw_src = 0
         self.nw_dst = 0
         self.tun_id = 0
+        self.arp_spa = 0
+        self.arp_tpa = 0
 
 
 class FlowWildcards(object):
@@ -92,6 +94,8 @@ class FlowWildcards(object):
         self.nw_src_mask = 0
         self.nw_dst_mask = 0
         self.tun_id_mask = 0
+        self.arp_spa_mask = 0
+        self.arp_tpa_mask = 0
         self.vlan_tci_mask = 0
         self.wildcards = FWW_ALL
 
@@ -189,6 +193,20 @@ class ClsRule(object):
     def set_nw_ttl(self, nw_ttl):
         self.wc.wildcards &= ~FWW_NW_TTL
         self.flow.nw_ttl = nw_ttl
+
+    def set_arp_spa(self, spa):
+        self.set_arp_spa_masked(spa, UINT32_MAX)
+
+    def set_arp_spa_masked(self, spa, mask):
+        self.flow.arp_spa = spa
+        self.wc.arp_spa_mask = mask
+
+    def set_arp_tpa(self, tpa):
+        self.set_arp_tpa_masked(tpa, UINT32_MAX)
+
+    def set_arp_tpa_masked(self, tpa, mask):
+        self.flow.arp_tpa = tpa
+        self.wc.arp_tpa_mask = mask
 
     def set_arp_sha(self, sha):
         self.wc.wildcards &= ~FWW_ARP_SHA
@@ -451,6 +469,28 @@ class MFTPSRC(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ARP_SPA, ofproto_v1_0.NXM_OF_ARP_SPA_W])
+class MFArpSpa(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE32)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.arp_spa, rule.wc.arp_spa_mask)
+
+
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_OF_ARP_TPA, ofproto_v1_0.NXM_OF_ARP_TPA_W])
+class MFArpTpa(MFField):
+    @classmethod
+    def make(cls):
+        return cls(MF_PACK_STRING_BE32)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.arp_tpa, rule.wc.arp_tpa_mask)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_ARP_SHA])
 class MFArpSha(MFField):
     @classmethod
@@ -623,6 +663,20 @@ def serialize_nxm_match(rule, buf, offset):
                               rule)
 
     # ARP
+    if rule.flow.arp_spa != 0:
+        if rule.wc.arp_spa_mask == UINT32_MAX:
+            header = ofproto_v1_0.NXM_OF_ARP_SPA
+        else:
+            header = ofproto_v1_0.NXM_OF_ARP_SPA_W
+        offset += nxm_put(buf, offset, header, rule)
+
+    if rule.flow.arp_tpa != 0:
+        if rule.wc.arp_tpa_mask == UINT32_MAX:
+            header = ofproto_v1_0.NXM_OF_ARP_TPA
+        else:
+            header = ofproto_v1_0.NXM_OF_ARP_TPA_W
+        offset += nxm_put(buf, offset, header, rule)
+
     if not rule.wc.wildcards & FWW_ARP_SHA:
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ARP_SHA, rule)
     if not rule.wc.wildcards & FWW_ARP_THA:
