@@ -87,6 +87,7 @@ class Flow(object):
         self.arp_tpa = 0
         self.ipv6_src = []
         self.ipv6_dst = []
+        self.nd_target = []
         self.ipv6_label = 0
 
 
@@ -104,6 +105,7 @@ class FlowWildcards(object):
         self.vlan_tci_mask = 0
         self.ipv6_src_mask = []
         self.ipv6_dst_mask = []
+        self.nd_target_mask = []
         self.wildcards = FWW_ALL
 
 
@@ -246,6 +248,14 @@ class ClsRule(object):
 
     def set_ipv6_dst(self, dst):
         self.flow.ipv6_dst = dst
+
+    def set_nd_target_masked(self, target, mask):
+        self.wc.nd_target_mask = mask
+        self.flow.nd_target = [x & y for (x, y) in
+                               itertools.izip(target, mask)]
+
+    def set_nd_target(self, target):
+        self.flow.nd_target = target
 
     def flow_format(self):
         # Tunnel ID is only supported by NXM
@@ -566,6 +576,20 @@ class MFIPV6Dst(MFField):
 
 
 @_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_ND_TARGET,
+                   ofproto_v1_0.NXM_NX_ND_TARGET_W])
+class MFNdTarget(MFField):
+    @classmethod
+    def make(cls):
+        return cls('!4I')
+
+    def put(self, buf, offset, rule):
+        return self.putv6(buf, offset,
+                          rule.flow.nd_target,
+                          rule.wc.nd_target_mask)
+
+
+@_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_ARP_THA])
 class MFArpTha(MFField):
     @classmethod
@@ -752,6 +776,13 @@ def serialize_nxm_match(rule, buf, offset):
             header = ofproto_v1_0.NXM_NX_IPV6_DST_W
         else:
             header = ofproto_v1_0.NXM_NX_IPV6_DST
+        offset += nxm_put(buf, offset, header, rule)
+
+    if len(rule.flow.nd_target):
+        if len(rule.wc.nd_target_mask):
+            header = ofproto_v1_0.NXM_NX_ND_TARGET_W
+        else:
+            header = ofproto_v1_0.NXM_NX_ND_TARGET
         offset += nxm_put(buf, offset, header, rule)
 
     # ARP

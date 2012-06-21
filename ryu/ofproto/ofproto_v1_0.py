@@ -715,6 +715,9 @@ NXM_NX_IPV6_DST_W = nxm_header_w(0x0001, 20, 16)
 NXM_NX_ICMPV6_TYPE = nxm_header(0x0001, 21, 1)
 NXM_NX_ICMPV6_CODE = nxm_header(0x0001, 22, 1)
 
+NXM_NX_ND_TARGET = nxm_header(0x0001, 23, 16)
+NXM_NX_ND_TARGET_W = nxm_header_w(0x0001, 23, 16)
+
 NXM_NX_ND_SLL = nxm_header(0x0001, 24, 6)
 
 NXM_NX_ND_TLL = nxm_header(0x0001, 25, 6)
