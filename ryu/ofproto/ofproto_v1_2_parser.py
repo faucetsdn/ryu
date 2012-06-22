@@ -805,6 +805,19 @@ class OFPQueueGetConfigReply(MsgBase):
         return msg
 
 
+@_set_msg_type(ofproto_v1_2.OFPT_BARRIER_REQUEST)
+class OFPBarrierRequest(MsgBase):
+    def __init__(self, datapath):
+        super(OFPBarrierRequest, self).__init__(datapath)
+
+
+@_register_parser
+@_set_msg_type(ofproto_v1_2.OFPT_BARRIER_REPLY)
+class OFPBarrierReply(MsgBase):
+    def __init__(self, datapath):
+        super(OFPBarrierReply, self).__init__(datapath)
+
+
 @_set_msg_type(ofproto_v1_2.OFPT_ROLE_REQUEST)
 class OFPRoleRequest(MsgBase):
     def __init__(self, datapath, role, generation_id):
