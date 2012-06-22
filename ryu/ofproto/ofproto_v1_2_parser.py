@@ -218,15 +218,6 @@ class OFPSetConfig(MsgBase):
                       self.flags, self.miss_send_len)
 
 
-class OFPMatch(object):
-    def __init__(self):
-        super(OFPMatch, self).__init__()
-
-    @classmethod
-    def parser(cls, buf, offset):
-        pass
-
-
 @_register_parser
 @_set_msg_type(ofproto_v1_2.OFPT_PACKET_IN)
 class OFPPacketIn(MsgBase):
@@ -263,7 +254,8 @@ class OFPFlowRemoved(MsgBase):
          msg.idle_timeout, msg.hard_timeout, msg.packet_count,
          msg.byte_count) = struct.unpack_from(
             ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR0,
-            msg.buf, ofproto_v1_2.OFP_HEADER_SIZE + ofproto_v1_2.OFP_MATCH_SIZE)
+            msg.buf,
+            ofproto_v1_2.OFP_HEADER_SIZE + ofproto_v1_2.OFP_MATCH_SIZE)
 
         offset = (ofproto_v1_2.OFP_HEADER_SIZE +
                   ofproto_v1_2.OFP_FLOW_REMOVED_SIZE)
@@ -616,8 +608,9 @@ class OFPActionSetField(OFPAction):
         # TODO: serialize OXM
 
 
-@OFPAction.register_action_type(ofproto_v1_2.OFPAT_EXPERIMENTER,
-                                ofproto_v1_2.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
+@OFPAction.register_action_type(
+    ofproto_v1_2.OFPAT_EXPERIMENTER,
+    ofproto_v1_2.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
 class OFPActionExperimenter(OFPAction):
     def __init__(self, experimenter):
         super(OFPActionExperimenter, self).__init__()
