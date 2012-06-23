@@ -320,7 +320,7 @@ class OFPPacketOut(MsgBase):
 class OFPFlowMod(MsgBase):
     def __init__(self, datapath, cookie, cookie_mask, table_id, command,
                  idle_timeout, hard_timeout, priority, buffer_id, out_port,
-                 out_group, flags, match):
+                 out_group, flags, match, instructions):
         super(OFPFlowMod, self).__init__(datapath)
         self.cookie = cookie
         self.cookie_mask = cookie_mask
@@ -334,6 +334,7 @@ class OFPFlowMod(MsgBase):
         self.out_group = out_group
         self.flags = flags
         self.match = match
+        self.instructions = instructions
 
     def _serialize_body(self):
         msg_pack_into(ofproto_v1_2.OFP_FLOW_MOD_PACK_STR0, self.buf,
@@ -345,7 +346,57 @@ class OFPFlowMod(MsgBase):
 
         offset = (ofproto_v1_2.OFP_FLOW_MOD_SIZE -
                   ofproto_v1_2.OFP_MATCH_SIZE)
-        self.match.serialize(self.buf, offset)
+
+        match_len = self.match.serialize(self.buf, offset)
+        offset += match_len
+
+        for inst in self.instructions:
+            inst.serialize(self.buf, offset)
+            offset += inst.len
+
+
+class OFPInstructionGotoTable(object):
+    def __init__(self, table_id):
+        super(OFPInstructionGotoTable, self).__init__()
+        self.type = ofproto_v1_2.OFPID_GOTO_TABLE
+        self.len = ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_SIZE
+        self.table_id = table_id
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR,
+                      buf, offset, self.type, self.len, self.table_id)
+
+
+class OFPInstructionWriteMetadata(object):
+    def __init__(self, metadata, metadata_mask):
+        super(OFPInstructionWriteMetadata, self).__init__()
+        self.type = ofproto_v1_2.OFPIT_WRITE_METADATA
+        self.len = ofproto_v1_2.OFP_INSTRUCTION_WRITE_METADATA_SIZE
+        self.metadata = metadata
+        self.metadata_mask = metadata_mask
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_2.OFP_INSTRUCTION_WRITE_METADATA_PACK_STR,
+                      buf, offset, self.type, self.len, self.metadata,
+                      self.metadata_mask)
+
+
+class OFPInstructionActions(object):
+    def __init__(self, type_, actions):
+        super(OFPInstructionActions, self).__init__()
+        self.type = type_
+        self.actions = actions
+
+    def serialize(self, buf, offset):
+        action_offset = offset + ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE
+        for a in self.actions:
+            a.serialize(buf, action_offset)
+            action_offset += a.len
+
+        self.len = action_offset - offset
+
+        msg_pack_into(ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_PACK_STR,
+                      buf, offset, self.type, self.len)
 
 
 class OFPActionHeader(object):
@@ -1051,6 +1102,8 @@ class OFPMatch(object):
 
         pad_len = 8 - (length % 8)
         ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
+
+        return length + pad_len
 
     @classmethod
     def parser(cls, buf, offset):
