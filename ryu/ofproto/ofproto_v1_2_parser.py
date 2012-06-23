@@ -853,21 +853,6 @@ class OFPRoleReply(MsgBase):
         return msg
 
 
-FWW_IN_PORT = 1 << 0
-FWW_DL_TYPE = 1 << 4
-FWW_NW_PROTO = 1 << 5
-FWW_NW_DSCP = 1 << 1
-FWW_NW_ECN = 1 << 2
-FWW_ARP_SHA = 1 << 3
-FWW_ARP_THA = 1 << 6
-FWW_IN_PHY_PORT = 1 << 7
-FWW_NW_TTL = 1 << 8
-FWW_VLAN_PCP = 1 << 9
-FWW_MPLS_LABEL = 1 << 10
-FWW_MPLS_TC = 1 << 11
-FWW_ARP_OP = 1 << 12
-FWW_ALL = (1 << 32) - 1
-
 UINT64_MAX = (1 << 64) - 1
 UINT32_MAX = (1 << 32) - 1
 UINT16_MAX = (1 << 16) - 1
@@ -900,7 +885,13 @@ class FlowWildcards(object):
         self.arp_tpa_mask = 0
         self.arp_sha_mask = 0
         self.arp_tha_mask = 0
-        self.wildcards = FWW_ALL
+        self.wildcards = (1 << 64) - 1
+
+    def ft_set(self, shift):
+        self.wildcards &= ~(1 << shift)
+
+    def ft_test(self, shift):
+        return not self.wildcards & (1 << shift)
 
 
 class OFPMatch(object):
@@ -911,67 +902,67 @@ class OFPMatch(object):
         self.fields = []
 
     def serialize(self, buf, offset):
-        if not self.wc.wildcards & FWW_IN_PORT:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PORT):
             self.fields.append(OFPMatchField.make(ofproto_v1_2.OXM_OF_IN_PORT))
 
-        if not self.wc.wildcards & FWW_IN_PHY_PORT:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PHY_PORT):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_IN_PHY_PORT))
 
-        if self.flow.dl_dst != mac.DONTCARE:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_DST):
             if self.wc.dl_dst_mask:
                 header = ofproto_v1_2.OXM_OF_ETH_DST_W
             else:
                 header = ofproto_v1_2.OXM_OF_ETH_DST
             self.fields.append(OFPMatchField.make(header))
 
-        if self.flow.dl_src != mac.DONTCARE:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_SRC):
             if self.wc.dl_src_mask:
                 header = ofproto_v1_2.OXM_OF_ETH_SRC_W
             else:
                 header = ofproto_v1_2.OXM_OF_ETH_SRC
             self.fields.append(OFPMatchField.make(header))
 
-        if not self.wc.wildcards & FWW_DL_TYPE:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_TYPE):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ETH_TYPE))
 
-        if self.wc.vlan_vid_mask != 0:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_VLAN_VID):
             if self.wc.vlan_vid_mask == UINT16_MAX:
                 header = ofproto_v1_2.OXM_OF_VLAN_VID
             else:
                 header = ofproto_v1_2.OXM_OF_VLAN_VID_W
             self.fields.append(OFPMatchField.make(header))
 
-        if not self.wc.wildcards & FWW_VLAN_PCP:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_VLAN_PCP):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_VLAN_PCP))
 
-        if not self.wc.wildcards & FWW_ARP_OP:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_OP):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_OP))
 
-        if self.flow.arp_spa != 0:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_SPA):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_SPA))
 
-        if self.flow.arp_tpa != 0:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_TPA):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_TPA))
 
-        if not self.wc.wildcards & FWW_ARP_SHA:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_SHA):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_SHA))
 
-        if not self.wc.wildcards & FWW_ARP_THA:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_THA):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_THA))
 
-        if not self.wc.wildcards & FWW_MPLS_LABEL:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_MPLS_LABEL))
 
-        if not self.wc.wildcards & FWW_MPLS_TC:
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_TC):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_MPLS_TC))
 
@@ -1003,51 +994,57 @@ class OFPMatch(object):
         return match
 
     def set_in_port(self, port):
-        self.wc.wildcards &= ~FWW_IN_PORT
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IN_PORT)
         self.flow.in_port = port
 
     def set_in_phy_port(self, phy_port):
-        self.wc.wildcards &= ~FWW_IN_PHY_PORT
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IN_PHY_PORT)
         self.flow.in_phy_port = phy_port
 
     def set_dl_dst(self, dl_dst):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ETH_DST)
         self.flow.dl_dst = dl_dst
 
     def set_dl_dst_masked(self, dl_dst, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ETH_DST)
         self.wc.dl_dst_mask = mask
         # bit-wise and of the corresponding elements of dl_dst and mask
         self.flow.dl_dst = mac.haddr_bitand(dl_dst, mask)
 
     def set_dl_src(self, dl_src):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ETH_SRC)
         self.flow.dl_src = dl_src
 
     def set_dl_src_masked(self, dl_src, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ETH_SRC)
         self.wc.dl_src_mask = mask
         self.flow.dl_src = mac.haddr_bitand(dl_src, mask)
 
     def set_dl_type(self, dl_type):
-        self.wc.wildcards &= ~FWW_DL_TYPE
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ETH_TYPE)
         self.flow.dl_type = dl_type
 
     def set_vlan_vid(self, vid):
         self.set_vlan_vid_masked(vid, UINT16_MAX)
 
     def set_vlan_vid_masked(self, vid, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_VLAN_VID)
         self.wc.vlan_vid_mask = mask
         self.flow.vlan_vid = vid
 
     def set_vlan_pcp(self, pcp):
-        self.wc.wildcards &= ~FWW_VLAN_PCP
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_VLAN_PCP)
         self.flow.vlan_pcp = pcp
 
     def set_arp_opcode(self, arp_op):
-        self.wc.wildcards &= ~FWW_ARP_OP
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_OP)
         self.flow.arp_op = arp_op
 
     def set_arp_spa(self, arp_spa):
         self.set_arp_spa_masked(arp_spa, UINT32_MAX)
 
     def set_arp_spa_masked(self, arp_spa, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_SPA)
         self.wc.arp_spa_mask = mask
         self.flow.arp_spa = arp_spa
 
@@ -1055,33 +1052,34 @@ class OFPMatch(object):
         self.set_arp_tpa_masked(arp_tpa, UINT32_MAX)
 
     def set_arp_tpa_masked(self, arp_tpa, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_TPA)
         self.wc.arp_tpa_mask = mask
         self.flow.arp_tpa = arp_tpa
 
     def set_arp_sha(self, arp_sha):
-        self.wc.wildcards &= ~FWW_ARP_SHA
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_SHA)
         self.flow.arp_sha = arp_sha
 
     def set_arp_sha_masked(self, arp_sha, mask):
-        self.wc.wildcards &= ~FWW_ARP_SHA
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_SHA)
         self.wc.arp_sha_mask = mask
         self.flow.arp_sha = mac.haddr_bitand(arp_sha, mask)
 
     def set_arp_tha(self, arp_tha):
-        self.wc.wildcards &= ~FWW_ARP_THA
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_THA)
         self.flow.arp_tha = arp_tha
 
     def set_arp_tha_masked(self, arp_tha, mask):
-        self.wc.wildcards &= ~FWW_ARP_THA
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_THA)
         self.wc.arp_tha_mask = mask
         self.flow.arp_tha = mac.haddr_bitand(arp_tha, mask)
 
     def set_mpls_label(self, mpls_label):
-        self.wc.wildcards &= ~FWW_MPLS_LABEL
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL)
         self.flow.mpls_label = mpls_label
 
     def set_mpls_tc(self, mpls_tc):
-        self.wc.wildcards &= ~FWW_MPLS_TC
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_MPLS_TC)
         self.flow.mpls_tc = mpls_tc
 
 
