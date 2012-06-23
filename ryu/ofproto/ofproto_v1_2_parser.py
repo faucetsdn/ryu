@@ -878,6 +878,8 @@ class Flow(object):
         self.udp_dst = 0
         self.sctp_src = 0
         self.sctp_dst = 0
+        self.icmpv4_type = 0
+        self.icmpv4_code = 0
         self.arp_op = 0
         self.arp_spa = 0
         self.arp_tpa = 0
@@ -1002,6 +1004,14 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_SCTP_DST):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_SCTP_DST))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV4_TYPE):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV4_TYPE))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV4_CODE):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV4_CODE))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_OP):
             self.fields.append(
@@ -1152,6 +1162,14 @@ class OFPMatch(object):
     def set_sctp_dst(self, sctp_dst):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_SCTP_DST)
         self.flow.sctp_dst = sctp_dst
+
+    def set_icmpv4_type(self, icmpv4_type):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ICMPV4_TYPE)
+        self.flow.icmpv4_type = icmpv4_type
+
+    def set_icmpv4_code(self, icmpv4_code):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ICMPV4_CODE)
+        self.flow.icmpv4_code = icmpv4_code
 
     def set_arp_opcode(self, arp_op):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_OP)
@@ -1508,6 +1526,32 @@ class MTSCTPDst(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTSCTPDst(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ICMPV4_TYPE])
+class MTICMPV4Type(OFPMatchField):
+    def __init__(self, header):
+        super(MTICMPV4Type, self).__init__(header, '!B')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.icmpv4_type)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTICMPV4Type(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ICMPV4_CODE])
+class MTICMPV4Code(OFPMatchField):
+    def __init__(self, header):
+        super(MTICMPV4Code, self).__init__(header, '!B')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.icmpv4_code)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTICMPV4Code(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_OP])
