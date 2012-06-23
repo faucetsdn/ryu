@@ -52,6 +52,12 @@ class SimpleIsolation(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+
+        datapath.send_delete_all_flows()
+        datapath.send_barrier()
+
         self.mac2port.dpid_add(ev.msg.datapath_id)
         self.nw.add_datapath(ev.msg)
 

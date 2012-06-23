@@ -191,23 +191,6 @@ class ConfigHandler(object):
             )
         datapath.send_msg(set_config)
 
-        #
-        # drop all flows in order to put datapath into unknown state
-        #
-        datapath.send_delete_all_flows()
-
-        datapath.send_barrier()
-
-        # We had better to move on to the main state after getting the
-        # response of the barrier since it guarantees that the switch
-        # is in the known state (all the flows were removed). However,
-        # cbench doesn't work because it ignores the barrier. Also,
-        # the above "known" state doesn't always work (for example,
-        # the secondary controller should not remove all the flows in
-        # the case of HA configuration). Let's move on to the main
-        # state here for now. I guess that we need API to enable
-        # applications to initialize switches in their own ways.
-
         LOG.debug('move onto main mode')
         ev.msg.datapath.ev_q.set_dispatcher(MAIN_DISPATCHER)
 
