@@ -876,6 +876,8 @@ class Flow(object):
         self.tcp_dst = 0
         self.udp_src = 0
         self.udp_dst = 0
+        self.sctp_src = 0
+        self.sctp_dst = 0
         self.arp_op = 0
         self.arp_spa = 0
         self.arp_tpa = 0
@@ -992,6 +994,14 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_UDP_DST):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_UDP_DST))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_SCTP_SRC):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_SCTP_SRC))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_SCTP_DST):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_SCTP_DST))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_OP):
             self.fields.append(
@@ -1134,6 +1144,14 @@ class OFPMatch(object):
     def set_udp_dst(self, udp_dst):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_UDP_DST)
         self.flow.udp_dst = udp_dst
+
+    def set_sctp_src(self, sctp_src):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_SCTP_SRC)
+        self.flow.sctp_src = sctp_src
+
+    def set_sctp_dst(self, sctp_dst):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_SCTP_DST)
+        self.flow.sctp_dst = sctp_dst
 
     def set_arp_opcode(self, arp_op):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_OP)
@@ -1464,6 +1482,32 @@ class MTUDPDst(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTUDPDst(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_SCTP_SRC])
+class MTSCTPSrc(OFPMatchField):
+    def __init__(self, header):
+        super(MTSCTPSrc, self).__init__(header, '!H')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.sctp_src)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTSCTPSrc(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_SCTP_DST])
+class MTSCTPDst(OFPMatchField):
+    def __init__(self, header):
+        super(MTSCTPDst, self).__init__(header, '!H')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.sctp_dst)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTSCTPDst(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_OP])
