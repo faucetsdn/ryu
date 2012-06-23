@@ -869,6 +869,7 @@ class Flow(object):
         self.vlan_pcp = 0
         self.ip_dscp = 0
         self.ip_ecn = 0
+        self.ip_proto = 0
         self.arp_op = 0
         self.arp_spa = 0
         self.arp_tpa = 0
@@ -947,6 +948,10 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IP_ECN):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_IP_ECN))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IP_PROTO):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_IP_PROTO))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_OP):
             self.fields.append(
@@ -1053,6 +1058,10 @@ class OFPMatch(object):
     def set_ip_ecn(self, ip_ecn):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IP_ECN)
         self.flow.ip_ecn = ip_ecn
+
+    def set_ip_proto(self, ip_proto):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IP_PROTO)
+        self.flow.ip_proto = ip_proto
 
     def set_arp_opcode(self, arp_op):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_OP)
@@ -1282,6 +1291,19 @@ class MTIPECN(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTIPECN(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IP_PROTO])
+class MTIPProto(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPProto, self).__init__(header, '!B')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.ip_proto)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPProto(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_OP])
