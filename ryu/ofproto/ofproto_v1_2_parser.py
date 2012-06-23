@@ -870,6 +870,8 @@ class Flow(object):
         self.ip_dscp = 0
         self.ip_ecn = 0
         self.ip_proto = 0
+        self.ipv4_src = 0
+        self.ipv4_dst = 0
         self.arp_op = 0
         self.arp_spa = 0
         self.arp_tpa = 0
@@ -884,6 +886,8 @@ class FlowWildcards(object):
         self.dl_dst_mask = 0
         self.dl_src_mask = 0
         self.vlan_vid_mask = 0
+        self.ipv4_src_mask = 0
+        self.ipv4_dst_mask = 0
         self.arp_spa_mask = 0
         self.arp_tpa_mask = 0
         self.arp_sha_mask = 0
@@ -952,6 +956,22 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IP_PROTO):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_IP_PROTO))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV4_SRC):
+            if self.wc.ipv4_src_mask == UINT32_MAX:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_SRC))
+            else:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_SRC_W))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV4_DST):
+            if self.wc.ipv4_dst_mask == UINT32_MAX:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_DST))
+            else:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_DST_W))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_OP):
             self.fields.append(
@@ -1062,6 +1082,22 @@ class OFPMatch(object):
     def set_ip_proto(self, ip_proto):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IP_PROTO)
         self.flow.ip_proto = ip_proto
+
+    def set_ipv4_src(self, ipv4_src):
+        self.set_ipv4_src_masked(ipv4_src, UINT32_MAX)
+
+    def set_ipv4_src_masked(self, ipv4_src, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV4_SRC)
+        self.flow.ipv4_src = ipv4_src
+        self.wc.ipv4_src_mask = mask
+
+    def set_ipv4_dst(self, ipv4_dst):
+        self.set_ipv4_dst_masked(ipv4_dst, UINT32_MAX)
+
+    def set_ipv4_dst_masked(self, ipv4_dst, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV4_DST)
+        self.flow.ipv4_dst = ipv4_dst
+        self.wc.ipv4_dst_mask = mask
 
     def set_arp_opcode(self, arp_op):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ARP_OP)
@@ -1304,6 +1340,42 @@ class MTIPProto(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTIPProto(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV4_SRC,
+                                      ofproto_v1_2.OXM_OF_IPV4_SRC_W])
+class MTIPV4Src(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPV4Src, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_IPV4_SRC:
+            self.put(buf, offset, match.flow.ipv4_src)
+        else:
+            self.put_w(buf, offset, match.flow.ipv4_src,
+                       match.wc.ipv4_src_mask)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPV4Src(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV4_DST,
+                                      ofproto_v1_2.OXM_OF_IPV4_DST_W])
+class MTIPV4Dst(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPV4Dst, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_IPV4_DST:
+            self.put(buf, offset, match.flow.ipv4_dst)
+        else:
+            self.put_w(buf, offset, match.flow.ipv4_dst,
+                       match.wc.ipv4_dst_mask)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPV4Dst(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_ARP_OP])
