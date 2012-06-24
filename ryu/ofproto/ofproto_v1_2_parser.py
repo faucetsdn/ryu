@@ -16,6 +16,7 @@
 
 import collections
 import struct
+import itertools
 
 from ryu.lib import mac
 from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
@@ -936,6 +937,8 @@ class Flow(object):
         self.arp_tpa = 0
         self.arp_sha = 0
         self.arp_tha = 0
+        self.ipv6_src = []
+        self.ipv6_dst = []
         self.mpls_lable = 0
         self.mpls_tc = 0
 
@@ -951,6 +954,8 @@ class FlowWildcards(object):
         self.arp_tpa_mask = 0
         self.arp_sha_mask = 0
         self.arp_tha_mask = 0
+        self.ipv6_src_mask = []
+        self.ipv6_dst_mask = []
         self.wildcards = (1 << 64) - 1
 
     def ft_set(self, shift):
@@ -1083,6 +1088,22 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_THA):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_THA))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_SRC):
+            if len(self.wc.ipv6_src_mask):
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_SRC_W))
+            else:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_SRC))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_DST):
+            if len(self.wc.ipv6_dst_mask):
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_DST_W))
+            else:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_DST))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL):
             self.fields.append(
@@ -1262,6 +1283,24 @@ class OFPMatch(object):
         self.wc.arp_tha_mask = mask
         self.flow.arp_tha = mac.haddr_bitand(arp_tha, mask)
 
+    def set_ipv6_src(self, src):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_SRC)
+        self.flow.ipv6_src = src
+
+    def set_ipv6_src_masked(self, src, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_SRC)
+        self.wc.ipv6_src_mask = mask
+        self.flow.ipv6_src = [x & y for (x, y) in itertools.izip(src, mask)]
+
+    def set_ipv6_dst(self, dst):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_DST)
+        self.flow.ipv6_dst = dst
+
+    def set_ipv6_dst_masked(self, dst, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_DST)
+        self.wc.ipv6_dst_mask = mask
+        self.flow.ipv6_dst = [x & y for (x, y) in itertools.izip(dst, mask)]
+
     def set_mpls_label(self, mpls_label):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL)
         self.flow.mpls_label = mpls_label
@@ -1318,6 +1357,17 @@ class OFPMatchField(object):
     def put(self, buf, offset, value):
         self._put_header(buf, offset)
         self._put(buf, offset + self.length, value)
+
+    def _putv6(self, buf, offset, value):
+        ofproto_parser.msg_pack_into(self.pack_str, buf, offset,
+                                     *value)
+        self.length += self.n_bytes
+
+    def putv6(self, buf, offset, value, mask):
+        self._put_header(buf, offset)
+        self._putv6(buf, offset + self.length, value)
+        if len(mask):
+            self._putv6(buf, offset + self.length, mask)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IN_PORT])
@@ -1690,6 +1740,36 @@ class MTArpTha(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTArpTha(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_SRC,
+                                      ofproto_v1_2.OXM_OF_IPV6_SRC_W])
+class MTIPv6Src(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPv6Src, self).__init__(header, '!4I')
+
+    def serialize(self, buf, offset, match):
+        self.putv6(buf, offset, match.flow.ipv6_src,
+                   match.wc.ipv6_src_mask)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPv6Src(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_DST,
+                                      ofproto_v1_2.OXM_OF_IPV6_DST_W])
+class MTIPv6Dst(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPv6Dst, self).__init__(header, '!4I')
+
+    def serialize(self, buf, offset, match):
+        self.putv6(buf, offset, match.flow.ipv6_dst,
+                   match.wc.ipv6_dst_mask)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPv6Dst(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_MPLS_LABEL])
