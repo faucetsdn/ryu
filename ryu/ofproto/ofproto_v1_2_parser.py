@@ -943,6 +943,8 @@ class Flow(object):
         self.icmpv6_type = 0
         self.icmpv6_code = 0
         self.ipv6_nd_target = []
+        self.ipv6_nd_sll = 0
+        self.ipv6_nd_tll = 0
         self.mpls_lable = 0
         self.mpls_tc = 0
 
@@ -1129,6 +1131,14 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TARGET):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_TARGET))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_SLL):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_SLL))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TLL):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_TLL))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL):
             self.fields.append(
@@ -1346,6 +1356,14 @@ class OFPMatch(object):
     def set_ipv6_nd_target(self, target):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TARGET)
         self.flow.ipv6_nd_target = target
+
+    def set_ipv6_nd_sll(self, ipv6_nd_sll):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_SLL)
+        self.flow.ipv6_nd_sll = ipv6_nd_sll
+
+    def set_ipv6_nd_tll(self, ipv6_nd_tll):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TLL)
+        self.flow.ipv6_nd_tll = ipv6_nd_tll
 
     def set_mpls_label(self, mpls_label):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL)
@@ -1886,6 +1904,32 @@ class MTIPv6NdTarget(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTIPv6NdTarget(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_SLL])
+class MTIPv6NdSll(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPv6NdSll, self).__init__(header, '!6s')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.ipv6_nd_sll)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPv6NdSll(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_TLL])
+class MTIPv6NdTll(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPv6NdTll, self).__init__(header, '!6s')
+
+    def serialize(self, buf, offset, match):
+        self.put(buf, offset, match.flow.ipv6_nd_tll)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPv6NdTll(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_MPLS_TC])
