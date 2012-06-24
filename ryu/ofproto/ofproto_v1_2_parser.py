@@ -939,6 +939,7 @@ class Flow(object):
         self.arp_tha = 0
         self.ipv6_src = []
         self.ipv6_dst = []
+        self.ipv6_flabel = 0
         self.mpls_lable = 0
         self.mpls_tc = 0
 
@@ -956,6 +957,7 @@ class FlowWildcards(object):
         self.arp_tha_mask = 0
         self.ipv6_src_mask = []
         self.ipv6_dst_mask = []
+        self.ipv6_flabel_mask = 0
         self.wildcards = (1 << 64) - 1
 
     def ft_set(self, shift):
@@ -1104,6 +1106,14 @@ class OFPMatch(object):
             else:
                 self.fields.append(
                     OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_DST))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL):
+            if self.wc.ipv6_flabel_mask:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_FLABEL_W))
+            else:
+                self.fields.append(
+                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_FLABEL))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL):
             self.fields.append(
@@ -1300,6 +1310,15 @@ class OFPMatch(object):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_DST)
         self.wc.ipv6_dst_mask = mask
         self.flow.ipv6_dst = [x & y for (x, y) in itertools.izip(dst, mask)]
+
+    def set_ipv6_flabel(self, flabel):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL)
+        self.flow.ipv6_flabel = flabel
+
+    def set_ipv6_flabel_masked(self, flabel, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL)
+        self.wc.ipv6_flabel_mask = mask
+        self.flow.ipv6_flabel = flabel
 
     def set_mpls_label(self, mpls_label):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL)
@@ -1770,6 +1789,24 @@ class MTIPv6Dst(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTIPv6Dst(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_FLABEL,
+                                      ofproto_v1_2.OXM_OF_IPV6_FLABEL_W])
+class MTIPv6Flabel(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPv6Flabel, self).__init__(header, '!I')
+
+    def serialize(self, buf, offset, match):
+        if self.header == ofproto_v1_2.OXM_OF_IPV6_FLABEL_W:
+            self.put_w(buf, offset, match.flow.ipv6_flabel,
+                       match.wc.ipv6_flabel_mask)
+        else:
+            self.put(buf, offset, match.flow.ipv6_flabel)
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPv6Flabel(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_MPLS_LABEL])
