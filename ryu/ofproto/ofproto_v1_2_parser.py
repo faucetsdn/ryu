@@ -942,6 +942,7 @@ class Flow(object):
         self.ipv6_flabel = 0
         self.icmpv6_type = 0
         self.icmpv6_code = 0
+        self.ipv6_nd_target = []
         self.mpls_lable = 0
         self.mpls_tc = 0
 
@@ -1124,6 +1125,10 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV6_CODE):
             self.fields.append(
                 OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV6_CODE))
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TARGET):
+            self.fields.append(
+                OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_TARGET))
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL):
             self.fields.append(
@@ -1337,6 +1342,10 @@ class OFPMatch(object):
     def set_icmpv6_code(self, icmpv6_code):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ICMPV6_CODE)
         self.flow.icmpv6_code = icmpv6_code
+
+    def set_ipv6_nd_target(self, target):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TARGET)
+        self.flow.ipv6_nd_target = target
 
     def set_mpls_label(self, mpls_label):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL)
@@ -1864,6 +1873,19 @@ class MTICMPV6Code(OFPMatchField):
     @classmethod
     def parser(cls, header, buf, offset):
         return MTICMPV6Code(header)
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_TARGET])
+class MTIPv6NdTarget(OFPMatchField):
+    def __init__(self, header):
+        super(MTIPv6NdTarget, self).__init__(header, '!4I')
+
+    def serialize(self, buf, offset, match):
+        self.putv6(buf, offset, match.flow.ipv6_nd_target, [])
+
+    @classmethod
+    def parser(cls, header, buf, offset):
+        return MTIPv6NdTarget(header)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_MPLS_TC])
