@@ -233,8 +233,8 @@ class OFPPacketIn(MsgBase):
             ofproto_v1_2.OFP_PACKET_IN_PACK_STR,
             msg.buf, ofproto_v1_2.OFP_HEADER_SIZE)
 
-        offset = ofproto_v1_2.OFP_HEADER_SIZE + ofproto_v1_2.OFP_PACKET_IN_SIZE
-        msg.match = OFPMatch.parser(buf, offset - ofproto_v1_2.OFP_MATCH_SIZE)
+        msg.match = OFPMatch.parser(msg.buf, ofproto_v1_2.OFP_PACKET_IN_SIZE -
+                                    ofproto_v1_2.OFP_MATCH_SIZE)
         return msg
 
 
