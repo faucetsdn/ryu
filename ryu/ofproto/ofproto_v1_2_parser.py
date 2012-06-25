@@ -1166,6 +1166,9 @@ class OFPMatch(object):
         match = OFPMatch()
         type_, length = struct.unpack_from('!HH', buf, offset)
 
+        match.type = type_
+        match.length = length
+
         # ofp_match adjustment
         offset += 4
         length -= 4
