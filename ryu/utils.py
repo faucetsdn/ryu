@@ -61,3 +61,7 @@ def find_flagfile(default_path=RYU_DEFAULT_FLAG_FILE):
         sys.argv.insert(1, flagfile)
         LOG.debug('flagfile = %s', filename)
         return
+
+
+def round_up(x, y):
+    return ((x + y - 1) / y) * y
