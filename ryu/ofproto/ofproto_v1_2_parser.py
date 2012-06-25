@@ -19,6 +19,7 @@ import struct
 import itertools
 
 from ryu.lib import mac
+from ryu import utils
 from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
 from . import ofproto_parser
 from . import ofproto_v1_2
@@ -236,6 +237,15 @@ class OFPPacketIn(MsgBase):
 
         msg.match = OFPMatch.parser(msg.buf, ofproto_v1_2.OFP_PACKET_IN_SIZE -
                                     ofproto_v1_2.OFP_MATCH_SIZE)
+
+        match_len = utils.round_up(msg.match.length, 8)
+        msg.data = msg.buf[(ofproto_v1_2.OFP_PACKET_IN_SIZE -
+                            ofproto_v1_2.OFP_MATCH_SIZE + match_len):]
+
+        if msg.total_len < len(msg.data):
+            # discard padding for 8-byte alignment of OFP packet
+            msg.data = msg.data[:msg.total_len]
+
         return msg
 
 
