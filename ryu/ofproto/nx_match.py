@@ -704,7 +704,8 @@ class MFICMPV6Label(MFField):
 
 
 @_register_make
-@_set_nxm_headers([ofproto_v1_0.nxm_nx_reg(i) for i in range(FLOW_N_REGS)])
+@_set_nxm_headers([ofproto_v1_0.nxm_nx_reg(i) for i in range(FLOW_N_REGS)]
+                  + [ofproto_v1_0.nxm_nx_reg_w(i) for i in range(FLOW_N_REGS)])
 class MFRegister(MFField):
     @classmethod
     def make(cls, header):
@@ -712,7 +713,8 @@ class MFRegister(MFField):
 
     def put(self, buf, offset, rule):
         for i in range(FLOW_N_REGS):
-            if ofproto_v1_0.nxm_nx_reg(i) == self.nxm_header:
+            if (ofproto_v1_0.nxm_nx_reg(i) == self.nxm_header or
+                ofproto_v1_0.nxm_nx_reg_w(i) == self.nxm_header):
                 if rule.wc.regs_mask[i]:
                     return self.putm(buf, offset, rule.flow.regs[i],
                                      rule.wc.regs_mask[i])
@@ -889,7 +891,10 @@ def serialize_nxm_match(rule, buf, offset):
 
     for i in range(FLOW_N_REGS):
         if rule.wc.regs_bits & (1 << i):
-            header = ofproto_v1_0.nxm_nx_reg(i)
+            if rule.wc.regs_mask[i]:
+                header = ofproto_v1_0.nxm_nx_reg_w(i)
+            else:
+                header = ofproto_v1_0.nxm_nx_reg(i)
             offset += nxm_put(buf, offset, header, rule)
 
     # Pad
