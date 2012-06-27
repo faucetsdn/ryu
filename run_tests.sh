@@ -28,7 +28,7 @@ function process_option {
     -f|--force) let force=1;;
     -p|--pep8) let just_pep8=1;let never_venv=1; let always_venv=0;;
     -P|--no-pep8) no_pep8=1;;
-    -l|--pylint) let just_pylint=1; let never_venv=1; let always_venv=0;;
+    -l|--pylint) let just_pylint=1;;
     -c|--coverage) coverage=1;;
     -v|--verbose) verbose=1;;
     -*) noseopts="$noseopts $1";;
@@ -87,7 +87,7 @@ function run_pylint {
   export PYTHONPATH=$PYTHONPATH:.ryu
   PYLINT_LOG=pylint.log
 
-  pylint $PYLINT_OPTIONS $PYLINT_INCLUDE > $PYLINT_LOG
+  ${wrapper} pylint $PYLINT_OPTIONS $PYLINT_INCLUDE > $PYLINT_LOG
   #BASE_CMD="pylint $PYLINT_OPTIONS $PYLINT_INCLUDE > $PYLINT_LOG"
   #[ $verbose -eq 1 ] && $BASE_CMD || msg_count=`$BASE_CMD | grep 'ryu/' | wc -l`
   #if [ $verbose -eq 0 ]; then
@@ -102,7 +102,8 @@ function run_pep8 {
   PEP8_EXCLUDE="vcsversion.py,*.pyc"
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat --show-source"
   PEP8_INCLUDE="bin/* ryu setup*.py"
-  ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
+  PEP8_LOG=pep8.log
+  ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE | tee $PEP8_LOG
 }
 
 #NOSETESTS="nosetests $noseopts $noseargs"

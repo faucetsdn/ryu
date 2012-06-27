@@ -1,9 +1,4 @@
-#distribute>=0.6.24
-
 coverage
-#mock>=0.7.1
 nose
-#nosexcover
-#openstack.nose_plugin
 pep8==0.6.1
-#webtest
+pylint==0.25.0

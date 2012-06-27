@@ -1,8 +1,15 @@
 [Messages Control]
+# PyLint Messages http://pylint-messages.wikidot.com/all-messages
 # C0111: Don't require docstrings on every method
 # W0511: TODOs in code comments are fine.
 # W0142: *args and **kwargs are fine.
-disable=C0111,W0511,W0142
+# E0602: Undefined variable %r
+# C0103: Invalid name "%s" (should match %s)
+# E1101: %s %r has no %r member
+# R0903: Too few public methods (%s/%s)
+# W0614: Unused import %s from wildcard import
+# R0801: Similar lines in %s files
+disable=C0111,W0511,W0142,E0602,C0103,E1101,R0903,W0614,R0801
 output-format=parseable
 reports=yes
 files-output=no

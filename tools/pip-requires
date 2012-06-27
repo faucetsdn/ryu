@@ -1,13 +1,4 @@
-#Paste
-#PasteDeploy==1.5.0
-#Routes>=1.12.3
-#eventlet>=0.9.12
-#lxml
-#mox==0.5.3
 gevent>=0.13
 python-gflags==1.3
 simplejson
-#sqlalchemy
 webob==1.0.8
-
-#-e git+https://review.openstack.org/p/openstack/python-quantumclient#egg=python-quantumclient
