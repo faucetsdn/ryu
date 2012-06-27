@@ -770,8 +770,390 @@ class OFPTableMod(MsgBase):
                       self.table_id, self.config)
 
 
-# class OFPStatsRequest
-# class OFPStatsReply
+class OFPStatsRequest(MsgBase):
+    def __init__(self, datapath, type_):
+        super(OFPStatsRequest, self).__init__(datapath)
+        self.type = type_
+        self.flags = 0
+
+    def _serialize_stats_body(self):
+        pass
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_HEADER_SIZE,
+                      self.type, self.flags)
+
+        self._serialize_stats_body()
+
+
+@_register_parser
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REPLY)
+class OFPStatsReply(MsgBase):
+    _STATS_TYPES = {}
+
+    @staticmethod
+    def register_stats_reply_type(type_, body_single_struct=False):
+        def _register_stats_reply_type(cls):
+            OFPStatsReply._STATS_TYPES[type_] = cls
+            cls.cls_body_single_struct = body_single_struct
+            return cls
+        return _register_stats_reply_type
+
+    def __init__(self, datapath):
+        super(OFPStatsReply, self).__init__(datapath)
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPStatsReply, cls).parser(datapath, version, msg_type,
+                                               msg_len, xid, buf)
+        msg.type, msg.flags = struct.unpack_from(
+            ofproto_v1_2.OFP_STATS_REPLY_PACK_STR, msg.buf,
+            ofproto_v1_2.OFP_HEADER_SIZE)
+        stats_type_cls = cls._STATS_TYPES.get(msg.type)
+
+        offset = ofproto_v1_2.OFP_STATS_REPLY_SIZE
+        body = []
+        while offset < msg_len:
+            r = stats_type_cls.parser(msg.buf, offset)
+            body.append(r)
+            offset += r.length
+
+        if stats_type_cls.cls_body_single_struct:
+            msg.body = body[0]
+        else:
+            msg.bdoy = body
+
+        return msg
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPDescStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath):
+        super(OFPDescStatsRequest, self).__init__(datapath,
+                                                  ofproto_v1_2.OFPST_DESC)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_DESC,
+                                         body_single_struct=True)
+class OFPDescStats(collections.namedtuple('OFPDescStats',
+        ('mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        desc = struct.unpack_from(ofproto_v1_2.OFP_DESC_STATS_PACK_STR,
+                                  buf, offset)
+        stats = cls(*desc)
+        stats.length = ofproto_v1_2.OFP_DESC_STATS_SIZE
+        return stats
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPFlowStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath, table_id, out_port, out_group,
+                 cookie, cookie_mask, match):
+        super(OFPFlowStatsRequest, self).__init__(datapath,
+                                                  ofproto_v1_2.OFPST_FLOW)
+        self.table_id = table_id
+        self.out_port = out_port
+        self.out_group = out_group
+        self.cookie = cookie
+        self.cookie_mask = cookie_mask
+        self.match = match
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto_v1_2.OFP_FLOW_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_STATS_REQUEST_SIZE,
+                      self.table_id, self.out_port, self.out_group,
+                      self.cookie, self.cookie_mask)
+
+        offset = (ofproto_v1_2.OFP_STATS_REQUEST_SIZE +
+                  ofproto_v1_2.OFP_FLOW_STATS_REQUEST_SIZE -
+                  ofproto_v1_2.OFP_MATCH_SIZE)
+
+        self.match.serialize(self.buf, offset)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_FLOW)
+class OFPFlowStats(object):
+    def __init__(self, length, table_id, duration_sec, duration_nsec,
+                 priority, idle_timeout, hard_timeout, cookie, packet_count,
+                 byte_count, match):
+        super(OFPFlowStats, self).__init__()
+        self.length = length
+        self.table_id = table_id
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.priority = priority
+        self.idle_timeout = idle_timeout
+        self.hard_timeout = hard_timeout
+        self.cookie = cookie
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+        self.match = match
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, table_id, duration_sec,
+         duration_nsec, priority,
+         idle_timeout, hard_timeout,
+         cookie, packet_count, byte_count) = struct.unpack_from(
+            ofproto_v1_2.OFP_FLOW_STATS_PACK_STR,
+            buf, offset)
+        offset += (ofproto_v1_2.OFP_FLOW_STATS_SIZE -
+                   ofproto_v1_2.OFP_MATCH_SIZE)
+        match = OFPMatch.parser(buf, offset)
+
+        return cls(length, table_id, duration_sec, duration_nsec, priority,
+                   idle_timeout, hard_timeout, cookie, packet_count,
+                   byte_count, match)
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPAggregateStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath, table_id, out_port, out_group,
+                 cookie, cookie_mask, match):
+        super(OFPAggregateStatsRequest, self).__init__(
+            datapath,
+            ofproto_v1_2.OFPST_AGGREGATE)
+        self.table_id = table_id
+        self.out_port = out_port
+        self.out_group = out_group
+        self.cookie = cookie
+        self.cookie_mask = cookie_mask
+        self.match = match
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto_v1_2.OFP_AGGREGATE_STATS_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto_v1_2.OFP_STATS_REQUEST_SIZE,
+                      self.table_id, self.out_port, self.out_group,
+                      self.cookie, self.cookie_mask)
+
+        offset = (ofproto_v1_2.OFP_STATS_REQUEST_SIZE +
+                  ofproto_v1_2.OFP_AGGREGATE_STATS_REQUEST_SIZE -
+                  ofproto_v1_2.OFP_MATCH_SIZE)
+
+        self.match.serialize(self.buf, offset)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_AGGREGATE,
+                                         body_single_struct=True)
+class OFPAggregateStatsReply(collections.namedtuple('OFPAggregateStats',
+        ('packet_count', 'byte_count', 'flow_count'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        desc = struct.unpack_from(
+            ofproto_v1_2.OFP_AGGREGATE_STATS_REPLY_PACK_STR,
+            buf, offset)
+        stats = cls(*desc)
+        stats.length = ofproto_v1_2.OFP_AGGREGATE_STATS_REPLY_SIZE
+        return stats
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPTableStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath):
+        super(OFPTableStatsRequest, self).__init__(datapath,
+                                                   ofproto_v1_2.OFPST_TABLE)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_TABLE)
+class OFPTableStats(
+    collections.namedtuple('OFPTableStats',
+                           ('table_id', 'name', 'match', 'wildcards',
+                            'write_actions', 'apply_actions',
+                            'write_setfields', 'apply_setfields',
+                            'metadata_match', 'metadata_write',
+                            'instructions', 'config',
+                            'max_entries', 'active_count',
+                            'lookup_count', 'matched_count'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        table = struct.unpack_from(
+            ofproto_v1_2.OFP_TABLE_STATS_PACK_STR,
+            buf, offset)
+        stats = cls(*table)
+        stats.length = ofproto_v1_2.OFP_TABLE_STATS_SIZE
+        return stats
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPPortStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath, port_no):
+        super(OFPPortStatsRequest, self).__init__(datapath,
+                                                  ofproto_v1_2.OFPST_PORT)
+        self.port_no = port_no
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto_v1_2.OFP_PORT_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_STATS_REQUEST_SIZE,
+                      self.port_no)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_PORT)
+class OFPPortStats(
+    collections.namedtuple('OFPPortStats',
+                           ('port_no', 'rx_packets', 'tx_packets',
+                            'rx_byptes', 'tx_bytes',
+                            'rx_dropped', 'tx_dropped',
+                            'rx_errors', 'tx_errors',
+                            'rx_frame_err', 'rx_over_err',
+                            'rx_crc_err', 'collisions'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        port = struct.unpack_from(ofproto_v1_2.OFP_PORT_STATS_PACK_STR,
+                                  buf, offset)
+        stats = cls(*port)
+        stats.length = ofproto_v1_2.OFP_PORT_STATS_SIZE
+        return stats
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPQueueStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath, port_no, queue_id):
+        super(OFPQueueStatsRequest, self).__init__(datapath,
+                                                   ofproto_v1_2.OFPST_QUEUE)
+        self.port_no = port_no
+        self.queue_id = queue_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto_v1_2.OFP_QUEUE_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_STATS_REQUEST_SIZE,
+                      self.port_no, self.queue_id)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_QUEUE)
+class OFPQueueStats(
+    collections.namedtuple('OFPQueueStats',
+                           ('port_no', 'queue_id', 'tx_bytes',
+                            'tx_packets', 'tx_errors'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        queue = struct.unpack_from(ofproto_v1_2.OFP_QUEUE_STATS_PACK_STR,
+                                   buf, offset)
+        stats = cls(*queue)
+        stats.length = ofproto_v1_2.OFP_QUEUE_STATS_SIZE
+        return stats
+
+
+class OFPBucketCounter(object):
+    def __init__(self, packet_count, byte_count):
+        super(OFPBucketCounter, self).__init__()
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+
+    @classmethod
+    def parser(cls, buf, offset):
+        packet, byte = struct.unpack_from(
+            ofproto_v1_2.OFP_BUCKET_COUNTER_PACK_STR,
+            buf, offset)
+        return cls(packet, byte)
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPGroupStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath, group_id):
+        super(OFPGroupStatsRequest, self).__init__(datapath,
+                                                   ofproto_v1_2.OFPST_GROUP)
+        self.group_id = group_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto_v1_2.OFP_GROUP_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_STATS_REQUEST_SIZE,
+                      self.group_id)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_GROUP)
+class OFPGroupStats(object):
+    def __init__(self, length, group_id, ref_count, packet_count,
+                 byte_count, bucket_counters):
+        super(OFPGroupStats, self).__init__()
+        self.length = length
+        self.group_id = group_id
+        self.ref_count = ref_count
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+        self.bucket_counters = bucket_counters
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, group_id, ref_count, packet_count,
+                 byte_count) = struct.unpack_from(
+            ofproto_v1_2.OFP_GROUP_STATS_PACK_STR,
+            buf, offset)
+
+        bucket_len = length - ofproto_v1_2.OFP_GROUP_STATS_SIZE
+        offset += ofproto_v1_2.OFP_GROUP_STATS_SIZE
+        bucket_counters = []
+        while bucket_len > 0:
+            bucket_counters.append(OFPBucketCounter.parser(buf, offset))
+            offset += ofproto_v1_2.OFP_BUCKET_COUNTER_SIZE
+            bucket_len -= ofproto_v1_2.OFP_BUCKET_COUNTER_SIZE
+
+        return cls(length, group_id, ref_count, packet_count,
+                   byte_count, bucket_counters)
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPGroupDescStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath):
+        super(OFPGroupDescStatsRequest, self).__init__(
+            datapath,
+            ofproto_v1_2.OFPST_GROUP_DESC)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_GROUP_DESC)
+class OFPGroupDescStats(object):
+    def __init__(self, length, type_, group_id, buckets):
+        self.length = length
+        self.type = type_
+        self.group_id = group_id
+        self.buckets = buckets
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, type_, group_id) = struct.unpack_from(
+            ofproto_v1_2.OFP_GROUP_DESC_STATS_PACK_STR,
+            buf, offset)
+
+        bucket_len = length - ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE
+        offset += ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE
+        buckets = []
+        while bucket_len > 0:
+            buckets.append(OFPBucket.parser(buf, offset))
+            offset += ofproto_v1_2.OFP_BUCKET_SIZE
+            bucket_len -= ofproto_v1_2.OFP_BUCKET_SIZE
+
+        return cls(length, type_, group_id, buckets)
+
+
+@_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
+class OFPGroupFeaturesStatsRequest(OFPStatsRequest):
+    def __init__(self, datapath):
+        super(OFPGroupFeaturesStatsRequest, self).__init__(
+            datapath,
+            ofproto_v1_2.OFPST_GROUP_FEATURES)
+
+
+@OFPStatsReply.register_stats_reply_type(ofproto_v1_2.OFPST_GROUP_FEATURES,
+                                         body_single_struct=True)
+class OFPGroupFeaturesStats(object):
+    def __init__(self, types, capabilities, max_groups, actions):
+        self.types = types
+        self.capabilities = capabilities
+        self.max_groups = max_groups
+        self.actions = acitons
+
+    @classmethod
+    def parser(cls, buf, offset):
+        stats = struct.unpack_from(
+            ofproto_v1_2.OFP_GROUP_FEATURES_STATS_PACK_STR, buf, offset)
+        types = stats[0]
+        capabilities = stats[1]
+        max_groups = stats[2:6]
+        acitons = stats[6:10]
+
+        return cls(types, capabilities, max_groups, actions)
 
 
 @_set_msg_type(ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REQUEST)

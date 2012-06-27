@@ -432,23 +432,25 @@ DESC_STR_LEN_STR = str(DESC_STR_LEN)
 SERIAL_NUM_LEN = 32
 SERIAL_NUM_LEN_STR = str(SERIAL_NUM_LEN)
 OFP_DESC_STATS_PACK_STR = '!' + \
-                          DESC_STR_LEN_STR + 'c' + \
-                          DESC_STR_LEN_STR + 'c' + \
-                          DESC_STR_LEN_STR + 'c' + \
-                          SERIAL_NUM_LEN_STR + 'c' + \
-                          DESC_STR_LEN_STR + 'c'
+                          DESC_STR_LEN_STR + 's' + \
+                          DESC_STR_LEN_STR + 's' + \
+                          DESC_STR_LEN_STR + 's' + \
+                          SERIAL_NUM_LEN_STR + 's' + \
+                          DESC_STR_LEN_STR + 's'
 OFP_DESC_STATS_SIZE = 1056
 assert calcsize(OFP_DESC_STATS_PACK_STR) == OFP_DESC_STATS_SIZE
 
 # struct ofp_flow_stats_request
-OFP_FLOW_STATS_REQUEST_PACK_STR = '!B3xII4xQQ' + _OFP_MATCH_PACK_STR
+OFP_FLOW_STATS_REQUEST_PACK_STR = '!B3xII4xQQ'
 OFP_FLOW_STATS_REQUEST_SIZE = 40
-assert calcsize(OFP_FLOW_STATS_REQUEST_PACK_STR) == OFP_FLOW_STATS_REQUEST_SIZE
+assert (calcsize(OFP_FLOW_STATS_REQUEST_PACK_STR) + OFP_MATCH_SIZE ==
+        OFP_FLOW_STATS_REQUEST_SIZE)
 
 # struct ofp_flow_stats
-OFP_FLOW_STATS_PACK_STR = '!HBxIIHHH6xQQQ' + _OFP_MATCH_PACK_STR
+OFP_FLOW_STATS_PACK_STR = '!HBxIIHHH6xQQQ'
 OFP_FLOW_STATS_SIZE = 56
-assert calcsize(OFP_FLOW_STATS_PACK_STR) == OFP_FLOW_STATS_SIZE
+assert (calcsize(OFP_FLOW_STATS_PACK_STR) + OFP_MATCH_SIZE ==
+        OFP_FLOW_STATS_SIZE)
 
 # struct ofp_aggregate_stats_request
 OFP_AGGREGATE_STATS_REQUEST_PACK_STR = '!B3xII4xQQ'
@@ -467,10 +469,10 @@ OFP_TABLE_STATS_SIZE = 128
 OFP_MAX_TABLE_NAME_LEN = 32
 OFP_MAX_TABLE_NAME_LEN_STR = str(OFP_MAX_TABLE_NAME_LEN)
 OFP_TABLE_STATS_PACK_STR = '!B7x' + OFP_MAX_TABLE_NAME_LEN_STR + \
-                           'cQQIIQQQQIIIIQQ'
+                           'sQQIIQQQQIIIIQQ'
 assert calcsize(OFP_TABLE_STATS_PACK_STR) == OFP_TABLE_STATS_SIZE
 
-# struct ofp_por_stats_request
+# struct ofp_port_stats_request
 OFP_PORT_STATS_REQUEST_PACK_STR = '!I4x'
 OFP_PORT_STATS_REQUEST_SIZE = 8
 assert calcsize(OFP_PORT_STATS_REQUEST_PACK_STR) == OFP_PORT_STATS_REQUEST_SIZE
