@@ -99,6 +99,9 @@ OFPP_CONTROLLER = 0xfffffffd    # Send to controller.
 OFPP_LOCAL = 0xfffffffe         # Local openflow "port".
 OFPP_ANY = 0xffffffff 	        # Not associated with a physical port.
 
+# All ones is used to indicate all queues in a port (for stats retrieval).
+OFPQ_ALL = 0xffffffff
+
 # enum ofp_port_features
 OFPPF_10MB_HD = 1 << 0    # 10 Mb half-duplex rate support.
 OFPPF_10MB_FD = 1 << 1    # 10 Mb full-duplex rate support.
