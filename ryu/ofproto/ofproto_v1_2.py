@@ -389,6 +389,11 @@ OFP_GROUP_MOD_SIZE = 16
 assert (calcsize(OFP_GROUP_MOD_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_GROUP_MOD_SIZE)
 
+# enum ofp_group
+OFPG_MAX = 0xffffff00
+OFPG_ALL = 0xfffffffc
+OFPG_ANY = 0xffffffff
+
 # enum ofp_group_mod_command
 OFPGC_ADD = 0  # New group.
 OFPGC_MODIFY = 1  # Modify all matching groups.
