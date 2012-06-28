@@ -266,7 +266,7 @@ class OFPFlowRemoved(MsgBase):
          msg.byte_count) = struct.unpack_from(
             ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR0,
             msg.buf,
-            ofproto_v1_2.OFP_HEADER_SIZE + ofproto_v1_2.OFP_MATCH_SIZE)
+            ofproto_v1_2.OFP_HEADER_SIZE)
 
         offset = (ofproto_v1_2.OFP_FLOW_REMOVED_SIZE -
                   ofproto_v1_2.OFP_MATCH_SIZE)
@@ -531,7 +531,8 @@ class OFPActionDecMplsTtl(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
@@ -561,7 +562,8 @@ class OFPActionDecNwTtl(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
@@ -1162,7 +1164,7 @@ class OFPQueueGetConfigRequest(MsgBase):
         super(OFPQueueGetConfigRequest, self).__init__(datapath)
         self.port = port
 
-    def _serialized_body(self):
+    def _serialize_body(self):
         msg_pack_into(ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
                       self.buf, ofproto_v1_2.OFP_HEADER_SIZE, self.port)
 
