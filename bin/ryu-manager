@@ -27,6 +27,7 @@ monkey.patch_all()
 from ryu import log
 log.early_init_log(logging.DEBUG)
 
+from ryu import version
 from ryu import utils
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
@@ -34,6 +35,7 @@ from ryu.controller import controller
 
 
 FLAGS = gflags.FLAGS
+gflags.DEFINE_bool('version', False, 'output version information and exit')
 gflags.DEFINE_multistring('app_lists',
                           [],
                           'application module name to run')
@@ -42,6 +44,11 @@ gflags.DEFINE_multistring('app_lists',
 def main():
     utils.find_flagfile()
     args = FLAGS(sys.argv)
+
+    if FLAGS.version:
+        print 'ryu-manager %s' % version
+        sys.exit(0)
+
     log.init_log()
 
     if len(args) > 1:
