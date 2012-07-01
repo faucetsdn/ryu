@@ -406,6 +406,11 @@ OFPGT_INDIRECT = 2  # Indirect group.
 OFPGT_FF = 3  # Fast failover group.
 
 # struct ofp_bucket
+OFP_BUCKET_PACK_STR = '!HHII4x'
+OFP_BUCKET_SIZE = 16
+assert calcsize(OFP_BUCKET_PACK_STR) == OFP_BUCKET_SIZE
+
+# struct ofp_port_mod
 OFP_PORT_MOD_PACK_STR = '!I4x' + OFP_ETH_ALEN_STR + 's' + '2xIII4x'
 OFP_PORT_MOD_SIZE = 40
 assert calcsize(OFP_PORT_MOD_PACK_STR) + OFP_HEADER_SIZE == OFP_PORT_MOD_SIZE
