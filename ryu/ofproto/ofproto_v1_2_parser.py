@@ -366,18 +366,45 @@ class OFPFlowMod(MsgBase):
             offset += inst.len
 
 
+class OFPInstruction(object):
+    _INSTRUCTION_TYPES = {}
+
+    @staticmethod
+    def register_instruction_type(types):
+        def _register_instruction_type(cls):
+            for type_ in types:
+                OFPInstruction._INSTRUCTION_TYPES[type_] = cls
+            return cls
+        return _register_instruction_type
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from('!HH', buf, offset)
+        cls_ = cls._INSTRUCTION_TYPES.get(type_)
+        return cls_.parser(buf, offset)
+
+
+@OFPInstruction.register_instruction_type([ofproto_v1_2.OFPIT_GOTO_TABLE])
 class OFPInstructionGotoTable(object):
     def __init__(self, table_id):
         super(OFPInstructionGotoTable, self).__init__()
-        self.type = ofproto_v1_2.OFPID_GOTO_TABLE
+        self.type = ofproto_v1_2.OFPIT_GOTO_TABLE
         self.len = ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_SIZE
         self.table_id = table_id
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, table_id) = struct.unpack_from(
+            ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR,
+            buf, offset)
+        return cls(table_id)
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR,
                       buf, offset, self.type, self.len, self.table_id)
 
 
+@OFPInstruction.register_instruction_type([ofproto_v1_2.OFPIT_WRITE_METADATA])
 class OFPInstructionWriteMetadata(object):
     def __init__(self, metadata, metadata_mask):
         super(OFPInstructionWriteMetadata, self).__init__()
@@ -386,23 +413,52 @@ class OFPInstructionWriteMetadata(object):
         self.metadata = metadata
         self.metadata_mask = metadata_mask
 
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, metadata, metadata_mask) = struct.unpack_from(
+            ofproto_v1_2.OFP_INSTRUCTION_WRITE_METADATA_PACK_STR,
+            buf, offset)
+        return cls(metadata, metadata_mask)
+
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_2.OFP_INSTRUCTION_WRITE_METADATA_PACK_STR,
                       buf, offset, self.type, self.len, self.metadata,
                       self.metadata_mask)
 
 
+@OFPInstruction.register_instruction_type([ofproto_v1_2.OFPIT_WRITE_ACTIONS,
+                                           ofproto_v1_2.OFPIT_APPLY_ACTIONS,
+                                           ofproto_v1_2.OFPIT_CLEAR_ACTIONS])
 class OFPInstructionActions(object):
-    def __init__(self, type_, actions):
+    def __init__(self, type_, actions=None):
         super(OFPInstructionActions, self).__init__()
         self.type = type_
         self.actions = actions
 
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_PACK_STR,
+            buf, offset)
+
+        offset += ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE
+        actions = []
+        actions_len = len_ - ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE
+        while actions_len > 0:
+            a = OFPAction.parser(buf, offset)
+            actions.append(a)
+            actions_len -= a.len
+
+        inst = cls(type_, actions)
+        inst.len = len_
+        return inst
+
     def serialize(self, buf, offset):
         action_offset = offset + ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE
-        for a in self.actions:
-            a.serialize(buf, action_offset)
-            action_offset += a.len
+        if self.actions:
+            for a in self.actions:
+                a.serialize(buf, action_offset)
+                action_offset += a.len
 
         self.len = action_offset - offset
 
@@ -824,7 +880,7 @@ class OFPStatsReply(MsgBase):
         if stats_type_cls.cls_body_single_struct:
             msg.body = body[0]
         else:
-            msg.bdoy = body
+            msg.body = body
 
         return msg
 
@@ -879,7 +935,7 @@ class OFPFlowStatsRequest(OFPStatsRequest):
 class OFPFlowStats(object):
     def __init__(self, length, table_id, duration_sec, duration_nsec,
                  priority, idle_timeout, hard_timeout, cookie, packet_count,
-                 byte_count, match):
+                 byte_count, match, instructions=None):
         super(OFPFlowStats, self).__init__()
         self.length = length
         self.table_id = table_id
@@ -892,6 +948,7 @@ class OFPFlowStats(object):
         self.packet_count = packet_count
         self.byte_count = byte_count
         self.match = match
+        self.instructions = instructions
 
     @classmethod
     def parser(cls, buf, offset):
@@ -904,6 +961,14 @@ class OFPFlowStats(object):
         offset += (ofproto_v1_2.OFP_FLOW_STATS_SIZE -
                    ofproto_v1_2.OFP_MATCH_SIZE)
         match = OFPMatch.parser(buf, offset)
+
+        match_length = utils.round_up(match.length, 8)
+        inst_length = (length - (ofproto_v1_2.OFP_FLOW_STATS_SIZE -
+                                 ofproto_v1_2.OFP_MATCH_SIZE + match_length))
+        offset += match_length
+        while inst_length > 0:
+            inst = OFPInstruction.parser(buf, offset)
+            inst_length -= inst.len
 
         return cls(length, table_id, duration_sec, duration_nsec, priority,
                    idle_timeout, hard_timeout, cookie, packet_count,

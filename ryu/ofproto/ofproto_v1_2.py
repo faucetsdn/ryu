@@ -213,7 +213,7 @@ assert (calcsize(OFP_OXM_EXPERIMENTER_HEADER_PACK_STR) ==
         OFP_OXM_EXPERIMENTER_HEADER_SIZE)
 
 # enum ofp_instruction_type
-OFPID_GOTO_TABLE = 1  # Setup the next table in the lookup pipeline.
+OFPIT_GOTO_TABLE = 1  # Setup the next table in the lookup pipeline.
 OFPIT_WRITE_METADATA = 2  # Setup the metadata field for use later in
                           # pipeline.
 OFPIT_WRITE_ACTIONS = 3  # Write the action(s) onto the datapath
