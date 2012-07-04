@@ -1438,174 +1438,178 @@ class OFPMatch(object):
         self.flow = Flow()
         self.fields = []
 
+    def append_field(self, header, value, mask=None):
+        self.fields.append(OFPMatchField.make(header, value, mask))
+
     def serialize(self, buf, offset):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PORT):
-            self.fields.append(OFPMatchField.make(ofproto_v1_2.OXM_OF_IN_PORT))
+            self.append_field(ofproto_v1_2.OXM_OF_IN_PORT,
+                              self.flow.in_port)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PHY_PORT):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IN_PHY_PORT))
+            self.append_field(ofproto_v1_2.OXM_OF_IN_PHY_PORT,
+                              self.flow.in_phy_port)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_DST):
             if self.wc.dl_dst_mask:
                 header = ofproto_v1_2.OXM_OF_ETH_DST_W
             else:
                 header = ofproto_v1_2.OXM_OF_ETH_DST
-            self.fields.append(OFPMatchField.make(header))
+            self.append_field(header, self.flow.dl_dst, self.wc.dl_dst_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_SRC):
             if self.wc.dl_src_mask:
                 header = ofproto_v1_2.OXM_OF_ETH_SRC_W
             else:
                 header = ofproto_v1_2.OXM_OF_ETH_SRC
-            self.fields.append(OFPMatchField.make(header))
+            self.append_field(header, self.flow.dl_src, self.wc.dl_src_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_TYPE):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ETH_TYPE))
+            self.append_field(ofproto_v1_2.OXM_OF_ETH_TYPE, self.flow.dl_type)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_VLAN_VID):
             if self.wc.vlan_vid_mask == UINT16_MAX:
                 header = ofproto_v1_2.OXM_OF_VLAN_VID
             else:
                 header = ofproto_v1_2.OXM_OF_VLAN_VID_W
-            self.fields.append(OFPMatchField.make(header))
+            self.append_field(header, self.flow.vlan_vid, self.vlan_vid_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_VLAN_PCP):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_VLAN_PCP))
+            self.append_field(ofproto_v1_2.OXM_OF_VLAN_PCP, self.flow.vlan_pcp)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IP_DSCP):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IP_DSCP))
+            self.append_field(ofproto_v1_2.OXM_OF_IP_DSCP, self.flow.ip_dscp)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IP_ECN):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IP_ECN))
+            self.append_field(ofproto_v1_2.OXM_OF_IP_ECN, self.flow.ip_ecn)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IP_PROTO):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IP_PROTO))
+            self.append_field(ofproto_v1_2.OXM_OF_IP_PROTO, self.flow.ip_proto)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV4_SRC):
             if self.wc.ipv4_src_mask == UINT32_MAX:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_SRC))
+                header = ofproto_v1_2.OXM_OF_IPV4_SRC
             else:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_SRC_W))
+                header = ofproto_v1_2.OXM_OF_IPV4_SRC_W
+            self.append_field(header, self.flow.ipv4_src,
+                              self.wc.ipv4_src_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV4_DST):
             if self.wc.ipv4_dst_mask == UINT32_MAX:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_DST))
+                header = ofproto_v1_2.OXM_OF_IPV4_DST
             else:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV4_DST_W))
+                header = ofproto_v1_2.OXM_OF_IPV4_DST_W
+            self.append_field(header, self.flow.ipv4_dst,
+                              self.wc.ipv4_dst_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_TCP_SRC):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_TCP_SRC))
+            self.append_field(ofproto_v1_2.OXM_OF_TCP_SRC, self.flow.tcp_src)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_TCP_DST):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_TCP_DST))
+            self.append_field(ofproto_v1_2.OXM_OF_TCP_DST, self.flow.tcp_dst)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_UDP_SRC):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_UDP_SRC))
+            self.append_field(ofproto_v1_2.OXM_OF_UDP_SRC, self.flow.udp_src)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_UDP_DST):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_UDP_DST))
+            self.append_field(ofproto_v1_2.OXM_OF_UDP_DST, self.flow.udp_dst)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_SCTP_SRC):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_SCTP_SRC))
+            self.append_field(ofproto_v1_2.OXM_OF_SCTP_SRC, self.flow.sctp_src)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_SCTP_DST):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_SCTP_DST))
+            self.append_field(ofproto_v1_2.OXM_OF_SCTP_DST, self.flow.sctp_dst)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV4_TYPE):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV4_TYPE))
+            self.append_field(ofproto_v1_2.OXM_OF_ICMPV4_TYPE,
+                              self.flow.icmpv4_type)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV4_CODE):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV4_CODE))
+            self.append_field(ofproto_v1_2.OXM_OF_ICMPV4_CODE,
+                              self.flow.icmpv4_code)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_OP):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_OP))
+            self.append_field(ofproto_v1_2.OXM_OF_ARP_OP, self.flow.arp_op)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_SPA):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_SPA))
+            if self.wc.arp_spa_mask:
+                header = ofproto_v1_2.OXM_OF_ARP_SPA_W
+            else:
+                header = ofproto_v1_2.OXM_OF_ARP_SPA
+            self.append_field(header, self.flow.arp_spa, self.wc.arp_spa_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_TPA):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_TPA))
+            if self.wc.arp_tpa_mask:
+                header = ofproto_v1_2.OXM_OF_ARP_TPA_W
+            else:
+                header = ofproto_v1_2.OXM_OF_ARP_TPA
+            self.append_field(header, self.flow.arp_tpa, self.wc.arp_tpa_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_SHA):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_SHA))
+            if self.wc.arp_sha_mask:
+                header = ofproto_v1_2.OXM_OF_ARP_SHA_W
+            else:
+                header = ofproto_v1_2.OXM_OF_ARP_SHA
+            self.append_field(header, self.flow.arp_sha, self.wc.arp_sha_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_THA):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ARP_THA))
+            if self.wc.arp_tha_mask:
+                header = ofproto_v1_2.OXM_OF_ARP_THA_W
+            else:
+                header = ofproto_v1_2.OXM_OF_ARP_THA
+            self.append_field(header, self.flow.arp_tha, self.wc.arp_tha_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_SRC):
             if len(self.wc.ipv6_src_mask):
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_SRC_W))
+                header = ofproto_v1_2.OXM_OF_IPV6_SRC_W
             else:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_SRC))
+                header = ofproto_v1_2.OXM_OF_IPV6_SRC
+            self.append_field(header, self.flow.ipv6_src,
+                              self.wc.ipv6_src_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_DST):
             if len(self.wc.ipv6_dst_mask):
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_DST_W))
+                header = ofproto_v1_2.OXM_OF_IPV6_DST_W
             else:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_DST))
+                header = ofproto_v1_2.OXM_OF_IPV6_DST
+            self.append_field(header, self.flow.ipv6_dst,
+                              self.wc.ipv6_dst_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL):
             if self.wc.ipv6_flabel_mask:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_FLABEL_W))
+                header = ofproto_v1_2.OXM_OF_IPV6_FLABEL_W
             else:
-                self.fields.append(
-                    OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_FLABEL))
+                header = ofproto_v1_2.OXM_OF_IPV6_FLABEL
+            self.append_field(header, self.flow.ipv6_flabel,
+                              self.wc.ipv6_flabel_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV6_TYPE):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV6_TYPE))
+            self.append_field(ofproto_v1_2.OXM_OF_ICMPV6_TYPE,
+                              self.flow.icmpv6_type)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ICMPV6_CODE):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_ICMPV6_CODE))
+            self.append_field(ofproto_v1_2.OXM_OF_ICMPV6_CODE,
+                              self.flow.icmpv6_code)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TARGET):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_TARGET))
+            self.append_field(ofproto_v1_2.OXM_OF_IPV6_ND_TARGET,
+                              self.flow.ipv6_nd_target)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_SLL):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_SLL))
+            self.append_field(ofproto_v1_2.OXM_OF_IPV6_ND_SLL,
+                              self.flow.ipv6_nd_sll)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TLL):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_IPV6_ND_TLL))
+            self.append_field(ofproto_v1_2.OXM_OF_IPV6_ND_TLL,
+                              self.flow.ipv6_nd_tll)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_MPLS_LABEL))
+            self.append_field(ofproto_v1_2.OXM_OF_MPLS_LABEL,
+                              self.flow.mpls_label)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_MPLS_TC):
-            self.fields.append(
-                OFPMatchField.make(ofproto_v1_2.OXM_OF_MPLS_TC))
+            self.append_field(ofproto_v1_2.OXM_OF_MPLS_TC,
+                              self.flow.mpls_tc)
 
         field_offset = offset + 4
         for f in self.fields:
@@ -1853,9 +1857,9 @@ class OFPMatchField(object):
         self.length = 0
 
     @staticmethod
-    def make(header):
+    def make(header, value, mask=None):
         cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
-        return cls_(header, 0)
+        return cls_(header, value, mask)
 
     @classmethod
     def parser(cls, buf, offset):
