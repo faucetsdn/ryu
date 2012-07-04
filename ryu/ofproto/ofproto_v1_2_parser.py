@@ -1613,7 +1613,7 @@ class OFPMatch(object):
 
         field_offset = offset + 4
         for f in self.fields:
-            f.serialize(buf, field_offset, self)
+            f.serialize(buf, field_offset)
             field_offset += f.length
 
         length = field_offset - offset
@@ -1881,7 +1881,7 @@ class OFPMatchField(object):
             (value,) = struct.unpack_from(cls.pack_str, buf, offset + 4)
         return cls(header, value, mask)
 
-    def serialize(self, buf, offset, match):
+    def serialize(self, buf, offset):
         hasmask = (self.header >> 8) & 1
         if hasmask:
             self.put_w(buf, offset, self.value, self.mask)
@@ -2171,9 +2171,8 @@ class MTIPv6Src(OFPMatchField):
         self.value = value
         self.mask = mask
 
-    def serialize(self, buf, offset, match):
-        self.putv6(buf, offset, match.flow.ipv6_src,
-                   match.wc.ipv6_src_mask)
+    def serialize(self, buf, offset):
+        self.putv6(buf, offset, self.value, self.mask)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_DST,
@@ -2186,9 +2185,8 @@ class MTIPv6Dst(OFPMatchField):
         self.value = value
         self.mask = mask
 
-    def serialize(self, buf, offset, match):
-        self.putv6(buf, offset, match.flow.ipv6_dst,
-                   match.wc.ipv6_dst_mask)
+    def serialize(self, buf, offset):
+        self.putv6(buf, offset, self.value, self.mask)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_FLABEL,
@@ -2237,8 +2235,8 @@ class MTIPv6NdTarget(OFPMatchField):
         super(MTIPv6NdTarget, self).__init__(header)
         self.value = value
 
-    def serialize(self, buf, offset, match):
-        self.putv6(buf, offset, match.flow.ipv6_nd_target, [])
+    def serialize(self, buf, offset):
+        self.putv6(buf, offset, self.value, self.mask)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_SLL])
