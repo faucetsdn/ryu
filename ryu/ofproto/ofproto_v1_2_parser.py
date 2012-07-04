@@ -1862,9 +1862,19 @@ class OFPMatchField(object):
         (header,) = struct.unpack_from('!I', buf, offset)
         # TODO: handle unknown field
         cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
-        field = cls_.parser(header, buf, offset)
+        field = cls_.field_parser(header, buf, offset)
         field.length = (header & 0xff) + 4
         return field
+
+    @classmethod
+    def field_parser(cls, header, buf, offset):
+        hasmask = (header >> 8) & 1
+        if hasmask:
+            pack_str = '!' + cls.pack_str[1:] * 2
+            (value, mask) = struct.unpack_from(pack_str, buf, offset + 4)
+        else:
+            (value,) = struct.unpack_from(cls.pack_str, buf, offset + 4)
+        return cls(header)
 
     def _put_header(self, buf, offset):
         ofproto_parser.msg_pack_into('!I', buf, offset, self.header)
