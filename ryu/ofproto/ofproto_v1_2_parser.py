@@ -716,20 +716,25 @@ class OFPActionPopMpls(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_2.OFPAT_SET_FIELD,
                                 ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE)
 class OFPActionSetField(OFPAction):
-    def __init__(self):
+    def __init__(self, field):
         super(OFPActionSetField, self).__init__()
+        self.field = field
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, len_) = struct.unpack_from(
-            ofproto_v1_2.OFP_ACTION_SET_FIELD_PACK_STR, buf, offset)
-        action = cls()
-        # TODO: parse OXM
-        return action
+        (type_, len_) = struct.unpack_from('!HH', buf, offset)
+        action.len = len_
+        field = OFPMatchField.parse(buf, offset + 4)
+        return cls(field)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_2.OFP_ACTION_SET_FIELD_PACK_STR, buf, offset)
-        # TODO: serialize OXM
+        self.field.serialize(buf, offset + 4)
+        oxm_len = self.field.length
+        pad_len = utils.round_up(oxm_len + 4, 8) - (oxm_len + 4)
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf,
+                                     offset + 8 + oxm_len)
+        self.len = ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len + pad_len
+        msg_pack_into('!HH', buf, offset, self.type, self.len)
 
 
 @OFPAction.register_action_type(
@@ -1915,6 +1920,9 @@ class OFPMatchField(object):
         self._putv6(buf, offset + self.length, value)
         if len(mask):
             self._putv6(buf, offset + self.length, mask)
+
+    def length(self):
+        return self.header & 0xff
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IN_PORT])
