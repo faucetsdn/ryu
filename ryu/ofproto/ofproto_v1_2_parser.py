@@ -461,6 +461,9 @@ class OFPInstructionActions(object):
                 action_offset += a.len
 
         self.len = action_offset - offset
+        pad_len = utils.round_up(self.len, 8) - self.len
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, action_offset)
+        self.len += pad_len
 
         msg_pack_into(ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_PACK_STR,
                       buf, offset, self.type, self.len)
@@ -725,18 +728,22 @@ class OFPActionSetField(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_) = struct.unpack_from('!HH', buf, offset)
+        field = OFPMatchField.parser(buf, offset + 4)
+        action = cls(field)
         action.len = len_
-        field = OFPMatchField.parse(buf, offset + 4)
-        return cls(field)
+        return action
 
     def serialize(self, buf, offset):
-        self.field.serialize(buf, offset + 4)
-        oxm_len = self.field.length
-        pad_len = utils.round_up(oxm_len + 4, 8) - (oxm_len + 4)
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf,
-                                     offset + 8 + oxm_len)
-        self.len = ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len + pad_len
+        oxm_len = self.field.oxm_len()
+        oxm_pad = utils.round_up(oxm_len + 4, 8) - (oxm_len + 4)
+        self.len = ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len + oxm_pad
+        pad_len = utils.round_up(self.len, 8) - self.len
+        self.len += pad_len
+
         msg_pack_into('!HH', buf, offset, self.type, self.len)
+        self.field.serialize(buf, offset + 4)
+        offset += ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset)
 
 
 @OFPAction.register_action_type(
@@ -1935,7 +1942,7 @@ class OFPMatchField(object):
         if len(mask):
             self._putv6(buf, offset + self.length, mask)
 
-    def length(self):
+    def oxm_len(self):
         return self.header & 0xff
 
 
