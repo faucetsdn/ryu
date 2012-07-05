@@ -769,20 +769,32 @@ class OFPBucket(object):
 
     @classmethod
     def parser(cls, buf, offset):
-        (msg.len, msg.weigth, msg.watch_port,
-         msg.watch_group) = struct.unpack_from(
+        (len_, weigth, watch_port, watch_group) = struct.unpack_from(
             ofproto_v1_2.OFP_BUCKET_PACK_STR, buf, offset)
 
         length = ofproto_v1_2.OFP_BUCKET_SIZE
         offset += ofproto_v1_2.OFP_BUCKET_SIZE
-        msg.actions = []
-        while length < msg.len:
+        actions = []
+        while length < len_:
             action = OFPAction.parser(buf, offset)
-            msg.actions.append(action)
+            actions.append(action)
             offset += action.len
             length += action.len
 
-        return msg
+        return cls(len_, weigth, watch_port, watch_group, actions)
+
+    def serialize(self, buf, offset):
+        action_offset = offset + ofproto_v1_2.OFP_BUCKET_SIZE
+        action_len = 0
+        for a in self.actions:
+            a.serialize(buf, action_offset)
+            action_offset += a.len
+            action_len += a.len
+
+        self.len = utils.round_up(ofproto_v1_2.OFP_BUCKET_SIZE + action_len,
+                                  8)
+        msg_pack_into(ofproto_v1_2.OFP_BUCKET_PACK_STR, buf, offset,
+                      self.len, self.weight, self.watch_port, self.watch_group)
 
 
 @_set_msg_type(ofproto_v1_2.OFPT_GROUP_MOD)
