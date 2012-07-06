@@ -101,7 +101,7 @@ class PortController(ControllerBase):
 
     def create(self, req, network_id, dpid, port_id, **_kwargs):
         try:
-            self.nw.create_port(network_id, int(dpid), int(port_id))
+            self.nw.create_port(network_id, int(dpid, 16), int(port_id))
         except NetworkNotFound:
             return Response(status=404)
         except PortAlreadyExist:
@@ -111,7 +111,7 @@ class PortController(ControllerBase):
 
     def update(self, req, network_id, dpid, port_id, **_kwargs):
         try:
-            self.nw.update_port(network_id, int(dpid), int(port_id))
+            self.nw.update_port(network_id, int(dpid, 16), int(port_id))
         except NetworkNotFound:
             return Response(status=404)
 
@@ -127,7 +127,7 @@ class PortController(ControllerBase):
 
     def delete(self, req, network_id, dpid, port_id, **_kwargs):
         try:
-            self.nw.remove_port(network_id, int(dpid), int(port_id))
+            self.nw.remove_port(network_id, int(dpid, 16), int(port_id))
         except (NetworkNotFound, PortNotFound):
             return Response(status=404)
 
