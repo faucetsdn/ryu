@@ -1638,7 +1638,7 @@ class OFPMatch(object):
         length = field_offset - offset
         msg_pack_into('!HH', buf, offset, ofproto_v1_2.OFPMT_OXM, length)
 
-        pad_len = 8 - (length % 8)
+        pad_len = utils.round_up(length, 8) - length
         ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
 
         return length + pad_len
