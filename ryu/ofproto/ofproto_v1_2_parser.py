@@ -2193,7 +2193,7 @@ class MTArpTha(OFPMatchField):
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_SRC,
                                       ofproto_v1_2.OXM_OF_IPV6_SRC_W])
 class MTIPv6Src(OFPMatchField):
-    pack_str = '!4I'
+    pack_str = '!8H'
 
     def __init__(self, header, value, mask=None):
         super(MTIPv6Src, self).__init__(header)
@@ -2207,7 +2207,7 @@ class MTIPv6Src(OFPMatchField):
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_DST,
                                       ofproto_v1_2.OXM_OF_IPV6_DST_W])
 class MTIPv6Dst(OFPMatchField):
-    pack_str = '!4I'
+    pack_str = '!8H'
 
     def __init__(self, header, value, mask=None):
         super(MTIPv6Dst, self).__init__(header)
@@ -2258,7 +2258,7 @@ class MTICMPV6Code(OFPMatchField):
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_TARGET])
 class MTIPv6NdTarget(OFPMatchField):
-    pack_str = '!4I'
+    pack_str = '!8H'
 
     def __init__(self, header, value, mask=None):
         super(MTIPv6NdTarget, self).__init__(header)
