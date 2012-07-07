@@ -1498,7 +1498,8 @@ class OFPMatch(object):
                 header = ofproto_v1_2.OXM_OF_VLAN_VID
             else:
                 header = ofproto_v1_2.OXM_OF_VLAN_VID_W
-            self.append_field(header, self.flow.vlan_vid, self.vlan_vid_mask)
+            self.append_field(header, self.flow.vlan_vid,
+                              self.wc.vlan_vid_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_VLAN_PCP):
             self.append_field(ofproto_v1_2.OXM_OF_VLAN_PCP, self.flow.vlan_pcp)
