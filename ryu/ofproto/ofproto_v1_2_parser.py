@@ -743,7 +743,7 @@ class OFPActionSetField(OFPAction):
         msg_pack_into('!HH', buf, offset, self.type, self.len)
         self.field.serialize(buf, offset + 4)
         offset += ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset)
+        ofproto_parser.msg_pack_into("%dx" % (oxm_pad + pad_len), buf, offset)
 
 
 @OFPAction.register_action_type(
