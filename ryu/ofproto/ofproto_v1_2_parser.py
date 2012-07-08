@@ -696,7 +696,8 @@ class OFPActionPopVlan(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
