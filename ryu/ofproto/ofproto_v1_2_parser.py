@@ -1938,10 +1938,10 @@ class OFPMatchField(object):
                                      *value)
         self.length += self.n_bytes
 
-    def putv6(self, buf, offset, value, mask):
+    def putv6(self, buf, offset, value, mask=None):
         self._put_header(buf, offset)
         self._putv6(buf, offset + self.length, value)
-        if len(mask):
+        if mask and len(mask):
             self._putv6(buf, offset + self.length, mask)
 
     def oxm_len(self):
@@ -2267,7 +2267,7 @@ class MTIPv6NdTarget(OFPMatchField):
         self.value = value
 
     def serialize(self, buf, offset):
-        self.putv6(buf, offset, self.value, self.mask)
+        self.putv6(buf, offset, self.value)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_SLL])
