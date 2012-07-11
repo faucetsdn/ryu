@@ -240,7 +240,7 @@ class OFPPacketIn(MsgBase):
 
         match_len = utils.round_up(msg.match.length, 8)
         msg.data = msg.buf[(ofproto_v1_2.OFP_PACKET_IN_SIZE -
-                            ofproto_v1_2.OFP_MATCH_SIZE + match_len):]
+                            ofproto_v1_2.OFP_MATCH_SIZE + match_len + 2):]
 
         if msg.total_len < len(msg.data):
             # discard padding for 8-byte alignment of OFP packet
