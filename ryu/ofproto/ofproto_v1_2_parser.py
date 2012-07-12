@@ -735,16 +735,14 @@ class OFPActionSetField(OFPAction):
         return action
 
     def serialize(self, buf, offset):
-        oxm_len = self.field.oxm_len()
-        oxm_pad = utils.round_up(oxm_len + 4, 8) - (oxm_len + 4)
-        self.len = ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len + oxm_pad
-        pad_len = utils.round_up(self.len, 8) - self.len
-        self.len += pad_len
+        len_ = ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + self.field.oxm_len()
+        self.len = utils.round_up(len_, 8)
+        pad_len = self.len - len_
 
         msg_pack_into('!HH', buf, offset, self.type, self.len)
         self.field.serialize(buf, offset + 4)
-        offset += ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + oxm_len
-        ofproto_parser.msg_pack_into("%dx" % (oxm_pad + pad_len), buf, offset)
+        offset += len_
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset)
 
 
 @OFPAction.register_action_type(
