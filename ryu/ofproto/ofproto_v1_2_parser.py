@@ -1305,17 +1305,45 @@ class OFPPacketQueue(object):
 
     @classmethod
     def parser(cls, buf, offset):
-        (msg.queue_id, msg.port, msg.len) = struct.unpack_from(
+        (queue_id, port, len_) = struct.unpack_from(
             ofproto_v1_2.OFP_PACKET_QUEUE_PACK_STR, buf, offset)
         length = ofproto_v1_2.OFP_PACKET_QUEUE_SIZE
         offset += ofproto_v1_2.OFP_PACKET_QUEUE_SIZE
-        msg.properties = []
-        while length < msg.len:
+        properties = []
+        while length < len_:
             queue_prop = OFPQueueProp.parser(buf, offset)
-            msg.properties.append(queue_prop)
+            properties.append(queue_prop)
             offset += queue_prop.len
-            length += queue_prop
-        return msg
+            length += queue_prop.len
+        return cls(queue_id, port, len_, properties)
+
+
+@OFPQueueProp.register_property(ofproto_v1_2.OFPQT_MIN_RATE,
+                                ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE)
+class OFPQueuePropMinRate(OFPQueueProp):
+    def __init__(self, rate):
+        super(OFPQueuePropMinRate, self).__init__()
+        self.rate = rate
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (rate,) = struct.unpack_from(
+            ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_PACK_STR, buf, offset)
+        return cls(rate)
+
+
+@OFPQueueProp.register_property(ofproto_v1_2.OFPQT_MAX_RATE,
+                                ofproto_v1_2.OFP_QUEUE_PROP_MAX_RATE_SIZE)
+class OFPQueuePropMaxRate(OFPQueueProp):
+    def __init__(self, rate):
+        super(OFPQueuePropMaxRate, self).__init__()
+        self.rate = rate
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (rate,) = struct.unpack_from(
+            ofproto_v1_2.OFP_QUEUE_PROP_MAX_RATE_PACK_STR, buf, offset)
+        return cls(rate)
 
 
 @_register_parser
@@ -1335,8 +1363,9 @@ class OFPQueueGetConfigReply(MsgBase):
 
         msg.queues = []
         length = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
-        while length < msg.length:
-            queue = OFPPacketQueue.parser(buf, offset)
+        offset = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
+        while length < msg.msg_len:
+            queue = OFPPacketQueue.parser(msg.buf, offset)
             msg.queues.append(queue)
 
             offset += queue.len
