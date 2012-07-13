@@ -297,6 +297,10 @@ class ClsRule(object):
         if self.wc.dl_dst_mask:
             return ofproto_v1_0.NXFF_NXM
 
+        # Masking DL_SRC is only supported by NXM
+        if self.wc.dl_src_mask:
+            return ofproto_v1_0.NXFF_NXM
+
         # ECN is only supported by NXM
         if not self.wc.wildcards & FWW_NW_ECN:
             return ofproto_v1_0.NXFF_NXM
@@ -313,7 +317,7 @@ class ClsRule(object):
         if self.flow.dl_src != mac.DONTCARE:
             wildcards &= ~ofproto.OFPFW_DL_SRC
 
-        if self.wc.dl_dst_mask:
+        if self.flow.dl_dst != mac.DONTCARE:
             wildcards &= ~ofproto.OFPFW_DL_DST
 
         if not self.wc.wildcards & FWW_DL_TYPE:
