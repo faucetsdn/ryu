@@ -421,6 +421,9 @@ OFP_STATS_REQUEST_SIZE = 16
 assert (calcsize(OFP_STATS_REQUEST_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_STATS_REQUEST_SIZE)
 
+# enum ofp_stats_reply_flags
+OFPSF_REPLY_MORE = 1 << 0       # More replies to follow.
+
 # struct ofp_stats_reply
 OFP_STATS_REPLY_PACK_STR = '!HH4x'
 OFP_STATS_REPLY_SIZE = 16
