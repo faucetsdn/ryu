@@ -21,7 +21,7 @@ from nose.tools import *
 import struct
 from ryu import exception
 
-from ryu.ofproto import ofproto, ofproto_parser
+from ryu.ofproto import ofproto_common, ofproto_parser
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 
 import logging

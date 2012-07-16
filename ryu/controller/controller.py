@@ -24,7 +24,7 @@ import greenlet
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
-from ryu.ofproto import ofproto
+from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_0_parser
@@ -40,7 +40,7 @@ LOG = logging.getLogger('ryu.controller.controller')
 
 FLAGS = gflags.FLAGS
 gflags.DEFINE_string('ofp_listen_host', '', 'openflow listen host')
-gflags.DEFINE_integer('ofp_tcp_listen_port', ofproto.OFP_TCP_PORT,
+gflags.DEFINE_integer('ofp_tcp_listen_port', ofproto_common.OFP_TCP_PORT,
                       'openflow tcp listen port')
 
 
@@ -122,7 +122,7 @@ class Datapath(object):
     @_deactivate
     def _recv_loop(self):
         buf = bytearray()
-        required_len = ofproto.OFP_HEADER_SIZE
+        required_len = ofproto_common.OFP_HEADER_SIZE
 
         count = 0
         while self.is_active:
@@ -143,7 +143,7 @@ class Datapath(object):
                 self.ev_q.queue(ofp_event.ofp_msg_to_ev(msg))
 
                 buf = buf[required_len:]
-                required_len = ofproto.OFP_HEADER_SIZE
+                required_len = ofproto_common.OFP_HEADER_SIZE
 
                 # We need to schedule other greenlets. Otherwise, ryu
                 # can't accept new switches or handle the existing
