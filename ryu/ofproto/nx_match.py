@@ -22,7 +22,6 @@ from ryu import exception
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
-from . import ofproto
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.nx_match')
@@ -309,19 +308,19 @@ class ClsRule(object):
 
     def match_tuple(self):
         assert self.flow_format() == ofproto_v1_0.NXFF_OPENFLOW10
-        wildcards = ofproto.OFPFW_ALL
+        wildcards = ofproto_v1_0.OFPFW_ALL
 
         if not self.wc.wildcards & FWW_IN_PORT:
-            wildcards &= ~ofproto.OFPFW_IN_PORT
+            wildcards &= ~ofproto_v1_0.OFPFW_IN_PORT
 
         if self.flow.dl_src != mac.DONTCARE:
-            wildcards &= ~ofproto.OFPFW_DL_SRC
+            wildcards &= ~ofproto_v1_0.OFPFW_DL_SRC
 
         if self.flow.dl_dst != mac.DONTCARE:
-            wildcards &= ~ofproto.OFPFW_DL_DST
+            wildcards &= ~ofproto_v1_0.OFPFW_DL_DST
 
         if not self.wc.wildcards & FWW_DL_TYPE:
-            wildcards &= ~ofproto.OFPFW_DL_TYPE
+            wildcards &= ~ofproto_v1_0.OFPFW_DL_TYPE
 
         # FIXME: Add support for dl_vlan, fl_vlan_pcp, nw_tos, nw_proto,
         # nw_src, nw_dst, tp_src and dp_dst to self
