@@ -2022,7 +2022,6 @@ class MTEthType(OFPMatchField):
     def __init__(self, header, value, mask=None):
         super(MTEthType, self).__init__(header)
         self.value = value
-        self.mask = mask
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_VLAN_VID,
