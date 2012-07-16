@@ -19,6 +19,7 @@ import logging
 
 from ryu import utils
 from ryu.controller.handler import register_instance
+from ryu.controller.controller import Datapath
 
 LOG = logging.getLogger('ryu.base.app_manager')
 
@@ -111,6 +112,15 @@ class AppManager(object):
             # Do we need to support multiple instances?
             # Yes, maybe for slicing.
             LOG.info('instantiating app %s', app_name)
+
+            if 'OFP_VERSIONS' in cls.__dict__:
+                for k in Datapath.supported_ofp_version.keys():
+                    if not k in cls.OFP_VERSIONS:
+                        del Datapath.supported_ofp_version[k]
+
+            assert len(Datapath.supported_ofp_version), \
+                'No OpenFlow version is available'
+
             assert app_name not in self.applications
             app = cls(*args, **kwargs)
             register_instance(app)
