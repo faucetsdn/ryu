@@ -1587,17 +1587,17 @@ class OFPMatch(object):
             self.append_field(ofproto_v1_2.OXM_OF_ARP_OP, self.flow.arp_op)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_SPA):
-            if self.wc.arp_spa_mask:
-                header = ofproto_v1_2.OXM_OF_ARP_SPA_W
-            else:
+            if self.wc.arp_spa_mask == UINT32_MAX:
                 header = ofproto_v1_2.OXM_OF_ARP_SPA
+            else:
+                header = ofproto_v1_2.OXM_OF_ARP_SPA_W
             self.append_field(header, self.flow.arp_spa, self.wc.arp_spa_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_TPA):
-            if self.wc.arp_tpa_mask:
-                header = ofproto_v1_2.OXM_OF_ARP_TPA_W
-            else:
+            if self.wc.arp_tpa_mask == UINT32_MAX:
                 header = ofproto_v1_2.OXM_OF_ARP_TPA
+            else:
+                header = ofproto_v1_2.OXM_OF_ARP_TPA_W
             self.append_field(header, self.flow.arp_tpa, self.wc.arp_tpa_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ARP_SHA):
@@ -1631,10 +1631,10 @@ class OFPMatch(object):
                               self.wc.ipv6_dst_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL):
-            if self.wc.ipv6_flabel_mask:
-                header = ofproto_v1_2.OXM_OF_IPV6_FLABEL_W
-            else:
+            if self.wc.ipv6_flabel_mask == UINT32_MAX:
                 header = ofproto_v1_2.OXM_OF_IPV6_FLABEL
+            else:
+                header = ofproto_v1_2.OXM_OF_IPV6_FLABEL_W
             self.append_field(header, self.flow.ipv6_flabel,
                               self.wc.ipv6_flabel_mask)
 
@@ -1858,8 +1858,7 @@ class OFPMatch(object):
         self.flow.ipv6_dst = [x & y for (x, y) in itertools.izip(dst, mask)]
 
     def set_ipv6_flabel(self, flabel):
-        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL)
-        self.flow.ipv6_flabel = flabel
+        self.set_ipv6_flabel_masked(flabel, UINT32_MAX)
 
     def set_ipv6_flabel_masked(self, flabel, mask):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL)
