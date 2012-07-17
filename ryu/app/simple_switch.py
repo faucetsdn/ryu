@@ -84,7 +84,7 @@ class SimpleSwitch(app_manager.RyuApp):
     def _port_status_handler(self, ev):
         msg = ev.msg
         reason = msg.reason
-        port_no = msg.port_no
+        port_no = msg.desc.port_no
 
         ofproto = msg.datapath.ofproto
         if reason == ofproto.OFPPR_ADD:
