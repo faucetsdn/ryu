@@ -19,10 +19,12 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.ofproto import nx_match
+from ryu.ofproto import ofproto_v1_0
 
 
 class Cbench(app_manager.RyuApp):
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
+
     def __init__(self, *args, **kwargs):
         super(Cbench, self).__init__(*args, **kwargs)
 
@@ -32,8 +34,13 @@ class Cbench(app_manager.RyuApp):
         datapath = msg.datapath
         ofproto = datapath.ofproto
 
-        rule = nx_match.ClsRule()
-        datapath.send_flow_mod(
-            rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
+        match = datapath.ofproto_parser.OFPMatch(
+            ofproto_v1_0.OFPFW_ALL, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+        mod = datapath.ofproto_parser.OFPFlowMod(
+            datapath, match=match, cookie=0, command=ofproto.OFPFC_ADD,
             idle_timeout=0, hard_timeout=0,
-            priority=ofproto.OFP_DEFAULT_PRIORITY, flags=0, actions=None)
+            priority=ofproto.OFP_DEFAULT_PRIORITY,
+            flags=0, actions=None)
+        datapath.send_msg(mod)
