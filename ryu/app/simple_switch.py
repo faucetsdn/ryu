@@ -21,7 +21,7 @@ from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.ofproto import nx_match
+from ryu.ofproto import ofproto_v1_0
 from ryu.lib.mac import haddr_to_str
 
 
@@ -36,6 +36,7 @@ LOG = logging.getLogger('ryu.app.simple_switch')
 
 
 class SimpleSwitch(app_manager.RyuApp):
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
     _CONTEXTS = {
         'mac2port': mac_to_port.MacToPortTable,
         }
@@ -67,18 +68,25 @@ class SimpleSwitch(app_manager.RyuApp):
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
 
         if out_port != ofproto.OFPP_FLOOD:
-            rule = nx_match.ClsRule()
-            rule.set_in_port(msg.in_port)
-            rule.set_dl_dst(dst)
-            rule.set_dl_type(nx_match.ETH_TYPE_IP)
-            rule.set_nw_dscp(0)
-            datapath.send_flow_mod(
-                rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
-                idle_timeout=0, hard_timeout=0,
+            wildcards = ofproto_v1_0.OFPFW_ALL
+            wildcards &= ~ofproto_v1_0.OFPFW_IN_PORT
+            wildcards &= ~ofproto_v1_0.OFPFW_DL_DST
+
+            match = datapath.ofproto_parser.OFPMatch(
+                wildcards, msg.in_port, 0, dst,
+                0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+            mod = datapath.ofproto_parser.OFPFlowMod(
+                datapath=datapath, match=match, cookie=0,
+                command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
                 priority=ofproto.OFP_DEFAULT_PRIORITY,
                 flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
+            datapath.send_msg(mod)
 
-        datapath.send_packet_out(msg.buffer_id, msg.in_port, actions)
+        out = datapath.ofproto_parser.OFPPacketOut(
+            datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port,
+            actions=actions)
+        datapath.send_msg(out)
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
