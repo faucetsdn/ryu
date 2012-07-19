@@ -817,9 +817,9 @@ class OFPGroupMod(MsgBase):
                       ofproto_v1_2.OFP_HEADER_SIZE,
                       self.command, self.type, self.group_id)
 
-        offset = ofproto_v1_2.OFP_HEADER_SIZE + ofproto_v1_2.OFP_GROUP_MOD_SIZE
+        offset = ofproto_v1_2.OFP_GROUP_MOD_SIZE
         for b in self.buckets:
-            b.serialize(self, buf, offset)
+            b.serialize(self.buf, offset)
             offset += b.len
 
 
@@ -1234,7 +1234,7 @@ class OFPGroupFeaturesStats(object):
         self.types = types
         self.capabilities = capabilities
         self.max_groups = max_groups
-        self.actions = acitons
+        self.actions = actions
 
     @classmethod
     def parser(cls, buf, offset):
@@ -1243,7 +1243,7 @@ class OFPGroupFeaturesStats(object):
         types = stats[0]
         capabilities = stats[1]
         max_groups = stats[2:6]
-        acitons = stats[6:10]
+        actions = stats[6:10]
 
         return cls(types, capabilities, max_groups, actions)
 
