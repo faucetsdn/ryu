@@ -1086,7 +1086,7 @@ class OFPPortStatsRequest(OFPStatsRequest):
 class OFPPortStats(
     collections.namedtuple('OFPPortStats',
                            ('port_no', 'rx_packets', 'tx_packets',
-                            'rx_byptes', 'tx_bytes',
+                            'rx_bytes', 'tx_bytes',
                             'rx_dropped', 'tx_dropped',
                             'rx_errors', 'tx_errors',
                             'rx_frame_err', 'rx_over_err',
