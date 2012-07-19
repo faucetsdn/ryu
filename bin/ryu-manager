@@ -32,6 +32,7 @@ from ryu import utils
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
+from ryu.tests.integrated import tester
 
 
 FLAGS = gflags.FLAGS
