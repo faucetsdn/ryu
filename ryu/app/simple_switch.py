@@ -37,13 +37,28 @@ LOG = logging.getLogger('ryu.app.simple_switch')
 
 class SimpleSwitch(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
-    _CONTEXTS = {
-        'mac2port': mac_to_port.MacToPortTable,
-        }
 
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch, self).__init__(*args, **kwargs)
-        self.mac2port = kwargs['mac2port']
+        self.mac_to_port = {}
+
+    def add_flow(self, datapath, in_port, dst, actions):
+        ofproto = datapath.ofproto
+
+        wildcards = ofproto_v1_0.OFPFW_ALL
+        wildcards &= ~ofproto_v1_0.OFPFW_IN_PORT
+        wildcards &= ~ofproto_v1_0.OFPFW_DL_DST
+
+        match = datapath.ofproto_parser.OFPMatch(
+            wildcards, in_port, 0, dst,
+            0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+        mod = datapath.ofproto_parser.OFPFlowMod(
+            datapath=datapath, match=match, cookie=0,
+            command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
+            priority=ofproto.OFP_DEFAULT_PRIORITY,
+            flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
+        datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -54,34 +69,24 @@ class SimpleSwitch(app_manager.RyuApp):
         dst, src, _eth_type = struct.unpack_from('!6s6sH', buffer(msg.data), 0)
 
         dpid = datapath.id
-        self.mac2port.dpid_add(dpid)
+        self.mac_to_port.setdefault(dpid, {})
+
         LOG.info("packet in %s %s %s %s",
                  dpid, haddr_to_str(src), haddr_to_str(dst), msg.in_port)
 
-        self.mac2port.port_add(dpid, msg.in_port, src)
-        out_port = self.mac2port.port_get(dpid, dst)
+        # learn a mac address to avoid FLOOD next time.
+        self.mac_to_port[dpid][src] = msg.in_port
 
-        if out_port == None:
-            LOG.info("out_port not found")
+        if dst in self.mac_to_port[dpid]:
+            out_port = self.mac_to_port[dpid][dst]
+        else:
             out_port = ofproto.OFPP_FLOOD
 
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
 
+        # install a flow to avoid packet_in next time
         if out_port != ofproto.OFPP_FLOOD:
-            wildcards = ofproto_v1_0.OFPFW_ALL
-            wildcards &= ~ofproto_v1_0.OFPFW_IN_PORT
-            wildcards &= ~ofproto_v1_0.OFPFW_DL_DST
-
-            match = datapath.ofproto_parser.OFPMatch(
-                wildcards, msg.in_port, 0, dst,
-                0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-            mod = datapath.ofproto_parser.OFPFlowMod(
-                datapath=datapath, match=match, cookie=0,
-                command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
-                priority=ofproto.OFP_DEFAULT_PRIORITY,
-                flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
-            datapath.send_msg(mod)
+            self.add_flow(datapath, msg.in_port, dst, actions)
 
         out = datapath.ofproto_parser.OFPPacketOut(
             datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port,
