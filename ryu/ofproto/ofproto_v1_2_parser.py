@@ -1427,6 +1427,7 @@ class Flow(object):
     def __init__(self):
         self.in_port = 0
         self.in_phy_port = 0
+        self.metadata = 0
         self.dl_dst = mac.DONTCARE
         self.dl_src = mac.DONTCARE
         self.dl_type = 0
@@ -1464,6 +1465,7 @@ class Flow(object):
 
 class FlowWildcards(object):
     def __init__(self):
+        self.metadata_mask = 0
         self.dl_dst_mask = 0
         self.dl_src_mask = 0
         self.vlan_vid_mask = 0
@@ -1503,6 +1505,14 @@ class OFPMatch(object):
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PHY_PORT):
             self.append_field(ofproto_v1_2.OXM_OF_IN_PHY_PORT,
                               self.flow.in_phy_port)
+
+        if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_METADATA):
+            if self.wc.metadata_mask == UINT64_MAX:
+                header = ofproto_v1_2.OXM_OF_METADATA
+            else:
+                header = ofproto_v1_2.OXM_OF_METADATA_W
+            self.append_field(header, self.flow.metadata,
+                              self.wc.metadata_mask)
 
         if self.wc.ft_test(ofproto_v1_2.OFPXMT_OFB_ETH_DST):
             if self.wc.dl_dst_mask:
@@ -1705,6 +1715,15 @@ class OFPMatch(object):
     def set_in_phy_port(self, phy_port):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IN_PHY_PORT)
         self.flow.in_phy_port = phy_port
+
+    def set_metadata(self, metadata):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_METADATA)
+        self.flow.metadata = metadata
+
+    def set_metadata_masked(self, metadata, mask):
+        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_METADATA)
+        self.wc.metadata_mask = mask
+        self.flow.metadata = metadata & mask
 
     def set_dl_dst(self, dl_dst):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_ETH_DST)
@@ -1981,6 +2000,17 @@ class MTInPort(OFPMatchField):
     def __init__(self, header, value, mask=None):
         super(MTInPort, self).__init__(header)
         self.value = value
+
+
+@OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_METADATA,
+                                      ofproto_v1_2.OXM_OF_METADATA_W])
+class MTMetadata(OFPMatchField):
+    pack_str = '!Q'
+
+    def __init__(self, header, value, mask=None):
+        super(MTMetadata, self).__init__(header)
+        self.value = value
+        self.mask = mask
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IN_PHY_PORT])
