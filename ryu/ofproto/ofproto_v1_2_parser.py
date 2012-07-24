@@ -448,6 +448,7 @@ class OFPInstructionActions(object):
             a = OFPAction.parser(buf, offset)
             actions.append(a)
             actions_len -= a.len
+            offset += a.len
 
         inst = cls(type_, actions)
         inst.len = len_
@@ -991,13 +992,16 @@ class OFPFlowStats(object):
         inst_length = (length - (ofproto_v1_2.OFP_FLOW_STATS_SIZE -
                                  ofproto_v1_2.OFP_MATCH_SIZE + match_length))
         offset += match_length
+        instructions = []
         while inst_length > 0:
             inst = OFPInstruction.parser(buf, offset)
+            instructions.append(inst)
+            offset += inst.len
             inst_length -= inst.len
 
         return cls(length, table_id, duration_sec, duration_nsec, priority,
                    idle_timeout, hard_timeout, cookie, packet_count,
-                   byte_count, match)
+                   byte_count, match, instructions)
 
 
 @_set_msg_type(ofproto_v1_2.OFPT_STATS_REQUEST)
