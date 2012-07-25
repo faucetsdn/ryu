@@ -132,9 +132,11 @@ class OFPExperimenter(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPExperimenter, cls).parser(datapath, version, msg_type,
                                                  msg_len, xid, buf)
-        (experimenter, exp_type) = struct.unpack_from(
+        (msg.experimenter, msg.exp_type) = struct.unpack_from(
             ofproto_v1_2.OFP_EXPERIMENTER_HEADER_PACK_STR, msg.buf,
             ofproto_v1_2.OFP_HEADER_SIZE)
+
+        return msg
 
 
 class OFPPort(collections.namedtuple('OFPPort', (
