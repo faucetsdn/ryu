@@ -1723,8 +1723,7 @@ class OFPMatch(object):
         self.flow.in_phy_port = phy_port
 
     def set_metadata(self, metadata):
-        self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_METADATA)
-        self.flow.metadata = metadata
+        self.set_metadata_masked(metadata, UINT64_MAX)
 
     def set_metadata_masked(self, metadata, mask):
         self.wc.ft_set(ofproto_v1_2.OFPXMT_OFB_METADATA)
