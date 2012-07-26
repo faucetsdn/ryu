@@ -2252,9 +2252,25 @@ class MTArpTha(OFPMatchField):
         self.mask = mask
 
 
+class MTIPv6(object):
+    @classmethod
+    def field_parser(cls, header, buf, offset):
+        hasmask = (header >> 8) & 1
+        if hasmask:
+            pack_str = '!' + cls.pack_str[1:] * 2
+            value = struct.unpack_from(pack_str, buf, offset + 4)
+            return cls(header, list(value[:8]), list(value[8:]))
+        else:
+            value = struct.unpack_from(cls.pack_str, buf, offset + 4)
+            return cls(header, list(value))
+
+    def serialize(self, buf, offset):
+        self.putv6(buf, offset, self.value, self.mask)
+
+
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_SRC,
                                       ofproto_v1_2.OXM_OF_IPV6_SRC_W])
-class MTIPv6Src(OFPMatchField):
+class MTIPv6Src(MTIPv6, OFPMatchField):
     pack_str = '!8H'
 
     def __init__(self, header, value, mask=None):
@@ -2262,22 +2278,16 @@ class MTIPv6Src(OFPMatchField):
         self.value = value
         self.mask = mask
 
-    def serialize(self, buf, offset):
-        self.putv6(buf, offset, self.value, self.mask)
-
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_DST,
                                       ofproto_v1_2.OXM_OF_IPV6_DST_W])
-class MTIPv6Dst(OFPMatchField):
+class MTIPv6Dst(MTIPv6, OFPMatchField):
     pack_str = '!8H'
 
     def __init__(self, header, value, mask=None):
         super(MTIPv6Dst, self).__init__(header)
         self.value = value
         self.mask = mask
-
-    def serialize(self, buf, offset):
-        self.putv6(buf, offset, self.value, self.mask)
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_FLABEL,
@@ -2319,7 +2329,7 @@ class MTICMPV6Code(OFPMatchField):
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IPV6_ND_TARGET])
-class MTIPv6NdTarget(OFPMatchField):
+class MTIPv6NdTarget(MTIPv6, OFPMatchField):
     pack_str = '!8H'
 
     def __init__(self, header, value, mask=None):
