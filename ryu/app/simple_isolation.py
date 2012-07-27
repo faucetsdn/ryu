@@ -202,7 +202,7 @@ class SimpleIsolation(app_manager.RyuApp):
 
         # When NW_ID_UNKNOWN is found, registering ports might be delayed.
         # So just drop only this packet and not install flow entry.
-        # It is expected that when next packet arrives, the port is registers
+        # It is expected that when next packet arrives, the port is registered
         # with some network id
 
         if port_nw_id != NW_ID_EXTERNAL and port_nw_id != NW_ID_UNKNOWN:
@@ -267,7 +267,7 @@ class SimpleIsolation(app_manager.RyuApp):
 
     def _port_add(self, ev):
         #
-        # delete flows entries that matches with
+        # delete flow entries that matches with
         # dl_dst == broadcast/multicast
         # and dl_src = network id if network id of this port is known
         # to send broadcast packet to this newly added port.
@@ -284,7 +284,7 @@ class SimpleIsolation(app_manager.RyuApp):
 
     def _port_del(self, ev):
         # free mac addresses associated to this VM port,
-        # and delete related flow entries for later reuse of mac address
+        # and delete related flow entries for later reuse of the mac address
 
         dps_needs_barrier = set()
 
