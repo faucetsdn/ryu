@@ -16,319 +16,145 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 import sys
-import gflags
 import logging
-import subprocess
-import traceback
 
 from ryu import utils
 from ryu.lib import mac
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller import dispatcher
-from ryu.controller import event
 from ryu.controller import handler
+from ryu.controller import dpset
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.ofproto import nx_match
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 
 
 LOG = logging.getLogger(__name__)
 
-FLAGS = gflags.FLAGS
-gflags.DEFINE_string('run_test_mod', '', 'Test run the module name.')
-
-
-class EventRunTest(event.EventBase):
-    def __init__(self, datapath):
-        super(EventRunTest, self).__init__()
-        self.datapath = datapath
-
-
-QUEUE_NAME_RUN_TEST_EV = 'run_test_event'
-DISPATCHER_NAME_RUN_TEST_EV = 'run_test_event'
-RUN_TEST_EV_DISPATCHER = dispatcher.EventDispatcher(
-    DISPATCHER_NAME_RUN_TEST_EV)
-
 
 LOG_TEST_START = 'TEST_START: %s'
 LOG_TEST_RESULTS = 'TEST_RESULTS:'
-LOG_TEST_FINISH = 'TEST_FINISHED: Completed=[%s], OK=[%s], NG=[%s]'
+LOG_TEST_FINISH = 'TEST_FINISHED: Completed=[%s]'
 
 
-class Tester(app_manager.RyuApp):
-
-    def __init__(self, *args, **kwargs):
-        super(Tester, self).__init__()
-        self.ev_q = dispatcher.EventQueue(QUEUE_NAME_RUN_TEST_EV,
-                                         RUN_TEST_EV_DISPATCHER)
-
-        run_test_mod = utils.import_module(FLAGS.run_test_mod)
-        LOG.debug('import run_test_mod.[%s]', run_test_mod.__name__)
-
-        self.run_test = run_test_mod.RunTest(*args, **kwargs)
-        handler.register_instance(self.run_test)
-
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
-    def switch_features_handler(self, ev):
-        msg = ev.msg
-        datapath = msg.datapath
-
-        send_delete_all_flows(datapath)
-        datapath.send_barrier()
-
-    @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
-    def barrier_replay_handler(self, ev):
-        self.ev_q.queue(EventRunTest(ev.msg.datapath))
-
-    @set_ev_cls(EventRunTest, RUN_TEST_EV_DISPATCHER)
-    def run_test_halder(self, ev):
-        dp = ev.datapath
-        t = self.run_test
-
-        if not t._test_started():
-            t._test_init(dp)
-
-        if not self._run_test(t):
-            # run_test was throwing exception.
-            LOG.info(LOG_TEST_FINISH, False, t._RESULTS_OK, t._RESULTS_NG)
-            return
-
-        if not t._test_completed():
-            t.datapath.send_barrier()
-            return
-
-        # Completed all tests.
-        LOG.info(LOG_TEST_FINISH, True, t._RESULTS_OK, t._RESULTS_NG)
-
-    def _run_test(self, t):
-        running = t._running()
-
-        if len(running) == 0:
-            # next test
-            name = t._pop_test()
-            LOG.info(LOG_TEST_START, name)
-            try:
-                getattr(t, name)()
-            except Exception:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(exc_type, exc_value,
-                                          exc_traceback, file=sys.stdout)
-                send_delete_all_flows(t.datapath)
-                return False
-        else:
-            # check
-            name = 'check_' + running[5:]
-
-            if not name in dir(t):
-                name = '_check_default'
-
-            err = 0
-            try:
-                # LOG.debug('_run_test: CHECK_TEST = [%s]', name)
-                getattr(t, name)()
-            except Exception:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(exc_type, exc_value,
-                                          exc_traceback, file=sys.stdout)
-                err = 1
-            finally:
-                send_delete_all_flows(t.datapath)
-                if err:
-                    return False
-            t._check_run()
-
-        return True
-
-
-def _send_delete_all_flows_v10(dp):
-    rule = nx_match.ClsRule()
-    match = dp.ofproto_parser.OFPMatch(dp.ofproto.OFPFW_ALL,
-                                       0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0)
-    m = dp.ofproto_parser.OFPFlowMod(
-                                     dp, match, 0,
-                                     dp.ofproto.OFPFC_DELETE,
-                                     0, 0, 0, 0,
-                                     dp.ofproto.OFPP_NONE, 0, None)
-    dp.send_msg(m)
-
-
-def _send_delete_all_flows_v12(dp):
-    match = dp.ofproto_parser.OFPMatch()
-    inst = []
-    m = dp.ofproto_parser.OFPFlowMod(dp, 0, 0, 0,
-                                     dp.ofproto.OFPFC_DELETE,
-                                     0, 0, 0, 0,
-                                     dp.ofproto.OFPP_ANY, 0xffffffff,
-                                     0, match, inst)
-    dp.send_msg(m)
-
-
-def send_delete_all_flows(dp):
-    assert dp.ofproto in (ofproto_v1_0, ofproto_v1_2)
-    if dp.ofproto == ofproto_v1_0:
-        _send_delete_all_flows_v10(dp)
-    elif dp.ofproto == ofproto_v1_2:
-        _send_delete_all_flows_v12(dp)
-    else:
-        # this function will be remove.
-        dp.send_delete_all_flows()
-
-
-def run_command(cmd, redirect_output=True, check_exit_code=True, env=None):
-    if redirect_output:
-        stdout = subprocess.PIPE
-    else:
-        stdout = None
-
-    proc = subprocess.Popen(cmd, stdout=stdout,
-                            stderr=subprocess.STDOUT, env=env)
-    output = proc.communicate()[0]
-
-    LOG.debug('Exec command "%s" \n%s', ' '.join(cmd), output)
-    if check_exit_code and proc.returncode != 0:
-        raise Exception('Command "%s" failed.\n%s' % (' '.join(cmd), output))
-    return output
-
-
-class RunTestBase(object):
+class TestFlowBase(app_manager.RyuApp):
     """
     To run the tests is required for the following pair of functions.
         1. test_<test name>()
             To send flows to switch.
 
-        2. check_<test name>() or _check_default()
+        2. verify_<test name>() or _verify_default()
             To check flows of switch.
-
-    To deal common values to the functions(test_ and check_)
-    can use `set_val('name', val)` and `get_val('name')`.
-    This values is initialized before the next tests.
     """
 
-    def __init__(self):
-        super(RunTestBase, self).__init__()
+    _CONTEXTS = {
+        'dpset': dpset.DPSet,
+        }
 
-        self._TEST_STARTED = False
-        self._TESTS = []
-        self._RUNNING = ''
-        self._RESULTS_OK = 0
-        self._RESULTS_NG = 0
-        self._CHECK = {}
+    def __init__(self, *args, **kwargs):
+        super(TestFlowBase, self).__init__(*args, **kwargs)
+        self.pending = []
+        self.results = {}
+        self.current = None
+        self.unclear = 0
 
-    def _test_started(self):
-        return self._TEST_STARTED
+        for t in dir(self):
+            if t.startswith("test_"):
+                self.pending.append(t)
+        self.unclear = len(self.pending)
 
-    def _test_init(self, dp):
-        self.datapath = dp
-        self.ofproto = dp.ofproto
-        self.ofproto_parser = dp.ofproto_parser
+    def delete_all_flows(self, dp):
+        if dp.ofproto == ofproto_v1_0:
+            match = dp.ofproto_parser.OFPMatch(dp.ofproto.OFPFW_ALL,
+                                               0, 0, 0, 0, 0,
+                                               0, 0, 0, 0, 0, 0, 0)
+            m = dp.ofproto_parser.OFPFlowMod(
+                                             dp, match, 0,
+                                             dp.ofproto.OFPFC_DELETE,
+                                             0, 0, 0, 0,
+                                             dp.ofproto.OFPP_NONE, 0, None)
+        elif dp.ofproto == ofproto_v1_2:
+            match = dp.ofproto_parser.OFPMatch()
+            m = dp.ofproto_parser.OFPFlowMod(dp, 0, 0, 0,
+                                             dp.ofproto.OFPFC_DELETE,
+                                             0, 0, 0, 0xffffffff,
+                                             dp.ofproto.OFPP_ANY, 0xffffffff,
+                                             0, match, [])
 
-        for name in dir(self):
-            if name.startswith("test_"):
-                self._TESTS.append(name)
-        self._TEST_STARTED = True
+        dp.send_msg(m)
 
-    def _test_completed(self):
-        if self._TEST_STARTED:
-            if len(self._RUNNING) + len(self._TESTS) == 0:
-                return True
-        return False
+    def send_flow_stats(self, dp):
+        if dp.ofproto == ofproto_v1_0:
+            match = dp.ofproto_parser.OFPMatch(dp.ofproto.OFPFW_ALL,
+                                               0, 0, 0, 0, 0,
+                                               0, 0, 0, 0, 0, 0, 0)
+            m = dp.ofproto_parser.OFPFlowStatsRequest(
+                                             dp, 0, match,
+                                             0, dp.ofproto.OFPP_NONE)
+        elif dp.ofproto == ofproto_v1_2:
+            match = dp.ofproto_parser.OFPMatch()
+            m = dp.ofproto_parser.OFPFlowStatsRequest(dp, 0,
+                                                      dp.ofproto.OFPP_ANY,
+                                                      dp.ofproto.OFPG_ANY,
+                                                      0, 0, match)
 
-    def _pop_test(self):
-        self._RUNNING = self._TESTS.pop()
-        return self._RUNNING
+        dp.send_msg(m)
 
-    def _running(self):
-        return self._RUNNING
+    def verify_default(self, dp, stats):
+        return 'function %s() is not found.' % ("verify" + self.current[4:], )
 
-    def _check_run(self):
-        self._RUNNING = ''
-
-    def _check_default(self):
-        err = 'function %s() is not found.' % (self._RUNNING, )
-        self.results(ret=False, msg=err)
-
-    def results(self, name=None, ret=True, msg=''):
-        if not name:
-            name = self._RUNNING
-
-        if ret:
-            res = 'OK'
-            self._RESULTS_OK += 1
+    def start_next_test(self, dp):
+        self.delete_all_flows(dp)
+        dp.send_barrier()
+        if len(self.pending):
+            t = self.pending.pop()
+            LOG.info(LOG_TEST_START, t)
+            self.current = t
+            getattr(self, t)(dp)
+            dp.send_barrier()
+            self.send_flow_stats(dp)
         else:
-            res = 'NG'
-            self._RESULTS_NG += 1
+            LOG.info("TEST_RESULTS:")
+            for t, r in self.results.items():
+                LOG.info("    %s: %s", t, r)
+            LOG.info(LOG_TEST_FINISH, self.unclear == 0)
 
-        LOG.info('%s %s [%s] %s', LOG_TEST_RESULTS, name, res, '\n' + msg)
+    @handler.set_ev_cls(ofp_event.EventOFPFlowStatsReply,
+                        handler.MAIN_DISPATCHER)
+    def flow_reply_handler(self, ev):
+        self.run_verify(ev)
 
-    def set_val(self, name, val):
-        self._CHECK[name] = val
+    @handler.set_ev_cls(ofp_event.EventOFPStatsReply,
+                        handler.MAIN_DISPATCHER)
+    def stats_reply_handler(self, ev):
+        self.run_verify(ev)
 
-    def get_val(self, name):
-        return self._CHECK[name]
+    def run_verify(self, ev):
+        msg = ev.msg
+        dp = msg.datapath
 
-    def del_val(self, name):
-        del self._CHECK[name]
+        verify_func = self.verify_default
+        v = "verify" + self.current[4:]
+        if v in dir(self):
+            verify_func = getattr(self, v)
 
-    def del_val_all(self):
-        self._CHECK.clear()
+        result = verify_func(dp, msg.body)
+        if result == True:
+            self.unclear -= 1
 
-    def get_ovs_flows(self, target):
-        # flows (return):
-        #     [flow1, flow2,...]
-        # flow:
-        #     {'actions': actions, 'rules': rules}
-        #     or {'apply_actions': actions, 'rules': rules}
-        #     or {'write_actions': actions, 'rules': rules}
-        #     or {'clear_actions': actions, 'rules': rules}
-        # actions, rules:
-        #     {'<name>': <val>}
+        self.results[self.current] = result
+        self.start_next_test(dp)
 
-        cmd = ('sudo', 'ovs-ofctl', 'dump-flows', target)
-        output = run_command(cmd)
+    @handler.set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
+    def handler_datapath(self, ev):
+        if ev.enter:
+            self.start_next_test(ev.dp)
 
-        flows = []
-        for line in output.splitlines():
-            if line.startswith(" "):
-                flow = {}
-                rules, actions = line.split('actions=')
-                rules = self.cnv_list(rules, '=')
-
-                if actions.startswith("apply_actions"):
-                    a_name = 'apply_actions'
-                    actions = actions[len(a_name) + 1:-1]
-                elif actions.startswith("write_actions"):
-                    a_name = 'write_actions'
-                    actions = actions[len(a_name) + 1:-1]
-                elif actions.startswith("clear_actions"):
-                    a_name = 'clear_actions'
-                    actions = actions[len(a_name) + 1:-1]
-                else:
-                    a_name = 'actions'
-                actions = self.cnv_list(actions, ':')
-                flows.append({'rules': rules, a_name: actions, })
-
-        return flows
-
-    def cnv_list(self, tmp, sep):
-        list_ = {}
-        for p in tmp.split(','):
-            if len(p.strip()) == 0:
-                continue
-
-            if p.find(sep) > 0:
-                name, val = p.strip().split(sep, 1)
-            else:
-                name = val = p.strip()
-            list_[name] = val
-        return list_
-
-    def cnv_txt(self, tmp, sep='='):
-        return ",".join([(str(x) + sep + str(tmp[x])) for x in tmp if x >= 0])
+    @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
+    def barrier_replay_handler(self, ev):
+        pass
 
     def haddr_to_str(self, addr):
         return mac.haddr_to_str(addr)

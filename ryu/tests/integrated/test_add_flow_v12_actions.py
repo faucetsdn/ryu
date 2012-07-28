@@ -17,14 +17,10 @@
 
 import logging
 
-from ryu.controller import handler
-from ryu.controller.handler import set_ev_cls
-from ryu.tests.integrated import tester
 from ryu.ofproto import nx_match
+from ryu.tests.integrated import tester
 
 LOG = logging.getLogger(__name__)
-
-_target = 'br-tester'
 
 IPPROTO_ICMP = 1
 IPPROTO_TCP = 6
@@ -40,1024 +36,344 @@ IPPROTO_SCTP = 132
 ETH_TYPE_MPLS = 0x8847
 
 
-class RunTest(tester.RunTestBase):
+class RunTest(tester.TestFlowBase):
     """ Test case for add flows of Actions
     """
 
-    def __init__(self):
-        super(RunTest, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(RunTest, self).__init__(*args, **kwargs)
 
-    def _set_val(self, type_, name, val):
-        self.set_val('type', type_)
-        self.set_val('name', name)
-        self.set_val('val', val)
+        self._verify = []
 
-    def _get_val(self):
-        type_ = self.get_val('type')
-        name = self.get_val('name')
-        val = self.get_val('val')
-        return (type_, name, val)
+    def add_apply_actions(self, dp, actions):
+        inst = [dp.ofproto_parser.OFPInstructionActions(
+                dp.ofproto.OFPIT_APPLY_ACTIONS, actions)]
 
-    def _check_default(self):
-        type_, name, val = self._get_val()
+        match = dp.ofproto_parser.OFPMatch()
+        m = dp.ofproto_parser.OFPFlowMod(dp, 0, 0, 0,
+                                         dp.ofproto.OFPFC_ADD,
+                                         0, 0, 0xff, 0xffffffff,
+                                         dp.ofproto.OFPP_ANY,
+                                         dp.ofproto.OFPG_ANY,
+                                         0, match, inst)
+        dp.send_msg(m)
 
-        ovs_flow = {}
-        try:
-            ovs_flow = self.get_ovs_flows(_target)[0][type_]
-        except (KeyError, IndexError):
-            pass
+    def add_set_field_action(self, dp, field, value):
+        self._verify = [dp.ofproto.OFPAT_SET_FIELD,
+                        'field', field, value]
+        f = dp.ofproto_parser.OFPMatchField.make(field, value)
+        actions = [dp.ofproto_parser.OFPActionSetField(f), ]
+        self.add_apply_actions(dp, actions)
 
-        ng = 0
-        if val == None:
-            if name in ovs_flow:
-                ng = 1
-        elif not name in ovs_flow or val != ovs_flow[name]:
-            ng = 1
+    def verify_default(self, dp, stats):
+        verify = self._verify
+        self._verify = []
 
-        if ng:
-            err = ' send (%s:%s=%s)\n flow (%s:%s)' \
-                   % (type_, name, val, type_, self.cnv_txt(ovs_flow))
-            self.results(ret=False, msg=err)
+        type_ = name = field = value = None
+        if len(verify) == 1:
+            (type_, ) = verify
+        elif len(verify) == 3:
+            (type_, name, value) = verify
+        elif len(verify) == 4:
+            (type_, name, field, value) = verify
         else:
-            self.results()
+            return "self._verify is invalid."
+
+        try:
+            action = stats[0].instructions[0].actions[0]
+            if action.cls_action_type != type_:
+                return "Action type error. send:%s, val:%s" \
+                           % (type_, action.cls_action_type)
+        except IndexError:
+            return "Action is not setting."
+
+        s_val = None
+        if name:
+            try:
+                s_val = getattr(action, name)
+            except AttributeError:
+                pass
+
+        if name == 'field':
+            if s_val.header != field:
+                return "Field error. send:%s val:%s" \
+                           % (field, s_val.field)
+            s_val = s_val.value
+
+        if name and s_val != value:
+                return "Value error. send:%s=%s val:%s" \
+                           % (name, value, s_val)
+
+        return True
+
+    def verify_action_drop(self, dp, stats):
+        for s in stats:
+            for i in s.instructions:
+                if len(i.actions):
+                    return "has actions. %s" % (i.actions)
+        return True
 
     # Test of General Actions
-    def test_action_output(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_output(self, dp):
         out_port = 255
-        self._set_val('apply_actions',
-                      'output',
-                      str(out_port))
+        self._verify = [dp.ofproto.OFPAT_OUTPUT,
+                        'port', out_port]
 
-        match = ofproto_parser.OFPMatch()
-        actions = [
-                   ofproto_parser.OFPActionOutput(out_port, 0),
-                  ]
-        inst = [
-                ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions),
-               ]
+        actions = [dp.ofproto_parser.OFPActionOutput(out_port, 0), ]
+        self.add_apply_actions(dp, actions)
 
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_drop(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        self._set_val('apply_actions',
-                      'drop',
-                      'drop')
-
-        match = ofproto_parser.OFPMatch()
-        inst = [
-               ]
-
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_drop(self, dp):
+        self.add_apply_actions(dp, [])
 
     # Test of Push-Tag/Pop-Tag Actions
-    def test_action_push_vlan(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+    def test_action_push_vlan(self, dp):
+        ethertype = nx_match.ETH_TYPE_VLAN
+        self._verify = [dp.ofproto.OFPAT_PUSH_VLAN,
+                        'ethertype', ethertype]
 
-        push_vlan = nx_match.ETH_TYPE_VLAN
-        self._set_val('apply_actions',
-                      'push_vlan',
-                      hex(push_vlan))
+        actions = [dp.ofproto_parser.OFPActionPushVlan(ethertype)]
+        self.add_apply_actions(dp, actions)
 
-        match = ofproto_parser.OFPMatch()
-        actions = [
-                   ofproto_parser.OFPActionPushVlan(push_vlan),
-                  ]
-        inst = [
-                ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions),
-               ]
+    def test_action_pop_vlan(self, dp):
+        self._verify = [dp.ofproto.OFPAT_POP_VLAN, ]
 
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+        actions = [dp.ofproto_parser.OFPActionPopVlan(), ]
+        self.add_apply_actions(dp, actions)
 
-    def test_action_pop_vlan(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+    def test_action_push_mpls(self, dp):
+        ethertype = ETH_TYPE_MPLS
+        self._verify = [dp.ofproto.OFPAT_PUSH_MPLS,
+                        'ethertype', ethertype]
 
-        self._set_val('apply_actions',
-                      'pop_vlan',
-                      'pop_vlan')
+        actions = [dp.ofproto_parser.OFPActionPushMpls(ethertype), ]
+        self.add_apply_actions(dp, actions)
 
-        match = ofproto_parser.OFPMatch()
-        actions = [
-                   ofproto_parser.OFPActionPopVlan(),
-                  ]
-        inst = [
-                ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions),
-               ]
-
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_push_mpls(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        push_mpls = ETH_TYPE_MPLS
-        self._set_val('apply_actions',
-                      'push_mpls',
-                      hex(push_mpls))
-
-        match = ofproto_parser.OFPMatch()
-        actions = [
-                   ofproto_parser.OFPActionPushMpls(push_mpls),
-                  ]
-        inst = [
-                ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions),
-               ]
-
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_pop_mpls(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        pop_mpls = nx_match.ETH_TYPE_IP
-        self._set_val('apply_actions',
-                      'pop_mpls',
-                      hex(pop_mpls))
-
-        match = ofproto_parser.OFPMatch()
-        actions = [
-                   ofproto_parser.OFPActionPopMpls(pop_mpls),
-                  ]
-        inst = [
-                ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions),
-               ]
-
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_pop_mpls(self, dp):
+        ethertype = nx_match.ETH_TYPE_VLAN
+        self._verify = [dp.ofproto.OFPAT_POP_MPLS,
+                        'ethertype', ethertype]
+        actions = [dp.ofproto_parser.OFPActionPopMpls(ethertype), ]
+        self.add_apply_actions(dp, actions)
 
     # Test of Set-Filed Actions
-    def test_action_set_field_dl_dst(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_dl_dst(self, dp):
+        field = dp.ofproto.OXM_OF_ETH_DST
         dl_dst = 'e2:7a:09:79:0b:0f'
-        self._set_val('apply_actions',
-                      'set_field',
-                      dl_dst + '->eth_dst')
+        value = self.haddr_to_bin(dl_dst)
 
-        dl_dst_bin = self.haddr_to_bin(dl_dst)
+        self.add_set_field_action(dp, field, value)
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_ETH_DST, dl_dst_bin)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_dl_src(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_dl_src(self, dp):
+        field = dp.ofproto.OXM_OF_ETH_SRC
         dl_src = '08:82:63:b6:62:05'
-        self._set_val('apply_actions',
-                      'set_field',
-                      dl_src + '->eth_src')
-        dl_src_bin = self.haddr_to_bin(dl_src)
+        value = self.haddr_to_bin(dl_src)
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_ETH_SRC, dl_src_bin)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_dl_type(self, dp):
+        field = dp.ofproto.OXM_OF_ETH_TYPE
+        value = nx_match.ETH_TYPE_IPV6
 
-    def test_action_set_field_dl_type(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        dl_type = nx_match.ETH_TYPE_IPV6
-        self._set_val('apply_actions',
-                      'set_field',
-                      hex(dl_type) + '->eth_type')
+    def test_action_set_field_vlan_vid(self, dp):
+        field = dp.ofproto.OXM_OF_VLAN_VID
+        value = 0x1e4
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_ETH_TYPE, dl_type)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_vlan_pcp(self, dp):
+        field = dp.ofproto.OXM_OF_VLAN_PCP
+        value = 3
 
-    def test_action_set_field_vlan_vid(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        dl_vlan = 0x1e4
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(dl_vlan) + '->dl_vlan')
+    def test_action_set_field_nw_dscp(self, dp):
+        field = dp.ofproto.OXM_OF_IP_DSCP
+        value = 32
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_VLAN_VID, dl_vlan)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_nw_ecn(self, dp):
+        field = dp.ofproto.OXM_OF_IP_ECN
+        value = 1
 
-    def test_action_set_field_vlan_pcp(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        vlan_pcp = 3
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(vlan_pcp) + '->dl_vlan_pcp')
+    def test_action_set_field_ip_proto(self, dp):
+        field = dp.ofproto.OXM_OF_IP_PROTO
+        value = IPPROTO_TCP
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_VLAN_PCP, vlan_pcp)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_nw_dscp(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        nw_dscp = 32
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(nw_dscp) + '->nw_tos')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_IP_DSCP, nw_dscp)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_nw_ecn(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        nw_ecn = 1
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(nw_ecn) + '->nw_ecn')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_IP_ECN, nw_ecn)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ip_proto(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        ip_proto = IPPROTO_TCP
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(ip_proto) + '->nw_proto')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_IP_PROTO, ip_proto)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv4_src(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv4_src(self, dp):
+        field = dp.ofproto.OXM_OF_IPV4_SRC
         ipv4_src = '192.168.3.92'
-        self._set_val('apply_actions',
-                      'set_field',
-                      ipv4_src + '->ip_src')
-        ipv4_src_int = self.ipv4_to_int(ipv4_src)
+        value = self.ipv4_to_int(ipv4_src)
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_IPV4_SRC, ipv4_src_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv4_dst(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv4_dst(self, dp):
+        field = dp.ofproto.OXM_OF_IPV4_DST
         ipv4_dst = '192.168.74.122'
-        self._set_val('apply_actions',
-                      'set_field',
-                      ipv4_dst + '->ip_dst')
-        ipv4_dst_int = self.ipv4_to_int(ipv4_dst)
+        value = self.ipv4_to_int(ipv4_dst)
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_IPV4_DST, ipv4_dst_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_tcp_src(self, dp):
+        field = dp.ofproto.OXM_OF_TCP_SRC
+        value = 105
 
-    def test_action_set_field_tcp_src(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        tcp_src = 105
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(tcp_src) + '->tcp_src')
+    def test_action_set_field_tcp_dst(self, dp):
+        field = dp.ofproto.OXM_OF_TCP_DST
+        value = 75
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_TCP_SRC, tcp_src)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_udp_src(self, dp):
+        field = dp.ofproto.OXM_OF_UDP_SRC
+        value = 197
 
-    def test_action_set_field_tcp_dst(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        tcp_dst = 75
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(tcp_dst) + '->tcp_dst')
+    def test_action_set_field_udp_dst(self, dp):
+        field = dp.ofproto.OXM_OF_UDP_DST
+        value = 17
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_TCP_DST, tcp_dst)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_icmpv4_type(self, dp):
+        field = dp.ofproto.OXM_OF_ICMPV4_TYPE
+        value = 8
 
-    def test_action_set_field_udp_src(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        udp_src = 197
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(udp_src) + '->udp_src')
+    def test_action_set_field_icmpv4_code(self, dp):
+        field = dp.ofproto.OXM_OF_ICMPV4_CODE
+        value = 2
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_UDP_SRC, udp_src)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_arp_op(self, dp):
+        field = dp.ofproto.OXM_OF_ARP_OP
+        value = 2
 
-    def test_action_set_field_udp_dst(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        udp_dst = 17
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(udp_dst) + '->udp_dst')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_UDP_DST, udp_dst)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_icmpv4_type(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        icmp_type = 8
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(icmp_type) + '->icmp_type')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_ICMPV4_TYPE, icmp_type)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_icmpv4_code(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        icmp_code = 2
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(icmp_code) + '->icmp_code')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_ICMPV4_CODE, icmp_code)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_arp_op(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        arp_op = 2
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(arp_op) + '->arp_op')
-
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ARP_OP, arp_op)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_arp_spa(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_arp_spa(self, dp):
+        field = dp.ofproto.OXM_OF_ARP_SPA
         nw_src = '192.168.132.179'
-        nw_src_int = self.ipv4_to_int(nw_src)
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(nw_src) + '->arp_spa')
+        value = self.ipv4_to_int(nw_src)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ARP_SPA, nw_src_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_arp_tpa(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_arp_tpa(self, dp):
+        field = dp.ofproto.OXM_OF_ARP_TPA
         nw_dst = '192.168.118.85'
-        nw_dst_int = self.ipv4_to_int(nw_dst)
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(nw_dst) + '->arp_tpa')
+        value = self.ipv4_to_int(nw_dst)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ARP_TPA, nw_dst_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_arp_sha(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_arp_sha(self, dp):
+        field = dp.ofproto.OXM_OF_ARP_SHA
         arp_sha = '50:29:e7:7f:6c:7f'
-        arp_sha_bin = self.haddr_to_bin(arp_sha)
-        self._set_val('apply_actions',
-                      'set_field',
-                      arp_sha + '->arp_sha')
+        value = self.haddr_to_bin(arp_sha)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ARP_SHA, arp_sha_bin)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_arp_tha(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_arp_tha(self, dp):
+        field = dp.ofproto.OXM_OF_ARP_THA
         arp_tha = '71:c8:72:2f:47:fd'
-        arp_tha_bin = self.haddr_to_bin(arp_tha)
-        self._set_val('apply_actions',
-                      'set_field',
-                      arp_tha + '->arp_tha')
+        value = self.haddr_to_bin(arp_tha)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ARP_THA, arp_tha_bin)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv6_src(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv6_src(self, dp):
+        field = dp.ofproto.OXM_OF_IPV6_SRC
         ipv6_src = '7527:c798:c772:4a18:117a:14ff:c1b6:e4ef'
-        ipv6_src_int = self.ipv6_to_int(ipv6_src)
-        self._set_val('apply_actions',
-                      'set_field',
-                      ipv6_src + '->ipv6_src')
+        value = self.ipv6_to_int(ipv6_src)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_IPV6_SRC, ipv6_src_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv6_dst(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv6_dst(self, dp):
+        field = dp.ofproto.OXM_OF_IPV6_DST
         ipv6_dst = '8893:65b3:6b49:3bdb:3d2:9401:866c:c96'
-        ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
-        self._set_val('apply_actions',
-                      'set_field',
-                      ipv6_dst + '->ipv6_dst')
+        value = self.ipv6_to_int(ipv6_dst)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_IPV6_DST, ipv6_dst_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_ipv6_flabel(self, dp):
+        field = dp.ofproto.OXM_OF_IPV6_FLABEL
+        value = 0x2c12
 
-    def test_action_set_field_ipv6_flabel(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        flabel = 0x2c12
-        self._set_val('apply_actions',
-                      'set_field',
-                      hex(flabel) + '->ipv6_label')
+    def test_action_set_field_icmpv6_type(self, dp):
+        field = dp.ofproto.OXM_OF_ICMPV6_TYPE
+        value = 129
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_IPV6_FLABEL, flabel)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_icmpv6_code(self, dp):
+        field = dp.ofproto.OXM_OF_ICMPV6_CODE
+        value = 2
 
-    def test_action_set_field_icmpv6_type(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        icmp_type = 129
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(icmp_type) + '->icmpv6_type')
-
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ICMPV6_TYPE, icmp_type)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_icmpv6_code(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        icmp_code = 129
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(icmp_code) + '->icmpv6_code')
-
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_ICMPV6_CODE, icmp_code)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv6_nd_target(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv6_nd_target(self, dp):
+        field = dp.ofproto.OXM_OF_IPV6_ND_TARGET
         target = "5420:db3f:921b:3e33:2791:98f:dd7f:2e19"
-        target_int = self.ipv6_to_int(target)
-        self._set_val('apply_actions',
-                      'set_field',
-                      target + '->nd_target')
+        value = self.ipv6_to_int(target)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_IPV6_ND_TARGET, target_int)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv6_nd_sll(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv6_nd_sll(self, dp):
+        field = dp.ofproto.OXM_OF_IPV6_ND_SLL
         sll = "54:db:3f:3e:27:19"
-        sll_bin = self.haddr_to_bin(sll)
-        self._set_val('apply_actions',
-                      'set_field',
-                      sll + '->nd_sll')
+        value = self.haddr_to_bin(sll)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_IPV6_ND_SLL, sll_bin)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_ipv6_nd_tll(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_field_ipv6_nd_tll(self, dp):
+        field = dp.ofproto.OXM_OF_IPV6_ND_TLL
         tll = "83:13:48:1e:d0:b0"
-        tll_bin = self.haddr_to_bin(tll)
-        self._set_val('apply_actions',
-                      'set_field',
-                      tll + '->nd_tll')
+        value = self.haddr_to_bin(tll)
 
-        f1 = ofproto_parser.OFPMatchField.make(
-                 ofproto.OXM_OF_IPV6_ND_TLL, tll_bin)
-        actions = [
-                   ofproto_parser.OFPActionSetField(f1),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_set_field_action(dp, field, value)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_set_field_mpls_label(self, dp):
+        field = dp.ofproto.OXM_OF_MPLS_LABEL
+        value = 0x4cd41
 
-    def test_action_set_field_mpls_label(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
+        self.add_set_field_action(dp, field, value)
 
-        label = 0x4cd41
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(label) + '->mpls_label')
+    def test_action_set_field_mpls_tc(self, dp):
+        field = dp.ofproto.OXM_OF_MPLS_TC
+        value = 0b101
 
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_MPLS_LABEL, label)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_set_field_mpls_tc(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        tc = 0b101
-        self._set_val('apply_actions',
-                      'set_field',
-                      str(tc) + '->mpls_tc')
-
-        field = ofproto_parser.OFPMatchField.make(
-                     ofproto.OXM_OF_MPLS_TC, tc)
-        actions = [
-                   ofproto_parser.OFPActionSetField(field),
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+        self.add_set_field_action(dp, field, value)
 
     # Test of Change-TTL Actions
-    def test_action_set_mpls_ttl(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
+    def test_action_set_mpls_ttl(self, dp):
         mpls_ttl = 8
-        self._set_val('apply_actions',
-                      'set_mpls_ttl',
-                      str(mpls_ttl))
+        self._verify = [dp.ofproto.OFPAT_SET_MPLS_TTL,
+                        'mpls_ttl', mpls_ttl]
+        actions = [dp.ofproto_parser.OFPActionSetMplsTtl(mpls_ttl), ]
+        self.add_apply_actions(dp, actions)
 
-        actions = [
-                   ofproto_parser.OFPActionSetMplsTtl(mpls_ttl)
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
+    def test_action_dec_mpls_ttl(self, dp):
+        self._verify = [dp.ofproto.OFPAT_DEC_MPLS_TTL]
+        actions = [dp.ofproto_parser.OFPActionDecMplsTtl(), ]
+        self.add_apply_actions(dp, actions)
 
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_copy_ttl_out(self, dp):
+        self._verify = [dp.ofproto.OFPAT_COPY_TTL_OUT]
+        actions = [dp.ofproto_parser.OFPActionCopyTtlOut(), ]
+        self.add_apply_actions(dp, actions)
 
-    def test_action_dec_mpls_ttl(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        self._set_val('apply_actions',
-                      'dec_mpls_ttl',
-                      'dec_mpls_ttl')
-        actions = [
-                   ofproto_parser.OFPActionDecMplsTtl()
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_copy_ttl_out(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        self._set_val('apply_actions',
-                      'copy_ttl_out',
-                      'copy_ttl_out')
-        actions = [
-                   ofproto_parser.OFPActionCopyTtlOut()
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
-
-    def test_action_copy_ttl_in(self):
-        datapath = self.datapath
-        ofproto = self.ofproto
-        ofproto_parser = self.ofproto_parser
-
-        self._set_val('apply_actions',
-                      'copy_ttl_in',
-                      'copy_ttl_in')
-        actions = [
-                   ofproto_parser.OFPActionCopyTtlIn()
-                  ]
-        inst = [ofproto_parser.OFPInstructionActions(
-                    ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        match = ofproto_parser.OFPMatch()
-        m = ofproto_parser.OFPFlowMod(
-                datapath, 0, 0, 0, ofproto.OFPFC_ADD, 0, 0, 0, 0xffffffff,
-                ofproto.OFPP_ANY, 0xffffffff, 0, match, inst)
-        datapath.send_msg(m)
+    def test_action_copy_ttl_in(self, dp):
+        self._verify = [dp.ofproto.OFPAT_COPY_TTL_IN]
+        actions = [dp.ofproto_parser.OFPActionCopyTtlIn(), ]
+        self.add_apply_actions(dp, actions)
