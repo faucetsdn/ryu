@@ -1931,7 +1931,11 @@ class OFPMatchField(object):
 
     def __init__(self, header):
         self.header = header
-        self.n_bytes = struct.calcsize(self.pack_str)
+        hasmask = (header >> 8) & 1
+        if hasmask:
+            self.n_bytes = (header & 0xff) / 2
+        else:
+            self.n_bytes = header & 0xff
         self.length = 0
 
     @staticmethod
@@ -1942,9 +1946,11 @@ class OFPMatchField(object):
     @classmethod
     def parser(cls, buf, offset):
         (header,) = struct.unpack_from('!I', buf, offset)
-        # TODO: handle unknown field
         cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
-        field = cls_.field_parser(header, buf, offset)
+        if cls_:
+            field = cls_.field_parser(header, buf, offset)
+        else:
+            field = OFPMatchField(header)
         field.length = (header & 0xff) + 4
         return field
 

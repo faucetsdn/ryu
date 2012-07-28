@@ -3403,6 +3403,18 @@ class TestOFPMatch(unittest.TestCase):
         eq_(res.fields[0].header, header)
         eq_(res.fields[0].value, value)
 
+    def test_parse_unknown_field(self):
+        buf = bytearray()
+        ofproto_parser.msg_pack_into('!HH', buf, 0, ofproto_v1_2.OFPMT_OXM,
+                                     4 + 6)
+        header = ofproto_v1_2.oxm_tlv_header(36, 2)
+        ofproto_parser.msg_pack_into('!IH', buf, 4, header, 1)
+        header = ofproto_v1_2.OXM_OF_ETH_TYPE
+        ofproto_v1_2_parser.msg_pack_into('!IH', buf, 10, header, 1)
+
+        match = OFPMatch()
+        res = match.parser(str(buf), 0)
+
     def test_set_in_port(self):
         header = ofproto_v1_2.OXM_OF_IN_PORT
         value = in_port = 0xfff8
