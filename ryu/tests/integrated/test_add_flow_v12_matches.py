@@ -18,6 +18,7 @@
 import logging
 import itertools
 
+from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import nx_match
 from ryu.tests.integrated import tester
 
@@ -38,6 +39,7 @@ IPPROTO_SCTP = 132
 class RunTest(tester.TestFlowBase):
     """ Test case for add flows of Matches
     """
+    OFP_VERSIONS = [ofproto_v1_2.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(RunTest, self).__init__(*args, **kwargs)

@@ -18,6 +18,7 @@
 import logging
 
 from ryu.tests.integrated import tester
+from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import nx_match
 
 LOG = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ LOG = logging.getLogger(__name__)
 class RunTest(tester.TestFlowBase):
     """ Test case for add flows of1.0
     """
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(RunTest, self).__init__(*args, **kwargs)
