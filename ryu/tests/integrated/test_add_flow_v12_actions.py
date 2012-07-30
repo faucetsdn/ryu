@@ -18,21 +18,11 @@
 import logging
 
 from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import inet
 from ryu.ofproto import nx_match
 from ryu.tests.integrated import tester
 
 LOG = logging.getLogger(__name__)
-
-IPPROTO_ICMP = 1
-IPPROTO_TCP = 6
-IPPROTO_UDP = 17
-IPPROTO_ROUTING = 43
-IPPROTO_FRAGMENT = 44
-IPPROTO_AH = 51
-IPPROTO_ICMPV6 = 58
-IPPROTO_NONE = 59
-IPPROTO_DSTOPTS = 60
-IPPROTO_SCTP = 132
 
 ETH_TYPE_MPLS = 0x8847
 
@@ -204,7 +194,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_action_set_field_ip_proto(self, dp):
         field = dp.ofproto.OXM_OF_IP_PROTO
-        value = IPPROTO_TCP
+        value = inet.IPPROTO_TCP
 
         self.add_set_field_action(dp, field, value)
 

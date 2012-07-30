@@ -22,6 +22,7 @@ from ryu import exception
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
+from . import inet
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.nx_match')
@@ -53,9 +54,6 @@ ETH_TYPE_ARP = 0x0806
 ETH_TYPE_VLAN = 0x8100
 ETH_TYPE_IPV6 = 0x86dd
 ETH_TYPE_LACP = 0x8809
-
-IPPROTO_ICMP = 1
-IPPROTO_ICMPV6 = 58
 
 IP_ECN_MASK = 0x03
 IP_DSCP_MASK = 0xfc
@@ -768,7 +766,7 @@ def serialize_nxm_match(rule, buf, offset):
         offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_IP_PROTO, rule)
 
     if not rule.wc.wildcards & FWW_NW_PROTO and (rule.flow.nw_proto
-                                                 == IPPROTO_ICMP):
+                                                 == inet.IPPROTO_ICMP):
         if rule.wc.tp_src_mask != 0:
             offset += nxm_put(buf, offset, ofproto_v1_0.NXM_OF_ICMP_TYPE, rule)
         if rule.wc.tp_dst_mask != 0:
@@ -823,7 +821,7 @@ def serialize_nxm_match(rule, buf, offset):
 
     # IPv6
     if not rule.wc.wildcards & FWW_NW_PROTO and (rule.flow.nw_proto
-                                                 == IPPROTO_ICMPV6):
+                                                 == inet.IPPROTO_ICMPV6):
         if rule.wc.tp_src_mask != 0:
             offset += nxm_put(buf, offset, ofproto_v1_0.NXM_NX_ICMPV6_TYPE,
                               rule)

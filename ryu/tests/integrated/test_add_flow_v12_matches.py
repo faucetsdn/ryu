@@ -19,21 +19,11 @@ import logging
 import itertools
 
 from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import inet
 from ryu.ofproto import nx_match
 from ryu.tests.integrated import tester
 
 LOG = logging.getLogger(__name__)
-
-IPPROTO_ICMP = 1
-IPPROTO_TCP = 6
-IPPROTO_UDP = 17
-IPPROTO_ROUTING = 43
-IPPROTO_FRAGMENT = 44
-IPPROTO_AH = 51
-IPPROTO_ICMPV6 = 58
-IPPROTO_NONE = 59
-IPPROTO_DSTOPTS = 60
-IPPROTO_SCTP = 132
 
 
 class RunTest(tester.TestFlowBase):
@@ -311,7 +301,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_icmp(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_ICMP
+        ip_proto = inet.IPPROTO_ICMP
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -322,7 +312,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_tcp(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_TCP
+        ip_proto = inet.IPPROTO_TCP
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -333,7 +323,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_udp(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_UDP
+        ip_proto = inet.IPPROTO_UDP
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -344,7 +334,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_ipv6_route(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ROUTING
+        ip_proto = inet.IPPROTO_ROUTING
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -355,7 +345,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_ipv6_frag(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_FRAGMENT
+        ip_proto = inet.IPPROTO_FRAGMENT
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -366,7 +356,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_ipv6_icmp(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ICMPV6
+        ip_proto = inet.IPPROTO_ICMPV6
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -377,7 +367,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_ipv6_none(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_NONE
+        ip_proto = inet.IPPROTO_NONE
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -388,7 +378,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_proto_ipv6_dstopts(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_DSTOPTS
+        ip_proto = inet.IPPROTO_DSTOPTS
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
 
@@ -515,7 +505,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_tcp_src(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_TCP
+        ip_proto = inet.IPPROTO_TCP
         tp_src = 1103
         self._verify = [(dp.ofproto.OXM_OF_TCP_SRC, ),
                         tp_src, None]
@@ -528,7 +518,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_tcp_dst(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_TCP
+        ip_proto = inet.IPPROTO_TCP
         tp_dst = 236
         self._verify = [(dp.ofproto.OXM_OF_TCP_DST, ),
                         tp_dst, None]
@@ -541,7 +531,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_udp_src(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_UDP
+        ip_proto = inet.IPPROTO_UDP
         tp_src = 56617
         self._verify = [(dp.ofproto.OXM_OF_UDP_SRC, ),
                         tp_src, None]
@@ -554,7 +544,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_udp_dst(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_UDP
+        ip_proto = inet.IPPROTO_UDP
         tp_dst = 61278
         self._verify = [(dp.ofproto.OXM_OF_UDP_DST, ),
                         tp_dst, None]
@@ -567,7 +557,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_icmpv4_type(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_ICMP
+        ip_proto = inet.IPPROTO_ICMP
         icmp_type = 8
         self._verify = [(dp.ofproto.OXM_OF_ICMPV4_TYPE, ),
                         icmp_type, None]
@@ -580,7 +570,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_icmpv4_code(self, dp):
         dl_type = nx_match.ETH_TYPE_IP
-        ip_proto = IPPROTO_ICMP
+        ip_proto = inet.IPPROTO_ICMP
         icmp_type = 9
         icmp_code = 16
         self._verify = [(dp.ofproto.OXM_OF_ICMPV4_CODE, ),
@@ -1009,7 +999,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_icmpv6_type(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ICMPV6
+        ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 129
         self._verify = [(dp.ofproto.OXM_OF_ICMPV6_TYPE, ),
                         icmp_type, None]
@@ -1022,7 +1012,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_icmpv6_code(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ICMPV6
+        ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 138
         icmp_code = 1
         self._verify = [(dp.ofproto.OXM_OF_ICMPV6_CODE, ),
@@ -1037,7 +1027,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ipv6_nd_target(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ICMPV6
+        ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 135
         target = "5420:db3f:921b:3e33:2791:98f:dd7f:2e19"
         target_int = self.ipv6_to_int(target)
@@ -1053,7 +1043,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ipv6_nd_sll(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ICMPV6
+        ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 135
         nd_sll = "93:6d:d0:d4:e8:36"
         nd_sll_bin = self.haddr_to_bin(nd_sll)
@@ -1069,7 +1059,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ipv6_nd_tll(self, dp):
         dl_type = nx_match.ETH_TYPE_IPV6
-        ip_proto = IPPROTO_ICMPV6
+        ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 136
         nd_tll = "18:f6:66:b6:f1:b3"
         nd_tll_bin = self.haddr_to_bin(nd_tll)
