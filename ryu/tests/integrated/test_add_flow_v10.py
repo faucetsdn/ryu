@@ -176,7 +176,8 @@ class RunTest(tester.TestFlowBase):
         self.add_action(dp, [action, ])
 
     def test_action_set_nw_tos(self, dp):
-        nw_tos = 111
+        # lowest two bits must be zero
+        nw_tos = 1 << 2
         self._verify = [dp.ofproto.OFPAT_SET_NW_TOS,
                         'tos', nw_tos]
         action = dp.ofproto_parser.OFPActionSetNwTos(nw_tos)
