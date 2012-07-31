@@ -28,7 +28,7 @@ from ryu.lib.mac import haddr_to_str
 LOG = logging.getLogger('ryu.app.simple_switch')
 
 # TODO: we should split the handler into two parts, protocol
-# independent and dependant parts.
+# independent and dependent parts.
 
 # TODO: can we use dpkt python library?
 
