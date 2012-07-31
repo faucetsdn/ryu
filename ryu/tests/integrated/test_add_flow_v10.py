@@ -19,6 +19,7 @@ import logging
 
 from ryu.tests.integrated import tester
 from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ether
 from ryu.ofproto import nx_match
 
 LOG = logging.getLogger(__name__)
@@ -224,7 +225,7 @@ class RunTest(tester.TestFlowBase):
         self.add_rule(dp, rule)
 
     def test_rule_set_dl_type_ip(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         self._verify = ['dl_type', dl_type]
 
         rule = nx_match.ClsRule()
@@ -232,7 +233,7 @@ class RunTest(tester.TestFlowBase):
         self.add_rule(dp, rule)
 
     def test_rule_set_dl_type_arp(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         self._verify = ['dl_type', dl_type]
 
         rule = nx_match.ClsRule()
@@ -240,7 +241,7 @@ class RunTest(tester.TestFlowBase):
         self.add_rule(dp, rule)
 
     def test_rule_set_dl_type_vlan(self, dp):
-        dl_type = nx_match.ETH_TYPE_VLAN
+        dl_type = ether.ETH_TYPE_8021Q
         self._verify = ['dl_type', dl_type]
 
         rule = nx_match.ClsRule()
@@ -248,7 +249,7 @@ class RunTest(tester.TestFlowBase):
         self.add_rule(dp, rule)
 
     def test_rule_set_dl_type_ipv6(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         self._verify = ['dl_type', dl_type]
 
         rule = nx_match.ClsRule()
@@ -256,7 +257,7 @@ class RunTest(tester.TestFlowBase):
         self.add_rule(dp, rule)
 
     def test_rule_set_dl_type_lacp(self, dp):
-        dl_type = nx_match.ETH_TYPE_LACP
+        dl_type = ether.ETH_TYPE_SLOW
         self._verify = ['dl_type', dl_type]
 
         rule = nx_match.ClsRule()

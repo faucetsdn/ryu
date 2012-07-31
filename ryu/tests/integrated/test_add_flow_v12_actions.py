@@ -18,13 +18,11 @@
 import logging
 
 from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ether
 from ryu.ofproto import inet
-from ryu.ofproto import nx_match
 from ryu.tests.integrated import tester
 
 LOG = logging.getLogger(__name__)
-
-ETH_TYPE_MPLS = 0x8847
 
 
 class RunTest(tester.TestFlowBase):
@@ -119,7 +117,7 @@ class RunTest(tester.TestFlowBase):
 
     # Test of Push-Tag/Pop-Tag Actions
     def test_action_push_vlan(self, dp):
-        ethertype = nx_match.ETH_TYPE_VLAN
+        ethertype = ether.ETH_TYPE_8021Q
         self._verify = [dp.ofproto.OFPAT_PUSH_VLAN,
                         'ethertype', ethertype]
 
@@ -133,7 +131,7 @@ class RunTest(tester.TestFlowBase):
         self.add_apply_actions(dp, actions)
 
     def test_action_push_mpls(self, dp):
-        ethertype = ETH_TYPE_MPLS
+        ethertype = ether.ETH_TYPE_MPLS
         self._verify = [dp.ofproto.OFPAT_PUSH_MPLS,
                         'ethertype', ethertype]
 
@@ -141,7 +139,7 @@ class RunTest(tester.TestFlowBase):
         self.add_apply_actions(dp, actions)
 
     def test_action_pop_mpls(self, dp):
-        ethertype = nx_match.ETH_TYPE_VLAN
+        ethertype = ether.ETH_TYPE_8021Q
         self._verify = [dp.ofproto.OFPAT_POP_MPLS,
                         'ethertype', ethertype]
         actions = [dp.ofproto_parser.OFPActionPopMpls(ethertype), ]
@@ -164,7 +162,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_action_set_field_dl_type(self, dp):
         field = dp.ofproto.OXM_OF_ETH_TYPE
-        value = nx_match.ETH_TYPE_IPV6
+        value = ether.ETH_TYPE_IPV6
 
         self.add_set_field_action(dp, field, value)
 

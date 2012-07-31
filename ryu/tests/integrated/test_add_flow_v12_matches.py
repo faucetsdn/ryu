@@ -19,8 +19,8 @@ import logging
 import itertools
 
 from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ether
 from ryu.ofproto import inet
-from ryu.ofproto import nx_match
 from ryu.tests.integrated import tester
 
 LOG = logging.getLogger(__name__)
@@ -179,7 +179,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_dl_type_ip(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
                         dl_type, None]
 
@@ -188,7 +188,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_dl_type_arp(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
                         dl_type, None]
 
@@ -197,7 +197,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_dl_type_vlan(self, dp):
-        dl_type = nx_match.ETH_TYPE_VLAN
+        dl_type = ether.ETH_TYPE_8021Q
         self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
                         dl_type, None]
 
@@ -206,7 +206,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_dl_type_ipv6(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
                         dl_type, None]
 
@@ -215,7 +215,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_dl_type_lacp(self, dp):
-        dl_type = nx_match.ETH_TYPE_LACP
+        dl_type = ether.ETH_TYPE_SLOW
         self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
                         dl_type, None]
 
@@ -225,7 +225,7 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_ip_dscp(self, dp):
         ip_dscp = 36
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         self._verify = [(dp.ofproto.OXM_OF_IP_DSCP, ),
                         ip_dscp, None]
 
@@ -289,7 +289,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_ecn(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_ecn = 3
         self._verify = [(dp.ofproto.OXM_OF_IP_ECN, ),
                         ip_ecn, None]
@@ -300,7 +300,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_icmp(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_ICMP
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -311,7 +311,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_tcp(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_TCP
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -322,7 +322,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_udp(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_UDP
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -333,7 +333,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_ipv6_route(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ROUTING
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -344,7 +344,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_ipv6_frag(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_FRAGMENT
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -355,7 +355,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_ipv6_icmp(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -366,7 +366,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_ipv6_none(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_NONE
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -377,7 +377,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ip_proto_ipv6_dstopts(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_DSTOPTS
         self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
                         ip_proto, None]
@@ -388,7 +388,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_src(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         src = '192.168.196.250'
         src_int = self.ipv4_to_int(src)
         self._verify = [(dp.ofproto.OXM_OF_IPV4_SRC,
@@ -401,7 +401,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_src_masked_32(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         src = '192.168.196.250'
         src_int = self.ipv4_to_int(src)
         mask = '255.255.255.255'
@@ -416,7 +416,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_src_masked_24(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         src = '192.168.196.250'
         src_int = self.ipv4_to_int(src)
         mask = '255.255.255.0'
@@ -431,7 +431,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_src_masked_0(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         src = '192.168.196.250'
         src_int = self.ipv4_to_int(src)
         mask = '0.0.0.0'
@@ -446,7 +446,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_dst(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         dst = '192.168.54.155'
         dst_int = self.ipv4_to_int(dst)
         self._verify = [(dp.ofproto.OXM_OF_IPV4_DST,
@@ -459,7 +459,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_dst_masked_32(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         dst = '192.168.54.155'
         dst_int = self.ipv4_to_int(dst)
         mask = '255.255.255.255'
@@ -474,7 +474,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_dst_masked_24(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         dst = '192.168.54.155'
         dst_int = self.ipv4_to_int(dst)
         mask = '255.255.255.0'
@@ -489,7 +489,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv4_dst_masked_0(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         dst = '192.168.54.155'
         dst_int = self.ipv4_to_int(dst)
         mask = '0.0.0.0'
@@ -504,7 +504,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_tcp_src(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_TCP
         tp_src = 1103
         self._verify = [(dp.ofproto.OXM_OF_TCP_SRC, ),
@@ -517,7 +517,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_tcp_dst(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_TCP
         tp_dst = 236
         self._verify = [(dp.ofproto.OXM_OF_TCP_DST, ),
@@ -530,7 +530,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_udp_src(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_UDP
         tp_src = 56617
         self._verify = [(dp.ofproto.OXM_OF_UDP_SRC, ),
@@ -543,7 +543,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_udp_dst(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_UDP
         tp_dst = 61278
         self._verify = [(dp.ofproto.OXM_OF_UDP_DST, ),
@@ -556,7 +556,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_icmpv4_type(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_ICMP
         icmp_type = 8
         self._verify = [(dp.ofproto.OXM_OF_ICMPV4_TYPE, ),
@@ -569,7 +569,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_icmpv4_code(self, dp):
-        dl_type = nx_match.ETH_TYPE_IP
+        dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_ICMP
         icmp_type = 9
         icmp_code = 16
@@ -584,7 +584,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_opcode(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_op = 1
         self._verify = [(dp.ofproto.OXM_OF_ARP_OP, ),
                         arp_op, None]
@@ -595,7 +595,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_spa(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_src = '192.168.222.57'
         nw_src_int = self.ipv4_to_int(nw_src)
         self._verify = [(dp.ofproto.OXM_OF_ARP_SPA,
@@ -608,7 +608,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_spa_masked_32(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_src = '192.168.222.57'
         nw_src_int = self.ipv4_to_int(nw_src)
         mask = '255.255.255.255'
@@ -623,7 +623,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_spa_masked_24(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_src = '192.168.222.57'
         nw_src_int = self.ipv4_to_int(nw_src)
         mask = '255.255.255.0'
@@ -638,7 +638,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_spa_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_src = '192.168.222.57'
         nw_src_int = self.ipv4_to_int(nw_src)
         mask = '0.0.0.0'
@@ -653,7 +653,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tpa(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_dst = '192.168.198.233'
         nw_dst_int = self.ipv4_to_int(nw_dst)
         self._verify = [(dp.ofproto.OXM_OF_ARP_TPA,
@@ -666,7 +666,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tpa_masked_32(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_dst = '192.168.198.233'
         nw_dst_int = self.ipv4_to_int(nw_dst)
         mask = '255.255.255.255'
@@ -681,7 +681,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tpa_masked_24(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_dst = '192.168.198.233'
         nw_dst_int = self.ipv4_to_int(nw_dst)
         mask = '255.255.255.0'
@@ -696,7 +696,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tpa_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         nw_dst = '192.168.198.233'
         nw_dst_int = self.ipv4_to_int(nw_dst)
         mask = '0.0.0.0'
@@ -711,7 +711,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_sha(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_sha = '3e:ec:13:9b:f3:0b'
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         self._verify = [(dp.ofproto.OXM_OF_ARP_SHA,
@@ -724,7 +724,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_sha_masked_ff(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_sha = '3e:ec:13:9b:f3:0b'
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         mask = 'ff:ff:ff:ff:ff:ff'
@@ -739,7 +739,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_sha_masked_f0(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_sha = '3e:ec:13:9b:f3:0b'
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         mask = 'ff:ff:ff:ff:ff:00'
@@ -754,7 +754,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_sha_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_sha = '3e:ec:13:9b:f3:0b'
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         mask = '00:00:00:00:00:00'
@@ -769,7 +769,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tha(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_tha = '83:6c:21:52:49:68'
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         self._verify = [(dp.ofproto.OXM_OF_ARP_THA,
@@ -782,7 +782,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tha_masked_ff(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_tha = '83:6c:21:52:49:68'
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         mask = 'ff:ff:ff:ff:ff:ff'
@@ -797,7 +797,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tha_masked_f0(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_tha = '83:6c:21:52:49:68'
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         mask = 'ff:ff:ff:ff:ff:00'
@@ -812,7 +812,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_arp_tha_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_ARP
+        dl_type = ether.ETH_TYPE_ARP
         arp_tha = '83:6c:21:52:49:68'
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         mask = '00:00:00:00:00:00'
@@ -827,7 +827,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_src(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_src = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         self._verify = [(dp.ofproto.OXM_OF_IPV6_SRC,
@@ -840,7 +840,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_src_masked_ff(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_src = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
@@ -855,7 +855,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_src_masked_f0(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_src = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:0'
@@ -872,7 +872,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_src_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_src = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         mask = '0:0:0:0:0:0:0:0'
@@ -887,7 +887,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_dst(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_dst = 'e9e8:9ea5:7d67:82cc:ca54:1fc0:2d24:f038'
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         self._verify = [(dp.ofproto.OXM_OF_IPV6_DST,
@@ -900,7 +900,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_dst_masked_ff(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_dst = 'e9e8:9ea5:7d67:82cc:ca54:1fc0:2d24:f038'
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
@@ -915,7 +915,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_dst_masked_f0(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_dst = 'e9e8:9ea5:7d67:82cc:ca54:1fc0:2d24:f038'
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:0'
@@ -932,7 +932,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_dst_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_dst = 'e9e8:9ea5:7d67:82cc:ca54:1fc0:2d24:f038'
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         mask = '0:0:0:0:0:0:0:0'
@@ -947,7 +947,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_flabel(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
                          dp.ofproto.OXM_OF_IPV6_FLABEL_W, ),
@@ -959,7 +959,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_flabel_masked_ff(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         mask = 0xfffff
         self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
@@ -972,7 +972,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_flabel_masked_f0(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         mask = 0xffff0
         self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
@@ -985,7 +985,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_flabel_masked_00(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         mask = 0x0
         self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
@@ -998,7 +998,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_icmpv6_type(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 129
         self._verify = [(dp.ofproto.OXM_OF_ICMPV6_TYPE, ),
@@ -1011,7 +1011,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_icmpv6_code(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 138
         icmp_code = 1
@@ -1026,7 +1026,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_nd_target(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 135
         target = "5420:db3f:921b:3e33:2791:98f:dd7f:2e19"
@@ -1042,7 +1042,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_nd_sll(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 135
         nd_sll = "93:6d:d0:d4:e8:36"
@@ -1058,7 +1058,7 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def test_rule_set_ipv6_nd_tll(self, dp):
-        dl_type = nx_match.ETH_TYPE_IPV6
+        dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 136
         nd_tll = "18:f6:66:b6:f1:b3"

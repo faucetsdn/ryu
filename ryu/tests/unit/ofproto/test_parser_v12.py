@@ -21,7 +21,8 @@ from struct import *
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto.ofproto_v1_2_parser import *
-from ryu.ofproto import ofproto_v1_2_parser, nx_match
+from ryu.ofproto import ofproto_v1_2_parser
+from ryu.ofproto import ether
 
 
 LOG = logging.getLogger('test_ofproto_v12')
@@ -3492,7 +3493,7 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_set_dl_type(self):
         header = ofproto_v1_2.OXM_OF_ETH_TYPE
-        value = dl_type = nx_match.ETH_TYPE_IP
+        value = dl_type = ether.ETH_TYPE_IP
 
         match = OFPMatch()
         match.set_dl_type(dl_type)

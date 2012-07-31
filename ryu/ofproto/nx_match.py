@@ -22,6 +22,7 @@ from ryu import exception
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
+from . import ether
 from . import inet
 
 import logging
@@ -47,13 +48,6 @@ FWW_ALL = (1 << 13) - 1
 FLOW_NW_FRAG_ANY = 1 << 0
 FLOW_NW_FRAG_LATER = 1 << 1
 FLOW_NW_FRAG_MASK = FLOW_NW_FRAG_ANY | FLOW_NW_FRAG_LATER
-
-# Ethernet types, for set_dl_type()
-ETH_TYPE_IP = 0x0800
-ETH_TYPE_ARP = 0x0806
-ETH_TYPE_VLAN = 0x8100
-ETH_TYPE_IPV6 = 0x86dd
-ETH_TYPE_LACP = 0x8809
 
 IP_ECN_MASK = 0x03
 IP_DSCP_MASK = 0xfc
