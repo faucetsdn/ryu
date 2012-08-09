@@ -1166,8 +1166,8 @@ class OFPEchoRequest(MsgBase):
         return msg
 
     def _serialize_body(self):
-        assert self.data is not None
-        self.buf += self.data
+        if self.data is not None:
+            self.buf += self.data
 
 
 @_register_parser
