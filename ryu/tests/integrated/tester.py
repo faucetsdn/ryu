@@ -77,10 +77,11 @@ class TestFlowBase(app_manager.RyuApp):
                                              dp.ofproto.OFPP_NONE, 0, None)
         elif dp.ofproto == ofproto_v1_2:
             match = dp.ofproto_parser.OFPMatch()
-            m = dp.ofproto_parser.OFPFlowMod(dp, 0, 0, 0,
+            m = dp.ofproto_parser.OFPFlowMod(dp, 0, 0, dp.ofproto.OFPTT_ALL,
                                              dp.ofproto.OFPFC_DELETE,
                                              0, 0, 0, 0xffffffff,
-                                             dp.ofproto.OFPP_ANY, 0xffffffff,
+                                             dp.ofproto.OFPP_ANY,
+                                             dp.ofproto.OFPG_ANY,
                                              0, match, [])
 
         dp.send_msg(m)
@@ -95,7 +96,7 @@ class TestFlowBase(app_manager.RyuApp):
                                              0, dp.ofproto.OFPP_NONE)
         elif dp.ofproto == ofproto_v1_2:
             match = dp.ofproto_parser.OFPMatch()
-            m = dp.ofproto_parser.OFPFlowStatsRequest(dp, 0,
+            m = dp.ofproto_parser.OFPFlowStatsRequest(dp, dp.ofproto.OFPTT_ALL,
                                                       dp.ofproto.OFPP_ANY,
                                                       dp.ofproto.OFPG_ANY,
                                                       0, 0, match)
