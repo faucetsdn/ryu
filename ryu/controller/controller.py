@@ -68,7 +68,7 @@ def _deactivate(method):
         except greenlet.GreenletExit:
             pass
         except:
-            traceback.print_stack()
+            traceback.print_exc()
             raise
         finally:
             self.is_active = False
