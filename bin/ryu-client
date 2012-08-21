@@ -43,7 +43,7 @@ def client_test():
         'create_port': lambda a: client.create_port(a[1], a[2], a[3]),
         'update_port': lambda a: client.update_port(a[1], a[2], a[3]),
         'delete_port': lambda a: client.delete_port(a[1], a[2], a[3])
-        }
+    }
 
     # allow '-', instead of '_'
     commands.update(dict([(k.replace('_', '-'), v)

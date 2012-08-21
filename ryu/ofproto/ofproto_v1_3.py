@@ -767,7 +767,7 @@ OFP_PACKET_IN_PACK_STR = '!IHBBQ' + _OFP_MATCH_PACK_STR
 OFP_PACKET_IN_SIZE = 32
 OFP_PACKET_IN_DATA_OFFSET = 18
 assert (calcsize(OFP_PACKET_IN_PACK_STR) + OFP_HEADER_SIZE ==
-       OFP_PACKET_IN_SIZE)
+        OFP_PACKET_IN_SIZE)
 
 # enum ofp_packet_in_reason
 OFPR_NO_MATCH = 0    # No matching flow.

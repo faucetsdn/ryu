@@ -79,8 +79,8 @@ def _set_msg_reply(msg_reply):
 #
 
 class OFPPhyPort(collections.namedtuple('OFPPhyPort', (
-    'port_no', 'hw_addr', 'name', 'config', 'state', 'curr', 'advertised',
-    'supported', 'peer'))):
+        'port_no', 'hw_addr', 'name', 'config', 'state', 'curr', 'advertised',
+        'supported', 'peer'))):
 
     @classmethod
     def parser(cls, buf, offset):
@@ -90,9 +90,9 @@ class OFPPhyPort(collections.namedtuple('OFPPhyPort', (
 
 
 class OFPMatch(collections.namedtuple('OFPMatchBase', (
-            'wildcards', 'in_port', 'dl_src', 'dl_dst', 'dl_vlan',
-            'dl_vlan_pcp', 'dl_type', 'nw_tos', 'nw_proto',
-            'nw_src', 'nw_dst', 'tp_src', 'tp_dst'))):
+        'wildcards', 'in_port', 'dl_src', 'dl_dst', 'dl_vlan',
+        'dl_vlan_pcp', 'dl_type', 'nw_tos', 'nw_proto',
+        'nw_src', 'nw_dst', 'tp_src', 'tp_dst'))):
 
     def __new__(cls, *args):
         # for convenience when dl_src/dl_dst are wildcard
@@ -543,8 +543,8 @@ class NXActionRegMove(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, n_bits, src_ofs, dst_ofs,
-         src, dst) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
+            src, dst) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
         return cls(n_bits, src_ofs, dst_ofs, src, dst)
 
 
@@ -566,8 +566,8 @@ class NXActionRegLoad(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
-         value) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
+            value) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, value)
 
 
@@ -615,8 +615,8 @@ class NXActionMultipath(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, fields, basis, algorithm,
-         max_link, arg, ofs_nbits, dst) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
+            max_link, arg, ofs_nbits, dst) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
         return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
                    dst)
 
@@ -700,8 +700,8 @@ class NXActionBundleBase(NXActionHeader):
     @classmethod
     def parser(cls, action_cls, buf, offset):
         (type_, len_, vendor, subtype, algorithm, fields, basis,
-         slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
+            slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
         slave_offset = offset + ofproto_v1_0.NX_ACTION_BUNDLE_SIZE
 
         slaves = []
@@ -760,8 +760,8 @@ class NXActionAutopath(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
-         id_) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
+            id_) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, id_)
 
 
@@ -783,8 +783,8 @@ class NXActionOutputReg(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, src,
-         max_len) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
+            max_len) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
         return cls(ofs_nbits, src, max_len)
 
 
@@ -854,9 +854,9 @@ class NXActionLearn(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, idle_timeout, hard_timeout, priority,
-         cookie, flags, table_id, fin_idle_timeout,
-         fin_hard_timeout) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset)
+            cookie, flags, table_id, fin_idle_timeout,
+            fin_hard_timeout) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset)
         spec = buf[offset + ofproto_v1_0.NX_ACTION_LEARN_SIZE:]
         return cls(idle_timeout, hard_timeout, priority,
                    cookie, flags, table_id, fin_idle_timeout,
@@ -881,8 +881,8 @@ class NXActionController(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, max_len, controller_id, reason,
-         _zero) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
+            _zero) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
         return cls(max_len, controller_id, reason)
 
 
@@ -903,13 +903,13 @@ class NXActionFinTimeout(NXActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, fin_idle_timeout,
-         fin_hard_timeout) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
+            fin_hard_timeout) = struct.unpack_from(
+                ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
         return cls(fin_idle_timeout, fin_hard_timeout)
 
 
-class OFPDescStats(collections.namedtuple('OFPDescStats',
-        ('mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
+class OFPDescStats(collections.namedtuple('OFPDescStats', (
+        'mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
     @classmethod
     def parser(cls, buf, offset):
         desc = struct.unpack_from(ofproto_v1_0.OFP_DESC_STATS_PACK_STR,
@@ -954,7 +954,7 @@ class OFPFlowStats(object):
          flow_stats.cookie,
          flow_stats.packet_count,
          flow_stats.byte_count) = struct.unpack_from(
-            ofproto_v1_0.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
+             ofproto_v1_0.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
         offset += ofproto_v1_0.OFP_FLOW_STATS_1_SIZE
 
         flow_stats.actions = []
@@ -969,8 +969,8 @@ class OFPFlowStats(object):
         return flow_stats
 
 
-class OFPAggregateStats(collections.namedtuple('OFPAggregateStats',
-        ('packet_count', 'byte_count', 'flow_count'))):
+class OFPAggregateStats(collections.namedtuple('OFPAggregateStats', (
+        'packet_count', 'byte_count', 'flow_count'))):
     @classmethod
     def parser(cls, buf, offset):
         agg = struct.unpack_from(
@@ -980,9 +980,9 @@ class OFPAggregateStats(collections.namedtuple('OFPAggregateStats',
         return stats
 
 
-class OFPTableStats(collections.namedtuple('OFPTableStats',
-        ('table_id', 'name', 'wildcards', 'max_entries', 'active_count',
-         'lookup_count', 'matched_count'))):
+class OFPTableStats(collections.namedtuple('OFPTableStats', (
+        'table_id', 'name', 'wildcards', 'max_entries', 'active_count',
+        'lookup_count', 'matched_count'))):
     @classmethod
     def parser(cls, buf, offset):
         tbl = struct.unpack_from(ofproto_v1_0.OFP_TABLE_STATS_PACK_STR,
@@ -992,10 +992,10 @@ class OFPTableStats(collections.namedtuple('OFPTableStats',
         return stats
 
 
-class OFPPortStats(collections.namedtuple('OFPPortStats',
-        ('port_no', 'rx_packets', 'tx_packets', 'rx_bytes', 'tx_bytes',
-         'rx_dropped', 'tx_dropped', 'rx_errors', 'tx_errors',
-         'rx_frame_err', 'rx_over_err', 'rx_crc_err', 'collisions'))):
+class OFPPortStats(collections.namedtuple('OFPPortStats', (
+        'port_no', 'rx_packets', 'tx_packets', 'rx_bytes', 'tx_bytes',
+        'rx_dropped', 'tx_dropped', 'rx_errors', 'tx_errors',
+        'rx_frame_err', 'rx_over_err', 'rx_crc_err', 'collisions'))):
     @classmethod
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_0.OFP_PORT_STATS_PACK_STR,
@@ -1005,8 +1005,8 @@ class OFPPortStats(collections.namedtuple('OFPPortStats',
         return stats
 
 
-class OFPQueueStats(collections.namedtuple('OFPQueueStats',
-        ('port_no', 'queue_id', 'tx_bytes', 'tx_packets', 'tx_errors'))):
+class OFPQueueStats(collections.namedtuple('OFPQueueStats', (
+        'port_no', 'queue_id', 'tx_bytes', 'tx_packets', 'tx_errors'))):
     @classmethod
     def parser(cls, buf, offset):
         queue = struct.unpack_from(ofproto_v1_0.OFP_QUEUE_STATS_PACK_STR,
@@ -1385,7 +1385,7 @@ class NXTFlowRemoved(NiciraHeader):
         (cookie, priority, reason, duration_sec, duration_nsec,
          idle_timeout, match_len,
          packet_count, byte_count) = struct.unpack_from(
-            ofproto_v1_0.NX_FLOW_REMOVED_PACK_STR, buf, offset)
+             ofproto_v1_0.NX_FLOW_REMOVED_PACK_STR, buf, offset)
         offset += (ofproto_v1_0.NX_FLOW_REMOVED_SIZE
                    - ofproto_v1_0.NICIRA_HEADER_SIZE)
         match = nx_match.NXMatch.parser(buf, offset, match_len)
@@ -1425,8 +1425,8 @@ class NXTPacketIn(NiciraHeader):
     @classmethod
     def parser(cls, datapath, buf, offset):
         (buffer_id, total_len, reason, table_id,
-                 cookie, match_len) = struct.unpack_from(
-            ofproto_v1_0.NX_PACKET_IN_PACK_STR, buf, offset)
+         cookie, match_len) = struct.unpack_from(
+             ofproto_v1_0.NX_PACKET_IN_PACK_STR, buf, offset)
 
         offset += (ofproto_v1_0.NX_PACKET_IN_SIZE
                    - ofproto_v1_0.NICIRA_HEADER_SIZE)
@@ -1507,8 +1507,8 @@ class OFPSwitchFeatures(MsgBase):
          msg.n_tables,
          msg.capabilities,
          msg.actions) = struct.unpack_from(
-            ofproto_v1_0.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
-            ofproto_v1_0.OFP_HEADER_SIZE)
+             ofproto_v1_0.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
+             ofproto_v1_0.OFP_HEADER_SIZE)
 
         msg.ports = {}
         n_ports = ((msg_len - ofproto_v1_0.OFP_SWITCH_FEATURES_SIZE) /
@@ -1532,7 +1532,7 @@ class OFPPortStatus(MsgBase):
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPPortStatus, cls).parser(datapath, version, msg_type,
-                                                   msg_len, xid, buf)
+                                               msg_len, xid, buf)
         msg.reason = struct.unpack_from(
             ofproto_v1_0.OFP_PORT_STATUS_PACK_STR,
             msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)[0]
@@ -1560,8 +1560,8 @@ class OFPPacketIn(MsgBase):
          msg.total_len,
          msg.in_port,
          msg.reason) = struct.unpack_from(
-            ofproto_v1_0.OFP_PACKET_IN_PACK_STR,
-            msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
+             ofproto_v1_0.OFP_PACKET_IN_PACK_STR,
+             msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
         msg.data = msg.buf[ofproto_v1_0.OFP_PACKET_IN_DATA_OFFSET:]
         if msg.total_len < len(msg.data):
             # discard padding for 8-byte alignment of OFP packet
@@ -1620,8 +1620,8 @@ class OFPFlowRemoved(MsgBase):
          msg.idle_timeout,
          msg.packet_count,
          msg.byte_count) = struct.unpack_from(
-            ofproto_v1_0.OFP_FLOW_REMOVED_PACK_STR0, msg.buf,
-            ofproto_v1_0.OFP_HEADER_SIZE + ofproto_v1_0.OFP_MATCH_SIZE)
+             ofproto_v1_0.OFP_FLOW_REMOVED_PACK_STR0, msg.buf,
+             ofproto_v1_0.OFP_HEADER_SIZE + ofproto_v1_0.OFP_MATCH_SIZE)
 
         return msg
 

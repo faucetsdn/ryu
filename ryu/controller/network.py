@@ -72,7 +72,7 @@ class Network(object):
         try:
             old_network_id = self.dpids.get(dpid, {}).get(port, None)
             if ((dpid, port) in self.networks[network_id] or
-                _known_nw_id(old_network_id)):
+                    _known_nw_id(old_network_id)):
                 if not port_may_exist:
                     raise PortAlreadyExist(network_id=network_id,
                                            dpid=dpid, port=port)
@@ -117,7 +117,8 @@ class Network(object):
             return True
 
         if (allow_nw_id_external is not None and
-            (allow_nw_id_external == nw_id or allow_nw_id_external == out_nw)):
+                (allow_nw_id_external == nw_id or
+                    allow_nw_id_external == out_nw)):
             # allow external network -> known network id
             return True
 

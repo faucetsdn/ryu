@@ -138,7 +138,7 @@ class restapi(app_manager.RyuApp):
     _CONTEXTS = {
         'network': network.Network,
         'wsgi': WSGIApplication
-        }
+    }
 
     def __init__(self, *args, **kwargs):
         super(restapi, self).__init__(*args, **kwargs)

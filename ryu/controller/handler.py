@@ -188,7 +188,7 @@ class ConfigHandler(object):
         set_config = ofproto_parser.OFPSetConfig(
             datapath, ofproto.OFPC_FRAG_NORMAL,
             128  # TODO:XXX
-            )
+        )
         datapath.send_msg(set_config)
 
         LOG.debug('move onto main mode')

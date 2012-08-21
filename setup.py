@@ -37,7 +37,7 @@ classifiers = [
     'Natural Language :: English',
     'Programming Language :: Python',
     'Operating System :: Unix',
-    ]
+]
 
 setup(name='ryu',
       version=version,
@@ -53,5 +53,4 @@ setup(name='ryu',
       scripts=['bin/ryu-manager',
                'bin/ryu-client'],
       data_files=[('/etc/ryu', ['etc/ryu/ryu.conf'])],
-#      install_requires=[]
       )

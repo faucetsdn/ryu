@@ -19,6 +19,7 @@ from . import udp
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.ofproto import inet
 
+
 class ipv4(packet_base.PacketBase):
     _PACK_STR = '!BBHHHBBHII'
 
@@ -64,7 +65,7 @@ class ipv4(packet_base.PacketBase):
     def checksum(self, data):
         s = 0
         for i in range(0, len(data), 2):
-            w = data[i] + (data[i+1] << 8)
+            w = data[i] + (data[i + 1] << 8)
             s = self.carry_around_add(s, w)
         return ~s & 0xffff
 
@@ -74,7 +75,7 @@ class ipv4(packet_base.PacketBase):
         msg_pack_into(ipv4._PACK_STR, buf, offset, version, self.tos,
                       self.total_length, self.identification, flags,
                       self.ttl, self.proto, 0, self.src, self.dst)
-        self.csum = self.checksum(buf[offset:offset+self.length])
+        self.csum = self.checksum(buf[offset:offset + self.length])
         msg_pack_into('H', buf, offset + 10, self.csum)
 
 ipv4.register_packet_type(udp.udp, inet.IPPROTO_UDP)

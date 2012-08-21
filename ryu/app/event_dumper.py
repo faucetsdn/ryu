@@ -49,7 +49,7 @@ class EventDumper(app_manager.RyuApp):
 
     def _register_dump_handler(self, ev_q, dispatcher):
         if (self._need_dump(ev_q.name, FLAGS.dump_queue) or
-            self._need_dump(dispatcher.name, FLAGS.dump_dispatcher)):
+                self._need_dump(dispatcher.name, FLAGS.dump_dispatcher)):
             dispatcher.register_all_handler(self._dump_event)
 
     @set_ev_cls(dispatcher.EventQueueCreate, dispatcher.QUEUE_EV_DISPATCHER)

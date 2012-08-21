@@ -41,7 +41,7 @@ class SimpleIsolation(app_manager.RyuApp):
     _CONTEXTS = {
         'network': network.Network,
         'dpset': dpset.DPSet,
-        }
+    }
 
     def __init__(self, *args, **kwargs):
         super(SimpleIsolation, self).__init__(*args, **kwargs)
@@ -136,6 +136,7 @@ class SimpleIsolation(app_manager.RyuApp):
         # LOG.debug('packet in ev %s msg %s', ev, ev.msg)
         msg = ev.msg
         datapath = msg.datapath
+        ofproto = datapath.ofproto
 
         dst, src, _eth_type = struct.unpack_from('!6s6sH', buffer(msg.data), 0)
 
@@ -170,10 +171,13 @@ class SimpleIsolation(app_manager.RyuApp):
             # new port.
             rule = nx_match.ClsRule()
             rule.set_dl_dst(src)
-            datapath.send_flow_mod(rule=rule, cookie=0,
-                command=datapath.ofproto.OFPFC_DELETE, idle_timeout=0,
-                hard_timeout=0, priority=datapath.ofproto.OFP_DEFAULT_PRIORITY,
-                out_port=old_port)
+            datapath.send_flow_mod(rule=rule,
+                                   cookie=0,
+                                   command=ofproto.OFPFC_DELETE,
+                                   idle_timeout=0,
+                                   hard_timeout=0,
+                                   priority=ofproto.OFP_DEFAULT_PRIORITY,
+                                   out_port=old_port)
 
             # to make sure the old flow entries are purged.
             datapath.send_barrier()
