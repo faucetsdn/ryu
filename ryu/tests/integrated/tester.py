@@ -49,9 +49,7 @@ class TestFlowBase(app_manager.RyuApp):
             To check flows of switch.
     """
 
-    _CONTEXTS = {
-        'dpset': dpset.DPSet,
-        }
+    _CONTEXTS = {'dpset': dpset.DPSet}
 
     def __init__(self, *args, **kwargs):
         super(TestFlowBase, self).__init__(*args, **kwargs)
@@ -70,8 +68,7 @@ class TestFlowBase(app_manager.RyuApp):
             match = dp.ofproto_parser.OFPMatch(dp.ofproto.OFPFW_ALL,
                                                0, 0, 0, 0, 0,
                                                0, 0, 0, 0, 0, 0, 0)
-            m = dp.ofproto_parser.OFPFlowMod(
-                                             dp, match, 0,
+            m = dp.ofproto_parser.OFPFlowMod(dp, match, 0,
                                              dp.ofproto.OFPFC_DELETE,
                                              0, 0, 0, 0,
                                              dp.ofproto.OFPP_NONE, 0, None)
@@ -91,9 +88,8 @@ class TestFlowBase(app_manager.RyuApp):
             match = dp.ofproto_parser.OFPMatch(dp.ofproto.OFPFW_ALL,
                                                0, 0, 0, 0, 0,
                                                0, 0, 0, 0, 0, 0, 0)
-            m = dp.ofproto_parser.OFPFlowStatsRequest(
-                                             dp, 0, match,
-                                             0, dp.ofproto.OFPP_NONE)
+            m = dp.ofproto_parser.OFPFlowStatsRequest(dp, 0, match,
+                                                      0, dp.ofproto.OFPP_NONE)
         elif dp.ofproto == ofproto_v1_2:
             match = dp.ofproto_parser.OFPMatch()
             m = dp.ofproto_parser.OFPFlowStatsRequest(dp, dp.ofproto.OFPTT_ALL,
@@ -142,7 +138,7 @@ class TestFlowBase(app_manager.RyuApp):
             verify_func = getattr(self, v)
 
         result = verify_func(dp, msg.body)
-        if result == True:
+        if result is True:
             self.unclear -= 1
 
         self.results[self.current] = result

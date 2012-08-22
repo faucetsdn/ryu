@@ -68,7 +68,7 @@ class RunTest(tester.TestFlowBase):
             action = actions[0]
             if action.cls_action_type != type_:
                 return "Action type error. send:%s, val:%s" \
-                           % (type_, action.cls_action_type)
+                    % (type_, action.cls_action_type)
         except IndexError:
             return "Action is not setting."
 
@@ -84,14 +84,14 @@ class RunTest(tester.TestFlowBase):
 
         if f_value != value:
             return "Value error. send:%s=%s val:%s" \
-                       % (name, value, f_value)
+                % (name, value, f_value)
         return True
 
     def _verify_rule(self, rule, name, value):
         f_value = getattr(rule, name)
         if f_value != value:
             return "Value error. send:%s=%s val:%s" \
-                       % (name, value, f_value)
+                % (name, value, f_value)
         return True
 
     def verify_default(self, dp, stats):

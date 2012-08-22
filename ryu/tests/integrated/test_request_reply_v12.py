@@ -76,7 +76,7 @@ class RunTest(tester.TestFlowBase):
             verify_func = getattr(self, v)
 
         result = verify_func(dp, msg)
-        if result == True:
+        if result is True:
             self.unclear -= 1
 
         self.results[self.current] = result
@@ -136,9 +136,11 @@ class RunTest(tester.TestFlowBase):
             out_group = dp.ofproto.OFPG_ANY
 
         m = dp.ofproto_parser.OFPFlowMod(dp, cookie, cookie_mask,
-                table_id, command, idle_timeout, hard_timeout,
-                priority, buffer_id, out_port, out_group,
-                flags, match, inst)
+                                         table_id, command,
+                                         idle_timeout, hard_timeout,
+                                         priority, buffer_id,
+                                         out_port, out_group,
+                                         flags, match, inst)
 
         dp.send_msg(m)
 
@@ -157,8 +159,8 @@ class RunTest(tester.TestFlowBase):
         self._verify = dp.ofproto.OFPST_AGGREGATE
         match = dp.ofproto_parser.OFPMatch()
         m = dp.ofproto_parser.OFPAggregateStatsRequest(
-                dp, dp.ofproto.OFPTT_ALL, dp.ofproto.OFPP_ANY,
-                dp.ofproto.OFPG_ANY, 0, 0, match)
+            dp, dp.ofproto.OFPTT_ALL, dp.ofproto.OFPP_ANY,
+            dp.ofproto.OFPG_ANY, 0, 0, match)
         dp.send_msg(m)
 
     def test_table_stats_request(self, dp):
@@ -246,8 +248,8 @@ class RunTest(tester.TestFlowBase):
         dp.send_barrier()
         match = dp.ofproto_parser.OFPMatch()
         m = dp.ofproto_parser.OFPAggregateStatsRequest(
-                dp, dp.ofproto.OFPTT_ALL, dp.ofproto.OFPP_ANY,
-                dp.ofproto.OFPG_ANY, 0, 0, match)
+            dp, dp.ofproto.OFPTT_ALL, dp.ofproto.OFPP_ANY,
+            dp.ofproto.OFPG_ANY, 0, 0, match)
         dp.send_msg(m)
 
     def verify_aggregate_stats_flow_count(self, dp, msg):
@@ -265,8 +267,8 @@ class RunTest(tester.TestFlowBase):
         out_port = 2
         match = dp.ofproto_parser.OFPMatch()
         m = dp.ofproto_parser.OFPAggregateStatsRequest(
-                dp, dp.ofproto.OFPTT_ALL, out_port,
-                dp.ofproto.OFPG_ANY, 0, 0, match)
+            dp, dp.ofproto.OFPTT_ALL, out_port,
+            dp.ofproto.OFPG_ANY, 0, 0, match)
         dp.send_msg(m)
 
     def verify_aggregate_stats_flow_count_out_port(self, dp, msg):
@@ -424,12 +426,10 @@ class RunTest(tester.TestFlowBase):
         a2 = dp.ofproto_parser.OFPActionOutput(2, 1500)
 
         # table_id, cookie, priority, dl_dst, action)
-        tables = {
-                  0: [0xffff, 10, '\xee' * 6, a1],
+        tables = {0: [0xffff, 10, '\xee' * 6, a1],
                   1: [0xff00, 10, '\xee' * 6, a2],
                   2: [0xf000, 100, '\xee' * 6, a1],
-                  3: [0x0000, 10, '\xff' * 6, a1],
-                 }
+                  3: [0x0000, 10, '\xff' * 6, a1]}
 
         self._verify = tables
         for table_id, val in tables.items():
@@ -666,7 +666,7 @@ class RunTest(tester.TestFlowBase):
             msg = ev.msg
             dp = msg.datapath
             if self._verify == dp.ofproto.OFPST_TABLE:
-                self.table_stats = msg.body[0]
+                self.table_stats = msg.body
             self.start_next_test(dp)
         else:
             self.run_verify(ev)
@@ -696,8 +696,8 @@ class RunTest(tester.TestFlowBase):
         if self.capabilities is None:
             m = dp.ofproto_parser.OFPFeaturesRequest(dp)
             dp.send_msg(m)
-        elif self.capabilities & dp.ofproto.OFPC_TABLE_STATS \
-             and self.table_stats is None:
+        elif (self.capabilities & dp.ofproto.OFPC_TABLE_STATS > 0 and
+              self.table_stats is None):
             self._verify = dp.ofproto.OFPST_TABLE
             m = dp.ofproto_parser.OFPTableStatsRequest(dp)
             dp.send_msg(m)

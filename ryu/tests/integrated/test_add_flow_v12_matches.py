@@ -64,11 +64,11 @@ class RunTest(tester.TestFlowBase):
 
         if f_value == value and f_mask == mask:
             return True
-        elif value == None:
+        elif value is None:
             return "Field[%s] is setting." % (headers, )
         else:
             return "Value error. send: (%s/%s), val:(%s/%s)" \
-                        % (value, mask, f_value, f_mask)
+                % (value, mask, f_value, f_mask)
 
     def test_rule_set_dl_dst(self, dp):
         dl_dst = 'e2:7a:09:79:0b:0f'
@@ -861,7 +861,7 @@ class RunTest(tester.TestFlowBase):
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:0'
         mask_int = self.ipv6_to_int(mask)
         ipv6_src_masked = [x & y for (x, y) in
-                              itertools.izip(ipv6_src_int, mask_int)]
+                           itertools.izip(ipv6_src_int, mask_int)]
         self._verify = [(dp.ofproto.OXM_OF_IPV6_SRC,
                          dp.ofproto.OXM_OF_IPV6_SRC_W, ),
                         ipv6_src_masked, mask_int]
@@ -921,7 +921,7 @@ class RunTest(tester.TestFlowBase):
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:0'
         mask_int = self.ipv6_to_int(mask)
         ipv6_dst_masked = [x & y for (x, y) in
-                              itertools.izip(ipv6_dst_int, mask_int)]
+                           itertools.izip(ipv6_dst_int, mask_int)]
         self._verify = [(dp.ofproto.OXM_OF_IPV6_DST,
                          dp.ofproto.OXM_OF_IPV6_DST_W, ),
                         ipv6_dst_masked, mask_int]

@@ -73,7 +73,7 @@ class RunTest(tester.TestFlowBase):
             action = stats[0].instructions[0].actions[0]
             if action.cls_action_type != type_:
                 return "Action type error. send:%s, val:%s" \
-                           % (type_, action.cls_action_type)
+                    % (type_, action.cls_action_type)
         except IndexError:
             return "Action is not setting."
 
@@ -87,12 +87,12 @@ class RunTest(tester.TestFlowBase):
         if name == 'field':
             if s_val.header != field:
                 return "Field error. send:%s val:%s" \
-                           % (field, s_val.field)
+                    % (field, s_val.field)
             s_val = s_val.value
 
         if name and s_val != value:
                 return "Value error. send:%s=%s val:%s" \
-                           % (name, value, s_val)
+                    % (name, value, s_val)
 
         return True
 

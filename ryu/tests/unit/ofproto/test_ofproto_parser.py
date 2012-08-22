@@ -32,25 +32,27 @@ class TestOfproto_Parser(unittest.TestCase):
     def setUp(self):
         LOG.debug('setUp')
         self.bufHello = binascii.unhexlify('0100000800000001')
-        self.bufFeaturesReply = binascii.unhexlify(
-                '010600b0000000020000000000000abc' \
-                + '00000100010000000000008700000fff' \
-                + '0002aefa39d2b9177472656d61302d30' \
-                + '00000000000000000000000000000000' \
-                + '000000c0000000000000000000000000' \
-                + 'fffe723f9a764cc87673775f30786162' \
-                + '63000000000000000000000100000001' \
-                + '00000082000000000000000000000000' \
-                + '00012200d6c5a1947472656d61312d30' \
-                + '00000000000000000000000000000000' \
-                + '000000c0000000000000000000000000')
-        self.bufPacketIn = binascii.unhexlify(
-                '010a005200000000000001010040' \
-                + '00020000000000000002000000000001' \
-                + '080045000032000000004011f967c0a8' \
-                + '0001c0a8000200010001001e00000000' \
-                + '00000000000000000000000000000000' \
-                + '00000000')
+
+        fr = '010600b0000000020000000000000abc' \
+            + '00000100010000000000008700000fff' \
+            + '0002aefa39d2b9177472656d61302d30' \
+            + '00000000000000000000000000000000' \
+            + '000000c0000000000000000000000000' \
+            + 'fffe723f9a764cc87673775f30786162' \
+            + '63000000000000000000000100000001' \
+            + '00000082000000000000000000000000' \
+            + '00012200d6c5a1947472656d61312d30' \
+            + '00000000000000000000000000000000' \
+            + '000000c0000000000000000000000000'
+        self.bufFeaturesReply = binascii.unhexlify(fr)
+
+        pi = '010a005200000000000001010040' \
+            + '00020000000000000002000000000001' \
+            + '080045000032000000004011f967c0a8' \
+            + '0001c0a8000200010001001e00000000' \
+            + '00000000000000000000000000000000' \
+            + '00000000'
+        self.bufPacketIn = binascii.unhexlify(pi)
 
     def tearDown(self):
         LOG.debug('tearDown')
@@ -160,12 +162,10 @@ class TestMsgBase(unittest.TestCase):
 
     def _test_parser(self, msg_type=ofproto_v1_0.OFPT_HELLO):
         xid = 2183948390
-        res = ofproto_v1_0_parser.OFPHello.parser(object, \
-                              ofproto_v1_0.OFP_VERSION, \
-                              msg_type, \
-                              ofproto_v1_0.OFP_HEADER_SIZE, \
-                              xid, \
-                              str().zfill(ofproto_v1_0.OFP_HEADER_SIZE))
+        res = ofproto_v1_0_parser.OFPHello.parser(
+            object, ofproto_v1_0.OFP_VERSION, msg_type,
+            ofproto_v1_0.OFP_HEADER_SIZE, xid,
+            str().zfill(ofproto_v1_0.OFP_HEADER_SIZE))
 
         eq_(ofproto_v1_0.OFP_VERSION, res.version)
         eq_(ofproto_v1_0.OFPT_HELLO, res.msg_type)
