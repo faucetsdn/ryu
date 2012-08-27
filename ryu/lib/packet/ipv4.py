@@ -15,6 +15,7 @@
 
 import struct
 from . import packet_base
+from . import packet_utils
 from . import udp
 from ryu.ofproto import inet
 
@@ -56,18 +57,6 @@ class ipv4(packet_base.PacketBase):
 
         return msg, ipv4.get_packet_type(proto)
 
-    @staticmethod
-    def carry_around_add(a, b):
-        c = a + b
-        return (c & 0xffff) + (c >> 16)
-
-    def checksum(self, data):
-        s = 0
-        for i in range(0, len(data), 2):
-            w = data[i] + (data[i + 1] << 8)
-            s = self.carry_around_add(s, w)
-        return ~s & 0xffff
-
     def serialize(self, payload, prev):
         hdr = bytearray().zfill(self.header_length * 4)
         version = self.version << 4 | self.header_length
@@ -77,7 +66,7 @@ class ipv4(packet_base.PacketBase):
         struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
                          self.total_length, self.identification, flags,
                          self.ttl, self.proto, 0, self.src, self.dst)
-        self.csum = self.checksum(hdr)
+        self.csum = packet_utils.checksum(hdr)
         struct.pack_into('H', hdr, 10, self.csum)
         return hdr
 
