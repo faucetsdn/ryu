@@ -273,7 +273,7 @@ class OFPFlowRemoved(MsgBase):
         offset = (ofproto_v1_2.OFP_FLOW_REMOVED_SIZE -
                   ofproto_v1_2.OFP_MATCH_SIZE)
 
-        msg.match = OFPMatch.parser(buf, offset)
+        msg.match = OFPMatch.parser(msg.buf, offset)
 
         return msg
 
