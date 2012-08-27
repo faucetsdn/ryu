@@ -22,6 +22,7 @@ import ipv4
 
 class udp(packet_base.PacketBase):
     _PACK_STR = '!HHHH'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, src_port, dst_port, length, csum=0):
         super(udp, self).__init__()
@@ -35,14 +36,11 @@ class udp(packet_base.PacketBase):
         (src_port, dst_port, length, csum) = struct.unpack_from(cls._PACK_STR,
                                                                 buf)
         msg = cls(src_port, dst_port, length, csum)
-        if length > struct.calcsize(cls._PACK_STR):
-            msg.data = buf[struct.calcsize(cls._PACK_STR):length]
-
         return msg, None
 
     def serialize(self, payload, prev):
         if self.length == 0:
-            self.length = struct.calcsize(udp._PACK_STR) + len(payload)
+            self.length = udp._MIN_LEN + len(payload)
         h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                         self.length, self.csum)
         if self.csum == 0:

@@ -21,13 +21,14 @@ from ryu.ofproto import ether
 
 class ethernet(packet_base.PacketBase):
     _PACK_STR = '!6s6sH'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, dst, src, ethertype):
         super(ethernet, self).__init__()
         self.dst = dst
         self.src = src
         self.ethertype = ethertype
-        self.length = struct.calcsize(ethernet._PACK_STR)
+        self.length = ethernet._MIN_LEN
 
     @classmethod
     def parser(cls, buf):

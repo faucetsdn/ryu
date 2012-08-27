@@ -23,6 +23,7 @@ from ryu.ofproto.ofproto_parser import msg_pack_into
 
 class vlan(packet_base.PacketBase):
     _PACK_STR = "!HH"
+    _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, pcp, cfi, vid, ethertype):
         super(vlan, self).__init__()
@@ -30,7 +31,7 @@ class vlan(packet_base.PacketBase):
         self.cfi = cfi
         self.vid = vid
         self.ethertype = ethertype
-        self.length = struct.calcsize(vlan._PACK_STR)
+        self.length = vlan._MIN_LEN
 
     @classmethod
     def parser(cls, buf):

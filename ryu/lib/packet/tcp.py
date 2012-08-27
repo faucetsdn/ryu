@@ -22,6 +22,7 @@ import ipv4
 
 class tcp(packet_base.PacketBase):
     _PACK_STR = '!HHIIBBHHH'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, src_port, dst_port, seq, ack, offset,
                  bits, window_size, csum, urgent):

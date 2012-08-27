@@ -19,6 +19,7 @@ from . import packet_base
 
 class arp(packet_base.PacketBase):
     _PACK_STR = '!HHBBH6sI6sI'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, hwtype, proto, hlen, plen, opcode,
                  src_mac, src_ip, dst_mac, dst_ip):
@@ -32,7 +33,7 @@ class arp(packet_base.PacketBase):
         self.src_ip = src_ip
         self.dst_mac = dst_mac
         self.dst_ip = dst_ip
-        self.length = struct.calcsize(arp._PACK_STR)
+        self.length = arp._MIN_LEN
 
     @classmethod
     def parser(cls, buf):

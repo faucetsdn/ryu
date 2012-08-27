@@ -23,6 +23,7 @@ from ryu.ofproto import inet
 
 class ipv4(packet_base.PacketBase):
     _PACK_STR = '!BBHHHBBHII'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, version, header_length, tos, total_length,
                  identification, flags, offset, ttl, proto, csum,
@@ -53,8 +54,8 @@ class ipv4(packet_base.PacketBase):
         msg = cls(version, header_length, tos, total_length, identification,
                   flags, offset, ttl, proto, csum, src, dst)
 
-        if msg.length > struct.calcsize(ipv4._PACK_STR):
-            self.extra = buf[struct.calcsize(ipv4._PACK_STR):msg.length]
+        if msg.length > ipv4._MIN_LEN:
+            self.extra = buf[ipv4._MIN_LEN:msg.length]
 
         return msg, ipv4.get_packet_type(proto)
 
