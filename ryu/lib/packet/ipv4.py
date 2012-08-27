@@ -17,6 +17,7 @@ import struct
 from . import packet_base
 from . import packet_utils
 from . import udp
+from . import tcp
 from ryu.ofproto import inet
 
 
@@ -70,4 +71,5 @@ class ipv4(packet_base.PacketBase):
         struct.pack_into('H', hdr, 10, self.csum)
         return hdr
 
+ipv4.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
 ipv4.register_packet_type(udp.udp, inet.IPPROTO_UDP)
