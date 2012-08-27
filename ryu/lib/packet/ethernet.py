@@ -17,7 +17,6 @@ import struct
 from . import packet_base
 from . import vlan
 from ryu.ofproto import ether
-from ryu.ofproto.ofproto_parser import msg_pack_into
 
 
 class ethernet(packet_base.PacketBase):
@@ -35,9 +34,9 @@ class ethernet(packet_base.PacketBase):
         dst, src, ethertype = struct.unpack_from(cls._PACK_STR, buf)
         return cls(dst, src, ethertype), ethernet.get_packet_type(ethertype)
 
-    def serialize(self, buf, offset):
-        msg_pack_into(ethernet._PACK_STR, buf, offset,
-                      self.dst, self.src, self.ethertype)
+    def serialize(self, payload, prev):
+        return struct.pack(ethernet._PACK_STR, self.dst, self.src,
+                           self.ethertype)
 
 
 # copy vlan _TYPES

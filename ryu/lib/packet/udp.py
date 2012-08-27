@@ -15,7 +15,6 @@
 
 import struct
 from . import packet_base
-from ryu.ofproto.ofproto_parser import msg_pack_into
 
 
 class udp(packet_base.PacketBase):
@@ -39,6 +38,6 @@ class udp(packet_base.PacketBase):
 
         return msg, None
 
-    def serialize(self, buf, offset):
-        msg_pack_into(udp._PACK_STR, buf, offset, self.src_port, self.dst_port,
-                      self.length, self.csum)
+    def serialize(self, payload, prev):
+        return struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
+                           self.length, self.csum)

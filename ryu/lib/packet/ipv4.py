@@ -16,7 +16,6 @@
 import struct
 from . import packet_base
 from . import udp
-from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.ofproto import inet
 
 
@@ -69,13 +68,15 @@ class ipv4(packet_base.PacketBase):
             s = self.carry_around_add(s, w)
         return ~s & 0xffff
 
-    def serialize(self, buf, offset):
+    def serialize(self, payload, prev):
+        hdr = bytearray().zfill(self.header_length * 4)
         version = self.version << 4 | self.header_length
         flags = self.flags << 15 | self.offset
-        msg_pack_into(ipv4._PACK_STR, buf, offset, version, self.tos,
-                      self.total_length, self.identification, flags,
-                      self.ttl, self.proto, 0, self.src, self.dst)
-        self.csum = self.checksum(buf[offset:offset + self.length])
-        msg_pack_into('H', buf, offset + 10, self.csum)
+        struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
+                         self.total_length, self.identification, flags,
+                         self.ttl, self.proto, 0, self.src, self.dst)
+        self.csum = self.checksum(hdr)
+        struct.pack_into('H', hdr, 10, self.csum)
+        return hdr
 
 ipv4.register_packet_type(udp.udp, inet.IPPROTO_UDP)

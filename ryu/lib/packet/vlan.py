@@ -40,9 +40,9 @@ class vlan(packet_base.PacketBase):
         vid = tci & ((1 << 12) - 1)
         return cls(pcp, cfi, vid, ethertype), vlan.get_packet_type(ethertype)
 
-    def serialize(self, buf, offset):
+    def serialize(self, payload, prev):
         tci = self.pcp << 15 | self.cfi << 12 | self.vid
-        msg_pack_into(vlan._PACK_STR, buf, offset, tci, self.ethertype)
+        return struct.pack(vlan._PACK_STR, tci, self.ethertype)
 
 vlan.register_packet_type(arp.arp, ether.ETH_TYPE_ARP)
 vlan.register_packet_type(ipv4.ipv4, ether.ETH_TYPE_IP)

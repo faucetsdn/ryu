@@ -15,7 +15,6 @@
 
 import struct
 from . import packet_base
-from ryu.ofproto.ofproto_parser import msg_pack_into
 
 
 class arp(packet_base.PacketBase):
@@ -42,7 +41,8 @@ class arp(packet_base.PacketBase):
         return cls(hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
                    dst_mac, dst_ip), None
 
-    def serialize(self, buf, offset):
-        msg_pack_into(arp._PACK_STR, buf, offset, self.hwtype, self.proto,
-                      self.hlen, self.plen, self.opcode,
-                      self.src_mac, self.src_ip, self.dst_mac, self.dst_ip)
+    def serialize(self, payload, prev):
+        return struct.pack(arp._PACK_STR, self.hwtype, self.proto,
+                           self.hlen, self.plen, self.opcode,
+                           self.src_mac, self.src_ip, self.dst_mac,
+                           self.dst_ip)

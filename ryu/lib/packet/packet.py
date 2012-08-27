@@ -34,11 +34,15 @@ class Packet(object):
                 self.protocols.append(proto)
 
     def serialize(self):
-        offset = 0
         self.data = bytearray()
-        for p in self.protocols:
-            p.serialize(self.data, offset)
-            offset += p.length
+        r = self.protocols[::-1]
+        for i, p in enumerate(r):
+            if i == len(r) - 1:
+                prev = None
+            else:
+                prev = r[i + 1]
+            data = p.serialize(self.data, prev)
+            self.data = data + self.data
 
     def add_protocol(self, proto):
         self.protocols.append(proto)
