@@ -72,6 +72,8 @@ class ipv4(packet_base.PacketBase):
         hdr = bytearray().zfill(self.header_length * 4)
         version = self.version << 4 | self.header_length
         flags = self.flags << 15 | self.offset
+        if self.total_length == 0:
+            self.total_length = self.header_length * 4 + len(payload)
         struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
                          self.total_length, self.identification, flags,
                          self.ttl, self.proto, 0, self.src, self.dst)
