@@ -14,7 +14,10 @@
 # limitations under the License.
 
 import struct
+import socket
 from . import packet_base
+from . import packet_utils
+import ipv4
 
 
 class udp(packet_base.PacketBase):
@@ -40,5 +43,14 @@ class udp(packet_base.PacketBase):
     def serialize(self, payload, prev):
         if self.length == 0:
             self.length = struct.calcsize(udp._PACK_STR) + len(payload)
-        return struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
-                           self.length, self.csum)
+        h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
+                        self.length, self.csum)
+        if self.csum == 0:
+            ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 17, self.length)
+            f = ph + h + payload
+            if len(f) % 2:
+                f += '\0'
+            self.csum = socket.htons(packet_utils.checksum(f))
+            h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
+                            self.length, self.csum)
+        return h
