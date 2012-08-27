@@ -20,13 +20,12 @@ from . import packet_base
 class udp(packet_base.PacketBase):
     _PACK_STR = '!HHHH'
 
-    def __init__(self, src_port, dst_port, length, csum=0, data=None):
+    def __init__(self, src_port, dst_port, length, csum=0):
         super(udp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port
         self.length = length
         self.csum = csum
-        self.data = data
 
     @classmethod
     def parser(cls, buf):
@@ -39,5 +38,7 @@ class udp(packet_base.PacketBase):
         return msg, None
 
     def serialize(self, payload, prev):
+        if self.length == 0:
+            self.length = struct.calcsize(udp._PACK_STR) + len(payload)
         return struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                            self.length, self.csum)
