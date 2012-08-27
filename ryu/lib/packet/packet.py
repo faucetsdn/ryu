@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import packet_base
 from . import ethernet
 
 
@@ -37,11 +38,14 @@ class Packet(object):
         self.data = bytearray()
         r = self.protocols[::-1]
         for i, p in enumerate(r):
-            if i == len(r) - 1:
-                prev = None
+            if p.__class__.__bases__[0] == packet_base.PacketBase:
+                if i == len(r) - 1:
+                    prev = None
+                else:
+                    prev = r[i + 1]
+                data = p.serialize(self.data, prev)
             else:
-                prev = r[i + 1]
-            data = p.serialize(self.data, prev)
+                data = str(p)
             self.data = data + self.data
 
     def add_protocol(self, proto):
