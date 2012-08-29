@@ -117,14 +117,6 @@ class EchoHandler(object):
         echo_reply.data = msg.data
         datapath.send_msg(echo_reply)
 
-    @staticmethod
-    @set_ev_cls(ofp_event.EventOFPEchoReply)
-    def echo_reply_handler(ev):
-        # do nothing
-        # msg = ev.msg
-        # LOG.debug('echo reply ev %s %s', msg, str(msg.data))
-        pass
-
 
 @register_cls([HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
 class ErrorMsgHandler(object):
