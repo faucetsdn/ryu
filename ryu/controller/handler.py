@@ -186,18 +186,6 @@ class ConfigHandler(object):
         LOG.debug('move onto main mode')
         ev.msg.datapath.ev_q.set_dispatcher(MAIN_DISPATCHER)
 
-    # The above OFPC_DELETE request may trigger flow removed ofp_event.
-    # Just ignore them.
-    @staticmethod
-    @set_ev_cls(ofp_event.EventOFPFlowRemoved)
-    def flow_removed_handler(ev):
-        LOG.debug("flow removed ev %s msg %s", ev, ev.msg)
-
-    @staticmethod
-    @set_ev_cls(ofp_event.EventOFPBarrierReply)
-    def barrier_reply_handler(ev):
-        LOG.debug('barrier reply ev %s msg %s', ev, ev.msg)
-
 
 @register_cls(MAIN_DISPATCHER)
 class MainHandler(object):
