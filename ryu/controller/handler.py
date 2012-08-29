@@ -189,13 +189,4 @@ class ConfigHandler(object):
 
 @register_cls(MAIN_DISPATCHER)
 class MainHandler(object):
-    @staticmethod
-    @set_ev_cls(ofp_event.EventOFPFlowRemoved)
-    def flow_removed_handler(ev):
-        pass
-
-    @staticmethod
-    @set_ev_cls(ofp_event.EventOFPPortStatus)
-    def port_status_handler(ev):
-        msg = ev.msg
-        LOG.debug('port status %s', msg.reason)
+    pass
