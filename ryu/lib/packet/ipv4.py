@@ -27,7 +27,7 @@ class ipv4(packet_base.PacketBase):
 
     def __init__(self, version, header_length, tos, total_length,
                  identification, flags, offset, ttl, proto, csum,
-                 src, dst):
+                 src, dst, option=None):
         super(ipv4, self).__init__()
         self.version = version
         self.header_length = header_length
@@ -42,6 +42,7 @@ class ipv4(packet_base.PacketBase):
         self.src = src
         self.dst = dst
         self.length = header_length * 4
+        self.option = option
 
     @classmethod
     def parser(cls, buf):
@@ -55,7 +56,7 @@ class ipv4(packet_base.PacketBase):
                   flags, offset, ttl, proto, csum, src, dst)
 
         if msg.length > ipv4._MIN_LEN:
-            self.extra = buf[ipv4._MIN_LEN:msg.length]
+            msg.option = buf[ipv4._MIN_LEN:msg.length]
 
         return msg, ipv4.get_packet_type(proto)
 
