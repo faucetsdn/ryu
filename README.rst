@@ -28,7 +28,7 @@ If you prefer to install Ryu from the source code::
    % cd ryu; python ./setup.py install
 
 If you want to use Ryu with `OpenStack <http://openstack.org/>`_,
-please refer `detailed documents <http://www.osrg.net/ryu/overview.html/>`_.
+please refer `detailed documents <http://www.osrg.net/ryu/overview.html>`_.
 You can create tens of thousands of isolated virtual networks without
 using VLAN.  The Ryu application is included in OpenStack mainline as
 of Essex release.
