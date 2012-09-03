@@ -1,0 +1,143 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>How Ryu L2 segregation works &mdash; Ryu 1.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="Ryu 1.2 documentation" href="index.html" />
+    <link rel="prev" title="Step-by-step example for testing ryu with OpenStack" href="step_by_step.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>Ryu 1.2 documentation</span></a></h1>
+        <h2 class="heading"><span>How Ryu L2 segregation works</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="step_by_step.html">Step-by-step example for testing ryu with OpenStack</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="how-ryu-l2-segregation-works">
+<span id="how-it-works"></span><h1>How Ryu L2 segregation works<a class="headerlink" href="#how-ryu-l2-segregation-works" title="Permalink to this headline">¶</a></h1>
+<p>This section describes how Ryu L2 segregation works.</p>
+<div class="section" id="tenant-network-id-creation">
+<h2>tenant/network id creation<a class="headerlink" href="#tenant-network-id-creation" title="Permalink to this headline">¶</a></h2>
+<p>When tenant(= network id) is created, Quantum server tells it to Ryu.
+Ryu remembers the network id.</p>
+<blockquote>
+<div><img alt="_images/network-creation.png" src="_images/network-creation.png" />
+</div></blockquote>
+</div>
+<div class="section" id="association-ovs-port-to-network-id">
+<h2>association OVS port to network id<a class="headerlink" href="#association-ovs-port-to-network-id" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>When VM instance is created, the network port is created in OVS and
+it is associated to network id that VM belongs to.</li>
+<li>quantum OVS agent tells the associated (network id, ovs port) to Ryu.
+Ryu remembers (network id, ovs port) relationship.</li>
+<li>quantum OVS agent also tells to Ryu which OVS port is not managed by
+nova/quantum, but is connected to external ether cable.
+We call it external OVS port or that the port is external.</li>
+</ol>
+<blockquote>
+<div><img alt="_images/assoc-ovs-port.png" src="_images/assoc-ovs-port.png" />
+</div></blockquote>
+</div>
+<div class="section" id="mac-learing">
+<h2>mac learing<a class="headerlink" href="#mac-learing" title="Permalink to this headline">¶</a></h2>
+<p>When VM sends packets, Ryu determins network id from OVS port and then
+associates src mac address to network id.</p>
+<blockquote>
+<div><img alt="_images/mac-learning.png" src="_images/mac-learning.png" />
+</div></blockquote>
+</div>
+<div class="section" id="packet-filtering-l2-unicast-case">
+<h2>packet filtering(L2 unicast case)<a class="headerlink" href="#packet-filtering-l2-unicast-case" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">When VM sending L2-unicast packet, Ryu checks if the destination mac
+address belongs to the same netowrk id of the source mac address which
+is same to the network id that the OVS port is associated to.</p>
+</li>
+<li><p class="first">If no, the packet is dropped.</p>
+</li>
+<li><p class="first">If yes, send the packet is sent to ports which belongs to the same
+network id and external port.</p>
+<blockquote>
+<div><img alt="_images/filtering-outgoing.png" src="_images/filtering-outgoing.png" />
+<img alt="_images/filtering-incoming.png" src="_images/filtering-incoming.png" />
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="packet-filtering-l2-broadcast-case">
+<h2>packet filtering(L2 broadcast case)<a class="headerlink" href="#packet-filtering-l2-broadcast-case" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">When VM sending L2-broadcast/multicaset packet, Ryu checks if the source
+mac address.</p>
+</li>
+<li><p class="first">send the packet to all external ports and all OVS ports that belongs
+to the same network id of the source mac address.</p>
+</li>
+<li><p class="first">When receiving broacast/multicast packet from the external ports,
+Ryu checks if the source mac address belongs to known network id.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If yes, send the packet to the external ports except incoming one
+and the all OVS ports that belongs to the network id</li>
+<li>if no, drop the packet.</li>
+</ul>
+<img alt="_images/filtering-broadcast.png" src="_images/filtering-broadcast.png" />
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="step_by_step.html">Step-by-step example for testing ryu with OpenStack</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, 2012 Nippon Telegraph and Telephone Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
