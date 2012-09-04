@@ -35,11 +35,10 @@ DISPATCHER_NAME_OFP_DEAD = 'ofp_dead'
 DEAD_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_DEAD)
 
 
-def set_ev_cls(ev_cls, dispatchers=None):
+def set_ev_cls(ev_cls, dispatchers):
     def _set_ev_cls_dec(handler):
         handler.ev_cls = ev_cls
-        if dispatchers is not None:
-            handler.dispatchers = dispatchers
+        handler.dispatchers = dispatchers
         return handler
     return _set_ev_cls_dec
 
@@ -56,47 +55,13 @@ def _listify(may_list):
     return may_list
 
 
-def _get_hnd_spec_dispatchers(handler, dispatchers):
-    hnd_spec_dispatchers = _listify(getattr(handler, 'dispatchers', None))
-    # LOG.debug("hnd_spec_dispatchers %s", hnd_spec_dispatchers)
-    if hnd_spec_dispatchers:
-        _dispatchers = copy.copy(dispatchers)
-        _dispatchers.extend(hnd_spec_dispatchers)
-    else:
-        _dispatchers = dispatchers
-
-    return _dispatchers
-
-
-def register_cls(dispatchers=None):
-    dispatchers = _listify(dispatchers)
-
-    def _register_cls_method(cls):
-        for _k, f in inspect.getmembers(cls, inspect.isfunction):
-            # LOG.debug('cls %s k %s f %s', cls, _k, f)
-            if not _is_ev_handler(f):
-                continue
-
-            _dispatchers = _get_hnd_spec_dispatchers(f, dispatchers)
-            # LOG.debug("_dispatchers %s", _dispatchers)
-            for d in _dispatchers:
-                # LOG.debug('register dispatcher %s ev %s cls %s k %s f %s',
-                #          d.name, f.ev_cls, cls, k, f)
-                d.register_handler(f.ev_cls, f)
-        return cls
-
-    return _register_cls_method
-
-
-def register_instance(i, dispatchers=None):
-    dispatchers = _listify(dispatchers)
-
+def register_instance(i):
     for _k, m in inspect.getmembers(i, inspect.ismethod):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
         if not _is_ev_handler(m):
             continue
 
-        _dispatchers = _get_hnd_spec_dispatchers(m, dispatchers)
+        _dispatchers = _listify(getattr(m, 'dispatchers', None))
         # LOG.debug("_dispatchers %s", _dispatchers)
         for d in _dispatchers:
             # LOG.debug('register dispatcher %s ev %s k %s m %s',
