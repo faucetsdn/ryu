@@ -51,6 +51,9 @@ def main():
 
     log.init_log()
 
+    # always enable ofp for now.
+    FLAGS.app_lists += ['ryu.controller.ofp_handler']
+
     if len(args) > 1:
         FLAGS.app_lists += args[1:]
 
