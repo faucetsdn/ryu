@@ -50,8 +50,8 @@ class ipv4(packet_base.PacketBase):
          src, dst) = struct.unpack_from(cls._PACK_STR, buf)
         header_length = version & 0xf
         version = version >> 4
-        offset = flags & ((1 << 15) - 1)
-        flags = flags >> 15
+        offset = flags & ((1 << 13) - 1)
+        flags = flags >> 13
         msg = cls(version, header_length, tos, total_length, identification,
                   flags, offset, ttl, proto, csum, src, dst)
 
@@ -63,7 +63,7 @@ class ipv4(packet_base.PacketBase):
     def serialize(self, payload, prev):
         hdr = bytearray().zfill(self.header_length * 4)
         version = self.version << 4 | self.header_length
-        flags = self.flags << 15 | self.offset
+        flags = self.flags << 13 | self.offset
         if self.total_length == 0:
             self.total_length = self.header_length * 4 + len(payload)
         struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
