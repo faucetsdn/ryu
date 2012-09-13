@@ -18,6 +18,7 @@ Contents:
    using_with_openstack.rst
    step_by_step.rst
    how_l2_segregation_works.rst
+   library.rst
 
 Indices and tables
 ==================
