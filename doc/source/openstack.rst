@@ -2,7 +2,7 @@
 OpenStack Integration
 *********************
 
-Ryu provides tenant L2 isolation featuer in OpenStack.
+Ryu provides tenant isolation feature in OpenStack.
 
 .. toctree::
    :maxdepth: 1
