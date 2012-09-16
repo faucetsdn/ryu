@@ -12,9 +12,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   overview.rst
-   writing_ryu_app.rst
    getting_started.rst
+   writing_ryu_app.rst
    openstack.rst
    library.rst
 
