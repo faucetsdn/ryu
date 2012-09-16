@@ -13,9 +13,8 @@ Contents:
    :maxdepth: 2
 
    getting_started.rst
-   writing_ryu_app.rst
    openstack.rst
-   library.rst
+   developing.rst
 
 Indices and tables
 ==================
