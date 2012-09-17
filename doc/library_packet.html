@@ -1,0 +1,147 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Packet library &mdash; Ryu 1.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="Ryu 1.2 documentation" href="index.html" />
+    <link rel="up" title="Library" href="library.html" />
+    <link rel="prev" title="Library" href="library.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>Ryu 1.2 documentation</span></a></h1>
+        <h2 class="heading"><span>Packet library</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="library.html">Library</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="packet-library">
+<h1>Packet library<a class="headerlink" href="#packet-library" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Ryu packet library helps you to parse and build various protocol
+packets. dpkt is the popular library for the same purpose, however it
+is not designed to handle protocols that are interleaved; vlan, mpls,
+gre, etc. So we implemented our own packet library.</p>
+</div>
+<div class="section" id="parsing-packet">
+<h2>Parsing Packet<a class="headerlink" href="#parsing-packet" title="Permalink to this headline">¶</a></h2>
+<p>First, let&#8217;s look at how we can use the library to parse the received
+packets in a handler for OFPPacketIn messages.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ryu.lib.packet</span> <span class="kn">import</span> <span class="n">packet</span>
+
+<span class="nd">@handler.set_ev_cls</span><span class="p">(</span><span class="n">ofp_event</span><span class="o">.</span><span class="n">EventOFPPacketIn</span><span class="p">,</span> <span class="n">handler</span><span class="o">.</span><span class="n">MAIN_DISPATCHER</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">packet_in_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+    <span class="n">pkt</span> <span class="o">=</span> <span class="n">packet</span><span class="o">.</span><span class="n">Packet</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pkt</span><span class="o">.</span><span class="n">protocols</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">p</span>
+</pre></div>
+</div>
+<p>You can create a Packet class instance with the received raw
+data. Then the packet library parses the data and creates protocol
+class instances included the data. The packet class &#8216;protocols&#8217; has
+the protocol class instances.</p>
+<p>If a TCP packet is received, something like the following is printed:</p>
+<div class="highlight-python"><pre>&lt;ryu.lib.packet.ethernet.ethernet object at 0x107a5d790&gt;
+&lt;ryu.lib.packet.vlan.vlan object at 0x107a5d7d0&gt;
+&lt;ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810&gt;
+&lt;ryu.lib.packet.tcp.tcp object at 0x107a5d850&gt;</pre>
+</div>
+<p>If vlan is not used, you see something like:</p>
+<div class="highlight-python"><pre>&lt;ryu.lib.packet.ethernet.ethernet object at 0x107a5d790&gt;
+&lt;ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810&gt;
+&lt;ryu.lib.packet.tcp.tcp object at 0x107a5d850&gt;</pre>
+</div>
+<p>You can access to a specific protocol class instance by using the
+packet class find_protocol method. Let&#8217;s try to check VLAN id if VLAN
+is used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ryu.lib.packet</span> <span class="kn">import</span> <span class="n">packet</span>
+
+<span class="nd">@handler.set_ev_cls</span><span class="p">(</span><span class="n">ofp_event</span><span class="o">.</span><span class="n">EventOFPPacketIn</span><span class="p">,</span> <span class="n">handler</span><span class="o">.</span><span class="n">MAIN_DISPATCHER</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">packet_in_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+    <span class="n">pkt</span> <span class="o">=</span> <span class="n">packet</span><span class="o">.</span><span class="n">Packet</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pkt</span><span class="o">.</span><span class="n">protocols</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">p</span>
+    <span class="n">vp</span> <span class="o">=</span> <span class="n">pkt</span><span class="o">.</span><span class="n">find_protocol</span><span class="p">(</span><span class="s">&#39;vlan&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vp</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;vlan found:&quot;</span><span class="p">,</span> <span class="n">vp</span><span class="o">.</span><span class="n">vid</span>
+</pre></div>
+</div>
+<p>You see something like:</p>
+<div class="highlight-python"><pre>&lt;ryu.lib.packet.ethernet.ethernet object at 0x107a5d790&gt;
+&lt;ryu.lib.packet.vlan.vlan object at 0x107a5d7d0&gt;
+&lt;ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810&gt;
+&lt;ryu.lib.packet.tcp.tcp object at 0x107a5d850&gt;
+vlan found: 10</pre>
+</div>
+</div>
+<div class="section" id="building-packet">
+<h2>Building Packet<a class="headerlink" href="#building-packet" title="Permalink to this headline">¶</a></h2>
+<p>You need to create protocol class instances that you want to send, add
+them to a packet class instance via add_protocol method, and then call
+serialize method. You have the raw data to send. The following example
+is building an arp packet.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dst</span> <span class="o">=</span> <span class="s">&#39;a&#39;</span> <span class="o">*</span> <span class="mi">6</span>
+<span class="n">src</span> <span class="o">=</span> <span class="s">&#39;b&#39;</span> <span class="o">*</span> <span class="mi">6</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">ethernet</span><span class="o">.</span><span class="n">ethernet</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">ether</span><span class="o">.</span><span class="n">ETH_TYPE_8021Q</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">arp</span><span class="o">.</span><span class="n">arp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0x0800</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\a</span><span class="s">&#39;</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\b</span><span class="s">&#39;</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">packet</span><span class="o">.</span><span class="n">Packet</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">add_protocol</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">add_protocol</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">serialize</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="library.html">Library</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, 2012 Nippon Telegraph and Telephone Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

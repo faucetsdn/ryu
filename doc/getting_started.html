@@ -28,8 +28,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="top" title="Ryu 1.2 documentation" href="index.html" />
-    <link rel="next" title="Using Ryu Network Operating System with OpenStack as OpenFlow controller" href="using_with_openstack.html" />
-    <link rel="prev" title="Writing Ryu Application" href="writing_ryu_app.html" /> 
+    <link rel="next" title="OpenStack Integration" href="openstack.html" />
+    <link rel="prev" title="Welcome to RYU the Network Operating System(NOS)" href="index.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
@@ -39,11 +39,11 @@
       <div class="topnav">
       
         <p>
-        «&#160;&#160;<a href="writing_ryu_app.html">Writing Ryu Application</a>
+        «&#160;&#160;<a href="index.html">Welcome to RYU the Network Operating System(NOS)</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="using_with_openstack.html">Using Ryu Network Operating System with OpenStack as OpenFlow controller</a>&#160;&#160;»
+        <a href="openstack.html">OpenStack Integration</a>&#160;&#160;»
         </p>
 
       </div>
@@ -51,132 +51,46 @@
         
         
   <div class="section" id="getting-started">
-<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview-what-s-ryu-the-network-operating-system">
-<h2>Overview/What&#8217;s Ryu the Network Operating System<a class="headerlink" href="#overview-what-s-ryu-the-network-operating-system" title="Permalink to this headline">¶</a></h2>
-<p>Ryu is an open-sourced Network Operating System which is licensed under Apache v2.0.
-It supports openflow protocol.</p>
-<p>If you are not familiar with Software Defined Network(SDN) and
-OpenFlow/openflow controller,
-please refer to <a class="reference external" href="http://www.openflow.org/">openflow org</a> .</p>
-<p>The mailing list is available at
-<a class="reference external" href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">ryu-devel ML</a></p>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-s-ryu">
+<h2>What&#8217;s Ryu<a class="headerlink" href="#what-s-ryu" title="Permalink to this headline">¶</a></h2>
+<p>Ryu is an Operating System for Software Defined Networking.</p>
+<p>Ryu aims to provide a logically centralized control and well defined
+API that make it easy for operators to create new network management
+and control applications. Currently, Ryu manages network devices by
+using OpenFlow. You can say that Ryu is an OpenFlow Controller, which
+support OpenFlow v1.0, v1.2, and Nicira Extensions.</p>
+<p>All of the code is freely available under the Apache 2.0 license. Ryu
+is fully written in Python.</p>
 </div>
-<div class="section" id="installing-ryu-network-operating-system">
-<h2>Installing Ryu Network Operating System<a class="headerlink" href="#installing-ryu-network-operating-system" title="Permalink to this headline">¶</a></h2>
-<p>Extract source code and just type:</p>
-<div class="highlight-python"><pre>% python ./setup.py install</pre>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>Installing Ryu is quite easy:</p>
+<div class="highlight-python"><pre>% pip install ryu</pre>
 </div>
-<p>Then, run ryu-manager.
-It listens to ip address 0.0.0.0 and port 6633 by default.
-Then have your openflow switch (hardware or openvswitch OVS) to connect to
-ryu-manager.</p>
-<p>For OVS case, you can done it by</p>
-<blockquote>
-<div>% ovs-vsctl set-controller &lt;your bridge&gt;  tcp:&lt;ip addr&gt;[:&lt;port: default 6633&gt;]</div></blockquote>
-<p>At the moment, ryu-manager supports only tcp method.
-If you want to use it with openstack nova and quantum OVS plugin,
-Please refer to <a class="reference internal" href="using_with_openstack.html#using-with-openstack"><em>Using Ryu Network Operating System with OpenStack as OpenFlow controller</em></a>.</p>
+<p>If you prefer to install Ryu from the source code:</p>
+<div class="highlight-python"><pre>% git clone git://github.com/osrg/ryu.git
+% cd ryu; python ./setup.py install</pre>
 </div>
-<div class="section" id="invoking-application-and-configuration">
-<h2>invoking application and Configuration<a class="headerlink" href="#invoking-application-and-configuration" title="Permalink to this headline">¶</a></h2>
-<p>It can be configured by passing configuration file like:</p>
-<div class="highlight-python"><pre>ryu-manager [--flagfile &lt;path to configuration file&gt;] [generic/application specific options...]</pre>
-</div>
-<p>At the moment the following applications are available
-(And more to come as Ryu evolves.)</p>
-<blockquote>
-<div><ul class="simple">
-<li>ryu.app.simple_isolation.SimpleIsolation</li>
-<li>ryu.app.rest.restapi</li>
-<li>ryu.app.simple_bridge.SimpleSwitch</li>
-<li>ryu.app.event_dumper.EventDumper</li>
-</ul>
-</div></blockquote>
-<p>The generic available is as follows:</p>
-<div class="highlight-python"><pre>--app_lists: application module name to run;
-  repeat this option to specify a list of values
-  (default: "['ryu.app.simple_isolation.SimpleIsolation',
-              'ryu.app.rest.restapi']")
--?,--[no]help: show this help
---[no]helpshort: show usage only for this module
---[no]helpxml: like --help, but generates XML output</pre>
-</div>
-<p>The options for REST server:</p>
-<div class="highlight-python"><pre>--wsapi_host: webapp listen host
-  (default: '')
---wsapi_port: webapp listen port
-  (default: '8080')
-  (an integer)</pre>
-</div>
-<p>The options for openflow controller:</p>
-<div class="highlight-python"><pre>--ofp_listen_host: openflow listen host
-  (default: '')
---ofp_tcp_listen_port: openflow tcp listen port
-  (default: '6633')
-  (an integer)</pre>
-</div>
-<p>The options for log:</p>
-<div class="highlight-python"><pre>--default_log_level: default log level
-  (an integer)
---log_dir: log file directory
---log_file: log file name
---log_file_mode: default log file permission
-  (default: '0644')
---[no]use_stderr: log to standard error
-  (default: 'true')
---use_syslog: output to syslog
-  (default: 'False')
---[no]verbose: show debug output
-  (default: 'false')</pre>
-</div>
-<p>The option for gflags:</p>
-<div class="highlight-python"><pre>--flagfile: Insert flag definitions from the given file into the command line.
-  (default: '')
---undefok: comma-separated list of flag names that it is okay to specify on
-  the command line even if the program does not define a flag with that name.
-  IMPORTANT: flags in this list that have arguments MUST use the --flag=value
-  format.
-  (default: '')</pre>
-</div>
-<p>The options for event dumper:</p>
-<div class="highlight-python"><pre>--dump_queue: list of dispatcher name to dump event: default any
-  (default: [])
---dump_dispatcher: list of dispatcher name to dump event: default any
-  (default: [])</pre>
+<p>If you want to use Ryu with <a class="reference external" href="http://openstack.org/">OpenStack</a>,
+please refer <a class="reference external" href="http://osrg.github.com/ryu/doc/using_with_openstack.html">detailed documents</a>.
+You can create tens of thousands of isolated virtual networks without
+using VLAN.  The Ryu application is included in OpenStack mainline as
+of Essex release.</p>
+<p>If you want to write your Ryu application, have a look at
+<a class="reference external" href="http://osrg.github.com/ryu/doc/writing_ryu_app.html">Writing ryu application</a> document.
+After writing your application, just type:</p>
+<div class="highlight-python"><pre>% ryu-manager yourapp.py</pre>
 </div>
 </div>
-<div class="section" id="invoking-example">
-<h2>Invoking Example<a class="headerlink" href="#invoking-example" title="Permalink to this headline">¶</a></h2>
-<p>The exmaple is as follows:</p>
-<div class="highlight-python"><pre>$ ./bin/ryu-manager --wsapi_port 8081 --verbose --app_lists ryu.app.simple_isolation.SimpleIsolation,ryu.app.rest.restapi,ryu.app.event_dumper.EventDumper
-unhandled event &lt;ryu.controller.dispatcher.EventQueueCreate object at 0x22ec690&gt;
-loading app ryu.app.simple_isolation.SimpleIsolation
-loading app ryu.app.rest.restapi
-ryu.app.event_dumper: registering q datapath dispatcher dpset
-loading app ryu.app.event_dumper.EventDumper
-connected socket:&lt;socket fileno=8 sock=172.16.3.33:6633 peer=172.17.107.1:41888&gt; address:('172.17.107.1', 41888)
-ryu.app.event_dumper: queue created ofp_msg
-ryu.app.event_dumper: event &lt;ryu.controller.dispatcher.EventQueueCreate object at 0x23bf3d0&gt;
-ryu.app.event_dumper: event &lt;ryu.controller.ofp_event.EventOFPHello object at 0x23bf4d0&gt;
-hello ev &lt;ryu.controller.ofp_event.EventOFPHello object at 0x23bf4d0&gt;
-move onto config mode
-dispatcher change q ofp_msg dispatcher ofp_config
-ryu.app.event_dumper: dispatcher change q ofp_msg dispatcher ofp_handshake -&gt; ofp_config
-ryu.app.event_dumper: event &lt;ryu.controller.dispatcher.EventDispatcherChange object at 0x23bf950&gt;
-ryu.app.event_dumper: event &lt;ryu.controller.ofp_event.EventOFPSwitchFeatures object at 0x23bf450&gt;
-switch features ev version: 0x1 msg_type 0x6 xid 0xd1bf86d2 port OFPPhyPort(port_no=8, hw_addr='b\x9d\xf4\x03\xab\xaf', name='tap5d7657d4-cb\x00\x00', config=0, state=1, curr=130, advertised=0, supported=0, peer=0) OFPPhyPort(port_no=1, hw_addr='\x00\x02\xb3\x13\xea\xd6', name='eth0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', config=0, state=0, curr=520, advertised=1679, supported=655, peer=0) OFPPhyPort(port_no=18, hw_addr='\xce\x12\xa2\x8a\xe5\x1c', name='tapa37f47e1-25\x00\x00', config=0, state=1, curr=130, advertised=0, supported=0, peer=0) OFPPhyPort(port_no=19, hw_addr='\x12\xba1\x7f\xe4\xde', name='tap927b77c7-8f\x00\x00', config=0, state=1, curr=130, advertised=0, supported=0, peer=0) OFPPhyPort(port_no=65534, hw_addr='\x00\x02\xb3\x13\xea\xd6', name='br-int\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', config=1, state=1, curr=0, advertised=0, supported=0, peer=0)
-dpid_add: 0x00000002b313ead6
-ryu.app.event_dumper: event &lt;ryu.controller.ofp_event.EventOFPBarrierReply object at 0x23bf4d0&gt;
-barrier reply ev &lt;ryu.controller.ofp_event.EventOFPBarrierReply object at 0x23bf4d0&gt; msg version: 0x1 msg_type 0x13 xid 0xd1bf86d5
-move onto main mode
-dispatcher change q ofp_msg dispatcher ofp_main
-DPSET: register datapath &lt;ryu.controller.controller.Datapath object at 0x23def10&gt;
-ryu.app.event_dumper: event &lt;ryu.controller.dpset.EventDP object at 0x23bf990&gt;
-unhandled event &lt;ryu.controller.dpset.EventDP object at 0x23bf990&gt;
-ryu.app.event_dumper: dispatcher change q ofp_msg dispatcher ofp_config -&gt; ofp_main
-ryu.app.event_dumper: event &lt;ryu.controller.dispatcher.EventDispatcherChange object at 0x23bf590&gt;</pre>
-</div>
+<div class="section" id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>Ryu Official site is <a class="reference external" href="http://osrg.github.com/ryu/">http://osrg.github.com/ryu/</a>.</p>
+<p>If you have any
+questions, suggestions, and patches, the mailing list is available at
+<a class="reference external" href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">ryu-devel ML</a>.
+<a class="reference external" href="http://dir.gmane.org/gmane.network.ryu.devel">The ML archive at Gmane</a>
+is also available.</p>
 </div>
 </div>
 
@@ -185,11 +99,11 @@ ryu.app.event_dumper: event &lt;ryu.controller.dispatcher.EventDispatcherChange 
       <div class="bottomnav">
       
         <p>
-        «&#160;&#160;<a href="writing_ryu_app.html">Writing Ryu Application</a>
+        «&#160;&#160;<a href="index.html">Welcome to RYU the Network Operating System(NOS)</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="using_with_openstack.html">Using Ryu Network Operating System with OpenStack as OpenFlow controller</a>&#160;&#160;»
+        <a href="openstack.html">OpenStack Integration</a>&#160;&#160;»
         </p>
 
       </div>

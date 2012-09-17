@@ -1,6 +1,6 @@
-***********************
-Writing Ryu Application
-***********************
+*********************
+The First Application
+*********************
 
 Whetting Your Appetite
 ======================
@@ -13,8 +13,8 @@ gears by using OpenFlow protocol, etc.
 Writing Ryu application is easy. It's just Python scripts.
 
 
-The first Ryu application
-=========================
+Start Writing
+=============
 
 We show a Ryu application that make OpenFlow switches work as a dumb
 layer 2 switch.

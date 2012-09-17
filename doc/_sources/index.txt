@@ -12,12 +12,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   overview.rst
-   writing_ryu_app.rst
    getting_started.rst
-   using_with_openstack.rst
-   step_by_step.rst
-   how_l2_segregation_works.rst
+   openstack.rst
+   developing.rst
 
 Indices and tables
 ==================
