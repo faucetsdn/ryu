@@ -25,7 +25,7 @@ class tcp(packet_base.PacketBase):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, src_port, dst_port, seq, ack, offset,
-                 bits, window_size, csum, urgent):
+                 bits, window_size, csum, urgent, option=None):
         super(tcp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port
@@ -37,6 +37,7 @@ class tcp(packet_base.PacketBase):
         self.csum = csum
         self.urgent = urgent
         self.length = self.offset * 4
+        self.option = option
 
     @classmethod
     def parser(cls, buf):
@@ -46,13 +47,23 @@ class tcp(packet_base.PacketBase):
         bits = bits & 0x3f
         msg = cls(src_port, dst_port, seq, ack, offset, bits,
                   window_size, csum, urgent)
+
+        if msg.length > tcp._MIN_LEN:
+            msg.option = buf[tcp._MIN_LEN:msg.length]
+
         return msg, None
 
     def serialize(self, payload, prev):
+        h = bytearray().zfill(self.length)
         offset = self.offset << 4
-        h = struct.pack(tcp._PACK_STR, self.src_port, self.dst_port,
-                        self.seq, self.ack, offset, self.bits,
-                        self.window_size, self.csum, self.urgent)
+        struct.pack_into(tcp._PACK_STR, h, 0, self.src_port, self.dst_port,
+                         self.seq, self.ack, offset, self.bits,
+                         self.window_size, self.csum, self.urgent)
+
+        if self.option:
+            assert (self.length - tcp._MIN_LEN) >= len(self.option)
+            h[tcp._MIN_LEN:tcp._MIN_LEN + len(self.option)] = self.option
+
         if self.csum == 0:
             length = self.length + len(payload)
             ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 6, length)
@@ -60,7 +71,5 @@ class tcp(packet_base.PacketBase):
             if len(f) % 2:
                 f += '\0'
             self.csum = socket.htons(packet_utils.checksum(f))
-            h = struct.pack(tcp._PACK_STR, self.src_port, self.dst_port,
-                            self.seq, self.ack, offset, self.bits,
-                            self.window_size, self.csum, self.urgent)
+            struct.pack_into('!H', h, 16, self.csum)
         return h
