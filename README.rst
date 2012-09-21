@@ -1,7 +1,3 @@
-****************************
-Ryu Network Operating System
-****************************
-
 What's Ryu
 ==========
 Ryu is an Operating System for Software Defined Networking.
