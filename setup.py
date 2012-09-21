@@ -52,5 +52,5 @@ setup(name='ryu',
       packages=find_packages(),
       scripts=['bin/ryu-manager',
                'bin/ryu-client'],
-      data_files=[('/etc/ryu', ['etc/ryu/ryu.conf'])],
+      data_files=[('etc/ryu', ['etc/ryu/ryu.conf'])],
       )
