@@ -61,6 +61,7 @@ class TestFlowBase(app_manager.RyuApp):
         for t in dir(self):
             if t.startswith("test_"):
                 self.pending.append(t)
+        self.pending.sort(reverse=True)
         self.unclear = len(self.pending)
 
     def delete_all_flows(self, dp):
@@ -113,10 +114,13 @@ class TestFlowBase(app_manager.RyuApp):
             dp.send_barrier()
             self.send_flow_stats(dp)
         else:
-            LOG.info("TEST_RESULTS:")
-            for t, r in self.results.items():
-                LOG.info("    %s: %s", t, r)
-            LOG.info(LOG_TEST_FINISH, self.unclear == 0)
+            self.print_results()
+
+    def print_results(self):
+        LOG.info("TEST_RESULTS:")
+        for t in sorted(self.results.keys()):
+            LOG.info("    %s: %s", t, self.results[t])
+        LOG.info(LOG_TEST_FINISH, self.unclear == 0)
 
     @handler.set_ev_cls(ofp_event.EventOFPFlowStatsReply,
                         handler.MAIN_DISPATCHER)
