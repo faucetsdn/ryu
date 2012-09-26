@@ -36,13 +36,13 @@ class vlan(packet_base.PacketBase):
     @classmethod
     def parser(cls, buf):
         tci, ethertype = struct.unpack_from(cls._PACK_STR, buf)
-        pcp = tci >> 15
+        pcp = tci >> 13
         cfi = (tci >> 12) & 1
         vid = tci & ((1 << 12) - 1)
         return cls(pcp, cfi, vid, ethertype), vlan.get_packet_type(ethertype)
 
     def serialize(self, payload, prev):
-        tci = self.pcp << 15 | self.cfi << 12 | self.vid
+        tci = self.pcp << 13 | self.cfi << 12 | self.vid
         return struct.pack(vlan._PACK_STR, tci, self.ethertype)
 
 vlan.register_packet_type(arp.arp, ether.ETH_TYPE_ARP)
