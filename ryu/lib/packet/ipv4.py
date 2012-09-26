@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import struct
+import socket
 from . import packet_base
 from . import packet_utils
 from . import udp
@@ -69,8 +70,13 @@ class ipv4(packet_base.PacketBase):
         struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
                          self.total_length, self.identification, flags,
                          self.ttl, self.proto, 0, self.src, self.dst)
-        self.csum = packet_utils.checksum(hdr)
-        struct.pack_into('H', hdr, 10, self.csum)
+
+        if self.option:
+            assert struct.calcsize('I') >= len(self.option)
+            hdr[ipv4._MIN_LEN:ipv4._MIN_LEN + len(self.option)] = self.option
+
+        self.csum = socket.htons(packet_utils.checksum(hdr))
+        struct.pack_into('!H', hdr, 10, self.csum)
         return hdr
 
 ipv4.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
