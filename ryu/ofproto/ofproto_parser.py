@@ -93,7 +93,7 @@ class MsgBase(object):
 
         self.version = self.datapath.ofproto.OFP_VERSION
         self.msg_type = self.cls_msg_type
-        self.buf = bytearray().zfill(self.datapath.ofproto.OFP_HEADER_SIZE)
+        self.buf = bytearray(self.datapath.ofproto.OFP_HEADER_SIZE)
 
     def _serialize_header(self):
         # buffer length is determined after trailing data is formated.
@@ -122,7 +122,7 @@ class MsgBase(object):
 
 def msg_pack_into(fmt, buf, offset, *args):
     if len(buf) < offset:
-        buf += bytearray().zfill(offset - len(buf))
+        buf += bytearray(offset - len(buf))
 
     if len(buf) == offset:
         buf += struct.pack(fmt, *args)
@@ -130,7 +130,7 @@ def msg_pack_into(fmt, buf, offset, *args):
 
     needed_len = offset + struct.calcsize(fmt)
     if len(buf) < needed_len:
-        buf += bytearray().zfill(needed_len - len(buf))
+        buf += bytearray(needed_len - len(buf))
 
     struct.pack_into(fmt, buf, offset, *args)
 

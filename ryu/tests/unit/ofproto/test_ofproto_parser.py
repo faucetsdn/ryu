@@ -252,7 +252,7 @@ class TestMsgPackInto(unittest.TestCase):
     def _test_msg_pack_into(self, offset_type='e'):
         fmt = '!HH'
         len_ = struct.calcsize(fmt)
-        buf = bytearray().zfill(len_)
+        buf = bytearray(len_)
         offset = len_
         arg1 = 1
         arg2 = 2

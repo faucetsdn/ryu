@@ -54,7 +54,7 @@ class tcp(packet_base.PacketBase):
         return msg, None
 
     def serialize(self, payload, prev):
-        h = bytearray().zfill(self.length)
+        h = bytearray(self.length)
         offset = self.offset << 4
         struct.pack_into(tcp._PACK_STR, h, 0, self.src_port, self.dst_port,
                          self.seq, self.ack, offset, self.bits,
@@ -69,7 +69,7 @@ class tcp(packet_base.PacketBase):
             ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 6, length)
             f = ph + h + payload
             if len(f) % 2:
-                f += '\0'
+                f += '\x00'
             self.csum = socket.htons(packet_utils.checksum(f))
             struct.pack_into('!H', h, 16, self.csum)
         return h

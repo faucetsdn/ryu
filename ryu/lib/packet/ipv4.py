@@ -62,7 +62,7 @@ class ipv4(packet_base.PacketBase):
         return msg, ipv4.get_packet_type(proto)
 
     def serialize(self, payload, prev):
-        hdr = bytearray().zfill(self.header_length * 4)
+        hdr = bytearray(self.header_length * 4)
         version = self.version << 4 | self.header_length
         flags = self.flags << 13 | self.offset
         if self.total_length == 0:
