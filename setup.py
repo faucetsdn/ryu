@@ -39,6 +39,11 @@ classifiers = [
     'Operating System :: Unix',
 ]
 
+if sys.platform == 'win32':
+    data_files = [('etc/ryu', ['etc/ryu/ryu.conf'])]
+else:
+    data_files = [('/etc/ryu', ['etc/ryu/ryu.conf'])]
+
 setup(name='ryu',
       version=version,
       description=("Ryu Network Operating System"),
@@ -52,5 +57,5 @@ setup(name='ryu',
       packages=find_packages(),
       scripts=['bin/ryu-manager',
                'bin/ryu-client'],
-      data_files=[('/etc/ryu', ['etc/ryu/ryu.conf'])],
+      data_files=data_files,
       )
