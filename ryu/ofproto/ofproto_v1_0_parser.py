@@ -1879,6 +1879,23 @@ class OFPFlowMod(MsgBase):
                 offset += a.len
 
 
+@_set_msg_type(ofproto_v1_0.OFPT_PORT_MOD)
+class OFPPortMod(MsgBase):
+    def __init__(self, datapath, port_no, hw_addr, config, mask, advertise):
+        super(OFPPortMod, self).__init__(datapath)
+        self.port_no = port_no
+        self.hw_addr = hw_addr
+        self.config = config
+        self.mask = mask
+        self.advertise = advertise
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto_v1_0.OFP_PORT_MOD_PACK_STR,
+                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+                      self.port_no, self.hw_addr,
+                      self.config, self.mask, self.advertise)
+
+
 @_set_msg_reply(OFPBarrierReply)
 @_set_msg_type(ofproto_v1_0.OFPT_BARRIER_REQUEST)
 class OFPBarrierRequest(MsgBase):
