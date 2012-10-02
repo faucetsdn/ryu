@@ -16,6 +16,7 @@
 
 import logging
 
+from ryu import utils
 from ryu.base import app_manager
 from ryu.controller import dispatcher
 from ryu.controller import ofp_event
@@ -98,7 +99,6 @@ class OFPHandler(app_manager.RyuApp):
                 [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def echo_request_handler(self, ev):
         msg = ev.msg
-        # LOG.debug('echo request msg %s %s', msg, str(msg.data))
         datapath = msg.datapath
         echo_reply = datapath.ofproto_parser.OFPEchoReply(datapath)
         echo_reply.xid = msg.xid
@@ -110,4 +110,4 @@ class OFPHandler(app_manager.RyuApp):
     def error_msg_handler(self, ev):
         msg = ev.msg
         LOG.debug('error msg ev %s type 0x%x code 0x%x %s',
-                  msg, msg.type, msg.code, str(msg.data))
+                  msg, msg.type, msg.code, utils.hex_array(msg.data))
