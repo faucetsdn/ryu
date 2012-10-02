@@ -65,3 +65,7 @@ def find_flagfile(default_path=RYU_DEFAULT_FLAG_FILE):
 
 def round_up(x, y):
     return ((x + y - 1) / y) * y
+
+
+def hex_array(data):
+    return ' '.join(hex(ord(chr)) for chr in data)
