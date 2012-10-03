@@ -161,16 +161,23 @@ class TestMsgBase(unittest.TestCase):
         c.set_xid(xid)
 
     def _test_parser(self, msg_type=ofproto_v1_0.OFPT_HELLO):
+        version = ofproto_v1_0.OFP_VERSION
+        msg_len = ofproto_v1_0.OFP_HEADER_SIZE
         xid = 2183948390
-        res = ofproto_v1_0_parser.OFPHello.parser(
-            object, ofproto_v1_0.OFP_VERSION, msg_type,
-            ofproto_v1_0.OFP_HEADER_SIZE, xid,
-            str().zfill(ofproto_v1_0.OFP_HEADER_SIZE))
+        data = '\x00\x01\x02\x03'
 
-        eq_(ofproto_v1_0.OFP_VERSION, res.version)
-        eq_(ofproto_v1_0.OFPT_HELLO, res.msg_type)
-        eq_(ofproto_v1_0.OFP_HEADER_SIZE, res.msg_len)
+        fmt = ofproto_v1_0.OFP_HEADER_PACK_STR
+        buf = struct.pack(fmt, version, msg_type, msg_len, xid) \
+            + data
+
+        res = ofproto_v1_0_parser.OFPHello.parser(
+            object, version, msg_type, msg_len, xid, bytearray(buf))
+
+        eq_(version, res.version)
+        eq_(msg_type, res.msg_type)
+        eq_(msg_len, res.msg_len)
         eq_(xid, res.xid)
+        eq_(buffer(buf), res.buf)
 
         # test __str__()
         list_ = ('version:', 'msg_type', 'xid')

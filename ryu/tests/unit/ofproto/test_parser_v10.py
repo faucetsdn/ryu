@@ -2695,18 +2695,24 @@ class TestOFPHello(unittest.TestCase):
         pass
 
     def test_parser(self):
+        version = ofproto_v1_0.OFP_VERSION
+        msg_type = ofproto_v1_0.OFPT_HELLO
+        msg_len = ofproto_v1_0.OFP_HEADER_SIZE
         xid = 2183948390
-        res = OFPHello.parser(object,
-                              ofproto_v1_0.OFP_VERSION,
-                              ofproto_v1_0.OFPT_HELLO,
-                              ofproto_v1_0.OFP_HEADER_SIZE,
-                              xid,
-                              str().zfill(ofproto_v1_0.OFP_HEADER_SIZE))
+        data = '\x00\x01\x02\x03'
 
-        eq_(ofproto_v1_0.OFP_VERSION, res.version)
-        eq_(ofproto_v1_0.OFPT_HELLO, res.msg_type)
-        eq_(ofproto_v1_0.OFP_HEADER_SIZE, res.msg_len)
+        fmt = ofproto_v1_0.OFP_HEADER_PACK_STR
+        buf = struct.pack(fmt, version, msg_type, msg_len, xid) \
+            + data
+
+        res = OFPHello.parser(object, version, msg_type, msg_len, xid,
+                              bytearray(buf))
+
+        eq_(version, res.version)
+        eq_(msg_type, res.msg_type)
+        eq_(msg_len, res.msg_len)
         eq_(xid, res.xid)
+        eq_(buffer(buf), res.buf)
 
         # test __str__()
         list_ = ('version:', 'msg_type', 'xid')
