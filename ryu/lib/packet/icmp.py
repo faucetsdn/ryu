@@ -103,7 +103,7 @@ class echo(object):
         return  msg
 
     def serialize(self):
-        hdr = bytearray(struct.pack(Echo._PACK_STR, self.id,
+        hdr = bytearray(struct.pack(echo._PACK_STR, self.id,
                                     self.seq))
 
         if self.data is not None:
