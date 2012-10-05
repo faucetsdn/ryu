@@ -35,6 +35,9 @@ class Packet(object):
                 self.parsed_bytes += proto.length
                 self.protocols.append(proto)
 
+        if len(self.data) > self.parsed_bytes:
+            self.protocols.append(self.data[self.parsed_bytes:])
+
     def serialize(self):
         self.data = bytearray()
         r = self.protocols[::-1]
