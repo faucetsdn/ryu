@@ -22,6 +22,7 @@ class Packet(object):
         super(Packet, self).__init__()
         self.data = data
         self.protocols = []
+        self.protocol_idx = 0
         self.parsed_bytes = 0
         if self.data:
             # Do we need to handle non ethernet?
@@ -55,3 +56,16 @@ class Packet(object):
         for p in self.protocols:
             if p.__class__.__name__ == name:
                 return p
+
+    def next(self):
+        try:
+            p = self.protocols[self.protocol_idx]
+        except:
+            self.protocol_idx = 0
+            raise StopIteration
+
+        self.protocol_idx += 1
+        return p
+
+    def __iter__(self):
+        return self
