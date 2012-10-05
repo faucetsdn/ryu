@@ -52,11 +52,6 @@ class Packet(object):
     def add_protocol(self, proto):
         self.protocols.append(proto)
 
-    def find_protocol(self, name):
-        for p in self.protocols:
-            if p.__class__.__name__ == name:
-                return p
-
     def next(self):
         try:
             p = self.protocols[self.protocol_idx]
