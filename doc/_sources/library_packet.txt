@@ -55,19 +55,18 @@ is used:
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         pkt = packet.Packet(array.array('B', ev.msg.data))
-        for p in pkt.protocols:
-            print p
-        vp = pkt.find_protocol('vlan')
-        if vp:
-            print "vlan found:", vp.vid
+        for p in pkt:
+            print p.protocol_name, p
+            if p.protocol_name == 'vlan':
+                print 'vid = ', p.vid
 
 You see something like::
 
-    <ryu.lib.packet.ethernet.ethernet object at 0x107a5d790>
-    <ryu.lib.packet.vlan.vlan object at 0x107a5d7d0>
-    <ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810>
-    <ryu.lib.packet.tcp.tcp object at 0x107a5d850>
-    vlan found: 10
+    ethernet <ryu.lib.packet.ethernet.ethernet object at 0x107a5d790>
+    vlan <ryu.lib.packet.vlan.vlan object at 0x107a5d7d0>
+    vid = 10
+    ipv4 <ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810>
+    tcp <ryu.lib.packet.tcp.tcp object at 0x107a5d850>
 
 
 

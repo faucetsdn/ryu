@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Packet library &mdash; Ryu 1.2 documentation</title>
+    <title>Packet library &mdash; Ryu 1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.2',
+        VERSION:     '1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -27,13 +27,13 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="Ryu 1.2 documentation" href="index.html" />
+    <link rel="top" title="Ryu 1.3 documentation" href="index.html" />
     <link rel="up" title="Library" href="library.html" />
     <link rel="prev" title="Library" href="library.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>Ryu 1.2 documentation</span></a></h1>
+          <span>Ryu 1.3 documentation</span></a></h1>
         <h2 class="heading"><span>Packet library</span></h2>
       </div>
       <div class="topnav">
@@ -93,19 +93,18 @@ is used:</p>
 <span class="nd">@handler.set_ev_cls</span><span class="p">(</span><span class="n">ofp_event</span><span class="o">.</span><span class="n">EventOFPPacketIn</span><span class="p">,</span> <span class="n">handler</span><span class="o">.</span><span class="n">MAIN_DISPATCHER</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">packet_in_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
     <span class="n">pkt</span> <span class="o">=</span> <span class="n">packet</span><span class="o">.</span><span class="n">Packet</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pkt</span><span class="o">.</span><span class="n">protocols</span><span class="p">:</span>
-        <span class="k">print</span> <span class="n">p</span>
-    <span class="n">vp</span> <span class="o">=</span> <span class="n">pkt</span><span class="o">.</span><span class="n">find_protocol</span><span class="p">(</span><span class="s">&#39;vlan&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">vp</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s">&quot;vlan found:&quot;</span><span class="p">,</span> <span class="n">vp</span><span class="o">.</span><span class="n">vid</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pkt</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">p</span><span class="o">.</span><span class="n">protocol_name</span><span class="p">,</span> <span class="n">p</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">protocol_name</span> <span class="o">==</span> <span class="s">&#39;vlan&#39;</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;vid = &#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">vid</span>
 </pre></div>
 </div>
 <p>You see something like:</p>
-<div class="highlight-python"><pre>&lt;ryu.lib.packet.ethernet.ethernet object at 0x107a5d790&gt;
-&lt;ryu.lib.packet.vlan.vlan object at 0x107a5d7d0&gt;
-&lt;ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810&gt;
-&lt;ryu.lib.packet.tcp.tcp object at 0x107a5d850&gt;
-vlan found: 10</pre>
+<div class="highlight-python"><pre>ethernet &lt;ryu.lib.packet.ethernet.ethernet object at 0x107a5d790&gt;
+vlan &lt;ryu.lib.packet.vlan.vlan object at 0x107a5d7d0&gt;
+vid = 10
+ipv4 &lt;ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810&gt;
+tcp &lt;ryu.lib.packet.tcp.tcp object at 0x107a5d850&gt;</pre>
 </div>
 </div>
 <div class="section" id="building-packet">
