@@ -190,7 +190,7 @@ class EventDispatcher(TrackInstances):
 
         handled = self._dispatch(ev, self.events.get(ev.__class__, []))
         if not handled:
-            LOG.info('unhandled event %s', ev)
+            LOG.debug('unhandled event %s', ev)
 
 
 class EventQueueBase(event.EventBase):
