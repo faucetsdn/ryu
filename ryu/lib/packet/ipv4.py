@@ -73,7 +73,7 @@ class ipv4(packet_base.PacketBase):
                          self.ttl, self.proto, 0, self.src, self.dst)
 
         if self.option:
-            assert struct.calcsize('I') >= len(self.option)
+            assert (self.length - ipv4._MIN_LEN) >= len(self.option)
             hdr[ipv4._MIN_LEN:ipv4._MIN_LEN + len(self.option)] = self.option
 
         self.csum = socket.htons(packet_utils.checksum(hdr))
