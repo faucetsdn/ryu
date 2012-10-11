@@ -24,31 +24,33 @@ class udp(packet_base.PacketBase):
     _PACK_STR = '!HHHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, src_port, dst_port, length, csum=0):
+    def __init__(self, src_port, dst_port, total_length=0, csum=0):
         super(udp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port
-        self.length = length
+        self.total_length = total_length
         self.csum = csum
+        self.length = udp._MIN_LEN
 
     @classmethod
     def parser(cls, buf):
-        (src_port, dst_port, length, csum) = struct.unpack_from(cls._PACK_STR,
-                                                                buf)
-        msg = cls(src_port, dst_port, length, csum)
+        (src_port, dst_port, total_length, csum) = struct.unpack_from(
+            cls._PACK_STR, buf)
+        msg = cls(src_port, dst_port, total_length, csum)
         return msg, None
 
     def serialize(self, payload, prev):
-        if self.length == 0:
-            self.length = udp._MIN_LEN + len(payload)
+        if self.total_length == 0:
+            self.total_length = udp._MIN_LEN + len(payload)
         h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
-                        self.length, self.csum)
+                        self.total_length, self.csum)
         if self.csum == 0:
-            ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 17, self.length)
+            ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 17,
+                             self.total_length)
             f = ph + h + payload
             if len(f) % 2:
                 f += '\x00'
             self.csum = socket.htons(packet_utils.checksum(f))
             h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
-                            self.length, self.csum)
+                            self.total_length, self.csum)
         return h
