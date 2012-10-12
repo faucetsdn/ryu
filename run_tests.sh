@@ -99,7 +99,7 @@ function run_pylint {
 function run_pep8 {
   echo "Running pep8 ..."
 
-  PEP8_EXCLUDE="vcsversion.py,*.pyc"
+  PEP8_EXCLUDE="vcsversion.py,*.pyc,contrib"
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat --show-source"
   PEP8_INCLUDE="bin/* ryu setup*.py"
   PEP8_LOG=pep8.log
