@@ -174,3 +174,8 @@ class Test_arp(unittest.TestCase):
         eq_(a.dst_mac, self.dst_mac)
         eq_(a.dst_ip, self.dst_ip)
         eq_(a.length, self.length)
+
+    @raises(Exception)
+    def test_malformed_arp(self):
+        m_short_buf = self.buf[1:arp._MIN_LEN]
+        arp.parser(m_short_buf)

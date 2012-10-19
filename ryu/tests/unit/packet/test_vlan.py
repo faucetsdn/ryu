@@ -137,3 +137,8 @@ class Test_vlan(unittest.TestCase):
         eq_(v.vid, self.vid)
         eq_(v.ethertype, self.ethertype)
         eq_(v.length, self.length)
+
+    @raises(Exception)
+    def test_malformed_vlan(self):
+        m_short_buf = self.buf[1:vlan._MIN_LEN]
+        vlan.parser(m_short_buf)
