@@ -29,6 +29,10 @@ gflags.DEFINE_string('wsapi_host', '', 'webapp listen host')
 gflags.DEFINE_integer('wsapi_port', 8080, 'webapp listen port')
 
 
+HEX_PATTERN = r'0x[0-9a-z]+'
+DIGIT_PATTERN = r'[1-9][0-9]*'
+
+
 class ControllerBase(object):
     special_vars = ['action', 'controller']
 
