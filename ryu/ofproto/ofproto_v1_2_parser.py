@@ -760,7 +760,9 @@ class OFPActionExperimenter(OFPAction):
     def parser(cls, buf, offset):
         (type_, len_, experimenter) = struct.unpack_from(
             ofproto_v1_2.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR, buf, offset)
-        return cls(experimenter)
+        ex = cls(experimenter)
+        ex.len = len_
+        return ex
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_2.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR,
