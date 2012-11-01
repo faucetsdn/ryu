@@ -41,7 +41,6 @@ class icmp(packet_base.PacketBase):
 
     def __init__(self, type_, code, csum, data=None):
         super(icmp, self).__init__()
-        print 'icmp._ICMP_TYPES:', icmp._ICMP_TYPES
         self.type = type_
         self.code = code
         self.csum = csum
