@@ -53,6 +53,27 @@ def to_actions(dp, acts):
     return actions
 
 
+def action_to_str(a):
+    action_type = a.cls_action_type
+
+    if action_type == ofproto_v1_0.OFPAT_OUTPUT:
+        buf = 'OUTPUT:' + str(a.port)
+    elif action_type == ofproto_v1_0.OFPAT_SET_VLAN_VID:
+        buf = 'SET_VLAN_VID:' + str(a.vlan_vid)
+    elif action_type == ofproto_v1_0.OFPAT_SET_VLAN_PCP:
+        buf = 'SET_VLAN_PCP:' + str(a.vlan_pcp)
+    elif action_type == ofproto_v1_0.OFPAT_STRIP_VLAN:
+        buf = 'STRIP_VLAN'
+    elif action_type == ofproto_v1_0.OFPAT_SET_DL_SRC:
+        buf = 'SET_DL_SRC:' + haddr_to_str(a.dl_addr)
+    elif action_type == ofproto_v1_0.OFPAT_SET_DL_DST:
+        buf = 'SET_DL_DST:' + haddr_to_str(a.dl_addr)
+    else:
+        buf = 'UNKNOWN'
+
+    return buf
+
+
 def to_match(dp, attrs):
     ofp = dp.ofproto
 
@@ -155,10 +176,15 @@ def get_flow_stats(dp, waiters):
     flows = []
     for msg in msgs:
         for stats in msg.body:
+            actions = []
+            for a in stats.actions:
+                actions.append(action_to_str(a))
+
             s = {'priority': stats.priority,
                  'cookie': stats.cookie,
                  'idle_timeout': stats.idle_timeout,
                  'hard_timeout': stats.hard_timeout,
+                 'actions': actions,
                  'match': {'dl_dst': haddr_to_str(stats.match.dl_dst),
                            'dl_src': haddr_to_str(stats.match.dl_src),
                            'dl_type': stats.match.dl_type,
