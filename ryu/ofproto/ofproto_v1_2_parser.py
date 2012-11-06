@@ -2076,6 +2076,16 @@ class MTVlanVid(OFPMatchField):
         self.value = value
         self.mask = mask
 
+    @classmethod
+    def field_parser(cls, header, buf, offset):
+        m = super(MTVlanVid, cls).field_parser(header, buf, offset)
+        m.value &= ~ofproto_v1_2.OFPVID_PRESENT
+        return m
+
+    def serialize(self, buf, offset):
+        self.value |= ofproto_v1_2.OFPVID_PRESENT
+        super(MTVlanVid, self).serialize(buf, offset)
+
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_VLAN_PCP])
 class MTVlanPcp(OFPMatchField):

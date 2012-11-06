@@ -3511,24 +3511,42 @@ class TestOFPMatch(unittest.TestCase):
 
         self._test_serialize_and_parser(header, value, match)
 
+    def _test_serialize_and_parser_vid(self, header, vid, match):
+        # match_serialize
+        buf = bytearray()
+        length = match.serialize(buf, 0)
+
+        cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
+        fmt = '!HHI' + cls_.pack_str.replace('!', '')
+        res = unpack_from(fmt, buffer(buf), 0)
+
+        eq_(res[3], vid | ofproto_v1_2.OFPVID_PRESENT)
+
+        # match_parser
+        res = match.parser(str(buf), 0)
+
+        eq_(res.type, ofproto_v1_2.OFPMT_OXM)
+        eq_(res.fields[0].header, header)
+        eq_(res.fields[0].value, vid)
+
     def test_set_vlan_vid(self):
         header = ofproto_v1_2.OXM_OF_VLAN_VID
-        value = vid = 0b101010101010
+        vid = 0b101010101010
 
         match = OFPMatch()
         match.set_vlan_vid(vid)
 
-        self._test_serialize_and_parser(header, value, match)
+        self._test_serialize_and_parser_vid(header, vid, match)
 
     def test_set_vlan_vid_masked(self):
         header = ofproto_v1_2.OXM_OF_VLAN_VID_W
-        value = vid = 0b101010101010
+        vid = 0b101010101010
         mask = 0xfff
 
         match = OFPMatch()
         match.set_vlan_vid_masked(vid, mask)
 
-        self._test_serialize_and_parser(header, value, match)
+        self._test_serialize_and_parser_vid(header, vid, match)
 
     def test_set_vlan_pcp(self):
         header = ofproto_v1_2.OXM_OF_VLAN_PCP
