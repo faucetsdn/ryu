@@ -21,6 +21,7 @@ import gevent
 import traceback
 import random
 import greenlet
+import ssl
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
@@ -42,6 +43,11 @@ FLAGS = gflags.FLAGS
 gflags.DEFINE_string('ofp_listen_host', '', 'openflow listen host')
 gflags.DEFINE_integer('ofp_tcp_listen_port', ofproto_common.OFP_TCP_PORT,
                       'openflow tcp listen port')
+gflags.DEFINE_integer('ofp_ssl_listen_port', ofproto_common.OFP_SSL_PORT,
+                      'openflow ssl listen port')
+gflags.DEFINE_string('ctl_privkey', None, 'controller private key')
+gflags.DEFINE_string('ctl_cert', None, 'controller certificate')
+gflags.DEFINE_string('ca_certs', None, 'CA certificates')
 
 
 class OpenFlowController(object):
@@ -54,9 +60,28 @@ class OpenFlowController(object):
         self.server_loop()
 
     def server_loop(self):
-        server = StreamServer((FLAGS.ofp_listen_host,
-                               FLAGS.ofp_tcp_listen_port),
-                              datapath_connection_factory)
+        if FLAGS.ctl_privkey and FLAGS.ctl_cert is not None:
+            if FLAGS.ca_certs is not None:
+                server = StreamServer((FLAGS.ofp_listen_host,
+                                       FLAGS.ofp_ssl_listen_port),
+                                      datapath_connection_factory,
+                                      keyfile=FLAGS.ctl_privkey,
+                                      certfile=FLAGS.ctl_cert,
+                                      cert_reqs=ssl.CERT_REQUIRED,
+                                      ca_certs=FLAGS.ca_certs,
+                                      ssl_version=ssl.PROTOCOL_TLSv1)
+            else:
+                server = StreamServer((FLAGS.ofp_listen_host,
+                                       FLAGS.ofp_ssl_listen_port),
+                                      datapath_connection_factory,
+                                      keyfile=FLAGS.ctl_privkey,
+                                      certfile=FLAGS.ctl_cert,
+                                      ssl_version=ssl.PROTOCOL_TLSv1)
+        else:
+            server = StreamServer((FLAGS.ofp_listen_host,
+                                   FLAGS.ofp_tcp_listen_port),
+                                  datapath_connection_factory)
+
         #LOG.debug('loop')
         server.serve_forever()
 
