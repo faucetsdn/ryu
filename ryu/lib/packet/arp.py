@@ -16,6 +16,14 @@
 import struct
 from . import packet_base
 
+ARP_HW_TYPE_ETHERNET = 1  # ethernet hardware type
+
+# arp operation codes
+ARP_REQUEST = 1
+ARP_REPLY = 2
+ARP_REV_REQUEST = 3
+ARP_REV_REPLY = 4
+
 
 class arp(packet_base.PacketBase):
     _PACK_STR = '!HHBBH6sI6sI'
