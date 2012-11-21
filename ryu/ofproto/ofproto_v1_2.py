@@ -656,7 +656,7 @@ OFPBRC_BUFFER_UNKNOWN = 8    # Specified buffer does not exist.
 OFPBRC_BAD_TABLE_ID = 9        # Specified table-id invalid or does not exist.
 OFPBRC_IS_SLAVE = 10        # Denied because controller is slave.
 OFPBRC_BAD_PORT = 11        # Invalid port.
-OFBRC_BAD_PACKET = 12        # Invalid packet in packet-out
+OFPBRC_BAD_PACKET = 12        # Invalid packet in packet-out
 
 # enum ofp_bad_action_code
 OFPBAC_BAD_TYPE = 0        # Unknown action type.
@@ -675,7 +675,7 @@ OFPBAC_UNSUPPORTED_ORDER = 11    # Action order is unsupported for
                 # the action list in an Apply-Actions
                 # instruction
 OFPBAC_BAD_TAG = 12        # Actions uses an unsupported tag/encap.
-OFBAC_BAD_SET_TYPE = 13        # Unsupported type in SET_FIELD action.
+OFPBAC_BAD_SET_TYPE = 13        # Unsupported type in SET_FIELD action.
 OFPBAC_BAD_SET_LEN = 14        # Length problem in SET_FIELD action.
 OFPBAC_BAD_SET_ARGUMENT = 15    # Bad arguement in SET_FIELD action.
 
@@ -689,7 +689,7 @@ OFPBIC_UNSUP_METADATA_MASK = 4    # Metadata mask value unsupported by
                 # datapath.
 OFPBIC_BAD_EXPERIMENTER = 5    # Unknown experimenter id specified.
 OFPBIC_BAD_EXP_TYPE = 6        # Unknown instruction for experimenter id.
-OFPBIC_BAD_EXP_LEN = 7        # Length problem in instrucitons.
+OFPBIC_BAD_LEN = 7        # Length problem in instrucitons.
 OFPBIC_EPERM = 8        # Permissions error.
 
 # enum ofp_bad_match_code
@@ -715,7 +715,7 @@ OFPBMC_EPERM = 11         # Permissions error.
 
 # enum ofp_flow_mod_failed_code
 OFPFMFC_UNKNOWN = 0        # Unspecified error.
-OFPFMFC_TABLES_FULL = 1        # Flow not added because table was full.
+OFPFMFC_TABLE_FULL = 1        # Flow not added because table was full.
 OFPFMFC_BAD_TABLE_ID = 2    # Table does not exist
 OFPFMFC_OVERLAP = 3        # Attempted to add overlapping flow
                                 # with CHECK_OVERLAP flag set.
