@@ -152,9 +152,10 @@ class Stream(object):
         assert retval != errno.EINPROGRESS
         if retval == 0:
             self.state = Stream.__S_CONNECTED
-        elif retval != errno.EAGAIN:
-            self.state = Stream.__S_DISCONNECTED
+        else:
             self.error = retval
+            if retval != errno.EAGAIN:
+                self.state = Stream.__S_DISCONNECTED
 
     def connect(self):
         """Tries to complete the connection on this stream.  If the connection
@@ -166,6 +167,11 @@ class Stream(object):
             last_state = self.state
             if self.state == Stream.__S_CONNECTING:
                 self.__scs_connecting()
+                if self.state == Stream.__S_CONNECTING:
+                    # try again
+                    assert self.error == errno.EAGAIN
+                    last_state = -1
+                assert self.state != last_state
             elif self.state == Stream.__S_CONNECTED:
                 return 0
             elif self.state == Stream.__S_DISCONNECTED:
