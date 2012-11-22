@@ -206,7 +206,7 @@ OFPXMT_OFB_IPV6_ND_SLL = 32  # Source link-layer for ND.
 OFPXMT_OFB_IPV6_ND_TLL = 33  # Target link-layer for ND.
 OFPXMT_OFB_MPLS_LABEL = 34  # MPLS label.
 OFPXMT_OFB_MPLS_TC = 35  # MPLS TC.
-OFPXMT_OFP_MPLS_BOS = 36  # MPLS BoS bit.
+OFPXMT_OFB_MPLS_BOS = 36  # MPLS BoS bit.
 OFPXMT_OFB_PBB_ISID = 37  # PBB I-SID.
 OFPXMT_OFB_TUNNEL_ID = 38  # Logical Port Metadata.
 OFPXMT_OFB_IPV6_EXTHDR = 39  # IPv6 Extension Header pseudo-field
@@ -233,7 +233,7 @@ assert (calcsize(OFP_OXM_EXPERIMENTER_HEADER_PACK_STR) ==
         OFP_OXM_EXPERIMENTER_HEADER_SIZE)
 
 # enum ofp_instruction_type
-OFPID_GOTO_TABLE = 1  # Setup the next table in the lookup pipeline.
+OFPIT_GOTO_TABLE = 1  # Setup the next table in the lookup pipeline.
 OFPIT_WRITE_METADATA = 2  # Setup the metadata field for use later in
                           # pipeline.
 OFPIT_WRITE_ACTIONS = 3  # Write the action(s) onto the datapath
@@ -1005,6 +1005,78 @@ OFP_EXPERIMENTER_HEADER_PACK_STR = '!II'
 OFP_EXPERIMENTER_HEADER_SIZE = 16
 assert (calcsize(OFP_EXPERIMENTER_HEADER_PACK_STR) + OFP_HEADER_SIZE
         == OFP_EXPERIMENTER_HEADER_SIZE)
+
+# OXM
+
+
+def _oxm_tlv_header(class_, field, hasmask, length):
+    return (class_ << 16) | (field << 9) | (hasmask << 8) | length
+
+
+def oxm_tlv_header(field, length):
+    return _oxm_tlv_header(OFPXMC_OPENFLOW_BASIC, field, 0, length)
+
+
+def oxm_tlv_header_w(field, length):
+    return _oxm_tlv_header(OFPXMC_OPENFLOW_BASIC, field, 1, length * 2)
+
+
+OXM_OF_IN_PORT = oxm_tlv_header(OFPXMT_OFB_IN_PORT, 4)
+OXM_OF_IN_PHY_PORT = oxm_tlv_header(OFPXMT_OFB_IN_PHY_PORT, 4)
+OXM_OF_METADATA = oxm_tlv_header(OFPXMT_OFB_METADATA, 8)
+OXM_OF_METADATA_W = oxm_tlv_header_w(OFPXMT_OFB_METADATA, 8)
+OXM_OF_ETH_DST = oxm_tlv_header(OFPXMT_OFB_ETH_DST, 6)
+OXM_OF_ETH_DST_W = oxm_tlv_header_w(OFPXMT_OFB_ETH_DST, 6)
+OXM_OF_ETH_SRC = oxm_tlv_header(OFPXMT_OFB_ETH_SRC, 6)
+OXM_OF_ETH_SRC_W = oxm_tlv_header_w(OFPXMT_OFB_ETH_SRC, 6)
+OXM_OF_ETH_TYPE = oxm_tlv_header(OFPXMT_OFB_ETH_TYPE, 2)
+OXM_OF_VLAN_VID = oxm_tlv_header(OFPXMT_OFB_VLAN_VID, 2)
+OXM_OF_VLAN_VID_W = oxm_tlv_header_w(OFPXMT_OFB_VLAN_VID, 2)
+OXM_OF_VLAN_PCP = oxm_tlv_header(OFPXMT_OFB_VLAN_PCP, 1)
+OXM_OF_IP_DSCP = oxm_tlv_header(OFPXMT_OFB_IP_DSCP, 1)
+OXM_OF_IP_ECN = oxm_tlv_header(OFPXMT_OFB_IP_ECN, 1)
+OXM_OF_IP_PROTO = oxm_tlv_header(OFPXMT_OFB_IP_PROTO, 1)
+OXM_OF_IPV4_SRC = oxm_tlv_header(OFPXMT_OFB_IPV4_SRC, 4)
+OXM_OF_IPV4_SRC_W = oxm_tlv_header_w(OFPXMT_OFB_IPV4_SRC, 4)
+OXM_OF_IPV4_DST = oxm_tlv_header(OFPXMT_OFB_IPV4_DST, 4)
+OXM_OF_IPV4_DST_W = oxm_tlv_header_w(OFPXMT_OFB_IPV4_DST, 4)
+OXM_OF_TCP_SRC = oxm_tlv_header(OFPXMT_OFB_TCP_SRC, 2)
+OXM_OF_TCP_DST = oxm_tlv_header(OFPXMT_OFB_TCP_DST, 2)
+OXM_OF_UDP_SRC = oxm_tlv_header(OFPXMT_OFB_UDP_SRC, 2)
+OXM_OF_UDP_DST = oxm_tlv_header(OFPXMT_OFB_UDP_DST, 2)
+OXM_OF_SCTP_SRC = oxm_tlv_header(OFPXMT_OFB_SCTP_SRC, 2)
+OXM_OF_SCTP_DST = oxm_tlv_header(OFPXMT_OFB_SCTP_DST, 2)
+OXM_OF_ICMPV4_TYPE = oxm_tlv_header(OFPXMT_OFB_ICMPV4_TYPE, 1)
+OXM_OF_ICMPV4_CODE = oxm_tlv_header(OFPXMT_OFB_ICMPV4_CODE, 1)
+OXM_OF_ARP_OP = oxm_tlv_header(OFPXMT_OFB_ARP_OP, 2)
+OXM_OF_ARP_SPA = oxm_tlv_header(OFPXMT_OFB_ARP_SPA, 4)
+OXM_OF_ARP_SPA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_SPA, 4)
+OXM_OF_ARP_TPA = oxm_tlv_header(OFPXMT_OFB_ARP_TPA, 4)
+OXM_OF_ARP_TPA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_TPA, 4)
+OXM_OF_ARP_SHA = oxm_tlv_header(OFPXMT_OFB_ARP_SHA, 6)
+OXM_OF_ARP_SHA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_SHA, 6)
+OXM_OF_ARP_THA = oxm_tlv_header(OFPXMT_OFB_ARP_THA, 6)
+OXM_OF_ARP_THA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_THA, 6)
+OXM_OF_IPV6_SRC = oxm_tlv_header(OFPXMT_OFB_IPV6_SRC, 16)
+OXM_OF_IPV6_SRC_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_SRC, 16)
+OXM_OF_IPV6_DST = oxm_tlv_header(OFPXMT_OFB_IPV6_DST, 16)
+OXM_OF_IPV6_DST_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_DST, 16)
+OXM_OF_IPV6_FLABEL = oxm_tlv_header(OFPXMT_OFB_IPV6_FLABEL, 4)
+OXM_OF_IPV6_FLABEL_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_FLABEL, 4)
+OXM_OF_ICMPV6_TYPE = oxm_tlv_header(OFPXMT_OFB_ICMPV6_TYPE, 1)
+OXM_OF_ICMPV6_CODE = oxm_tlv_header(OFPXMT_OFB_ICMPV6_CODE, 1)
+OXM_OF_IPV6_ND_TARGET = oxm_tlv_header(OFPXMT_OFB_IPV6_ND_TARGET, 16)
+OXM_OF_IPV6_ND_SLL = oxm_tlv_header(OFPXMT_OFB_IPV6_ND_SLL, 6)
+OXM_OF_IPV6_ND_TLL = oxm_tlv_header(OFPXMT_OFB_IPV6_ND_TLL, 6)
+OXM_OF_MPLS_LABEL = oxm_tlv_header(OFPXMT_OFB_MPLS_LABEL, 4)
+OXM_OF_MPLS_TC = oxm_tlv_header(OFPXMT_OFB_MPLS_TC, 1)
+OXM_OF_MPLS_BOS = oxm_tlv_header(OFPXMT_OFB_MPLS_BOS, 1)
+OXM_OF_PBB_ISID = oxm_tlv_header(OFPXMT_OFB_PBB_ISID, 3)
+OXM_OF_PBB_ISID_W = oxm_tlv_header_w(OFPXMT_OFB_PBB_ISID, 3)
+OXM_OF_TUNNEL_ID = oxm_tlv_header(OFPXMT_OFB_TUNNEL_ID, 8)
+OXM_OF_TUNNEL_ID_W = oxm_tlv_header_w(OFPXMT_OFB_TUNNEL_ID, 8)
+OXM_OF_IPV6_EXTHDR = oxm_tlv_header(OFPXMT_OFB_IPV6_EXTHDR, 2)
+OXM_OF_IPV6_EXTHDR_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_EXTHDR, 2)
 
 # define constants
 OFP_VERSION = 0x04
