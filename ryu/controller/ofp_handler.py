@@ -82,7 +82,13 @@ class OFPHandler(app_manager.RyuApp):
         LOG.debug('switch features ev %s', msg)
 
         datapath.id = msg.datapath_id
-        datapath.ports = msg.ports
+
+        # hacky workaround, will be removed. OF1.3 doesn't have
+        # ports. An application should not depend on them. But there
+        # might be such bad applications so keep this workaround for
+        # while.
+        if datapath.ofproto.OFP_VERSION < 0x04:
+            datapath.ports = msg.ports
 
         ofproto = datapath.ofproto
         ofproto_parser = datapath.ofproto_parser
