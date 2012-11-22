@@ -1243,7 +1243,7 @@ class OFPMeterConfigStatsRequest(OFPMultipartRequest):
 
 
 @OFPMultipartReply.register_stats_type()
-@_set_stats_type(ofproto_v1_3.OFPMP_METER_CONFIG, OFPMeterCOnfigStats)
+@_set_stats_type(ofproto_v1_3.OFPMP_METER_CONFIG, OFPMeterConfigStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPMeterConfigStatsReply(OFPMultipartReply):
     def __init__(self, datapath):
