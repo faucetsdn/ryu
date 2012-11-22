@@ -1454,7 +1454,7 @@ class OFPPacketQueue(MsgBase):
     def __init__(self, datapath):
         super(OFPPacketQueue, self).__init__(datapath)
 
-    @clasmethod
+    @classmethod
     def parser(cls, buf, offset):
         (msg.queue_id, msg.port, msg.len) = struct.unpack_from(
             ofproto_v1_3.OFP_PACKET_QUEUE_PACK_STR, buf, offset)
