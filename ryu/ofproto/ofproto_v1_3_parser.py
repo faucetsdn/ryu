@@ -1890,7 +1890,7 @@ class OFPMultipartRequest(MsgBase):
         assert flags == 0      # none yet defined
 
         super(OFPMultipartRequest, self).__init__(datapath)
-        self.type = self.__class__cls.stats_type
+        self.type = self.__class__.cls_stats_type
         self.flags = flags
 
     def _serialize_stats_body():
@@ -1919,11 +1919,8 @@ class OFPMultipartReply(MsgBase):
             return cls
         return _register_stats_type
 
-    def __init__(self, datapath, type_, flags):
+    def __init__(self, datapath):
         super(OFPMultipartReply, self).__init__(datapath)
-        self.type = type_
-        self.flags = flags
-        self.body = None
 
     @classmethod
     def parser_stats_body(cls, buf, msg_len, offset):
@@ -1948,14 +1945,23 @@ class OFPMultipartReply(MsgBase):
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        type_, flags = struct.unpack_from(
+        msg = super(OFPMultipartReply, cls).parser(datapath, version, msg_type,
+                                                   msg_len, xid, buf)
+        msg.type, msg.flags = struct.unpack_from(
             ofproto_v1_3.OFP_MULTIPART_REPLY_PACK_STR, buffer(buf),
             ofproto_v1_3.OFP_HEADER_SIZE)
-        stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
-        msg = stats_type_cls.parser_stats(
-            datapath, version, msg_type, msg_len, xid, buf)
-        msg.type = type_
-        msg.flags = flags
+        stats_type_cls = cls._STATS_MSG_TYPES.get(msg.type)
+
+        offset = ofproto_v1_3.OFP_MULTIPART_REPLY_SIZE
+        body = []
+        while offset < msg_len:
+            b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
+            offset += b.length
+
+        if stats_type_cls.cls_body_single_struct:
+            msg.body = body[0]
+        else:
+            msg.body = body
         return msg
 
 
@@ -1995,7 +2001,7 @@ class OFPFlowStats(object):
         self.priority = None
         self.idle_timeout = None
         self.hard_timeout = None
-        self.flags
+        self.flags = None
         self.cookie = None
         self.packet_count = None
         self.byte_count = None
@@ -2008,19 +2014,32 @@ class OFPFlowStats(object):
         (flow_stats.length, flow_stats.table_id,
          flow_stats.duration_sec, flow_stats.duration_nsec,
          flow_stats.priority, flow_stats.idle_timeout,
+         flow_stats.hard_timeout, flow_stats.flags,
          flow_stats.cookie, flow_stats.packet_count,
          flow_stats.byte_count) = struct.unpack_from(
              ofproto_v1_3.OFP_FLOW_STATS_0_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_FLOW_STATS_0_SIZE
 
-        flow_stats.match = OFPMatch.parse(buf, offset)
+        flow_stats.match = OFPMatch.parser(buf, offset)
+        match_length = utils.round_up(flow_stats.match.length, 8)
+        inst_length = (flow_stats.length - (ofproto_v1_3.OFP_FLOW_STATS_SIZE -
+                                            ofproto_v1_3.OFP_MATCH_SIZE +
+                                            match_length))
+        offset += match_length
+        instructions = []
+        while inst_length > 0:
+            inst = OFPInstruction.parser(buf, offset)
+            instructions.append(inst)
+            offset += inst.len
+            inst_length -= inst.len
 
+        flow_stats.instructions = instructions
         return flow_stats
 
 
 class OFPFlowStatsRequestBase(OFPMultipartRequest):
     def __init__(self, datapath, flags, table_id, out_port, out_group,
-                 cookie, cookie_mask):
+                 cookie, cookie_mask, match):
         super(OFPFlowStatsRequestBase, self).__init__(datapath, flags)
         self.table_id = table_id
         self.out_port = out_port
@@ -2035,7 +2054,7 @@ class OFPFlowStatsRequestBase(OFPMultipartRequest):
                       self.buf, offset, self.table_id, self.out_port,
                       self.out_group, self.cookie, self.cookie_mask)
 
-        offset += OFP_FLOWSTAT_REQUEST_0_SIZE
+        offset += ofproto_v1_3.OFP_FLOW_STATS_REQUEST_0_SIZE
         self.match.serialize(self.buf, offset)
 
 
@@ -2043,10 +2062,10 @@ class OFPFlowStatsRequestBase(OFPMultipartRequest):
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPFlowStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, table_id, out_port, out_group,
-                 cookie, cookie_mask):
-        super(OFPFlowStatsRequest, self).__init__(datapath, table_id,
+                 cookie, cookie_mask, match):
+        super(OFPFlowStatsRequest, self).__init__(datapath, flags, table_id,
                                                   out_port, out_group,
-                                                  cookie, cookie_mask)
+                                                  cookie, cookie_mask, match)
 
 
 @OFPMultipartReply.register_stats_type()
