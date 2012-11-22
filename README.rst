@@ -6,7 +6,7 @@ Ryu aims to provide a logically centralized control and well defined
 API that make it easy for operators to create new network management
 and control applications. Currently, Ryu manages network devices by
 using OpenFlow. You can say that Ryu is an OpenFlow Controller, which
-support OpenFlow v1.0, v1.2, and Nicira Extensions.
+support OpenFlow v1.0, v1.2, v1.3, and Nicira Extensions.
 
 All of the code is freely available under the Apache 2.0 license. Ryu
 is fully written in Python.
