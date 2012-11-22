@@ -57,7 +57,7 @@ OFPT_ROLE_REPLY = 25    # Controller/switch message
 
 OFPT_GET_ASYNC_REQUEST = 26    # Controller/switch message
 OFPT_GET_ASYNC_REPLY = 27    # Controller/switch message
-OFPT_GET_ASYNC = 28    # Controller/switch message
+OFPT_SET_ASYNC = 28    # Controller/switch message
 
 OFPT_METER_MOD = 29    # Controller/switch message
 

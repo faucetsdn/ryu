@@ -1553,7 +1553,7 @@ class OFPGetAsyncReply(MsgBase):
 
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_SET_ASYNC)
-class OFPGetAsyncReply(MsgBase):
+class OFPSetAsync(MsgBase):
     def __init__(self, datapath):
         super(OFPSetAsync, self).__init__(datapath)
 
