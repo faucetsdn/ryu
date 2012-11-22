@@ -229,8 +229,8 @@ OFPIEH_UNSEQ = 1 << 8    # Unexpected sequencing encountered.
 # ofp_oxm_experimenter_header
 OFP_OXM_EXPERIMENTER_HEADER_PACK_STR = '!II'
 OFP_OXM_EXPERIMENTER_HEADER_SIZE = 8
-assert (calcsize(OFP_OXM_EXPERIMENTER_HEADER_PACK_STR) +
-        OFP_OXM_EXPERIMENTER_HEADER_SIZE) == OFP_OXM_EXPERIMENTER_HEADER_SIZE
+assert (calcsize(OFP_OXM_EXPERIMENTER_HEADER_PACK_STR) ==
+        OFP_OXM_EXPERIMENTER_HEADER_SIZE)
 
 # enum ofp_instruction_type
 OFPID_GOTO_TABLE = 1  # Setup the next table in the lookup pipeline.
