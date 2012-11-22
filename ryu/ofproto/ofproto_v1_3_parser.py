@@ -973,7 +973,7 @@ class OFPPortStatsRequest(OFPMultipartRequest):
 
 @OFPMultipartReply.register_stats_type()
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_STATS, OFPPortStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPPortStatsReply(OFPMultipartReply):
     def __init__(self, datapath):
         super(OFPPortStatsReply, self).__init__(datapath)
