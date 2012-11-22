@@ -895,7 +895,7 @@ class OFPAggregateStats(collections.namedtuple('OFPAggregateStats', (
         return stats
 
 
-@_set_stats_type(ofproto_v1_3.OFPST_AGGREGATE, OFPAggregateStats)
+@_set_stats_type(ofproto_v1_3.OFPMP_AGGREGATE, OFPAggregateStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, table_id, out_port, out_group,
@@ -908,7 +908,7 @@ class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
                                                        cookie_mask)
 
 
-@OFPmultipartReply.register_stats_type()
+@OFPMultipartReply.register_stats_type()
 @_set_stats_type(ofproto_v1_3.OFPMP_AGGREGATE, OFPAggregateStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPAggregateStatsReply(OFPMultipartReply):
