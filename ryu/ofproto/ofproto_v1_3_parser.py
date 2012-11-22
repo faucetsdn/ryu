@@ -1390,7 +1390,7 @@ class OFPQueueProp(OFPQueuePropHeader):
 
     @staticmethod
     def register_queue_property(property_, len_):
-        def _register_property(cls):
+        def _register_queue_property(cls):
             cls.cls_property = property_
             cls.cls_len = len_
             OFPQueueProp._QUEUE_PROP_PROPERTIES[cls.cls_property] = cls
