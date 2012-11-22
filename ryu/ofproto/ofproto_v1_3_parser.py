@@ -1262,7 +1262,7 @@ class OFPMeterFeaturesStats(collections.namedtuple('OFPMeterFeaturesStats', (
         return stats
 
 
-@_set_stats_type(ofproto_v1_3.OFPMP_METER_FEATUERS, OFPMeterFeaturesStats)
+@_set_stats_type(ofproto_v1_3.OFPMP_METER_FEATURES, OFPMeterFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPMeterFeaturesStatsRequest(OFPMultipartRequest):
     def __init__(self, datapath, flags, port_no):
