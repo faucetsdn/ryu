@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import struct
+import socket
 import logging
-
 import gevent
 
 from ryu.ofproto import ofproto_v1_0
@@ -53,25 +54,28 @@ def to_actions(dp, acts):
     return actions
 
 
-def action_to_str(a):
-    action_type = a.cls_action_type
+def actions_to_str(acts):
+    actions = []
+    for a in acts:
+        action_type = a.cls_action_type
 
-    if action_type == ofproto_v1_0.OFPAT_OUTPUT:
-        buf = 'OUTPUT:' + str(a.port)
-    elif action_type == ofproto_v1_0.OFPAT_SET_VLAN_VID:
-        buf = 'SET_VLAN_VID:' + str(a.vlan_vid)
-    elif action_type == ofproto_v1_0.OFPAT_SET_VLAN_PCP:
-        buf = 'SET_VLAN_PCP:' + str(a.vlan_pcp)
-    elif action_type == ofproto_v1_0.OFPAT_STRIP_VLAN:
-        buf = 'STRIP_VLAN'
-    elif action_type == ofproto_v1_0.OFPAT_SET_DL_SRC:
-        buf = 'SET_DL_SRC:' + haddr_to_str(a.dl_addr)
-    elif action_type == ofproto_v1_0.OFPAT_SET_DL_DST:
-        buf = 'SET_DL_DST:' + haddr_to_str(a.dl_addr)
-    else:
-        buf = 'UNKNOWN'
+        if action_type == ofproto_v1_0.OFPAT_OUTPUT:
+            buf = 'OUTPUT:' + str(a.port)
+        elif action_type == ofproto_v1_0.OFPAT_SET_VLAN_VID:
+            buf = 'SET_VLAN_VID:' + str(a.vlan_vid)
+        elif action_type == ofproto_v1_0.OFPAT_SET_VLAN_PCP:
+            buf = 'SET_VLAN_PCP:' + str(a.vlan_pcp)
+        elif action_type == ofproto_v1_0.OFPAT_STRIP_VLAN:
+            buf = 'STRIP_VLAN'
+        elif action_type == ofproto_v1_0.OFPAT_SET_DL_SRC:
+            buf = 'SET_DL_SRC:' + haddr_to_str(a.dl_addr)
+        elif action_type == ofproto_v1_0.OFPAT_SET_DL_DST:
+            buf = 'SET_DL_DST:' + haddr_to_str(a.dl_addr)
+        else:
+            buf = 'UNKNOWN'
+        actions.append(buf)
 
-    return buf
+    return actions
 
 
 def to_match(dp, attrs):
@@ -117,9 +121,25 @@ def to_match(dp, attrs):
             nw_proto = int(value)
             wildcards &= ~ofp.OFPFW_NW_PROTO
         elif key == 'nw_src':
-            pass
+            ip = value.split('/')
+            nw_src = struct.unpack('!I', socket.inet_aton(ip[0]))[0]
+            mask = 32
+            if len(ip) == 2:
+                mask = int(ip[1])
+                assert 0 < mask <= 32
+            v = (32 - mask) << ofp.OFPFW_NW_SRC_SHIFT | \
+                ~ofp.OFPFW_NW_SRC_MASK
+            wildcards &= v
         elif key == 'nw_dst':
-            pass
+            ip = value.split('/')
+            nw_dst = struct.unpack('!I', socket.inet_aton(ip[0]))[0]
+            mask = 32
+            if len(ip) == 2:
+                mask = int(ip[1])
+                assert 0 < mask <= 32
+            v = (32 - mask) << ofp.OFPFW_NW_DST_SHIFT | \
+                ~ofp.OFPFW_NW_DST_MASK
+            wildcards &= v
         elif key == 'tp_src':
             tp_src = int(value)
             wildcards &= ~ofp.OFPFW_TP_SRC
@@ -127,13 +147,27 @@ def to_match(dp, attrs):
             tp_dst = int(value)
             wildcards &= ~ofp.OFPFW_TP_DST
         else:
-            print "unknown match name ", key, value, len(key)
+            LOG.debug("unknown match name %s, %s, %d", key, value, len(key))
 
     match = dp.ofproto_parser.OFPMatch(
         wildcards, in_port, dl_src, dl_dst, dl_vlan, dl_vlan_pcp,
         dl_type, nw_tos, nw_proto, nw_src, nw_dst, tp_src, tp_dst)
 
     return match
+
+
+def match_to_str(m):
+    return {'dl_dst': haddr_to_str(m.dl_dst),
+            'dl_src': haddr_to_str(m.dl_src),
+            'dl_type': m.dl_type,
+            'dl_vlan': m.dl_vlan,
+            'dl_vlan_pcp': m.dl_vlan_pcp,
+            'in_port': m.in_port,
+            'nw_dst': socket.inet_ntoa(struct.pack('!I', m.nw_dst)),
+            'nw_proto': m.nw_proto,
+            'nw_src': socket.inet_ntoa(struct.pack('!I', m.nw_src)),
+            'tp_src': m.tp_src,
+            'tp_dst': m.tp_dst}
 
 
 def send_stats_request(dp, stats, waiters, msgs):
@@ -176,26 +210,15 @@ def get_flow_stats(dp, waiters):
     flows = []
     for msg in msgs:
         for stats in msg.body:
-            actions = []
-            for a in stats.actions:
-                actions.append(action_to_str(a))
+            actions = actions_to_str(stats.actions)
+            match = match_to_str(stats.match)
 
             s = {'priority': stats.priority,
                  'cookie': stats.cookie,
                  'idle_timeout': stats.idle_timeout,
                  'hard_timeout': stats.hard_timeout,
                  'actions': actions,
-                 'match': {'dl_dst': haddr_to_str(stats.match.dl_dst),
-                           'dl_src': haddr_to_str(stats.match.dl_src),
-                           'dl_type': stats.match.dl_type,
-                           'dl_vlan': stats.match.dl_vlan,
-                           'dl_vlan_pcp': stats.match.dl_vlan_pcp,
-                           'in_port': stats.match.in_port,
-                           'nw_dst': stats.match.nw_dst,
-                           'nw_proto': stats.match.nw_proto,
-                           'nw_src': stats.match.nw_src,
-                           'tp_src': stats.match.tp_src,
-                           'tp_dst': stats.match.tp_dst},
+                 'match': match,
                  'byte_count': stats.byte_count,
                  'duration_sec': stats.duration_sec,
                  'duration_nsec': stats.duration_nsec,
