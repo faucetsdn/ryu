@@ -17,6 +17,7 @@
 import gflags
 import inspect
 import logging
+import logging.handlers
 import os
 import sys
 
@@ -50,7 +51,7 @@ def _get_log_file():
     if FLAGS.log_file:
         return FLAGS.log_file
     if FLAGS.log_dir:
-        return os.path.join(FLAGS.logdir,
+        return os.path.join(FLAGS.log_dir,
                             os.path.basename(inspect.stack()[-1][1])) + '.log'
     return None
 
@@ -71,8 +72,8 @@ def init_log():
 
     log_file = _get_log_file()
     if log_file is not None:
-        logging.addHandler(logging.handlers.WatchedFileHandler(log_file))
-        mode = int(FLAGS.log_file_mnode, 8)
+        log.addHandler(logging.handlers.WatchedFileHandler(log_file))
+        mode = int(FLAGS.log_file_mode, 8)
         os.chmod(log_file, mode)
 
     if FLAGS.verbose:
