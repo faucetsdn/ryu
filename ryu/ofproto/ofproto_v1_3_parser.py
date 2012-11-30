@@ -1286,8 +1286,17 @@ class OFPPacketIn(MsgBase):
              ofproto_v1_3.OFP_PACKET_IN_PACK_STR,
              msg.buf, ofproto_v1_3.OFP_HEADER_SIZE)
 
-        offset = ofproto_v1_3.OFP_HEADER_SIZE + ofproto_v1_3.OFP_PACKET_IN_SIZE
-        msg.match = OFPMatch.parser(buf, offset - ofproto_v1_3.OFP_MATCH_SIZE)
+        msg.match = OFPMatch.parser(msg.buf, ofproto_v1_3.OFP_PACKET_IN_SIZE -
+                                    ofproto_v1_3.OFP_MATCH_SIZE)
+
+        match_len = utils.round_up(msg.match.length, 8)
+        msg.data = msg.buf[(ofproto_v1_3.OFP_PACKET_IN_SIZE -
+                            ofproto_v1_3.OFP_MATCH_SIZE + match_len + 2):]
+
+        if msg.total_len < len(msg.data):
+            # discard padding for 8-byte alignment of OFP packet
+            msg.data = msg.data[:msg.total_len]
+
         return msg
 
 
