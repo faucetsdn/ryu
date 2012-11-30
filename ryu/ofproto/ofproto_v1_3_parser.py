@@ -56,6 +56,52 @@ class OFPHello(MsgBase):
     def __init__(self, datapath):
         super(OFPHello, self).__init__(datapath)
 
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPHello, cls).parser(datapath, version, msg_type,
+                                          msg_len, xid, buf)
+
+        offset = ofproto_v1_3.OFP_HELLO_HEADER_SIZE
+        elems = []
+        while offset < msg.msg_len:
+            type_, length = struct.unpack_from(
+                ofproto_v1_3.OFP_HELLO_ELEM_HEADER_PACK_STR, msg.buf, offset)
+
+            # better to register Hello Element classes but currently
+            # Only VerisonBitmap is supported so let's be simple.
+
+            if type_ == ofproto_v1_3.OFPHET_VERSIONBITMAP:
+                elem = OFPHelloElemVersionBitmap.parser(msg.buf, offset)
+                elems.append(elem)
+
+            offset += length
+        msg.elements = elems
+        return msg
+
+
+class OFPHelloElemVersionBitmap(object):
+    def __init__(self, type_, length, bitmaps):
+        super(OFPHelloElemVersionBitmap, self).__init__()
+        self.type = type_
+        self.length = length
+        self.bitmaps = bitmaps
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, length = struct.unpack_from(
+            ofproto_v1_3.OFP_HELLO_ELEM_VERSIONBITMAP_HEADER_PACK_STR,
+            buf, offset)
+        bitmaps_len = (length -
+                       ofproto_v1_3.OFP_HELLO_ELEM_VERSIONBITMAP_HEADER_SIZE)
+        offset += ofproto_v1_3.OFP_HELLO_ELEM_VERSIONBITMAP_HEADER_SIZE
+        bitmaps = []
+        while bitmaps_len > 0:
+            bitmap = struct.unpack_from('!I', buf, offset)
+            bitmaps.append(bitmap)
+            bitmaps_len -= 4
+
+        return cls(type_, length, bitmaps)
+
 
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_ERROR)
