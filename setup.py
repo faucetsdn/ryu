@@ -21,6 +21,9 @@ from setuptools import find_packages
 from setuptools import setup
 
 from ryu import version
+from ryu import utils
+
+requires = utils.parse_requirements()
 
 doing_bdist = any(arg.startswith('bdist') for arg in sys.argv[1:])
 
@@ -53,6 +56,7 @@ setup(name='ryu',
       url='http://osrg.github.com/ryu/',
       author='Ryu project team',
       author_email='ryu-devel@lists.sourceforge.net',
+      install_requires=requires,
       license='Apache License 2.0',
       packages=find_packages(),
       scripts=['bin/ryu-manager',
