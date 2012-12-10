@@ -49,9 +49,15 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 ## Update the switch stats
 #
 # add a flow entry
-# POST /stats/flowentry
+# POST /stats/flowentry/add
 #
-# delete flows of the switch
+# modify all matching flow entries
+# POST /stats/flowentry/modify
+#
+# delete all matching flow entries
+# POST /stats/flowentry/delete
+#
+# delete all flow entries of the switch
 # DELETE /stats/flowentry/clear/<dpid>
 #
 
@@ -109,7 +115,7 @@ class StatsController(ControllerBase):
         body = json.dumps(ports)
         return (Response(content_type='application/json', body=body))
 
-    def push_flow_entry(self, req, **_kwargs):
+    def mod_flow_entry(self, req, cmd, **_kwargs):
         try:
             flow = eval(req.body)
         except SyntaxError:
@@ -121,8 +127,17 @@ class StatsController(ControllerBase):
         if dp is None:
             return Response(status=404)
 
+        if cmd == 'add':
+            cmd = dp.ofproto.OFPFC_ADD
+        elif cmd == 'modify':
+            cmd = dp.ofproto.OFPFC_MODIFY
+        elif cmd == 'delete':
+            cmd = dp.ofproto.OFPFC_DELETE
+        else:
+            return Response(status=404)
+
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
-            ofctl_v1_0.push_flow_entry(dp, flow)
+            ofctl_v1_0.mod_flow_entry(dp, flow, cmd)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -182,11 +197,12 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_port_stats',
                        conditions=dict(method=['GET']))
 
-        uri = path + '/flowentry'
+        uri = path + '/flowentry/{cmd}'
         mapper.connect('stats', uri,
-                       controller=StatsController, action='push_flow_entry',
+                       controller=StatsController, action='mod_flow_entry',
                        conditions=dict(method=['POST']))
-        uri = uri + '/clear/{dpid}'
+
+        uri = path + '/flowentry/clear/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='delete_flow_entry',
                        conditions=dict(method=['DELETE']))
@@ -201,7 +217,6 @@ class RestStatsApi(app_manager.RyuApp):
             return
         lock, msgs = self.waiters[dp.id][msg.xid]
         msgs.append(msg)
-        print 'stats_reply_handler:', msgs
 
         if msg.flags & dp.ofproto.OFPSF_REPLY_MORE:
             return

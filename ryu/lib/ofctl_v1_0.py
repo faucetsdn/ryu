@@ -256,7 +256,7 @@ def get_port_stats(dp, waiters):
     return ports
 
 
-def push_flow_entry(dp, flow):
+def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     priority = int(flow.get('priority',
                             dp.ofproto.OFP_DEFAULT_PRIORITY))
@@ -268,7 +268,7 @@ def push_flow_entry(dp, flow):
 
     flow_mod = dp.ofproto_parser.OFPFlowMod(
         datapath=dp, match=match, cookie=cookie,
-        command=dp.ofproto.OFPFC_ADD, idle_timeout=idle_timeout,
+        command=cmd, idle_timeout=idle_timeout,
         hard_timeout=hard_timeout, priority=priority, flags=flags,
         actions=actions)
 
