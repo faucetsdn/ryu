@@ -59,10 +59,8 @@ def _create_ofp_msg_ev_class(msg_cls):
 def _create_ofp_msg_ev_from_module(modname):
     mod = utils.import_module(modname)
     # print mod
-    for _k, cls in mod.__dict__.items():
-        if not inspect.isclass(cls):
-            continue
-        if 'cls_msg_type' not in cls.__dict__:
+    for _k, cls in inspect.getmembers(mod, inspect.isclass):
+        if not hasattr(cls, 'cls_msg_type'):
             continue
         _create_ofp_msg_ev_class(cls)
 

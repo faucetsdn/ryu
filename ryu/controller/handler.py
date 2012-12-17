@@ -44,7 +44,7 @@ def set_ev_cls(ev_cls, dispatchers):
 
 
 def _is_ev_handler(meth):
-    return 'ev_cls' in meth.__dict__
+    return hasattr(meth, 'ev_cls')
 
 
 def _listify(may_list):

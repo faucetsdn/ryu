@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
 import itertools
 import logging
 
@@ -72,12 +73,10 @@ class AppManager(object):
 
     def load_app(self, name):
         mod = utils.import_module(name)
-        for k, v in mod.__dict__.items():
-            try:
-                if issubclass(v, RyuApp):
-                    return getattr(mod, k)
-            except TypeError:
-                pass
+        clses = inspect.getmembers(mod, lambda cls: (inspect.isclass(cls) and
+                                                     issubclass(cls, RyuApp)))
+        if clses:
+            return clses[0][1]
         return None
 
     def load_apps(self, app_lists):
@@ -113,7 +112,7 @@ class AppManager(object):
             # Yes, maybe for slicing.
             LOG.info('instantiating app %s', app_name)
 
-            if 'OFP_VERSIONS' in cls.__dict__:
+            if hasattr(cls, 'OFP_VERSIONS'):
                 for k in Datapath.supported_ofp_version.keys():
                     if not k in cls.OFP_VERSIONS:
                         del Datapath.supported_ofp_version[k]
