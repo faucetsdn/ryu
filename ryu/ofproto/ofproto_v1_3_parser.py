@@ -2011,6 +2011,7 @@ class OFPMultipartReply(MsgBase):
         body = []
         while offset < msg_len:
             b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
+            body.append(b)
             offset += b.length
 
         if stats_type_cls.cls_body_single_struct:
