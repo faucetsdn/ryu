@@ -17,12 +17,12 @@
 # limitations under the License.
 
 import gevent
+from gevent import monkey
+monkey.patch_all()
+
 import gflags
 import logging
 import sys
-
-from gevent import monkey
-monkey.patch_all()
 
 from ryu import log
 log.early_init_log(logging.DEBUG)
