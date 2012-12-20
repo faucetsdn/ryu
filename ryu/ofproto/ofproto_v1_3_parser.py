@@ -55,6 +55,7 @@ def msg_parser(datapath, version, msg_type, msg_len, xid, buf):
 class OFPHello(MsgBase):
     def __init__(self, datapath):
         super(OFPHello, self).__init__(datapath)
+        self.elements = None
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -80,27 +81,37 @@ class OFPHello(MsgBase):
 
 
 class OFPHelloElemVersionBitmap(object):
-    def __init__(self, type_, length, bitmaps):
+    def __init__(self, versions):
         super(OFPHelloElemVersionBitmap, self).__init__()
-        self.type = type_
-        self.length = length
-        self.bitmaps = bitmaps
+        self.type = ofproto_v1_3.OFPHET_VERSIONBITMAP
+        self.length = None
+        self.bitmaps = None
+        self.versions = versions
 
     @classmethod
     def parser(cls, buf, offset):
         type_, length = struct.unpack_from(
             ofproto_v1_3.OFP_HELLO_ELEM_VERSIONBITMAP_HEADER_PACK_STR,
             buf, offset)
+        assert type_ == ofproto_v1_3.OFPHET_VERSIONBITMAP
+
         bitmaps_len = (length -
                        ofproto_v1_3.OFP_HELLO_ELEM_VERSIONBITMAP_HEADER_SIZE)
         offset += ofproto_v1_3.OFP_HELLO_ELEM_VERSIONBITMAP_HEADER_SIZE
         bitmaps = []
-        while bitmaps_len > 0:
+        while bitmaps_len >= 4:
             bitmap = struct.unpack_from('!I', buf, offset)
-            bitmaps.append(bitmap)
+            bitmaps.append(bitmap[0])
+            offset += 4
             bitmaps_len -= 4
 
-        return cls(type_, length, bitmaps)
+        versions = [i * 32 + shift
+                    for i, bitmap in enumerate(bitmaps)
+                    for shift in range(31) if bitmap & (1 << shift)]
+        elem = cls(versions)
+        elem.length = length
+        elem.bitmaps = bitmaps
+        return elem
 
 
 @_register_parser
