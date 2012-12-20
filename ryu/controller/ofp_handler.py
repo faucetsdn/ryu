@@ -58,54 +58,62 @@ class OFPHandler(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
 
-        # TODO: check if received version is supported.
-        #       pre 1.0 is not supported
-        # TODO: OFPHET_VERSIONBITMAP
-        usable_versions = [version for version
-                           in datapath.supported_ofp_version
-                           if version <= msg.version]
+        # check if received version is supported.
+        # pre 1.0 is not supported
+        elements = getattr(msg, 'elements', None)
+        if elements:
+            usable_versions = []
+            for elem in elements:
+                usable_versions += elem.versions or []
+        else:
+            usable_versions = [version for version
+                               in datapath.supported_ofp_version
+                               if version <= msg.version]
+            if (usable_versions and
+                max(usable_versions) != min(msg.version,
+                                            datapath.ofproto.OFP_VERSION)):
+                # The version of min(msg.version, datapath.ofproto.OFP_VERSION)
+                # should be used according to the spec. But we can't.
+                # So log it and use max(usable_versions) with the hope that
+                # the switch is able to understand lower version.
+                # e.g.
+                # OF 1.1 from switch
+                # OF 1.2 from Ryu and supported_ofp_version = (1.0, 1.2)
+                # In this case, 1.1 should be used according to the spec,
+                # but 1.1 can't be used.
+                #
+                # OF1.3.1 6.3.1
+                # Upon receipt of this message, the recipient must
+                # calculate the OpenFlow protocol version to be used. If
+                # both the Hello message sent and the Hello message
+                # received contained a OFPHET_VERSIONBITMAP hello element,
+                # and if those bitmaps have some common bits set, the
+                # negotiated version must be the highest version set in
+                # both bitmaps. Otherwise, the negotiated version must be
+                # the smaller of the version number that was sent and the
+                # one that was received in the version fields.  If the
+                # negotiated version is supported by the recipient, then
+                # the connection proceeds. Otherwise, the recipient must
+                # reply with an OFPT_ERROR message with a type field of
+                # OFPET_HELLO_FAILED, a code field of OFPHFC_INCOMPATIBLE,
+                # and optionally an ASCII string explaining the situation
+                # in data, and then terminate the connection.
+                version = max(usable_versions)
+                error_desc = 'no compatible version found: '
+                'switch 0x%x controller 0x%x, but found usable 0x%x. '
+                'If possible, set the switch to use OF version 0x%x' % (
+                    msg.version, datapath.ofproto.OFP_VERSION,
+                    version, version)
+                self.hello_failed(error_desc)
+                return
+
         if not usable_versions:
-            # send the error
             error_desc = 'unsupported version 0x%x. '
             'If possible, set the switch to use one of the versions %s' % (
                 msg.version, datapath.supported_ofp_version.keys())
             self.hello_failed(error_desc)
             return
-        version = max(usable_versions)
-        if version != min(msg.version, datapath.ofproto.OFP_VERSION):
-            # The version of min(msg.version, datapath.ofproto.OFP_VERSION)
-            # should be used according to the spec. But we can't.
-            # So log it and use max(usable_versions) with the hope that
-            # the switch is able to understand lower version.
-            # e.g.
-            # OF 1.1 from switch
-            # OF 1.2 from Ryu and supported_ofp_version = (1.0, 1.2)
-            # In this case, 1.1 should be used according to the spec,
-            # but 1.1 can't be used.
-            #
-            # OF1.3.1 6.3.1
-            # Upon receipt of this message, the recipient must
-            # calculate the OpenFlow protocol version to be used. If
-            # both the Hello message sent and the Hello message
-            # received contained a OFPHET_VERSIONBITMAP hello element,
-            # and if those bitmaps have some common bits set, the
-            # negotiated version must be the highest version set in
-            # both bitmaps. Otherwise, the negotiated version must be
-            # the smaller of the version number that was sent and the
-            # one that was received in the version fields.  If the
-            # negotiated version is supported by the recipient, then
-            # the connection proceeds. Otherwise, the recipient must
-            # reply with an OFPT_ERROR message with a type field of
-            # OFPET_HELLO_FAILED, a code field of OFPHFC_INCOMPATIBLE,
-            # and optionally an ASCII string explaining the situation
-            # in data, and then terminate the connection.
-            error_desc = 'no compatible version found: '
-            'switch 0x%x controller 0x%x, but found usable 0x%x. '
-            'If possible, set the switch to use OF version 0x%x' % (
-                msg.version, datapath.ofproto.OFP_VERSION, version, version)
-            self.hello_failed(error_desc)
-            return
-        datapath.set_version(version)
+        datapath.set_version(max(usable_versions))
 
         # now send feature
         features_reqeust = datapath.ofproto_parser.OFPFeaturesRequest(datapath)
