@@ -1069,11 +1069,9 @@ class RunTest(tester.TestFlowBase):
 
     def is_supported(self, t):
         unsupported = [
-            'out_port',
-            'flow_removed_table_id',
         ]
         for u in unsupported:
-            if t.find(u) > 0:
+            if t.find(u) != -1:
                 return False
 
         return True

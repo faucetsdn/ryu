@@ -16,7 +16,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 import logging
-import itertools
 
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ether
@@ -34,7 +33,7 @@ class RunTest(tester.TestFlowBase):
     def __init__(self, *args, **kwargs):
         super(RunTest, self).__init__(*args, **kwargs)
 
-        self._verify = []
+        self._verify = {}
 
     def add_matches(self, dp, match):
         m = dp.ofproto_parser.OFPFlowMod(dp, 0, 0, 0,
@@ -44,39 +43,108 @@ class RunTest(tester.TestFlowBase):
                                          0xffffffff, 0, match, [])
         dp.send_msg(m)
 
+    def _set_verify(self, headers, value, mask=None,
+                    all_bits_masked=False, type_='int'):
+        self._verify = {}
+        self._verify['headers'] = headers
+        self._verify['value'] = value
+        self._verify['mask'] = mask
+        self._verify['all_bits_masked'] = all_bits_masked
+        self._verify['type'] = type_
+
     def verify_default(self, dp, stats):
-        verify = self._verify
-        self._verify = []
+        type_ = self._verify['type']
+        headers = self._verify['headers']
+        value = self._verify['value']
+        mask = self._verify['mask']
+        value_masked = self._masked(type_, value, mask)
+        all_bits_masked = self._verify['all_bits_masked']
 
-        headers = value = mask = None
-        if len(verify) == 3:
-            (headers, value, mask, ) = verify
+        field = None
+        for s in stats:
+            for f in s.match.fields:
+                if f.header in headers:
+                    field = f
+                    break
+
+        if field is None:
+            if self._is_all_zero_bit(type_, mask):
+                return True
+            return 'Field not found.'
+
+        f_value = field.value
+        if hasattr(field, 'mask'):
+            f_mask = field.mask
         else:
-            return "self._verify is invalid."
+            f_mask = None
 
-        f_value = f_mask = None
-        for f in stats[0].match.fields:
-            if f.header in headers:
-                f_value = f.value
-                if len(headers) == 2:
-                    f_mask = f.mask
-                break
+        if (f_value == value) or (f_value == value_masked):
+            if (f_mask == mask) or (all_bits_masked and f_mask is None):
+                return True
 
-        if f_value == value and f_mask == mask:
+        return "send: %s/%s, reply: %s/%s" \
+            % (self._cnv_to_str(type_, value, mask, f_value, f_mask))
+
+    def _masked(self, type_, value, mask):
+        if mask is None:
+            v = value
+        elif type_ == 'int':
+            v = value & mask
+        elif type_ == 'mac':
+            v = self.haddr_masked(value, mask)
+        elif type_ == 'ipv4':
+            v = self.ipv4_masked(value, mask)
+        elif type_ == 'ipv6':
+            v = self.ipv6_masked(value, mask)
+        else:
+            raise 'Unknown type'
+        return v
+
+    def _is_all_zero_bit(self, type_, val):
+        if type_ == 'int' or type_ == 'ipv4':
+            return val == 0
+        elif type_ == 'mac':
+            for v in val:
+                if v != '\x00':
+                    return False
             return True
-        elif value is None:
-            return "Field[%s] is setting." % (headers, )
+        elif type_ == 'ipv6':
+            for v in val:
+                if v != 0:
+                    return False
+            return True
         else:
-            return "Value error. send: (%s/%s), val:(%s/%s)" \
-                % (value, mask, f_value, f_mask)
+            raise 'Unknown type'
+
+    def _cnv_to_str(self, type_, value, mask, f_value, f_mask):
+        func = None
+        if type_ == 'int':
+            pass
+        elif type_ == 'mac':
+            func = self.haddr_to_str
+        elif type_ == 'ipv4':
+            func = self.ipv4_to_str
+        elif type_ == 'ipv6':
+            func = self.ipv6_to_str
+        else:
+            raise 'Unknown type'
+
+        if func:
+            value = func(value)
+            f_value = func(f_value)
+            if mask:
+                mask = func(mask)
+            if f_mask:
+                f_mask = func(f_mask)
+
+        return value, mask, f_value, f_mask
 
     def test_rule_set_dl_dst(self, dp):
         dl_dst = 'e2:7a:09:79:0b:0f'
         dl_dst_bin = self.haddr_to_bin(dl_dst)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_DST,
-                         dp.ofproto.OXM_OF_ETH_DST_W, ),
-                        dl_dst_bin, None]
+        headers = [dp.ofproto.OXM_OF_ETH_DST, dp.ofproto.OXM_OF_ETH_DST_W]
+        self._set_verify(headers, dl_dst_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst(dl_dst_bin)
@@ -88,9 +156,8 @@ class RunTest(tester.TestFlowBase):
         mask = 'ff:ff:ff:ff:ff:ff'
         mask_bin = self.haddr_to_bin(mask)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_DST,
-                         dp.ofproto.OXM_OF_ETH_DST_W, ),
-                        dl_dst_bin, None]
+        headers = [dp.ofproto.OXM_OF_ETH_DST, dp.ofproto.OXM_OF_ETH_DST_W]
+        self._set_verify(headers, dl_dst_bin, mask_bin, True, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst_masked(dl_dst_bin, mask_bin)
@@ -102,9 +169,8 @@ class RunTest(tester.TestFlowBase):
         mask = 'ff:ff:ff:ff:ff:00'
         mask_bin = self.haddr_to_bin(mask)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_DST,
-                         dp.ofproto.OXM_OF_ETH_DST_W, ),
-                        dl_dst_bin[:-1] + '\x00', mask_bin]
+        headers = [dp.ofproto.OXM_OF_ETH_DST, dp.ofproto.OXM_OF_ETH_DST_W]
+        self._set_verify(headers, dl_dst_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst_masked(dl_dst_bin, mask_bin)
@@ -116,9 +182,8 @@ class RunTest(tester.TestFlowBase):
         mask = '00:00:00:00:00:00'
         mask_bin = self.haddr_to_bin(mask)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_DST,
-                         dp.ofproto.OXM_OF_ETH_DST_W, ),
-                        None, None]
+        headers = [dp.ofproto.OXM_OF_ETH_DST, dp.ofproto.OXM_OF_ETH_DST_W]
+        self._set_verify(headers, dl_dst_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst_masked(dl_dst_bin, mask_bin)
@@ -128,9 +193,8 @@ class RunTest(tester.TestFlowBase):
         dl_src = 'e2:7a:09:79:0b:0f'
         dl_src_bin = self.haddr_to_bin(dl_src)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_SRC,
-                         dp.ofproto.OXM_OF_ETH_SRC_W, ),
-                        dl_src_bin, None]
+        headers = [dp.ofproto.OXM_OF_ETH_SRC, dp.ofproto.OXM_OF_ETH_SRC_W]
+        self._set_verify(headers, dl_src_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_src(dl_src_bin)
@@ -142,9 +206,8 @@ class RunTest(tester.TestFlowBase):
         mask = 'ff:ff:ff:ff:ff:ff'
         mask_bin = self.haddr_to_bin(mask)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_SRC,
-                         dp.ofproto.OXM_OF_ETH_SRC_W, ),
-                        dl_src_bin, None]
+        headers = [dp.ofproto.OXM_OF_ETH_SRC, dp.ofproto.OXM_OF_ETH_SRC_W]
+        self._set_verify(headers, dl_src_bin, mask_bin, True, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_src_masked(dl_src_bin, mask_bin)
@@ -156,9 +219,8 @@ class RunTest(tester.TestFlowBase):
         mask = 'ff:ff:ff:ff:ff:00'
         mask_bin = self.haddr_to_bin(mask)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_SRC,
-                         dp.ofproto.OXM_OF_ETH_SRC_W, ),
-                        dl_src_bin[:-1] + '\x00', mask_bin]
+        headers = [dp.ofproto.OXM_OF_ETH_SRC, dp.ofproto.OXM_OF_ETH_SRC_W]
+        self._set_verify(headers, dl_src_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_src_masked(dl_src_bin, mask_bin)
@@ -170,9 +232,8 @@ class RunTest(tester.TestFlowBase):
         mask = '00:00:00:00:00:00'
         mask_bin = self.haddr_to_bin(mask)
 
-        self._verify = [(dp.ofproto.OXM_OF_ETH_SRC,
-                         dp.ofproto.OXM_OF_ETH_SRC_W, ),
-                        None, None]
+        headers = [dp.ofproto.OXM_OF_ETH_SRC, dp.ofproto.OXM_OF_ETH_SRC_W]
+        self._set_verify(headers, dl_src_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_src_masked(dl_src_bin, mask_bin)
@@ -180,8 +241,9 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_dl_type_ip(self, dp):
         dl_type = ether.ETH_TYPE_IP
-        self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
-                        dl_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ETH_TYPE]
+        self._set_verify(headers, dl_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -189,8 +251,9 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_dl_type_arp(self, dp):
         dl_type = ether.ETH_TYPE_ARP
-        self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
-                        dl_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ETH_TYPE]
+        self._set_verify(headers, dl_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -198,8 +261,9 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_dl_type_vlan(self, dp):
         dl_type = ether.ETH_TYPE_8021Q
-        self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
-                        dl_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ETH_TYPE]
+        self._set_verify(headers, dl_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -207,8 +271,9 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_dl_type_ipv6(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
-        self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
-                        dl_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ETH_TYPE]
+        self._set_verify(headers, dl_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -216,8 +281,9 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_dl_type_lacp(self, dp):
         dl_type = ether.ETH_TYPE_SLOW
-        self._verify = [(dp.ofproto.OXM_OF_ETH_TYPE, ),
-                        dl_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ETH_TYPE]
+        self._set_verify(headers, dl_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -226,8 +292,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_dscp(self, dp):
         ip_dscp = 36
         dl_type = ether.ETH_TYPE_IP
-        self._verify = [(dp.ofproto.OXM_OF_IP_DSCP, ),
-                        ip_dscp, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_DSCP]
+        self._set_verify(headers, ip_dscp)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -236,9 +303,9 @@ class RunTest(tester.TestFlowBase):
 
     def test_rule_set_vlan_vid(self, dp):
         vlan_vid = 0x4ef
-        self._verify = [(dp.ofproto.OXM_OF_VLAN_VID,
-                         dp.ofproto.OXM_OF_VLAN_VID_W, ),
-                        vlan_vid, None]
+
+        headers = [dp.ofproto.OXM_OF_VLAN_VID, dp.ofproto.OXM_OF_VLAN_VID_W]
+        self._set_verify(headers, vlan_vid)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_vlan_vid(vlan_vid)
@@ -247,9 +314,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_vlan_vid_masked_ff(self, dp):
         vlan_vid = 0x4ef
         mask = 0xfff
-        self._verify = [(dp.ofproto.OXM_OF_VLAN_VID,
-                         dp.ofproto.OXM_OF_VLAN_VID_W, ),
-                        vlan_vid, None]
+
+        headers = [dp.ofproto.OXM_OF_VLAN_VID, dp.ofproto.OXM_OF_VLAN_VID_W]
+        self._set_verify(headers, vlan_vid, mask, True)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_vlan_vid_masked(vlan_vid, mask)
@@ -258,9 +325,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_vlan_vid_masked_f0(self, dp):
         vlan_vid = 0x4ef
         mask = 0xff0
-        self._verify = [(dp.ofproto.OXM_OF_VLAN_VID,
-                         dp.ofproto.OXM_OF_VLAN_VID_W, ),
-                        vlan_vid & mask, mask]
+
+        headers = [dp.ofproto.OXM_OF_VLAN_VID, dp.ofproto.OXM_OF_VLAN_VID_W]
+        self._set_verify(headers, vlan_vid, mask)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_vlan_vid_masked(vlan_vid, mask)
@@ -269,9 +336,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_vlan_vid_masked_00(self, dp):
         vlan_vid = 0x4ef
         mask = 0x000
-        self._verify = [(dp.ofproto.OXM_OF_VLAN_VID,
-                         dp.ofproto.OXM_OF_VLAN_VID_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_VLAN_VID, dp.ofproto.OXM_OF_VLAN_VID_W]
+        self._set_verify(headers, vlan_vid, mask)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_vlan_vid_masked(vlan_vid, mask)
@@ -280,8 +347,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_vlan_pcp(self, dp):
         vlan_vid = 0x4ef
         vlan_pcp = 5
-        self._verify = [(dp.ofproto.OXM_OF_VLAN_PCP, ),
-                        vlan_pcp, None]
+
+        headers = [dp.ofproto.OXM_OF_VLAN_PCP]
+        self._set_verify(headers, vlan_pcp)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_vlan_vid(vlan_vid)
@@ -291,8 +359,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_ecn(self, dp):
         dl_type = ether.ETH_TYPE_IP
         ip_ecn = 3
-        self._verify = [(dp.ofproto.OXM_OF_IP_ECN, ),
-                        ip_ecn, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_ECN]
+        self._set_verify(headers, ip_ecn)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -302,8 +371,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_icmp(self, dp):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_ICMP
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -313,8 +383,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_tcp(self, dp):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_TCP
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -324,8 +395,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_udp(self, dp):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_UDP
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -335,8 +407,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_ipv6_route(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ROUTING
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -346,8 +419,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_ipv6_frag(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_FRAGMENT
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -357,8 +431,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_ipv6_icmp(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -368,8 +443,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_ipv6_none(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_NONE
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -379,8 +455,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ip_proto_ipv6_dstopts(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_DSTOPTS
-        self._verify = [(dp.ofproto.OXM_OF_IP_PROTO, ),
-                        ip_proto, None]
+
+        headers = [dp.ofproto.OXM_OF_IP_PROTO]
+        self._set_verify(headers, ip_proto)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -391,9 +468,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         src = '192.168.196.250'
         src_int = self.ipv4_to_int(src)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_SRC,
-                         dp.ofproto.OXM_OF_IPV4_SRC_W, ),
-                        src_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_SRC, dp.ofproto.OXM_OF_IPV4_SRC_W]
+        self._set_verify(headers, src_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -406,9 +483,9 @@ class RunTest(tester.TestFlowBase):
         src_int = self.ipv4_to_int(src)
         mask = '255.255.255.255'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_SRC,
-                         dp.ofproto.OXM_OF_IPV4_SRC_W, ),
-                        src_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_SRC, dp.ofproto.OXM_OF_IPV4_SRC_W]
+        self._set_verify(headers, src_int, mask_int, True, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -421,9 +498,9 @@ class RunTest(tester.TestFlowBase):
         src_int = self.ipv4_to_int(src)
         mask = '255.255.255.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_SRC,
-                         dp.ofproto.OXM_OF_IPV4_SRC_W, ),
-                        src_int & mask_int, mask_int]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_SRC, dp.ofproto.OXM_OF_IPV4_SRC_W]
+        self._set_verify(headers, src_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -436,9 +513,9 @@ class RunTest(tester.TestFlowBase):
         src_int = self.ipv4_to_int(src)
         mask = '0.0.0.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_SRC,
-                         dp.ofproto.OXM_OF_IPV4_SRC_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_SRC, dp.ofproto.OXM_OF_IPV4_SRC_W]
+        self._set_verify(headers, src_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -449,9 +526,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         dst = '192.168.54.155'
         dst_int = self.ipv4_to_int(dst)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_DST,
-                         dp.ofproto.OXM_OF_IPV4_DST_W, ),
-                        dst_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_DST, dp.ofproto.OXM_OF_IPV4_DST_W]
+        self._set_verify(headers, dst_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -464,9 +541,9 @@ class RunTest(tester.TestFlowBase):
         dst_int = self.ipv4_to_int(dst)
         mask = '255.255.255.255'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_DST,
-                         dp.ofproto.OXM_OF_IPV4_DST_W, ),
-                        dst_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_DST, dp.ofproto.OXM_OF_IPV4_DST_W]
+        self._set_verify(headers, dst_int, mask_int, True, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -479,9 +556,9 @@ class RunTest(tester.TestFlowBase):
         dst_int = self.ipv4_to_int(dst)
         mask = '255.255.255.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_DST,
-                         dp.ofproto.OXM_OF_IPV4_DST_W, ),
-                        dst_int & mask_int, mask_int]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_DST, dp.ofproto.OXM_OF_IPV4_DST_W]
+        self._set_verify(headers, dst_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -494,9 +571,9 @@ class RunTest(tester.TestFlowBase):
         dst_int = self.ipv4_to_int(dst)
         mask = '0.0.0.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV4_DST,
-                         dp.ofproto.OXM_OF_IPV4_DST_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV4_DST, dp.ofproto.OXM_OF_IPV4_DST_W]
+        self._set_verify(headers, dst_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -507,8 +584,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_TCP
         tp_src = 1103
-        self._verify = [(dp.ofproto.OXM_OF_TCP_SRC, ),
-                        tp_src, None]
+
+        headers = [dp.ofproto.OXM_OF_TCP_SRC]
+        self._set_verify(headers, tp_src)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -520,8 +598,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_TCP
         tp_dst = 236
-        self._verify = [(dp.ofproto.OXM_OF_TCP_DST, ),
-                        tp_dst, None]
+
+        headers = [dp.ofproto.OXM_OF_TCP_DST]
+        self._set_verify(headers, tp_dst)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -533,8 +612,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_UDP
         tp_src = 56617
-        self._verify = [(dp.ofproto.OXM_OF_UDP_SRC, ),
-                        tp_src, None]
+
+        headers = [dp.ofproto.OXM_OF_UDP_SRC]
+        self._set_verify(headers, tp_src)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -546,8 +626,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_UDP
         tp_dst = 61278
-        self._verify = [(dp.ofproto.OXM_OF_UDP_DST, ),
-                        tp_dst, None]
+
+        headers = [dp.ofproto.OXM_OF_UDP_DST]
+        self._set_verify(headers, tp_dst)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -559,8 +640,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IP
         ip_proto = inet.IPPROTO_ICMP
         icmp_type = 8
-        self._verify = [(dp.ofproto.OXM_OF_ICMPV4_TYPE, ),
-                        icmp_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ICMPV4_TYPE]
+        self._set_verify(headers, icmp_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -573,8 +655,9 @@ class RunTest(tester.TestFlowBase):
         ip_proto = inet.IPPROTO_ICMP
         icmp_type = 9
         icmp_code = 16
-        self._verify = [(dp.ofproto.OXM_OF_ICMPV4_CODE, ),
-                        icmp_code, None]
+
+        headers = [dp.ofproto.OXM_OF_ICMPV4_CODE]
+        self._set_verify(headers, icmp_code)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -586,8 +669,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_arp_opcode(self, dp):
         dl_type = ether.ETH_TYPE_ARP
         arp_op = 1
-        self._verify = [(dp.ofproto.OXM_OF_ARP_OP, ),
-                        arp_op, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_OP]
+        self._set_verify(headers, arp_op)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -598,9 +682,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_ARP
         nw_src = '192.168.222.57'
         nw_src_int = self.ipv4_to_int(nw_src)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SPA,
-                         dp.ofproto.OXM_OF_ARP_SPA_W, ),
-                        nw_src_int, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SPA, dp.ofproto.OXM_OF_ARP_SPA_W]
+        self._set_verify(headers, nw_src_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -613,9 +697,9 @@ class RunTest(tester.TestFlowBase):
         nw_src_int = self.ipv4_to_int(nw_src)
         mask = '255.255.255.255'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SPA,
-                         dp.ofproto.OXM_OF_ARP_SPA_W, ),
-                        nw_src_int, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SPA, dp.ofproto.OXM_OF_ARP_SPA_W]
+        self._set_verify(headers, nw_src_int, mask_int, True, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -628,9 +712,9 @@ class RunTest(tester.TestFlowBase):
         nw_src_int = self.ipv4_to_int(nw_src)
         mask = '255.255.255.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SPA,
-                         dp.ofproto.OXM_OF_ARP_SPA_W, ),
-                        nw_src_int & mask_int, mask_int]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SPA, dp.ofproto.OXM_OF_ARP_SPA_W]
+        self._set_verify(headers, nw_src_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -643,9 +727,9 @@ class RunTest(tester.TestFlowBase):
         nw_src_int = self.ipv4_to_int(nw_src)
         mask = '0.0.0.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SPA,
-                         dp.ofproto.OXM_OF_ARP_SPA_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SPA, dp.ofproto.OXM_OF_ARP_SPA_W]
+        self._set_verify(headers, nw_src_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -656,9 +740,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_ARP
         nw_dst = '192.168.198.233'
         nw_dst_int = self.ipv4_to_int(nw_dst)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_TPA,
-                         dp.ofproto.OXM_OF_ARP_TPA_W, ),
-                        nw_dst_int, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_TPA, dp.ofproto.OXM_OF_ARP_TPA_W]
+        self._set_verify(headers, nw_dst_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -671,9 +755,9 @@ class RunTest(tester.TestFlowBase):
         nw_dst_int = self.ipv4_to_int(nw_dst)
         mask = '255.255.255.255'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_TPA,
-                         dp.ofproto.OXM_OF_ARP_TPA_W, ),
-                        nw_dst_int, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_TPA, dp.ofproto.OXM_OF_ARP_TPA_W]
+        self._set_verify(headers, nw_dst_int, mask_int, True, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -686,9 +770,9 @@ class RunTest(tester.TestFlowBase):
         nw_dst_int = self.ipv4_to_int(nw_dst)
         mask = '255.255.255.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_TPA,
-                         dp.ofproto.OXM_OF_ARP_TPA_W, ),
-                        nw_dst_int & mask_int, mask_int]
+
+        headers = [dp.ofproto.OXM_OF_ARP_TPA, dp.ofproto.OXM_OF_ARP_TPA_W]
+        self._set_verify(headers, nw_dst_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -701,9 +785,9 @@ class RunTest(tester.TestFlowBase):
         nw_dst_int = self.ipv4_to_int(nw_dst)
         mask = '0.0.0.0'
         mask_int = self.ipv4_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_TPA,
-                         dp.ofproto.OXM_OF_ARP_TPA_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_TPA, dp.ofproto.OXM_OF_ARP_TPA_W]
+        self._set_verify(headers, nw_dst_int, mask_int, type_='ipv4')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -714,9 +798,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_ARP
         arp_sha = '3e:ec:13:9b:f3:0b'
         arp_sha_bin = self.haddr_to_bin(arp_sha)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SHA,
-                         dp.ofproto.OXM_OF_ARP_SHA_W, ),
-                        arp_sha_bin, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SHA, dp.ofproto.OXM_OF_ARP_SHA_W]
+        self._set_verify(headers, arp_sha_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -729,9 +813,9 @@ class RunTest(tester.TestFlowBase):
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         mask = 'ff:ff:ff:ff:ff:ff'
         mask_bin = self.haddr_to_bin(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SHA,
-                         dp.ofproto.OXM_OF_ARP_SHA_W, ),
-                        arp_sha_bin, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SHA, dp.ofproto.OXM_OF_ARP_SHA_W]
+        self._set_verify(headers, arp_sha_bin, mask_bin, True, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -744,9 +828,9 @@ class RunTest(tester.TestFlowBase):
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         mask = 'ff:ff:ff:ff:ff:00'
         mask_bin = self.haddr_to_bin(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SHA,
-                         dp.ofproto.OXM_OF_ARP_SHA_W, ),
-                        arp_sha_bin[:-1] + '\x00', mask_bin]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SHA, dp.ofproto.OXM_OF_ARP_SHA_W]
+        self._set_verify(headers, arp_sha_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -759,9 +843,9 @@ class RunTest(tester.TestFlowBase):
         arp_sha_bin = self.haddr_to_bin(arp_sha)
         mask = '00:00:00:00:00:00'
         mask_bin = self.haddr_to_bin(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_SHA,
-                         dp.ofproto.OXM_OF_ARP_SHA_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_SHA, dp.ofproto.OXM_OF_ARP_SHA_W]
+        self._set_verify(headers, arp_sha_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -772,9 +856,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_ARP
         arp_tha = '83:6c:21:52:49:68'
         arp_tha_bin = self.haddr_to_bin(arp_tha)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_THA,
-                         dp.ofproto.OXM_OF_ARP_THA_W, ),
-                        arp_tha_bin, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_THA, dp.ofproto.OXM_OF_ARP_THA_W]
+        self._set_verify(headers, arp_tha_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -787,9 +871,9 @@ class RunTest(tester.TestFlowBase):
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         mask = 'ff:ff:ff:ff:ff:ff'
         mask_bin = self.haddr_to_bin(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_THA,
-                         dp.ofproto.OXM_OF_ARP_THA_W, ),
-                        arp_tha_bin, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_THA, dp.ofproto.OXM_OF_ARP_THA_W]
+        self._set_verify(headers, arp_tha_bin, mask_bin, True, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -802,9 +886,9 @@ class RunTest(tester.TestFlowBase):
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         mask = 'ff:ff:ff:ff:ff:00'
         mask_bin = self.haddr_to_bin(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_THA,
-                         dp.ofproto.OXM_OF_ARP_THA_W, ),
-                        arp_tha_bin[:-1] + '\x00', mask_bin]
+
+        headers = [dp.ofproto.OXM_OF_ARP_THA, dp.ofproto.OXM_OF_ARP_THA_W]
+        self._set_verify(headers, arp_tha_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -817,9 +901,9 @@ class RunTest(tester.TestFlowBase):
         arp_tha_bin = self.haddr_to_bin(arp_tha)
         mask = '00:00:00:00:00:00'
         mask_bin = self.haddr_to_bin(mask)
-        self._verify = [(dp.ofproto.OXM_OF_ARP_THA,
-                         dp.ofproto.OXM_OF_ARP_THA_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_ARP_THA, dp.ofproto.OXM_OF_ARP_THA_W]
+        self._set_verify(headers, arp_tha_bin, mask_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -830,9 +914,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IPV6
         ipv6_src = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_SRC,
-                         dp.ofproto.OXM_OF_IPV6_SRC_W, ),
-                        ipv6_src_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_SRC, dp.ofproto.OXM_OF_IPV6_SRC_W]
+        self._set_verify(headers, ipv6_src_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -845,9 +929,9 @@ class RunTest(tester.TestFlowBase):
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
         mask_int = self.ipv6_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_SRC,
-                         dp.ofproto.OXM_OF_IPV6_SRC_W, ),
-                        ipv6_src_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_SRC, dp.ofproto.OXM_OF_IPV6_SRC_W]
+        self._set_verify(headers, ipv6_src_int, mask_int, True, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -860,11 +944,9 @@ class RunTest(tester.TestFlowBase):
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:0'
         mask_int = self.ipv6_to_int(mask)
-        ipv6_src_masked = [x & y for (x, y) in
-                           itertools.izip(ipv6_src_int, mask_int)]
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_SRC,
-                         dp.ofproto.OXM_OF_IPV6_SRC_W, ),
-                        ipv6_src_masked, mask_int]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_SRC, dp.ofproto.OXM_OF_IPV6_SRC_W]
+        self._set_verify(headers, ipv6_src_int, mask_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -877,9 +959,9 @@ class RunTest(tester.TestFlowBase):
         ipv6_src_int = self.ipv6_to_int(ipv6_src)
         mask = '0:0:0:0:0:0:0:0'
         mask_int = self.ipv6_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_SRC,
-                         dp.ofproto.OXM_OF_IPV6_SRC_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_SRC, dp.ofproto.OXM_OF_IPV6_SRC_W]
+        self._set_verify(headers, ipv6_src_int, mask_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -890,9 +972,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IPV6
         ipv6_dst = 'e9e8:9ea5:7d67:82cc:ca54:1fc0:2d24:f038'
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_DST,
-                         dp.ofproto.OXM_OF_IPV6_DST_W, ),
-                        ipv6_dst_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_DST, dp.ofproto.OXM_OF_IPV6_DST_W]
+        self._set_verify(headers, ipv6_dst_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -905,9 +987,9 @@ class RunTest(tester.TestFlowBase):
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
         mask_int = self.ipv6_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_DST,
-                         dp.ofproto.OXM_OF_IPV6_DST_W, ),
-                        ipv6_dst_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_DST, dp.ofproto.OXM_OF_IPV6_DST_W]
+        self._set_verify(headers, ipv6_dst_int, mask_int, True, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -920,11 +1002,9 @@ class RunTest(tester.TestFlowBase):
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         mask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:0'
         mask_int = self.ipv6_to_int(mask)
-        ipv6_dst_masked = [x & y for (x, y) in
-                           itertools.izip(ipv6_dst_int, mask_int)]
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_DST,
-                         dp.ofproto.OXM_OF_IPV6_DST_W, ),
-                        ipv6_dst_masked, mask_int]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_DST, dp.ofproto.OXM_OF_IPV6_DST_W]
+        self._set_verify(headers, ipv6_dst_int, mask_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -937,9 +1017,9 @@ class RunTest(tester.TestFlowBase):
         ipv6_dst_int = self.ipv6_to_int(ipv6_dst)
         mask = '0:0:0:0:0:0:0:0'
         mask_int = self.ipv6_to_int(mask)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_DST,
-                         dp.ofproto.OXM_OF_IPV6_DST_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_DST, dp.ofproto.OXM_OF_IPV6_DST_W]
+        self._set_verify(headers, ipv6_dst_int, mask_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -949,9 +1029,10 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_ipv6_flabel(self, dp):
         dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
-                         dp.ofproto.OXM_OF_IPV6_FLABEL_W, ),
-                        ipv6_label, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_FLABEL,
+                   dp.ofproto.OXM_OF_IPV6_FLABEL_W]
+        self._set_verify(headers, ipv6_label)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -962,9 +1043,10 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         mask = 0xfffff
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
-                         dp.ofproto.OXM_OF_IPV6_FLABEL_W, ),
-                        ipv6_label, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_FLABEL,
+                   dp.ofproto.OXM_OF_IPV6_FLABEL_W]
+        self._set_verify(headers, ipv6_label, mask, True)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -975,9 +1057,10 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         mask = 0xffff0
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
-                         dp.ofproto.OXM_OF_IPV6_FLABEL_W, ),
-                        ipv6_label & mask, mask]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_FLABEL,
+                   dp.ofproto.OXM_OF_IPV6_FLABEL_W]
+        self._set_verify(headers, ipv6_label, mask)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -988,9 +1071,10 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IPV6
         ipv6_label = 0xc5384
         mask = 0x0
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_FLABEL,
-                         dp.ofproto.OXM_OF_IPV6_FLABEL_W, ),
-                        None, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_FLABEL,
+                   dp.ofproto.OXM_OF_IPV6_FLABEL_W]
+        self._set_verify(headers, ipv6_label, mask)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1001,8 +1085,9 @@ class RunTest(tester.TestFlowBase):
         dl_type = ether.ETH_TYPE_IPV6
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 129
-        self._verify = [(dp.ofproto.OXM_OF_ICMPV6_TYPE, ),
-                        icmp_type, None]
+
+        headers = [dp.ofproto.OXM_OF_ICMPV6_TYPE]
+        self._set_verify(headers, icmp_type)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1015,8 +1100,9 @@ class RunTest(tester.TestFlowBase):
         ip_proto = inet.IPPROTO_ICMPV6
         icmp_type = 138
         icmp_code = 1
-        self._verify = [(dp.ofproto.OXM_OF_ICMPV6_CODE, ),
-                        icmp_code, None]
+
+        headers = [dp.ofproto.OXM_OF_ICMPV6_CODE]
+        self._set_verify(headers, icmp_code)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1031,8 +1117,9 @@ class RunTest(tester.TestFlowBase):
         icmp_type = 135
         target = "5420:db3f:921b:3e33:2791:98f:dd7f:2e19"
         target_int = self.ipv6_to_int(target)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_ND_TARGET, ),
-                        target_int, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_ND_TARGET]
+        self._set_verify(headers, target_int, type_='ipv6')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1047,8 +1134,9 @@ class RunTest(tester.TestFlowBase):
         icmp_type = 135
         nd_sll = "93:6d:d0:d4:e8:36"
         nd_sll_bin = self.haddr_to_bin(nd_sll)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_ND_SLL, ),
-                        nd_sll_bin, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_ND_SLL]
+        self._set_verify(headers, nd_sll_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1063,8 +1151,9 @@ class RunTest(tester.TestFlowBase):
         icmp_type = 136
         nd_tll = "18:f6:66:b6:f1:b3"
         nd_tll_bin = self.haddr_to_bin(nd_tll)
-        self._verify = [(dp.ofproto.OXM_OF_IPV6_ND_TLL, ),
-                        nd_tll_bin, None]
+
+        headers = [dp.ofproto.OXM_OF_IPV6_ND_TLL]
+        self._set_verify(headers, nd_tll_bin, type_='mac')
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1076,8 +1165,9 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_mpls_label(self, dp):
         dl_type = 0x8847
         label = 2144
-        self._verify = [(dp.ofproto.OXM_OF_MPLS_LABEL, ),
-                        label, None]
+
+        headers = [dp.ofproto.OXM_OF_MPLS_LABEL]
+        self._set_verify(headers, label)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
@@ -1087,10 +1177,21 @@ class RunTest(tester.TestFlowBase):
     def test_rule_set_mpls_tc(self, dp):
         dl_type = 0x8847
         tc = 3
-        self._verify = [(dp.ofproto.OXM_OF_MPLS_TC, ),
-                        tc, None]
+
+        headers = [dp.ofproto.OXM_OF_MPLS_TC]
+        self._set_verify(headers, tc)
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_type(dl_type)
         match.set_mpls_tc(tc)
         self.add_matches(dp, match)
+
+    def is_supported(self, t):
+        unsupported = [
+            'test_rule_set_mpls_tc',
+        ]
+        for u in unsupported:
+            if t.find(u) != -1:
+                return False
+
+        return True

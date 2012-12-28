@@ -17,6 +17,7 @@
 
 import sys
 import logging
+import itertools
 
 from ryu import utils
 from ryu.lib import mac
@@ -108,11 +109,16 @@ class TestFlowBase(app_manager.RyuApp):
         dp.send_barrier()
         if len(self.pending):
             t = self.pending.pop()
-            LOG.info(LOG_TEST_START, t)
-            self.current = t
-            getattr(self, t)(dp)
-            dp.send_barrier()
-            self.send_flow_stats(dp)
+            if self.is_supported(t):
+                LOG.info(LOG_TEST_START, t)
+                self.current = t
+                getattr(self, t)(dp)
+                dp.send_barrier()
+                self.send_flow_stats(dp)
+            else:
+                self.results[t] = 'SKIP (unsupported)'
+                self.unclear -= 1
+                self.start_next_test(dp)
         else:
             self.print_results()
 
@@ -138,7 +144,7 @@ class TestFlowBase(app_manager.RyuApp):
 
         verify_func = self.verify_default
         v = "verify" + self.current[4:]
-        if v in dir(self):
+        if hasattr(self, v):
             verify_func = getattr(self, v)
 
         result = verify_func(dp, msg.body)
@@ -163,6 +169,13 @@ class TestFlowBase(app_manager.RyuApp):
     def haddr_to_bin(self, string):
         return mac.haddr_to_bin(string)
 
+    def haddr_masked(self, haddr_bin, mask_bin):
+        return mac.haddr_bitand(haddr_bin, mask_bin)
+
+    def ipv4_to_str(self, integre):
+        ip_list = [str((integre >> (24 - (n * 8)) & 255)) for n in range(4)]
+        return '.'.join(ip_list)
+
     def ipv4_to_int(self, string):
         ip = string.split('.')
         assert len(ip) == 4
@@ -172,7 +185,20 @@ class TestFlowBase(app_manager.RyuApp):
             i = (i << 8) | b
         return i
 
+    def ipv4_masked(self, ip_int, mask_int):
+        return ip_int & mask_int
+
+    def ipv6_to_str(self, integres):
+        return ':'.join(hex(x)[2:] for x in integres)
+
     def ipv6_to_int(self, string):
         ip = string.split(':')
         assert len(ip) == 8
         return [int(x, 16) for x in ip]
+
+    def ipv6_masked(self, ipv6_int, mask_int):
+        return [x & y for (x, y) in
+                itertools.izip(ipv6_int, mask_int)]
+
+    def is_supported(self, t):
+        return True
