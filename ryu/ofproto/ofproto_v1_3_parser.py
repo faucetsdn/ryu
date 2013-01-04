@@ -1413,7 +1413,7 @@ class OFPPortStatus(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
-    def __init__(self, datapath, buffer_id=None, inport=None, actions=None,
+    def __init__(self, datapath, buffer_id=None, in_port=None, actions=None,
                  data=None):
         assert in_port is not None
 
