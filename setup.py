@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
 
 from setuptools import find_packages
@@ -35,6 +34,7 @@ if doing_bdist:
         start:long_description.find('\n\n\n', start)]
 
 classifiers = [
+    'Development Status :: 5 - Production/Stable',
     'License :: OSI Approved :: Apache Software License',
     'Topic :: System :: Networking',
     'Natural Language :: English',

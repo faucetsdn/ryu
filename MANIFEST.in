@@ -1,6 +1,6 @@
 include LICENSE
-include README.rst
 include MANIFEST.in
+include *.rst
 graft contrib
 graft doc
 graft etc
