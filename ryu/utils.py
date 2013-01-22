@@ -37,7 +37,7 @@ def import_module(modname):
     return sys.modules[modname]
 
 
-RYU_DEFAULT_FLAG_FILE = ('ryu.conf', 'etc/ryu/ryu.conf' '/etc/ryu/ryu.conf')
+RYU_DEFAULT_FLAG_FILE = ('ryu.conf', 'etc/ryu/ryu.conf', '/etc/ryu/ryu.conf')
 
 
 def find_flagfile(default_path=RYU_DEFAULT_FLAG_FILE):
