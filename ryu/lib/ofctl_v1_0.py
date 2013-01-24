@@ -172,15 +172,15 @@ def match_to_str(m):
 
 def send_stats_request(dp, stats, waiters, msgs):
     dp.set_xid(stats)
-    waiters = waiters.setdefault(dp.id, {})
+    waiters_per_dp = waiters.setdefault(dp.id, {})
     lock = gevent.event.AsyncResult()
-    waiters[stats.xid] = (lock, msgs)
+    waiters_per_dp[stats.xid] = (lock, msgs)
     dp.send_msg(stats)
 
     try:
         lock.get(timeout=DEFAULT_TIMEOUT)
     except gevent.Timeout:
-        del waiters[dp.id][stats.xid]
+        del waiters_per_dp[stats.xid]
 
 
 def get_desc_stats(dp, waiters):
