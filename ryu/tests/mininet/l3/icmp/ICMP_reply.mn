@@ -1,0 +1,6 @@
+TEST_NAME=ICMP-Reply
+DUMP_HOST=h1
+DUMP_IF=h1-eth0
+RYU_APP=test_icmp
+PCAP_MZ="-t icmp ping -c 3 -r -B h2"
+PCAP_FILTER="icmp.type==0"

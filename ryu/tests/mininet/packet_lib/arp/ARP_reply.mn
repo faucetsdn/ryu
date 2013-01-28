@@ -1,0 +1,7 @@
+# test-ARP-reply
+TEST_NAME=ARP-Reply
+DUMP_HOST=h1
+DUMP_IF=h1-eth0
+RYU_APP=test_arp
+PCAP_MZ="-t arp request,targetip=10.0.0.100 -c 3 -r"
+PCAP_FILTER="arp.opcode==reply && arp.src.proto_ipv4==10.0.0.100 && arp.src.hw_mac==fe:ee:ee:ee:ee:ef"

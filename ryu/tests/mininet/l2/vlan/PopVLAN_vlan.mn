@@ -1,0 +1,6 @@
+TEST_NAME=VLAN-PopVLAN
+DUMP_HOST=h2
+DUMP_IF=h2-eth0
+RYU_APP=test_vlan
+PCAP_MZ="-t tcp -Q 8 -P $TEST_NAME -c 3 -r"
+PCAP_FILTER="! vlan && ip.proto==TCP"

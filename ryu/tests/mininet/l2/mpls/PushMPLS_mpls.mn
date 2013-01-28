@@ -1,0 +1,6 @@
+TEST_NAME=MPLS-PushMPLS
+DUMP_HOST=h2
+DUMP_IF=h2-eth0
+RYU_APP=test_mpls
+PCAP_MZ="-t tcp -M 100 -P $TEST_NAME -c 3 -r"
+PCAP_FILTER="mpls.label==100 && mpls.label==200 && ip.proto==TCP"

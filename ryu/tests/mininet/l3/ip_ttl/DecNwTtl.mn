@@ -1,0 +1,6 @@
+TEST_NAME=DecNwTtl
+DUMP_HOST=h2
+DUMP_IF=h2-eth0
+RYU_APP=test_ip_ttl
+PCAP_MZ="-t icmp ttl=64 -P $TEST_NAME -c 3 -b 00:00:00:00:00:02"
+PCAP_FILTER="icmp && ip.ttl==63"
