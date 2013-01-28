@@ -414,6 +414,18 @@ class RunTest(tester.TestFlowBase):
         actions = [dp.ofproto_parser.OFPActionDecMplsTtl(), ]
         self.add_apply_actions(dp, actions)
 
+    def test_action_set_nw_ttl(self, dp):
+        nw_ttl = 64
+        self._verify = [dp.ofproto.OFPAT_SET_NW_TTL,
+                        'nw_ttl', nw_ttl]
+        actions = [dp.ofproto_parser.OFPActionSetNwTtl(nw_ttl), ]
+        self.add_apply_actions(dp, actions)
+
+    def test_action_dec_nw_ttl(self, dp):
+        self._verify = [dp.ofproto.OFPAT_DEC_NW_TTL]
+        actions = [dp.ofproto_parser.OFPActionDecNwTtl(), ]
+        self.add_apply_actions(dp, actions)
+
     def test_action_copy_ttl_out(self, dp):
         self._verify = [dp.ofproto.OFPAT_COPY_TTL_OUT]
         actions = [dp.ofproto_parser.OFPActionCopyTtlOut(), ]
@@ -431,6 +443,7 @@ class RunTest(tester.TestFlowBase):
             'test_action_set_field_arp',
             'test_action_set_field_ipv6',
             'test_action_set_field_icmp',
+            'test_action_set_nw_ttl',
         ]
         for u in unsupported:
             if t.find(u) != -1:
