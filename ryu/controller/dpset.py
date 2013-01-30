@@ -67,8 +67,8 @@ class DPSet(object):
         if dp_type_ is not None:
             dp.dp_type = dp_type_
 
-        self.ev_q.queue(EventDP(dp, True))
         self.dps[dp.id] = dp
+        self.ev_q.queue(EventDP(dp, True))
 
     def unregister(self, dp):
         if dp.id in self.dps:
