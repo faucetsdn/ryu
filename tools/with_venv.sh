@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2011 OpenStack LLC.
@@ -18,4 +18,4 @@
 
 TOOLS=`dirname $0`
 VENV=$TOOLS/../.venv
-source $VENV/bin/activate && $@
+. $VENV/bin/activate && $@

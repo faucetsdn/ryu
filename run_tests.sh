@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-function usage {
+usage() {
   echo "Usage: $0 [OPTION]..."
   echo "Run Ryu's test suite(s)"
   echo ""
@@ -20,15 +20,15 @@ function usage {
   exit
 }
 
-function process_option {
+process_option() {
   case "$1" in
     -h|--help) usage;;
-    -V|--virtual-env) let always_venv=1; let never_venv=0;;
-    -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
-    -f|--force) let force=1;;
-    -p|--pep8) let just_pep8=1;let never_venv=1; let always_venv=0;;
+    -V|--virtual-env) always_venv=1; never_venv=0;;
+    -N|--no-virtual-env) always_venv=0; never_venv=1;;
+    -f|--force) force=1;;
+    -p|--pep8) just_pep8=1; never_venv=1; always_venv=0;;
     -P|--no-pep8) no_pep8=1;;
-    -l|--pylint) let just_pylint=1;;
+    -l|--pylint) just_pylint=1;;
     -c|--coverage) coverage=1;;
     -v|--verbose) verbose=1;;
     -*) noseopts="$noseopts $1";;
@@ -58,7 +58,7 @@ if [ $coverage -eq 1 ]; then
     noseopts="$noseopts --with-coverage --cover-package=ryu"
 fi
 
-function run_tests {
+run_tests() {
   # Just run the test suites in current environment
   ${wrapper} rm -f ./$PLUGIN_DIR/tests.sqlite
 
@@ -80,7 +80,7 @@ function run_tests {
   return $RESULT
 }
 
-function run_pylint {
+run_pylint() {
   echo "Running pylint ..."
   PYLINT_OPTIONS="--rcfile=.pylintrc --output-format=parseable"
   PYLINT_INCLUDE="ryu bin/ryu-manager bin/ryu-client"
@@ -96,7 +96,7 @@ function run_pylint {
   export PYTHONPATH=$OLD_PYTHONPATH
 }
 
-function run_pep8 {
+run_pep8() {
   echo "Running pep8 ..."
 
   PEP8_EXCLUDE="vcsversion.py,*.pyc,contrib"
