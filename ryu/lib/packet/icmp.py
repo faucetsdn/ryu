@@ -99,7 +99,7 @@ class echo(object):
         if len(buf) > offset:
             msg.data = buf[offset:]
 
-        return  msg
+        return msg
 
     def serialize(self):
         hdr = bytearray(struct.pack(echo._PACK_STR, self.id,
