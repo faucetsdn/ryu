@@ -1,4 +1,4 @@
-# Ajust module loading path for third party library
+# Adjust module loading path for third party libraries
 import os
 import sys
 
