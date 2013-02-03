@@ -16,10 +16,12 @@
 
 import logging
 
+import ryu.base.app_manager
+
 from ryu import utils
-from ryu.base import app_manager
+from ryu.controller import handler
 from ryu.controller import ofp_event
-from ryu.controller.handler import set_ev_cls
+from ryu.controller.handler import set_ev_cls, set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
 
@@ -39,9 +41,10 @@ LOG = logging.getLogger('ryu.controller.ofp_handler')
 # back Echo Reply message.
 
 
-class OFPHandler(app_manager.RyuApp):
+class OFPHandler(ryu.base.app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(OFPHandler, self).__init__(*args, **kwargs)
+        self.name = 'ofp_event'
 
     @staticmethod
     def hello_failed(datapath, error_desc):
@@ -52,7 +55,7 @@ class OFPHandler(app_manager.RyuApp):
         error_msg.data = error_desc
         datapath.send_msg(error_msg)
 
-    @set_ev_cls(ofp_event.EventOFPHello, HANDSHAKE_DISPATCHER)
+    @set_ev_handler(ofp_event.EventOFPHello, HANDSHAKE_DISPATCHER)
     def hello_handler(self, ev):
         LOG.debug('hello ev %s', ev)
         msg = ev.msg
@@ -121,9 +124,9 @@ class OFPHandler(app_manager.RyuApp):
 
         # now move on to config state
         LOG.debug('move onto config mode')
-        datapath.ev_q.set_dispatcher(CONFIG_DISPATCHER)
+        datapath.set_state(CONFIG_DISPATCHER)
 
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    @set_ev_handler(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
@@ -147,10 +150,10 @@ class OFPHandler(app_manager.RyuApp):
         datapath.send_msg(set_config)
 
         LOG.debug('move onto main mode')
-        ev.msg.datapath.ev_q.set_dispatcher(MAIN_DISPATCHER)
+        ev.msg.datapath.set_state(MAIN_DISPATCHER)
 
-    @set_ev_cls(ofp_event.EventOFPEchoRequest,
-                [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    @set_ev_handler(ofp_event.EventOFPEchoRequest,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def echo_request_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
@@ -159,8 +162,8 @@ class OFPHandler(app_manager.RyuApp):
         echo_reply.data = msg.data
         datapath.send_msg(echo_reply)
 
-    @set_ev_cls(ofp_event.EventOFPErrorMsg,
-                [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    @set_ev_handler(ofp_event.EventOFPErrorMsg,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):
         msg = ev.msg
         LOG.debug('error msg ev %s type 0x%x code 0x%x %s',

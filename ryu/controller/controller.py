@@ -25,6 +25,8 @@ import ssl
 from gevent.server import StreamServer
 from gevent.queue import Queue
 
+import ryu.base.app_manager
+
 from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_v1_0
@@ -35,7 +37,6 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.ofproto import nx_match
 
-from ryu.controller import dispatcher
 from ryu.controller import handler
 from ryu.controller import ofp_event
 
@@ -123,25 +124,22 @@ class Datapath(object):
         # prevent it from eating memory up
         self.send_q = Queue(16)
 
-        # circular reference self.ev_q.aux == self
-        self.ev_q = dispatcher.EventQueue(handler.QUEUE_NAME_OFP_MSG,
-                                          handler.HANDSHAKE_DISPATCHER,
-                                          self)
-
         self.set_version(max(self.supported_ofp_version))
         self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
         self.ports = None
         self.flow_format = ofproto_v1_0.NXFF_OPENFLOW10
+        self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
+        self.set_state(handler.HANDSHAKE_DISPATCHER)
 
     def close(self):
-        """
-        Call this before discarding this datapath object
-        The circular refernce as self.ev_q.aux == self must be broken.
-        """
-        # tell this datapath is dead
-        self.ev_q.set_dispatcher(handler.DEAD_DISPATCHER)
-        self.ev_q.close()
+        self.set_state(handler.DEAD_DISPATCHER)
+
+    def set_state(self, state):
+        self.state = state
+        ev = ofp_event.EventOFPStateChange(self)
+        ev.state = state
+        self.ofp_brick.send_event_to_observers(ev)
 
     def set_version(self, version):
         assert version in self.supported_ofp_version
@@ -169,7 +167,13 @@ class Datapath(object):
                 msg = ofproto_parser.msg(self,
                                          version, msg_type, msg_len, xid, buf)
                 #LOG.debug('queue msg %s cls %s', msg, msg.__class__)
-                self.ev_q.queue(ofp_event.ofp_msg_to_ev(msg))
+                ev = ofp_event.ofp_msg_to_ev(msg)
+                handlers = self.ofp_brick.get_handlers(ev)
+                for handler in handlers:
+                    if self.state in handler.dispatchers:
+                        handler(ev)
+
+                self.ofp_brick.send_event_to_observers(ev)
 
                 buf = buf[required_len:]
                 required_len = ofproto_common.OFP_HEADER_SIZE
@@ -218,10 +222,6 @@ class Datapath(object):
         finally:
             gevent.kill(send_thr)
             gevent.joinall([send_thr])
-
-    def send_ev(self, ev):
-        #LOG.debug('send_ev %s', ev)
-        self.ev_q.queue(ev)
 
     #
     # Utility methods for convenience

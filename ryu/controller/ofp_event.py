@@ -73,3 +73,9 @@ _PARSER_MODULE_LIST = ['ryu.ofproto.ofproto_v1_0_parser',
 for m in _PARSER_MODULE_LIST:
     # print 'loading module %s' % m
     _create_ofp_msg_ev_from_module(m)
+
+
+class EventOFPStateChange(event.EventBase):
+    def __init__(self, dp):
+        super(EventOFPStateChange, self).__init__()
+        self.datapath = dp

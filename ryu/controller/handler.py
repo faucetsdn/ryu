@@ -14,36 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import inspect
 import logging
 
-from ryu.controller import dispatcher
 from ryu.controller import ofp_event
 
 LOG = logging.getLogger('ryu.controller.handler')
 
-QUEUE_NAME_OFP_MSG = 'ofp_msg'
-DISPATCHER_NAME_OFP_HANDSHAKE = 'ofp_handshake'
-HANDSHAKE_DISPATCHER = dispatcher.EventDispatcher(
-    DISPATCHER_NAME_OFP_HANDSHAKE)
-DISPATCHER_NAME_OFP_CONFIG = 'ofp_config'
-CONFIG_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_CONFIG)
-DISPATCHER_NAME_OFP_MAIN = 'ofp_main'
-MAIN_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_MAIN)
-DISPATCHER_NAME_OFP_DEAD = 'ofp_dead'
-DEAD_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_DEAD)
+# just represent OF datapath state. datapath specific so should be moved.
+HANDSHAKE_DISPATCHER = "handshake"
+CONFIG_DISPATCHER = "config"
+MAIN_DISPATCHER = "main"
+DEAD_DISPATCHER = "dead"
 
 
+# should be named something like 'observe_event'
 def set_ev_cls(ev_cls, dispatchers):
     def _set_ev_cls_dec(handler):
         handler.ev_cls = ev_cls
-        handler.dispatchers = dispatchers
+        handler.dispatchers = _listify(dispatchers)
+        handler.observer = ev_cls.__module__
         return handler
     return _set_ev_cls_dec
 
 
-def _is_ev_handler(meth):
+def set_ev_handler(ev_cls, dispatchers):
+    def _set_ev_cls_dec(handler):
+        handler.ev_cls = ev_cls
+        handler.dispatchers = _listify(dispatchers)
+        return handler
+    return _set_ev_cls_dec
+
+
+def _is_ev_cls(meth):
     return hasattr(meth, 'ev_cls')
 
 
@@ -58,12 +61,5 @@ def _listify(may_list):
 def register_instance(i):
     for _k, m in inspect.getmembers(i, inspect.ismethod):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
-        if not _is_ev_handler(m):
-            continue
-
-        _dispatchers = _listify(getattr(m, 'dispatchers', None))
-        # LOG.debug("_dispatchers %s", _dispatchers)
-        for d in _dispatchers:
-            # LOG.debug('register dispatcher %s ev %s k %s m %s',
-            #           d.name, m.ev_cls, _k, m)
-            d.register_handler(m.ev_cls, m)
+        if _is_ev_cls(m):
+            i.register_handler(m.ev_cls, m)

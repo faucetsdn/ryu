@@ -16,8 +16,9 @@
 
 import logging
 
+from ryu.base import app_manager
 from ryu.controller import event
-from ryu.controller import dispatcher
+from ryu.controller import ofp_event
 from ryu.controller import dp_type
 from ryu.controller import handler
 from ryu.controller.handler import set_ev_cls
@@ -25,9 +26,7 @@ from ryu.controller.handler import set_ev_cls
 LOG = logging.getLogger('ryu.controller.dpset')
 
 
-QUEUE_NAME_DPSET = 'dpset'
-DISPATCHER_NAME_DPSET = 'dpset'
-DPSET_EV_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_DPSET)
+DPSET_EV_DISPATCHER = 'dpset'
 
 
 class EventDPBase(event.EventBase):
@@ -46,18 +45,16 @@ class EventDP(EventDPBase):
 
 
 # this depends on controller::Datapath and dispatchers in handler
-class DPSet(object):
+class DPSet(app_manager.RyuApp):
     def __init__(self):
         super(DPSet, self).__init__()
+        self.name = 'dpset'
 
         # dp registration and type setting can be occur in any order
         # Sometimes the sw_type is set before dp connection
         self.dp_types = {}
 
         self.dps = {}   # datapath_id => class Datapath
-        self.ev_q = dispatcher.EventQueue(QUEUE_NAME_DPSET,
-                                          DPSET_EV_DISPATCHER)
-        handler.register_instance(self)
 
     def register(self, dp):
         assert dp.id is not None
@@ -68,7 +65,7 @@ class DPSet(object):
             dp.dp_type = dp_type_
 
         self.dps[dp.id] = dp
-        self.ev_q.queue(EventDP(dp, True))
+        self.send_event_to_observers(EventDP(dp, True))
 
     def unregister(self, dp):
         if dp.id in self.dps:
@@ -76,7 +73,7 @@ class DPSet(object):
             assert dp.id not in self.dp_types
             self.dp_types[dp.id] = getattr(dp, 'dp_type', dp_type.UNKNOWN)
 
-            self.ev_q.queue(EventDP(dp, False))
+            self.send_event_to_observers(EventDP(dp, False))
 
     def set_type(self, dp_id, dp_type_=dp_type.UNKNOWN):
         if dp_id in self.dps:
@@ -92,19 +89,14 @@ class DPSet(object):
     def get_all(self):
         return self.dps.items()
 
-    @set_ev_cls(dispatcher.EventDispatcherChange,
-                dispatcher.QUEUE_EV_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPStateChange,
+                [handler.MAIN_DISPATCHER, handler.DEAD_DISPATCHER])
     def dispacher_change(self, ev):
-        LOG.debug('dispatcher change q %s dispatcher %s',
-                  ev.ev_q.name, ev.new_dispatcher.name)
-        if ev.ev_q.name != handler.QUEUE_NAME_OFP_MSG:
-            return
-
-        datapath = ev.ev_q.aux
+        datapath = ev.datapath
         assert datapath is not None
-        if ev.new_dispatcher.name == handler.DISPATCHER_NAME_OFP_MAIN:
+        if ev.state == handler.MAIN_DISPATCHER:
             LOG.debug('DPSET: register datapath %s', datapath)
             self.register(datapath)
-        elif ev.new_dispatcher.name == handler.DISPATCHER_NAME_OFP_DEAD:
+        elif ev.state == handler.DEAD_DISPATCHER:
             LOG.debug('DPSET: unregister datapath %s', datapath)
             self.unregister(datapath)
