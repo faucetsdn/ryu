@@ -182,3 +182,51 @@ class SwitchConfClientV1_0(RyuClientBase):
 
 
 SwitchConfClient = SwitchConfClientV1_0
+
+
+class QuantumIfaceClientV1_0(RyuClientBase):
+    version = 'v1.0'
+
+    # /quantum/ports
+    # /quantum/ports/{iface_id}
+    # /quantum/ports/{iface_id}/keys/
+    # /quantum/ports/{iface_id}/keys/{key}/{value}
+    path_quantum_ports = 'quantum/ports'
+    path_iface_id = path_quantum_ports + '/%(iface_id)s'
+    path_keys = path_iface_id + '/keys'
+    path_key = path_keys + '/%(key)s'
+    path_value = path_key + '/%(value)s'
+
+    def __init__(self, address):
+        super(QuantumIfaceClientV1_0, self).__init__(self.version, address)
+
+    def list_ifaces(self):
+        return self._do_request_read('GET', self.path_quantum_ports)
+
+    def delete_iface(self, iface_id):
+        self._do_request('DELETE', self.path_iface_id % locals())
+
+    def list_keys(self, iface_id):
+        return self._do_request_read('GET', self.path_keys % locals())
+
+    def get_key(self, iface_id, key):
+        return self._do_request_read('GET', self.path_key % locals())
+
+    def create_key(self, iface_id, key, value):
+        self._do_request('POST', self.path_value % locals())
+
+    def update_key(self, iface_id, key, value):
+        self._do_request('PUT', self.path_value % locals())
+
+    # for convenience
+    def get_network_id(self, iface_id):
+        return self.get_key(iface_id, 'network_id')
+
+    def create_network_id(self, iface_id, network_id):
+        self.create_key(iface_id, 'network_id', network_id)
+
+    def update_network_id(self, iface_id, network_id):
+        self.update_key(iface_id, 'network_id', network_id)
+
+
+QuantumIfaceClient = QuantumIfaceClientV1_0
