@@ -23,3 +23,25 @@ FLAGS = gflags.FLAGS
 
 # GLOBAL flags
 gflags.DEFINE_boolean('monkey_patch', False, 'do monkey patch')
+
+# app/quantum_adapter
+gflags.DEFINE_string('quantum_url', 'http://localhost:9696',
+                     'URL for connecting to quantum')
+gflags.DEFINE_integer('quantum_url_timeout', 30,
+                      'timeout value for connecting to quantum in seconds')
+gflags.DEFINE_string('quantum_admin_username', 'quantum',
+                     'username for connecting to quantum in admin context')
+gflags.DEFINE_string('quantum_admin_password', 'service_password',
+                     'password for connecting to quantum in admin context')
+gflags.DEFINE_string('quantum_admin_tenant_name', 'service',
+                     'tenant name for connecting to quantum in admin context')
+gflags.DEFINE_string('quantum_admin_auth_url', 'http://localhost:5000/v2.0',
+                     'auth url for connecting to quantum in admin context')
+gflags.DEFINE_string(
+    'quantum_auth_strategy',
+    'keystone',
+    'auth strategy for connecting to quantum in admin context')
+
+gflags.DEFINE_string('quantum_controller_addr', None,
+                     'openflow mehod:address:port to set controller of'
+                     'ovs bridge')
