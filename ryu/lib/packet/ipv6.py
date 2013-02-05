@@ -17,6 +17,7 @@ import struct
 import socket
 from . import packet_base
 from . import packet_utils
+from . import icmp6
 from . import tcp
 from ryu.ofproto import inet
 
@@ -64,4 +65,5 @@ class ipv6(packet_base.PacketBase):
                          self.src, self.dst)
         return hdr
 
+ipv6.register_packet_type(icmp6.icmp6, inet.IPPROTO_ICMP6)
 ipv6.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
