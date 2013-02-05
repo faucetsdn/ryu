@@ -19,9 +19,10 @@
 import sys
 from optparse import OptionParser
 
-from ryu.app.client import TunnelClient
 from ryu.app.client import OFPClient
+from ryu.app.client import QuantumIfaceClient
 from ryu.app.client import SwitchConfClient
+from ryu.app.client import TunnelClient
 
 
 def client_test():
@@ -39,6 +40,7 @@ def client_test():
     ofp_client = OFPClient(address)
     tun_client = TunnelClient(address)
     sc_client = SwitchConfClient(address)
+    qi_client = QuantumIfaceClient(address)
 
     commands = {
         'list_nets': lambda a: sys.stdout.write(ofp_client.get_networks()),
@@ -72,6 +74,19 @@ def client_test():
         'sc_get_key': lambda a: sys.stdout.write(
             sc_client.get_key(a[1], a[2])),
         'sc_delete_key': lambda a: sc_client.delete_key(a[1], a[2]),
+
+        'qi_list_iface': lambda a: sys.stdout.write(qi_client.list_ifaces()),
+        'qi_delete_iface': lambda a: qi_client.delete_iface(a[1]),
+        'qi_list_keys': lambda a: sys.stdout.write(
+            qi_client.list_keys(a[1])),
+        'qi_create_key': lambda a: qi_client.create_network_id(
+            a[1], a[2], a[3]),
+        'qi_update_key': lambda a: qi_client.update_network_id(
+            a[1], a[2], a[3]),
+        'qi_get_net_id': lambda a: sys.stdout.write(
+            qi_client.get_network_id(a[1])),
+        'qi_create_net_id': lambda a: qi_client.create_network_id(a[1], a[2]),
+        'qi_update_net_id': lambda a: qi_client.update_network_id(a[1], a[2]),
     }
 
     # allow '-', instead of '_'
