@@ -96,3 +96,49 @@ class OFPClientV1_0(RyuClientBase):
 
 
 OFPClient = OFPClientV1_0
+
+
+class TunnelClientV1_0(RyuClientBase):
+    version = 'v1.0'
+
+    # /tunnels/networks/{network-id}/key/{tunnel_key}
+    # /tunnels/switches/{dpid}/ports/{port-id}/{remote_dpip}
+    path_tunnels = 'tunnels'
+    path_key = path_tunnels + '/networks/%(network_id)s/key'
+    path_tunnel_key = path_key + '/%(tunnel_key)s'
+    path_ports = path_tunnels + '/switches/%(dpid)s/ports'
+    path_port = path_ports + '/%(port_no)s'
+    path_remote_dpid = path_port + '/%(remote_dpid)s'
+
+    def __init__(self, address):
+        super(TunnelClientV1_0, self).__init__(self.version, address)
+
+    def get_tunnel_key(self, network_id):
+        return self._do_request_read('GET', self.path_key % locals())
+
+    def delete_tunnel_key(self, network_id):
+        return self._do_request_read('DELETE', self.path_key % locals())
+
+    def create_tunnel_key(self, network_id, tunnel_key):
+        self._do_request('POST', self.path_tunnel_key % locals())
+
+    def update_tunnel_key(self, network_id, tunnel_key):
+        self._do_request('PUT', self.path_tunnel_key % locals())
+
+    def list_ports(self, dpid):
+        return self._do_request_read('GET', self.path_ports % locals())
+
+    def delete_port(self, dpid, port_no):
+        return self._do_request_read('DELETE', self.path_port % locals())
+
+    def get_remote_dpid(self, dpid, port_no):
+        return self._do_request_read('GET', self.path_port % locals())
+
+    def create_remote_dpid(self, dpid, port_no, remote_dpid):
+        self._do_request('POST', self.path_remote_dpid % locals())
+
+    def update_remote_dpid(self, dpid, port_no, remote_dpid):
+        self._do_request('PUT', self.path_remote_dpid % locals())
+
+
+TunnelClient = TunnelClientV1_0
