@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import httplib
+import json
 import urlparse
 
 
@@ -40,10 +41,14 @@ class RyuClientBase(object):
         self.port = res.port
         self.url_prefix = '/' + self.version + '/'
 
-    def _do_request(self, method, action):
+    def _do_request(self, method, action, body=None):
         conn = httplib.HTTPConnection(self.host, self.port)
         url = self.url_prefix + action
-        conn.request(method, url)
+        headers = {}
+        if body is not None:
+            body = json.dumps(body)
+            headers['Content-Type'] = 'application/json'
+        conn.request(method, url, body, headers)
         res = conn.getresponse()
         if res.status in (httplib.OK,
                           httplib.CREATED,
@@ -142,3 +147,38 @@ class TunnelClientV1_0(RyuClientBase):
 
 
 TunnelClient = TunnelClientV1_0
+
+
+class SwitchConfClientV1_0(RyuClientBase):
+    version = 'v1.0'
+
+    # /conf/switches
+    # /conf/switches/<dpid>
+    # /conf/switches/<dpid>/<key>
+    path_conf_switches = 'conf/switches'
+    path_switch = path_conf_switches + '/%(dpid)s'
+    path_key = path_switch + '/%(key)s'
+
+    def __init__(self, address):
+        super(SwitchConfClientV1_0, self).__init__(self.version, address)
+
+    def list_switches(self):
+        return self._do_request_read('GET', self.path_conf_switches)
+
+    def delete_switch(self, dpid):
+        self._do_request('DELETE', self.path_switch % locals())
+
+    def list_keys(self, dpid):
+        return self._do_request_read('GET', self.path_switch % locals())
+
+    def set_key(self, dpid, key, value):
+        self._do_request('PUT', self.path_key % locals(), value)
+
+    def get_key(self, dpid, key):
+        return self._do_request_read('GET', self.path_key % locals())
+
+    def delete_key(self, dpid, key):
+        self._do_request('DELETE', self.path_key % locals())
+
+
+SwitchConfClient = SwitchConfClientV1_0
