@@ -66,7 +66,11 @@ class tcp(packet_base.PacketBase):
 
         if self.csum == 0:
             length = self.length + len(payload)
-            ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 6, length)
+            if prev.version == 4:
+                ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 6, length)
+            elif prev.version == 6:
+                ph = struct.pack('!16s16sBBH', prev.src, prev.dst, 0, 6,
+                                 length)
             f = ph + h + payload
             if len(f) % 2:
                 f += '\x00'
