@@ -21,6 +21,7 @@ from optparse import OptionParser
 
 from ryu.app.client import TunnelClient
 from ryu.app.client import OFPClient
+from ryu.app.client import SwitchConfClient
 
 
 def client_test():
@@ -37,6 +38,7 @@ def client_test():
     address = options.host + ':' + str(options.port)
     ofp_client = OFPClient(address)
     tun_client = TunnelClient(address)
+    sc_client = SwitchConfClient(address)
 
     commands = {
         'list_nets': lambda a: sys.stdout.write(ofp_client.get_networks()),
@@ -62,6 +64,14 @@ def client_test():
             a[1], a[2], a[3]),
         'update_remote_dpid': lambda a: tun_client.update_remote_dpid(
             a[1], a[2], a[3]),
+
+        'sc_list_sw': lambda a: sys.stdout.write(sc_client.list_switches()),
+        'sc_delete_sw': lambda a: sc_client.delete_switch(a[1]),
+        'sc_list_keys': lambda a: sys.stdout.write(sc_client.list_keys(a[1])),
+        'sc_set_key': lambda a: sc_client.set_key(a[1], a[2], a[3]),
+        'sc_get_key': lambda a: sys.stdout.write(
+            sc_client.get_key(a[1], a[2])),
+        'sc_delete_key': lambda a: sc_client.delete_key(a[1], a[2]),
     }
 
     # allow '-', instead of '_'
