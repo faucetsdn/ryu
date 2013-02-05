@@ -29,7 +29,7 @@ DEAD_DISPATCHER = "dead"
 
 
 # should be named something like 'observe_event'
-def set_ev_cls(ev_cls, dispatchers):
+def set_ev_cls(ev_cls, dispatchers=None):
     def _set_ev_cls_dec(handler):
         handler.ev_cls = ev_cls
         handler.dispatchers = _listify(dispatchers)
