@@ -19,6 +19,7 @@
 import sys
 from optparse import OptionParser
 
+from ryu.app.client import TunnelClient
 from ryu.app.client import OFPClient
 
 
@@ -33,16 +34,34 @@ def client_test():
         parser.print_help()
         sys.exit(1)
 
-    client = OFPClient(options.host + ':' + str(options.port))
+    address = options.host + ':' + str(options.port)
+    ofp_client = OFPClient(address)
+    tun_client = TunnelClient(address)
+
     commands = {
-        'list_nets': lambda a: sys.stdout.write(client.get_networks()),
-        'create_net': lambda a: client.create_network(a[1]),
-        'update_net': lambda a: client.update_network(a[1]),
-        'delete_net': lambda a: client.delete_network(a[1]),
-        'list_ports': lambda a: sys.stdout.write(client.get_ports(a[1])),
-        'create_port': lambda a: client.create_port(a[1], a[2], a[3]),
-        'update_port': lambda a: client.update_port(a[1], a[2], a[3]),
-        'delete_port': lambda a: client.delete_port(a[1], a[2], a[3])
+        'list_nets': lambda a: sys.stdout.write(ofp_client.get_networks()),
+        'create_net': lambda a: ofp_client.create_network(a[1]),
+        'update_net': lambda a: ofp_client.update_network(a[1]),
+        'delete_net': lambda a: ofp_client.delete_network(a[1]),
+        'list_ports': lambda a: sys.stdout.write(ofp_client.get_ports(a[1])),
+        'create_port': lambda a: ofp_client.create_port(a[1], a[2], a[3]),
+        'update_port': lambda a: ofp_client.update_port(a[1], a[2], a[3]),
+        'delete_port': lambda a: ofp_client.delete_port(a[1], a[2], a[3]),
+
+        'get_tun_key': lambda a: sys.stdout.write(
+            tun_client.get_tunnel_key(a[1])),
+        'delete_tun_key': lambda a: tun_client.delete_tunnel_key(a[1]),
+        'create_tun_key': lambda a: tun_client.create_tunnel_key(a[1], a[2]),
+        'update_tun_key': lambda a: tun_client.update_tunnel_key(a[1], a[2]),
+        'list_tun_ports': lambda a: sys.stdout.write(
+            tun_client.list_ports(a[1])),
+        'delete_tun_port': lambda a: tun_client.delete_port(a[1], a[2]),
+        'get_remote_dpid': lambda a: sys.stdout.write(
+            tun_client.get_remote_dpid(a[1], a[2])),
+        'create_remote_dpid': lambda a: tun_client.create_remote_dpid(
+            a[1], a[2], a[3]),
+        'update_remote_dpid': lambda a: tun_client.update_remote_dpid(
+            a[1], a[2], a[3]),
     }
 
     # allow '-', instead of '_'
