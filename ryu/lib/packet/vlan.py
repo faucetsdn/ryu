@@ -17,6 +17,7 @@ import struct
 from . import packet_base
 from . import arp
 from . import ipv4
+from . import lldp
 from ryu.ofproto import ether
 from ryu.ofproto.ofproto_parser import msg_pack_into
 
@@ -47,3 +48,4 @@ class vlan(packet_base.PacketBase):
 
 vlan.register_packet_type(arp.arp, ether.ETH_TYPE_ARP)
 vlan.register_packet_type(ipv4.ipv4, ether.ETH_TYPE_IP)
+vlan.register_packet_type(lldp.lldp, ether.ETH_TYPE_LLDP)
