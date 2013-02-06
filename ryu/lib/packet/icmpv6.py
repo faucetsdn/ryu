@@ -22,21 +22,21 @@ from . import packet_base
 from . import packet_utils
 from ryu.lib.mac import haddr_to_bin, haddr_to_str
 
-ICMP6_DST_UNREACH = 1       # dest unreachable, codes:
-ICMP6_PACKET_TOO_BIG = 2       # packet too big
-ICMP6_TIME_EXCEEDED = 3       # time exceeded, code:
-ICMP6_PARAM_PROB = 4       # ip6 header bad
+ICMPV6_DST_UNREACH = 1       # dest unreachable, codes:
+ICMPV6_PACKET_TOO_BIG = 2       # packet too big
+ICMPV6_TIME_EXCEEDED = 3       # time exceeded, code:
+ICMPV6_PARAM_PROB = 4       # ip6 header bad
 
-ICMP6_ECHO_REQUEST = 128     # echo service
-ICMP6_ECHO_REPLY = 129     # echo reply
+ICMPV6_ECHO_REQUEST = 128     # echo service
+ICMPV6_ECHO_REPLY = 129     # echo reply
 MLD_LISTENER_QUERY = 130     # multicast listener query
 MLD_LISTENER_REPOR = 131     # multicast listener report
 MLD_LISTENER_DONE = 132     # multicast listener done
 
 # RFC2292 decls
-ICMP6_MEMBERSHIP_QUERY = 130     # group membership query
-ICMP6_MEMBERSHIP_REPORT = 131     # group membership report
-ICMP6_MEMBERSHIP_REDUCTION = 132     # group membership termination
+ICMPV6_MEMBERSHIP_QUERY = 130     # group membership query
+ICMPV6_MEMBERSHIP_REPORT = 131     # group membership report
+ICMPV6_MEMBERSHIP_REDUCTION = 132     # group membership termination
 
 ND_ROUTER_SOLICIT = 133     # router solicitation
 ND_ROUTER_ADVERT = 134     # router advertisment
@@ -44,33 +44,33 @@ ND_NEIGHBOR_SOLICIT = 135     # neighbor solicitation
 ND_NEIGHBOR_ADVERT = 136     # neighbor advertisment
 ND_REDIREC = 137     # redirect
 
-ICMP6_ROUTER_RENUMBERING = 138     # router renumbering
+ICMPV6_ROUTER_RENUMBERING = 138     # router renumbering
 
-ICMP6_WRUREQUEST = 139     # who are you request
-ICMP6_WRUREPLY = 140     # who are you reply
-ICMP6_FQDN_QUERY = 139     # FQDN query
-ICMP6_FQDN_REPLY = 140     # FQDN reply
-ICMP6_NI_QUERY = 139     # node information request
-ICMP6_NI_REPLY = 140     # node information reply
+ICMPV6_WRUREQUEST = 139     # who are you request
+ICMPV6_WRUREPLY = 140     # who are you reply
+ICMPV6_FQDN_QUERY = 139     # FQDN query
+ICMPV6_FQDN_REPLY = 140     # FQDN reply
+ICMPV6_NI_QUERY = 139     # node information request
+ICMPV6_NI_REPLY = 140     # node information reply
 
-ICMP6_MAXTYPE = 201
+ICMPV6_MAXTYPE = 201
 
 
-class icmp6(packet_base.PacketBase):
+class icmpv6(packet_base.PacketBase):
     _PACK_STR = '!BBH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
-    _ICMP6_TYPES = {}
+    _ICMPV6_TYPES = {}
 
     @staticmethod
-    def register_icmp6_type(*args):
-        def _register_icmp6_type(cls):
+    def register_icmpv6_type(*args):
+        def _register_icmpv6_type(cls):
             for type_ in args:
-                icmp6._ICMP6_TYPES[type_] = cls
+                icmpv6._ICMPV6_TYPES[type_] = cls
             return cls
-        return _register_icmp6_type
+        return _register_icmpv6_type
 
     def __init__(self, type_, code, csum, data=None):
-        super(icmp6, self).__init__()
+        super(icmpv6, self).__init__()
         self.type_ = type_
         self.code = code
         self.csum = csum
@@ -82,7 +82,7 @@ class icmp6(packet_base.PacketBase):
         msg = cls(type_, code, csum)
         offset = cls._MIN_LEN
         if len(buf) > offset:
-            cls_ = cls._ICMP6_TYPES.get(type_, None)
+            cls_ = cls._ICMPV6_TYPES.get(type_, None)
             if cls_:
                 msg.data = cls_.parser(buf, offset)
             else:
@@ -91,11 +91,11 @@ class icmp6(packet_base.PacketBase):
         return msg, None
 
     def serialize(self, payload, prev):
-        hdr = bytearray(struct.pack(icmp6._PACK_STR, self.type_,
+        hdr = bytearray(struct.pack(icmpv6._PACK_STR, self.type_,
                                     self.code, self.csum))
 
         if self.data is not None:
-            if self.type_ in icmp6._ICMP6_TYPES:
+            if self.type_ in icmpv6._ICMPV6_TYPES:
                 hdr += self.data.serialize()
             else:
                 hdr += self.data
@@ -115,7 +115,7 @@ class icmp6(packet_base.PacketBase):
         return hdr
 
 
-@icmp6.register_icmp6_type(ND_NEIGHBOR_SOLICIT, ND_NEIGHBOR_ADVERT)
+@icmpv6.register_icmpv6_type(ND_NEIGHBOR_SOLICIT, ND_NEIGHBOR_ADVERT)
 class nd_s(object):
     _PACK_STR = '!I16sBB6s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
@@ -149,7 +149,7 @@ class nd_s(object):
         return hdr
 
 
-@icmp6.register_icmp6_type(ICMP6_ECHO_REPLY, ICMP6_ECHO_REQUEST)
+@icmpv6.register_icmpv6_type(ICMPV6_ECHO_REPLY, ICMPV6_ECHO_REQUEST)
 class echo(object):
     _PACK_STR = '!HH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
