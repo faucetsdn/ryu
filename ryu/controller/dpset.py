@@ -170,16 +170,23 @@ class DPSet(app_manager.RyuApp):
         port = msg.desc
         ofproto = datapath.ofproto
 
-        LOG.debug('port status %s', reason)
-
         if reason == ofproto.OFPPR_ADD:
+            LOG.debug('DPSET: A port was added.' +
+                      '(datapath id = %s, port number = %s)',
+                      datapath.id, port.port_no)
             self._port_added(datapath, port)
             self.send_event_to_observers(EventPortAdd(datapath, port))
         elif reason == ofproto.OFPPR_DELETE:
+            LOG.debug('DPSET: A port was deleted.' +
+                      '(datapath id = %s, port number = %s)',
+                      datapath.id, port.port_no)
             self._port_deleted(datapath, port)
             self.send_event_to_observers(EventPortDelete(datapath, port))
         else:
             assert reason == ofproto.OFPPR_MODIFY
+            LOG.debug('DPSET: A port was modified.' +
+                      '(datapath id = %s, port number = %s)',
+                      datapath.id, port.port_no)
             self.port_state[datapath.id].modify(port.port_no, port)
             self.send_event_to_observers(EventPortModify(datapath, port))
 
