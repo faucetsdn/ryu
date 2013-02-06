@@ -27,6 +27,8 @@ import ryu.exception as ryu_exc
 
 LOG = logging.getLogger('ryu.controller.dpset')
 
+DPSET_EV_DISPATCHER = "dpset"
+
 
 class EventDPBase(event.EventBase):
     def __init__(self, dp):
