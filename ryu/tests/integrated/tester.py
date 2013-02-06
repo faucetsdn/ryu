@@ -37,7 +37,8 @@ LOG = logging.getLogger(__name__)
 
 LOG_TEST_START = 'TEST_START: %s'
 LOG_TEST_RESULTS = 'TEST_RESULTS:'
-LOG_TEST_FINISH = 'TEST_FINISHED: Completed=[%s]'
+LOG_TEST_FINISH = 'TEST_FINISHED: Completed=[%s] (OK=%s NG=%s SKIP=%s)'
+LOG_TEST_UNSUPPORTED = 'SKIP (unsupported)'
 
 
 class TestFlowBase(app_manager.RyuApp):
@@ -116,7 +117,7 @@ class TestFlowBase(app_manager.RyuApp):
                 dp.send_barrier()
                 self.send_flow_stats(dp)
             else:
-                self.results[t] = 'SKIP (unsupported)'
+                self.results[t] = LOG_TEST_UNSUPPORTED
                 self.unclear -= 1
                 self.start_next_test(dp)
         else:
@@ -124,9 +125,18 @@ class TestFlowBase(app_manager.RyuApp):
 
     def print_results(self):
         LOG.info("TEST_RESULTS:")
+        ok = 0
+        ng = 0
+        skip = 0
         for t in sorted(self.results.keys()):
+            if self.results[t] is True:
+                ok += 1
+            elif self.results[t] == LOG_TEST_UNSUPPORTED:
+                skip += 1
+            else:
+                ng += 1
             LOG.info("    %s: %s", t, self.results[t])
-        LOG.info(LOG_TEST_FINISH, self.unclear == 0)
+        LOG.info(LOG_TEST_FINISH, self.unclear == 0, ok, ng, skip)
 
     @handler.set_ev_cls(ofp_event.EventOFPFlowStatsReply,
                         handler.MAIN_DISPATCHER)

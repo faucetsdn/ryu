@@ -42,21 +42,13 @@ class RunTest(tester.TestFlowBase):
         super(RunTest, self).__init__(*args, **kwargs)
 
         self._verify = None
-        self.ready = 0
-        self.capabilities = None
         self.n_tables = ofproto_v1_2.OFPTT_MAX
-        self.table_stats = None
 
     def start_next_test(self, dp):
         self._verify = None
         self.delete_all_flows(dp)
         dp.send_barrier()
         if len(self.pending):
-            if not self.ready:
-                # Get supported capabilities.
-                self.get_supported(dp)
-                return
-
             t = self.pending.pop()
             if self.is_supported(t):
                 LOG.info(tester.LOG_TEST_START, t)
@@ -1017,12 +1009,7 @@ class RunTest(tester.TestFlowBase):
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, MAIN_DISPATCHER)
     def features_replay_handler(self, ev):
         if self.current is None:
-            msg = ev.msg
-            dp = msg.datapath
-            self.capabilities = ev.msg.capabilities
-            if self.n_tables > msg.n_tables:
-                self.n_tables = msg.n_tables
-            self.start_next_test(ev.msg.datapath)
+            pass
         else:
             self.run_verify(ev)
 
@@ -1053,19 +1040,6 @@ class RunTest(tester.TestFlowBase):
     def error_handler(self, ev):
         if self.current.find('error') > 0:
             self.run_verify(ev)
-
-    def get_supported(self, dp):
-        if self.capabilities is None:
-            m = dp.ofproto_parser.OFPFeaturesRequest(dp)
-            dp.send_msg(m)
-        elif (self.capabilities & dp.ofproto.OFPC_TABLE_STATS > 0 and
-              self.table_stats is None):
-            self._verify = dp.ofproto.OFPST_TABLE
-            m = dp.ofproto_parser.OFPTableStatsRequest(dp)
-            dp.send_msg(m)
-        else:
-            self.ready = 1
-            self.start_next_test(dp)
 
     def is_supported(self, t):
         unsupported = [
