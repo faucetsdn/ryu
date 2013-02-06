@@ -164,7 +164,7 @@ class TestFlowBase(app_manager.RyuApp):
         self.results[self.current] = result
         self.start_next_test(dp)
 
-    @handler.set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
+    @handler.set_ev_cls(dpset.EventDP)
     def handler_datapath(self, ev):
         if ev.enter:
             self.start_next_test(ev.dp)
