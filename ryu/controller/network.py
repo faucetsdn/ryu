@@ -180,8 +180,11 @@ class DPIDs(dict):
         except KeyError:
             raise PortNotFound(dpid=dpid, port=port_no, network_id=None)
 
-    def get_ports(self, dpid):
-        return self.get(dpid, {}).values()
+    def get_ports(self, dpid, network_id=None):
+        if network_id is None:
+            return self.get(dpid, {}).values()
+        return [p for p in self.get(dpid, {}).values()
+                if p.network_id == network_id]
 
     def get_port(self, dpid, port_no):
         try:
@@ -194,6 +197,9 @@ class DPIDs(dict):
             return self[dpid][port_no].network_id
         except KeyError:
             raise PortUnknown(dpid=dpid, port=port_no)
+
+    def get_networks(self, dpid):
+        return set(self[dpid].values())
 
     def get_network_safe(self, dpid, port_no):
         port = self.get(dpid, {}).get(port_no)
@@ -312,6 +318,9 @@ class Network(app_manager.RyuApp):
     def has_network(self, network_id):
         return self.networks.has_network(network_id)
 
+    def get_networks(self, dpid):
+        return self.dpids.get_networks(dpid)
+
     def create_mac(self, network_id, dpid, port_no, mac_address):
         self.dpids.set_mac(network_id, dpid, port_no, mac_address)
 
@@ -327,8 +336,8 @@ class Network(app_manager.RyuApp):
             return []
         return [mac_address]
 
-    def get_ports(self, dpid):
-        return self.dpids.get_ports(dpid)
+    def get_ports(self, dpid, network_id=None):
+        return self.dpids.get_ports(dpid, network_id)
 
     def get_port(self, dpid, port_no):
         return self.dpids.get_port(dpid, port_no)
