@@ -21,11 +21,9 @@ from ryu import exception as ryu_exc
 from ryu.app.rest_nw_id import (NW_ID_VPORT_GRE,
                                 RESERVED_NETWORK_IDS)
 from ryu.base import app_manager
-from ryu.controller import (dispatcher,
-                            dpset,
+from ryu.controller import (dpset,
                             event,
                             handler,
-                            handler_utils,
                             network,
                             ofp_event,
                             tunnels)
@@ -41,65 +39,6 @@ def _is_reserved_port(ofproto, port_no):
     return port_no > ofproto.OFPP_MAX
 
 
-# Those events are higher level events than events of network tenant,
-# tunnel ports as the race conditions are masked.
-# Add event is generated only when all necessary informations are gathered,
-# Del event is generated when any one of the informations are deleted.
-#
-# Example: ports for VMs
-# there is a race condition between ofp port add/del event and
-# register network_id for the port.
-
-
-class EventTunnelKeyDel(event.EventBase):
-    def __init__(self, tunnel_key):
-        super(EventTunnelKeyDel, self).__init__()
-        self.tunnel_key = tunnel_key
-
-
-class EventPortBase(event.EventBase):
-    def __init__(self, dpid, port_no):
-        super(EventPortBase, self).__init__()
-        self.dpid = dpid
-        self.port_no = port_no
-
-
-class EventVMPort(EventPortBase):
-    def __init__(self, network_id, tunnel_key,
-                 dpid, port_no, mac_address, add_del):
-        super(EventVMPort, self).__init__(dpid, port_no)
-        self.network_id = network_id
-        self.tunnel_key = tunnel_key
-        self.mac_address = mac_address
-        self.add_del = add_del
-
-    def __str__(self):
-        return ('EventVMPort<dpid %s port_no %d '
-                'network_id %s tunnel_key %s mac %s add_del %s>' %
-                (dpid_lib.dpid_to_str(self.dpid), self.port_no,
-                 self.network_id, self.tunnel_key,
-                 mac.haddr_to_str(self.mac_address), self.add_del))
-
-
-class EventTunnelPort(EventPortBase):
-    def __init__(self, dpid, port_no, remote_dpid, add_del):
-        super(EventTunnelPort, self).__init__(dpid, port_no)
-        self.remote_dpid = remote_dpid
-        self.add_del = add_del
-
-    def __str__(self):
-        return ('EventTunnelPort<dpid %s port_no %d remote_dpid %s '
-                'add_del %s>' %
-                (dpid_lib.dpid_to_str(self.dpid), self.port_no,
-                 dpid_lib.dpid_to_str(self.remote_dpid), self.add_del))
-
-
-QUEUE_NAME_PORT_SET_EV = 'port_set_event'
-DISPATCHER_NAME_PORT_SET_EV = 'port_set_event'
-PORT_SET_EV_DISPATCHER = dispatcher.EventDispatcher(
-    DISPATCHER_NAME_PORT_SET_EV)
-
-
 def _link_is_up(dpset_, dp, port_no):
     try:
         state = dpset_.get_port(dp.id, port_no).state
@@ -108,19 +47,62 @@ def _link_is_up(dpset_, dp, port_no):
         return False
 
 
-class PortSet(handler_utils.QueueSerializer):
-    _EV_CLSES = (
-        (dpset.EventDP, dpset.DPSET_EV_DISPATCHER),
-        (ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER),
-    )
+class PortSet(app_manager.RyuApp):
+
+    # Those events are higher level events than events of network tenant,
+    # tunnel ports as the race conditions are masked.
+    # Add event is generated only when all necessary informations are gathered,
+    # Del event is generated when any one of the informations are deleted.
+    #
+    # Example: ports for VMs
+    # there is a race condition between ofp port add/del event and
+    # register network_id for the port.
+
+    class EventTunnelKeyDel(event.EventBase):
+        def __init__(self, tunnel_key):
+            super(EventTunnelKeyDel, self).__init__()
+            self.tunnel_key = tunnel_key
+
+    class EventPortBase(event.EventBase):
+        def __init__(self, dpid, port_no):
+            super(PortSet.EventPortBase, self).__init__()
+            self.dpid = dpid
+            self.port_no = port_no
+
+    class EventVMPort(EventPortBase):
+        def __init__(self, network_id, tunnel_key,
+                     dpid, port_no, mac_address, add_del):
+            super(PortSet.EventVMPort, self).__init__(dpid, port_no)
+            self.network_id = network_id
+            self.tunnel_key = tunnel_key
+            self.mac_address = mac_address
+            self.add_del = add_del
+
+        def __str__(self):
+            return ('EventVMPort<dpid %s port_no %d '
+                    'network_id %s tunnel_key %s mac %s add_del %s>' %
+                    (dpid_lib.dpid_to_str(self.dpid), self.port_no,
+                     self.network_id, self.tunnel_key,
+                     mac.haddr_to_str(self.mac_address), self.add_del))
+
+    class EventTunnelPort(EventPortBase):
+        def __init__(self, dpid, port_no, remote_dpid, add_del):
+            super(PortSet.EventTunnelPort, self).__init__(dpid, port_no)
+            self.remote_dpid = remote_dpid
+            self.add_del = add_del
+
+        def __str__(self):
+            return ('EventTunnelPort<dpid %s port_no %d remote_dpid %s '
+                    'add_del %s>' %
+                    (dpid_lib.dpid_to_str(self.dpid), self.port_no,
+                     dpid_lib.dpid_to_str(self.remote_dpid), self.add_del))
 
     def __init__(self, **kwargs):
+        super(PortSet, self).__init__()
         self.nw = kwargs['network']
         self.tunnels = kwargs['tunnels']
         self.dpset = kwargs['dpset']
-
-        super(PortSet, self).__init__(QUEUE_NAME_PORT_SET_EV,
-                                      PORT_SET_EV_DISPATCHER, self._EV_CLSES)
+        app_manager.register_app(self)
 
     def _check_link_state(self, dp, port_no, add_del):
         if add_del:
@@ -146,7 +128,8 @@ class PortSet(handler_utils.QueueSerializer):
         except ryu_exc.PortNotFound:
             return
 
-        self._ev_q.queue(EventTunnelPort(dpid, port_no, remote_dpid, add_del))
+        self.send_event_to_observers(self.EventTunnelPort(dpid, port_no,
+                                     remote_dpid, add_del))
 
     # VM port
     # of connection: self.dpids by (dpid, port_no)
@@ -173,8 +156,8 @@ class PortSet(handler_utils.QueueSerializer):
         except tunnels.TunnelKeyNotFound:
             return
 
-        self._ev_q.queue(EventVMPort(network_id, tunnel_key, dpid,
-                                     port_no, mac_address, add_del))
+        self.send_event_to_observers(self.EventVMPort(network_id, tunnel_key,
+                                     dpid, port_no, mac_address, add_del))
 
     def _vm_port_mac_handler(self, dpid, port_no, network_id, add_del):
         if network_id == NW_ID_VPORT_GRE:
@@ -209,7 +192,7 @@ class PortSet(handler_utils.QueueSerializer):
                               port.mac_address, add_del)
 
     def _tunnel_key_del(self, tunnel_key):
-        self._ev_q.queue(EventTunnelKeyDel(tunnel_key))
+        self.send_event_to_observers(self.EventTunnelKeyDel(tunnel_key))
 
     # nw: network del
     #           port add/del (vm/tunnel port)
@@ -219,8 +202,7 @@ class PortSet(handler_utils.QueueSerializer):
     # dpset: eventdp
     #        port add/delete/modify
 
-    @handler.set_ev_cls(network.EventNetworkDel,
-                        network.NETWORK_TENANT_EV_DISPATCHER)
+    @handler.set_ev_cls(network.EventNetworkDel)
     def network_del_handler(self, ev):
         network_id = ev.network_id
         if network_id in RESERVED_NETWORK_IDS:
@@ -233,26 +215,22 @@ class PortSet(handler_utils.QueueSerializer):
             self._vm_port_mac_handler(dpid, port_no, network_id, False)
         self._tunnel_key_del(tunnel_key)
 
-    @handler.set_ev_cls(network.EventNetworkPort,
-                        network.NETWORK_TENANT_EV_DISPATCHER)
+    @handler.set_ev_cls(network.EventNetworkPort)
     def network_port_handler(self, ev):
         self._vm_port_mac_handler(ev.dpid, ev.port_no, ev.network_id,
                                   ev.add_del)
 
-    @handler.set_ev_cls(network.EventMacAddress,
-                        network.NETWORK_TENANT_EV_DISPATCHER)
+    @handler.set_ev_cls(network.EventMacAddress)
     def network_mac_address_handler(self, ev):
         self._vm_port_handler(ev.dpid, ev.port_no, ev.network_id,
                               ev.mac_address, ev.add_del)
 
-    @handler.set_ev_cls(tunnels.EventTunnelKeyAdd,
-                        tunnels.TUNNEL_EV_DISPATCHER)
+    @handler.set_ev_cls(tunnels.EventTunnelKeyAdd)
     def tunnel_key_add_handler(self, ev):
         for (dpid, port_no) in self.nw.list_ports(ev.network_id):
             self._vm_port_mac_handler(dpid, port_no, ev.network_id, True)
 
-    @handler.set_ev_cls(tunnels.EventTunnelKeyDel,
-                        tunnels.TUNNEL_EV_DISPATCHER)
+    @handler.set_ev_cls(tunnels.EventTunnelKeyDel)
     def tunnel_key_del_handler(self, ev):
         network_id = ev.network_id
         for (dpid, port_no) in self.nw.list_ports(network_id):
@@ -260,13 +238,14 @@ class PortSet(handler_utils.QueueSerializer):
         if self.nw.has_networks(network_id):
             self._tunnel_key_del(ev.tunnel_key)
 
-    @handler.set_ev_cls(tunnels.EventTunnelPort, tunnels.TUNNEL_EV_DISPATCHER)
+    @handler.set_ev_cls(tunnels.EventTunnelPort)
     def tunnel_port_handler(self, ev):
         self._port_handler(ev.dpid, ev.port_no, ev.add_del)
 
-    @handler.set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
+    @handler.set_ev_cls(dpset.EventDP)
     def dp_handler(self, ev):
-        enter_leave = ev.enter_leave
+        self.send_event_to_observers(ev)
+        enter_leave = ev.enter
         if not enter_leave:
             # TODO:XXX
             # What to do on datapath disconnection?
@@ -278,15 +257,15 @@ class PortSet(handler_utils.QueueSerializer):
         for port_no in ports:
             self._port_handler(dpid, port_no, enter_leave)
 
-    @handler.set_ev_cls(dpset.EventPortAdd, dpset.DPSET_EV_DISPATCHER)
+    @handler.set_ev_cls(dpset.EventPortAdd)
     def port_add_handler(self, ev):
         self._port_handler(ev.dp.id, ev.port.port_no, True)
 
-    @handler.set_ev_cls(dpset.EventPortDelete, dpset.DPSET_EV_DISPATCHER)
+    @handler.set_ev_cls(dpset.EventPortDelete)
     def port_del_handler(self, ev):
         self._port_handler(ev.dp.id, ev.port.port_no, False)
 
-    @handler.set_ev_cls(dpset.EventPortModify, dpset.DPSET_EV_DISPATCHER)
+    @handler.set_ev_cls(dpset.EventPortModify)
     def port_modify_handler(self, ev):
         # We don't know LINK status has been changed.
         # So VM/TUNNEL port event can be triggered many times.
@@ -294,6 +273,11 @@ class PortSet(handler_utils.QueueSerializer):
         port = ev.port
         self._port_handler(dp.id, port.port_no,
                            not (port.state & dp.ofproto.OFPPS_LINK_DOWN))
+
+    @handler.set_ev_cls(ofp_event.EventOFPPacketIn)
+    def packet_in_handler(self, ev):
+        # for debug
+        self.send_event_to_observers(ev)
 
 
 def cls_rule(in_port=None, tun_id=None, dl_src=None, dl_dst=None):
@@ -413,12 +397,15 @@ class GRETunnel(app_manager.RyuApp):
         self.tunnels = kwargs['tunnels']
 
         self.port_set = PortSet(**kwargs)
+        map(lambda ev_cls: self.port_set.register_observer(ev_cls, self.name),
+            [dpset.EventDP, PortSet.EventTunnelKeyDel, PortSet.EventVMPort,
+            PortSet.EventTunnelPort, ofp_event.EventOFPPacketIn])
 
     # TODO: track active vm/tunnel ports
 
-    @handler.set_ev_cls(dpset.EventDP, PORT_SET_EV_DISPATCHER)
+    @handler.set_ev_handler(dpset.EventDP)
     def dp_handler(self, ev):
-        if not ev.enter_leave:
+        if not ev.enter:
             return
 
         # enable nicira extension
@@ -950,11 +937,11 @@ class GRETunnel(app_manager.RyuApp):
                            dp.ofproto.OFPFC_DELETE_STRICT,
                            self.SRC_PRI_TUNNEL_DROP, [])
 
-    @handler.set_ev_cls(EventTunnelKeyDel, PORT_SET_EV_DISPATCHER)
+    @handler.set_ev_handler(PortSet.EventTunnelKeyDel)
     def tunnel_key_del_handler(self, ev):
         LOG.debug('tunnel_key_del ev %s', ev)
 
-    @handler.set_ev_cls(EventVMPort, PORT_SET_EV_DISPATCHER)
+    @handler.set_ev_handler(PortSet.EventVMPort)
     def vm_port_handler(self, ev):
         LOG.debug('vm_port ev %s', ev)
         if ev.add_del:
@@ -962,7 +949,7 @@ class GRETunnel(app_manager.RyuApp):
         else:
             self._vm_port_del(ev)
 
-    @handler.set_ev_cls(EventTunnelPort, PORT_SET_EV_DISPATCHER)
+    @handler.set_ev_handler(PortSet.EventTunnelPort)
     def tunnel_port_handler(self, ev):
         LOG.debug('tunnel_port ev %s', ev)
         if ev.add_del:
@@ -970,7 +957,7 @@ class GRETunnel(app_manager.RyuApp):
         else:
             self._tunnel_port_del(ev)
 
-    @handler.set_ev_cls(ofp_event.EventOFPPacketIn, PORT_SET_EV_DISPATCHER)
+    @handler.set_ev_handler(ofp_event.EventOFPPacketIn)
     def packet_in_handler(self, ev):
         # for debug
         msg = ev.msg
