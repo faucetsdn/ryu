@@ -68,27 +68,30 @@ class RyuClientBase(object):
 class OFPClientV1_0(RyuClientBase):
     version = 'v1.0'
 
-    # /networks/{network_id}/{dpid}_{port}
-    path_networks = 'networks/%s'
-    path_port = path_networks + '/%s_%s'
+    # /networks/{network_id}/{dpid}_{port}/macs/{mac_address}
+    path_networks = 'networks'
+    path_network = path_networks + '/%s'
+    path_port = path_network + '/%s_%s'
+    path_macs = path_port + '/macs'
+    path_mac = path_macs + '/%s'
 
     def __init__(self, address):
         super(OFPClientV1_0, self).__init__(OFPClientV1_0.version, address)
 
     def get_networks(self):
-        return self._do_request_read('GET', '')
+        return self._do_request_read('GET', self.path_networks)
 
     def create_network(self, network_id):
-        self._do_request('POST', self.path_networks % network_id)
+        self._do_request('POST', self.path_network % network_id)
 
     def update_network(self, network_id):
-        self._do_request('PUT', self.path_networks % network_id)
+        self._do_request('PUT', self.path_network % network_id)
 
     def delete_network(self, network_id):
-        self._do_request('DELETE', self.path_networks % network_id)
+        self._do_request('DELETE', self.path_network % network_id)
 
     def get_ports(self, network_id):
-        return self._do_request_read('GET', self.path_networks % network_id)
+        return self._do_request_read('GET', self.path_network % network_id)
 
     def create_port(self, network_id, dpid, port):
         self._do_request('POST', self.path_port % (network_id, dpid, port))
@@ -98,6 +101,18 @@ class OFPClientV1_0(RyuClientBase):
 
     def delete_port(self, network_id, dpid, port):
         self._do_request('DELETE', self.path_port % (network_id, dpid, port))
+
+    def list_macs(self, network_id, dpid, port):
+        return self._do_request_read('GET',
+                                     self.path_macs % (network_id, dpid, port))
+
+    def create_mac(self, network_id, dpid, port, mac_address):
+        self._do_request('POST', self.path_mac % (network_id, dpid, port,
+                                                  mac_address))
+
+    def update_mac(self, network_id, dpid, port, mac_address):
+        self._do_request('PUT', self.path_mac % (network_id, dpid, port,
+                                                 mac_address))
 
 
 OFPClient = OFPClientV1_0
