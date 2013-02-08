@@ -36,6 +36,27 @@ class OVSBridgeNotFound(ryu_exc.RyuException):
     message = 'no bridge for datapath_id %(datapath_id)s'
 
 
+class VifPort(object):
+    def __init__(self, port_name, ofport, vif_id, vif_mac, switch):
+        super(VifPort, self).__init__()
+        self.port_name = port_name
+        self.ofport = ofport
+        self.vif_id = vif_id
+        self.vif_mac = vif_mac
+        self.switch = switch
+
+    def __str__(self):
+        return ('iface-id=%s, '
+                'vif_mac=%s, '
+                'port_name=%s, '
+                'ofport=%d, '
+                'bridge_name=%s' % (self.vif_id,
+                                    self.vif_mac,
+                                    self.port_name,
+                                    self.ofport,
+                                    self.switch.br_name))
+
+
 class TunnelPort(object):
     def __init__(self, port_name, ofport, tunnel_type, local_ip, remote_ip):
         super(TunnelPort, self).__init__()
@@ -94,6 +115,11 @@ class OVSBridge(object):
                 datapath_id=dpid_lib.dpid_to_str(self.datapath_id))
         return result[0].name
 
+    def get_controller(self):
+        command = ovs_vsctl.VSCtlCommand('get-controller', [self.br_name])
+        self.run_command([command])
+        return command.result[0]
+
     def set_controller(self, controllers):
         command = ovs_vsctl.VSCtlCommand('set-controller', [self.br_name])
         command.args.extend(controllers)
@@ -108,6 +134,10 @@ class OVSBridge(object):
             'set', (table_name, record, '%s=%s' % (column, value)))
         self.run_command([command])
 
+    def clear_db_attribute(self, table_name, record, column):
+        command = ovs_vsctl.VSCtlCommand('clear', (table_name, record, column))
+        self.run_command([command])
+
     def db_get_val(self, table, record, column):
         command = ovs_vsctl.VSCtlCommand('get', (table, record, column))
         self.run_command([command])
@@ -118,6 +148,9 @@ class OVSBridge(object):
         val = self.db_get_val(table, record, column)
         assert type(val) == dict
         return val
+
+    def get_datapath_id(self):
+        return self.db_get_val('Bridge', self.br_name, 'datapath_id')
 
     def delete_port(self, port_name):
         command = ovs_vsctl.VSCtlCommand(
@@ -146,6 +179,9 @@ class OVSBridge(object):
                     'type=%s' % tunnel_type, 'options=%s' % options))
         self.run_command([command_add, command_set])
 
+    def add_gre_port(self, name, local_ip, remote_ip, key=None):
+        self.add_tunnel_port(name, 'gre', local_ip, remote_ip, key=key)
+
     def del_port(self, port_name):
         command = ovs_vsctl.VSCtlCommand('del-port', (self.br_name, port_name))
         self.run_command([command])
@@ -161,6 +197,37 @@ class OVSBridge(object):
                 ports.append(port)
 
         return ports
+
+    def _vifport(self, name, external_ids):
+        ofport = self.get_ofport(name)
+        return VifPort(name, ofport, external_ids['iface-id'],
+                       external_ids['attached-mac'], self)
+
+    def _get_vif_port(self, name):
+        external_ids = self.db_get_map('Interface', name, 'external_ids')
+        if 'iface-id' in external_ids and 'attached-mac' in external_ids:
+            return self._vifport(name, external_ids)
+
+    def get_vif_ports(self):
+        'returns a VIF object for each VIF port'
+        return self._get_ports(self._get_vif_port)
+
+    def _get_external_port(self, name):
+        # exclude vif ports
+        external_ids = self.db_get_map('Interface', name, 'external_ids')
+        if external_ids:
+            return
+
+        # exclude tunnel ports
+        options = self.db_get_map('Interface', name, 'options')
+        if 'remote_ip' in options:
+            return
+
+        ofport = self.get_ofport(name)
+        return VifPort(name, ofport, None, None, self)
+
+    def get_external_ports(self):
+        return self._get_ports(self._get_external_port)
 
     def get_tunnel_port(self, name, tunnel_type='gre'):
         type_ = self.db_get_val('Interface', name, 'type')
