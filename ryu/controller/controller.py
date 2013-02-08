@@ -290,6 +290,9 @@ class Datapath(object):
         self.send_msg(set_format)
         self.send_barrier()
 
+    def is_reserved_port(self, port_no):
+        return port_no > self.ofproto.OFPP_MAX
+
 
 def datapath_connection_factory(socket, address):
     LOG.debug('connected socket:%s address:%s', socket, address)
