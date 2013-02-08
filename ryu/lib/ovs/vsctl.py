@@ -18,7 +18,9 @@
 import gevent
 import itertools
 import logging
+import operator
 import os
+import sys
 import weakref
 
 import ovs.db.data
@@ -212,6 +214,21 @@ class VSCtlContext(object):
             parent.children.add(vsctl_bridge)
         self.bridges[name] = vsctl_bridge
         return vsctl_bridge
+
+    def del_cached_bridge(self, vsctl_bridge):
+        assert not vsctl_bridge.ports
+        assert not vsctl_bridge.children
+
+        parent = vsctl_bridge.parent
+        if parent:
+            parent.children.remove(vsctl_bridge)
+            vsctl_bridge.parent = None  # break circular reference
+        ovsrec_bridge = vsctl_bridge.br_cfg
+        if ovsrec_bridge:
+            ovsrec_bridge.delete()
+            self.ovs_delete_bridge(ovsrec_bridge)
+
+        del self.bridges[vsctl_bridge.name]
 
     def add_port_to_cache(self, vsctl_bridge_parent, ovsrec_port):
         tag = getattr(ovsrec_port, vswitch_idl.OVSREC_PORT_COL_TAG, None)
@@ -428,6 +445,16 @@ class VSCtlContext(object):
                                     vswitch_idl.OVSREC_BRIDGE_COL_PORTS,
                                     ovsrec_port)
 
+    def ovs_insert_bridge(self, ovsrec_bridge):
+        self._column_insert(self.ovs,
+                            vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES,
+                            ovsrec_bridge)
+
+    def ovs_delete_bridge(self, ovsrec_bridge):
+        self._column_delete(self.ovs,
+                            vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES,
+                            ovsrec_bridge)
+
     def del_port(self, vsctl_port):
         if vsctl_port.bridge().parent:
             ovsrec_bridge = vsctl_port.bridge().parent.br_cfg
@@ -438,6 +465,13 @@ class VSCtlContext(object):
         for vsctl_iface in vsctl_port.ifaces.copy():
             self.del_cached_iface(vsctl_iface)
         self.del_cached_port(vsctl_port)
+
+    def del_bridge(self, vsctl_bridge):
+        for child in vsctl_bridge.children.copy():
+            self.del_bridge(child)
+        for vsctl_port in vsctl_bridge.ports.copy():
+            self.del_port(vsctl_port)
+        self.del_cached_bridge(vsctl_bridge)
 
     def add_port(self, br_name, port_name, may_exist, fake_iface,
                  iface_names, settings=None):
@@ -503,6 +537,77 @@ class VSCtlContext(object):
         vsctl_port = self.add_port_to_cache(vsctl_bridge, ovsrec_port)
         for ovsrec_iface in ifaces:
             self.add_iface_to_cache(vsctl_port, ovsrec_iface)
+
+    def add_bridge(self, br_name, parent_name=None, vlan=0, may_exist=False):
+        self.populate_cache()
+        if may_exist:
+            vsctl_bridge = self.find_bridge(br_name, False)
+            if vsctl_bridge:
+                if not parent_name:
+                    if vsctl_bridge.parent:
+                        vsctl_fatal('"--may-exist add-vsctl_bridge %s" '
+                                    'but %s is a VLAN bridge for VLAN %d' %
+                                    (br_name, br_name, vsctl_bridge.vlan))
+                else:
+                    if not vsctl_bridge.parent:
+                        vsctl_fatal('"--may-exist add-vsctl_bridge %s %s %d" '
+                                    'but %s is not a VLAN bridge' %
+                                    (br_name, parent_name, vlan, br_name))
+                    elif vsctl_bridge.parent.name != parent_name:
+                        vsctl_fatal('"--may-exist add-vsctl_bridge %s %s %d" '
+                                    'but %s has the wrong parent %s' %
+                                    (br_name, parent_name, vlan,
+                                     br_name, vsctl_bridge.parent.name))
+                    elif vsctl_bridge.vlan != vlan:
+                        vsctl_fatal('"--may-exist add-vsctl_bridge %s %s %d" '
+                                    'but %s is a VLAN bridge for the wrong '
+                                    'VLAN %d' %
+                                    (br_name, parent_name, vlan, br_name,
+                                     vsctl_bridge.vlan))
+                return
+
+        self.check_conflicts(br_name,
+                             'cannot create a bridge named %s' % br_name)
+
+        txn = self.txn
+        tables = self.idl.tables
+        if not parent_name:
+            ovsrec_iface = txn.insert(
+                tables[vswitch_idl.OVSREC_TABLE_INTERFACE])
+            ovsrec_iface.name = br_name
+            ovsrec_iface.type = 'internal'
+
+            ovsrec_port = txn.insert(tables[vswitch_idl.OVSREC_TABLE_PORT])
+            ovsrec_port.name = br_name
+            ovsrec_port.interfaces = [ovsrec_iface]
+            ovsrec_port.fake_bridge = False
+
+            ovsrec_bridge = txn.insert(tables[vswitch_idl.OVSREC_TABLE_BRIDGE])
+            ovsrec_bridge.name = br_name
+            ovsrec_bridge.ports = [ovsrec_port]
+
+            self.ovs_insert_bridge(ovsrec_bridge)
+        else:
+            parent = self.find_bridge(parent_name, False)
+            if parent and parent.parent:
+                vsctl_fatal('cannot create bridge with fake bridge as parent')
+            if not parent:
+                vsctl_fatal('parent bridge %s does not exist' % parent_name)
+
+            ovsrec_iface = txn.insert(
+                tables[vswitch_idl.OVSREC_TABLE_INTERFACE])
+            ovsrec_iface.name = br_name
+            ovsrec_iface.type = 'internal'
+
+            ovsrec_port = txn.insert(tables[vswitch_idl.OVSREC_TABLE_PORT])
+            ovsrec_port.name = br_name
+            ovsrec_port.interfaces = [ovsrec_iface]
+            ovsrec_port.fake_bridge = True
+            ovsrec_port.tag = [vlan]
+
+            self.bridge_insert_port(parent.br_cfg, ovsrec_port)
+
+        self.invalidate_cache()
 
     @staticmethod
     def parse_column_key_value(table_schema, setting_string):
@@ -613,6 +718,15 @@ class VSCtlContext(object):
             vsctl_fatal('no row "%s" in table %s' % (record_id,
                                                      vsctl_table.table_name))
         return ovsrec_row
+
+
+class _CmdShowTable(object):
+    def __init__(self, table, name_column, columns, recurse):
+        super(_CmdShowTable, self).__init__()
+        self.table = table
+        self.name_column = name_column
+        self.columns = columns
+        self.recurse = recurse
 
 
 class _VSCtlRowID(object):
@@ -826,19 +940,53 @@ class VSCtl(object):
         :type commands: list of VSCtlCommand
         """
         all_commands = {
+            # Open vSwitch commands.
+            'init': (None, self._cmd_init),
+            'show': (self._pre_cmd_show, self._cmd_show),
+
+            # Bridge commands.
+            'add-br': (self._pre_add_br, self._cmd_add_br),
+            'del-br': (self._pre_get_info, self._cmd_del_br),
+            'list-br': (self._pre_get_info, self._cmd_list_br),
+
             # Port. commands
             'list-ports': (self._pre_get_info, self._cmd_list_ports),
             'add-port': (self._pre_cmd_add_port, self._cmd_add_port),
             'del-port': (self._pre_get_info, self._cmd_del_port),
+            # 'add-bond':
+            # 'port-to-br':
+
+            # Interface commands.
+            'list-ifaces': (self._pre_get_info, self._cmd_list_ifaces),
+            # 'iface-to-br':
 
             # Controller commands.
+            'get-controller': (self._pre_controller, self._cmd_get_controller),
             'del-controller': (self._pre_controller, self._cmd_del_controller),
             'set-controller': (self._pre_controller, self._cmd_set_controller),
+            # 'get-fail-mode':
+            # 'del-fail-mode':
+            # 'set-fail-mode':
+
+            # Manager commands.
+            # 'get-manager':
+            # 'del-manager':
+            # 'set-manager':
+
+            # Switch commands.
+            # 'emer-reset':
 
             # Database commands.
+            # 'comment':
             'get': (self._pre_cmd_get, self._cmd_get),
+            # 'list':
             'find': (self._pre_cmd_find, self._cmd_find),
             'set': (self._pre_cmd_set, self._cmd_set),
+            # 'add':
+            'clear': (self._pre_cmd_clear, self._cmd_clear),
+            # 'create':
+            # 'destroy':
+            # 'wait-until':
 
             # for quantum_adapter
             'list-ifaces-verbose': (self._pre_cmd_list_ifaces_verbose,
@@ -856,6 +1004,112 @@ class VSCtl(object):
         else:
             with gevent.Timeout(timeout_msec * 1000, exception):
                 self._run_command(commands)
+
+    # commands
+    def _cmd_init(self, _ctx, _command):
+        # nothing. Just check connection to ovsdb
+        pass
+
+    _CMD_SHOW_TABLES = [
+        _CmdShowTable(vswitch_idl.OVSREC_TABLE_OPEN_VSWITCH, None,
+                      [vswitch_idl.OVSREC_OPEN_VSWITCH_COL_MANAGER_OPTIONS,
+                       vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES,
+                       vswitch_idl.OVSREC_OPEN_VSWITCH_COL_OVS_VERSION],
+                      False),
+        _CmdShowTable(vswitch_idl.OVSREC_TABLE_BRIDGE,
+                      vswitch_idl.OVSREC_BRIDGE_COL_NAME,
+                      [vswitch_idl.OVSREC_BRIDGE_COL_CONTROLLER,
+                       vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE,
+                       vswitch_idl.OVSREC_BRIDGE_COL_PORTS],
+                      False),
+        _CmdShowTable(vswitch_idl.OVSREC_TABLE_PORT,
+                      vswitch_idl.OVSREC_PORT_COL_NAME,
+                      [vswitch_idl.OVSREC_PORT_COL_TAG,
+                       vswitch_idl.OVSREC_PORT_COL_TRUNKS,
+                       vswitch_idl.OVSREC_PORT_COL_INTERFACES],
+                      False),
+        _CmdShowTable(vswitch_idl.OVSREC_TABLE_INTERFACE,
+                      vswitch_idl.OVSREC_INTERFACE_COL_NAME,
+                      [vswitch_idl.OVSREC_INTERFACE_COL_TYPE,
+                       vswitch_idl.OVSREC_INTERFACE_COL_OPTIONS],
+                      False),
+        _CmdShowTable(vswitch_idl.OVSREC_TABLE_CONTROLLER,
+                      vswitch_idl.OVSREC_CONTROLLER_COL_TARGET,
+                      [vswitch_idl.OVSREC_CONTROLLER_COL_IS_CONNECTED],
+                      False),
+        _CmdShowTable(vswitch_idl.OVSREC_TABLE_MANAGER,
+                      vswitch_idl.OVSREC_MANAGER_COL_TARGET,
+                      [vswitch_idl.OVSREC_MANAGER_COL_IS_CONNECTED],
+                      False),
+    ]
+
+    def _pre_cmd_show(self, _ctx, _command):
+        schema_helper = self.schema_helper
+        for show in self._CMD_SHOW_TABLES:
+            schema_helper.register_table(show.table)
+            if show.name_column:
+                schema_helper.register_columns(show.table, [show.name_column])
+            schema_helper.register_columns(show.table, show.columns)
+
+    @staticmethod
+    def _cmd_show_find_table_by_row(row):
+        for show in VSCtl._CMD_SHOW_TABLES:
+            if show.table == row._table.name:
+                return show
+        return None
+
+    @staticmethod
+    def _cmd_show_find_table_by_name(name):
+        for show in VSCtl._CMD_SHOW_TABLES:
+            if show.table == name:
+                return show
+        return None
+
+    @staticmethod
+    def _cmd_show_row(ctx, row, level):
+        _INDENT_SIZE = 4  # # of spaces per indent
+        show = VSCtl._cmd_show_find_table_by_row(row)
+        output = ''
+
+        output += ' ' * level * _INDENT_SIZE
+        if show and show.name_column:
+            output += '%s ' % show.table
+            datum = getattr(row, show.name_column)
+            output += datum
+        else:
+            output += str(row.uuid)
+        output += '\n'
+
+        if not show or show.recurse:
+            return
+
+        show.recurse = True
+        for column in show.columns:
+            datum = row._data[column]
+            key = datum.type.key
+            if (key.type == ovs.db.types.UuidType and key.ref_table_name):
+                ref_show = VSCtl._cmd_show_find_table_by_name(
+                    key.ref_table_name)
+                if ref_show:
+                    for atom in datum.values:
+                        ref_row = ctx.idl.tables[ref_show.table].rows.get(
+                            atom.value)
+                        if ref_row:
+                            VSCtl._cmd_show_row(ctx, ref_row, level + 1)
+                    continue
+
+            if not datum.is_default():
+                output += ' ' * (level + 1) * _INDENT_SIZE
+                output += '%s: %s\n' % (column, datum)
+
+        show.recurse = False
+        return output
+
+    def _cmd_show(self, ctx, command):
+        for row in ctx.idl.tables[
+                self._CMD_SHOW_TABLES[0].table].rows.values():
+            output = self._cmd_show_row(ctx, row, 0)
+            command.result = output
 
     def _pre_get_info(self, _ctx, _command):
         schema_helper = self.schema_helper
@@ -878,6 +1132,43 @@ class VSCtl(object):
         schema_helper.register_columns(
             vswitch_idl.OVSREC_TABLE_INTERFACE,
             [vswitch_idl.OVSREC_INTERFACE_COL_NAME])
+
+    def _cmd_list_br(self, ctx, command):
+        ctx.populate_cache()
+        command.result = sorted(ctx.bridges.keys())
+
+    def _pre_add_br(self, ctx, command):
+        self._pre_get_info(ctx, command)
+
+        schema_helper = self.schema_helper
+        schema_helper.register_columns(
+            vswitch_idl.OVSREC_TABLE_INTERFACE,
+            [vswitch_idl.OVSREC_INTERFACE_COL_TYPE])
+
+    def _cmd_add_br(self, ctx, command):
+        br_name = command.args[0]
+        if len(command.args) == 1:
+            parent_name = None
+            vlan = 0
+        elif len(command.args) == 3:
+            parent_name = command.args[1]
+            vlan = int(command.args[2])
+            if vlan < 0 or vlan > 4095:
+                vsctl_fatal("vlan must be between 0 and 4095 %d" % vlan)
+        else:
+            vsctl_fatal('this command takes exactly 1 or 3 argument')
+
+        ctx.add_bridge(br_name, parent_name, vlan)
+
+    def _del_br(self, ctx, br_name, must_exist=False):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, must_exist)
+        if br:
+            ctx.del_bridge(br)
+
+    def _cmd_del_br(self, ctx, command):
+        br_name = command.args[0]
+        self._del_br(ctx, br_name)
 
     def _list_ports(self, ctx, br_name):
         ctx.populate_cache()
@@ -962,6 +1253,25 @@ class VSCtl(object):
         br_name = command.args[0] if len(command.args) == 2 else None
         self._del_port(ctx, br_name, target, must_exist, with_iface)
 
+    def _list_ifaces(self, ctx, br_name):
+        ctx.populate_cache()
+
+        br = ctx.find_bridge(br_name, True)
+        ctx.verify_ports()
+
+        iface_names = set()
+        for vsctl_port in br.ports:
+            for vsctl_iface in vsctl_port.ifaces:
+                iface_name = vsctl_iface.iface_cfg.name
+                if iface_name != br_name:
+                    iface_names.add(iface_name)
+        return iface_names
+
+    def _cmd_list_ifaces(self, ctx, command):
+        br_name = command.args[0]
+        iface_names = self._list_ifaces(ctx, br_name)
+        command.result = sorted(iface_names)
+
     def _pre_cmd_list_ifaces_verbose(self, ctx, command):
         self._pre_get_info(ctx, command)
         schema_helper = self.schema_helper
@@ -1027,6 +1337,17 @@ class VSCtl(object):
         self.schema_helper.register_columns(
             vswitch_idl.OVSREC_TABLE_CONTROLLER,
             [vswitch_idl.OVSREC_CONTROLLER_COL_TARGET])
+
+    def _get_controller(self, ctx, br_name):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, True)
+        self._verify_controllers(br.br_cfg)
+        return set(controller.target for controller in br.br_cfg.controller)
+
+    def _cmd_get_controller(self, ctx, command):
+        br_name = command.args[0]
+        controller_names = self._get_controller(ctx, br_name)
+        command.result = sorted(controller_names)
 
     def _delete_controllers(self, ovsrec_controllers):
         for controller in ovsrec_controllers:
@@ -1339,3 +1660,75 @@ class VSCtl(object):
                              for column_key_value in command.args[2:]]
 
         self._set(ctx, table_name, record_id, column_key_values)
+
+    def _pre_clear(self, ctx, table_name, column):
+        self._pre_get_table(ctx, table_name)
+        self._pre_get_column(ctx, table_name, column)
+        self._check_mutable(table_name, column)
+
+    def _pre_cmd_clear(self, ctx, command):
+        table_name = command.args[0]
+        column = command.args[2]
+        self._pre_clear(ctx, table_name, column)
+
+    def _clear(self, ctx, table_name, record_id, column):
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
+        column_schema = ctx.idl.tables[table_name].columns[column]
+        if column_schema.type.n_min > 0:
+            vsctl_fatal('"clear" operation cannot be applied to column %s '
+                        'of table %s, which is not allowed to be empty' %
+                        (column, table_name))
+
+        # assuming that default datum is empty.
+        default_datum = ovs.db.data.Datum.default(column_schema.type)
+        setattr(ovsrec_row, column,
+                default_datum.to_python(ovs.db.idl._uuid_to_row))
+        ctx.invalidate_cache()
+
+    def _cmd_clear(self, ctx, command):
+        table_name = command.args[0]
+        record_id = command.args[1]
+        column = command.args[2]
+        self._clear(ctx, table_name, record_id, column)
+
+
+#
+# Create constants from ovs db schema
+#
+
+def schema_print(schema_location, prefix):
+    prefix = prefix.upper()
+
+    json = ovs.json.from_file(schema_location)
+    schema = ovs.db.schema.DbSchema.from_json(json)
+
+    print '# Do NOT edit.'
+    print '# This is automatically generated.'
+    print '# created based on version %s' % (schema.version or 'unknown')
+    print ''
+    print ''
+    print '%s_DB_NAME = \'%s\'' % (prefix, schema.name)
+    for table in sorted(schema.tables.values(),
+                        key=operator.attrgetter('name')):
+        print ''
+        print '%s_TABLE_%s = \'%s\'' % (prefix,
+                                        table.name.upper(), table.name)
+        for column in sorted(table.columns.values(),
+                             key=operator.attrgetter('name')):
+            print '%s_%s_COL_%s = \'%s\'' % (prefix, table.name.upper(),
+                                             column.name.upper(),
+                                             column.name)
+
+
+def main():
+    if len(sys.argv) <= 2:
+        print 'Usage: %s <schema file> <prefix>' % sys.argv[0]
+
+    location = sys.argv[1]
+    prefix = sys.argv[2]
+    schema_print(location, prefix)
+
+
+if __name__ == '__main__':
+    main()
