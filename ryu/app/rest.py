@@ -160,9 +160,11 @@ class MacController(ControllerBase):
         self.nw = data
 
     def create(self, _req, network_id, dpid, port_id, mac_addr, **_kwargs):
-        mac = mac_lib.haddr_to_bin(mac_addr)
+        dpid = dpid_lib.str_to_dpid(dpid)
+        port_id = int(port_id)
+        mac_addr = mac_lib.haddr_to_bin(mac_addr)
         try:
-            self.nw.create_mac(network_id, int(dpid, 16), int(port_id), mac)
+            self.nw.create_mac(network_id, dpid, port_id, mac_addr)
         except PortNotFound:
             return Response(status=404)
         except network.MacAddressAlreadyExist:
@@ -171,18 +173,22 @@ class MacController(ControllerBase):
         return Response(status=200)
 
     def update(self, _req, network_id, dpid, port_id, mac_addr, **_kwargs):
-        mac = mac_lib.haddr_to_bin(mac_addr)
+        dpid = dpid_lib.str_to_dpid(dpid)
+        port_id = int(port_id)
+        mac_addr = mac_lib.haddr_to_bin(mac_addr)
         try:
-            self.nw.update_mac(network_id, int(dpid, 16), int(port_id), mac)
+            self.nw.update_mac(network_id, dpid, port_id, mac_addr)
         except PortNotFound:
             return Response(status=404)
 
         return Response(status=200)
 
     def lists(self, _req, network_id, dpid, port_id, **_kwargs):
+        dpid = dpid_lib.str_to_dpid(dpid)
+        port_id = int(port_id)
         try:
             body = json.dumps([mac_lib.haddr_to_str(mac_addr) for mac_addr in
-                               self.nw.list_mac(int(dpid, 16), int(port_id))])
+                               self.nw.list_mac(dpid, port_id)])
         except PortNotFound:
             return Response(status=404)
 
@@ -236,16 +242,18 @@ class RestAPI(app_manager.RyuApp):
                   conditions=dict(method=['DELETE']))
 
         wsgi.registory['MacController'] = self.nw
+        route_name = 'macs'
         uri += '/macs'
-        mapper.connect('macs', uri,
+        mapper.connect(route_name, uri,
                        controller=MacController, action='lists',
-                       conditions=dict(method=['GET']))
+                       conditions=dict(method=['GET']),
+                       requirements=requirements)
 
         uri += '/{mac_addr}'
-        mapper.connect('macs', uri,
-                       controller=MacController, action='create',
-                       conditions=dict(method=['POST']))
-
-        mapper.connect('macs', uri,
-                       controller=MacController, action='update',
-                       conditions=dict(method=['PUT']))
+        requirements['mac_addr'] = mac_lib.HADDR_PATTERN
+        s = mapper.submapper(controller=MacController,
+                             requirements=requirements)
+        s.connect(route_name, uri, action='create',
+                  conditions=dict(method=['POST']))
+        s.connect(route_name, uri, action='update',
+                  conditions=dict(method=['PUT']))
