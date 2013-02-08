@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import logging
 
 from ryu.base import app_manager
@@ -145,7 +146,7 @@ class Port(object):
 
 
 class DPIDs(dict):
-    """dpid -> port_no -> network_id"""
+    """dpid -> port_no -> Port(port_no, network_id, mac_address)"""
     def __init__(self, f, nw_id_unknown):
         super(DPIDs, self).__init__()
         self.send_event = f
@@ -180,11 +181,16 @@ class DPIDs(dict):
         except KeyError:
             raise PortNotFound(dpid=dpid, port=port_no, network_id=None)
 
-    def get_ports(self, dpid, network_id=None):
+    def get_ports(self, dpid, network_id=None, mac_address=None):
         if network_id is None:
             return self.get(dpid, {}).values()
+        if mac_address is None:
+            return [p for p in self.get(dpid, {}).values()
+                    if p.network_id == network_id]
+
+        # live-migration: There can be two ports that have same mac address.
         return [p for p in self.get(dpid, {}).values()
-                if p.network_id == network_id]
+                if p.network_id == network_id and p.mac_address == mac_address]
 
     def get_port(self, dpid, port_no):
         try:
@@ -242,6 +248,48 @@ class DPIDs(dict):
                                          mac_address=port.mac_address)
 
 
+MacPort = collections.namedtuple('MacPort', ('dpid', 'port_no'))
+
+
+class MacToPort(collections.defaultdict):
+    """mac_address -> set of MacPort(dpid, port_no)"""
+    def __init__(self):
+        super(MacToPort, self).__init__(set)
+
+    def add_port(self, dpid, port_no, mac_address):
+        self[mac_address].add(MacPort(dpid, port_no))
+
+    def remove_port(self, dpid, port_no, mac_address):
+        ports = self[mac_address]
+        ports.discard(MacPort(dpid, port_no))
+        if not ports:
+            del self[mac_address]
+
+    def get_ports(self, mac_address):
+        return self[mac_address]
+
+
+class MacAddresses(dict):
+    """network_id -> mac_address -> set of (dpid, port_no)"""
+    def add_port(self, network_id, dpid, port_no, mac_address):
+        mac2port = self.setdefault(network_id, MacToPort())
+        mac2port.add_port(dpid, port_no, mac_address)
+
+    def remove_port(self, network_id, dpid, port_no, mac_address):
+        mac2port = self.get(network_id)
+        if mac2port is None:
+            return
+        mac2port.remove_port(dpid, port_no, mac_address)
+        if not mac2port:
+            del self[network_id]
+
+    def get_ports(self, network_id, mac_address):
+        mac2port = self.get(network_id)
+        if not mac2port:
+            return set()
+        return mac2port.get_ports(mac_address)
+
+
 class Network(app_manager.RyuApp):
     def __init__(self, nw_id_unknown=NW_ID_UNKNOWN):
         super(Network, self).__init__()
@@ -249,6 +297,7 @@ class Network(app_manager.RyuApp):
         self.nw_id_unknown = nw_id_unknown
         self.networks = Networks(self.send_event_to_observers)
         self.dpids = DPIDs(self.send_event_to_observers, nw_id_unknown)
+        self.mac_addresses = MacAddresses()
 
     def _check_nw_id_unknown(self, network_id):
         if network_id == self.nw_id_unknown:
@@ -303,10 +352,25 @@ class Network(app_manager.RyuApp):
     def update_port(self, network_id, dpid, port):
         self._update_port(network_id, dpid, port, True)
 
-    def remove_port(self, network_id, dpid, port):
+    def _get_old_mac(self, network_id, dpid, port_no):
+        try:
+            port = self.dpids.get_port(dpid, port_no)
+        except PortNotFound:
+            pass
+        else:
+            if port.network_id == network_id:
+                return port.mac_address
+        return None
+
+    def remove_port(self, network_id, dpid, port_no):
         # generate event first, then do the real task
-        self.dpids.remove_port(dpid, port)
-        self.networks.remove(network_id, dpid, port)
+        old_mac_address = self._get_old_mac(network_id, dpid, port_no)
+
+        self.dpids.remove_port(dpid, port_no)
+        self.networks.remove(network_id, dpid, port_no)
+        if old_mac_address is not None:
+            self.mac_addresses.remove_port(network_id, dpid, port_no,
+                                           old_mac_address)
 
     #
     # methods for gre tunnel
@@ -322,10 +386,17 @@ class Network(app_manager.RyuApp):
         return self.dpids.get_networks(dpid)
 
     def create_mac(self, network_id, dpid, port_no, mac_address):
+        self.mac_addresses.add_port(network_id, dpid, port_no, mac_address)
         self.dpids.set_mac(network_id, dpid, port_no, mac_address)
 
     def update_mac(self, network_id, dpid, port_no, mac_address):
+        old_mac_address = self._get_old_mac(network_id, dpid, port_no)
+
         self.dpids.update_mac(network_id, dpid, port_no, mac_address)
+        if old_mac_address is not None:
+            self.mac_addresses.remove_port(network_id, dpid, port_no,
+                                           old_mac_address)
+        self.mac_addresses.add_port(network_id, dpid, port_no, mac_address)
 
     def get_mac(self, dpid, port_no):
         return self.dpids.get_mac(dpid, port_no)
@@ -336,11 +407,14 @@ class Network(app_manager.RyuApp):
             return []
         return [mac_address]
 
-    def get_ports(self, dpid, network_id=None):
-        return self.dpids.get_ports(dpid, network_id)
+    def get_ports(self, dpid, network_id=None, mac_address=None):
+        return self.dpids.get_ports(dpid, network_id, mac_address)
 
     def get_port(self, dpid, port_no):
         return self.dpids.get_port(dpid, port_no)
+
+    def get_ports_with_mac(self, network_id, mac_address):
+        return self.mac_addresses.get_ports(network_id, mac_address)
 
     #
     # methods for simple_isolation

@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import logging
-from collections import defaultdict
 
 from ryu import exception as ryu_exc
 from ryu.app.rest_nw_id import (NW_ID_VPORT_GRE,
@@ -177,6 +177,10 @@ class PortSet(handler_utils.QueueSerializer):
                                      port_no, mac_address, add_del))
 
     def _vm_port_mac_handler(self, dpid, port_no, network_id, add_del):
+        if network_id == NW_ID_VPORT_GRE:
+            self._tunnel_port_handler(dpid, port_no, add_del)
+            return
+
         try:
             mac_address = self.nw.get_mac(dpid, port_no)
         except ryu_exc.PortNotFound:
@@ -473,6 +477,29 @@ class GRETunnel(app_manager.RyuApp):
     def _link_is_up(self, dp, port_no):
         return _link_is_up(self.dpset, dp, port_no)
 
+    def _port_is_active(self, network_id, dp, nw_port):
+        return (nw_port.network_id == network_id and
+                nw_port.mac_address is not None and
+                self._link_is_up(dp, nw_port.port_no))
+
+    def _tunnel_port_with_mac(self, remote_dp, dpid, network_id, port_no,
+                              mac_address):
+        tunnel_ports = []
+        ports = self.nw.get_ports_with_mac(network_id, mac_address).copy()
+        ports.discard((dpid, port_no))
+        assert len(ports) <= 1
+        for port in ports:
+            try:
+                tunnel_port_no = self.tunnels.get_port(remote_dp.id, port.dpid)
+            except ryu_exc.PortNotFound:
+                pass
+            else:
+                if self._link_is_up(remote_dp, tunnel_port_no):
+                    tunnel_ports.append(tunnel_port_no)
+
+        assert len(tunnel_ports) <= 1
+        return tunnel_ports
+
     def _vm_port_add(self, ev):
         dpid = ev.dpid
         dp = self.dpset.get(dpid)
@@ -486,8 +513,12 @@ class GRETunnel(app_manager.RyuApp):
         remote_dpids.remove(dpid)
 
         # LOCAL_OUT_TABLE: unicast
+        # live-migration: there can be two ports with same mac_address
+        ports = self.nw.get_ports(dpid, network_id, mac_address)
+        assert ev.port_no in [port.port_no for port in ports]
         rule = cls_rule(tun_id=tunnel_key, dl_dst=mac_address)
-        actions = [ofproto_parser.OFPActionOutput(ev.port_no)]
+        actions = [ofproto_parser.OFPActionOutput(port.port_no)
+                   for port in ports if self._link_is_up(dp, port.port_no)]
         self.send_flow_mod(dp, rule, self.LOCAL_OUT_TABLE, ofproto.OFPFC_ADD,
                            self.LOCAL_OUT_PRI_MAC, actions)
 
@@ -495,9 +526,7 @@ class GRETunnel(app_manager.RyuApp):
         rule = cls_rule(tun_id=tunnel_key, dl_dst=mac.BROADCAST)
         actions = []
         for port in self.nw.get_ports(dpid):
-            if (port.network_id != network_id or port.mac_address is None):
-                continue
-            if not self._link_is_up(dp, port.port_no):
+            if not self._port_is_active(network_id, dp, port):
                 continue
             actions.append(ofproto_parser.OFPActionOutput(port.port_no))
 
@@ -519,6 +548,7 @@ class GRETunnel(app_manager.RyuApp):
                                ofproto.OFPFC_ADD, self.LOCAL_OUT_PRI_DROP, [])
 
         # TUNNEL_OUT_TABLE: unicast
+        mac_to_ports = collections.defaultdict(set)
         for remote_dpid in remote_dpids:
             remote_dp = self.dpset.get(remote_dpid)
             if remote_dp is None:
@@ -531,19 +561,12 @@ class GRETunnel(app_manager.RyuApp):
                 continue
 
             for port in self.nw.get_ports(remote_dpid):
-                if port.network_id != network_id or port.mac_address is None:
-                    continue
-                if not self._link_is_up(remote_dp, port.port_no):
+                if not self._port_is_active(network_id, remote_dp, port):
                     continue
                 # TUNNEL_OUT_TABLE: unicast
-                rule = cls_rule(tun_id=tunnel_key, dl_dst=port.mac_address)
-                output = ofproto_parser.OFPActionOutput(tunnel_port_no)
-                resubmit_table = ofproto_parser.NXActionResubmitTable(
-                    in_port=ofproto.OFPP_IN_PORT, table=self.LOCAL_OUT_TABLE)
-                actions = [output, resubmit_table]
-                self.send_flow_mod(dp, rule, self.TUNNEL_OUT_TABLE,
-                                   ofproto.OFPFC_ADD, self.TUNNEL_OUT_PRI_MAC,
-                                   actions)
+                # live-migration: there can be more than one tunnel-ports that
+                #                 have a given mac address
+                mac_to_ports[port.mac_address].add(tunnel_port_no)
 
             if first_instance:
                 # SRC_TABLE: TUNNEL-port: resubmit to LOAL_OUT_TABLE
@@ -554,6 +577,18 @@ class GRETunnel(app_manager.RyuApp):
                 self.send_flow_mod(dp, rule, self.SRC_TABLE,
                                    ofproto.OFPFC_ADD, self.SRC_PRI_TUNNEL_PASS,
                                    actions)
+
+        # TUNNEL_OUT_TABLE: unicast
+        for remote_mac_address, tunnel_ports in mac_to_ports.items():
+            rule = cls_rule(tun_id=tunnel_key, dl_dst=remote_mac_address)
+            outputs = [ofproto_parser.OFPActionOutput(tunnel_port_no)
+                       for tunnel_port_no in tunnel_ports]
+            resubmit_table = ofproto_parser.NXActionResubmitTable(
+                in_port=ofproto.OFPP_IN_PORT, table=self.LOCAL_OUT_TABLE)
+            actions = outputs + [resubmit_table]
+            self.send_flow_mod(dp, rule, self.TUNNEL_OUT_TABLE,
+                               ofproto.OFPFC_ADD, self.TUNNEL_OUT_PRI_MAC,
+                               actions)
 
         if first_instance:
             # TUNNEL_OUT_TABLE: catch-all(resubmit to LOCAL_OUT_TABLE)
@@ -610,28 +645,36 @@ class GRETunnel(app_manager.RyuApp):
             remote_ofproto_parser = remote_dp.ofproto_parser
 
             # TUNNEL_OUT_TABLE: unicast
+            # live-migration: there can be another port that has
+            # same mac address
+            tunnel_ports = self._tunnel_port_with_mac(remote_dp, dpid,
+                                                      network_id, ev.port_no,
+                                                      mac_address)
+            tunnel_ports.append(tunnel_port_no)
+
             rule = cls_rule(tun_id=ev.tunnel_key, dl_dst=mac_address)
-            output = remote_ofproto_parser.OFPActionOutput(tunnel_port_no)
+            outputs = [remote_ofproto_parser.OFPActionOutput(port_no)
+                       for port_no in tunnel_ports]
             resubmit_table = remote_ofproto_parser.NXActionResubmitTable(
                 in_port=remote_ofproto.OFPP_IN_PORT,
                 table=self.LOCAL_OUT_TABLE)
-            actions = [output, resubmit_table]
+            actions = outputs + [resubmit_table]
             self.send_flow_mod(remote_dp, rule, self.TUNNEL_OUT_TABLE,
                                remote_ofproto.OFPFC_ADD,
                                self.TUNNEL_OUT_PRI_MAC, actions)
 
-            if first_instance:
-                # SRC_TABLE: TUNNEL-port
-                rule = cls_rule(in_port=tunnel_port_no, tun_id=ev.tunnel_key)
-                resubmit_table = remote_ofproto_parser.NXActionResubmitTable(
-                    in_port=remote_ofproto.OFPP_IN_PORT,
-                    table=self.LOCAL_OUT_TABLE)
-                actions = [resubmit_table]
-                self.send_flow_mod(remote_dp, rule, self.SRC_TABLE,
-                                   remote_ofproto.OFPFC_ADD,
-                                   self.SRC_PRI_TUNNEL_PASS, actions)
-            else:
+            if not first_instance:
                 continue
+
+            # SRC_TABLE: TUNNEL-port
+            rule = cls_rule(in_port=tunnel_port_no, tun_id=ev.tunnel_key)
+            resubmit_table = remote_ofproto_parser.NXActionResubmitTable(
+                in_port=remote_ofproto.OFPP_IN_PORT,
+                table=self.LOCAL_OUT_TABLE)
+            actions = [resubmit_table]
+            self.send_flow_mod(remote_dp, rule, self.SRC_TABLE,
+                               remote_ofproto.OFPFC_ADD,
+                               self.SRC_PRI_TUNNEL_PASS, actions)
 
             # TUNNEL_OUT_TABLE: broadcast
             rule = cls_rule(tun_id=ev.tunnel_key, dl_dst=mac.BROADCAST)
@@ -667,9 +710,7 @@ class GRETunnel(app_manager.RyuApp):
         for port in self.nw.get_ports(dpid):
             if port.port_no == ev.port_no:
                 continue
-            if (port.network_id != network_id or port.mac_address is None):
-                continue
-            if not self._link_is_up(dp, port.port_no):
+            if not self._port_is_active(network_id, dp, port):
                 continue
             local_ports.append(port.port_no)
 
@@ -704,10 +745,23 @@ class GRETunnel(app_manager.RyuApp):
                                [])  # priority is ignored
         else:
             # LOCAL_OUT_TABLE: unicast
-            rule = cls_rule(tun_id=tunnel_key, dl_src=mac_address)
-            self.send_flow_del(dp, rule, self.LOCAL_OUT_TABLE,
-                               ofproto.OFPFC_DELETE_STRICT,
-                               self.LOCAL_OUT_PRI_MAC, ev.port_no)
+            # live-migration: there can be two ports with same mac_address
+            ports = self.nw.get_ports(dpid, network_id, mac_address)
+            port_nos = [port.port_no for port in ports
+                        if (port.port_no != ev.port_no and
+                            self._link_is_up(dp, port.port_no))]
+            rule = cls_rule(tun_id=tunnel_key, dl_dst=mac_address)
+            if port_nos:
+                assert len(ports) == 1
+                actions = [ofproto_parser.OFPActionOutput(port_no)
+                           for port_no in port_nos]
+                self.send_flow_mod(dp, rule, self.LOCAL_OUT_TABLE,
+                                   ofproto.OFPFC_MODIFY_STRICT,
+                                   self.LOCAL_OUT_PRI_MAC, actions)
+            else:
+                self.send_flow_del(dp, rule, self.LOCAL_OUT_TABLE,
+                                   ofproto.OFPFC_DELETE_STRICT,
+                                   self.LOCAL_OUT_PRI_MAC, ev.port_no)
 
             # LOCAL_OUT_TABLE: broadcast
             rule = cls_rule(tun_id=tunnel_key, dl_dst=mac.BROADCAST)
@@ -721,7 +775,8 @@ class GRETunnel(app_manager.RyuApp):
 
         # remote dp
         remote_dpids = self.nw.get_dpids(ev.network_id)
-        remote_dpids.remove(dpid)
+        if dpid in remote_dpids:
+            remote_dpids.remove(dpid)
         for remote_dpid in remote_dpids:
             remote_dp = self.dpset.get(remote_dpid)
             if remote_dp is None:
@@ -744,7 +799,7 @@ class GRETunnel(app_manager.RyuApp):
                                    self.SRC_PRI_TUNNEL_PASS, None)
 
                 # SRC_TABLE: TUNNEL-port catch-call drop rule
-                rule = cls_rule(in_port=tunnel_port_no, tun_id=tunnel_key)
+                rule = cls_rule(in_port=tunnel_port_no)
                 self.send_flow_del(remote_dp, rule, self.SRC_TABLE,
                                    remote_ofproto.OFPFC_DELETE_STRICT,
                                    self.SRC_PRI_TUNNEL_DROP, None)
@@ -771,15 +826,31 @@ class GRETunnel(app_manager.RyuApp):
                                    actions)
 
             # TUNNEL_OUT_TABLE: unicast
+            # live-migration: there can be more than one (dpid, port_no)
+            #                 with a given mac address
+            tunnel_ports = self._tunnel_port_with_mac(remote_dp, dpid,
+                                                      network_id, ev.port_no,
+                                                      mac_address)
             rule = cls_rule(tun_id=tunnel_key, dl_dst=mac_address)
-            self.send_flow_del(remote_dp, rule, self.TUNNEL_OUT_TABLE,
-                               remote_ofproto.OFPFC_DELETE_STRICT,
-                               self.TUNNEL_OUT_PRI_MAC, tunnel_port_no)
+            if tunnel_ports:
+                outputs = [remote_ofproto_parser.OFPActionOutput(port_no)
+                           for port_no in tunnel_ports]
+                resubmit_table = remote_ofproto_parser.NXActionResubmitTable(
+                    in_port=remote_ofproto.OFPP_IN_PORT,
+                    table=self.LOCAL_OUT_TABLE)
+                actions = outputs + [resubmit_table]
+                self.send_flow_mod(remote_dp, rule, self.TUNNEL_OUT_TABLE,
+                                   remote_ofproto.OFPFC_ADD,
+                                   self.TUNNEL_OUT_PRI_MAC, actions)
+            else:
+                self.send_flow_del(remote_dp, rule, self.TUNNEL_OUT_TABLE,
+                                   remote_ofproto.OFPFC_DELETE_STRICT,
+                                   self.TUNNEL_OUT_PRI_MAC, tunnel_port_no)
 
             # TODO:XXX multicast
 
     def _get_vm_ports(self, dpid):
-        ports = defaultdict(list)
+        ports = collections.defaultdict(list)
         for port in self.nw.get_ports(dpid):
             if port.network_id in RESERVED_NETWORK_IDS:
                 continue

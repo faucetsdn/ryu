@@ -431,17 +431,20 @@ class TunnelPortUpdater(app_manager.RyuApp):
 
     def _vm_port_del(self, network_id, dpid):
         LOG.debug('_vm_port_del %s %s', network_id, dpid_lib.dpid_to_str(dpid))
-        if len(self.nw.get_ports(dpid, network_id)) > 1:
+        if len(self.nw.get_ports(dpid, network_id)) > 0:
             return
 
-        tunnel_networks = self.nw.get_networks(dpid).copy()
+        tunnel_networks = set(p.network_id
+                              for p in self.nw.get_networks(dpid))
         tunnel_networks.discard(network_id)
         tunnel_networks.difference_update(rest_nw_id.RESERVED_NETWORK_IDS)
         dpids = self.nw.get_dpids(network_id).copy()
         dpids.discard(dpid)
         del_dpids = []
         for remote_dpid in dpids:
-            if tunnel_networks & self.nw.get_networks(remote_dpid):
+            remote_networks = set(p.network_id
+                                  for p in self.nw.get_networks(remote_dpid))
+            if tunnel_networks & remote_networks:
                 continue
             self.tunnel_requests.remove(dpid, remote_dpid)
             del_dpids.append(remote_dpid)

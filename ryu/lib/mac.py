@@ -35,6 +35,8 @@ def is_multicast(addr):
 def haddr_to_str(addr):
     """Format mac address in internal representation into human readable
     form"""
+    if addr is None:
+        return 'None'
     assert len(addr) == _HADDR_LEN
     return ':'.join('%02x' % ord(char) for char in addr)
 

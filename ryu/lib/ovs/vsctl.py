@@ -1309,7 +1309,6 @@ class VSCtl(object):
         else:
             # When port is created, ofport column might be None.
             # So try with port name if it happended
-            port_name = port_name.rstrip('\0')
             for vsctl_port in br.ports:
                 iface_cfgs.extend(
                     self._iface_to_dict(vsctl_iface.iface_cfg)

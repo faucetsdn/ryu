@@ -188,9 +188,16 @@ class OVSSwitch(object):
         iface_id = port.ext_ids.get('iface-id')
         if iface_id is None:
             return
+        try:
+            network_id = self.ifaces.get_key(iface_id,
+                                             QuantumIfaces.KEY_NETWORK_ID)
+        except KeyError:
+            return
 
         if not add:
+            self.network_api.remove_port(network_id, self.dpid, port.ofport)
             ports = self.ifaces.get_key(iface_id, QuantumIfaces.KEY_PORTS)
+            other_ovs_ports = None
             for p in ports:
                 dpid = p.get(QuantumIfaces.SUBKEY_DATAPATH_ID)
                 if dpid is None:
@@ -201,9 +208,9 @@ class OVSSwitch(object):
                 other_ovs_ports = self.ifaces.del_key(iface_id,
                                                       QuantumIfaces.KEY_PORTS,
                                                       p)
-                if other_ovs_ports:
-                    # When live-migration, one of the two OVS ports is deleted.
-                    return
+            if other_ovs_ports:
+                # When live-migration, one of the two OVS ports is deleted.
+                return
 
             port_data = {
                 'datapath_id': dpid_lib.dpid_to_str(self.dpid),
@@ -227,11 +234,6 @@ class OVSSwitch(object):
             return
 
         # update {network, port, mac}
-        try:
-            network_id = self.ifaces.get_key(iface_id,
-                                             QuantumIfaces.KEY_NETWORK_ID)
-        except KeyError:
-            return
         self.network_api.update_network(network_id)
         self.network_api.update_port(network_id, self.dpid, port.ofport)
         mac = port.ext_ids.get('attached-mac')
@@ -240,7 +242,6 @@ class OVSSwitch(object):
                                         mac_lib.haddr_to_bin(mac))
 
     def update_port(self, port_no, port_name, add):
-        port_name = port_name.rstrip('\x00')
         LOG.debug('update_port port_no %d %s %s', port_no, port_name, add)
         assert port_name is not None
         old_port = self.ports.get(port_no)
@@ -252,9 +253,9 @@ class OVSSwitch(object):
             if self.ovs_bridge:
                 port_cfg = self.ovs_bridge.get_quantum_ports(port_name)
                 if port_cfg:
-                    if 'ofport' not in port_cfg:
+                    if 'ofport' not in port_cfg or not port_cfg['ofport']:
                         port_cfg['ofport'] = port_no
-                    if port_cfg['ofport'] != port_no:
+                    elif port_cfg['ofport'] != port_no:
                         LOG.warn('inconsistent port_no: %d port_cfg %s',
                                  port_no, port_cfg)
                         return
@@ -369,12 +370,14 @@ class QuantumAdapter(app_manager.RyuApp):
     @handler.set_ev_cls(dpset.EventPortAdd)
     def port_add_handler(self, ev):
         port = ev.port
-        self._port_handler(ev.dp.id, port.port_no, port.name, True)
+        name = port.name.rstrip('\0')
+        self._port_handler(ev.dp.id, port.port_no, name, True)
 
     @handler.set_ev_cls(dpset.EventPortDelete)
     def port_del_handler(self, ev):
         port = ev.port
-        self._port_handler(ev.dp.id, port.port_no, port.name, False)
+        name = port.name.rstrip('\0')
+        self._port_handler(ev.dp.id, port.port_no, name, False)
 
     def _conf_switch_set_ovsdb_addr(self, dpid, value):
         ovs_switch = self._get_ovs_switch(dpid)
