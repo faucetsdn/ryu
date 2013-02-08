@@ -29,7 +29,6 @@ from ryu.controller import (conf_switch,
                             network,
                             tunnels)
 from ryu.lib import dpid as dpid_lib
-from ryu.lib import synchronized
 from ryu.lib.ovs import bridge as ovs_bridge
 
 
@@ -381,9 +380,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
         self._add_tunnel_ports(tunnel_dp,
                                self.tunnel_requests.get_remote(dpid))
 
-    @handler.set_ev_cls(conf_switch.EventConfSwitchSet,
-                        conf_switch.CONF_SWITCH_EV_DISPATCHER)
-    @synchronized.synchronized(_LOCK)
+    @handler.set_ev_cls(conf_switch.EventConfSwitchSet)
     def conf_switch_set_handler(self, ev):
         LOG.debug('conf_switch_set_handler %s %s %s',
                   dpid_lib.dpid_to_str(ev.dpid), ev.key, ev.value)
@@ -399,9 +396,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
             for tunnel_dp in self.tunnel_dpset.values():
                 tunnel_dp.request_update_remote(ev.dpid, ev.value)
 
-    @handler.set_ev_cls(conf_switch.EventConfSwitchDel,
-                        conf_switch.CONF_SWITCH_EV_DISPATCHER)
-    @synchronized.synchronized(_LOCK)
+    @handler.set_ev_cls(conf_switch.EventConfSwitchDel)
     def conf_switch_del_handler(self, ev):
         # TODO:XXX
         pass
@@ -459,9 +454,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
             tunnel_dp.request_del_tunnel_port(remote_dp.tunnel_ip)
             remote_dp.request_del_tunnel_port(tunnel_dp.tunnel_ip)
 
-    @handler.set_ev_cls(network.EventNetworkPort,
-                        network.NETWORK_TENANT_EV_DISPATCHER)
-    @synchronized.synchronized(_LOCK)
+    @handler.set_ev_cls(network.EventNetworkPort)
     def network_port_handler(self, ev):
         LOG.debug('network_port_handler %s', ev)
         if ev.network_id in rest_nw_id.RESERVED_NETWORK_IDS:
