@@ -32,13 +32,13 @@ from ryu.lib import quantum_ifaces
 # unregister iface_id
 # DELETE /v1.0/quantum/ports/{iface_id}
 #
-# associate netowrk_id with iface_id
+# associate network_id with iface_id
 # GET /v1.0/quantum/ports/{iface_id}/network_id
 #
-# associate netowrk_id with iface_id
+# associate network_id with iface_id
 # POST /v1.0/quantum/ports/{iface_id}/network_id/{network_id}
 #
-# update netowrk_id with iface_id
+# update network_id with iface_id
 # PUT /v1.0/quantum/ports/{iface_id}/network_id/{network_id}
 
 
