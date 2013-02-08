@@ -175,6 +175,13 @@ class AppManager(object):
                         brick = SERVICE_BRICKS[name]
                         brick.register_observer(m.ev_cls, i.name)
 
+        for brick, i in SERVICE_BRICKS.items():
+            LOG.debug("BRICK %s" % brick)
+            for ev_cls, list in i.observers.items():
+                LOG.debug("  PROVIDES %s TO %s" % (ev_cls.__name__, list))
+            for ev_cls, handler in i.event_handlers.items():
+                LOG.debug("  CONSUMES %s" % (ev_cls.__name__,))
+
     def close(self):
         def close_all(close_dict):
             for app in close_dict:
