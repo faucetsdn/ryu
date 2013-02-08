@@ -88,7 +88,12 @@ class RyuApp(object):
 
     def send_event(self, name, ev):
         if name in SERVICE_BRICKS:
+            LOG.debug("EVENT %s->%s %s" %
+                      (self.name, name, ev.__class__.__name__))
             SERVICE_BRICKS[name]._send_event(ev)
+        else:
+            LOG.debug("EVENT LOST %s->%s %s" %
+                      (self.name, name, ev.__class__.__name__))
 
     def send_event_to_observers(self, ev):
         for observer in self.get_observers(ev):
