@@ -220,7 +220,7 @@ class DPIDs(dict):
     def _set_mac(self, network_id, dpid, port_no, port, mac_address):
         if not (port.network_id is None or
                 port.network_id == network_id or
-                port.netowrk_id == self.nw_id_unknown):
+                port.network_id == self.nw_id_unknown):
             raise PortNotFound(network_id=network_id, dpid=dpid, port=port_no)
 
         port.network_id = network_id
