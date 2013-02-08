@@ -354,7 +354,7 @@ class GRETunnel(app_manager.RyuApp):
     such that packet in event should not be triggered.
     """
     _CONTEXTS = {
-        'netowrk': network.Network,
+        'network': network.Network,
         'dpset': dpset.DPSet,
         'tunnels': tunnels.Tunnels,
     }
