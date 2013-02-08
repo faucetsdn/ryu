@@ -34,6 +34,11 @@ def lookup_service_brick(name):
     return SERVICE_BRICKS.get(name)
 
 
+def register_app(app):
+    SERVICE_BRICKS[app.name] = app
+    register_instance(app)
+
+
 class RyuApp(object):
     """
     Base class for Ryu network application
@@ -139,8 +144,7 @@ class AppManager(object):
             self.contexts[key] = context
             # hack for dpset
             if context.__class__.__base__ == RyuApp:
-                SERVICE_BRICKS[context.name] = context
-                register_instance(context)
+                register_app(context)
         return self.contexts
 
     def instantiate_apps(self, *args, **kwargs):
@@ -160,9 +164,8 @@ class AppManager(object):
 
             assert app_name not in self.applications
             app = cls(*args, **kwargs)
-            register_instance(app)
+            register_app(app)
             self.applications[app_name] = app
-            SERVICE_BRICKS[app.name] = app
 
         for key, i in SERVICE_BRICKS.items():
             for _k, m in inspect.getmembers(i, inspect.ismethod):
