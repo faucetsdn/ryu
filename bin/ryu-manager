@@ -20,6 +20,15 @@ import gevent
 from gevent import monkey
 monkey.patch_all()
 
+# TODO:
+#   Right now, we have our own patched copy of ovs python bindings
+#   Once our modification is upstreamed and widely deployed,
+#   use it
+#
+# NOTE: this modifies sys.path and thus affects the following imports.
+# eg. openstack.common.cfg.
+import ryu.contrib
+
 from openstack.common import cfg
 import logging
 import sys
@@ -32,12 +41,6 @@ from ryu import version
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
-
-# TODO:
-#   Right now, we have our own patched copy of ovs python bindings
-#   Once our modification is upstreamed and widely deployed,
-#   use it
-import ryu.contrib
 
 
 CONF = cfg.CONF
