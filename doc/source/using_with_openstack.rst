@@ -74,7 +74,7 @@ from the source, please refer to OpenStack document and get back here again.
 
    * run ryu network os::
 
-      % ryu-manager [----flagfile /etc/ryu/ryu.conf]
+      % ryu-manager
 
 
 * get nova source and quantum source from github

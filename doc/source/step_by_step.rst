@@ -367,7 +367,8 @@ If you use default configurations, you don't have to modify it.
 Just leave it blank::
 
     # Sample configuration file
-    #--wsapi_host=<hostip>
-    #--wsapi_port=<port:8080>
-    #--ofp_listen_host=<hostip>
-    #--ofp_listen_port=<port:6633>
+    [DEFAULT]
+    #wsapi_host=<hostip>
+    #wsapi_port=<port:8080>
+    #ofp_listen_host=<hostip>
+    #ofp_listen_port=<port:6633>
