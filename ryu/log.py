@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gflags
+from openstack.common import cfg
 import inspect
 import logging
 import logging.handlers
@@ -22,16 +22,18 @@ import os
 import sys
 
 
-FLAGS = gflags.FLAGS
+CONF = cfg.CONF
 
-gflags.DEFINE_integer('default_log_level', None, 'default log level')
-gflags.DEFINE_bool('verbose', False, 'show debug output')
-
-gflags.DEFINE_bool('use_stderr', True, 'log to standard error')
-gflags.DEFINE_string('use_syslog', False, 'output to syslog')
-gflags.DEFINE_string('log_dir', None, 'log file directory')
-gflags.DEFINE_string('log_file', None, 'log file name')
-gflags.DEFINE_string('log_file_mode', '0644', 'default log file permission')
+CONF.register_cli_opts([
+    cfg.IntOpt('default_log_level', default=None, help='default log level'),
+    cfg.BoolOpt('verbose', default=False, help='show debug output'),
+    cfg.BoolOpt('use_stderr', default=True, help='log to standard error'),
+    cfg.StrOpt('use_syslog', default=False, help='output to syslog'),
+    cfg.StrOpt('log_dir', default=None, help='log file directory'),
+    cfg.StrOpt('log_file', default=None, help='log file name'),
+    cfg.StrOpt('log_file_mode', default='0644',
+               help='default log file permission')
+])
 
 
 _EARLY_LOG_HANDLER = None
@@ -48,10 +50,10 @@ def early_init_log(level=None):
 
 
 def _get_log_file():
-    if FLAGS.log_file:
-        return FLAGS.log_file
-    if FLAGS.log_dir:
-        return os.path.join(FLAGS.log_dir,
+    if CONF.log_file:
+        return CONF.log_file
+    if CONF.log_dir:
+        return os.path.join(CONF.log_dir,
                             os.path.basename(inspect.stack()[-1][1])) + '.log'
     return None
 
@@ -60,25 +62,25 @@ def init_log():
     global _EARLY_LOG_HANDLER
 
     log = logging.getLogger()
-    if FLAGS.use_stderr:
+    if CONF.use_stderr:
         log.addHandler(logging.StreamHandler(sys.stderr))
     if _EARLY_LOG_HANDLER is not None:
         log.removeHandler(_EARLY_LOG_HANDLER)
         _EARLY_LOG_HANDLER = None
 
-    if FLAGS.use_syslog:
+    if CONF.use_syslog:
         syslog = logging.handlers.SysLogHandler(address='/dev/log')
         log.addHandler(syslog)
 
     log_file = _get_log_file()
     if log_file is not None:
         log.addHandler(logging.handlers.WatchedFileHandler(log_file))
-        mode = int(FLAGS.log_file_mode, 8)
+        mode = int(CONF.log_file_mode, 8)
         os.chmod(log_file, mode)
 
-    if FLAGS.verbose:
+    if CONF.verbose:
         log.setLevel(logging.DEBUG)
-    elif FLAGS.default_log_level is not None:
-        log.setLevel(FLAGS.default_log_level)
+    elif CONF.default_log_level is not None:
+        log.setLevel(CONF.default_log_level)
     else:
         log.setLevel(logging.INFO)

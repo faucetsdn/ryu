@@ -20,7 +20,7 @@ import gevent
 from gevent import monkey
 monkey.patch_all()
 
-import gflags
+from openstack.common import cfg
 import logging
 import sys
 
@@ -29,7 +29,6 @@ log.early_init_log(logging.DEBUG)
 
 from ryu import flags
 from ryu import version
-from ryu import utils
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
@@ -41,31 +40,26 @@ from ryu.controller import controller
 import ryu.contrib
 
 
-FLAGS = gflags.FLAGS
-gflags.DEFINE_bool('version', False, 'output version information and exit')
-gflags.DEFINE_multistring('app_lists',
-                          [],
-                          'application module name to run')
+CONF = cfg.CONF
+CONF.register_cli_opts([
+    cfg.ListOpt('app_lists', default=[],
+                help='application module name to run'),
+    cfg.MultiStrOpt('app', positional=True, default=[],
+                    help='application module name to run')
+])
 
 
 def main():
-    utils.find_flagfile()
-    args = FLAGS(sys.argv)
-
-    if FLAGS.version:
-        print 'ryu-manager %s' % version
-        sys.exit(0)
+    CONF(project='ryu', version='ryu-manager %s' % version)
 
     log.init_log()
 
     # always enable ofp for now.
-    FLAGS.app_lists += ['ryu.controller.ofp_handler']
-
-    if len(args) > 1:
-        FLAGS.app_lists += args[1:]
+    CONF.app_lists += ['ryu.controller.ofp_handler']
+    CONF.app_lists += CONF.app
 
     app_mgr = AppManager()
-    app_mgr.load_apps(FLAGS.app_lists)
+    app_mgr.load_apps(CONF.app_lists)
     contexts = app_mgr.create_contexts()
     app_mgr.instantiate_apps(**contexts)
 

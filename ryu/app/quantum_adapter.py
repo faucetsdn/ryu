@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gflags
+from openstack.common import cfg
 import logging
 
 from quantumclient import client as q_client
@@ -41,17 +41,17 @@ monkey.patch_all()
 
 
 LOG = logging.getLogger(__name__)
-FLAGS = gflags.FLAGS
+CONF = cfg.CONF
 
 
 def _get_auth_token():
     httpclient = q_client.HTTPClient(
-        username=FLAGS.quantum_admin_username,
-        tenant_name=FLAGS.quantum_admin_tenant_name,
-        password=FLAGS.quantum_admin_password,
-        auth_url=FLAGS.quantum_admin_auth_url,
-        timeout=FLAGS.quantum_url_timeout,
-        auth_strategy=FLAGS.quantum_auth_strategy)
+        username=CONF.quantum_admin_username,
+        tenant_name=CONF.quantum_admin_tenant_name,
+        password=CONF.quantum_admin_password,
+        auth_url=CONF.quantum_admin_auth_url,
+        timeout=CONF.quantum_url_timeout,
+        auth_strategy=CONF.quantum_auth_strategy)
     try:
         httpclient.authenticate()
     except (q_exc.Unauthorized, q_exc.Forbidden, q_exc.EndpointNotFound) as e:
@@ -64,12 +64,12 @@ def _get_auth_token():
 def _get_quantum_client(token):
     if token:
         my_client = q_clientv2.Client(
-            endpoint_url=FLAGS.quantum_url,
-            token=token, timeout=FLAGS.quantum_url_timeout)
+            endpoint_url=CONF.quantum_url,
+            token=token, timeout=CONF.quantum_url_timeout)
     else:
         my_client = q_clientv2.Client(
-            endpoint_url=FLAGS.quantum_url,
-            auth_strategy=None, timeout=FLAGS.quantum_url_timeout)
+            endpoint_url=CONF.quantum_url,
+            auth_strategy=None, timeout=CONF.quantum_url_timeout)
     return my_client
 
 
@@ -129,7 +129,7 @@ class OVSSwitch(object):
     def __init__(self, dpid, nw, ifaces):
         # TODO: clean up
         token = None
-        if FLAGS.quantum_auth_strategy:
+        if CONF.quantum_auth_strategy:
             token = _get_auth_token()
         q_api = _get_quantum_client(token)
 
@@ -137,7 +137,7 @@ class OVSSwitch(object):
         self.network_api = nw
         self.ifaces = ifaces
         self.q_api = q_api
-        self.ctrl_addr = FLAGS.quantum_controller_addr
+        self.ctrl_addr = CONF.quantum_controller_addr
 
         self.ovsdb_addr = None
         self.tunnel_ip = None

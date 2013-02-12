@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import contextlib
-import gflags
+from openstack.common import cfg
 import logging
 import gevent
 import traceback
@@ -42,15 +42,17 @@ from ryu.controller import ofp_event
 
 LOG = logging.getLogger('ryu.controller.controller')
 
-FLAGS = gflags.FLAGS
-gflags.DEFINE_string('ofp_listen_host', '', 'openflow listen host')
-gflags.DEFINE_integer('ofp_tcp_listen_port', ofproto_common.OFP_TCP_PORT,
-                      'openflow tcp listen port')
-gflags.DEFINE_integer('ofp_ssl_listen_port', ofproto_common.OFP_SSL_PORT,
-                      'openflow ssl listen port')
-gflags.DEFINE_string('ctl_privkey', None, 'controller private key')
-gflags.DEFINE_string('ctl_cert', None, 'controller certificate')
-gflags.DEFINE_string('ca_certs', None, 'CA certificates')
+CONF = cfg.CONF
+CONF.register_cli_opts([
+    cfg.StrOpt('ofp_listen_host', default='', help='openflow listen host'),
+    cfg.IntOpt('ofp_tcp_listen_port', default=ofproto_common.OFP_TCP_PORT,
+               help='openflow tcp listen port'),
+    cfg.IntOpt('ofp_ssl_listen_port', default=ofproto_common.OFP_SSL_PORT,
+               help='openflow ssl listen port'),
+    cfg.StrOpt('ctl_privkey', default=None, help='controller private key'),
+    cfg.StrOpt('ctl_cert', default=None, help='controller certificate'),
+    cfg.StrOpt('ca_certs', default=None, help='CA certificates')
+])
 
 
 class OpenFlowController(object):
@@ -63,26 +65,26 @@ class OpenFlowController(object):
         self.server_loop()
 
     def server_loop(self):
-        if FLAGS.ctl_privkey and FLAGS.ctl_cert is not None:
-            if FLAGS.ca_certs is not None:
-                server = StreamServer((FLAGS.ofp_listen_host,
-                                       FLAGS.ofp_ssl_listen_port),
+        if CONF.ctl_privkey and CONF.ctl_cert is not None:
+            if CONF.ca_certs is not None:
+                server = StreamServer((CONF.ofp_listen_host,
+                                       CONF.ofp_ssl_listen_port),
                                       datapath_connection_factory,
-                                      keyfile=FLAGS.ctl_privkey,
-                                      certfile=FLAGS.ctl_cert,
+                                      keyfile=CONF.ctl_privkey,
+                                      certfile=CONF.ctl_cert,
                                       cert_reqs=ssl.CERT_REQUIRED,
-                                      ca_certs=FLAGS.ca_certs,
+                                      ca_certs=CONF.ca_certs,
                                       ssl_version=ssl.PROTOCOL_TLSv1)
             else:
-                server = StreamServer((FLAGS.ofp_listen_host,
-                                       FLAGS.ofp_ssl_listen_port),
+                server = StreamServer((CONF.ofp_listen_host,
+                                       CONF.ofp_ssl_listen_port),
                                       datapath_connection_factory,
-                                      keyfile=FLAGS.ctl_privkey,
-                                      certfile=FLAGS.ctl_cert,
+                                      keyfile=CONF.ctl_privkey,
+                                      certfile=CONF.ctl_cert,
                                       ssl_version=ssl.PROTOCOL_TLSv1)
         else:
-            server = StreamServer((FLAGS.ofp_listen_host,
-                                   FLAGS.ofp_tcp_listen_port),
+            server = StreamServer((CONF.ofp_listen_host,
+                                   CONF.ofp_tcp_listen_port),
                                   datapath_connection_factory)
 
         #LOG.debug('loop')

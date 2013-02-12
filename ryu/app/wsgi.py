@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gflags
+from openstack.common import cfg
 import logging
 import webob.dec
 
@@ -24,10 +24,11 @@ from routes.util import URLGenerator
 
 LOG = logging.getLogger('ryu.app.wsgi')
 
-FLAGS = gflags.FLAGS
-gflags.DEFINE_string('wsapi_host', '', 'webapp listen host')
-gflags.DEFINE_integer('wsapi_port', 8080, 'webapp listen port')
-
+CONF = cfg.CONF
+CONF.register_cli_opts([
+    cfg.StrOpt('wsapi_host', default='', help='webapp listen host'),
+    cfg.IntOpt('wsapi_port', default=8080, help='webapp listen port')
+])
 
 HEX_PATTERN = r'0x[0-9a-z]+'
 DIGIT_PATTERN = r'[1-9][0-9]*'
@@ -87,7 +88,7 @@ class WSGIApplication(object):
 
 class WSGIServer(pywsgi.WSGIServer):
     def __init__(self, application, **config):
-        super(WSGIServer, self).__init__((FLAGS.wsapi_host, FLAGS.wsapi_port),
+        super(WSGIServer, self).__init__((CONF.wsapi_host, CONF.wsapi_port),
                                          application, **config)
 
     def __call__(self):

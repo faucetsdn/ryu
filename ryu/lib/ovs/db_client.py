@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gflags
 import logging
 import os
 
@@ -23,7 +22,6 @@ from ovs import (jsonrpc,
 from ovs import util as ovs_util
 from ovs.db import schema
 
-FLAGS = gflags.FLAGS
 LOG = logging.getLogger(__name__)
 
 

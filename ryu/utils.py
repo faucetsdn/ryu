@@ -37,33 +37,6 @@ def import_module(modname):
     return sys.modules[modname]
 
 
-RYU_DEFAULT_FLAG_FILE = ('ryu.conf', 'etc/ryu/ryu.conf', '/etc/ryu/ryu.conf')
-
-
-def find_flagfile(default_path=RYU_DEFAULT_FLAG_FILE):
-    if '--flagfile' in sys.argv:
-        return
-
-    script_dir = os.path.dirname(inspect.stack()[-1][1])
-
-    for filename in default_path:
-        if not os.path.isabs(filename):
-            if os.path.exists(filename):
-                # try relative to current path
-                filename = os.path.abspath(filename)
-            elif os.path.exists(os.path.join(script_dir, filename)):
-                # try relative to script dir
-                filename = os.path.join(script_dir, filename)
-
-        if not os.path.exists(filename):
-            continue
-
-        flagfile = '--flagfile=%s' % filename
-        sys.argv.insert(1, flagfile)
-        LOG.debug('flagfile = %s', filename)
-        return
-
-
 def round_up(x, y):
     return ((x + y - 1) / y) * y
 

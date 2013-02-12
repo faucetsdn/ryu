@@ -16,7 +16,7 @@
 
 import collections
 import gevent
-import gflags
+from openstack.common import cfg
 import logging
 import netaddr
 
@@ -33,8 +33,11 @@ from ryu.lib.ovs import bridge as ovs_bridge
 
 
 LOG = logging.getLogger(__name__)
-FLAGS = gflags.FLAGS
-gflags.DEFINE_string('tunnel_type', 'gre', 'tunnel type for ovs tunnel port')
+CONF = cfg.CONF
+CONF.register_opts([
+    cfg.StrOpt('tunnel_type', default='gre',
+               help='tunnel type for ovs tunnel port')
+])
 
 _TUNNEL_TYPE_TO_NW_ID = {
     'gre': rest_nw_id.NW_ID_VPORT_GRE,
@@ -351,7 +354,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(TunnelPortUpdater, self).__init__(args, kwargs)
-        self.tunnel_type = FLAGS.tunnel_type
+        self.tunnel_type = CONF.tunnel_type
         self.cs = kwargs['conf_switch']
         self.nw = kwargs['network']
         self.tunnels = kwargs['tunnels']

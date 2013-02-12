@@ -19,7 +19,7 @@ slimmed down version of OVSBridge in quantum agent
 """
 
 import functools
-import gflags
+from openstack.common import cfg
 import logging
 
 import ryu.exception as ryu_exc
@@ -28,8 +28,10 @@ import ryu.lib.ovs.vsctl as ovs_vsctl
 
 LOG = logging.getLogger(__name__)
 
-FLAGS = gflags.FLAGS
-gflags.DEFINE_integer('ovsdb_timeout', 2, 'ovsdb timeout')
+CONF = cfg.CONF
+CONF.register_opts([
+    cfg.IntOpt('ovsdb_timeout', default=2, help='ovsdb timeout')
+])
 
 
 class OVSBridgeNotFound(ryu_exc.RyuException):
@@ -90,7 +92,7 @@ class OVSBridge(object):
         super(OVSBridge, self).__init__()
         self.datapath_id = datapath_id
         self.vsctl = ovs_vsctl.VSCtl(ovsdb_addr)
-        self.timeout = timeout or FLAGS.ovsdb_timeout
+        self.timeout = timeout or CONF.ovsdb_timeout
         self.exception = exception
 
         self.br_name = None
