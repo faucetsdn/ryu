@@ -41,6 +41,6 @@ CONF.register_cli_opts([
                help='auth strategy for connecting to quantum in admin'
                'context'),
     cfg.StrOpt('quantum_controller_addr', default=None,
-               help='openflow mehod:address:port to set controller of'
+               help='openflow method:address:port to set controller of'
                'ovs bridge')
 ])
