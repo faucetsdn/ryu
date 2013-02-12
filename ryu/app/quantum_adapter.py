@@ -363,9 +363,7 @@ class QuantumAdapter(app_manager.RyuApp):
             # can be disconnected for some reason.
             # TODO: configuration needed to tell that this dp is really
             # removed.
-            ovs_switch = self.dps.pop(dpid, None)
-            if ovs_switch:
-                ovs_switch.close()
+            self.dps.pop(dpid, None)
 
     @handler.set_ev_cls(dpset.EventPortAdd)
     def port_add_handler(self, ev):
