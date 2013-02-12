@@ -213,5 +213,9 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'ryu', u'ryu Documentation',
-     [u'ryu development team'], 1)
+     [u'ryu development team'], 1),
+    ('man/ryu_manager', 'ryu-manager', u'ryu manager',
+     [u'ryu development team'], 1),
+    ('man/ryu_client', 'ryu-client', u'ryu client utility',
+     [u'ryu development team'], 1),
 ]
