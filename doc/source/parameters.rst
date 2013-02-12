@@ -1,3 +1,5 @@
+:orphan:
+
 .. _getting_started:
 
 ***************
@@ -44,6 +46,7 @@ It can be configured by passing configuration file like::
 
 At the moment the following applications are available
 (And more to come as Ryu evolves.)
+
   * ryu.app.simple_isolation.SimpleIsolation
   * ryu.app.rest.restapi
   * ryu.app.simple_bridge.SimpleSwitch
