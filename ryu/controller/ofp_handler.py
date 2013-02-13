@@ -21,6 +21,7 @@ import ryu.base.app_manager
 
 from ryu import utils
 from ryu.controller import ofp_event
+from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
 
