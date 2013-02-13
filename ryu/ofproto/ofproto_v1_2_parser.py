@@ -1300,6 +1300,7 @@ class OFPQueueProp(OFPQueuePropHeader):
             ofproto_v1_2.OFP_QUEUE_PROP_HEADER_PACK_STR,
             buf, offset)
         cls_ = cls._QUEUE_PROP_PROPERTIES.get(property_)
+        offset += ofproto_v1_2.OFP_QUEUE_PROP_HEADER_SIZE
         return cls_.parser(buf, offset)
 
 

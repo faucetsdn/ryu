@@ -3181,50 +3181,6 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPQueueGetConfigReply
     """
 
-    class Datapath(object):
-        ofproto = ofproto_v1_2
-        ofproto_parser = ofproto_v1_2_parser
-
-    # OFP_HEADER_PACK_STR
-    version = ofproto_v1_2.OFP_VERSION
-    msg_type = ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REPLY
-    msg_len = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
-        + ofproto_v1_2.OFP_PACKET_QUEUE_SIZE \
-        + ofproto_v1_2.OFP_QUEUE_PROP_HEADER_SIZE
-    xid = 2495926989
-
-    fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
-    buf = pack(fmt, version, msg_type, msg_len, xid)
-
-    # OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR = '!I4x'
-    # OFP_QUEUE_GET_CONFIG_REPLY_SIZE = 16
-    port = 65037
-
-    fmt = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR
-    buf += pack(fmt, port)
-
-    # OFP_QUEUE_PROP_HEADER_PACK_STR = '!HH4x'
-    # OFP_QUEUE_PROP_HEADER_SIZE = 8
-    property_ = ofproto_v1_2.OFPQT_MIN_RATE
-    properties_len = ofproto_v1_2.OFP_QUEUE_PROP_HEADER_SIZE
-    properties = [OFPQueuePropHeader(property_, properties_len)]
-
-    buf_properties = bytearray()
-    properties[0].serialize(buf_properties, 0)
-
-    # OFP_PACKET_QUEUE_PACK_STR = '!IIH6x'
-    # OFP_PACKET_QUEUE_SIZE = 16
-    queue_id = 6606
-    queue_port = 41186
-    queue_len = ofproto_v1_2.OFP_PACKET_QUEUE_SIZE \
-        + ofproto_v1_2.OFP_QUEUE_PROP_HEADER_SIZE
-    queues = [OFPPacketQueue(queue_id, queue_port, queue_len, properties)]
-
-    fmt = ofproto_v1_2.OFP_PACKET_QUEUE_PACK_STR
-    buf += pack(fmt, queue_id, queue_port, queue_len) + buf_properties
-
-    c = OFPQueueGetConfigReply(Datapath)
-
     def setUp(self):
         pass
 
@@ -3235,18 +3191,60 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        res = self.c.parser(object, self.version, self.msg_type, self.msg_len,
-                            self.xid, self.buf)
+        version = ofproto_v1_2.OFP_VERSION
+        msg_type = ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REPLY
+        msg_len = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
+            + ofproto_v1_2.OFP_PACKET_QUEUE_SIZE \
+            + ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+        xid = 0
+        # OFP_HEADER_PACK_STR = '!BBHI'
+        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        buf = pack(fmt, version, msg_type, msg_len, xid)
 
-        eq_(self.version, res.version)
-        eq_(self.msg_type, res.msg_type)
-        eq_(self.msg_len, res.msg_len)
-        eq_(self.xid, res.xid)
+        # OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR = '!I4x'
+        fmt = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR
+        port = 1
+        buf += pack(fmt, port)
 
-        eq_(self.queue_id, res.queues[0].queue_id)
-        eq_(self.queue_port, res.queues[0].port)
-        eq_(self.queue_len, res.queues[0].len)
-        eq_(self.property_, res.queues[0].properties[0].property)
+        # OFP_PACKET_QUEUE_PACK_STR = '!IIH6x'
+        fmt = ofproto_v1_2.OFP_PACKET_QUEUE_PACK_STR
+        queue_id = 2
+        queue_port = 3
+        queue_len = ofproto_v1_2.OFP_PACKET_QUEUE_SIZE \
+            + ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+        buf += pack(fmt, queue_id, queue_port, queue_len)
+
+        # OFP_QUEUE_PROP_HEADER_PACK_STR = '!HH4x'
+        fmt = ofproto_v1_2.OFP_QUEUE_PROP_HEADER_PACK_STR
+        prop_type = ofproto_v1_2.OFPQT_MIN_RATE
+        prop_len = ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+        buf += pack(fmt, prop_type, prop_len)
+
+        # OFP_QUEUE_PROP_MIN_RATE_PACK_STR = '!H6x'
+        fmt = ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_PACK_STR
+        prop_rate = 4
+        buf += pack(fmt, prop_rate)
+
+        res = OFPQueueGetConfigReply.parser(object, version, msg_type,
+                                            msg_len, xid, buf)
+
+        eq_(version, res.version)
+        eq_(msg_type, res.msg_type)
+        eq_(msg_len, res.msg_len)
+        eq_(xid, res.xid)
+        eq_(port, res.port)
+        ok_(res.queues)
+
+        queue = res.queues[0]
+        eq_(queue_id, queue.queue_id)
+        eq_(queue_port, queue.port)
+        eq_(queue_len, queue.len)
+        ok_(queue.properties)
+
+        prop = queue.properties[0]
+        eq_(prop_type, prop.property)
+        eq_(prop_len, prop.len)
+        eq_(prop_rate, prop.rate)
 
 
 class TestOFPBarrierRequest(unittest.TestCase):
