@@ -189,12 +189,19 @@ class Datapath(object):
 
     @_deactivate
     def _send_loop(self):
-        while self.is_active:
-            buf = self.send_q.get()
-            self.socket.sendall(buf)
+        try:
+            while self.is_active:
+                buf = self.send_q.get()
+                self.socket.sendall(buf)
+        finally:
+            q = self.send_q
+            self.send_q = None
+            while q.get():
+                pass
 
     def send(self, buf):
-        self.send_q.put(buf)
+        if self.send_q:
+            self.send_q.put(buf)
 
     def set_xid(self, msg):
         self.xid += 1
