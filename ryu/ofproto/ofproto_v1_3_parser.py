@@ -1816,7 +1816,7 @@ class OFPActionPopMpls(OFPAction):
         return cls(ethertype)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_3.OFP_ACTION_POP_MPLS_PACK_STR, buff, offset,
+        msg_pack_into(ofproto_v1_3.OFP_ACTION_POP_MPLS_PACK_STR, buf, offset,
                       self.ethertype)
 
 
