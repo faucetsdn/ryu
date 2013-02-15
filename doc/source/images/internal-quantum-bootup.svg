@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="297mm"
+   height="210mm"
+   id="svg2994"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="internal-quantum-bootup.svg">
+  <defs
+     id="defs2996">
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mend"
+       style="overflow:visible;">
+      <path
+         id="path3845"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.4) rotate(180) translate(10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path3839"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     inkscape:document-units="mm"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.94549198"
+     inkscape:cx="528.29639"
+     inkscape:cy="372.04724"
+     inkscape:current-layer="layer1"
+     id="namedview2998"
+     showgrid="false"
+     inkscape:window-width="1523"
+     inkscape:window-height="1072"
+     inkscape:window-x="39"
+     inkscape:window-y="75"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata3000">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#00ffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.59297168;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3003"
+       width="131.57176"
+       height="70.721771"
+       x="188.27751"
+       y="176.18547" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="110.88218"
+       y="154.5258"
+       id="text3773"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3775"
+         x="110.88218"
+         y="154.5258" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="200.65062"
+       y="206.13747"
+       id="text3777"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3779"
+         x="200.65062"
+         y="206.13747">Quantum</tspan><tspan
+         sodipodi:role="line"
+         x="200.65062"
+         y="236.13747"
+         id="tspan3781">Server</tspan></text>
+    <rect
+       style="fill:#00ffff;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3783"
+       width="112.23441"
+       height="70.315529"
+       x="717.44904"
+       y="145.77005" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="730.97125"
+       y="176.87114"
+       id="text3785"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3787"
+         x="730.97125"
+         y="176.87114">Ryu</tspan></text>
+    <rect
+       style="fill:#00ffff;fill-rule:evenodd;stroke:#000000;stroke-width:1.10748124px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3789"
+       width="769.55322"
+       height="270.44434"
+       x="43.437778"
+       y="393.86905" />
+    <rect
+       style="fill:#00ffff;fill-rule:evenodd;stroke:#000000;stroke-width:0.9129163px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3791"
+       width="136.5744"
+       height="51.840321"
+       x="66.870529"
+       y="437.97333" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="95.267166"
+       y="471.77887"
+       id="text3793"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3795"
+         x="95.267166"
+         y="471.77887">ryu.ini</tspan></text>
+    <g
+       id="g3825"
+       transform="translate(416.71427,-6.3459026)">
+      <path
+         transform="matrix(1.042316,0,0,1.0647383,35.099087,16.081462)"
+         d="m 201.48104,585.88452 -47.30174,0.79573 -24.33999,-40.56665 22.96175,-41.36238 47.30175,-0.79572 24.33999,40.56665 z"
+         inkscape:randomized="0"
+         inkscape:rounded="0"
+         inkscape:flatsided="true"
+         sodipodi:arg2="1.5539756"
+         sodipodi:arg1="1.0303768"
+         sodipodi:r2="40.97031"
+         sodipodi:r1="47.308437"
+         sodipodi:cy="545.31787"
+         sodipodi:cx="177.14105"
+         sodipodi:sides="6"
+         id="path3797"
+         style="fill:#00ff00;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.99921262;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+         sodipodi:type="star" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text3801"
+         y="603.46344"
+         x="192.01549"
+         style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+         xml:space="preserve"><tspan
+           y="603.46344"
+           x="192.01549"
+           id="tspan3803"
+           sodipodi:role="line">OVS</tspan></text>
+    </g>
+    <path
+       sodipodi:type="arc"
+       style="fill:#00ffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.77165353;stroke-linecap:butt;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path3805"
+       sodipodi:cx="384.03098"
+       sodipodi:cy="482.43958"
+       sodipodi:rx="125.75662"
+       sodipodi:ry="35.833878"
+       d="m 509.7876,482.43958 a 125.75662,35.833878 0 1 1 -251.51325,0 125.75662,35.833878 0 1 1 251.51325,0 z"
+       transform="matrix(0.7468437,0,0,0.70094681,178.67835,126.04697)" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="399.21118"
+       y="468.24127"
+       id="text3807"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3809"
+         x="399.21118"
+         y="468.24127">Ryu agent</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.54330707;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="m 204.25845,465.47229 163.93582,0.72099"
+       id="path3830"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.54330707;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="M 518.2067,442.54904 728.86992,219.25852"
+       id="path4462"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.54330707;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="m 521.02895,482.64718 78.74585,82.48553"
+       id="path4648"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="81.932907"
+       y="517.38977"
+       id="text4834"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4836"
+         x="81.932907"
+         y="517.38977">1.get IP address</tspan><tspan
+         sodipodi:role="line"
+         x="81.932907"
+         y="547.38977"
+         id="tspan4404">for ryu to access</tspan><tspan
+         sodipodi:role="line"
+         x="81.932907"
+         y="577.38977"
+         id="tspan4406">ovsdb</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="352.14709"
+       y="540.65802"
+       id="text4838"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="352.14709"
+         y="540.65802"
+         id="tspan4842">3. setup OVS</tspan><tspan
+         sodipodi:role="line"
+         x="352.14709"
+         y="570.65802"
+         id="tspan4200">to accept changes</tspan><tspan
+         sodipodi:role="line"
+         x="352.14709"
+         y="600.65802"
+         id="tspan4202">from Ryu.</tspan><tspan
+         sodipodi:role="line"
+         x="352.14709"
+         y="622.68402"
+         id="tspan4606"
+         style="font-size:16px">set-manager ptcp:&lt;port&gt;</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="387.24884"
+       y="216.63544"
+       id="text4846"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="387.24884"
+         y="216.63544"
+         id="tspan4850">4. register necesary infos</tspan><tspan
+         sodipodi:role="line"
+         x="387.24884"
+         y="246.63544"
+         id="tspan4854">dpid, ovsdb ip address</tspan><tspan
+         sodipodi:role="line"
+         x="387.24884"
+         y="276.63544"
+         id="tspan4177">(+ ip adress for tunnel</tspan><tspan
+         sodipodi:role="line"
+         x="387.24884"
+         y="306.63544"
+         id="tspan4616">if GRE is enabled)</tspan><tspan
+         sodipodi:role="line"
+         x="387.24884"
+         y="336.63544"
+         id="tspan4860" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="22.987768"
+       y="50.404736"
+       id="text4862"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4864"
+         x="22.987768"
+         y="50.404736"
+         style="font-size:48px">Node boot up</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.29350114;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="M 403.26785,443.90126 252.79812,248.84757"
+       id="path3027"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="51.824883"
+       y="268.15176"
+       id="text4192"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4194"
+         x="51.824883"
+         y="268.15176">2. Get address</tspan><tspan
+         sodipodi:role="line"
+         x="51.824883"
+         y="298.15176"
+         id="tspan4198">for Ryu REST</tspan><tspan
+         sodipodi:role="line"
+         x="51.824883"
+         y="328.15176"
+         id="tspan4196">via openstack RPC</tspan><tspan
+         sodipodi:role="line"
+         x="51.824883"
+         y="358.15176"
+         id="tspan4618">which is used for</tspan><tspan
+         sodipodi:role="line"
+         x="51.824883"
+         y="388.15176"
+         id="tspan4620">internal communication</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.78022003px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect4204"
+       width="125.13995"
+       height="47.363235"
+       x="192.15517"
+       y="72.159836" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="213.64537"
+       y="101.04301"
+       id="text4206"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4208"
+         x="213.64537"
+         y="101.04301">ryu.ini</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.54330707;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="m 250.66315,119.02308 0,58.17077"
+       id="path4210"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="11.634151"
+       y="124.31133"
+       id="text4396"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4398"
+         x="11.634151"
+         y="124.31133">get IP address </tspan><tspan
+         sodipodi:role="line"
+         x="11.634151"
+         y="154.31133"
+         id="tspan4400">for Ryu REST API</tspan><tspan
+         sodipodi:role="line"
+         x="11.634151"
+         y="184.31133"
+         id="tspan4402">on startup</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.54330707;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Mend)"
+       d="M 779.48837,217.38456 672.66568,570.63981"
+       id="path4408"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:24px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="767.85419"
+       y="286.13184"
+       id="text4594"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="767.85419"
+         y="286.13184"
+         id="tspan4598">5. setup ovs</tspan><tspan
+         sodipodi:role="line"
+         x="767.85419"
+         y="316.13184"
+         id="tspan4602">to connect Ryu</tspan><tspan
+         sodipodi:role="line"
+         x="767.85419"
+         y="346.13184"
+         id="tspan3045"
+         style="font-size:16px">set-controller tcp:&lt;ip&gt;:&lt;port&gt;</tspan></text>
+  </g>
+</svg>

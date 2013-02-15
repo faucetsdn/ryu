@@ -15,7 +15,7 @@
    height="744.09448"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 r9760"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="filtering-incoming.svg"
    inkscape:export-filename="/home/yamahata/openvswitch/sp-lab/scarab/ryu/ryu-1/doc/source/images/filtering-incoming.png"
    inkscape:export-xdpi="90"
@@ -28,7 +28,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.86228854"
-     inkscape:cx="460.06235"
+     inkscape:cx="462.38176"
      inkscape:cy="372.04724"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -680,30 +680,25 @@
          x="628.24133"
          id="tspan5238-6-0-7-5"
          sodipodi:role="line">mac addr</tspan></text>
-    <g
-       id="g6423"
-       transform="translate(369.87661,-185.71907)"
-       style="opacity:0.6125;fill:#3866a9;fill-opacity:0.46666667">
-      <rect
-         style="fill:#b1c76d;fill-opacity:0.46666667;fill-rule:evenodd;stroke:#ff1300;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-         id="rect6358-7"
-         width="267.63913"
-         height="28.903856"
-         x="80.828072"
-         y="594.69769" />
-      <text
-         sodipodi:linespacing="125%"
-         id="text6360-0"
-         y="615.96716"
-         x="86.097534"
-         style="font-size:22px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#3866a9;fill-opacity:0.46666667;stroke:none;font-family:Bitstream Vera Sans"
-         xml:space="preserve"><tspan
-           y="615.96716"
-           x="86.097534"
-           id="tspan6362-5"
-           sodipodi:role="line"
-           style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-opacity:1">ryu-openflow-controller</tspan></text>
-    </g>
+    <rect
+       y="407.85098"
+       x="449.57703"
+       height="31.159182"
+       width="47.231167"
+       id="rect6358-7"
+       style="opacity:0.6125;fill:#b1c76d;fill-opacity:0.46666667;fill-rule:evenodd;stroke:#ff1300;stroke-width:1.7446754;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <text
+       xml:space="preserve"
+       style="font-size:22px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;opacity:0.6125;fill:#3866a9;fill-opacity:0.46666667;stroke:none;font-family:Bitstream Vera Sans"
+       x="455.97415"
+       y="430.24811"
+       id="text6360-0"
+       sodipodi:linespacing="125%"><tspan
+         style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+         sodipodi:role="line"
+         id="tspan6362-5"
+         x="455.97415"
+         y="430.24811">ryu</tspan></text>
     <rect
        y="465.60553"
        x="454.48364"

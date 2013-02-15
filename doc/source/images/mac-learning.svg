@@ -15,7 +15,7 @@
    height="744.09448"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 r9760"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="mac-learning.svg"
    inkscape:export-filename="/home/yamahata/openvswitch/sp-lab/scarab/scarab-2/doc/source/images/mac-learning.png"
    inkscape:export-xdpi="90"
@@ -28,7 +28,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.8162589"
-     inkscape:cx="374.1874"
+     inkscape:cx="376.6376"
      inkscape:cy="324.99839"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -394,30 +394,25 @@
        id="path4088"
        inkscape:connector-curvature="0"
        transform="translate(0,308.2677)" />
-    <g
-       id="g6423"
-       transform="translate(423.13207,13.647835)"
-       style="opacity:0.6125;fill:#3866a9;fill-opacity:0.46666667">
-      <rect
-         style="fill:#b1c76d;fill-opacity:0.46666667;fill-rule:evenodd;stroke:#ff1300;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-         id="rect6358-7"
-         width="267.63913"
-         height="28.903856"
-         x="80.828072"
-         y="594.69769" />
-      <text
-         sodipodi:linespacing="125%"
-         id="text6360-0"
-         y="615.96716"
-         x="86.097534"
-         style="font-size:22px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#3866a9;fill-opacity:0.46666667;stroke:none;font-family:Bitstream Vera Sans"
-         xml:space="preserve"><tspan
-           y="615.96716"
-           x="86.097534"
-           id="tspan6362-5"
-           sodipodi:role="line"
-           style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-opacity:1">ryu-openflow-controller</tspan></text>
-    </g>
+    <rect
+       y="607.22595"
+       x="502.84055"
+       height="31.143024"
+       width="48.134926"
+       id="rect6358-7"
+       style="opacity:0.6125;fill:#b1c76d;fill-opacity:0.46666667;fill-rule:evenodd;stroke:#ff1300;stroke-width:1.76083171;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <text
+       xml:space="preserve"
+       style="font-size:22px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;opacity:0.6125;fill:#3866a9;fill-opacity:0.46666667;stroke:none;font-family:Bitstream Vera Sans"
+       x="509.22961"
+       y="629.61499"
+       id="text6360-0"
+       sodipodi:linespacing="125%"><tspan
+         style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+         sodipodi:role="line"
+         id="tspan6362-5"
+         x="509.22961"
+         y="629.61499">ryu</tspan></text>
     <rect
        y="573.9325"
        x="74.458321"
@@ -527,7 +522,7 @@
          sodipodi:role="line"
          x="33.077721"
          y="1027.5736"
-         id="tspan3090">to network id of OVS port</tspan></text>
+         id="tspan3090">to network uuid of OVS port</tspan></text>
     <g
        id="g6280"
        transform="translate(-137.65551,-208.28264)">
@@ -759,6 +754,6 @@
          id="tspan6176"
          y="891.41553"
          x="344.25351"
-         sodipodi:role="line">network id</tspan></text>
+         sodipodi:role="line">network uuid</tspan></text>
   </g>
 </svg>
