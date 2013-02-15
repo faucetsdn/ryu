@@ -808,8 +808,8 @@ class RunTest(tester.TestFlowBase):
             duration_nsec = (msg.duration_sec * 10 ** 9) + msg.duration_nsec
             timeout_nsec = timeout * 10 ** 9
 
-            # grace of 1.5 second to timeout.
-            l = timeout * 10 ** 9
+            # grace of -0.5 and +1.5 second to timeout.
+            l = (timeout - 0.5) * 10 ** 9
             h = (timeout + 1.5) * 10 ** 9
             if not l < duration_nsec < h:
                 return 'bad duration time. set=%s(nsec), duration=%s(nsec)' \
