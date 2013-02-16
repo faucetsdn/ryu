@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ryu L2 isolation &mdash; Ryu 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="Ryu 1.6 documentation" href="index.html" />
+    <link rel="up" title="OpenStack Integration" href="openstack.html" />
+    <link rel="next" title="Writing Your Ryu Application" href="developing.html" />
+    <link rel="prev" title="Step-by-step example for testing ryu with OpenStack" href="step_by_step.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>Ryu 1.6 documentation</span></a></h1>
+        <h2 class="heading"><span>Ryu L2 isolation</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="step_by_step.html">Step-by-step example for testing ryu with OpenStack</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="developing.html">Writing Your Ryu Application</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="ryu-l2-isolation">
+<span id="internals-l2-isolation"></span><h1>Ryu L2 isolation<a class="headerlink" href="#ryu-l2-isolation" title="Permalink to this headline">¶</a></h1>
+<p>This section describes how Ryu cooperates with Openstack Quantum and
+how its L2 isolation works.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Ryu provides REST API by which Quantum server tells necessary informations.
+Quantum Server manages the association networks(uuid) to actual key value in
+addition to normal Quantum management informations.
+(Here key value is an integer for VLAN ID, GRE key and so on.
+The quantum only have to know the range of key which depends on the isolation
+technology. For example, 12 bit in VLAN case, 24 bit in GRE case.)
+Quantum Ryu plugin doesn&#8217;t know about what technology Ryu uses for L2
+isolation.</p>
+<blockquote>
+<div><img alt="_images/internal-quantum-overview.png" src="_images/internal-quantum-overview.png" />
+</div></blockquote>
+<p>Quantum doesn&#8217;t necessarily knows all the informations Ryu needs like
+mac address attached to the interface. Ryu can gather those informations
+by accessing directly to OVSDB. When tunnel ports on OVS needs to be created
+on compute-node, Ryu will directly accesses to OVSDB and creates/deletes
+ports.</p>
+</div>
+<div class="section" id="cooperate-with-openstack-quantum">
+<h2>Cooperate with Openstack Quantum<a class="headerlink" href="#cooperate-with-openstack-quantum" title="Permalink to this headline">¶</a></h2>
+<p>Ryu reacts to Qauntnum events, compute-node boots up, network
+creation/deletion, and VM instance creation/deletion.
+When VM instance is created, corresponding quantum port is created.</p>
+<div class="section" id="compute-node-boot-up">
+<h3>compute-node boot up<a class="headerlink" href="#compute-node-boot-up" title="Permalink to this headline">¶</a></h3>
+<p>When a compute note boots up, minimal initalization work is done by
+Ryu-quantum-agent which tell necessary informations to Ryu.
+Then Ryu set up OVS such that OVS connects to Ryu via OpenFlow.
+There are 2 steps of OVS initialization. By agent and by Ryu.
+This is to keep Ryu agent logic minimal and independent from what actual Ryu
+needs to set. Even if Ryu is enhanced for new feature and some additional
+configuration to OVS is needed (for example multi-controller for HA),
+ryu agent doesn&#8217;t need to be modified due to 2 step initialization.</p>
+<blockquote>
+<div><img alt="_images/internal-quantum-bootup.png" src="_images/internal-quantum-bootup.png" />
+</div></blockquote>
+</div>
+<div class="section" id="network-creation">
+<h3>network creation<a class="headerlink" href="#network-creation" title="Permalink to this headline">¶</a></h3>
+<p>When network is created, quantum Ryu plugin assigns Key value to
+a created network, and tell the association to Ryu</p>
+<blockquote>
+<div><img alt="_images/internal-quantum-network-creation.png" src="_images/internal-quantum-network-creation.png" />
+</div></blockquote>
+</div>
+<div class="section" id="vm-instance-creation">
+<h3>VM instance creation<a class="headerlink" href="#vm-instance-creation" title="Permalink to this headline">¶</a></h3>
+<p>When VM instance is created, quantum port is created. Quantum Ryu
+plugin tells the association of (network uuid, port uuid) to Ryu, and
+then OVS port is created.  Ryu finds the port creation via OpenFlow
+and get the information of the created port for (port uuid, attached
+mac address) via OVSDB protocoal, and then sets up network
+configuration to OVS.</p>
+<blockquote>
+<div><img alt="_images/internal-quantum-instance-create.png" src="_images/internal-quantum-instance-create.png" />
+</div></blockquote>
+</div>
+<div class="section" id="quantum-adapater-ryuapp">
+<h3>quantum_adapater RyuApp<a class="headerlink" href="#quantum-adapater-ryuapp" title="Permalink to this headline">¶</a></h3>
+<p>This application watches port creation/deletion by OF protocol.
+When it detects the creation of ports, it tries to retrieve related
+informations(port uuid, mac address) by OVSDB protocol,
+tries to determine if the port corresponds to Qauntnum VM port, and then
+stores those informations into the in-memory, which generates the event of
+VMPort creation. Then Ryu app of isolation (simple_vlan or gre_tunnel)
+will be notified.</p>
+</div>
+<div class="section" id="live-migration">
+<h3>live-migration<a class="headerlink" href="#live-migration" title="Permalink to this headline">¶</a></h3>
+<p>live-migration is popular feature with virtualization, so as OpenStack.
+As of this writing, there is no hooks in quantum. So no notification/callback
+are triggered when live-migration starts/on-going/ends/error-abort.
+Traditional live-migration uses GARP to tell switches the used mac address
+is moved.</p>
+<blockquote>
+<div><img alt="_images/internal-live-migration.png" src="_images/internal-live-migration.png" />
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="vlan">
+<h2>VLAN<a class="headerlink" href="#vlan" title="Permalink to this headline">¶</a></h2>
+<p>OVS supports port vlan with setting tag value in OVSDB.
+Ryu utilizes it for L2 isolation.</p>
+<div class="section" id="simple-vlan-ryuapp">
+<h3>simple_vlan RyuApp<a class="headerlink" href="#simple-vlan-ryuapp" title="Permalink to this headline">¶</a></h3>
+<p>When port is created, it sets tag value to key assigned to a given network uuid.
+And sets flow entry to output:normal.</p>
+</div>
+<div class="section" id="id1">
+<h3>live-migration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>As flows includes output:normal action, packets are processed by
+OVS builtin mac-learning.</p>
+<ol class="arabic simple">
+<li>When destination VM port is created, same rule is inserted on OVS
+on the destination.
+But the port on the destination is not used until the first GARP packet
+is sent</li>
+<li>When VM is resumed on the destination, a GARP packet is sent.
+Then, mac learning tables on each switch are updated.
+So the port on the source will be unused.</li>
+<li>When the VM on the source is destroyed, the port on the source is also
+destroyed.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="gre-tunneling">
+<h2>GRE tunneling<a class="headerlink" href="#gre-tunneling" title="Permalink to this headline">¶</a></h2>
+<p>OVS supports tunneling and Ryu utilizes it for L2 isolation as follows.</p>
+<blockquote>
+<div><img alt="_images/internal-gre-tunnel.png" src="_images/internal-gre-tunnel.png" />
+</div></blockquote>
+<div class="section" id="tunnel-port-updator-ryuapp">
+<h3>tunnel_port_updator RyuApp<a class="headerlink" href="#tunnel-port-updator-ryuapp" title="Permalink to this headline">¶</a></h3>
+<p>This application watches the VM port creation/deletion, and creates/deletes
+tunnel port on OVS when necessary.
+That is, it creates tunnel port between compute-nodes which have VMs of same
+tenant. it deletes tunnel ports when compute-nodes have no VMs of same
+tenant.</p>
+</div>
+<div class="section" id="gre-tunnel-ryuapp">
+<h3>gre_tunnel RyuApp<a class="headerlink" href="#gre-tunnel-ryuapp" title="Permalink to this headline">¶</a></h3>
+<p>This application watches VM/tunnel port creation/deletion, and
+installs/removes flow entries based on port creation/deletion.</p>
+</div>
+<div class="section" id="flow-entries">
+<h3>Flow Entries<a class="headerlink" href="#flow-entries" title="Permalink to this headline">¶</a></h3>
+<p>Ryu installs following flow entries.</p>
+<blockquote>
+<div><img alt="_images/internal-quantum-gre-flow-table.png" src="_images/internal-quantum-gre-flow-table.png" />
+</div></blockquote>
+</div>
+<div class="section" id="id2">
+<h3>live-migration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>As flows are aware of mac address of each ports, Ryu updates flow table
+for live-migration on each compute-nodes.
+When the port of same mac address is added on another compute-node,
+Ryu installs flows that duplicates packet so that packets destined to
+the mac address will be duplicated and sent to both ports.
+GARP from hypervisor isn&#8217;t used.</p>
+<blockquote>
+<div><img alt="_images/internal-tunnel-live-migration-before.png" src="_images/internal-tunnel-live-migration-before.png" />
+<img alt="_images/internal-tunnel-live-migration-during.png" src="_images/internal-tunnel-live-migration-during.png" />
+<img alt="_images/internal-tunnel-live-migration-after.png" src="_images/internal-tunnel-live-migration-after.png" />
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="mac-address-based-l2-isolation">
+<h2>Mac address based L2 isolation<a class="headerlink" href="#mac-address-based-l2-isolation" title="Permalink to this headline">¶</a></h2>
+<p>Ryu also supports mac address based L2 isolation.
+In this case key isn&#8217;t used.</p>
+<div class="section" id="mac-learing">
+<h3>mac learing<a class="headerlink" href="#mac-learing" title="Permalink to this headline">¶</a></h3>
+<p>When VM sends packets, Ryu determins network uuid from OVS port and then
+associates src mac address to network uuid.</p>
+<blockquote>
+<div><img alt="_images/mac-learning.png" src="_images/mac-learning.png" />
+</div></blockquote>
+</div>
+<div class="section" id="packet-filtering-l2-unicast-case">
+<h3>packet filtering(L2 unicast case)<a class="headerlink" href="#packet-filtering-l2-unicast-case" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">When VM sending L2-unicast packet, Ryu checks if the destination mac
+address belongs to the same netowrk id of the source mac address which
+is same to the network uuid that the OVS port is associated to.</p>
+</li>
+<li><p class="first">If no, the packet is dropped.</p>
+</li>
+<li><p class="first">If yes, send the packet is sent to ports which belongs to the same
+network uuid and external port.</p>
+<blockquote>
+<div><img alt="_images/filtering-outgoing.png" src="_images/filtering-outgoing.png" />
+<img alt="_images/filtering-incoming.png" src="_images/filtering-incoming.png" />
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="packet-filtering-l2-broadcast-case">
+<h3>packet filtering(L2 broadcast case)<a class="headerlink" href="#packet-filtering-l2-broadcast-case" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">When VM sending L2-broadcast/multicaset packet, Ryu checks if the source
+mac address.</p>
+</li>
+<li><p class="first">send the packet to all external ports and all OVS ports that belongs
+to the same network uuid of the source mac address.</p>
+</li>
+<li><p class="first">When receiving broacast/multicast packet from the external ports,
+Ryu checks if the source mac address belongs to known network uuid.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If yes, send the packet to the external ports except incoming one
+and the all OVS ports that belongs to the network uuid</li>
+<li>if no, drop the packet.</li>
+</ul>
+<img alt="_images/filtering-broadcast.png" src="_images/filtering-broadcast.png" />
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h3>live-migration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>As of this writing, simple isolation doesn&#8217;t support live-migration.</p>
+</div>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="step_by_step.html">Step-by-step example for testing ryu with OpenStack</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="developing.html">Writing Your Ryu Application</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, 2012 Nippon Telegraph and Telephone Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

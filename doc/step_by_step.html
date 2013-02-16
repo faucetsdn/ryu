@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Step-by-step example for testing ryu with OpenStack &mdash; Ryu 1.5 documentation</title>
+    <title>Step-by-step example for testing ryu with OpenStack &mdash; Ryu 1.6 documentation</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5',
+        VERSION:     '1.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -27,14 +27,14 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="Ryu 1.5 documentation" href="index.html" />
+    <link rel="top" title="Ryu 1.6 documentation" href="index.html" />
     <link rel="up" title="OpenStack Integration" href="openstack.html" />
-    <link rel="next" title="How Ryu L2 segregation works" href="how_l2_segregation_works.html" />
+    <link rel="next" title="Ryu L2 isolation" href="internals_l2_isolation.html" />
     <link rel="prev" title="Using Ryu Network Operating System with OpenStack as OpenFlow controller" href="using_with_openstack.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>Ryu 1.5 documentation</span></a></h1>
+          <span>Ryu 1.6 documentation</span></a></h1>
         <h2 class="heading"><span>Step-by-step example for testing ryu with OpenStack</span></h2>
       </div>
       <div class="topnav">
@@ -44,7 +44,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="how_l2_segregation_works.html">How Ryu L2 segregation works</a>&#160;&#160;»
+        <a href="internals_l2_isolation.html">Ryu L2 isolation</a>&#160;&#160;»
         </p>
 
       </div>
@@ -207,13 +207,15 @@ to create/register image.</p>
 <p>boot instances for each projects.
 In order to test network segregation, 2 or more VM instances need to
 be created:</p>
-<div class="highlight-python"><pre>$ source ./$tenant0/novarc
-$ euca-run-instances ami-&lt;id which you get above&gt; -k mykey-$tenant0 -t m1.tiny</pre>
-</div>
-<p># repeat euca-run-instances for some times.
-$ source ./$tenant1/novarc
-$ euca-run-instances ami-&lt;id which you get above&gt; -k mykey-$tenant1 -t m1.tiny</p>
 </li>
+</ol>
+<div class="highlight-python"><pre>$ source ./$tenant0/novarc
+$ euca-run-instances ami-&lt;id which you get above&gt; -k mykey-$tenant0 -t m1.tiny
+# repeat euca-run-instances for some times.
+$ source ./$tenant1/novarc
+$ euca-run-instances ami-&lt;id which you get above&gt; -k mykey-$tenant1 -t m1.tiny</pre>
+</div>
+<ol class="arabic">
 <li><p class="first">check if VM instances are created</p>
 <p>Get the list of VM instances you&#8217;ve created and their assigned IP address:</p>
 <div class="highlight-python"><pre>$ euca-describe-instances</pre>
@@ -411,10 +413,11 @@ openflow-rest-api = &lt;IP address on which ryu-manager is running&gt;:&lt;port&
 If you use default configurations, you don&#8217;t have to modify it.
 Just leave it blank:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c"># Sample configuration file</span>
-<span class="c">#--wsapi_host=&lt;hostip&gt;</span>
-<span class="c">#--wsapi_port=&lt;port:8080&gt;</span>
-<span class="c">#--ofp_listen_host=&lt;hostip&gt;</span>
-<span class="c">#--ofp_listen_port=&lt;port:6633&gt;</span>
+<span class="p">[</span><span class="n">DEFAULT</span><span class="p">]</span>
+<span class="c">#wsapi_host=&lt;hostip&gt;</span>
+<span class="c">#wsapi_port=&lt;port:8080&gt;</span>
+<span class="c">#ofp_listen_host=&lt;hostip&gt;</span>
+<span class="c">#ofp_listen_port=&lt;port:6633&gt;</span>
 </pre></div>
 </div>
 </div>
@@ -430,7 +433,7 @@ Just leave it blank:</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="how_l2_segregation_works.html">How Ryu L2 segregation works</a>&#160;&#160;»
+        <a href="internals_l2_isolation.html">Ryu L2 isolation</a>&#160;&#160;»
         </p>
 
       </div>

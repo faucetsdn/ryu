@@ -1,3 +1,5 @@
+:orphan:
+
 .. _getting_started:
 
 ***************
@@ -44,6 +46,7 @@ It can be configured by passing configuration file like::
 
 At the moment the following applications are available
 (And more to come as Ryu evolves.)
+
   * ryu.app.simple_isolation.SimpleIsolation
   * ryu.app.rest.restapi
   * ryu.app.simple_bridge.SimpleSwitch
@@ -90,15 +93,16 @@ The options for log::
   --[no]verbose: show debug output
     (default: 'false')
 
-The option for gflags::
+The option for openstack.common.cfg::
 
-  --flagfile: Insert flag definitions from the given file into the command line.
-    (default: '')
-  --undefok: comma-separated list of flag names that it is okay to specify on
-    the command line even if the program does not define a flag with that name.
-    IMPORTANT: flags in this list that have arguments MUST use the --flag=value
-    format.
-    (default: '')
+  --config-file: Path to a config file to use. Multiple config files
+    can be specified, with values in later files taking precedence.
+    (default: [])
+  --config-dir: Path to a config directory to pull *.conf files from.
+    This file set is sorted, so as to provide a predictable parse order if
+    individual options are over-ridden. The set is parsed after the file(s),
+    if any, specified via --config-file, hence over-ridden options in the
+    directory take precedence.
 
 The options for event dumper::
 

@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting Started &mdash; Ryu 1.5 documentation</title>
+    <title>Getting Started &mdash; Ryu 1.6 documentation</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5',
+        VERSION:     '1.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -27,11 +27,11 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="Ryu 1.5 documentation" href="index.html" /> 
+    <link rel="top" title="Ryu 1.6 documentation" href="index.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>Ryu 1.5 documentation</span></a></h1>
+          <span>Ryu 1.6 documentation</span></a></h1>
         <h2 class="heading"><span>Getting Started</span></h2>
       </div>
       <div class="topnav">
@@ -124,14 +124,15 @@ Please refer to <a class="reference internal" href="using_with_openstack.html#us
 --[no]verbose: show debug output
   (default: 'false')</pre>
 </div>
-<p>The option for gflags:</p>
-<div class="highlight-python"><pre>--flagfile: Insert flag definitions from the given file into the command line.
-  (default: '')
---undefok: comma-separated list of flag names that it is okay to specify on
-  the command line even if the program does not define a flag with that name.
-  IMPORTANT: flags in this list that have arguments MUST use the --flag=value
-  format.
-  (default: '')</pre>
+<p>The option for openstack.common.cfg:</p>
+<div class="highlight-python"><pre>--config-file: Path to a config file to use. Multiple config files
+  can be specified, with values in later files taking precedence.
+  (default: [])
+--config-dir: Path to a config directory to pull *.conf files from.
+  This file set is sorted, so as to provide a predictable parse order if
+  individual options are over-ridden. The set is parsed after the file(s),
+  if any, specified via --config-file, hence over-ridden options in the
+  directory take precedence.</pre>
 </div>
 <p>The options for event dumper:</p>
 <div class="highlight-python"><pre>--dump_queue: list of dispatcher name to dump event: default any

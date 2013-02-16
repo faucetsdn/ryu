@@ -1,4 +1,4 @@
-.. _step_by_step_example
+.. step_by_step_example
 
 ***************************************************
 Step-by-step example for testing ryu with OpenStack
@@ -157,7 +157,9 @@ The more openstack way is possible, though.
 
    boot instances for each projects.
    In order to test network segregation, 2 or more VM instances need to
-   be created::
+   be created:
+
+::
 
    $ source ./$tenant0/novarc
    $ euca-run-instances ami-<id which you get above> -k mykey-$tenant0 -t m1.tiny
@@ -226,6 +228,7 @@ Some values need to be changed depending on your setup. For example
 IP addresses/port numbers.
 
 * /etc/nova/nova.conf for api, compute, network, volume, object-store and scheduler node
+
 Here is the nova.conf on which all nova servers are running::
 
     --verbose
@@ -275,6 +278,7 @@ Here is the nova.conf on which all nova servers are running::
 
 
 * /etc/nova/nova.conf on compute nodes
+
 I copied the above to compute node and modified it.
 So it includes unnecessary values for network node. Since they don't harm,
 I didn't scrub them.::
@@ -317,6 +321,7 @@ I didn't scrub them.::
 
 
 * /etc/quantum/plugins.ini
+
 This file needs to be installed on which quantum-server is running.
 This file defines which quantum plugin is used::
 
@@ -326,10 +331,12 @@ This file defines which quantum plugin is used::
 
 
 * /etc/quantum/quantum.conf
+
 This file needs to be installed on which quantum-server is running.
 A configuration file for quantum server. I use this file as is.
 
 * /etc/quantum/plugins/ryu/ryu.ini
+
 This files needs to be installed on nova-compute node, nova-network node
 and quantum-server node.
 This file defines several setting ryu quantum plugin/agent uses::
@@ -354,12 +361,14 @@ This file defines several setting ryu quantum plugin/agent uses::
 	# This corresponds to <wsapi_host>:<wsapi_port> in ryu.conf
 
 * /etc/ryu/ryu.conf
+
 This file needs to be installed on which ryu-manager is running.
 If you use default configurations, you don't have to modify it.
 Just leave it blank::
 
     # Sample configuration file
-    #--wsapi_host=<hostip>
-    #--wsapi_port=<port:8080>
-    #--ofp_listen_host=<hostip>
-    #--ofp_listen_port=<port:6633>
+    [DEFAULT]
+    #wsapi_host=<hostip>
+    #wsapi_port=<port:8080>
+    #ofp_listen_host=<hostip>
+    #ofp_listen_port=<port:6633>
