@@ -1220,9 +1220,10 @@ class OFPGroupDescStats(object):
         offset += ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE
         buckets = []
         while bucket_len > 0:
-            buckets.append(OFPBucket.parser(buf, offset))
-            offset += ofproto_v1_2.OFP_BUCKET_SIZE
-            bucket_len -= ofproto_v1_2.OFP_BUCKET_SIZE
+            bucket = OFPBucket.parser(buf, offset)
+            buckets.append(bucket)
+            offset += bucket.len
+            bucket_len -= bucket.len
 
         return cls(length, type_, group_id, buckets)
 

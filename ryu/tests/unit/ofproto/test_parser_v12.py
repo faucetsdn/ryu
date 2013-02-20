@@ -2993,6 +2993,46 @@ class TestOFPGroupDescStats(unittest.TestCase):
         eq_(self.port, res.buckets[0].actions[0].port)
         eq_(self.max_len, res.buckets[0].actions[0].max_len)
 
+    def test_parser_loop(self):
+        bucket_cnt = 2
+        # OFP_GROUP_DESC_STATS_PACK_STR = '!HBxI'
+        length = ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE \
+            + (ofproto_v1_2.OFP_BUCKET_SIZE
+            + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE) * bucket_cnt
+        type_ = ofproto_v1_2.OFPGT_ALL
+        group_id = 6606
+
+        fmt = ofproto_v1_2.OFP_GROUP_DESC_STATS_PACK_STR
+        buf = pack(fmt, length, type_, group_id)
+
+        buckets = []
+        for b in range(bucket_cnt):
+            # OFP_BUCKET
+            weight = watch_port = watch_group = b
+            bucket = OFPBucket(self.len_, weight,
+                               watch_port, watch_group,
+                               self.actions)
+            buckets.append(bucket)
+            buf_buckets = bytearray()
+            buckets[b].serialize(buf_buckets, 0)
+            buf += str(buf_buckets)
+
+        res = OFPGroupDescStats.parser(buf, 0)
+
+        eq_(type_, res.type)
+        eq_(length, res.length)
+        eq_(group_id, res.group_id)
+
+        for b in range(bucket_cnt):
+            eq_(buckets[b].len, res.buckets[b].len)
+            eq_(buckets[b].weight, res.buckets[b].weight)
+            eq_(buckets[b].watch_port, res.buckets[b].watch_port)
+            eq_(buckets[b].watch_group, res.buckets[b].watch_group)
+            eq_(buckets[b].actions[0].port,
+                res.buckets[b].actions[0].port)
+            eq_(buckets[b].actions[0].max_len,
+                res.buckets[b].actions[0].max_len)
+
 
 class TestOFPGroupFeaturesStatsRequest(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPGroupFeaturesStatsRequest
