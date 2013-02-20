@@ -66,6 +66,8 @@ FLOW_N_REGS = 8  # ovs 1.5
 class Flow(object):
     def __init__(self):
         self.in_port = 0
+        self.dl_vlan = 0
+        self.dl_vlan_pcp = 0
         self.dl_src = mac.DONTCARE
         self.dl_dst = mac.DONTCARE
         self.dl_type = 0
@@ -108,7 +110,7 @@ class FlowWildcards(object):
         self.nw_frag_mask = 0
         self.regs_bits = 0
         self.regs_mask = [0] * FLOW_N_REGS
-        self.wildcards = FWW_ALL
+        self.wildcards = ofproto_v1_0.OFPFW_ALL
 
 
 class ClsRule(object):
@@ -119,6 +121,14 @@ class ClsRule(object):
     def set_in_port(self, port):
         self.wc.wildcards &= ~FWW_IN_PORT
         self.flow.in_port = port
+
+    def set_dl_vlan(self, dl_vlan):
+        self.wc.wildcards &= ~ofproto_v1_0.OFPFW_DL_VLAN
+	self.flow.dl_vlan = dl_vlan
+
+    def set_dl_vlan_pcp(self, dl_vlan_pcp):
+	self.wc.wildcards &= ~ofproto_v1_0.OFPFW_DL_VLAN_PCP
+	self.flow.dl_vlan_pcp = dl_vlan_pcp
 
     def set_dl_dst(self, dl_dst):
         self.flow.dl_dst = dl_dst
@@ -165,18 +175,18 @@ class ClsRule(object):
         self.flow.nw_proto = nw_proto
 
     def set_nw_src(self, nw_src):
-        self.set_nw_src_masked(nw_src, UINT32_MAX)
+        self.set_nw_src_masked(nw_src, 0) #mask is null for a exact match
 
     def set_nw_src_masked(self, nw_src, mask):
         self.flow.nw_src = nw_src
-        self.wc.nw_src_mask = mask
+        self.wc.nw_src_mask = mask #mask is opposite of CIDR
 
     def set_nw_dst(self, nw_dst):
-        self.set_nw_dst_masked(nw_dst, UINT32_MAX)
+        self.set_nw_dst_masked(nw_dst, 0) #mask is null for a exact match
 
     def set_nw_dst_masked(self, nw_dst, mask):
         self.flow.nw_dst = nw_dst
-        self.wc.nw_dst_mask = mask
+        self.wc.nw_dst_mask = mask #mask is opposite of CIDR
 
     def set_nw_dscp(self, nw_dscp):
         self.wc.wildcards &= ~FWW_NW_DSCP
@@ -314,11 +324,38 @@ class ClsRule(object):
         if not self.wc.wildcards & FWW_DL_TYPE:
             wildcards &= ~ofproto_v1_0.OFPFW_DL_TYPE
 
-        # FIXME: Add support for dl_vlan, fl_vlan_pcp, nw_tos, nw_proto,
-        # nw_src, nw_dst, tp_src and dp_dst to self
+        if self.flow.dl_vlan != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_DL_VLAN
+
+        if self.flow.dl_vlan_pcp != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_DL_VLAN_PCP
+	
+        if self.flow.nw_tos != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_NW_TOS
+
+        if self.flow.nw_proto != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_NW_PROTO
+
+        if self.flow.nw_src != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_NW_SRC_MASK
+            wildcards |= (self.flow.nw_src_mask % 32) << 8 #maximum size of 32 to prevent changes on other bits
+
+        if self.flow.nw_dst != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_NW_DST_MASK
+            wildcards |= (self.flow.nw_src_mask % 32) << 14 #maximum size of 32 to prevent changes on other bits
+
+        if self.flow.tp_src != 0:
+            wildcards |= ~ofproto_v1_0.OFPFW_TP_SRC
+
+        if self.flow.tp_dst != 0:
+            wildcards &= ~ofproto_v1_0.OFPFW_TP_DST
+
+	#FIXME: add support for arp, icmp, etc
+	
         return (wildcards, self.flow.in_port, self.flow.dl_src,
-                self.flow.dl_dst, 0, 0, self.flow.dl_type,
-                self.flow.nw_tos & IP_DSCP_MASK, 0, 0, 0, 0, 0)
+                self.flow.dl_dst, self.flow.dl_vlan, self.flow.dl_vlan_pcp, self.flow.dl_type,
+                self.flow.nw_tos & IP_DSCP_MASK, self.flow.nw_proto,
+                self.flow.nw_src, self.flow.nw_dst, self.flow.tp_src, self.flow.tp_dst)
 
 
 def _set_nxm_headers(nxm_headers):
