@@ -65,7 +65,7 @@ OFPT_METER_MOD = 29    # Controller/switch message
 OFP_MAX_PORT_NAME_LEN = 16
 OFP_ETH_ALEN = 6
 OFP_ETH_ALEN_STR = str(OFP_ETH_ALEN)
-_OFP_PORT_PACK_STR = 'I4x' + OFP_ETH_ALEN_STR + 'B' + '2x' + \
+_OFP_PORT_PACK_STR = 'I4x' + OFP_ETH_ALEN_STR + 's' + '2x' + \
                      str(OFP_MAX_PORT_NAME_LEN) + 's' + 'IIIIIIII'
 OFP_PORT_PACK_STR = '!' + _OFP_PORT_PACK_STR
 OFP_PORT_SIZE = 64
@@ -428,7 +428,7 @@ OFP_BUCKET_SIZE = 16
 assert calcsize(OFP_BUCKET_PACK_STR) == OFP_BUCKET_SIZE
 
 # struct ofp_port_mod
-OFP_PORT_MOD_PACK_STR = '!I4x' + OFP_ETH_ALEN_STR + 'B2xIII4x'
+OFP_PORT_MOD_PACK_STR = '!I4x' + OFP_ETH_ALEN_STR + 's2xIII4x'
 OFP_PORT_MOD_SIZE = 40
 assert (calcsize(OFP_PORT_MOD_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_PORT_MOD_SIZE)

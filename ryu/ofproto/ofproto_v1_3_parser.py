@@ -246,7 +246,7 @@ class OFPGetConfigReply(MsgBase):
         msg = super(OFPGetConfigReply, cls).parser(datapath, version, msg_type,
                                                    msg_len, xid, buf)
         msg.flags, msg.miss_send_len = struct.unpack_from(
-            ofproto_v1_3.OFP_SWITCH_CONFIG_PACK_STR, buf,
+            ofproto_v1_3.OFP_SWITCH_CONFIG_PACK_STR, msg.buf,
             ofproto_v1_3.OFP_HEADER_SIZE)
         return msg
 
