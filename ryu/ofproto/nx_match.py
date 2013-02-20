@@ -338,14 +338,14 @@ class ClsRule(object):
 
         if self.flow.nw_src != 0:
             wildcards &= ~ofproto_v1_0.OFPFW_NW_SRC_MASK
-            wildcards |= (self.flow.nw_src_mask % 32) << 8 #maximum size of 32 to prevent changes on other bits
+            wildcards |= (self.wc.nw_src_mask % 32) << 8 #maximum size of 32 to prevent changes on other bits
 
         if self.flow.nw_dst != 0:
             wildcards &= ~ofproto_v1_0.OFPFW_NW_DST_MASK
-            wildcards |= (self.flow.nw_src_mask % 32) << 14 #maximum size of 32 to prevent changes on other bits
+            wildcards |= (self.wc.nw_dst_mask % 32) << 14 #maximum size of 32 to prevent changes on other bits
 
         if self.flow.tp_src != 0:
-            wildcards |= ~ofproto_v1_0.OFPFW_TP_SRC
+            wildcards &= ~ofproto_v1_0.OFPFW_TP_SRC
 
         if self.flow.tp_dst != 0:
             wildcards &= ~ofproto_v1_0.OFPFW_TP_DST
