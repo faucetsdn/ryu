@@ -18,7 +18,6 @@ import logging
 
 from ryu.base import app_manager
 from ryu.controller import event
-from ryu.controller import ofp_event
 from ryu.controller import dp_type
 from ryu.controller import handler
 from ryu.controller import ofp_event
