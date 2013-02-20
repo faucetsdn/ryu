@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import contextlib
-from openstack.common import cfg
+from oslo.config import cfg
 import logging
 import gevent
 import traceback

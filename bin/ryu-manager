@@ -26,10 +26,10 @@ monkey.patch_all()
 #   use it
 #
 # NOTE: this modifies sys.path and thus affects the following imports.
-# eg. openstack.common.cfg.
+# eg. oslo.config.cfg.
 import ryu.contrib
 
-from openstack.common import cfg
+from oslo.config import cfg
 import logging
 import sys
 

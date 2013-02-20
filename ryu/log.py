@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from openstack.common import cfg
+from oslo.config import cfg
 import inspect
 import logging
 import logging.handlers

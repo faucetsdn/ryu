@@ -16,7 +16,7 @@
 
 import collections
 import gevent
-from openstack.common import cfg
+from oslo.config import cfg
 import logging
 import netaddr
 

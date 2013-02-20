@@ -19,7 +19,7 @@ slimmed down version of OVSBridge in quantum agent
 """
 
 import functools
-from openstack.common import cfg
+from oslo.config import cfg
 import logging
 
 import ryu.exception as ryu_exc
