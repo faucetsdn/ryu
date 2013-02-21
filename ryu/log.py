@@ -25,13 +25,13 @@ import sys
 CONF = cfg.CONF
 
 CONF.register_cli_opts([
-    cfg.IntOpt('default_log_level', default=None, help='default log level'),
+    cfg.IntOpt('default-log-level', default=None, help='default log level'),
     cfg.BoolOpt('verbose', default=False, help='show debug output'),
-    cfg.BoolOpt('use_stderr', default=True, help='log to standard error'),
-    cfg.StrOpt('use_syslog', default=False, help='output to syslog'),
-    cfg.StrOpt('log_dir', default=None, help='log file directory'),
-    cfg.StrOpt('log_file', default=None, help='log file name'),
-    cfg.StrOpt('log_file_mode', default='0644',
+    cfg.BoolOpt('use-stderr', default=True, help='log to standard error'),
+    cfg.StrOpt('use-syslog', default=False, help='output to syslog'),
+    cfg.StrOpt('log-dir', default=None, help='log file directory'),
+    cfg.StrOpt('log-file', default=None, help='log file name'),
+    cfg.StrOpt('log-file-mode', default='0644',
                help='default log file permission')
 ])
 

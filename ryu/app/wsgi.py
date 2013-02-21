@@ -26,8 +26,8 @@ LOG = logging.getLogger('ryu.app.wsgi')
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
-    cfg.StrOpt('wsapi_host', default='', help='webapp listen host'),
-    cfg.IntOpt('wsapi_port', default=8080, help='webapp listen port')
+    cfg.StrOpt('wsapi-host', default='', help='webapp listen host'),
+    cfg.IntOpt('wsapi-port', default=8080, help='webapp listen port')
 ])
 
 HEX_PATTERN = r'0x[0-9a-z]+'

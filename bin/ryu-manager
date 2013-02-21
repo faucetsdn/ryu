@@ -45,7 +45,7 @@ from ryu.controller import controller
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
-    cfg.ListOpt('app_lists', default=[],
+    cfg.ListOpt('app-lists', default=[],
                 help='application module name to run'),
     cfg.MultiStrOpt('app', positional=True, default=[],
                     help='application module name to run')

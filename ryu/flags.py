@@ -23,24 +23,24 @@ CONF = cfg.CONF
 
 CONF.register_cli_opts([
     # GLOBAL flags
-    cfg.BoolOpt('monkey_patch', default=False, help='do monkey patch'),
+    cfg.BoolOpt('monkey-patch', default=False, help='do monkey patch'),
     # app/quantum_adapter
-    cfg.StrOpt('quantum_url', default='http://localhost:9696',
+    cfg.StrOpt('quantum-url', default='http://localhost:9696',
                help='URL for connecting to quantum'),
-    cfg.IntOpt('quantum_url_timeout', default=30,
+    cfg.IntOpt('quantum-url-timeout', default=30,
                help='timeout value for connecting to quantum in seconds'),
-    cfg.StrOpt('quantum_admin_username', default='quantum',
+    cfg.StrOpt('quantum-admin-username', default='quantum',
                help='username for connecting to quantum in admin context'),
-    cfg.StrOpt('quantum_admin_password', default='service_password',
+    cfg.StrOpt('quantum-admin-password', default='service_password',
                help='password for connecting to quantum in admin context'),
-    cfg.StrOpt('quantum_admin_tenant_name', default='service',
+    cfg.StrOpt('quantum-admin-tenant-name', default='service',
                help='tenant name for connecting to quantum in admin context'),
-    cfg.StrOpt('quantum_admin_auth_url', default='http://localhost:5000/v2.0',
+    cfg.StrOpt('quantum-admin-auth-url', default='http://localhost:5000/v2.0',
                help='auth url for connecting to quantum in admin context'),
-    cfg.StrOpt('quantum_auth_strategy', default='keystone',
+    cfg.StrOpt('quantum-auth-strategy', default='keystone',
                help='auth strategy for connecting to quantum in admin'
                'context'),
-    cfg.StrOpt('quantum_controller_addr', default=None,
+    cfg.StrOpt('quantum-controller-addr', default=None,
                help='openflow method:address:port to set controller of'
                'ovs bridge')
 ])

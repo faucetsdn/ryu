@@ -35,7 +35,7 @@ from ryu.lib.ovs import bridge as ovs_bridge
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 CONF.register_opts([
-    cfg.StrOpt('tunnel_type', default='gre',
+    cfg.StrOpt('tunnel-type', default='gre',
                help='tunnel type for ovs tunnel port')
 ])
 

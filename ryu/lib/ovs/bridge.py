@@ -30,7 +30,7 @@ LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
 CONF.register_opts([
-    cfg.IntOpt('ovsdb_timeout', default=2, help='ovsdb timeout')
+    cfg.IntOpt('ovsdb-timeout', default=2, help='ovsdb timeout')
 ])
 
 
