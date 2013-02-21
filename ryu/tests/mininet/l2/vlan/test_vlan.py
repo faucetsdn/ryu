@@ -37,7 +37,6 @@ class RunTestMininet(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(RunTestMininet, self).__init__(*args, **kwargs)
-        self.mac_to_port = {}
 
     def _add_flow(self, dp, match, actions):
         inst = [dp.ofproto_parser.OFPInstructionActions(
