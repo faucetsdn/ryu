@@ -55,9 +55,9 @@ command, e.g.::
 
 Run Ryu with CA files::
 
-    % ryu-manager --ctl_privkey ctl-privkey.pem \
-                  --ctl_cert ctl-cert.pem \
-                  --ca_cert /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
+    % ryu-manager --ctl-privkey ctl-privkey.pem \
+                  --ctl-cert ctl-cert.pem \
+                  --ca-cert /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
                   --verbose
 
 You can see something like::

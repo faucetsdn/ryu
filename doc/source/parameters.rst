@@ -54,7 +54,7 @@ At the moment the following applications are available
 
 The generic available is as follows::
 
-  --app_lists: application module name to run;
+  --app-lists: application module name to run;
     repeat this option to specify a list of values
     (default: "['ryu.app.simple_isolation.SimpleIsolation',
                 'ryu.app.rest.restapi']")
@@ -64,31 +64,31 @@ The generic available is as follows::
 
 The options for REST server::
 
-  --wsapi_host: webapp listen host
+  --wsapi-host: webapp listen host
     (default: '')
-  --wsapi_port: webapp listen port
+  --wsapi-port: webapp listen port
     (default: '8080')
     (an integer)
 
 The options for openflow controller::
 
-  --ofp_listen_host: openflow listen host
+  --ofp-listen-host: openflow listen host
     (default: '')
-  --ofp_tcp_listen_port: openflow tcp listen port
+  --ofp-tcp-listen-port: openflow tcp listen port
     (default: '6633')
     (an integer)
 
 The options for log::
 
-  --default_log_level: default log level
+  --default-log-level: default log level
     (an integer)
-  --log_dir: log file directory
-  --log_file: log file name
-  --log_file_mode: default log file permission
+  --log-dir: log file directory
+  --log-file: log file name
+  --log-file-mode: default log file permission
     (default: '0644')
-  --[no]use_stderr: log to standard error
+  --[no]use-stderr: log to standard error
     (default: 'true')
-  --use_syslog: output to syslog
+  --use-syslog: output to syslog
     (default: 'False')
   --[no]verbose: show debug output
     (default: 'false')
@@ -106,9 +106,9 @@ The option for openstack.common.cfg::
 
 The options for event dumper::
 
-  --dump_queue: list of dispatcher name to dump event: default any
+  --dump-queue: list of dispatcher name to dump event: default any
     (default: [])
-  --dump_dispatcher: list of dispatcher name to dump event: default any
+  --dump-dispatcher: list of dispatcher name to dump event: default any
     (default: [])
 
 
@@ -116,7 +116,7 @@ Invoking Example
 ================
 The exmaple is as follows::
 
-  $ ./bin/ryu-manager --wsapi_port 8081 --verbose --app_lists ryu.app.simple_isolation.SimpleIsolation,ryu.app.rest.restapi,ryu.app.event_dumper.EventDumper
+  $ ./bin/ryu-manager --wsapi-port 8081 --verbose --app-lists ryu.app.simple_isolation.SimpleIsolation,ryu.app.rest.restapi,ryu.app.event_dumper.EventDumper
   unhandled event <ryu.controller.dispatcher.EventQueueCreate object at 0x22ec690>
   loading app ryu.app.simple_isolation.SimpleIsolation
   loading app ryu.app.rest.restapi
