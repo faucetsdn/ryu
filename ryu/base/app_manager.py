@@ -46,6 +46,7 @@ class RyuApp(object):
     Base class for Ryu network application
     """
     _CONTEXTS = {}
+    _EVENTS = []  # list of events to be generated in app
 
     @classmethod
     def context_iteritems(cls):
@@ -179,10 +180,17 @@ class AppManager(object):
         for key, i in SERVICE_BRICKS.items():
             for _k, m in inspect.getmembers(i, inspect.ismethod):
                 if hasattr(m, 'observer'):
+                    # name is module name of ev_cls
                     name = m.observer.split('.')[-1]
                     if name in SERVICE_BRICKS:
                         brick = SERVICE_BRICKS[name]
                         brick.register_observer(m.ev_cls, i.name)
+
+                # allow RyuApp and Event class are in different module
+                if hasattr(m, 'ev_cls'):
+                    for brick in SERVICE_BRICKS.itervalues():
+                        if m.ev_cls in brick._EVENTS:
+                            brick.register_observer(m.ev_cls, i.name)
 
         for brick, i in SERVICE_BRICKS.items():
             LOG.debug("BRICK %s" % brick)
