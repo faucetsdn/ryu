@@ -196,10 +196,7 @@ class Datapath(object):
                 buf = self.send_q.get()
                 self.socket.sendall(buf)
         finally:
-            q = self.send_q
             self.send_q = None
-            while q.get():
-                pass
 
     def send(self, buf):
         if self.send_q:
