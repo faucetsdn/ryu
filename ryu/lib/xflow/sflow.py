@@ -60,7 +60,7 @@ class sFlowV5(object):
     _MIN_LEN_V6 = struct.calcsize(_PACK_STR_IPV6)
 
     def __init__(self, version, address_type, agent_address, sub_agent_id,
-                  sequence_number, uptime, samples_num, samples):
+                 sequence_number, uptime, samples_num, samples):
         super(sFlowV5, self).__init__()
         self.version = version
         self.address_type = address_type
@@ -83,7 +83,7 @@ class sFlowV5(object):
             min_len = cls._MIN_LEN_V6
         else:
             LOG.info("Unknown address_type. sFlowV5.address_type=%d"
-                      % address_type)
+                     % address_type)
             return None
 
         (version, address_type, agent_address, sub_agent_id, sequence_number,
@@ -138,7 +138,7 @@ class sFlowV5Sample(object):
             # sample_format == 3    : Expanded Flow Sample
             # sample_format == 4    : Expanded Counter Sample
             LOG.info("Unknown format. sFlowV5Sample.sample_format=%d"
-                % sample_format)
+                     % sample_format)
             pack_str = '!%sc' % sample_length
             sample = struct.unpack_from(pack_str, buf, offset)
 
@@ -151,8 +151,8 @@ class sFlowV5FlowSample(object):
     _PACK_STR = '!IIIIIIII'
 
     def __init__(self, sequence_number, source_id_type, source_id_index,
-                  sampling_rate, sample_pool, drops, input_if, output_if,
-                  flow_records_num, flow_records):
+                 sampling_rate, sample_pool, drops, input_if, output_if,
+                 flow_records_num, flow_records):
         super(sFlowV5FlowSample, self).__init__()
         self.sequence_number = sequence_number
         self.source_id_type = source_id_type
@@ -198,7 +198,7 @@ class sFlowV5FlowRecord(object):
     MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, enterprise, flow_data_format,
-                  flow_data_length, flow_data):
+                 flow_data_length, flow_data):
         super(sFlowV5FlowRecord, self).__init__()
         self.enterprise = enterprise
         self.flow_data_format = flow_data_format
@@ -241,7 +241,7 @@ class sFlowV5FlowRecord(object):
             # flow_data_format == 1011 : Extended MPLS LVP FEC
             # flow_data_format == 1012 : Extended VLAN tunnel
             LOG.info("Unknown format. sFlowV5FlowRecord.flow_data_format=%d"
-                % flow_data_format)
+                     % flow_data_format)
             pack_str = '!%sc' % flow_data_length
             flow_data = struct.unpack_from(pack_str, buf, offset)
 
@@ -299,7 +299,7 @@ class sFlowV5CounterSample(object):
     _PACK_STR = '!III'
 
     def __init__(self, sequence_number, source_id_type, source_id_index,
-                  counters_records_num, counters_records):
+                 counters_records_num, counters_records):
         super(sFlowV5CounterSample, self).__init__()
         self.sequence_number = sequence_number
         self.source_id_type = source_id_type
@@ -339,7 +339,7 @@ class sFlowV5CounterRecord(object):
     MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, enterprise, counter_data_format,
-                  counter_data_length, counter_data):
+                 counter_data_length, counter_data):
         super(sFlowV5CounterRecord, self).__init__()
         self.enterprise = enterprise
         self.counter_data_format = counter_data_format

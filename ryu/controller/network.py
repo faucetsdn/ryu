@@ -227,7 +227,8 @@ class DPIDs(dict):
         port.mac_address = mac_address
         if port.network_id and port.mac_address:
             self.send_event(EventMacAddress(
-                    dpid, port_no, port.network_id, port.mac_address, True))
+                            dpid, port_no, port.network_id, port.mac_address,
+                            True))
 
     def set_mac(self, network_id, dpid, port_no, mac_address):
         port = self.get_port(dpid, port_no)

@@ -49,7 +49,7 @@ class ipv6(packet_base.PacketBase):
         payload_length = plen
         hop_limit = hlim
         msg = cls(version, traffic_class, flow_label, payload_length,
-                 nxt, hop_limit, src, dst)
+                  nxt, hop_limit, src, dst)
 
         if msg.length > ipv6._MIN_LEN:
             msg.option = buf[ipv6._MIN_LEN:msg.length]

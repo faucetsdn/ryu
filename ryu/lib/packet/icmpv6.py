@@ -171,7 +171,8 @@ class nd_neighbor(object):
         return hdr
 
 
-@nd_neighbor.register_nd_option_type(nd_neighbor.ND_OPTION_SLA, nd_neighbor.ND_OPTION_TLA)
+@nd_neighbor.register_nd_option_type(nd_neighbor.ND_OPTION_SLA,
+                                     nd_neighbor.ND_OPTION_TLA)
 class nd_option_la(object):
     _PACK_STR = '!6s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
