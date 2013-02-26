@@ -763,6 +763,29 @@ class TestOFPErrorMsg(unittest.TestCase):
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
+    def test_parser_experimenter(self):
+        type_ = 0xffff
+        exp_type = 1
+        experimenter = 1
+        data = 'Error Experimenter Message.'
+
+        # OFP_ERROR_EXPERIMENTER_MSG_PACK_STR = '!HHI'
+        fmt = ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR
+        buf = self.buf + pack(fmt, type_, exp_type, experimenter) \
+            + data
+
+        res = OFPErrorMsg.parser(object, self.version, self.msg_type,
+                                 self.msg_len, self.xid, buf)
+
+        eq_(res.version, self.version)
+        eq_(res.msg_type, self.msg_type)
+        eq_(res.msg_len, self.msg_len)
+        eq_(res.xid, self.xid)
+        eq_(res.type, type_)
+        eq_(res.exp_type, exp_type)
+        eq_(res.experimenter, experimenter)
+        eq_(res.data, data)
+
     def _test_serialize(self, type_, code, data):
         # OFP_ERROR_MSG_PACK_STR = '!HH'
         fmt = ofproto_v1_2.OFP_ERROR_MSG_PACK_STR

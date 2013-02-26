@@ -69,6 +69,12 @@ class OFPErrorMsg(MsgBase):
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        type_, = struct.unpack_from('!H', buffer(buf),
+                                    ofproto_v1_2.OFP_HEADER_SIZE)
+        if type_ == ofproto_v1_2.OFPET_EXPERIMENTER:
+            return OFPErrorExperimenterMsg.parser(datapath, version, msg_type,
+                                                  msg_len, xid, buf)
+
         msg = super(OFPErrorMsg, cls).parser(datapath, version, msg_type,
                                              msg_len, xid, buf)
         msg.type, msg.code = struct.unpack_from(
@@ -82,6 +88,26 @@ class OFPErrorMsg(MsgBase):
         msg_pack_into(ofproto_v1_2.OFP_ERROR_MSG_PACK_STR, self.buf,
                       ofproto_v1_2.OFP_HEADER_SIZE, self.type, self.code)
         self.buf += self.data
+
+
+class OFPErrorExperimenterMsg(MsgBase):
+    def __init__(self, datapath):
+        super(OFPErrorExperimenterMsg, self).__init__(datapath)
+        self.type = None
+        self.exp_type = None
+        self.experimenter = None
+        self.data = None
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        cls.cls_msg_type = msg_type
+        msg = super(OFPErrorExperimenterMsg, cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+        msg.type, msg.exp_type, msg.experimenter = struct.unpack_from(
+            ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR, msg.buf,
+            ofproto_v1_2.OFP_HEADER_SIZE)
+        msg.data = msg.buf[ofproto_v1_2.OFP_ERROR_EXPERIMENTER_SIZE:]
+        return msg
 
 
 @_register_parser
