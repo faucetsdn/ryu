@@ -69,15 +69,20 @@ class RyuApp(object):
         self.event_handlers.setdefault(ev_cls, [])
         self.event_handlers[ev_cls].append(handler)
 
-    def register_observer(self, ev_cls, name):
-        self.observers.setdefault(ev_cls, [])
-        self.observers[ev_cls].append(name)
+    def register_observer(self, ev_cls, name, states=None):
+        states = states or []
+        self.observers.setdefault(ev_cls, {})[name] = states
 
     def get_handlers(self, ev):
         return self.event_handlers.get(ev.__class__, [])
 
-    def get_observers(self, ev):
-        return self.observers.get(ev.__class__, [])
+    def get_observers(self, ev, state):
+        observers = []
+        for k, v in self.observers.get(ev.__class__, {}).iteritems():
+            if not state or not v or state in v:
+                observers.append(k)
+
+        return observers
 
     def _event_loop(self):
         while True:
@@ -98,8 +103,8 @@ class RyuApp(object):
             LOG.debug("EVENT LOST %s->%s %s" %
                       (self.name, name, ev.__class__.__name__))
 
-    def send_event_to_observers(self, ev):
-        for observer in self.get_observers(ev):
+    def send_event_to_observers(self, ev, state=None):
+        for observer in self.get_observers(ev, state):
             self.send_event(observer, ev)
 
     def close(self):
@@ -184,7 +189,8 @@ class AppManager(object):
                     name = m.observer.split('.')[-1]
                     if name in SERVICE_BRICKS:
                         brick = SERVICE_BRICKS[name]
-                        brick.register_observer(m.ev_cls, i.name)
+                        brick.register_observer(m.ev_cls, i.name,
+                                                m.dispatchers)
 
                 # allow RyuApp and Event class are in different module
                 if hasattr(m, 'ev_cls'):

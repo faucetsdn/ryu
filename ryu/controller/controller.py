@@ -141,7 +141,7 @@ class Datapath(object):
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
-        self.ofp_brick.send_event_to_observers(ev)
+        self.ofp_brick.send_event_to_observers(ev, state)
 
     def set_version(self, version):
         assert version in self.supported_ofp_version
@@ -175,7 +175,7 @@ class Datapath(object):
                     if self.state in handler.dispatchers:
                         handler(ev)
 
-                self.ofp_brick.send_event_to_observers(ev)
+                self.ofp_brick.send_event_to_observers(ev, self.state)
 
                 buf = buf[required_len:]
                 required_len = ofproto_common.OFP_HEADER_SIZE
