@@ -46,7 +46,7 @@ def haddr_to_bin(string):
     internal representation"""
     hexes = string.split(':')
     if len(hexes) != _HADDR_LEN:
-        ValueError('Invalid format for mac address: %s' % string)
+        raise ValueError('Invalid format for mac address: %s' % string)
     return ''.join(chr(int(h, 16)) for h in hexes)
 
 
