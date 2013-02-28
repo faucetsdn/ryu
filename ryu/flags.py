@@ -22,8 +22,6 @@ from oslo.config import cfg
 CONF = cfg.CONF
 
 CONF.register_cli_opts([
-    # GLOBAL flags
-    cfg.BoolOpt('monkey-patch', default=False, help='do monkey patch'),
     # app/quantum_adapter
     cfg.StrOpt('quantum-url', default='http://localhost:9696',
                help='URL for connecting to quantum'),
