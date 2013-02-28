@@ -1210,6 +1210,68 @@ class TestOFPErrorMsg(unittest.TestCase):
                                ofproto_v1_2.OFPRRFC_BAD_ROLE)
 
 
+class TestOFPErrorExperimenterMsg(unittest.TestCase):
+    """ Test case for ofproto_v1_2_parser.OFPErrorExperimenterMsg
+    """
+
+    def test_init(self):
+        c = OFPErrorExperimenterMsg(_Datapath)
+        eq_(c.type, None)
+        eq_(c.exp_type, None)
+        eq_(c.experimenter, None)
+        eq_(c.data, None)
+
+    def _test_parser(self, exp_type, experimenter, data=None):
+        # OFP_HEADER_PACK_STR
+        # '!BBHI'...version, msg_type, msg_len, xid
+        version = ofproto_v1_2.OFP_VERSION
+        msg_type = ofproto_v1_2.OFPT_ERROR
+        msg_len = ofproto_v1_2.OFP_ERROR_MSG_SIZE
+        xid = 2495926989
+
+        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        buf = pack(fmt, version, msg_type, msg_len, xid)
+
+        # OFP_ERROR_EXPERIMENTER_MSG_PACK_STR = '!HHI'
+        type_ = 0xffff
+        fmt = ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR
+        buf += pack(fmt, type_, exp_type, experimenter)
+
+        if data is not None:
+            buf += data
+
+        res = OFPErrorExperimenterMsg.parser(
+            object, version, msg_type, msg_len, xid, buf)
+
+        eq_(res.version, version)
+        eq_(res.msg_type, msg_type)
+        eq_(res.msg_len, msg_len)
+        eq_(res.xid, xid)
+        eq_(res.type, type_)
+        eq_(res.exp_type, exp_type)
+        eq_(res.experimenter, experimenter)
+
+        if data is not None:
+            eq_(res.data, data)
+
+    def test_parser_mid(self):
+        exp_type = 32768
+        experimenter = 2147483648
+        data = 'Error Experimenter Message.'
+        self._test_parser(exp_type, experimenter, data)
+
+    def test_parser_max(self):
+        exp_type = 65535
+        experimenter = 4294967295
+        data = 'Error Experimenter Message.'.ljust(65519)
+        self._test_parser(exp_type, experimenter, data)
+
+    def test_parser_min(self):
+        exp_type = 0
+        experimenter = 0
+        self._test_parser(exp_type, experimenter)
+
+
 class TestOFPEchoRequest(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPEchoRequest
     """
@@ -2395,6 +2457,7 @@ class TestOFPPacketOut(unittest.TestCase):
 
         eq_(buffer_id, c.buffer_id)
         eq_(in_port, c.in_port)
+        eq_(0, c.actions_len)
         eq_(data, c.data)
         eq_(actions, c.actions)
 
@@ -4868,6 +4931,47 @@ class TestOFPTableStats(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPTableStats
     """
 
+    def test_init(self):
+        table_id = 91
+        name = 'name'
+        match = 1270985291017894273
+        wildcards = 3316608530
+        write_actions = 2484712402
+        apply_actions = 3999715196
+        write_setfields = 5142202600015232219
+        apply_setfields = 2659740543924820419
+        metadata_match = 2127614848199081640
+        metadata_write = 2127614848199081641
+        instructions = 1119692796
+        config = 2226555987
+        max_entries = 2506913869
+        active_count = 2024581150
+        lookup_count = 4620020561814017052
+        matched_count = 2825167325263435621
+
+        res = OFPTableStats(table_id, name, match, wildcards, write_actions,
+                            apply_actions, write_setfields, apply_setfields,
+                            metadata_match, metadata_write, instructions,
+                            config, max_entries, active_count, lookup_count,
+                            matched_count)
+
+        eq_(table_id, res.table_id)
+        eq_(name, res.name)
+        eq_(match, res.match)
+        eq_(wildcards, res.wildcards)
+        eq_(write_actions, res.write_actions)
+        eq_(apply_actions, res.apply_actions)
+        eq_(write_setfields, res.write_setfields)
+        eq_(apply_setfields, res.apply_setfields)
+        eq_(metadata_match, res.metadata_match)
+        eq_(metadata_write, res.metadata_write)
+        eq_(instructions, res.instructions)
+        eq_(config, res.config)
+        eq_(max_entries, res.max_entries)
+        eq_(active_count, res.active_count)
+        eq_(lookup_count, res.lookup_count)
+        eq_(matched_count, res.matched_count)
+
     def _test_parser(self, table_id, name, match, wildcards, write_actions,
                      apply_actions, write_setfields, apply_setfields,
                      metadata_match, metadata_write, instructions, config,
@@ -5254,6 +5358,40 @@ class TestOFPPortStats(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPPortStats
     """
 
+    def test_init(self):
+        port_no = 6606
+        rx_packets = 5999980397101236279
+        tx_packets = 2856480458895760962
+        rx_bytes = 6170274950576278921
+        tx_bytes = 8638420181865882538
+        rx_dropped = 6982303461569875546
+        tx_dropped = 661287462113808071
+        rx_errors = 3422231811478788365
+        tx_errors = 6283093430376743019
+        rx_frame_err = 876072919806406283
+        rx_over_err = 6525873760178941600
+        rx_crc_err = 8303073210207070535
+        collisions = 3409801584220270201
+
+        res = OFPPortStats(port_no, rx_packets, tx_packets,
+                           rx_bytes, tx_bytes, rx_dropped, tx_dropped,
+                           rx_errors, tx_errors, rx_frame_err,
+                           rx_over_err, rx_crc_err, collisions)
+
+        eq_(port_no, res.port_no)
+        eq_(rx_packets, res.rx_packets)
+        eq_(tx_packets, res.tx_packets)
+        eq_(rx_bytes, res.rx_bytes)
+        eq_(tx_bytes, res.tx_bytes)
+        eq_(rx_dropped, res.rx_dropped)
+        eq_(tx_dropped, res.tx_dropped)
+        eq_(rx_errors, res.rx_errors)
+        eq_(tx_errors, res.tx_errors)
+        eq_(rx_frame_err, res.rx_frame_err)
+        eq_(rx_over_err, res.rx_over_err)
+        eq_(rx_crc_err, res.rx_crc_err)
+        eq_(collisions, res.collisions)
+
     def _test_parser(self, port_no, rx_packets, tx_packets,
                      rx_bytes, tx_bytes, rx_dropped, tx_dropped,
                      rx_errors, tx_errors, rx_frame_err,
@@ -5457,6 +5595,22 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
 class TestOFPQueueStats(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPQueueStats
     """
+
+    def test_init(self):
+        port_no = 41186
+        queue_id = 6606
+        tx_bytes = 8638420181865882538
+        tx_packets = 2856480458895760962
+        tx_errors = 6283093430376743019
+
+        res = OFPQueueStats(port_no, queue_id, tx_bytes,
+                            tx_packets, tx_errors)
+
+        eq_(port_no, res.port_no)
+        eq_(queue_id, res.queue_id)
+        eq_(tx_bytes, res.tx_bytes)
+        eq_(tx_packets, res.tx_packets)
+        eq_(tx_errors, res.tx_errors)
 
     def _test_parser(self, port_no, queue_id, tx_bytes,
                      tx_packets, tx_errors):
@@ -6425,6 +6579,66 @@ class TestOFPMatch(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPMatch
     """
 
+    def test_init(self):
+        res = OFPMatch()
+
+        # wc check
+        eq_(res.wc.metadata_mask, 0)
+        eq_(res.wc.dl_dst_mask, 0)
+        eq_(res.wc.dl_src_mask, 0)
+        eq_(res.wc.vlan_vid_mask, 0)
+        eq_(res.wc.ipv4_src_mask, 0)
+        eq_(res.wc.ipv4_dst_mask, 0)
+        eq_(res.wc.arp_spa_mask, 0)
+        eq_(res.wc.arp_tpa_mask, 0)
+        eq_(res.wc.arp_sha_mask, 0)
+        eq_(res.wc.arp_tha_mask, 0)
+        eq_(res.wc.ipv6_src_mask, [])
+        eq_(res.wc.ipv6_dst_mask, [])
+        eq_(res.wc.ipv6_flabel_mask, 0)
+        eq_(res.wc.wildcards, (1 << 64) - 1)
+
+        # flow check
+        eq_(res.flow.in_port, 0)
+        eq_(res.flow.in_phy_port, 0)
+        eq_(res.flow.metadata, 0)
+        eq_(res.flow.dl_dst, mac.DONTCARE)
+        eq_(res.flow.dl_src, mac.DONTCARE)
+        eq_(res.flow.dl_type, 0)
+        eq_(res.flow.vlan_vid, 0)
+        eq_(res.flow.vlan_pcp, 0)
+        eq_(res.flow.ip_dscp, 0)
+        eq_(res.flow.ip_ecn, 0)
+        eq_(res.flow.ip_proto, 0)
+        eq_(res.flow.ipv4_src, 0)
+        eq_(res.flow.ipv4_dst, 0)
+        eq_(res.flow.tcp_src, 0)
+        eq_(res.flow.tcp_dst, 0)
+        eq_(res.flow.udp_src, 0)
+        eq_(res.flow.udp_dst, 0)
+        eq_(res.flow.sctp_src, 0)
+        eq_(res.flow.sctp_dst, 0)
+        eq_(res.flow.icmpv4_type, 0)
+        eq_(res.flow.icmpv4_code, 0)
+        eq_(res.flow.arp_op, 0)
+        eq_(res.flow.arp_spa, 0)
+        eq_(res.flow.arp_tpa, 0)
+        eq_(res.flow.arp_sha, 0)
+        eq_(res.flow.arp_tha, 0)
+        eq_(res.flow.ipv6_src, [])
+        eq_(res.flow.ipv6_dst, [])
+        eq_(res.flow.ipv6_flabel, 0)
+        eq_(res.flow.icmpv6_type, 0)
+        eq_(res.flow.icmpv6_code, 0)
+        eq_(res.flow.ipv6_nd_target, [])
+        eq_(res.flow.ipv6_nd_sll, 0)
+        eq_(res.flow.ipv6_nd_tll, 0)
+        eq_(res.flow.mpls_lable, 0)
+        eq_(res.flow.mpls_tc, 0)
+
+        # flow check
+        eq_(res.fields, [])
+
     def _test_serialize_and_parser(self, match, header, value, mask=None):
         cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
         pack_str = cls_.pack_str.replace('!', '')
@@ -7290,3 +7504,26 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_set_mpls_tc_min(self):
         self._test_set_mpls_tc(0)
+
+
+class TestOFPMatchField(unittest.TestCase):
+    """ Test case for ofproto_v1_2_parser.OFPMatchField
+    """
+
+    def test_init_hasmask_true(self):
+        header = 0x0100
+
+        res = OFPMatchField(header)
+
+        eq_(res.header, header)
+        eq_(res.n_bytes, (header & 0xff) / 2)
+        eq_(res.length, 0)
+
+    def test_init_hasmask_false(self):
+        header = 0x0000
+
+        res = OFPMatchField(header)
+
+        eq_(res.header, header)
+        eq_(res.n_bytes, header & 0xff)
+        eq_(res.length, 0)
