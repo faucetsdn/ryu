@@ -2595,7 +2595,7 @@ class OFPTableFeaturesStatsReply(OFPMultipartReply):
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_DESC, OFPPort)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPPortDescStatsRequest(OFPMultipartRequest):
-    def __init__(self, datapath, flags, port_no):
+    def __init__(self, datapath, flags):
         super(OFPPortDescStatsRequest, self).__init__(datapath, flags)
 
 
