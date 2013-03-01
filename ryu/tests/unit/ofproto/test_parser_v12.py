@@ -3511,7 +3511,7 @@ class TestOFPActionPushVlan(unittest.TestCase):
     def test_parser_max(self):
         self._test_parser(0xffff)
 
-    def test_parser_mid(self):
+    def test_parser_min(self):
         self._test_parser(0)
 
     def _test_serialize(self, ethertype):
@@ -3530,7 +3530,7 @@ class TestOFPActionPushVlan(unittest.TestCase):
     def test_serialize_max(self):
         self._test_serialize(0xffff)
 
-    def test_serialize_mid(self):
+    def test_serialize_min(self):
         self._test_serialize(0)
 
 
@@ -3563,7 +3563,7 @@ class TestOFPActionPushMpls(unittest.TestCase):
     def test_parser_max(self):
         self._test_parser(0xffff)
 
-    def test_parser_mid(self):
+    def test_parser_min(self):
         self._test_parser(0)
 
     def _test_serialize(self, ethertype):
@@ -3582,7 +3582,7 @@ class TestOFPActionPushMpls(unittest.TestCase):
     def test_serialize_max(self):
         self._test_serialize(0xffff)
 
-    def test_serialize_mid(self):
+    def test_serialize_min(self):
         self._test_serialize(0)
 
 
@@ -3641,7 +3641,7 @@ class TestOFPActionPopMpls(unittest.TestCase):
     def test_parser_max(self):
         self._test_parser(0xffff)
 
-    def test_parser_mid(self):
+    def test_parser_min(self):
         self._test_parser(0)
 
     def _test_serialize(self, ethertype):
@@ -3660,7 +3660,7 @@ class TestOFPActionPopMpls(unittest.TestCase):
     def test_serialize_max(self):
         self._test_serialize(0xffff)
 
-    def test_serialize_mid(self):
+    def test_serialize_min(self):
         self._test_serialize(0)
 
 
@@ -7486,7 +7486,7 @@ class TestOFPMatch(unittest.TestCase):
     def test_set_mpls_label_max(self):
         self._test_set_mpls_label(0xfffff)
 
-    def test_set_mpls_label_mid(self):
+    def test_set_mpls_label_min(self):
         self._test_set_mpls_label(0)
 
     # set_mpls_tc
