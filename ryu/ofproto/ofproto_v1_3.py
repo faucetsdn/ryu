@@ -638,7 +638,7 @@ OFP_TABLE_FEATURE_PROP_OXM_SIZE = 4
 assert (calcsize(OFP_TABLE_FEATURE_PROP_OXM_PACK_STR) ==
         OFP_TABLE_FEATURE_PROP_OXM_SIZE)
 
-# struct ofp_port_stats_reuqest
+# struct ofp_port_stats_request
 OFP_PORT_STATS_REQUEST_PACK_STR = '!I4x'
 OFP_PORT_STATS_REQUEST_SIZE = 8
 assert (calcsize(OFP_PORT_STATS_REQUEST_PACK_STR) ==
