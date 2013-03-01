@@ -1959,7 +1959,7 @@ class OFPMultipartRequest(MsgBase):
         self.type = self.__class__.cls_stats_type
         self.flags = flags
 
-    def _serialize_stats_body():
+    def _serialize_stats_body(self):
         pass
 
     def _serialize_body(self):
