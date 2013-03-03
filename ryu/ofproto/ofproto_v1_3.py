@@ -526,11 +526,11 @@ DESC_STR_LEN_STR = str(DESC_STR_LEN)
 SERIAL_NUM_LEN = 32
 SERIAL_NUM_LEN_STR = str(SERIAL_NUM_LEN)
 OFP_DESC_PACK_STR = '!' + \
-                    DESC_STR_LEN_STR + 'c' + \
-                    DESC_STR_LEN_STR + 'c' + \
-                    DESC_STR_LEN_STR + 'c' + \
-                    SERIAL_NUM_LEN_STR + 'c' + \
-                    DESC_STR_LEN_STR + 'c'
+                    DESC_STR_LEN_STR + 's' + \
+                    DESC_STR_LEN_STR + 's' + \
+                    DESC_STR_LEN_STR + 's' + \
+                    SERIAL_NUM_LEN_STR + 's' + \
+                    DESC_STR_LEN_STR + 's'
 OFP_DESC_SIZE = 1056
 assert calcsize(OFP_DESC_PACK_STR) == OFP_DESC_SIZE
 
