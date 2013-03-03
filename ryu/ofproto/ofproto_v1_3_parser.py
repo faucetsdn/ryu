@@ -1825,8 +1825,9 @@ class OFPActionPopMpls(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_FIELD,
                                 ofproto_v1_3.OFP_ACTION_SET_FIELD_SIZE)
 class OFPActionSetField(OFPAction):
-    def __init__(self):
+    def __init__(self, field):
         super(OFPActionSetField, self).__init__()
+        set.field = field
 
     @classmethod
     def parser(cls, buf, offset):
