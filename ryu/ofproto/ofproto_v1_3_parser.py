@@ -1789,7 +1789,7 @@ class OFPActionPushMpls(OFPAction):
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_ACTION_PUSH_PACK_STR, buf, offset,
-                      self.ethertype)
+                      self.type, self.len, self.ethertype)
 
 
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_POP_VLAN,
@@ -1819,7 +1819,7 @@ class OFPActionPopMpls(OFPAction):
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_ACTION_POP_MPLS_PACK_STR, buf, offset,
-                      self.ethertype)
+                      self.type, self.len, self.ethertype)
 
 
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_FIELD,
