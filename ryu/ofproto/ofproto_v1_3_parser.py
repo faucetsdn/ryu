@@ -2766,7 +2766,7 @@ class OFPRoleRequest(MsgBase):
         self.role = role
         self.generation_id = generation_id
 
-    def __serialize_body(self):
+    def _serialize_body(self):
         assert self.role is not None
         assert self.generation_id is not None
         msg_pack_into(ofproto_v1_3.OFP_ROLE_REQUEST_PACK_STR,
