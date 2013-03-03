@@ -1390,7 +1390,9 @@ class OFPPort(collections.namedtuple('OFPPort', (
     @classmethod
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_3.OFP_PORT_PACK_STR, buf, offset)
-        return cls(*port)
+        ofpport = cls(*port)
+        ofpport.length = ofproto_v1_3.OFP_PORT_SIZE
+        return ofpport
 
 
 @_register_parser
