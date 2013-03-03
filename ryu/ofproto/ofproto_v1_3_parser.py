@@ -2158,13 +2158,14 @@ class OFPAggregateStats(collections.namedtuple('OFPAggregateStats', (
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, table_id, out_port, out_group,
-                 cookie, cookie_mask):
+                 cookie, cookie_mask, match):
         super(OFPAggregateStatsRequest, self).__init__(datapath,
                                                        table_id,
                                                        out_port,
                                                        out_group,
                                                        cookie,
-                                                       cookie_mask)
+                                                       cookie_mask,
+                                                       match)
 
 
 @OFPMultipartReply.register_stats_type()
