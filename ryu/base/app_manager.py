@@ -62,6 +62,7 @@ class RyuApp(object):
         self.observers = {}
         self.threads = []
         self.events = Queue()
+        self.replies = Queue()
         self.threads.append(gevent.spawn(self._event_loop))
 
     def register_handler(self, ev_cls, handler):
@@ -83,6 +84,15 @@ class RyuApp(object):
                 observers.append(k)
 
         return observers
+
+    def send_reply(self, rep):
+        SERVICE_BRICKS[rep.dst].replies.put(rep)
+
+    def send_request(self, req):
+        req.src = self.name
+        self.send_event(req.dst, req)
+        # going to sleep for the reply
+        return self.replies.get()
 
     def _event_loop(self):
         while True:
