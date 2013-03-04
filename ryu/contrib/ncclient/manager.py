@@ -33,7 +33,7 @@ CAPABILITIES = [
     "urn:ietf:params:netconf:capability:url:1.0?scheme=http,ftp,file,https,sftp",
     "urn:ietf:params:netconf:capability:validate:1.0",
     "urn:ietf:params:netconf:capability:xpath:1.0",
-    "urn:liberouter:params:netconf:capability:power-control:1.0"
+    "urn:liberouter:params:netconf:capability:power-control:1.0",
     "urn:ietf:params:netconf:capability:interleave:1.0"
 ]
 """A list of URI's representing the client's capabilities. This is used during the initial capability exchange. Modify this if you need to announce some capability not already included."""
