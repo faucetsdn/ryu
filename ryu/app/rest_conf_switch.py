@@ -25,9 +25,6 @@ from ryu.controller import conf_switch
 from ryu.lib import dpid as dpid_lib
 
 
-LOG = logging.getLogger(__name__)
-
-
 # REST API for switch configuration
 #
 # get all the switches
