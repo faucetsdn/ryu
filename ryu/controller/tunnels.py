@@ -22,9 +22,6 @@ from ryu.base import app_manager
 from ryu.controller import event
 
 
-LOG = logging.getLogger(__name__)
-
-
 class RemoteDPIDAlreadyExist(ryu_exc.RyuException):
     message = ('port (%(dpid)s, %(port)s) has already '
                'remote dpid %(remote_dpid)s')
