@@ -31,9 +31,6 @@ from ryu.lib.ovs import bridge
 from ryu.ofproto import nx_match
 
 
-LOG = logging.getLogger(__name__)
-
-
 def _is_reserved_port(dp, port_no):
     return port_no > dp.ofproto.OFPP_MAX
 
@@ -60,8 +57,8 @@ class SimpleVLAN(app_manager.RyuApp):
         self.tunnels = kwargs['tunnels']
 
     def _port_flow_add(self, dp, port_no):
-        LOG.debug('ovs_port_update dpid %s port_no %s',
-                  dpid_lib.dpid_to_str(dp.id), port_no)
+        self.logger.debug('ovs_port_update dpid %s port_no %s',
+                          dpid_lib.dpid_to_str(dp.id), port_no)
         rule = nx_match.ClsRule()
         rule.set_in_port(port_no)
         ofproto = dp.ofproto
@@ -72,8 +69,8 @@ class SimpleVLAN(app_manager.RyuApp):
                          priority=self._PRIORITY_NORMAL, actions=actions)
 
     def _port_flow_del(self, dp, port_no):
-        LOG.debug('_port_flow_del dp %s port_no %d',
-                  dpid_lib.dpid_to_str(dp.id), port_no)
+        self.logger.debug('_port_flow_del dp %s port_no %d',
+                          dpid_lib.dpid_to_str(dp.id), port_no)
         rule = nx_match.ClsRule()
         rule.set_in_port(port_no)
         dp.send_flow_del(rule=rule, cookie=self._COOKIE_NORMAL)
@@ -115,18 +112,18 @@ class SimpleVLAN(app_manager.RyuApp):
         try:
             port = self.dpset.get_port(dpid, port_no)
         except ryu_exc.PortNotFound:
-            LOG.debug('port not found')
+            self.logger.debug('port not found')
             return
 
         try:
             ovsdb_addr = self.conf_sw.get_key(dpid, conf_switch_key.OVSDB_ADDR)
         except KeyError:
-            LOG.debug('ovsdb_addr not found')
+            self.logger.debug('ovsdb_addr not found')
             return
 
         self._port_flow_add(dp, port_no)
 
-        LOG.debug('ovs_port_update dpid %s port_no %s', dpid, port_no)
+        self.logger.debug('ovs_port_update dpid %s port_no %s', dpid, port_no)
         # ovs-vsctl --db=ovsdb_addr --timeout=2
         # set Port port.name tag=tunnel_key
         ovs_br = bridge.OVSBridge(dpid, ovsdb_addr, 2)
@@ -135,30 +132,30 @@ class SimpleVLAN(app_manager.RyuApp):
         try:
             ovs_br.set_db_attribute("Port", port_name, "tag", tunnel_key)
         except gevent.Timeout:
-            LOG.error('timout')
+            self.logger.error('timout')
             return
 
         return True
 
     def _port_setup_netid(self, dpid, port_no, network_id):
-        LOG.debug('_port_setup_netid %s %s %s',
-                  dpid_lib.dpid_to_str(dpid), port_no, network_id)
+        self.logger.debug('_port_setup_netid %s %s %s',
+                          dpid_lib.dpid_to_str(dpid), port_no, network_id)
         dp = self.dpset.get(dpid)
         if dp is None:
-            LOG.debug('dp not found')
+            self.logger.debug('dp not found')
             return
         if _is_reserved_port(dp, port_no):
             return
 
         if network_id == rest_nw_id.NW_ID_EXTERNAL:
-            LOG.debug('external interface')
+            self.logger.debug('external interface')
             self._queue_port_flow_add(dp, port_no)
             return True
 
         try:
             tunnel_key = self.tunnels.get_key(network_id)
         except tunnels.TunnelKeyNotFound:
-            LOG.debug('tunnel key not found')
+            self.logger.debug('tunnel key not found')
             return
 
         return self._port_setup(dp, port_no, tunnel_key)
@@ -171,22 +168,22 @@ class SimpleVLAN(app_manager.RyuApp):
         try:
             network_id = self.nw.get_network(dpid, port_no)
         except ryu_exc.PortUnknown:
-            LOG.debug('port_unknown')
+            self.logger.debug('port_unknown')
             self._queue_port_flow_del(dp, port_no)
             return
 
         if not self._port_setup_netid(dpid, port_no, network_id):
-            LOG.debug('_port_setup_netid failed')
+            self.logger.debug('_port_setup_netid failed')
             self._queue_port_flow_del(dp, port_no)
 
     @handler.set_ev_cls(dpset.EventPortAdd)
     def port_add_handler(self, ev):
-        LOG.debug('port_add %s', ev)
+        self.logger.debug('port_add %s', ev)
         self._port_add(ev.dp, ev.port.port_no)
 
     @handler.set_ev_cls(dpset.EventPortDelete)
     def port_del_handler(self, ev):
-        LOG.debug('port_del %s', ev)
+        self.logger.debug('port_del %s', ev)
         dp = ev.dp
         port_no = ev.port.port_no
         if _is_reserved_port(dp, port_no):
@@ -195,14 +192,14 @@ class SimpleVLAN(app_manager.RyuApp):
 
     @handler.set_ev_cls(network.EventNetworkPort)
     def network_port_handler(self, ev):
-        LOG.debug('network_port %s', ev)
+        self.logger.debug('network_port %s', ev)
         if not ev.add_del:
             return
         self._port_setup_netid(ev.dpid, ev.port_no, ev.network_id)
 
     @handler.set_ev_cls(tunnels.EventTunnelKeyAdd)
     def tunnel_key_add_handler(self, ev):
-        LOG.debug('tunnel_add %s', ev)
+        self.logger.debug('tunnel_add %s', ev)
         tunnel_key = ev.tunnel_key
         for (dpid, port_no) in self.nw.list_ports(ev.network_id):
             dp = self.dpset.get(dpid)
@@ -212,7 +209,7 @@ class SimpleVLAN(app_manager.RyuApp):
 
     @handler.set_ev_cls(conf_switch.EventConfSwitchSet)
     def conf_switch_set_handler(self, ev):
-        LOG.debug('conf_switch_set %s', ev)
+        self.logger.debug('conf_switch_set %s', ev)
         if ev.key != conf_switch_key.OVSDB_ADDR:
             return
 

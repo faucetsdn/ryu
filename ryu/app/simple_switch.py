@@ -25,8 +25,6 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.lib.mac import haddr_to_str
 
 
-LOG = logging.getLogger('ryu.app.simple_switch')
-
 # TODO: we should split the handler into two parts, protocol
 # independent and dependant parts.
 
@@ -71,8 +69,9 @@ class SimpleSwitch(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
-        LOG.info("packet in %s %s %s %s",
-                 dpid, haddr_to_str(src), haddr_to_str(dst), msg.in_port)
+        self.logger.info("packet in %s %s %s %s",
+                         dpid, haddr_to_str(src), haddr_to_str(dst),
+                         msg.in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = msg.in_port
@@ -101,10 +100,10 @@ class SimpleSwitch(app_manager.RyuApp):
 
         ofproto = msg.datapath.ofproto
         if reason == ofproto.OFPPR_ADD:
-            LOG.info("port added %s", port_no)
+            self.logger.info("port added %s", port_no)
         elif reason == ofproto.OFPPR_DELETE:
-            LOG.info("port deleted %s", port_no)
+            self.logger.info("port deleted %s", port_no)
         elif reason == ofproto.OFPPR_MODIFY:
-            LOG.info("port modified %s", port_no)
+            self.logger.info("port modified %s", port_no)
         else:
-            LOG.info("Illeagal port state %s %s", port_no, reason)
+            self.logger.info("Illeagal port state %s %s", port_no, reason)

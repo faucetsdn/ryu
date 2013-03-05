@@ -40,11 +40,10 @@ from gevent import monkey
 monkey.patch_all()
 
 
-LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-def _get_auth_token():
+def _get_auth_token(logger):
     httpclient = q_client.HTTPClient(
         username=CONF.quantum_admin_username,
         tenant_name=CONF.quantum_admin_tenant_name,
@@ -55,9 +54,9 @@ def _get_auth_token():
     try:
         httpclient.authenticate()
     except (q_exc.Unauthorized, q_exc.Forbidden, q_exc.EndpointNotFound) as e:
-        LOG.error("authentication failure: %s", e)
+        logger.error("authentication failure: %s", e)
         return None
-    # LOG.debug("_get_auth_token: token=%s", httpclient.auth_token)
+    # logger.debug("_get_auth_token: token=%s", httpclient.auth_token)
     return httpclient.auth_token
 
 
@@ -126,16 +125,17 @@ class OVSPort(object):
 
 
 class OVSSwitch(object):
-    def __init__(self, dpid, nw, ifaces):
+    def __init__(self, dpid, nw, ifaces, logger):
         # TODO: clean up
         token = None
         if CONF.quantum_auth_strategy:
-            token = _get_auth_token()
+            token = _get_auth_token(logger)
         q_api = _get_quantum_client(token)
 
         self.dpid = dpid
         self.network_api = nw
         self.ifaces = ifaces
+        self.logger = logger
         self.q_api = q_api
         self.ctrl_addr = CONF.quantum_controller_addr
 
@@ -149,8 +149,8 @@ class OVSSwitch(object):
 
     def set_ovsdb_addr(self, dpid, ovsdb_addr):
         # easy check if the address format valid
-        LOG.debug('set_ovsdb_addr dpid %s ovsdb_addr %s',
-                  dpid_lib.dpid_to_str(dpid), ovsdb_addr)
+        self.logger.debug('set_ovsdb_addr dpid %s ovsdb_addr %s',
+                          dpid_lib.dpid_to_str(dpid), ovsdb_addr)
         _proto, _host, _port = ovsdb_addr.split(':')
 
         old_address = self.ovsdb_addr
@@ -164,7 +164,7 @@ class OVSSwitch(object):
             return
         self.ovsdb_addr = ovsdb_addr
         if self.ovs_bridge is None:
-            LOG.debug('ovsdb: adding ports %s', self.ports)
+            self.logger.debug('ovsdb: adding ports %s', self.ports)
             ovs_bridge = bridge.OVSBridge(dpid, ovsdb_addr)
             self.ovs_bridge = ovs_bridge
             ovs_bridge.init()
@@ -172,7 +172,7 @@ class OVSSwitch(object):
             #       not overwrite controllers, but append this controller
             ovs_bridge.set_controller([self.ctrl_addr])
             for port in self.ports.values():
-                LOG.debug('adding port %s', port)
+                self.logger.debug('adding port %s', port)
                 self.update_port(port.ofport, port.name, True)
 
     def _update_external_port(self, port, add=True):
@@ -184,7 +184,7 @@ class OVSSwitch(object):
                                          self.dpid, port.ofport)
 
     def _update_vif_port(self, port, add=True):
-        LOG.debug("_update_vif_port: %s %s", port, add)
+        self.logger.debug("_update_vif_port: %s %s", port, add)
         iface_id = port.ext_ids.get('iface-id')
         if iface_id is None:
             return
@@ -223,12 +223,12 @@ class OVSSwitch(object):
                 'deleted': True
             }
             body = {'port': port_data}
-            # LOG.debug("port-body = %s", body)
+            # self.logger.debug("port-body = %s", body)
 
             try:
                 self.q_api.update_port(port.ext_ids['iface-id'], body)
             except (q_exc.ConnectionFailed, q_exc.QuantumClientException) as e:
-                LOG.error("quantum update port failed: %s", e)
+                self.logger.error("quantum update port failed: %s", e)
                 # TODO: When authentication failure occurred,
                 # it should get auth token again
             return
@@ -242,7 +242,8 @@ class OVSSwitch(object):
                                         mac_lib.haddr_to_bin(mac))
 
     def update_port(self, port_no, port_name, add):
-        LOG.debug('update_port port_no %d %s %s', port_no, port_name, add)
+        self.logger.debug('update_port port_no %d %s %s', port_no, port_name,
+                          add)
         assert port_name is not None
         old_port = self.ports.get(port_no)
         if not add:
@@ -256,12 +257,12 @@ class OVSSwitch(object):
                     if 'ofport' not in port_cfg or not port_cfg['ofport']:
                         port_cfg['ofport'] = port_no
                     elif port_cfg['ofport'] != port_no:
-                        LOG.warn('inconsistent port_no: %d port_cfg %s',
-                                 port_no, port_cfg)
+                        self.logger.warn('inconsistent port_no: %d port_cfg '
+                                         '%s', port_no, port_cfg)
                         return
                     if port_cfg['name'] != port_name:
-                        LOG.warn('inconsistent port_name: %s port_cfg %s',
-                                 port_name, port_cfg)
+                        self.logger.warn('inconsistent port_name: %s '
+                                         'port_cfg %s', port_name, port_cfg)
                         return
                     new_port.update(port_cfg)
 
@@ -281,10 +282,10 @@ class OVSSwitch(object):
             if port_type == OVSPort.PORT_ERROR:
                 return
             elif port_type == OVSPort.PORT_UNKNOWN:
-                # LOG.info("delete external port: %s", old_port)
+                # self.logger.info("delete external port: %s", old_port)
                 self._update_external_port(old_port, add=False)
             else:
-                # LOG.info("delete port: %s", old_port)
+                # self.logger.info("delete port: %s", old_port)
                 if port_type != OVSPort.PORT_TUNNEL:
                     self._update_vif_port(old_port, add=False)
             return
@@ -296,17 +297,17 @@ class OVSSwitch(object):
             if port_type == OVSPort.PORT_ERROR:
                 return
             elif port_type == OVSPort.PORT_UNKNOWN:
-                # LOG.info("create external port: %s", new_port)
+                # self.logger.info("create external port: %s", new_port)
                 self._update_external_port(new_port)
             else:
-                # LOG.info("create port: %s", new_port)
+                # self.logger.info("create port: %s", new_port)
                 if port_type != OVSPort.PORT_TUNNEL:
                     self._update_vif_port(new_port)
             return
         if new_port.get_port_type() in (OVSPort.PORT_GUEST,
                                         OVSPort.PORT_GATEWAY,
                                         OVSPort.PORT_VETH_GATEWAY):
-            # LOG.info("update port: %s", new_port)
+            # self.logger.info("update port: %s", new_port)
             self._update_vif_port(new_port)
 
 
@@ -334,10 +335,10 @@ class QuantumAdapter(app_manager.RyuApp):
         ovs_switch = self.dps.get(dpid)
         if not ovs_switch:
             if create:
-                ovs_switch = OVSSwitch(dpid, self.nw, self.ifaces)
+                ovs_switch = OVSSwitch(dpid, self.nw, self.ifaces, self.logger)
                 self.dps[dpid] = ovs_switch
         else:
-            LOG.debug('ovs switch %s is already known', dpid)
+            self.logger.debug('ovs switch %s is already known', dpid)
         return ovs_switch
 
     def _port_handler(self, dpid, port_no, port_name, add):
@@ -345,8 +346,8 @@ class QuantumAdapter(app_manager.RyuApp):
         if ovs_switch:
             ovs_switch.update_port(port_no, port_name, add)
         else:
-            LOG.warn('unknown ovs switch %s %s %s %s\n',
-                     dpid, port_no, port_name, add)
+            self.logger.warn('unknown ovs switch %s %s %s %s\n',
+                             dpid, port_no, port_name, add)
 
     @handler.set_ev_cls(dpset.EventDP)
     def dp_handler(self, ev):
@@ -388,24 +389,24 @@ class QuantumAdapter(app_manager.RyuApp):
 
     @handler.set_ev_cls(conf_switch.EventConfSwitchSet)
     def conf_switch_set_handler(self, ev):
-        LOG.debug("conf_switch set: %s", ev)
+        self.logger.debug("conf_switch set: %s", ev)
         if ev.key == cs_key.OVSDB_ADDR:
             self._conf_switch_set_ovsdb_addr(ev.dpid, ev.value)
         else:
-            LOG.debug("unknown event: %s", ev)
+            self.logger.debug("unknown event: %s", ev)
 
     @handler.set_ev_cls(conf_switch.EventConfSwitchDel)
     def conf_switch_del_handler(self, ev):
-        LOG.debug("conf_switch del: %s", ev)
+        self.logger.debug("conf_switch del: %s", ev)
         if ev.key == cs_key.OVSDB_ADDR:
             self._conf_switch_del_ovsdb_addr(ev.dpid)
         else:
-            LOG.debug("unknown event: %s", ev)
+            self.logger.debug("unknown event: %s", ev)
 
     @handler.set_ev_cls(quantum_ifaces.EventQuantumIfaceSet)
     def quantum_iface_set_handler(self, ev):
         if ev.key != quantum_ifaces.QuantumIfaces.KEY_NETWORK_ID:
-            # LOG.debug("unknown key %s", ev.key)
+            # self.logger.debug("unknown key %s", ev.key)
             return
         iface_id = ev.iface_id
         try:

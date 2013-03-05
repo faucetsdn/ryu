@@ -32,9 +32,6 @@ from ryu.lib import dpid as dpid_lib
 from ryu.lib import mac
 
 
-LOG = logging.getLogger(__name__)
-
-
 def _is_reserved_port(ofproto, port_no):
     return port_no > ofproto.OFPP_MAX
 
@@ -249,7 +246,7 @@ class PortSet(app_manager.RyuApp):
         if not enter_leave:
             # TODO:XXX
             # What to do on datapath disconnection?
-            LOG.debug('dp disconnection ev:%s', ev)
+            self.logger.debug('dp disconnection ev:%s', ev)
 
         dpid = ev.dp.id
         ports = set(port.port_no for port in ev.ports)
@@ -928,7 +925,7 @@ class GRETunnel(app_manager.RyuApp):
         # follows vm port deletion.
         # the tunnel port is deleted if and only if no instance of same
         # tenants resides in both nodes of tunnel end points.
-        LOG.debug('tunnel_port_del %s', ev)
+        self.logger.debug('tunnel_port_del %s', ev)
         dp = self.dpset.get(ev.dpid)
 
         # SRC_TABLE: TUNNEL-port catch-all drop rule
@@ -939,11 +936,11 @@ class GRETunnel(app_manager.RyuApp):
 
     @handler.set_ev_handler(PortSet.EventTunnelKeyDel)
     def tunnel_key_del_handler(self, ev):
-        LOG.debug('tunnel_key_del ev %s', ev)
+        self.logger.debug('tunnel_key_del ev %s', ev)
 
     @handler.set_ev_handler(PortSet.EventVMPort)
     def vm_port_handler(self, ev):
-        LOG.debug('vm_port ev %s', ev)
+        self.logger.debug('vm_port ev %s', ev)
         if ev.add_del:
             self._vm_port_add(ev)
         else:
@@ -951,7 +948,7 @@ class GRETunnel(app_manager.RyuApp):
 
     @handler.set_ev_handler(PortSet.EventTunnelPort)
     def tunnel_port_handler(self, ev):
-        LOG.debug('tunnel_port ev %s', ev)
+        self.logger.debug('tunnel_port ev %s', ev)
         if ev.add_del:
             self._tunnel_port_add(ev)
         else:
@@ -961,6 +958,6 @@ class GRETunnel(app_manager.RyuApp):
     def packet_in_handler(self, ev):
         # for debug
         msg = ev.msg
-        LOG.debug('packet in ev %s msg %s', ev, ev.msg)
+        self.logger.debug('packet in ev %s msg %s', ev, ev.msg)
         if msg.buffer_id != 0xffffffff:  # TODO:XXX use constant instead of -1
             msg.datapath.send_packet_out(msg.buffer_id, msg.in_port, [])

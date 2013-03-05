@@ -32,7 +32,6 @@ from ryu.lib import dpid as dpid_lib
 from ryu.lib.ovs import bridge as ovs_bridge
 
 
-LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 CONF.register_opts([
     cfg.StrOpt('tunnel-type', default='gre',
@@ -104,11 +103,12 @@ class TunnelPort(object):
 
 class TunnelDP(object):
     def __init__(self, dpid, ovsdb_addr, tunnel_ip, tunnel_type, conf_switch_,
-                 network_api, tunnel_api):
+                 network_api, tunnel_api, logger):
         super(TunnelDP, self).__init__()
         self.dpid = dpid
         self.network_api = network_api
         self.tunnel_api = tunnel_api
+        self.logger = logger
 
         self.ovs_bridge = ovs_bridge.OVSBridge(dpid, ovsdb_addr)
 
@@ -127,7 +127,7 @@ class TunnelDP(object):
         self.ovs_bridge.init()
         for tp in self.ovs_bridge.get_tunnel_ports(self.tunnel_type):
             if tp.local_ip != self.tunnel_ip:
-                LOG.warn('unknown tunnel port %s', tp)
+                self.logger.warn('unknown tunnel port %s', tp)
                 continue
 
             remote_dpid = self.conf_switch.find_dpid(cs_key.OVS_TUNNEL_ADDR,
@@ -155,9 +155,9 @@ class TunnelDP(object):
                 return
 
             # tunnel ip address is changed.
-            LOG.warn('local ip address is changed %s: %s -> %s',
-                     dpid_lib.dpid_to_str(remote_dpid),
-                     self.tunnel_ip, remote_ip)
+            self.logger.warn('local ip address is changed %s: %s -> %s',
+                             dpid_lib.dpid_to_str(remote_dpid),
+                             self.tunnel_ip, remote_ip)
             # recreate tunnel ports.
             for tp in list(self.tunnels.values()):
                 if tp.remote_dpid is None:
@@ -171,9 +171,9 @@ class TunnelDP(object):
             return
 
         if self.tunnel_ip == remote_ip:
-            LOG.error('ip conflict: %s %s %s',
-                      dpid_lib.dpid_to_str(self.dpid),
-                      dpid_lib.dpid_to_str(remote_dpid), remote_ip)
+            self.logger.error('ip conflict: %s %s %s',
+                              dpid_lib.dpid_to_str(self.dpid),
+                              dpid_lib.dpid_to_str(remote_dpid), remote_ip)
             # XXX What should we do?
             return
 
@@ -183,9 +183,9 @@ class TunnelDP(object):
                     self._api_update(tp.port_no, remote_dpid)
                     continue
 
-                LOG.warn('remote ip address is changed %s: %s -> %s',
-                         dpid_lib.dpid_to_str(remote_dpid),
-                         tp.remote_ip, remote_ip)
+                self.logger.warn('remote ip address is changed %s: %s -> %s',
+                                 dpid_lib.dpid_to_str(remote_dpid),
+                                 tp.remote_ip, remote_ip)
                 self._del_tunnel_port(tp.port_no, self.tunnel_ip, tp.remote_ip)
 
                 new_tp = self._add_tunnel_port(remote_dpid, remote_ip)
@@ -215,14 +215,14 @@ class TunnelDP(object):
                    for tp in self.tunnels.values())
 
     def _add_tunnel_port(self, remote_dpid, remote_ip):
-        LOG.debug('add_tunnel_port local %s %s remote %s %s',
-                  dpid_lib.dpid_to_str(self.dpid), self.tunnel_ip,
-                  dpid_lib.dpid_to_str(remote_dpid), remote_ip)
+        self.logger.debug('add_tunnel_port local %s %s remote %s %s',
+                          dpid_lib.dpid_to_str(self.dpid), self.tunnel_ip,
+                          dpid_lib.dpid_to_str(remote_dpid), remote_ip)
         if self._tunnel_port_exists(remote_dpid, remote_ip):
-            LOG.debug('add_tunnel_port nop')
+            self.logger.debug('add_tunnel_port nop')
             return
 
-        LOG.debug('add_tunnel_port creating port')
+        self.logger.debug('add_tunnel_port creating port')
         port_name = self._port_name(self.tunnel_ip, remote_ip)
         self.ovs_bridge.add_tunnel_port(port_name, self.tunnel_type,
                                         self.tunnel_ip, remote_ip, 'flow')
@@ -290,7 +290,7 @@ class TunnelDP(object):
             try:
                 self._init()
             except gevent.timeout.Timeout:
-                LOG.warn('_init timeouted')
+                self.logger.warn('_init timeouted')
 
         req = None
         while True:
@@ -305,19 +305,19 @@ class TunnelDP(object):
 
                 # shoud use dispatcher?
                 if isinstance(req, self._RequestUpdateRemote):
-                    LOG.debug('update_remote')
+                    self.logger.debug('update_remote')
                     self._update_remote(req.remote_dpid, req.remote_ip)
                 elif isinstance(req, self._RequestAddTunnelPort):
-                    LOG.debug('add_tunnel_port')
+                    self.logger.debug('add_tunnel_port')
                     self._add_tunnel_port(req.remote_dpid, req.remote_ip)
                 elif isinstance(req, self._RequestDelTunnelPort):
-                    LOG.debug('del_tunnel_port')
+                    self.logger.debug('del_tunnel_port')
                     self._del_tunnel_port_ip(req.remote_ip)
                 else:
-                    LOG.error('unknown request %s', req)
+                    self.logger.error('unknown request %s', req)
             except gevent.timeout.Timeout:
                 # timeout. try again
-                LOG.warn('timeout try again')
+                self.logger.warn('timeout try again')
                 continue
             else:
                 # Done. move onto next request
@@ -369,13 +369,15 @@ class TunnelPortUpdater(app_manager.RyuApp):
         setattr(self, self._LOCK, gevent.coros.Semaphore())
 
     def _ovsdb_update(self, dpid, ovsdb_addr, ovs_tunnel_addr):
-        LOG.debug('_ovsdb_update %s %s %s',
-                  dpid_lib.dpid_to_str(dpid), ovsdb_addr, ovs_tunnel_addr)
+        self.logger.debug('_ovsdb_update %s %s %s',
+                          dpid_lib.dpid_to_str(dpid), ovsdb_addr,
+                          ovs_tunnel_addr)
         if dpid not in self.tunnel_dpset:
             # TODO:XXX changing ovsdb_addr, ovs_tunnel_addr
             tunnel_dp = TunnelDP(dpid, ovsdb_addr, ovs_tunnel_addr,
                                  self.tunnel_type, self.cs,
-                                 self.network_api, self.tunnel_api)
+                                 self.network_api, self.tunnel_api,
+                                 self.logger)
             self.tunnel_dpset[dpid] = tunnel_dp
 
         tunnel_dp = self.tunnel_dpset.get(dpid)
@@ -385,8 +387,8 @@ class TunnelPortUpdater(app_manager.RyuApp):
 
     @handler.set_ev_cls(conf_switch.EventConfSwitchSet)
     def conf_switch_set_handler(self, ev):
-        LOG.debug('conf_switch_set_handler %s %s %s',
-                  dpid_lib.dpid_to_str(ev.dpid), ev.key, ev.value)
+        self.logger.debug('conf_switch_set_handler %s %s %s',
+                          dpid_lib.dpid_to_str(ev.dpid), ev.key, ev.value)
         dpid = ev.dpid
         if (ev.key == cs_key.OVSDB_ADDR or ev.key == cs_key.OVS_TUNNEL_ADDR):
             if ((dpid, cs_key.OVSDB_ADDR) in self.cs and
@@ -405,7 +407,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
         pass
 
     def _add_tunnel_ports(self, tunnel_dp, remote_dpids):
-        LOG.debug('_add_tunnel_ports %s %s', tunnel_dp, remote_dpids)
+        self.logger.debug('_add_tunnel_ports %s %s', tunnel_dp, remote_dpids)
         for remote_dpid in remote_dpids:
             remote_dp = self.tunnel_dpset.get(remote_dpid)
             if remote_dp is None:
@@ -416,7 +418,8 @@ class TunnelPortUpdater(app_manager.RyuApp):
                                               tunnel_dp.tunnel_ip)
 
     def _vm_port_add(self, network_id, dpid):
-        LOG.debug('_vm_port_add %s %s', network_id, dpid_lib.dpid_to_str(dpid))
+        self.logger.debug('_vm_port_add %s %s', network_id,
+                          dpid_lib.dpid_to_str(dpid))
         dpids = self.nw.get_dpids(network_id)
         dpids.remove(dpid)
         for remote_dpid in dpids:
@@ -428,7 +431,8 @@ class TunnelPortUpdater(app_manager.RyuApp):
         self._add_tunnel_ports(tunnel_dp, dpids)
 
     def _vm_port_del(self, network_id, dpid):
-        LOG.debug('_vm_port_del %s %s', network_id, dpid_lib.dpid_to_str(dpid))
+        self.logger.debug('_vm_port_del %s %s', network_id,
+                          dpid_lib.dpid_to_str(dpid))
         if len(self.nw.get_ports(dpid, network_id)) > 0:
             return
 
@@ -459,7 +463,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
 
     @handler.set_ev_cls(network.EventNetworkPort)
     def network_port_handler(self, ev):
-        LOG.debug('network_port_handler %s', ev)
+        self.logger.debug('network_port_handler %s', ev)
         if ev.network_id in rest_nw_id.RESERVED_NETWORK_IDS:
             return
 

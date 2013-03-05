@@ -34,9 +34,6 @@ from ryu.lib.mac import haddr_to_str
 from ryu.lib import mac
 
 
-LOG = logging.getLogger('ryu.app.simple_isolation')
-
-
 class SimpleIsolation(app_manager.RyuApp):
     _CONTEXTS = {
         'network': network.Network,
@@ -88,28 +85,29 @@ class SimpleIsolation(app_manager.RyuApp):
 
         if not self.nw.same_network(datapath.id, nw_id, out_port,
                                     NW_ID_EXTERNAL):
-            LOG.debug('packet is blocked src %s dst %s '
-                      'from %d to %d on datapath %d',
-                      haddr_to_str(src), haddr_to_str(dst),
-                      msg.in_port, out_port, datapath.id)
+            self.logger.debug('packet is blocked src %s dst %s '
+                              'from %d to %d on datapath %d',
+                              haddr_to_str(src), haddr_to_str(dst),
+                              msg.in_port, out_port, datapath.id)
             return
 
-        LOG.debug("learned dpid %s in_port %d out_port %d src %s dst %s",
-                  datapath.id, msg.in_port, out_port,
-                  haddr_to_str(src), haddr_to_str(dst))
+        self.logger.debug("learned dpid %s in_port %d out_port "
+                          "%d src %s dst %s",
+                          datapath.id, msg.in_port, out_port,
+                          haddr_to_str(src), haddr_to_str(dst))
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
         self._modflow_and_send_packet(msg, src, dst, actions)
 
     def _flood_to_nw_id(self, msg, src, dst, nw_id):
         datapath = msg.datapath
         actions = []
-        LOG.debug("dpid %s in_port %d src %s dst %s ports %s",
-                  datapath.id, msg.in_port,
-                  haddr_to_str(src), haddr_to_str(dst),
-                  self.nw.dpids.get(datapath.id, {}).items())
+        self.logger.debug("dpid %s in_port %d src %s dst %s ports %s",
+                          datapath.id, msg.in_port,
+                          haddr_to_str(src), haddr_to_str(dst),
+                          self.nw.dpids.get(datapath.id, {}).items())
         for port_no in self.nw.filter_ports(datapath.id, msg.in_port,
                                             nw_id, NW_ID_EXTERNAL):
-            LOG.debug("port_no %s", port_no)
+            self.logger.debug("port_no %s", port_no)
             actions.append(datapath.ofproto_parser.OFPActionOutput(port_no))
         self._modflow_and_send_packet(msg, src, dst, actions)
 
@@ -129,7 +127,7 @@ class SimpleIsolation(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
-        # LOG.debug('packet in ev %s msg %s', ev, ev.msg)
+        # self.logger.debug('packet in ev %s msg %s', ev, ev.msg)
         msg = ev.msg
         datapath = msg.datapath
         ofproto = datapath.ofproto
@@ -151,9 +149,9 @@ class SimpleIsolation(app_manager.RyuApp):
                 # allow external -> known nw id change
                 self.mac2net.add_mac(src, port_nw_id, NW_ID_EXTERNAL)
             except MacAddressDuplicated:
-                LOG.warn('mac address %s is already in use.'
-                         ' So (dpid %s, port %s) can not use it',
-                         haddr_to_str(src), datapath.id, msg.in_port)
+                self.logger.warn('mac address %s is already in use.'
+                                 ' So (dpid %s, port %s) can not use it',
+                                 haddr_to_str(src), datapath.id, msg.in_port)
                 #
                 # should we install drop action pro-actively for future?
                 #
@@ -241,7 +239,7 @@ class SimpleIsolation(app_manager.RyuApp):
                                                             out_port)
                     else:
                         # should not occur?
-                        LOG.debug("should this case happen?")
+                        self.logger.debug("should this case happen?")
                         self._drop_packet(msg)
                 elif dst_nw_id == NW_ID_EXTERNAL:
                     # try learned mac
@@ -251,7 +249,7 @@ class SimpleIsolation(app_manager.RyuApp):
                                                         src_nw_id, out_port)
                 else:
                     assert dst_nw_id == NW_ID_UNKNOWN
-                    LOG.debug("Unknown dst_nw_id")
+                    self.logger.debug("Unknown dst_nw_id")
                     self._drop_packet(msg)
             elif src_nw_id == NW_ID_EXTERNAL:
                 self._modflow_and_drop_packet(msg, src, dst)
@@ -263,7 +261,7 @@ class SimpleIsolation(app_manager.RyuApp):
             # drop packets
             assert port_nw_id == NW_ID_UNKNOWN
             self._drop_packet(msg)
-            # LOG.debug("Unknown port_nw_id")
+            # self.logger.debug("Unknown port_nw_id")
 
     def _port_add(self, ev):
         #

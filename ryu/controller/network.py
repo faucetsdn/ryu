@@ -25,9 +25,6 @@ from ryu.exception import NetworkNotFound, NetworkAlreadyExist
 from ryu.exception import PortAlreadyExist, PortNotFound, PortUnknown
 
 
-LOG = logging.getLogger('ryu.controller.network')
-
-
 class MacAddressAlreadyExist(ryu_exc.RyuException):
     message = 'port (%(dpid)s, %(port)s) has already mac %(mac_address)s'
 
@@ -434,9 +431,9 @@ class Network(app_manager.RyuApp):
             # allow external network -> known network id
             return True
 
-        LOG.debug('blocked dpid %s nw_id %s out_port %d out_nw %s'
-                  'external %s',
-                  dpid, nw_id, out_port, out_nw, allow_nw_id_external)
+        self.logger.debug('blocked dpid %s nw_id %s out_port %d out_nw %s'
+                          'external %s',
+                          dpid, nw_id, out_port, out_nw, allow_nw_id_external)
         return False
 
     def get_network(self, dpid, port):

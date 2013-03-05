@@ -63,6 +63,7 @@ class RyuApp(object):
         self.threads = []
         self.events = Queue()
         self.replies = Queue()
+        self.logger = logging.getLogger(self.name)
         self.threads.append(gevent.spawn(self._event_loop))
 
     def register_handler(self, ev_cls, handler):
