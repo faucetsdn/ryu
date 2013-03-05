@@ -406,7 +406,7 @@ OFPFF_NO_PKT_COUNTS = 1 << 3    # Don't keep track of packet count.
 OFPFF_NO_BYT_COUNTS = 1 << 4    # Don't keep track of byte count.
 
 # struct ofp_group_mod
-OFP_GROUP_MOD_PACK_STR = '!HBBI'
+OFP_GROUP_MOD_PACK_STR = '!HBxI'
 OFP_GROUP_MOD_SIZE = 16
 assert (calcsize(OFP_GROUP_MOD_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_GROUP_MOD_SIZE)

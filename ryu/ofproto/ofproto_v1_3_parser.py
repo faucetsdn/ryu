@@ -1894,6 +1894,19 @@ class OFPBucket(object):
 
         return msg
 
+    def serialize(self, buf, offset):
+        action_offset = offset + ofproto_v1_3.OFP_BUCKET_SIZE
+        action_len = 0
+        for a in self.actions:
+            a.serialize(buf, action_offset)
+            action_offset += a.len
+            action_len += a.len
+
+        self.len = utils.round_up(ofproto_v1_3.OFP_BUCKET_SIZE + action_len,
+                                  8)
+        msg_pack_into(ofproto_v1_3.OFP_BUCKET_PACK_STR, buf, offset,
+                      self.len, self.weight, self.watch_port, self.watch_group)
+
 
 @_set_msg_type(ofproto_v1_3.OFPT_GROUP_MOD)
 class OFPGroupMod(MsgBase):
@@ -1909,9 +1922,9 @@ class OFPGroupMod(MsgBase):
                       ofproto_v1_3.OFP_HEADER_SIZE,
                       self.command, self.type, self.group_id)
 
-        offset = ofproto_v1_3.OFP_HEADER_SIZE + ofproto_v1_3.OFP_GROUP_MOD_SIZE
+        offset = ofproto_v1_3.OFP_GROUP_MOD_SIZE
         for b in self.buckets:
-            b.serialize(self, buf, offset)
+            b.serialize(self.buf, offset)
             offset += b.len
 
 
