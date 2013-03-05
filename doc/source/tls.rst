@@ -48,9 +48,12 @@ Testing TLS Connection
 Configuring ovs-vswitchd to use CA files using the ovs-vsctl "set-ssl"
 command, e.g.::
 
-    % ovs-vsctl set-ssl sc-privkey.pem sc-cert.pem /usr/local/var/lib/openvswitch/pki/controllerca/cacert.pem
+    % ovs-vsctl set-ssl /etc/openvswitch/sc-privkey.pem /etc/openvswitch/sc-cert.pem /usr/local/var/lib/openvswitch/pki/controllerca/cacert.pem
     % ovs-vsctl add-br br0
     % ovs-vsctl set-controller br0 ssl:127.0.0.1:6633
+
+Substitute the correct file names, if they differ from the ones used
+above. You should use absolute file names.
 
 
 Run Ryu with CA files::
