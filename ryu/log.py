@@ -78,9 +78,9 @@ def init_log():
         mode = int(CONF.log_file_mode, 8)
         os.chmod(log_file, mode)
 
-    if CONF.verbose:
-        log.setLevel(logging.DEBUG)
-    elif CONF.default_log_level is not None:
+    if CONF.default_log_level is not None:
         log.setLevel(CONF.default_log_level)
+    elif CONF.verbose:
+        log.setLevel(logging.DEBUG)
     else:
         log.setLevel(logging.INFO)
