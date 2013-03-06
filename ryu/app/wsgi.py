@@ -15,14 +15,12 @@
 # limitations under the License.
 
 from oslo.config import cfg
-import logging
 import webob.dec
 
 from gevent import pywsgi
 from routes import Mapper
 from routes.util import URLGenerator
 
-LOG = logging.getLogger('ryu.app.wsgi')
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
@@ -53,7 +51,6 @@ class ControllerBase(object):
             if attr in kwargs:
                 del kwargs[attr]
 
-        # LOG.debug('kwargs %s', kwargs)
         return getattr(self, action)(req, **kwargs)
 
 
@@ -66,9 +63,6 @@ class WSGIApplication(object):
 
     @webob.dec.wsgify
     def __call__(self, req):
-        # LOG.debug('mapper %s', self.mapper)
-        # LOG.debug('req: %s\n', req)
-        # LOG.debug('\nreq.environ: %s', req.environ)
         match = self.mapper.match(environ=req.environ)
 
         if not match:
