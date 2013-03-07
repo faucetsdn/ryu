@@ -11,6 +11,12 @@
     xmlns:yang="urn:ietf:params:xml:ns:yang:ietf-yang-types"
     xmlns:inet="urn:ietf:params:xml:ns:yang:ietf-inet-types"
     xmlns:of11-config="urn:onf:of111:config:yang">
+    <xs:import namespace="urn:ietf:params:xml:ns:yang:ietf-inet-types"
+	       schemaLocation="ietf-inet-types.xsd"/>
+    <xs:import namespace="urn:ietf:params:xml:ns:yang:ietf-yang-types"
+	       schemaLocation="ietf-yang-types.xsd"/>
+    <xs:import namespace="urn:ietf:params:xml:ns:netconf:base:1.0"
+	       schemaLocation="../netconf/netconf.xsd"/>
     <xs:annotation>
         <xs:documentation> This schema was generated from the YANG module of-config1.1.1 by pyang
             version 1.2. The schema describes an instance document consisting of the entire

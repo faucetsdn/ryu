@@ -6,6 +6,12 @@
            xmlns="urn:onf:params:xml:ns:onf:of12:config"
            xmlns:of12-config="urn:onf:params:xml:ns:onf:of12:config"
            xmlns:inet="urn:ietf:params:xml:ns:yang:ietf-inet-types">
+    <xs:import namespace="http://www.w3.org/2000/09/xmldsig#"
+	       schemaLocation="xmldsig-core-schema.xsd"/>
+    <xs:import namespace="urn:ietf:params:xml:ns:yang:ietf-inet-types"
+	       schemaLocation="ietf-inet-types.xsd"/>
+    <xs:import namespace="urn:ietf:params:xml:ns:netconf:base:1.0"
+	       schemaLocation="../netconf/netconf.xsd"/>
     <xs:element name="capable-switch" type="OFCapableSwitchType">
         <xs:annotation>
             <xs:documentation>The OpenFlow Capable Switch and its configurationpoints, logical
