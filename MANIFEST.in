@@ -1,6 +1,7 @@
 include LICENSE
 include MANIFEST.in
 include *.rst
+recursive-include *.xsd
 graft contrib
 graft doc
 graft etc
