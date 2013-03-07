@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:yin="urn:ietf:params:xml:schema:yang:yin:1"
+           targetNamespace="urn:ietf:params:xml:ns:yang:ietf-inet-types"
+           xmlns="urn:ietf:params:xml:ns:yang:ietf-inet-types"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="2010-09-24"
+           xml:lang="en"
+           xmlns:inet="urn:ietf:params:xml:ns:yang:ietf-inet-types">
+
+  <xs:annotation>
+    <xs:documentation>
+      This schema was generated from the YANG module ietf-inet-types
+      by pyang version 1.0.
+
+      The schema describes an instance document consisting
+      of the entire configuration data store, operational
+      data, rpc operations, and notifications.
+      This schema can thus NOT be used as-is to
+      validate NETCONF PDUs.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:annotation>
+    <xs:documentation>
+      This module contains a collection of generally useful derived
+      YANG data types for Internet addresses and related things.
+
+      Copyright (c) 2010 IETF Trust and the persons identified as
+      authors of the code.  All rights reserved.
+
+      Redistribution and use in source and binary forms, with or without
+      modification, is permitted pursuant to, and subject to the license
+      terms contained in, the Simplified BSD License set forth in Section
+      4.c of the IETF Trust's Legal Provisions Relating to IETF Documents
+      (http://trustee.ietf.org/license-info).
+
+      This version of this YANG module is part of RFC 6021; see
+      the RFC itself for full legal notices.
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- YANG typedefs -->
+
+  <xs:simpleType name="ip-version">
+    <xs:annotation>
+      <xs:documentation>
+        This value represents the version of the IP protocol.
+
+        In the value set and its semantics, this type is equivalent
+        to the InetVersion textual convention of the SMIv2.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="unknown"/>
+      <xs:enumeration value="ipv4"/>
+      <xs:enumeration value="ipv6"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="dscp">
+    <xs:annotation>
+      <xs:documentation>
+        The dscp type represents a Differentiated Services Code-Point
+        that may be used for marking packets in a traffic stream.
+
+        In the value set and its semantics, this type is equivalent
+        to the Dscp textual convention of the SMIv2.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:unsignedByte">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="63"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ipv6-flow-label">
+    <xs:annotation>
+      <xs:documentation>
+        The flow-label type represents flow identifier or Flow Label
+        in an IPv6 packet header that may be used to discriminate
+        traffic flows.
+
+        In the value set and its semantics, this type is equivalent
+        to the IPv6FlowLabel textual convention of the SMIv2.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:unsignedInt">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1048575"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="port-number">
+    <xs:annotation>
+      <xs:documentation>
+        The port-number type represents a 16-bit port number of an
+        Internet transport layer protocol such as UDP, TCP, DCCP, or
+        SCTP.  Port numbers are assigned by IANA.  A current list of
+        all assignments is available from &lt;http://www.iana.org/&gt;.
+
+        Note that the port number value zero is reserved by IANA.  In
+        situations where the value zero does not make sense, it can
+        be excluded by subtyping the port-number type.
+
+        In the value set and its semantics, this type is equivalent
+        to the InetPortNumber textual convention of the SMIv2.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:unsignedShort">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="65535"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="as-number">
+    <xs:annotation>
+      <xs:documentation>
+        The as-number type represents autonomous system numbers
+        which identify an Autonomous System (AS).  An AS is a set
+        of routers under a single technical administration, using
+        an interior gateway protocol and common metrics to route
+        packets within the AS, and using an exterior gateway
+        protocol to route packets to other ASs'.  IANA maintains
+        the AS number space and has delegated large parts to the
+        regional registries.
+
+        Autonomous system numbers were originally limited to 16
+        bits.  BGP extensions have enlarged the autonomous system
+        number space to 32 bits.  This type therefore uses an uint32
+        base type without a range restriction in order to support
+        a larger autonomous system number space.
+
+        In the value set and its semantics, this type is equivalent
+        to the InetAutonomousSystemNumber textual convention of
+        the SMIv2.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:unsignedInt">
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ip-address">
+    <xs:annotation>
+      <xs:documentation>
+        The ip-address type represents an IP address and is IP
+        version neutral.  The format of the textual representations
+        implies the IP version.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:union memberTypes="inet:ipv4-address inet:ipv6-address">
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="ipv4-address">
+    <xs:annotation>
+      <xs:documentation>
+        The ipv4-address type represents an IPv4 address in
+        dotted-quad notation.  The IPv4 address may include a zone
+        index, separated by a % sign.
+
+        The zone index is used to disambiguate identical address
+        values.  For link-local addresses, the zone index will
+        typically be the interface index number or the name of an
+        interface.  If the zone index is not present, the default
+        zone of the device will be used.
+
+        The canonical format for the zone index is the numerical
+        format
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:string">
+    <xs:pattern value="(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(%[\p{N}\p{L}]+)?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ipv6-address">
+    <xs:annotation>
+      <xs:documentation>
+        The ipv6-address type represents an IPv6 address in full,
+        mixed, shortened, and shortened-mixed notation.  The IPv6
+        address may include a zone index, separated by a % sign.
+
+        The zone index is used to disambiguate identical address
+        values.  For link-local addresses, the zone index will
+        typically be the interface index number or the name of an
+        interface.  If the zone index is not present, the default
+        zone of the device will be used.
+
+        The canonical format of IPv6 addresses uses the compressed
+        format described in RFC 4291, Section 2.2, item 2 with the
+        following additional rules: the :: substitution must be
+        applied to the longest sequence of all-zero 16-bit chunks
+        in an IPv6 address.  If there is a tie, the first sequence
+        of all-zero 16-bit chunks is replaced by ::.  Single
+        all-zero 16-bit chunks are not compressed.  The canonical
+        format uses lowercase characters and leading zeros are
+        not allowed.  The canonical format for the zone index is
+        the numerical format as described in RFC 4007, Section
+        11.2.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:string">
+    <xs:pattern value="(((:|[0-9a-fA-F]{0,4}):)([0-9a-fA-F]{0,4}:){0,5}((([0-9a-fA-F]{0,4}:)?(:|[0-9a-fA-F]{0,4}))|(((25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])))(%[\p{N}\p{L}]+)?)|((([^:]+:){6}(([^:]+:[^:]+)|(.*\..*)))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?)(%.+)?)"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ip-prefix">
+    <xs:annotation>
+      <xs:documentation>
+        The ip-prefix type represents an IP prefix and is IP
+        version neutral.  The format of the textual representations
+        implies the IP version.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:union memberTypes="inet:ipv4-prefix inet:ipv6-prefix">
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="ipv4-prefix">
+    <xs:annotation>
+      <xs:documentation>
+        The ipv4-prefix type represents an IPv4 address prefix.
+        The prefix length is given by the number following the
+        slash character and must be less than or equal to 32.
+
+        A prefix length value of n corresponds to an IP address
+        mask that has n contiguous 1-bits from the most
+        significant bit (MSB) and all other bits set to 0.
+
+        The canonical format of an IPv4 prefix has all bits of
+        the IPv4 address set to zero that are not part of the
+        IPv4 prefix.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:string">
+    <xs:pattern value="(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])/(([0-9])|([1-2][0-9])|(3[0-2]))"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ipv6-prefix">
+    <xs:annotation>
+      <xs:documentation>
+        The ipv6-prefix type represents an IPv6 address prefix.
+        The prefix length is given by the number following the
+        slash character and must be less than or equal 128.
+
+        A prefix length value of n corresponds to an IP address
+        mask that has n contiguous 1-bits from the most
+        significant bit (MSB) and all other bits set to 0.
+
+        The IPv6 address should have all bits that do not belong
+        to the prefix set to zero.
+
+        The canonical format of an IPv6 prefix has all bits of
+        the IPv6 address set to zero that are not part of the
+        IPv6 prefix.  Furthermore, IPv6 address is represented
+        in the compressed format described in RFC 4291, Section
+        2.2, item 2 with the following additional rules: the ::
+        substitution must be applied to the longest sequence of
+        all-zero 16-bit chunks in an IPv6 address.  If there is
+        a tie, the first sequence of all-zero 16-bit chunks is
+        replaced by ::.  Single all-zero 16-bit chunks are not
+        compressed.  The canonical format uses lowercase
+        characters and leading zeros are not allowed.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:string">
+    <xs:pattern value="(((:|[0-9a-fA-F]{0,4}):)([0-9a-fA-F]{0,4}:){0,5}((([0-9a-fA-F]{0,4}:)?(:|[0-9a-fA-F]{0,4}))|(((25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9]?[0-9])))(/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8]))))|((([^:]+:){6}(([^:]+:[^:]+)|(.*\..*)))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?)(/.+))"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="domain-name">
+    <xs:annotation>
+      <xs:documentation>
+        The domain-name type represents a DNS domain name.  The
+        name SHOULD be fully qualified whenever possible.
+
+        Internet domain names are only loosely specified.  Section
+        3.5 of RFC 1034 recommends a syntax (modified in Section
+        2.1 of RFC 1123).  The pattern above is intended to allow
+        for current practice in domain name use, and some possible
+        future expansion.  It is designed to hold various types of
+        domain names, including names used for A or AAAA records
+        (host names) and other records, such as SRV records.  Note
+        that Internet host names have a stricter syntax (described
+        in RFC 952) than the DNS recommendations in RFCs 1034 and
+        1123, and that systems that want to store host names in
+        schema nodes using the domain-name type are recommended to
+        adhere to this stricter standard to ensure interoperability.
+
+        The encoding of DNS names in the DNS protocol is limited
+        to 255 characters.  Since the encoding consists of labels
+        prefixed by a length bytes and there is a trailing NULL
+        byte, only 253 characters can appear in the textual dotted
+        notation.
+
+        The description clause of schema nodes using the domain-name
+        type MUST describe when and how these names are resolved to
+        IP addresses.  Note that the resolution of a domain-name value
+        may require to query multiple DNS records (e.g., A for IPv4
+        and AAAA for IPv6).  The order of the resolution process and
+        which DNS record takes precedence can either be defined
+        explicitely or it may depend on the configuration of the
+        resolver.
+
+        Domain-name values use the US-ASCII encoding.  Their canonical
+        format uses lowercase US-ASCII characters.  Internationalized
+        domain names MUST be encoded in punycode as described in RFC
+        3492
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="t0">
+      <xs:minLength value="1"/>
+      <xs:maxLength value="253"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="host">
+    <xs:annotation>
+      <xs:documentation>
+        The host type represents either an IP address or a DNS
+        domain name.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:union memberTypes="inet:ip-address inet:domain-name">
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="uri">
+    <xs:annotation>
+      <xs:documentation>
+        The uri type represents a Uniform Resource Identifier
+        (URI) as defined by STD 66.
+
+        Objects using the uri type MUST be in US-ASCII encoding,
+        and MUST be normalized as described by RFC 3986 Sections
+        6.2.1, 6.2.2.1, and 6.2.2.2.  All unnecessary
+        percent-encoding is removed, and all case-insensitive
+        characters are set to lowercase except for hexadecimal
+        digits, which are normalized to uppercase as described in
+        Section 6.2.2.1.
+
+        The purpose of this normalization is to help provide
+        unique URIs.  Note that this normalization is not
+        sufficient to provide uniqueness.  Two URIs that are
+        textually distinct after this normalization may still be
+        equivalent.
+
+        Objects using the uri type may restrict the schemes that
+        they permit.  For example, 'data:' and 'urn:' schemes
+        might not be appropriate.
+
+        A zero-length URI is not a valid URI.  This can be used to
+        express 'URI absent' where required.
+
+        In the value set and its semantics, this type is equivalent
+        to the Uri SMIv2 textual convention defined in RFC 5017.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:restriction base="xs:string">
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <!-- locally generated simpleType helpers -->
+
+  <xs:simpleType name="t0">
+    <xs:restriction base="xs:string">
+    <xs:pattern value="((([a-zA-Z0-9_]([a-zA-Z0-9\-_]){0,61})?[a-zA-Z0-9]\.)*([a-zA-Z0-9_]([a-zA-Z0-9\-_]){0,61})?[a-zA-Z0-9]\.?)|\."/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

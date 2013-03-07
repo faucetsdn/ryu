@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+           elementFormDefault="qualified"
+           targetNamespace="urn:onf:params:xml:ns:onf:of12:config"
+           xmlns="urn:onf:params:xml:ns:onf:of12:config"
+           xmlns:of12-config="urn:onf:params:xml:ns:onf:of12:config"
+           xmlns:inet="urn:ietf:params:xml:ns:yang:ietf-inet-types">
+    <xs:element name="capable-switch" type="OFCapableSwitchType">
+        <xs:annotation>
+            <xs:documentation>The OpenFlow Capable Switch and its configurationpoints, logical
+            switches and resources available to logicalswitches. </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:simpleType name="OFConfigID">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+    <xs:complexType name="OFCapableSwitchType">
+        <xs:annotation>
+            <xs:documentation>Representation of an OpenFlow Capable Switch.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="id" type="OFConfigID">
+                <xs:annotation>
+                    <xs:documentation>An unique but locally arbitrary identifier that identifies a
+                    Capable Switch towards management systems and that is persistent across
+                    reboots of the system. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="configuration-points" minOccurs="0" type="OFConfigurationPointListType">
+                <xs:annotation>
+                    <xs:documentation>The list of all configuration points known to the OpenFlow
+                    Capable Switch that may manage it using OF-CONFIG. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="resources" minOccurs="0" type="OFCapableSwitchResourceListType">
+                <xs:annotation>
+                    <xs:documentation>This element contains lists of all resources of the OpenFlow
+                    Capable Switch that can be used by OpenFlow Logical Switches.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="logical-switches" minOccurs="0" type="OFLogicalSwitchListType">
+                <xs:annotation>
+                    <xs:documentation>List of all OpenFlow Logical Switches available on the
+                    OpenFlow Capable Switch. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFConfigurationPointListType">
+        <xs:annotation>
+            <xs:documentation/>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="configuration-point" type="OFConfigurationPointType"
+                        maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFCapableSwitchResourceListType">
+        <xs:sequence>
+            <xs:element name="port" type="OFPortType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="queue" type="OFQueueType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="owned-certificate" type="OFOwnedCertificateType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="external-certificate" type="OFExternalCertificateType"
+                minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="flow-table" type="OFFlowTableType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFLogicalSwitchListType">
+        <xs:sequence>
+            <xs:element name="logical-switch" type="OFLogicalSwitchType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFConfigurationPointType">
+        <xs:annotation>
+            <xs:documentation>Representation of an OpenFlow Configuration Point. </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="id" type="OFConfigID">
+                <xs:annotation>
+                    <xs:documentation>An identifier that identifies a Configuration Point of the
+                    OpenFlow Capable Switch. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="uri" type="inet:uri">
+                <xs:annotation>
+                    <xs:documentation>A locator of the Configuration Point. This element MAY contain
+                    a locator of the configuration point including, for example, an IP address
+                    and a port number. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="protocol" type="OFConfigurationPointProtocolType">
+                <xs:annotation>
+                    <xs:documentation>The transport protocol that the Configuration Point uses when
+                    communicating via NETCONF with the OpenFlow Capable Switch.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFConfigurationPointProtocolType">
+        <xs:annotation>
+            <xs:documentation>The mappings of NETCONF to different transport protocols are defined
+            in RFC 6242 for SSH, RFC 4743 for SOAP, RFC 4744 for BEEP, and RFC 5539 for TLS.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="ssh"/>
+            <xs:enumeration value="soap"/>
+            <xs:enumeration value="tls"/>
+            <xs:enumeration value="beep"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFLogicalSwitchType">
+        <xs:annotation>
+            <xs:documentation>The representation of an OpenFlow Logical Switch </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="id" minOccurs="0" type="OFConfigID">
+                <xs:annotation>
+                    <xs:documentation>An unique but locally arbitrary identifier that identifies an
+                    OpenFlow Logical Switch within an OpenFlow Capable Switch. It is persistent
+                    across reboots of the system. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="capabilities" minOccurs="0" type="OFLogicalSwitchCapabilitiesType">
+                <xs:annotation>
+                    <xs:documentation>Capability items of logical switch. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="datapath-id" type="OFConfigID">
+                <xs:annotation>
+                    <xs:documentation>A unique identifier that identifiers an OpenFlow Logical
+                    Switch within the context of an OpenFlow Controller. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="enabled" minOccurs="0" type="xs:boolean"/>
+            <xs:element name="check-controller-certificate" minOccurs="0" type="xs:boolean"/>
+            <xs:element name="lost-connection-behavior" minOccurs="0"
+                        type="OFLogicalSwitchLostConnnectionBehavior"/>
+            <xs:element name="controllers" minOccurs="0" type="OFControllerListType">
+                <xs:annotation>
+                    <xs:documentation>The list of controllers that are assigned to the OpenFlow
+                    Logical Switch. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="resources" minOccurs="0" type="OFLogicalSwitchResourceListType">
+                <xs:annotation>
+                    <xs:documentation>The list of references to all resources of the OpenFlow
+                    Capable Switch that the OpenFlow Logical Switch has exclusive access to.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFLogicalSwitchLostConnnectionBehavior">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="failSecureMode"/>
+            <xs:enumeration value="failStandaloneMode"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFControllerListType">
+        <xs:sequence>
+            <xs:element name="controller" type="OFControllerType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFLogicalSwitchResourceListType">
+        <xs:sequence>
+            <xs:element name="port" type="OFConfigID" maxOccurs="unbounded"/>
+            <xs:element name="queue" type="OFConfigID" maxOccurs="unbounded"/>
+            <xs:element name="certificate" type="OFConfigID" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="flow-table" type="OFConfigID" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFLogicalSwitchCapabilitiesType">
+        <xs:sequence>
+            <xs:element name="max-buffered-packets" type="xs:integer">
+                <xs:annotation>
+                    <xs:documentation>The maximum number of packets the switch can buffer when
+                    sending packets to the controller using packet-in messages. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="max-tables" type="xs:integer">
+                <xs:annotation>
+                    <xs:documentation> The number of flow tables supported by the switch. See
+                    OpenFlow protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="max-ports" type="xs:integer">
+                <xs:annotation>
+                    <xs:documentation> The number of ports supported by the switch. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="flow-statistics" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation> Whether the switch supports flow statistics. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="table-statistics" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation> Whether the switch supports table statistics. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="port-statistics" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>Whether the switch supports port statistics. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="group-statistics" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation> Whether the switch supports group statistics. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="queue-statistics" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>Whether the switch supports queue statistics. See OpenFlow
+                    protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="reassemble-ip-fragments" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>Whether the switch supports reassemble IP fragments. See
+                    OpenFlow protocol 1.2 section A.3.1 </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="block-looping-ports" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>"true" indicates that a switch protocol outside of OpenFlow,
+                    such as 802.1D Spanning Tree, will detect topology loops and block ports to
+                    prevent packet loops. See OpenFlow protocol 1.2 section A.3.1
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="reserved-port-types" type="OFReservedPortTypes">
+                <xs:annotation>
+                    <xs:documentation>Specify generic forwarding actions such as sending to the
+                    controller, ooding, or forwarding using non-OpenFlow methods, such as
+                    "normal" switch processing. SeeOpenFlow protocol 1.2 section 4.5.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="group-types" type="OFGroupTypes">
+                <xs:annotation>
+                    <xs:documentation>The group types supported by the switch. SeeOpenFlow protocol
+                    1.2 section 5.4.1. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="group-capabilities" type="OFGroupCapabilities">
+                <xs:annotation>
+                    <xs:documentation>The group capabilities supported by the switch. SeeOpenFlow
+                    protocol 1.2 section A.3.5.9. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="action-types" type="OFActionTypes">
+                <xs:annotation>
+                    <xs:documentation>The action types supported by the switch. See OpenFlow
+                    protocol 1.2 section 5.9 and A.2.5. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="instruction-types" type="OFInstructionTypes">
+                <xs:annotation>
+                    <xs:documentation>The instruction types supported by the switch. See OpenFlow
+                    protocol 1.2 section 5.6. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFReservedPortTypes">
+        <xs:sequence minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="type" type="OFReservedPortType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFReservedPortType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="all"/>
+            <xs:enumeration value="controller"/>
+            <xs:enumeration value="table"/>
+            <xs:enumeration value="inport"/>
+            <xs:enumeration value="any"/>
+            <xs:enumeration value="local"/>
+            <xs:enumeration value="normal"/>
+            <xs:enumeration value="flood"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFGroupTypes">
+        <xs:sequence minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="type" type="OFGroupType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFGroupType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="all"/>
+            <xs:enumeration value="select"/>
+            <xs:enumeration value="indirect"/>
+            <xs:enumeration value="fast-failover"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFGroupCapabilities">
+        <xs:sequence minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="capability" type="OFGroupCapability"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFGroupCapability">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="select-weight"/>
+            <xs:enumeration value="select-liveness"/>
+            <xs:enumeration value="chaining"/>
+            <xs:enumeration value="chaining-check"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFActionTypes">
+        <xs:sequence minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="type" type="OFActionType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFActionType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="output"/>
+            <xs:enumeration value="copy-ttl-out"/>
+            <xs:enumeration value="copy-ttl-in"/>
+            <xs:enumeration value="set-mpls-ttl"/>
+            <xs:enumeration value="dec-mpls-ttl"/>
+            <xs:enumeration value="push-vlan"/>
+            <xs:enumeration value="pop-vlan"/>
+            <xs:enumeration value="push-mpls"/>
+            <xs:enumeration value="pop-mpls"/>
+            <xs:enumeration value="set-queue"/>
+            <xs:enumeration value="group"/>
+            <xs:enumeration value="set-nw-ttl"/>
+            <xs:enumeration value="dec-nw-ttl"/>
+            <xs:enumeration value="pop-mpls"/>
+            <xs:enumeration value="set-field"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFInstructionTypes">
+        <xs:sequence minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="type" type="OFInstructionType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFInstructionType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="apply-actions"/>
+            <xs:enumeration value="clear-actions"/>
+            <xs:enumeration value="write-actions"/>
+            <xs:enumeration value="write-metadata"/>
+            <xs:enumeration value="goto-table"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFControllerType">
+        <xs:annotation>
+            <xs:documentation>Representation of an OpenFlow Controller </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="id" type="OFConfigID">
+                <xs:annotation>
+                    <xs:documentation>An unique but locally arbitrary identifier that identifies an
+                    OpenFlow Controller within the context of an OpenFlow Capable Switch. It is
+                    persistent across reboots of the system. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="role" minOccurs="0" type="OFControllerRoleType">
+                <xs:annotation>
+                    <xs:documentation>The predefined role of the controller. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ip-address" minOccurs="0" type="inet:ip-prefix">
+                <xs:annotation>
+                    <xs:documentation>The remote IP of the controller to connect
+                    to.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="port" minOccurs="0" type="inet:port-number">
+                <xs:annotation>
+                    <xs:documentation>The port number the controller listens on. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="local-ip-address" minOccurs="0" type="inet:ip-address">
+                <xs:annotation>
+                    <xs:documentation>This specifies the source IP for packets sent to this
+                    controller and overrides the default IP used. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="local-port" minOccurs="0" type="inet:port-number">
+                <xs:annotation>
+                    <xs:documentation>The port number the controller listens on. If 0 the port is
+                    chosen dynamically. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="protocol" minOccurs="0" type="OFControllerProtocolType">
+                <xs:annotation>
+                    <xs:documentation>The protocol used for connecting to the controller. Both sides
+                    must support the chosen protocol for a successful establishment of a
+                    connection. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="state" minOccurs="0" type="OFControllerOpenFlowStateType">
+                <xs:annotation>
+                    <xs:documentation>This element represents the state of the OpenFlow protocol
+                    connection to the controller. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="operation" type="xs:string"/>
+    </xs:complexType>
+    <xs:simpleType name="OFControllerRoleType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="master"/>
+            <xs:enumeration value="slave"/>
+            <xs:enumeration value="equal"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="OFControllerProtocolType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="tcp"/>
+            <xs:enumeration value="tls"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFControllerOpenFlowStateType">
+        <xs:sequence>
+            <xs:element name="connection-state" type="OFControllerConnectionStateType">
+                <xs:annotation>
+                    <xs:documentation>This element represents the run-time state of the OpenFlow
+                    connection to the Controller. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="current-version" type="OFOpenFlowVersionType">
+                <xs:annotation>
+                    <xs:documentation>This element denotes the version of OpenFlow that Controller
+                    is currently communicating with. It is only relevant when the
+                    connection-state element is set to "up". </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="supported-versions" type="OFOpenFlowSupportedVersionsType">
+                <xs:annotation>
+                    <xs:documentation>This element denotes all of the versions of the OpenFlow
+                    protocol that the controller supports. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFControllerConnectionStateType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="up"/>
+            <xs:enumeration value="down"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFOpenFlowSupportedVersionsType">
+        <xs:sequence>
+            <xs:element name="version" type="OFOpenFlowVersionType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFOpenFlowVersionType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="1.2"/>
+            <xs:enumeration value="1.1"/>
+            <xs:enumeration value="1.0"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFResourceType">
+        <xs:annotation>
+            <xs:documentation>A Base Class for OpenFlow Resources. </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="resource-id" type="OFConfigID">
+                <xs:annotation>
+                    <xs:documentation>An unique but locally arbitrary identifier that identifies a
+                    resource within the context of and OpenFlow Capable Switch and is persistent
+                    across reboots of the system. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFPortType">
+        <xs:complexContent>
+            <xs:extension base="OFResourceType">
+                <xs:sequence>
+                    <xs:element name="number" minOccurs="0" type="xs:unsignedInt"/>
+                    <xs:element name="name" minOccurs="0" type="xs:string"/>
+                    <xs:element name="current-rate" minOccurs="0" type="xs:unsignedLong"/>
+                    <xs:element name="max-rate" minOccurs="0" type="xs:unsignedLong"/>
+                    <xs:element name="configuration" minOccurs="0" type="OFPortConfigurationType"/>
+                    <xs:element name="state" minOccurs="0" type="OFPortStateType"/>
+                    <xs:element name="features" minOccurs="0" type="OFPortFeatureMasterList"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="OFPortFeatureMasterList">
+        <xs:sequence>
+            <xs:element name="current" minOccurs="0" type="OFPortCurrentFeatureListType"/>
+            <xs:element name="advertised" minOccurs="0" type="OFPortOtherFeatureListType"/>
+            <xs:element name="supported" minOccurs="0" type="OFPortOtherFeatureListType"/>
+            <xs:element name="advertised-peer" minOccurs="0" type="OFPortOtherFeatureListType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFPortConfigurationType">
+        <xs:sequence>
+            <xs:element name="admin-state" minOccurs="0" type="OFPortStateOptionsType"/>
+            <xs:element name="no-receive" minOccurs="0" type="xs:boolean"/>
+            <xs:element name="no-forward" minOccurs="0" type="xs:boolean"/>
+            <xs:element name="no-packet-in" minOccurs="0" type="xs:boolean"/>
+        </xs:sequence>
+        <xs:attribute name="operation" type="xs:string"/>
+    </xs:complexType>
+    <xs:complexType name="OFPortStateType">
+        <xs:sequence>
+            <xs:element name="oper-state" minOccurs="0" type="OFPortStateOptionsType"/>
+            <xs:element name="blocked" minOccurs="0" type="xs:boolean"/>
+            <xs:element name="live" minOccurs="0" type="xs:boolean"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFPortStateOptionsType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="up"/>
+            <xs:enumeration value="down"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFPortCurrentFeatureListType">
+        <xs:sequence>
+            <xs:element name="rate" type="OFPortRateType"/>
+            <xs:element name="auto-negotiate" type="OFPortAutoNegotiateType"/>
+            <xs:element name="medium" type="OFPortMediumType"/>
+            <xs:element name="pause" type="OFPortPauseType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFPortOtherFeatureListType">
+        <xs:sequence>
+            <xs:element name="rate" type="OFPortRateType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="auto-negotiate" type="OFPortAutoNegotiateType" minOccurs="0"/>
+            <xs:element name="medium" type="OFPortMediumType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="pause" type="OFPortPauseType" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="operation" type="xs:string"/>
+    </xs:complexType>
+    <xs:simpleType name="OFPortRateType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="10Mb-HD"/>
+            <xs:enumeration value="10Mb-FD"/>
+            <xs:enumeration value="100Mb-HD"/>
+            <xs:enumeration value="100Mb-FD"/>
+            <xs:enumeration value="1Gb-HD"/>
+            <xs:enumeration value="1Gb-FD"/>
+            <xs:enumeration value="1 Tb"/>
+            <xs:enumeration value="Other"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="OFPortAutoNegotiateType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="enabled"/>
+            <xs:enumeration value="disabled"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="OFPortMediumType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="copper"/>
+            <xs:enumeration value="fiber"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="OFPortPauseType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="unsupported"/>
+            <xs:enumeration value="symmetric"/>
+            <xs:enumeration value="asymmetric"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="OFQueueType">
+        <xs:complexContent>
+            <xs:extension base="OFResourceType">
+                <xs:sequence maxOccurs="1" minOccurs="1">
+                    <xs:element name="id" minOccurs="0" type="OFConfigID">
+                        <xs:annotation>
+                            <xs:documentation>An unique but locally arbitrary number that identifies
+                            a queue within the context of and OpenFlow Logical Switch and is
+                            persistent across reboots of the system. </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="port" minOccurs="0" type="OFConfigID">
+                        <xs:annotation>
+                            <xs:documentation>Port in the context of the same Logical Switch which
+                            this Queue is associated with. </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="properties" type="OFQueuePropertiesType">
+                        <xs:annotation>
+                            <xs:documentation>Properties of the Queue. </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:sequence>
+                <xs:attribute name="operation" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="OFQueuePropertiesType">
+        <xs:sequence>
+            <xs:element name="min-rate" type="OFQueueMinRateType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>The minimal rate that is reserved for this queue in 1/10 of a
+                    percent of the actual rate. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="max-rate" type="OFQueueMaxRateType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>The maximum rate that is reserved for this queue in 1/10 of a
+                    percent of the actual rate. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="experimenter" type="xs:unsignedLong">
+                <xs:annotation>
+                    <xs:documentation>Experimental Properties</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFQueueMinRateType">
+        <xs:restriction base="xs:integer"/>
+    </xs:simpleType>
+    <xs:simpleType name="OFQueueMaxRateType">
+        <xs:restriction base="xs:integer"/>
+    </xs:simpleType>
+    <xs:complexType name="OFExternalCertificateType">
+        <xs:complexContent>
+            <xs:extension base="OFResourceType">
+                <xs:sequence maxOccurs="1" minOccurs="1">
+                    <xs:element name="certificate" minOccurs="0" type="OFX509CertificateType"/>
+                </xs:sequence>
+                <xs:attribute name="operation" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="OFOwnedCertificateType">
+        <xs:complexContent>
+            <xs:extension base="OFResourceType">
+                <xs:sequence maxOccurs="1" minOccurs="1">
+                    <xs:element name="certificate" type="OFX509CertificateType"/>
+                    <xs:element name="private-key" type="ds:KeyValueType"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:simpleType name="OFX509CertificateType">
+        <xs:restriction base="xs:base64Binary"/>
+    </xs:simpleType>
+    <xs:complexType name="OFFlowTableType">
+        <xs:complexContent>
+            <xs:extension base="OFResourceType">
+                <xs:sequence maxOccurs="1" minOccurs="1">
+                    <xs:element name="max-entries" type="xs:integer"/>
+                    <xs:element name="next-tables" type="OFNextFlowTables"/>
+                    <xs:element name="instructions" type="OFFlowTableInstructions"/>
+                    <xs:element name="matches" type="OFFlowTableMatchFields"/>
+                    <xs:element name="write-actions" type="OFFlowTableWriteActions"/>
+                    <xs:element name="apply-actions" type="OFFlowTableApplyActions"/>
+                    <xs:element name="write-setfields" type="OFFlowTableMatchFields"/>
+                    <xs:element name="apply-setfields" type="OFFlowTableMatchFields"/>
+                    <xs:element name="wildcards" type="OFFlowTableMatchFields"/>
+                    <xs:element name="metadata-match" type="xs:hexBinary"/>
+                    <xs:element name="metadata-write" type="xs:hexBinary"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="OFNextFlowTables">
+        <xs:sequence minOccurs="1" maxOccurs="10">
+            <xs:element name="table-id" type="OFConfigID"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFFlowTableInstructions">
+        <xs:sequence minOccurs="1" maxOccurs="10">
+            <xs:element name="type" type="OFInstructionType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFFlowTableMatchFields">
+        <xs:sequence minOccurs="1" maxOccurs="10">
+            <xs:element name="type" type="OFMatchFieldType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFFlowTableWriteActions">
+        <xs:sequence minOccurs="1" maxOccurs="10">
+            <xs:element name="type" type="OFActionType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="OFFlowTableApplyActions">
+        <xs:sequence minOccurs="1" maxOccurs="10">
+            <xs:element name="type" type="OFActionType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="OFMatchFieldType">
+        <xs:annotation>
+            <xs:documentation> The open flow match field types. See OpenFlow protocol 1.2 section
+            A.2.3.7 </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="input-port"/>
+            <xs:enumeration value="physical-input-port"/>
+            <xs:enumeration value="metadata"/>
+            <xs:enumeration value="ethernet-dest"/>
+            <xs:enumeration value="ethernet-src"/>
+            <xs:enumeration value="ethernet-frame-type"/>
+            <xs:enumeration value="vlan-id"/>
+            <xs:enumeration value="vlan-priority"/>
+            <xs:enumeration value="ip-dscp"/>
+            <xs:enumeration value="ip-ecn"/>
+            <xs:enumeration value="ip-protocol"/>
+            <xs:enumeration value="ipv4-src"/>
+            <xs:enumeration value="ipv4-dest"/>
+            <xs:enumeration value="tcp-src"/>
+            <xs:enumeration value="tcp-dest"/>
+            <xs:enumeration value="udp-src"/>
+            <xs:enumeration value="udp-dest"/>
+            <xs:enumeration value="sctp-src"/>
+            <xs:enumeration value="sctp-dest"/>
+            <xs:enumeration value="icmpv4-type"/>
+            <xs:enumeration value="icmpv4-code"/>
+            <xs:enumeration value="arp-op"/>
+            <xs:enumeration value="arp-src-ip-address"/>
+            <xs:enumeration value="arp-target-ip-address"/>
+            <xs:enumeration value="arp-src-hardware-address"/>
+            <xs:enumeration value="arp-target-hardware-address"/>
+            <xs:enumeration value="ipv6-src"/>
+            <xs:enumeration value="ipv6-dest"/>
+            <xs:enumeration value="ipv6-flow-label"/>
+            <xs:enumeration value="icmpv6-type"/>
+            <xs:enumeration value="icmpv6-code"/>
+            <xs:enumeration value="ipv6-nd-target"/>
+            <xs:enumeration value="ipv6-nd-source-link-layer"/>
+            <xs:enumeration value="ipv6-nd-target-link-layer"/>
+            <xs:enumeration value="mpls-label"/>
+            <xs:enumeration value="mpls-tc"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
