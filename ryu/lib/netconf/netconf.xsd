@@ -15,10 +15,14 @@
   </xs:annotation>
 
   <!--
-     import standard XML definitions
-    -->
+      import standard XML definitions
+  -->
+  <!--
   <xs:import namespace="http://www.w3.org/XML/1998/namespace"
              schemaLocation="http://www.w3.org/2001/xml.xsd">
+  -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+             schemaLocation="xml.xsd">
     <xs:annotation>
       <xs:documentation>
         This import accesses the xml: attribute groups for the
@@ -26,17 +30,19 @@
       </xs:documentation>
     </xs:annotation>
   </xs:import>
+
   <!--
-     message-id attribute
-    -->
+      message-id attribute
+  -->
   <xs:simpleType name="messageIdType">
     <xs:restriction base="xs:string">
       <xs:maxLength value="4095"/>
     </xs:restriction>
   </xs:simpleType>
+
   <!--
-     Types used for session-id
-    -->
+      Types used for session-id
+  -->
   <xs:simpleType name="SessionId">
     <xs:restriction base="xs:unsignedInt">
       <xs:minInclusive value="1"/>
@@ -45,9 +51,10 @@
   <xs:simpleType name="SessionIdOrZero">
     <xs:restriction base="xs:unsignedInt"/>
   </xs:simpleType>
+
   <!--
-     <rpc> element
-    -->
+      <rpc> element
+  -->
   <xs:complexType name="rpcType">
     <xs:sequence>
       <xs:element ref="rpcOperation"/>
@@ -55,14 +62,15 @@
     <xs:attribute name="message-id" type="messageIdType"
                   use="required"/>
     <!--
-       Arbitrary attributes can be supplied with <rpc> element.
-      -->
+	Arbitrary attributes can be supplied with <rpc> element.
+    -->
     <xs:anyAttribute processContents="lax"/>
   </xs:complexType>
   <xs:element name="rpc" type="rpcType"/>
+
   <!--
-     data types and elements used to construct rpc-errors
-    -->
+      data types and elements used to construct rpc-errors
+  -->
   <xs:simpleType name="ErrorType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="transport"/>
@@ -149,9 +157,10 @@
                   minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
+
   <!--
-     operation attribute used in <edit-config>
-    -->
+      operation attribute used in <edit-config>
+  -->
   <xs:simpleType name="editOperationType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="merge"/>
@@ -161,10 +170,23 @@
       <xs:enumeration value="remove"/>
     </xs:restriction>
   </xs:simpleType>
-  <xs:attribute name="operation" type="editOperationType"/>
+  <xs:attribute name="operation" type="editOperationType" default="merge"/>
+
   <!--
-     <rpc-reply> element
-    -->
+      default-operation element
+  -->
+  <xs:simpleType name="DefaultOperationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="merge"/>
+      <xs:enumeration value="replace"/>
+      <xs:enumeration value="none"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="default-operation" type="DefaultOperationType"/>
+
+  <!--
+      <rpc-reply> element
+  -->
   <xs:complexType name="rpcReplyType">
     <xs:choice>
       <xs:element name="ok"/>
@@ -174,37 +196,49 @@
         <xs:element ref="rpcResponse"
                     minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
+      <xs:element ref="data" minOccurs="0"/>
     </xs:choice>
     <xs:attribute name="message-id" type="messageIdType"
                   use="optional"/>
     <!--
-       Any attributes supplied with <rpc> element must be returned
-       on <rpc-reply>.
-      -->
+	Any attributes supplied with <rpc> element must be returned
+	on <rpc-reply>.
+    -->
     <xs:anyAttribute processContents="lax"/>
   </xs:complexType>
   <xs:element name="rpc-reply" type="rpcReplyType"/>
+
+  <xs:complexType name="dataInlineType">
+    <xs:complexContent>
+      <xs:extension base="xs:anyType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="data" type="dataInlineType"/>
+
   <!--
-     <rpc-error> element
-       -->
+      <rpc-error> element
+  -->
   <xs:element name="rpc-error" type="rpcErrorType"/>
+
   <!--
-     rpcOperationType: used as a base type for all
-     NETCONF operations
-    -->
+      rpcOperationType: used as a base type for all
+      NETCONF operations
+  -->
   <xs:complexType name="rpcOperationType"/>
   <xs:element name="rpcOperation" type="rpcOperationType"
               abstract="true"/>
+
   <!--
-     rpcResponseType: used as a base type for all
-     NETCONF responses
-    -->
+      rpcResponseType: used as a base type for all
+      NETCONF responses
+  -->
   <xs:complexType name="rpcResponseType"/>
   <xs:element name="rpcResponse" type="rpcResponseType"
               abstract="true"/>
+
   <!--
-     <hello> element
-    -->
+      <hello> element
+  -->
   <xs:element name="hello">
     <xs:complexType>
       <xs:sequence>
@@ -221,5 +255,308 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-</xs:schema>
 
+  <!--
+      <config> element
+  -->
+  <xs:complexType name="configInlineType">
+    <xs:complexContent>
+      <xs:extension base="xs:anyType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="config" type="configInlineType"/>
+
+  <!--
+      Configuration datastore names
+  -->
+  <xs:complexType name="configNameType"/>
+  <xs:element name="config-name" type="configNameType"
+	      abstract="true"/>
+  <xs:element name="startup" type="configNameType"
+	      substitutionGroup="config-name"/>
+  <xs:element name="candidate" type="configNameType"
+	      substitutionGroup="config-name"/>
+  <xs:element name="running" type="configNameType"
+	      substitutionGroup="config-name"/>
+
+  <!--
+      <url> element
+  -->
+  <xs:complexType name="configUriType">
+    <xs:simpleContent>
+      <xs:extension base="xs:anyURI"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="url" type="configUriType"/>
+
+  <!--
+      <source> element
+  -->
+  <xs:complexType name="rpcOperationSourceType">
+    <xs:choice>
+      <xs:element ref="config"/>
+      <xs:element ref="config-name"/>
+      <xs:element ref="url"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:element name="source" type="rpcOperationSourceType"/>
+
+  <!--
+      <target> element
+  -->
+  <xs:complexType name="rpcOperationTargetType">
+    <xs:choice>
+      <xs:element ref="config-name"/>
+      <xs:element ref="url"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:element name="target" type="rpcOperationTargetType"/>
+
+  <!--
+      <filter> element
+  -->
+  <xs:simpleType name="FilterType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="subtree"/>
+      <xs:enumeration value="xpath"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="filterInlineType">
+    <xs:complexContent>
+      <xs:extension base="xs:anyType">
+	<xs:attribute name="type" type="FilterType"
+		      default="subtree"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="filter" type="filterInlineType"/>
+
+  <!--
+      test-option> parameter to <edit-config>
+  -->
+  <xs:simpleType name="testOptionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="test-then-set"/>
+      <xs:enumeration value="set"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="test-option" type="testOptionType"/>
+
+  <!--
+      <error-option> parameter to <edit-config>
+  -->
+  <xs:simpleType name="errorOptionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="stop-on-error"/>
+      <xs:enumeration value="ignore-error"/>
+      <xs:enumeration value="rollback-on-error"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="error-option" type="errorOptionType"/>
+
+  <!--
+      <get> operation
+  -->
+  <xs:complexType name="getType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="filter" minOccurs="0" maxOccurs="1"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="get" type="getType" substitutionGroup="rpcOperation"/>
+
+  <!--
+      <get-config> operation
+  -->
+  <xs:complexType name="getConfigType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="source"/>
+	  <xs:element ref="filter" minOccurs="0" maxOccurs="1"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="get-config" type="getConfigType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <edit-config> operation
+  -->
+  <xs:complexType name="editConfigType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="target"/>
+	  <xs:element ref="default-operation" minOccurs="0"/>
+	  <xs:element ref="test-option" minOccurs="0"/>
+	  <xs:element ref="error-option" minOccurs="0"/>
+	  <xs:element ref="config" minOccurs="0"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="edit-config" type="editConfigType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <copy-config> operation
+  -->
+  <xs:complexType name="copyConfigType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="source"/>
+	  <xs:element ref="target"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="copy-config" type="copyConfigType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <delete-config> operation
+  -->
+  <xs:complexType name="delete-configType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="target"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="delete-config" type="delete-configType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <lock> operation
+  -->
+  <xs:complexType name="lockType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="target"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="lock" type="lockType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <unlock> operation
+  -->
+  <xs:complexType name="unlockType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="target"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="unlock" type="unlockType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <validate> operation
+  -->
+  <xs:complexType name="validateType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element ref="source"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="validate" type="validateType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <commit> operation
+  -->
+  <xs:simpleType name="confirmTimeoutType">
+    <xs:restriction base="xs:unsignedInt"/>
+  </xs:simpleType>
+  <xs:simpleType name="persistIdType">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+
+  <xs:complexType name="commitType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element name="confirmed" minOccurs="0" maxOccurs="1"/>
+	  <xs:element name="confirm-timeout" type="confirmTimeoutType"
+		      minOccurs="0" maxOccurs="1"/>
+	  <xs:element name="persist" minOccurs="0" maxOccurs="1"/>
+	  <xs:element name="persist-id" type="persistIdType"
+		      minOccurs="0" maxOccurs="1"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="commit" type="commitType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <cancel-commit> operation
+  -->
+  <xs:complexType name="cancelCommitType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element name="persist-id" type="persistIdType"
+		      minOccurs="0" maxOccurs="1"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="cancel-commit" type="cancelCommitType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <discard-changes> operation
+  -->
+  <xs:complexType name="discardChangesType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="discard-changes" type="discardChangesType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <close-session> operation
+  -->
+  <xs:complexType name="closeSessionType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="close-session" type="closeSessionType"
+	      substitutionGroup="rpcOperation"/>
+
+  <!--
+      <kill-session> operation
+  -->
+  <xs:complexType name="killSessionType">
+    <xs:complexContent>
+      <xs:extension base="rpcOperationType">
+	<xs:sequence>
+	  <xs:element name="session-id" minOccurs="0" maxOccurs="1"/>
+	</xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="kill-session" type="killSessionType"
+	      substitutionGroup="rpcOperation"/>
+
+</xs:schema>
