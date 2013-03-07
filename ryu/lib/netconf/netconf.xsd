@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="urn:ietf:params:xml:ns:netconf:base:1.0"
+           targetNamespace="urn:ietf:params:xml:ns:netconf:base:1.0"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           xml:lang="en"
+           version="1.1">
+
+  <xs:annotation>
+    <xs:documentation>
+      This schema defines the syntax for the NETCONF Messages layer
+      messages 'hello', 'rpc', and 'rpc-reply'.
+    </xs:documentation>
+  </xs:annotation>
+
+  <!--
+     import standard XML definitions
+    -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+             schemaLocation="http://www.w3.org/2001/xml.xsd">
+    <xs:annotation>
+      <xs:documentation>
+        This import accesses the xml: attribute groups for the
+        xml:lang as declared on the error-message element.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:import>
+  <!--
+     message-id attribute
+    -->
+  <xs:simpleType name="messageIdType">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="4095"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <!--
+     Types used for session-id
+    -->
+  <xs:simpleType name="SessionId">
+    <xs:restriction base="xs:unsignedInt">
+      <xs:minInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SessionIdOrZero">
+    <xs:restriction base="xs:unsignedInt"/>
+  </xs:simpleType>
+  <!--
+     <rpc> element
+    -->
+  <xs:complexType name="rpcType">
+    <xs:sequence>
+      <xs:element ref="rpcOperation"/>
+    </xs:sequence>
+    <xs:attribute name="message-id" type="messageIdType"
+                  use="required"/>
+    <!--
+       Arbitrary attributes can be supplied with <rpc> element.
+      -->
+    <xs:anyAttribute processContents="lax"/>
+  </xs:complexType>
+  <xs:element name="rpc" type="rpcType"/>
+  <!--
+     data types and elements used to construct rpc-errors
+    -->
+  <xs:simpleType name="ErrorType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="transport"/>
+      <xs:enumeration value="rpc"/>
+      <xs:enumeration value="protocol"/>
+      <xs:enumeration value="application"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ErrorTag">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="in-use"/>
+      <xs:enumeration value="invalid-value"/>
+      <xs:enumeration value="too-big"/>
+      <xs:enumeration value="missing-attribute"/>
+      <xs:enumeration value="bad-attribute"/>
+      <xs:enumeration value="unknown-attribute"/>
+      <xs:enumeration value="missing-element"/>
+      <xs:enumeration value="bad-element"/>
+      <xs:enumeration value="unknown-element"/>
+      <xs:enumeration value="unknown-namespace"/>
+      <xs:enumeration value="access-denied"/>
+      <xs:enumeration value="lock-denied"/>
+      <xs:enumeration value="resource-denied"/>
+      <xs:enumeration value="rollback-failed"/>
+      <xs:enumeration value="data-exists"/>
+      <xs:enumeration value="data-missing"/>
+      <xs:enumeration value="operation-not-supported"/>
+      <xs:enumeration value="operation-failed"/>
+      <xs:enumeration value="partial-operation"/>
+      <xs:enumeration value="malformed-message"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ErrorSeverity">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="error"/>
+      <xs:enumeration value="warning"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="errorInfoType">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="session-id" type="SessionIdOrZero"/>
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+          <xs:sequence>
+            <xs:element name="bad-attribute" type="xs:QName"
+                        minOccurs="0" maxOccurs="1"/>
+            <xs:element name="bad-element" type="xs:QName"
+                        minOccurs="0" maxOccurs="1"/>
+            <xs:element name="ok-element" type="xs:QName"
+                        minOccurs="0" maxOccurs="1"/>
+            <xs:element name="err-element" type="xs:QName"
+                        minOccurs="0" maxOccurs="1"/>
+            <xs:element name="noop-element" type="xs:QName"
+                        minOccurs="0" maxOccurs="1"/>
+            <xs:element name="bad-namespace" type="xs:string"
+                        minOccurs="0" maxOccurs="1"/>
+          </xs:sequence>
+        </xs:sequence>
+      </xs:choice>
+      <!-- elements from any other namespace are also allowed
+           to follow the NETCONF elements -->
+      <xs:any namespace="##other" processContents="lax"
+              minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="rpcErrorType">
+    <xs:sequence>
+      <xs:element name="error-type" type="ErrorType"/>
+      <xs:element name="error-tag" type="ErrorTag"/>
+      <xs:element name="error-severity" type="ErrorSeverity"/>
+      <xs:element name="error-app-tag" type="xs:string"
+                  minOccurs="0"/>
+      <xs:element name="error-path" type="xs:string" minOccurs="0"/>
+      <xs:element name="error-message" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute ref="xml:lang" use="optional"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="error-info" type="errorInfoType"
+                  minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <!--
+     operation attribute used in <edit-config>
+    -->
+  <xs:simpleType name="editOperationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="merge"/>
+      <xs:enumeration value="replace"/>
+      <xs:enumeration value="create"/>
+      <xs:enumeration value="delete"/>
+      <xs:enumeration value="remove"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:attribute name="operation" type="editOperationType"/>
+  <!--
+     <rpc-reply> element
+    -->
+  <xs:complexType name="rpcReplyType">
+    <xs:choice>
+      <xs:element name="ok"/>
+      <xs:sequence>
+        <xs:element ref="rpc-error"
+                    minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="rpcResponse"
+                    minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:choice>
+    <xs:attribute name="message-id" type="messageIdType"
+                  use="optional"/>
+    <!--
+       Any attributes supplied with <rpc> element must be returned
+       on <rpc-reply>.
+      -->
+    <xs:anyAttribute processContents="lax"/>
+  </xs:complexType>
+  <xs:element name="rpc-reply" type="rpcReplyType"/>
+  <!--
+     <rpc-error> element
+       -->
+  <xs:element name="rpc-error" type="rpcErrorType"/>
+  <!--
+     rpcOperationType: used as a base type for all
+     NETCONF operations
+    -->
+  <xs:complexType name="rpcOperationType"/>
+  <xs:element name="rpcOperation" type="rpcOperationType"
+              abstract="true"/>
+  <!--
+     rpcResponseType: used as a base type for all
+     NETCONF responses
+    -->
+  <xs:complexType name="rpcResponseType"/>
+  <xs:element name="rpcResponse" type="rpcResponseType"
+              abstract="true"/>
+  <!--
+     <hello> element
+    -->
+  <xs:element name="hello">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="capabilities">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="capability" type="xs:anyURI"
+                          maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="session-id" type="SessionId"
+                    minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+
