@@ -67,7 +67,7 @@ class OFCapableSwitch(object):
 
     def _find_capable_switch(self, tree):
         capable_switch = None
-        for element in tree.getchildren():
+        for element in tree:
             ns, tag = get_ns_tag(element.tag)
             if tag != ofc_consts.CAPABLE_SWITCH:
                 continue
