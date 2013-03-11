@@ -146,11 +146,12 @@ class nd_neighbor(object):
     @classmethod
     def parser(cls, buf, offset):
         (res, dst) = struct.unpack_from(cls._PACK_STR, buf, offset)
-        msg = cls(res, dst)
+        msg = cls(res >> 29, dst)
         offset += cls._MIN_LEN
         if len(buf) > offset:
             (msg.type_, msg.length) = struct.unpack_from('!BB', buf, offset)
             cls_ = cls._ND_OPTION_TYPES.get(msg.type_, None)
+            offset += 2
             if cls_:
                 msg.data = cls_.parser(buf, offset)
             else:
