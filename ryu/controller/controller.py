@@ -172,10 +172,11 @@ class Datapath(object):
                 ev = ofp_event.ofp_msg_to_ev(msg)
                 self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                handlers = self.ofp_brick.get_handlers(ev)
+                handlers = [handler for handler in
+                            self.ofp_brick.get_handlers(ev) if self.state in
+                            handler.dispatchers]
                 for handler in handlers:
-                    if self.state in handler.dispatchers:
-                        handler(ev)
+                    handler(ev)
 
                 buf = buf[required_len:]
                 required_len = ofproto_common.OFP_HEADER_SIZE
