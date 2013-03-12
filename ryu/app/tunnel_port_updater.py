@@ -350,7 +350,6 @@ class TunnelPortUpdater(app_manager.RyuApp):
         'network': network.Network,
         'tunnels': tunnels.Tunnels,
     }
-    _LOCK = 'lock'
 
     def __init__(self, *args, **kwargs):
         super(TunnelPortUpdater, self).__init__(args, kwargs)
@@ -365,8 +364,6 @@ class TunnelPortUpdater(app_manager.RyuApp):
         self.tunnel_api = TunnelAPI(self.tunnels)
         self.network_api.update_network(
             _TUNNEL_TYPE_TO_NW_ID[self.tunnel_type])
-
-        setattr(self, self._LOCK, gevent.coros.Semaphore())
 
     def _ovsdb_update(self, dpid, ovsdb_addr, ovs_tunnel_addr):
         self.logger.debug('_ovsdb_update %s %s %s',
