@@ -998,11 +998,11 @@ class VSCtl(object):
             command._prerequisite, command._run = funcs
         self._do_main(commands)
 
-    def run_command(self, commands, timeout_msec=None, exception=None):
-        if timeout_msec is None:
+    def run_command(self, commands, timeout_sec=None, exception=None):
+        if timeout_sec is None:
             self._run_command(commands)
         else:
-            with gevent.Timeout(timeout_msec * 1000, exception):
+            with gevent.Timeout(timeout_sec, exception):
                 self._run_command(commands)
 
     # commands
