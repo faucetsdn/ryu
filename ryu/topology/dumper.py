@@ -21,7 +21,7 @@ import time
 
 from ryu.base import app_manager
 from ryu.controller.handler import set_ev_handler
-from ryu.topology import switches, event
+from ryu.topology import event
 
 LOG = logging.getLogger(__name__)
 
@@ -34,8 +34,15 @@ class DiscoveryEventDumper(app_manager.RyuApp):
         super(DiscoveryEventDumper, self).__init__()
 
         # For testing when sync and async request.
-#        self.threads.append(gevent.spawn_later(0, self._request_sync, 5))
-        self.threads.append(gevent.spawn_later(0, self._request_async, 10))
+#        self.threads.append(
+#            gevent.spawn_later(0, self._switch_request_sync, 5))
+#        self.threads.append(
+#            gevent.spawn_later(0, self._switch_request_async, 10))
+#
+#        self.threads.append(
+#            gevent.spawn_later(0, self._link_request_sync, 5))
+#        self.threads.append(
+#            gevent.spawn_later(0, self._link_request_async, 10))
 
         self.is_active = True
 
@@ -59,22 +66,30 @@ class DiscoveryEventDumper(app_manager.RyuApp):
     def port_modify_handler(self, ev):
         LOG.debug(ev)
 
-    def _request_sync(self, interval):
+    @set_ev_handler(event.EventLinkAdd)
+    def link_add_handler(self, ev):
+        LOG.debug(ev)
+
+    @set_ev_handler(event.EventLinkDelete)
+    def link_del_handler(self, ev):
+        LOG.debug(ev)
+
+    def _switch_request_sync(self, interval):
         while self.is_active:
             request = event.EventSwitchRequest()
-            LOG.debug('request sync %s thread(%s)',
+            LOG.debug('switch_request sync %s thread(%s)',
                       request, id(gevent.getcurrent()))
             reply = self.send_request(request)
-            LOG.debug('reply sync %s', reply)
+            LOG.debug('switch_reply sync %s', reply)
             if len(reply.switches) > 0:
                 for sw in reply.switches:
                     LOG.debug('  %s', sw)
             gevent.sleep(interval)
 
-    def _request_async(self, interval):
+    def _switch_request_async(self, interval):
         while self.is_active:
             request = event.EventSwitchRequest()
-            LOG.debug('request async %s thread(%s)',
+            LOG.debug('switch_request async %s thread(%s)',
                       request, id(gevent.getcurrent()))
             self.send_event(request.dst, request)
 
@@ -86,7 +101,7 @@ class DiscoveryEventDumper(app_manager.RyuApp):
                     i += 1
                     LOG.debug('  thread is busy... %s/%s thread(%s)',
                               i, busy, id(gevent.getcurrent()))
-            LOG.debug('  thread yield to reply handler. thread(%s)',
+            LOG.debug('  thread yield to switch_reply handler. thread(%s)',
                       id(gevent.getcurrent()))
 
             # yield
@@ -98,7 +113,51 @@ class DiscoveryEventDumper(app_manager.RyuApp):
 
     @set_ev_handler(event.EventSwitchReply)
     def switch_reply_handler(self, reply):
-        LOG.debug('reply async %s', reply)
+        LOG.debug('switch_reply async %s', reply)
         if len(reply.switches) > 0:
             for sw in reply.switches:
                 LOG.debug('  %s', sw)
+
+    def _link_request_sync(self, interval):
+        while self.is_active:
+            request = event.EventLinkRequest()
+            LOG.debug('link_request sync %s thread(%s)',
+                      request, id(gevent.getcurrent()))
+            reply = self.send_request(request)
+            LOG.debug('link_reply sync %s', reply)
+            if len(reply.links) > 0:
+                for link in reply.links:
+                    LOG.debug('  %s', link)
+            gevent.sleep(interval)
+
+    def _link_request_async(self, interval):
+        while self.is_active:
+            request = event.EventLinkRequest()
+            LOG.debug('link_request async %s thread(%s)',
+                      request, id(gevent.getcurrent()))
+            self.send_event(request.dst, request)
+
+            start = time.time()
+            busy = interval / 2
+            i = 0
+            while i < busy:
+                if time.time() > start + i:
+                    i += 1
+                    LOG.debug('  thread is busy... %s/%s thread(%s)',
+                              i, busy, id(gevent.getcurrent()))
+            LOG.debug('  thread yield to link_reply handler. thread(%s)',
+                      id(gevent.getcurrent()))
+
+            # yield
+            gevent.sleep(0)
+
+            LOG.debug('  thread get back. thread(%s)',
+                      id(gevent.getcurrent()))
+            gevent.sleep(interval - busy)
+
+    @set_ev_handler(event.EventLinkReply)
+    def link_reply_handler(self, reply):
+        LOG.debug('link_reply async %s', reply)
+        if len(reply.links) > 0:
+            for link in reply.links:
+                LOG.debug('  %s', link)

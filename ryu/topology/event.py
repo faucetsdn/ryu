@@ -84,3 +84,45 @@ class EventSwitchReply(event.EventReplyBase):
     def __str__(self):
         return 'EventSwitchReply<dst=%s, %s>' % \
             (self.dst, self.switches)
+
+
+class EventLinkBase(event.EventBase):
+    def __init__(self, link):
+        super(EventLinkBase, self).__init__()
+        self.link = link
+
+    def __str__(self):
+        return '%s<%s>' % (self.__class__.__name__, self.link)
+
+
+class EventLinkAdd(EventLinkBase):
+    def __init__(self, link):
+        super(EventLinkAdd, self).__init__(link)
+
+
+class EventLinkDelete(EventLinkBase):
+    def __init__(self, link):
+        super(EventLinkDelete, self).__init__(link)
+
+
+class EventLinkRequest(event.EventRequestBase):
+    # If dpid is None, reply all list
+    def __init__(self, dpid=None):
+        super(EventLinkRequest, self).__init__()
+        self.dst = 'switches'
+        self.dpid = dpid
+
+    def __str__(self):
+        return 'EventLinkRequest<src=%s, dpid=%s>' % \
+            (self.src, self.dpid)
+
+
+class EventLinkReply(event.EventReplyBase):
+    def __init__(self, dst, dpid, links):
+        super(EventLinkReply, self).__init__(dst)
+        self.dpid = dpid
+        self.links = links
+
+    def __str__(self):
+        return 'EventLinkReply<dst=%s, dpid=%s, links=%s>' % \
+            (self.dst, self.dpid, len(self.links))
