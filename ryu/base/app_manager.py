@@ -24,6 +24,7 @@ from gevent.queue import Queue
 from ryu import utils
 from ryu.controller.handler import register_instance
 from ryu.controller.controller import Datapath
+from ryu.controller.event import EventRequestBase, EventReplyBase
 
 LOG = logging.getLogger('ryu.base.app_manager')
 
@@ -87,10 +88,12 @@ class RyuApp(object):
         return observers
 
     def send_reply(self, rep):
+        assert isinstance(rep, EventReplyBase)
         SERVICE_BRICKS[rep.dst].replies.put(rep)
 
     def send_request(self, req):
-        req.src = self.name
+        assert isinstance(req, EventRequestBase)
+        req.sync = True
         self.send_event(req.dst, req)
         # going to sleep for the reply
         return self.replies.get()
@@ -107,6 +110,8 @@ class RyuApp(object):
 
     def send_event(self, name, ev):
         if name in SERVICE_BRICKS:
+            if isinstance(ev, EventRequestBase):
+                ev.src = self.name
             LOG.debug("EVENT %s->%s %s" %
                       (self.name, name, ev.__class__.__name__))
             SERVICE_BRICKS[name]._send_event(ev)
