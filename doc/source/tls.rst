@@ -60,7 +60,7 @@ Run Ryu with CA files::
 
     % ryu-manager --ctl-privkey ctl-privkey.pem \
                   --ctl-cert ctl-cert.pem \
-                  --ca-cert /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
+                  --ca-certs /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
                   --verbose
 
 You can see something like::
