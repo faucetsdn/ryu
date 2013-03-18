@@ -65,7 +65,7 @@ class OpenFlowController(object):
         self.server_loop()
 
     def server_loop(self):
-        if CONF.ctl_privkey and CONF.ctl_cert is not None:
+        if CONF.ctl_privkey is not None and CONF.ctl_cert is not None:
             if CONF.ca_certs is not None:
                 server = StreamServer((CONF.ofp_listen_host,
                                        CONF.ofp_ssl_listen_port),
