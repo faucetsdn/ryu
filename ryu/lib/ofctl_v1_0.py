@@ -101,7 +101,7 @@ def to_match(dp, attrs):
             wildcards &= ~ofp.OFPFW_IN_PORT
         elif key == 'dl_src':
             dl_src = haddr_to_bin(value)
-            wildcards &= ~ofp.OFPFW_DL_DST
+            wildcards &= ~ofp.OFPFW_DL_SRC
         elif key == 'dl_dst':
             dl_dst = haddr_to_bin(value)
             wildcards &= ~ofp.OFPFW_DL_DST
@@ -163,11 +163,33 @@ def match_to_str(m):
             'dl_vlan': m.dl_vlan,
             'dl_vlan_pcp': m.dl_vlan_pcp,
             'in_port': m.in_port,
-            'nw_dst': socket.inet_ntoa(struct.pack('!I', m.nw_dst)),
+            'nw_dst': nw_dst_to_str(m.wildcards, m.nw_dst),
             'nw_proto': m.nw_proto,
-            'nw_src': socket.inet_ntoa(struct.pack('!I', m.nw_src)),
+            'nw_src': nw_src_to_str(m.wildcards, m.nw_src),
             'tp_src': m.tp_src,
             'tp_dst': m.tp_dst}
+
+
+def nw_src_to_str(wildcards, addr):
+    ip = socket.inet_ntoa(struct.pack('!I', addr))
+    mask = 32 - ((wildcards & ofproto_v1_0.OFPFW_NW_SRC_MASK)
+                 >> ofproto_v1_0.OFPFW_NW_SRC_SHIFT)
+    if mask == 32:
+        mask = 0
+    if mask:
+        ip += '/%d' % mask
+    return ip
+
+
+def nw_dst_to_str(wildcards, addr):
+    ip = socket.inet_ntoa(struct.pack('!I', addr))
+    mask = 32 - ((wildcards & ofproto_v1_0.OFPFW_NW_DST_MASK)
+                 >> ofproto_v1_0.OFPFW_NW_DST_SHIFT)
+    if mask == 32:
+        mask = 0
+    if mask:
+        ip += '/%d' % mask
+    return ip
 
 
 def send_stats_request(dp, stats, waiters, msgs):
