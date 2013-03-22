@@ -77,8 +77,10 @@ def main():
         thr = gevent.spawn_later(0, webapp)
         services.append(thr)
 
-    gevent.joinall(services)
-    app_mgr.close()
+    try:
+        gevent.joinall(services)
+    finally:
+        app_mgr.close()
 
 
 if __name__ == "__main__":
