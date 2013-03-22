@@ -223,7 +223,7 @@ class AppManager(object):
 
     def close(self):
         def close_all(close_dict):
-            for app in close_dict:
+            for app in close_dict.values():
                 close_method = getattr(app, 'close', None)
                 if callable(close_method):
                     close_method()
