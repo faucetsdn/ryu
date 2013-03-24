@@ -175,18 +175,18 @@ class ClsRule(object):
         self.flow.nw_proto = nw_proto
 
     def set_nw_src(self, nw_src):
-        self.set_nw_src_masked(nw_src, UINT32_MAX)
+        self.set_nw_src_masked(nw_src, 0)  # mask is null for a exact match
 
     def set_nw_src_masked(self, nw_src, mask):
         self.flow.nw_src = nw_src
-        self.wc.nw_src_mask = mask
+        self.wc.nw_src_mask = mask  # mask is opposite of CIDR
 
     def set_nw_dst(self, nw_dst):
-        self.set_nw_dst_masked(nw_dst, UINT32_MAX)
+        self.set_nw_dst_masked(nw_dst, 0)  # mask is null for a exact match
 
     def set_nw_dst_masked(self, nw_dst, mask):
         self.flow.nw_dst = nw_dst
-        self.wc.nw_dst_mask = mask
+        self.wc.nw_dst_mask = mask  # mask is opposite of CIDR
 
     def set_nw_dscp(self, nw_dscp):
         self.wc.wildcards &= ~FWW_NW_DSCP
