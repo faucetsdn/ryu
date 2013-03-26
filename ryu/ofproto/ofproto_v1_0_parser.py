@@ -1025,6 +1025,49 @@ class OFPVendorStats(collections.namedtuple('OFPVendorStats',
         return stats
 
 
+class NXFlowStats(object):
+    def __init__(self):
+        super(NXFlowStats, self).__init__()
+        self.length = None
+        self.table_id = None
+        self.duration_sec = None
+        self.duration_nsec = None
+        self.priority = None
+        self.idle_timeout = None
+        self.hard_timeout = None
+        self.match_len = None
+        self.idle_age = None
+        self.hard_age = None
+        self.cookie = None
+        self.packet_count = None
+        self.byte_count = None
+
+    @classmethod
+    def parser(cls, buf, offset):
+        nxflow_stats = cls()
+        (nxflow_stats.length, nxflow_stats.table_id,
+         nxflow_stats.duration_sec, nxflow_stats.duration_nsec,
+         nxflow_stats.priority, nxflow_stats.idle_timeout,
+         nxflow_stats.hard_timeout, nxflow_stats.match_len,
+         nxflow_stats.idle_age, nxflow_stats.hard_age,
+         nxflow_stats.cookie, nxflow_stats.packet_count,
+         nxflow_stats.byte_count) = struct.unpack_from(
+             ofproto_v1_0.NX_FLOW_STATS_PACK_STR, buf, offset)
+        offset += ofproto_v1_0.NX_FLOW_STATS_SIZE
+
+        fields = []
+        match_len = nxflow_stats.match_len
+        match_len -= 4
+        while match_len > 0:
+            field = nx_match.MFField.parser(buf, offset)
+            offset += field.length
+            match_len -= field.length
+            fields.append(field)
+        nxflow_stats.fields = fields
+
+        return nxflow_stats
+
+
 class OFPQueuePropHeader(object):
     _QUEUE_PROPERTIES = {}
 
@@ -1769,8 +1812,100 @@ class OFPQueueStatsReply(OFPStatsReply):
 @_set_stats_type(ofproto_v1_0.OFPST_VENDOR, OFPVendorStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
 class OFPVendorStatsReply(OFPStatsReply):
+    _STATS_VENDORS = {}
+
+    @staticmethod
+    def register_stats_vendor(vendor):
+        def _register_stats_vendor(cls):
+            cls.cls_vendor = vendor
+            OFPVendorStatsReply._STATS_VENDORS[cls.cls_vendor] = cls
+            return cls
+        return _register_stats_vendor
+
     def __init__(self, datapath):
         super(OFPVendorStatsReply, self).__init__(datapath)
+
+    @classmethod
+    def parser_stats(cls, datapath, version, msg_type, msg_len, xid,
+                     buf):
+        (type_,) = struct.unpack_from(
+            ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR, buffer(buf),
+            ofproto_v1_0.OFP_STATS_MSG_SIZE)
+
+        cls_ = cls._STATS_VENDORS.get(type_)
+
+        if cls_ is None:
+            msg = MsgBase.parser.__func__(
+                cls, datapath, version, msg_type, msg_len, xid, buf)
+            body_cls = cls.cls_stats_body_cls
+            body = body_cls.parser(buf,
+                                   ofproto_v1_0.OFP_STATS_MSG_SIZE)
+            msg.body = body
+            return msg
+
+        return cls_.parser(
+            datapath, version, msg_type, msg_len, xid, buf,
+            ofproto_v1_0.OFP_VENDOR_STATS_MSG_SIZE)
+
+
+@OFPVendorStatsReply.register_stats_vendor(ofproto_v1_0.NX_VENDOR_ID)
+class NXStatsReply(OFPStatsReply):
+    _NX_STATS_TYPES = {}
+
+    @staticmethod
+    def register_nx_stats_type(body_single_struct=False):
+        def _register_nx_stats_type(cls):
+            assert cls.cls_stats_type is not None
+            assert cls.cls_stats_type not in \
+                NXStatsReply._NX_STATS_TYPES
+            assert cls.cls_stats_body_cls is not None
+            cls.cls_body_single_struct = body_single_struct
+            NXStatsReply._NX_STATS_TYPES[cls.cls_stats_type] = cls
+            return cls
+        return _register_nx_stats_type
+
+    @classmethod
+    def parser_stats_body(cls, buf, msg_len, offset):
+        body_cls = cls.cls_stats_body_cls
+        body = []
+        while offset < msg_len:
+            entry = body_cls.parser(buf, offset)
+            body.append(entry)
+            offset += entry.length
+
+        if cls.cls_body_single_struct:
+            return body[0]
+        return body
+
+    @classmethod
+    def parser_stats(cls, datapath, version, msg_type, msg_len, xid,
+                     buf, offset):
+        msg = MsgBase.parser.__func__(
+            cls, datapath, version, msg_type, msg_len, xid, buf)
+        msg.body = msg.parser_stats_body(msg.buf, msg.msg_len, offset)
+
+        return msg
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf,
+               offset):
+        (type_,) = struct.unpack_from(
+            ofproto_v1_0.NX_STATS_MSG_PACK_STR, buffer(buf), offset)
+        offset += ofproto_v1_0.NX_STATS_MSG0_SIZE
+
+        cls_ = cls._NX_STATS_TYPES.get(type_)
+
+        msg = cls_.parser_stats(
+            datapath, version, msg_type, msg_len, xid, buf, offset)
+
+        return msg
+
+
+@NXStatsReply.register_nx_stats_type()
+@_set_stats_type(ofproto_v1_0.NXST_FLOW, NXFlowStats)
+class NXFlowStatsReply(NXStatsReply):
+    def __init__(self, datapath):
+        super(NXFlowStatsReply, self).__init__(datapath)
 
 
 #
@@ -2015,13 +2150,48 @@ class OFPQueueStatsRequest(OFPStatsRequest):
 @_set_stats_type(ofproto_v1_0.OFPST_VENDOR, OFPVendorStats)
 @_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
 class OFPVendorStatsRequest(OFPStatsRequest):
-    def __init__(self, datapath, flags, vendor, specific_data):
+    def __init__(self, datapath, flags, vendor, specific_data=None):
         super(OFPVendorStatsRequest, self).__init__(datapath, flags)
         self.vendor = vendor
         self.specific_data = specific_data
+
+    def _serialize_vendor_stats(self):
+        self.buf += self.specific_data
 
     def _serialize_stats_body(self):
         msg_pack_into(ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR,
                       self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
                       self.vendor)
-        self.buf += self.specific_data
+        self._serialize_vendor_stats()
+
+
+class NXStatsRequest(OFPVendorStatsRequest):
+    def __init__(self, datapath, flags, subtype):
+        super(NXStatsRequest, self).__init__(datapath, flags,
+                                             ofproto_v1_0.NX_VENDOR_ID)
+        self.subtype = subtype
+
+    def _serialize_vendor_stats_body(self):
+        pass
+
+    def _serialize_vendor_stats(self):
+        msg_pack_into(ofproto_v1_0.NX_STATS_MSG_PACK_STR, self.buf,
+                      ofproto_v1_0.OFP_VENDOR_STATS_MSG_SIZE,
+                      self.subtype)
+        self._serialize_vendor_stats_body()
+
+
+class NXFlowStatsRequest(NXStatsRequest):
+    def __init__(self, datapath, flags, out_port, match_len,
+                 table_id):
+        super(NXFlowStatsRequest, self).__init__(datapath, flags,
+                                                 ofproto_v1_0.NXST_FLOW)
+        self.out_port = out_port
+        self.match_len = match_len
+        self.table_id = table_id
+
+    def _serialize_vendor_stats_body(self):
+        msg_pack_into(
+            ofproto_v1_0.NX_FLOW_STATS_REQUEST_PACK_STR,
+            self.buf, ofproto_v1_0.NX_STATS_MSG_SIZE, self.out_port,
+            self.match_len, self.table_id)
