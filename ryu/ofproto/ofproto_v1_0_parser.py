@@ -410,7 +410,7 @@ class NXActionHeader(object):
         self.vendor = ofproto_v1_0.NX_VENDOR_ID
         self.subtype = subtype_
 
-    def serialise(self, buf, offset):
+    def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
                       buf, offset, self.type, self.len)
 
