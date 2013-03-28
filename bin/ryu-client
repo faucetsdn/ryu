@@ -23,6 +23,7 @@ from ryu.app.client import OFPClient
 from ryu.app.client import QuantumIfaceClient
 from ryu.app.client import SwitchConfClient
 from ryu.app.client import TunnelClient
+from ryu.app.client import TopologyClient
 
 
 def client_test():
@@ -41,6 +42,7 @@ def client_test():
     tun_client = TunnelClient(address)
     sc_client = SwitchConfClient(address)
     qi_client = QuantumIfaceClient(address)
+    topo_client = TopologyClient(address)
 
     commands = {
         'list_nets': lambda a: sys.stdout.write(ofp_client.get_networks()),
@@ -87,6 +89,9 @@ def client_test():
             qi_client.get_network_id(a[1])),
         'qi_create_net_id': lambda a: qi_client.create_network_id(a[1], a[2]),
         'qi_update_net_id': lambda a: qi_client.update_network_id(a[1], a[2]),
+
+        'topo_list_switches': lambda a: topo_client.list_switches(),
+        'topo_list_links': lambda a: topo_client.list_links(),
     }
 
     # allow '-', instead of '_'

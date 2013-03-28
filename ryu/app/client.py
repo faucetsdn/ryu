@@ -245,3 +245,37 @@ class QuantumIfaceClientV1_0(RyuClientBase):
 
 
 QuantumIfaceClient = QuantumIfaceClientV1_0
+
+
+class TopologyClientV1_0(RyuClientBase):
+    version = 'v1.0'
+
+    # /topology/switches
+    # /topology/switches/{dpid}
+    # /topology/links
+    # /topology/links/{dpid}
+    _path_switches = 'topology/switches'
+    _path_links = 'topology/links'
+
+    def __init__(self, address):
+        super(TopologyClientV1_0, self).__init__(self.version, address)
+
+    # dpid: string representation (see ryu.lib.dpid)
+    #       if None, get all
+    def list_switches(self, dpid=None):
+        uri = self._path_switches
+        if dpid:
+            uri += '/%s' % (dpid)
+
+        return self._do_request('GET', uri)
+
+    # dpid: string representation (see ryu.lib.dpid)
+    #       if None, get all
+    def list_links(self, dpid=None):
+        uri = self._path_links
+        if dpid:
+            uri += '/%s' % (dpid)
+        return self._do_request('GET', uri)
+
+
+TopologyClient = TopologyClientV1_0
