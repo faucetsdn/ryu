@@ -804,7 +804,8 @@ class Switches(app_manager.RyuApp):
 
 
 def get_switch(app, dpid=None):
-    return app.send_request(event.EventSwitchRequest(dpid))
+    rep = app.send_request(event.EventSwitchRequest(dpid))
+    return rep.switches
 
 
 def get_all_switch(app):
@@ -812,7 +813,8 @@ def get_all_switch(app):
 
 
 def get_link(app, dpid=None):
-    return app.send_request(event.EventLinkRequest(dpid))
+    rep = app.send_request(event.EventLinkRequest(dpid))
+    return rep.links
 
 
 def get_all_link(app):
