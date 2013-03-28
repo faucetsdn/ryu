@@ -99,7 +99,9 @@ def client_test():
                           for (k, v) in commands.items()]))
 
     cmd = args[0]
-    commands[cmd](args)
+    res = commands[cmd](args)
+    if res:
+        print res.read()
 
 if __name__ == "__main__":
     client_test()
