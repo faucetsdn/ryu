@@ -17,6 +17,7 @@ import logging
 import gevent
 import struct
 import time
+import json
 from oslo.config import cfg
 
 from ryu.topology import event
@@ -25,8 +26,9 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.exception import RyuException
-from ryu.lib.mac import DONTCARE
+from ryu.lib.mac import DONTCARE, haddr_to_str
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
+from ryu.lib.port_no import port_no_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.ofproto.ether import ETH_TYPE_LLDP
 from ryu.ofproto import ofproto_v1_0
@@ -77,6 +79,12 @@ class Port(object):
         #       return (self._state & self._ofproto.OFPPS_LIVE) > 0
         return not self.is_down()
 
+    def to_dict(self):
+        return {'dpid': dpid_to_str(self.dpid),
+                'port_no': port_no_to_str(self.port_no),
+                'hw_addr': haddr_to_str(self.hw_addr),
+                'name': self.name.rstrip('\0')}
+
     # for Switch.del_port()
     def __eq__(self, other):
         return self.dpid == other.dpid and self.port_no == other.port_no
@@ -109,6 +117,11 @@ class Switch(object):
     def del_port(self, ofpport):
         self.ports.remove(Port(ofpport))
 
+    def to_dict(self):
+        d = {'dpid': dpid_to_str(self.dp.id),
+             'ports': [port.to_dict() for port in self.ports]}
+        return d
+
     def __str__(self):
         msg = 'Switch<dpid=%s, ' % self.dp.id
         for port in self.ports:
@@ -124,6 +137,11 @@ class Link(object):
         super(Link, self).__init__()
         self.src = src
         self.dst = dst
+
+    def to_dict(self):
+        d = {'src': self.src.to_dict(),
+             'dst': self.dst.to_dict()}
+        return d
 
     # this type is used for key value of LinkState
     def __eq__(self, other):
@@ -421,8 +439,8 @@ class Switches(app_manager.RyuApp):
     LINK_TIMEOUT = TIMEOUT_CHECK_PERIOD * 2
     LINK_LLDP_DROP = 5
 
-    def __init__(self):
-        super(Switches, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(Switches, self).__init__(*args, **kwargs)
 
         self.name = 'switches'
         self.dps = {}                 # datapath_id => Datapath class
