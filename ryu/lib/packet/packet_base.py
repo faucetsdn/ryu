@@ -31,8 +31,8 @@ class PacketBase(object):
         self.protocol_name = self.__class__.__name__
 
     @classmethod
-    def parser(cls):
+    def parser(cls, buf):
         pass
 
-    def serialize(self):
+    def serialize(self, payload, prev):
         pass
