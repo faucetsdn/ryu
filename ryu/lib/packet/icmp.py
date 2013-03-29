@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import struct
-import socket
+
 from . import packet_base
 from . import packet_utils
 
@@ -72,7 +72,7 @@ class icmp(packet_base.PacketBase):
                 hdr += self.data
 
         if self.csum == 0:
-            self.csum = socket.htons(packet_utils.checksum(hdr))
+            self.csum = packet_utils.checksum(hdr)
             struct.pack_into('!H', hdr, 2, self.csum)
 
         return hdr

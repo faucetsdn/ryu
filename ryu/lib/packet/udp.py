@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import struct
-import socket
+
 from . import packet_base
 from . import packet_utils
 import ipv4
@@ -48,7 +48,7 @@ class udp(packet_base.PacketBase):
             ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 17,
                              self.total_length)
             f = ph + h + payload
-            self.csum = socket.htons(packet_utils.checksum(f))
+            self.csum = packet_utils.checksum(f)
             h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                             self.total_length, self.csum)
         return h

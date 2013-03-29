@@ -19,7 +19,6 @@ import unittest
 import logging
 import struct
 import netaddr
-import socket
 
 from nose.tools import ok_, eq_, nottest, raises
 from nose.plugins.skip import Skip, SkipTest
@@ -40,7 +39,7 @@ def icmpv6_csum(prev, buf):
     h = bytearray(buf)
     struct.pack_into('!H', h, 2, 0)
 
-    return socket.htons(packet_utils.checksum(ph + h))
+    return packet_utils.checksum(ph + h)
 
 
 class Test_icmpv6_header(unittest.TestCase):

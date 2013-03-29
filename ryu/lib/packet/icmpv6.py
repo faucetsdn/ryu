@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import struct
-import socket
 import sys
 import array
 import binascii
@@ -107,7 +106,7 @@ class icmpv6(packet_base.PacketBase):
             ph = struct.pack('!16s16sBBH', prev.src, prev.dst, 0, prev.nxt,
                              length)
             f = ph + hdr + payload
-            self.csum = socket.htons(packet_utils.checksum(f))
+            self.csum = packet_utils.checksum(f)
             struct.pack_into('!H', hdr, 2, self.csum)
 
         return hdr

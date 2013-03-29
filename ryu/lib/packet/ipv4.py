@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import struct
-import socket
+
 from . import packet_base
 from . import packet_utils
 from . import icmp
@@ -76,7 +76,7 @@ class ipv4(packet_base.PacketBase):
             assert (self.length - ipv4._MIN_LEN) >= len(self.option)
             hdr[ipv4._MIN_LEN:ipv4._MIN_LEN + len(self.option)] = self.option
 
-        self.csum = socket.htons(packet_utils.checksum(hdr))
+        self.csum = packet_utils.checksum(hdr)
         struct.pack_into('!H', hdr, 10, self.csum)
         return hdr
 

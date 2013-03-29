@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import socket
+
 
 def carry_around_add(a, b):
     c = a + b
@@ -27,4 +29,4 @@ def checksum(data):
     for i in range(0, len(data), 2):
         w = data[i] + (data[i + 1] << 8)
         s = carry_around_add(s, w)
-    return ~s & 0xffff
+    return socket.ntohs(~s & 0xffff)
