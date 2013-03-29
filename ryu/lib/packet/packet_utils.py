@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import socket
+import struct
 
 
 def carry_around_add(a, b):
@@ -30,3 +31,63 @@ def checksum(data):
         w = data[i] + (data[i + 1] << 8)
         s = carry_around_add(s, w)
     return socket.ntohs(~s & 0xffff)
+
+
+# avoid circular import
+_IPV4_PSEUDO_HEADER_PACK_STR = '!IIxBH'
+_IPV6_PSEUDO_HEADER_PACK_STR = '!16s16sI3xB'
+
+
+def checksum_ip(ipvx, length, payload):
+    """
+    calculate checksum of IP pseudo header
+
+    IPv4 pseudo header
+    UDP RFC768
+    TCP RFC793 3.1
+
+     0      7 8     15 16    23 24    31
+    +--------+--------+--------+--------+
+    |          source address           |
+    +--------+--------+--------+--------+
+    |        destination address        |
+    +--------+--------+--------+--------+
+    |  zero  |protocol|    length       |
+    +--------+--------+--------+--------+
+
+
+    IPv6 pseudo header
+    RFC2460 8.1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +                         Source Address                        +
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +                      Destination Address                      +
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                   Upper-Layer Packet Length                   |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                      zero                     |  Next Header  |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    """
+    if ipvx.version == 4:
+        header = struct.pack(_IPV4_PSEUDO_HEADER_PACK_STR,
+                             ipvx.src, ipvx.dst, ipvx.proto, length)
+    elif ipvx.version == 6:
+        header = struct.pack(_IPV6_PSEUDO_HEADER_PACK_STR,
+                             ipvx.src, ipvx.dst, length, ipvx.nxt)
+    else:
+        raise ValueError('Unknown IP version %d' % ipvx.version)
+
+    buf = header + payload
+    return checksum(buf)
