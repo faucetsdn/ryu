@@ -95,7 +95,7 @@ class Test_tcp(unittest.TestCase):
         src_ip = int(netaddr.IPAddress('192.168.10.1'))
         dst_ip = int(netaddr.IPAddress('192.168.100.1'))
         prev = ipv4(4, 5, 0, 0, 0, 0, 0, 64,
-                    inet.IPPROTO_UDP, 0, src_ip, dst_ip)
+                    inet.IPPROTO_TCP, 0, src_ip, dst_ip)
 
         t = tcp(self.src_port, self.dst_port, self.seq, self.ack,
                 offset, self.bits, self.window_size, csum, self.urgent)
@@ -125,7 +125,7 @@ class Test_tcp(unittest.TestCase):
         src_ip = int(netaddr.IPAddress('192.168.10.1'))
         dst_ip = int(netaddr.IPAddress('192.168.100.1'))
         prev = ipv4(4, 5, 0, 0, 0, 0, 0, 64,
-                    inet.IPPROTO_UDP, 0, src_ip, dst_ip)
+                    inet.IPPROTO_TCP, 0, src_ip, dst_ip)
 
         t = tcp(self.src_port, self.dst_port, self.seq, self.ack,
                 offset, self.bits, self.window_size, csum, self.urgent,
