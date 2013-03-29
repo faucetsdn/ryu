@@ -35,8 +35,8 @@ LOG = logging.getLogger(__name__)
 
 
 def icmpv6_csum(prev, buf):
-    ph = struct.pack('!16s16sBBH', prev.src, prev.dst, 0, prev.nxt,
-                     prev.payload_length)
+    ph = struct.pack('!16s16sI3xB', prev.src, prev.dst,
+                     prev.payload_length, prev.nxt)
     h = bytearray(buf)
     struct.pack_into('!H', h, 2, 0)
 
