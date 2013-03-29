@@ -17,7 +17,6 @@ import struct
 
 from . import packet_base
 from . import packet_utils
-import ipv4
 
 
 class udp(packet_base.PacketBase):
@@ -45,10 +44,8 @@ class udp(packet_base.PacketBase):
         h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                         self.total_length, self.csum)
         if self.csum == 0:
-            ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 17,
-                             self.total_length)
-            f = ph + h + payload
-            self.csum = packet_utils.checksum(f)
+            self.csum = packet_utils.checksum_ip(
+                prev, self.total_length, h + payload)
             h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                             self.total_length, self.csum)
         return h
