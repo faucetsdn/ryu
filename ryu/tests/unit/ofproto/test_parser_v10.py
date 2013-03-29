@@ -4959,7 +4959,7 @@ class TestOFPVendorStatsReply(unittest.TestCase):
 
         # body
         body = res.body[0]
-        eq_(specific_data, body.specific_data)
+        eq_(specific_data, body)
 
         # test __str__()
         list_ = ('version:', 'msg_type', 'xid',)
