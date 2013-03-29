@@ -72,8 +72,6 @@ class tcp(packet_base.PacketBase):
                 ph = struct.pack('!16s16sBBH', prev.src, prev.dst, 0, 6,
                                  length)
             f = ph + h + payload
-            if len(f) % 2:
-                f += '\x00'
             self.csum = socket.htons(packet_utils.checksum(f))
             struct.pack_into('!H', h, 16, self.csum)
         return h

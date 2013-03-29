@@ -48,8 +48,6 @@ class udp(packet_base.PacketBase):
             ph = struct.pack('!IIBBH', prev.src, prev.dst, 0, 17,
                              self.total_length)
             f = ph + h + payload
-            if len(f) % 2:
-                f += '\x00'
             self.csum = socket.htons(packet_utils.checksum(f))
             h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                             self.total_length, self.csum)

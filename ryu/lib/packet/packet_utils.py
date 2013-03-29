@@ -20,6 +20,9 @@ def carry_around_add(a, b):
 
 
 def checksum(data):
+    if len(data) % 2:
+        data += '\x00'
+
     s = 0
     for i in range(0, len(data), 2):
         w = data[i] + (data[i + 1] << 8)

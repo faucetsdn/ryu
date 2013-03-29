@@ -72,8 +72,6 @@ class icmp(packet_base.PacketBase):
                 hdr += self.data
 
         if self.csum == 0:
-            if len(hdr) % 2:
-                hdr += '\0'
             self.csum = socket.htons(packet_utils.checksum(hdr))
             struct.pack_into('!H', hdr, 2, self.csum)
 
