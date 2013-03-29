@@ -17,6 +17,7 @@ import struct
 import sys
 import array
 import binascii
+
 from . import packet_base
 from . import packet_utils
 from ryu.lib.mac import haddr_to_bin, haddr_to_str
@@ -98,15 +99,8 @@ class icmpv6(packet_base.PacketBase):
                 hdr += self.data.serialize()
             else:
                 hdr += self.data
-        src = prev.src
-        dst = prev.dst
-        nxt = prev.nxt
         if self.csum == 0:
-            length = len(str(hdr))
-            ph = struct.pack('!16s16sBBH', prev.src, prev.dst, 0, prev.nxt,
-                             length)
-            f = ph + hdr + payload
-            self.csum = packet_utils.checksum(f)
+            self.csum = packet_utils.checksum_ip(prev, len(hdr), hdr + payload)
             struct.pack_into('!H', hdr, 2, self.csum)
 
         return hdr
