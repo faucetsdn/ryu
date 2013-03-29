@@ -1044,6 +1044,7 @@ class NXFlowStats(object):
 
     @classmethod
     def parser(cls, buf, offset):
+        original_offset = offset
         nxflow_stats = cls()
         (nxflow_stats.length, nxflow_stats.table_id,
          nxflow_stats.duration_sec, nxflow_stats.duration_nsec,
@@ -1064,6 +1065,16 @@ class NXFlowStats(object):
             match_len -= field.length
             fields.append(field)
         nxflow_stats.fields = fields
+
+        actions = []
+        total_len = original_offset + nxflow_stats.length
+        match_len = nxflow_stats.match_len
+        offset += (match_len + 7) / 8 * 8 - match_len
+        while offset < total_len:
+            action = OFPAction.parser(buf, offset)
+            actions.append(action)
+            offset += action.len
+        nxflow_stats.actions = actions
 
         return nxflow_stats
 
