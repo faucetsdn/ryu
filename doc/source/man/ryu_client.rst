@@ -9,7 +9,7 @@ Synoposis
 
 Description
 -----------
-:program:`ryu-manger` is a test utility for :program:`ryu-manager`
+:program:`ryu-client` is a test utility for :program:`ryu-manager`
 
 Options
 -------
