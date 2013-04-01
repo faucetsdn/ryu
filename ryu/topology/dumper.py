@@ -30,8 +30,8 @@ class DiscoveryEventDumper(app_manager.RyuApp):
     ''' This app dumps discovery events
     '''
 
-    def __init__(self):
-        super(DiscoveryEventDumper, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(DiscoveryEventDumper, self).__init__(*args, **kwargs)
 
         # For testing when sync and async request.
 #        self.threads.append(
