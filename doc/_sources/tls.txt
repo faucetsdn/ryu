@@ -48,28 +48,33 @@ Testing TLS Connection
 Configuring ovs-vswitchd to use CA files using the ovs-vsctl "set-ssl"
 command, e.g.::
 
-    % ovs-vsctl set-ssl sc-privkey.pem sc-cert.pem /usr/local/var/lib/openvswitch/pki/controllerca/cacert.pem
+    % ovs-vsctl set-ssl /etc/openvswitch/sc-privkey.pem /etc/openvswitch/sc-cert.pem /usr/local/var/lib/openvswitch/pki/controllerca/cacert.pem
     % ovs-vsctl add-br br0
     % ovs-vsctl set-controller br0 ssl:127.0.0.1:6633
+
+Substitute the correct file names, if they differ from the ones used
+above. You should use absolute file names.
 
 
 Run Ryu with CA files::
 
-    % ryu-manager --ctl_privkey ctl-privkey.pem \
-                  --ctl_cert ctl-cert.pem \
-                  --ca_cert /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
+    % ryu-manager --ctl-privkey ctl-privkey.pem \
+                  --ctl-cert ctl-cert.pem \
+                  --ca-certs /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
                   --verbose
 
 You can see something like::
 
     loading app ryu.controller.ofp_handler
     instantiating app ryu.controller.ofp_handler
-    connected socket:<SSLSocket fileno=4 sock=127.0.0.1:6633 peer=127.0.0.1:56493> address:('127.0.0.1', 56493)
-    unhandled event <ryu.controller.dispatcher.EventQueueCreate object at 0x2fdcd90>
-    hello ev <ryu.controller.ofp_event.EventOFPHello object at 0x2fdce90>
+    BRICK ofp_event
+      CONSUMES EventOFPSwitchFeatures
+      CONSUMES EventOFPErrorMsg
+      CONSUMES EventOFPHello
+      CONSUMES EventOFPEchoRequest
+    connected socket:<SSLSocket fileno=4 sock=127.0.0.1:6633 peer=127.0.0.1:61302> address:('127.0.0.1', 61302)
+    hello ev <ryu.controller.ofp_event.EventOFPHello object at 0x1047806d0>
     move onto config mode
-    unhandled event <ryu.controller.dispatcher.EventDispatcherChange object at 0x2fdcfd0>
-    switch features ev version: 0x1 msg_type 0x6 xid 0xc23353f2 port OFPPhyPort(port_no=65534, hw_addr='\x16\xd8u\xe7[C', name='br0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', config=1, state=1, curr=0, advertised=0, supported=0, peer=0)
+    switch features ev version: 0x1 msg_type 0x6 xid 0xb0bb34e5 port OFPPhyPort(port_no=65534, hw_addr='\x16\xdc\xa2\xe2}K', name='br0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', config=0, state=0, curr=0, advertised=0, supported=0, peer=0)
     move onto main mode
-    unhandled event <ryu.controller.dispatcher.EventDispatcherChange object at 0x2fdcfd0>
 
