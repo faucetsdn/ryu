@@ -42,7 +42,7 @@ class Packet(object):
         self.data = bytearray()
         r = self.protocols[::-1]
         for i, p in enumerate(r):
-            if p.__class__.__bases__[0] == packet_base.PacketBase:
+            if isinstance(p, packet_base.PacketBase):
                 if i == len(r) - 1:
                     prev = None
                 else:
