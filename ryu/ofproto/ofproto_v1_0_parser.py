@@ -23,7 +23,7 @@ from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
 from . import nx_match
-import utils.round_up
+from ryu import utils
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.ofproto_v1_0_parser')
