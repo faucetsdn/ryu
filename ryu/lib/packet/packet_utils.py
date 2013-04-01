@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import array
 import socket
 import struct
 
@@ -26,10 +27,10 @@ def checksum(data):
     if len(data) % 2:
         data += '\x00'
 
-    s = 0
-    for i in range(0, len(data), 2):
-        w = data[i] + (data[i + 1] << 8)
-        s = carry_around_add(s, w)
+    data = str(data)    # input can be bytearray.
+    s = sum(array.array('H', data))
+    s = (s & 0xffff) + (s >> 16)
+    s += (s >> 16)
     return socket.ntohs(~s & 0xffff)
 
 
