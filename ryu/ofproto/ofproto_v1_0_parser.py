@@ -23,6 +23,7 @@ from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
 from . import nx_match
+import utils.round_up
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.ofproto_v1_0_parser')
@@ -1069,7 +1070,7 @@ class NXFlowStats(object):
         actions = []
         total_len = original_offset + nxflow_stats.length
         match_len = nxflow_stats.match_len
-        offset += (match_len + 7) / 8 * 8 - match_len
+        offset += utils.round_up(match_len, 8) - match_len
         while offset < total_len:
             action = OFPAction.parser(buf, offset)
             actions.append(action)
