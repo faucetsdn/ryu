@@ -49,11 +49,11 @@ LOG = logging.getLogger('ryu.app.firewall')
 # GET /firewall/module/status
 #
 # set enable the firewall switches
-# POST /firewall/module/enable/{switch-id}
+# PUT /firewall/module/enable/{switch-id}
 #  {switch-id} is 'all' or switchID
 #
 # set disable the firewall switches
-# POST /firewall/module/disable/{switch-id}
+# PUT /firewall/module/disable/{switch-id}
 #  {switch-id} is 'all' or switchID
 #
 #
