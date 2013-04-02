@@ -13,7 +13,6 @@ Contents:
    :maxdepth: 2
 
    getting_started.rst
-   openstack.rst
    developing.rst
    configuration.rst
 
