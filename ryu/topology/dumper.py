@@ -22,6 +22,7 @@ import time
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.topology import event
+from ryu.topology import switches
 
 LOG = logging.getLogger(__name__)
 
@@ -29,6 +30,9 @@ LOG = logging.getLogger(__name__)
 class DiscoveryEventDumper(app_manager.RyuApp):
     ''' This app dumps discovery events
     '''
+    _CONTEXTS = {
+        'switches': switches.Switches,
+    }
 
     def __init__(self, *args, **kwargs):
         super(DiscoveryEventDumper, self).__init__(*args, **kwargs)
