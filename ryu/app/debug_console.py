@@ -17,21 +17,29 @@
 # a RyuApp to provide a python interactive console for debugging
 
 import code
-import gevent
 import os
+import select
 import sys
 import signal
 
 from ryu.base import app_manager
+from ryu.lib import hub
+
+
+# builtin raw_input() is written by C and doesn't yeild execution.
+def _raw_input(message):
+    sys.stdout.write(message)
+    select.select([sys.stdin.fileno()], [], [])
+    return sys.stdin.readline()
 
 
 class DebugConsole(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(DebugConsole, self).__init__(*args, **kwargs)
-        gevent.spawn(self.__thread)
+        hub.spawn(self.__thread)
 
     def __thread(self):
-        code.InteractiveConsole().interact("Ryu Debug Console")
+        code.interact(banner="Ryu Debug Console", readfunc=_raw_input)
 
         # XXX should be a graceful shutdown
         os.kill(os.getpid(), signal.SIGTERM)
