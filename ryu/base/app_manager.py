@@ -123,6 +123,13 @@ class RyuApp(object):
         for observer in self.get_observers(ev, state):
             self.send_event(observer, ev)
 
+    def reply_to_request(self, req, rep):
+        rep.dst = req.src
+        if req.sync:
+            self.send_reply(rep)
+        else:
+            self.send_event(rep.dst, rep)
+
     def close(self):
         """
         teardown method.
