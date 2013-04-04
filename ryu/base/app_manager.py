@@ -200,19 +200,20 @@ class AppManager(object):
 
         for i in SERVICE_BRICKS.values():
             for _k, m in inspect.getmembers(i, inspect.ismethod):
-                if hasattr(m, 'observer'):
-                    # name is module name of ev_cls
-                    name = m.observer.split('.')[-1]
-                    if name in SERVICE_BRICKS:
-                        brick = SERVICE_BRICKS[name]
-                        brick.register_observer(m.ev_cls, i.name,
-                                                m.dispatchers)
+                if not hasattr(m, 'observer'):
+                    continue
+
+                # name is module name of ev_cls
+                name = m.observer.split('.')[-1]
+                if name in SERVICE_BRICKS:
+                    brick = SERVICE_BRICKS[name]
+                    brick.register_observer(m.ev_cls, i.name, m.dispatchers)
 
                 # allow RyuApp and Event class are in different module
-                if hasattr(m, 'ev_cls'):
-                    for brick in SERVICE_BRICKS.itervalues():
-                        if m.ev_cls in brick._EVENTS:
-                            brick.register_observer(m.ev_cls, i.name)
+                for brick in SERVICE_BRICKS.itervalues():
+                    if m.ev_cls in brick._EVENTS:
+                        brick.register_observer(m.ev_cls, i.name,
+                                                m.dispatchers)
 
         for brick, i in SERVICE_BRICKS.items():
             LOG.debug("BRICK %s" % brick)
