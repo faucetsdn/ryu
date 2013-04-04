@@ -198,7 +198,7 @@ class AppManager(object):
             register_app(app)
             self.applications[app_name] = app
 
-        for key, i in SERVICE_BRICKS.items():
+        for i in SERVICE_BRICKS.values():
             for _k, m in inspect.getmembers(i, inspect.ismethod):
                 if hasattr(m, 'observer'):
                     # name is module name of ev_cls
@@ -218,7 +218,7 @@ class AppManager(object):
             LOG.debug("BRICK %s" % brick)
             for ev_cls, list in i.observers.items():
                 LOG.debug("  PROVIDES %s TO %s" % (ev_cls.__name__, list))
-            for ev_cls, handler in i.event_handlers.items():
+            for ev_cls in i.event_handlers.keys():
                 LOG.debug("  CONSUMES %s" % (ev_cls.__name__,))
 
     def close(self):
