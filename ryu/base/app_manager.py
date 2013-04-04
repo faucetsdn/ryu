@@ -142,6 +142,15 @@ class RyuApp(object):
 
 
 class AppManager(object):
+    # singletone
+    _instance = None
+
+    @staticmethod
+    def get_instance():
+        if not AppManager._instance:
+            AppManager._instance = AppManager()
+        return AppManager._instance
+
     def __init__(self):
         self.applications_cls = {}
         self.applications = {}
