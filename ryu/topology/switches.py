@@ -800,10 +800,7 @@ class Switches(app_manager.RyuApp):
             switches.append(self._get_switch(dpid))
 
         rep = event.EventSwitchReply(req.src, switches)
-        if req.sync:
-            self.send_reply(rep)
-        else:
-            self.send_event(req.src, rep)
+        self.reply_to_request(req, rep)
 
     @set_ev_cls(event.EventLinkRequest)
     def link_request_handler(self, req):
@@ -815,10 +812,7 @@ class Switches(app_manager.RyuApp):
         else:
             links = [link for link in self.links if link.src.dpid == dpid]
         rep = event.EventLinkReply(req.src, dpid, links)
-        if req.sync:
-            self.send_reply(rep)
-        else:
-            self.send_event(req.src, rep)
+        self.reply_to_request(req, rep)
 
 
 def get_switch(app, dpid=None):
