@@ -20,7 +20,7 @@ import gevent.queue
 import time
 
 from ryu.base import app_manager
-from ryu.controller.handler import set_ev_handler
+from ryu.controller import handler
 from ryu.topology import event
 
 LOG = logging.getLogger(__name__)
@@ -46,31 +46,31 @@ class DiscoveryEventDumper(app_manager.RyuApp):
 
         self.is_active = True
 
-    @set_ev_handler(event.EventSwitchEnter)
+    @handler.set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
         LOG.debug(ev)
 
-    @set_ev_handler(event.EventSwitchLeave)
+    @handler.set_ev_cls(event.EventSwitchLeave)
     def switch_leave_handler(self, ev):
         LOG.debug(ev)
 
-    @set_ev_handler(event.EventPortAdd)
+    @handler.set_ev_cls(event.EventPortAdd)
     def port_add_handler(self, ev):
         LOG.debug(ev)
 
-    @set_ev_handler(event.EventPortDelete)
+    @handler.set_ev_cls(event.EventPortDelete)
     def port_delete_handler(self, ev):
         LOG.debug(ev)
 
-    @set_ev_handler(event.EventPortModify)
+    @handler.set_ev_cls(event.EventPortModify)
     def port_modify_handler(self, ev):
         LOG.debug(ev)
 
-    @set_ev_handler(event.EventLinkAdd)
+    @handler.set_ev_cls(event.EventLinkAdd)
     def link_add_handler(self, ev):
         LOG.debug(ev)
 
-    @set_ev_handler(event.EventLinkDelete)
+    @handler.set_ev_cls(event.EventLinkDelete)
     def link_del_handler(self, ev):
         LOG.debug(ev)
 
@@ -111,7 +111,7 @@ class DiscoveryEventDumper(app_manager.RyuApp):
                       id(gevent.getcurrent()))
             gevent.sleep(interval - busy)
 
-    @set_ev_handler(event.EventSwitchReply)
+    @handler.set_ev_cls(event.EventSwitchReply)
     def switch_reply_handler(self, reply):
         LOG.debug('switch_reply async %s', reply)
         if len(reply.switches) > 0:
@@ -155,7 +155,7 @@ class DiscoveryEventDumper(app_manager.RyuApp):
                       id(gevent.getcurrent()))
             gevent.sleep(interval - busy)
 
-    @set_ev_handler(event.EventLinkReply)
+    @handler.set_ev_cls(event.EventLinkReply)
     def link_reply_handler(self, reply):
         LOG.debug('link_reply async %s', reply)
         if len(reply.links) > 0:
