@@ -631,13 +631,14 @@ class Switches(app_manager.RyuApp):
 
     @staticmethod
     def _drop_packet(msg):
-        if msg.buffer_id == 0xffffffff:
+        buffer_id = msg.buffer_id
+        if buffer_id == 0xffffffff:
             return  # TODO:use constant instead of -1
 
         dp = msg.datapath
         # TODO:XXX
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
-            dp.send_packet_out(dp.id, msg.in_port, [])
+            dp.send_packet_out(buffer_id, msg.in_port, [])
         else:
             LOG.error('cannot drop_packet. unsupported version. %x',
                       dp.ofproto.OFP_VERSION)
