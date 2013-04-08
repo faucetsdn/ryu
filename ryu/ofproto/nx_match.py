@@ -337,23 +337,21 @@ class ClsRule(object):
         if self.flow.nw_proto != 0:
             wildcards &= ~ofproto_v1_0.OFPFW_NW_PROTO
 
-        if self.flow.nw_src != 0:
+        if self.wc.nw_src_mask != 0 and "01" not in bin(self.wc.nw_src_mask):
             wildcards &= ~ofproto_v1_0.OFPFW_NW_SRC_MASK
-            # maximum size of 32 to prevent changes on other bits
-            wildcards |= (self.wc.nw_src_mask % 32) << 8
+            maskbits = (bin(self.wc.nw_src_mask).count("0") - 1)
+            wildcards |= (maskbits << ofproto_v1_0.OFPFW_NW_SRC_SHIFT)
 
-        if self.flow.nw_dst != 0:
+        if self.wc.nw_dst_mask != 0 and "01" not in bin(self.wc.nw_dst_mask):
             wildcards &= ~ofproto_v1_0.OFPFW_NW_DST_MASK
-            # maximum size of 32 to prevent changes on other bits
-            wildcards |= (self.wc.nw_dst_mask % 32) << 14
+            maskbits = (bin(self.wc.nw_dst_mask).count("0") - 1)
+            wildcards |= (maskbits << ofproto_v1_0.OFPFW_NW_DST_SHIFT)
 
         if self.flow.tp_src != 0:
             wildcards &= ~ofproto_v1_0.OFPFW_TP_SRC
 
         if self.flow.tp_dst != 0:
             wildcards &= ~ofproto_v1_0.OFPFW_TP_DST
-
-        #FIXME: add support for arp, icmp, etc
 
         return (wildcards, self.flow.in_port, self.flow.dl_src,
                 self.flow.dl_dst, self.flow.dl_vlan, self.flow.dl_vlan_pcp,
