@@ -57,6 +57,7 @@ MF_PACK_STRING_BE32 = '!I'
 MF_PACK_STRING_BE16 = '!H'
 MF_PACK_STRING_8 = '!B'
 MF_PACK_STRING_MAC = '!6s'
+MF_PACK_STRING_IPV6 = '!8H'
 
 _MF_FIELDS = {}
 
@@ -722,13 +723,35 @@ class MFArpSha(MFField):
         return self._put(buf, offset, rule.flow.arp_sha)
 
 
+class MFIPV6(object):
+    pack_str = MF_PACK_STRING_IPV6
+
+    @classmethod
+    def field_parser(cls, header, buf, offset):
+        hasmask = (header >> 8) & 1
+        if hasmask:
+            pack_string = '!' + cls.pack_str[1:] * 2
+            value = struct.unpack_from(pack_string, buf, offset + 4)
+            return cls(header, list(value[:8]), list(value[8:]))
+        else:
+            value = struct.unpack_from(cls.pack_str, buf, offset + 4)
+            return cls(header, list(value))
+
+
 @_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_SRC,
                    ofproto_v1_0.NXM_NX_IPV6_SRC_W])
-class MFIPV6Src(MFField):
+@MFField.register_field_header([ofproto_v1_0.NXM_NX_IPV6_SRC,
+                   ofproto_v1_0.NXM_NX_IPV6_SRC_W])
+class MFIPV6Src(MFIPV6, MFField):
+    def __init__(self, header, value, mask=None):
+        super(MFIPV6Src, self).__init__(header, MFIPV6Src.pack_str)
+        self.value = value
+        self.mask = mask
+
     @classmethod
     def make(cls, header):
-        return cls(header, '!4I')
+        return cls(header, cls.pack_str)
 
     def put(self, buf, offset, rule):
         return self.putv6(buf, offset,
@@ -739,10 +762,17 @@ class MFIPV6Src(MFField):
 @_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_DST,
                    ofproto_v1_0.NXM_NX_IPV6_DST_W])
-class MFIPV6Dst(MFField):
+@MFField.register_field_header([ofproto_v1_0.NXM_NX_IPV6_DST,
+                   ofproto_v1_0.NXM_NX_IPV6_DST_W])
+class MFIPV6Dst(MFIPV6, MFField):
+    def __init__(self, header, value, mask=None):
+        super(MFIPV6Dst, self).__init__(header, MFIPV6Dst.pack_str)
+        self.value = value
+        self.mask = mask
+
     @classmethod
     def make(cls, header):
-        return cls(header, '!4I')
+        return cls(header, cls.pack_str)
 
     def put(self, buf, offset, rule):
         return self.putv6(buf, offset,
