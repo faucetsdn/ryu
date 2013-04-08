@@ -814,21 +814,3 @@ class Switches(app_manager.RyuApp):
             links = [link for link in self.links if link.src.dpid == dpid]
         rep = event.EventLinkReply(req.src, dpid, links)
         self.reply_to_request(req, rep)
-
-
-def get_switch(app, dpid=None):
-    rep = app.send_request(event.EventSwitchRequest(dpid))
-    return rep.switches
-
-
-def get_all_switch(app):
-    return get_switch(app)
-
-
-def get_link(app, dpid=None):
-    rep = app.send_request(event.EventLinkRequest(dpid))
-    return rep.links
-
-
-def get_all_link(app):
-    return get_link(app)
