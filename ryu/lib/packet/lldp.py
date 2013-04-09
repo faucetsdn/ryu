@@ -75,7 +75,8 @@ class LLDPBasicTLV(object):
     _LEN_MAX = 511
     tlv_type = None
 
-    def __init__(self, buf=None, *args, **kwargs):
+    def __init__(self, buf=None, *_args, **_kwargs):
+        super(LLDPBasicTLV, self).__init__()
         if buf:
             (self.typelen, ) = struct.unpack(
                 LLDP_TLV_TYPELEN_STR, buf[:LLDP_TLV_SIZE])
@@ -108,6 +109,7 @@ class lldp(packet_base.PacketBase):
     tlvs = []
 
     def __init__(self, tlvs):
+        super(lldp, self).__init__()
         self.tlvs = tlvs
         length = 0
         for tlv in tlvs:
