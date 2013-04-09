@@ -120,7 +120,8 @@ class OFConfigClient(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(OFConfigClient, self).__init__(*args, **kwargs)
         self.switch = capable_switch.OFCapableSwitch(
-            host=HOST, port=PORT, username=USERNAME, password=PASSWORD)
+            host=HOST, port=PORT, username=USERNAME, password=PASSWORD,
+            unknown_host_cb=lambda host, fingeprint: True)
         gevent.spawn(self._do_of_config)
 
     def _validate(self, tree):
