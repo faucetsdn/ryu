@@ -62,4 +62,5 @@ setup(name='ryu',
       scripts=['bin/ryu-manager',
                'bin/ryu-client'],
       data_files=data_files,
+      include_package_data=True,
       )
