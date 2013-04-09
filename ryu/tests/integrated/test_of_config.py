@@ -14,6 +14,102 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+How to run this test
+
+edit linc config file. LINC-Switch/rel/linc/releases/1.0/sys.config
+You can find the sample config I used for the test below
+
+For this following config to work, the network interface
+linc-port and linc-port2 must be created before hand.
+(Or edit the port name depending on your environment)
+An easy way is to create them as follows
+# ip link add linc-port type veth peer name linc-port-peer
+# ip link set linc-port up
+# ip link add linc-port2 type veth peer name linc-port-peer2
+# ip link set linc-port2 up
+
+Then run linc
+# rel/linc/bin/linc console
+
+Then run ryu
+# PYTHONPATH=. ./bin/ryu-manager --verbose \
+        ryu/tests/integrated/test_of_config.py
+
+
+Here is my sys.config used for this test.
+-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8---
+[
+ {linc,
+  [
+   {of_config, enabled},
+
+   {logical_switches,
+    [
+     {switch, 0,
+      [
+       {backend, linc_us4},
+
+       {controllers,
+        [
+         {"Switch0-DefaultController", "localhost", 6633, tcp}
+        ]},
+
+       {ports,
+        [
+         {port, 1, [{interface, "linc-port"}]},
+         {port, 2, [{interface, "linc-port2"}]}
+        ]},
+
+       {queues_status, disabled},
+
+       {queues,
+        [
+        ]}
+      ]}
+    ]}
+  ]},
+
+ {enetconf,
+  [
+   {capabilities, [{base, {1, 1}},
+                   {startup, {1, 0}},
+                   {'writable-running', {1, 0}}]},
+   {callback_module, linc_ofconfig},
+   {sshd_ip, any},
+   {sshd_port, 1830},
+   {sshd_user_passwords,
+    [
+     {"linc", "linc"}
+    ]}
+  ]},
+
+ {lager,
+  [
+   {handlers,
+    [
+     {lager_console_backend, info},
+     {lager_file_backend,
+      [
+       {"log/error.log", error, 10485760, "$D0", 5},
+       {"log/console.log", info, 10485760, "$D0", 5}
+      ]}
+    ]}
+  ]},
+
+ {sasl,
+  [
+   {sasl_error_logger, {file, "log/sasl-error.log"}},
+   {errlog_type, error},
+   {error_logger_mf_dir, "log/sasl"},      % Log directory
+   {error_logger_mf_maxbytes, 10485760},   % 10 MB max file size
+   {error_logger_mf_maxfiles, 5}           % 5 files max
+  ]}
+].
+-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8-->8--
+
+"""
+
 import gevent
 import traceback
 
