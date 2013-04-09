@@ -102,10 +102,6 @@ class LLDPBasicTLV(object):
     def _len_valid(self):
         return self._LEN_MIN <= self.len and self.len <= self._LEN_MAX
 
-    def __str__(self):
-        self._typelen()
-        return super(LLDPBasicTLV, self).__str__()
-
 
 class lldp(packet_base.PacketBase):
     _tlv_parsers = {}
@@ -129,11 +125,6 @@ class lldp(packet_base.PacketBase):
                 self.tlvs[1].tlv_type == LLDP_TLV_PORT_ID and
                 self.tlvs[2].tlv_type == LLDP_TLV_TTL and
                 self.tlvs[-1].tlv_type == LLDP_TLV_END)
-
-    def __str__(self):
-        assert self._tlvs_len_valid()
-        assert self._tlvs_valid()
-        return ''.join(str(tlv) for tlv in self.tlvs)
 
     @classmethod
     def parser(cls, buf):
