@@ -48,7 +48,9 @@ CONF.register_cli_opts([
     cfg.ListOpt('app-lists', default=[],
                 help='application module name to run'),
     cfg.MultiStrOpt('app', positional=True, default=[],
-                    help='application module name to run')
+                    help='application module name to run'),
+    cfg.BoolOpt('cgitb', default=False,
+                help='enable cgitb for more comprehensive traceback'),
 ])
 
 
@@ -56,6 +58,9 @@ def main():
     CONF(project='ryu', version='ryu-manager %s' % version)
 
     log.init_log()
+    if CONF.cgitb:
+        import cgitb
+        cgitb.enable(format='text')
 
     # always enable ofp for now.
     app_lists = CONF.app_lists + CONF.app + ['ryu.controller.ofp_handler']
