@@ -217,8 +217,11 @@ class FirewallOfsList(dict):
         super(FirewallOfsList, self).__init__()
 
     def get_ofs(self, dp_id):
+        if len(self) == 0:
+            raise ValueError('firewall sw is not connected.')
+
         dps = {}
-        if dp_id == REST_ALL and len(self) > 0:
+        if dp_id == REST_ALL:
             dps = self
         else:
             try:
