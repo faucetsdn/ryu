@@ -5,7 +5,7 @@ How to Get Your Change Into Ryu
 Submitting a change
 ===================
 
-Send patches to ryu-devel@list.sourceforge.net. Please don't use 'pull
+Send patches to ryu-devel@lists.sourceforge.net. Please don't use 'pull
 request' on github. We expect you to send a patch in Linux kernel
 development style. If you are not familiar with it, please read the
 following document:
