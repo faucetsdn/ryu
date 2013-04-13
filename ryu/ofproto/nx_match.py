@@ -740,7 +740,7 @@ class MFIPV6(object):
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_SRC,
                    ofproto_v1_0.NXM_NX_IPV6_SRC_W])
 @MFField.register_field_header([ofproto_v1_0.NXM_NX_IPV6_SRC,
-                   ofproto_v1_0.NXM_NX_IPV6_SRC_W])
+                                ofproto_v1_0.NXM_NX_IPV6_SRC_W])
 class MFIPV6Src(MFIPV6, MFField):
     def __init__(self, header, value, mask=None):
         super(MFIPV6Src, self).__init__(header, MFIPV6Src.pack_str)
@@ -761,7 +761,7 @@ class MFIPV6Src(MFIPV6, MFField):
 @_set_nxm_headers([ofproto_v1_0.NXM_NX_IPV6_DST,
                    ofproto_v1_0.NXM_NX_IPV6_DST_W])
 @MFField.register_field_header([ofproto_v1_0.NXM_NX_IPV6_DST,
-                   ofproto_v1_0.NXM_NX_IPV6_DST_W])
+                                ofproto_v1_0.NXM_NX_IPV6_DST_W])
 class MFIPV6Dst(MFIPV6, MFField):
     def __init__(self, header, value, mask=None):
         super(MFIPV6Dst, self).__init__(header, MFIPV6Dst.pack_str)
