@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import struct
+
+from ryu.ofproto import ether
 from . import packet_base
 
 ARP_HW_TYPE_ETHERNET = 1  # ethernet hardware type
@@ -55,3 +57,10 @@ class arp(packet_base.PacketBase):
                            self.hlen, self.plen, self.opcode,
                            self.src_mac, self.src_ip, self.dst_mac,
                            self.dst_ip)
+
+
+def arp_ip(opcode, src_mac, src_ip, dst_mac, dst_ip):
+    return arp(ARP_HW_TYPE_ETHERNET, ether.ETH_TYPE_IP,
+               6,  # ether mac address length
+               4,  # ipv4 address length,
+               opcode, src_mac, src_ip, dst_mac, dst_ip)
