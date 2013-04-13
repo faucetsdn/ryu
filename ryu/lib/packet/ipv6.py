@@ -22,6 +22,11 @@ from . import tcp
 from ryu.ofproto import inet
 
 
+IPV6_ADDRESS_PACK_STR = '!16s'
+IPV6_ADDRESS_LEN = struct.calcsize(IPV6_ADDRESS_PACK_STR)
+IPV6_PSEUDO_HEADER_PACK_STR = '!16s16s3xB'
+
+
 class ipv6(packet_base.PacketBase):
     _PACK_STR = '!IHBB16s16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
