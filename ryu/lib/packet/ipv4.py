@@ -23,6 +23,11 @@ from . import tcp
 from ryu.ofproto import inet
 
 
+IPV4_ADDRESS_PACK_STR = '!I'
+IPV4_ADDRESS_LEN = struct.calcsize(IPV4_ADDRESS_PACK_STR)
+IPV4_PSEUDO_HEADER_PACK_STR = '!II2xHH'
+
+
 class ipv4(packet_base.PacketBase):
     _PACK_STR = '!BBHHHBBHII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
