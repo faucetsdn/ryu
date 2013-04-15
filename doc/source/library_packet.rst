@@ -45,8 +45,7 @@ If vlan is not used, you see something like::
     <ryu.lib.packet.tcp.tcp object at 0x107a5d850>
 
 You can access to a specific protocol class instance by using the
-packet class find_protocol method. Let's try to check VLAN id if VLAN
-is used:
+packet class iterator.  Let's try to check VLAN id if VLAN is used:
 
 .. code-block:: python
        
