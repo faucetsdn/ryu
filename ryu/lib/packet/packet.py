@@ -18,7 +18,16 @@ from . import ethernet
 
 
 class Packet(object):
+    """A packet decoder/encoder class.
+
+    An instance is used to either decode or encode a single packet.
+    """
+
     def __init__(self, data=None):
+        """*data* is a bytearray to describe a raw datagram to decode.
+        *data* should be omitted when encoding a packet.
+        """
+
         super(Packet, self).__init__()
         self.data = data
         self.protocols = []
@@ -26,9 +35,9 @@ class Packet(object):
         self.parsed_bytes = 0
         if self.data:
             # Do we need to handle non ethernet?
-            self.parser(ethernet.ethernet)
+            self._parser(ethernet.ethernet)
 
-    def parser(self, cls):
+    def _parser(self, cls):
         while cls:
             proto, cls = cls.parser(self.data[self.parsed_bytes:])
             if proto:
@@ -39,6 +48,11 @@ class Packet(object):
             self.protocols.append(self.data[self.parsed_bytes:])
 
     def serialize(self):
+        """Encode a packet and store the resulted bytearray in self.data.
+
+        This method is legal only when encoding a packet.
+        """
+
         self.data = bytearray()
         r = self.protocols[::-1]
         for i, p in enumerate(r):
@@ -53,9 +67,21 @@ class Packet(object):
             self.data = data + self.data
 
     def add_protocol(self, proto):
+        """Register a protocol *proto* for this packet.
+
+        This method is legal only when encoding a packet.
+
+        When encoding a packet, register a protocol (ethernet, ipv4, ...)
+        header to add to this packet.
+        Protocol headers should be registered in on-wire order before calling
+        self.serialize.
+        """
+
         self.protocols.append(proto)
 
     def next(self):
+        """See __iter__."""
+
         try:
             p = self.protocols[self.protocol_idx]
         except:
@@ -66,4 +92,13 @@ class Packet(object):
         return p
 
     def __iter__(self):
+        """Iterate protocol (ethernet, ipv4, ...) headers and the payload.
+
+        This method is legal only when decoding a packet.
+
+        Protocol headers are instances of subclass of packet_base.PacketBase.
+        The payload is a bytearray.
+        They are iterated in on-wire order.
+        """
+
         return self
