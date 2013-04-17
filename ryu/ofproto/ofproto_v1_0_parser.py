@@ -2194,15 +2194,21 @@ class NXStatsRequest(OFPVendorStatsRequest):
 
 
 class NXFlowStatsRequest(NXStatsRequest):
-    def __init__(self, datapath, flags, out_port, match_len,
-                 table_id):
+    def __init__(self, datapath, flags, out_port, table_id, rule=None):
         super(NXFlowStatsRequest, self).__init__(datapath, flags,
                                                  ofproto_v1_0.NXST_FLOW)
         self.out_port = out_port
-        self.match_len = match_len
         self.table_id = table_id
+        self.rule = rule
+        self.match_len = 0
 
     def _serialize_vendor_stats_body(self):
+        if self.rule is not None:
+            offset = ofproto_v1_0.NX_STATS_MSG_SIZE + \
+                ofproto_v1_0.NX_FLOW_STATS_REQUEST_SIZE
+            self.match_len = nx_match.serialize_nxm_match(
+                self.rule, self.buf, offset)
+
         msg_pack_into(
             ofproto_v1_0.NX_FLOW_STATS_REQUEST_PACK_STR,
             self.buf, ofproto_v1_0.NX_STATS_MSG_SIZE, self.out_port,
