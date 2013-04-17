@@ -46,8 +46,20 @@ class PacketBase(object):
         This method is used only when decoding a packet.
 
         Decode a protocol header at offset 0 in bytearray *buf*.
-        Returns the rest of the packet and the decoded header, which is
-        instance of packet_base.PacketBase subclass.
+        Returns the following two objects.
+
+        * An object to describe the decoded header.
+        It should have the following attributes at least.
+
+        =========== ============
+        Attribute   Description
+        =========== ============
+        length      The number of the corresponding on-wire octets
+        =========== ============
+
+        * A packet_base.PacketBase subclass appropriate for the rest of
+          the packet.  None when the rest of the packet should be considered
+          as raw payload.
         """
         pass
 

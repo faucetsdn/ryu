@@ -27,6 +27,27 @@ ICMP_ECHO_REQUEST = 8
 
 
 class icmp(packet_base.PacketBase):
+    """ICMP (RFC 792) header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    type           Type
+    code           Code
+    csum           CheckSum \
+                   (0 means automatically-calculate when encoding)
+    data           Payload. \
+                   Either a bytearray or ryu.lib.packet.icmp.echo object. \
+                   NOTE: This includes "unused" 16 bits and the following \
+                   "Internet Header + 64 bits of Original Data Datagram" of \
+                   the ICMP header.
+    ============== ====================
+    """
+
     _PACK_STR = '!BBH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _ICMP_TYPES = {}
@@ -80,6 +101,24 @@ class icmp(packet_base.PacketBase):
 
 @icmp.register_icmp_type(ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST)
 class echo(object):
+    """ICMP sub encoder/decoder class.
+
+    This is used with ryu.lib.packet.icmp.icmp for
+    ICMP Echo and Echo Reply messages.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    id             Identifier
+    seq            Sequence Number
+    data           Internet Header + 64 bits of Original Data Datagram
+    ============== ====================
+    """
+
     _PACK_STR = '!HH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 

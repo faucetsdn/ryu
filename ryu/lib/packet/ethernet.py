@@ -21,6 +21,20 @@ from ryu.ofproto import ether
 
 
 class ethernet(packet_base.PacketBase):
+    """Ethernet header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    __init__ takes the correspondig args in this order.
+
+    =========== ====================
+    Attribute   Description
+    =========== ====================
+    dst         destination address
+    src         source address
+    ethertype   ether type
+    =========== ====================
+    """
+
     _PACK_STR = '!6s6sH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 

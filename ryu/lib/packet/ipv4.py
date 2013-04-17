@@ -29,6 +29,34 @@ IPV4_PSEUDO_HEADER_PACK_STR = '!II2xHH'
 
 
 class ipv4(packet_base.PacketBase):
+    """IPv4 header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    version        Version
+    header_length  IHL
+    tos            Type of Service
+    total_length   Total Length \
+                   (0 means automatically-calculate when encoding)
+    identification Identification
+    flags          Flags
+    offset         Fragment Offset
+    ttl            Time to Live
+    proto          Protocol
+    csum           Header Checksum \
+                   (Ignored and automatically-calculated when encoding)
+    src            Source Address
+    dst            Destination Address
+    option         A bytearray which contains the entire Options, or None for \
+                   no Options
+    ============== ====================
+    """
+
     _PACK_STR = '!BBHHHBBHII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
