@@ -28,6 +28,27 @@ ARP_REV_REPLY = 4
 
 
 class arp(packet_base.PacketBase):
+    """ARP (RFC 826) header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    hwtype         ar$hrd
+    proto          ar$pro
+    hlen           ar$hln
+    plen           ar$pln
+    opcode         ar$op
+    src_mac        ar$sha
+    src_ip         ar$spa
+    dst_mac        ar$tha
+    dst_ip         ar$tpa
+    ============== ====================
+    """
+
     _PACK_STR = '!HHBBH6sI6sI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
@@ -60,6 +81,13 @@ class arp(packet_base.PacketBase):
 
 
 def arp_ip(opcode, src_mac, src_ip, dst_mac, dst_ip):
+    """A convenient wrapper for IPv4 ARP for Ethernet.
+
+    This is an equivalent of the following code.
+
+        arp(ARP_HW_TYPE_ETHERNET, ether.ETH_TYPE_IP, \
+               6, 4, opcode, src_mac, src_ip, dst_mac, dst_ip)
+    """
     return arp(ARP_HW_TYPE_ETHERNET, ether.ETH_TYPE_IP,
                6,  # ether mac address length
                4,  # ipv4 address length,

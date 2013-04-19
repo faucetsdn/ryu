@@ -29,7 +29,11 @@ IPV4_PSEUDO_HEADER_PACK_STR = '!II2xHH'
 
 
 class ipv4(packet_base.PacketBase):
-    """IPv4 header encoder/decoder class.
+    """IPv4 (RFC 791) header encoder/decoder class.
+
+    NOTE: When decoding, this implementation tries to decode the upper
+    layer protocol even for a fragmented datagram.  It isn't likely
+    what a user would want.
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.

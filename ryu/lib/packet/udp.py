@@ -20,6 +20,24 @@ from . import packet_utils
 
 
 class udp(packet_base.PacketBase):
+    """UDP (RFC 768) header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    src_port       Source Port
+    dst_port       Destination Port
+    total_length   Length \
+                   (0 means automatically-calculate when encoding)
+    csum           Checksum \
+                   (0 means automatically-calculate when encoding)
+    ============== ====================
+    """
+
     _PACK_STR = '!HHHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 

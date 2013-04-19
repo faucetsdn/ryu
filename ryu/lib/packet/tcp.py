@@ -20,6 +20,30 @@ from . import packet_utils
 
 
 class tcp(packet_base.PacketBase):
+    """TCP (RFC 793) header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    src_port       Source Port
+    dst_port       Destination Port
+    seq            Sequence Number
+    ack            Acknowledgement Number
+    offset         Data Offset
+    bits           Control Bits
+    window_size    Window
+    csum           Checksum \
+                   (0 means automatically-calculate when encoding)
+    urgent         Urgent Pointer
+    option         An bytearray containing Options and following Padding. \
+                   None if no options.
+    ============== ====================
+    """
+
     _PACK_STR = '!HHIIBBHHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 

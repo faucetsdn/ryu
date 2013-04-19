@@ -28,6 +28,27 @@ IPV6_PSEUDO_HEADER_PACK_STR = '!16s16s3xB'
 
 
 class ipv6(packet_base.PacketBase):
+    """IPv6 (RFC 2460) header encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    version        Version
+    traffic_class  Traffic Class
+    flow_label     When decoding, Flow Label. \
+                   When encoding, the most significant 8 bits of Flow Label.
+    payload_length Payload Length
+    nxt            Next Header
+    hop_limit      Hop Limit
+    src            Source Address
+    dst            Destination Address
+    ============== ====================
+    """
+
     _PACK_STR = '!IHBB16s16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 

@@ -175,6 +175,33 @@ def is_ipv6(ip_address):
 
 
 class vrrp(packet_base.PacketBase):
+    """The base class for VRRPv2 (RFC 3768) and VRRPv3 (RFC 5798)
+    header encoder/decoder classes.
+
+    Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
+    This class should not be directly instantiated by user.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    version        Version
+    type           Type
+    vrid           Virtual Rtr ID (VRID)
+    priority       Priority
+    count_ip       Count IPvX Addr. \
+                   Calculated automatically when encoding.
+    max_adver_int  Maximum Advertisement Interval (Max Adver Int)
+    checksum       Checksum. \
+                   Calculated automatically when encoding.
+    ip_addresses   IPvX Address(es).  A python list of IP addresses.
+    auth_type      Authentication Type (only for VRRPv2)
+    auth_data      Authentication Data (only for VRRPv2)
+    ============== ====================
+    """
+
     _VERSION_PACK_STR = '!B'
     _IPV4_ADDRESS_PACK_STR_RAW = 'I'
     _IPV4_ADDRESS_PACK_STR = '!' + _IPV4_ADDRESS_PACK_STR_RAW
@@ -289,6 +316,24 @@ class vrrp(packet_base.PacketBase):
         return self.identification
 
     def create_packet(self, primary_ip_address, vlan_id=None):
+        """Prepare a VRRP packet.
+
+        Returns a newly created ryu.lib.packet.packet.Packet object
+        with appropriate protocol header objects added by add_protocol().
+        It's caller's responsibility to serialize().
+        The serialized packet would looks like the ones described in
+        the following sections.
+
+        * RFC 3768 5.1. VRRP Packet Format
+        * RFC 5798 5.1. VRRP Packet Format
+
+        ================== ====================
+        Argument           Description
+        ================== ====================
+        primary_ip_address Source IP address
+        vlan_id            VLAN ID.  None for no VLAN.
+        ================== ====================
+        """
         if self.is_ipv6:
             traffic_class = 0xc0        # set tos to internetwork control
             flow_label = 0
@@ -358,6 +403,12 @@ class vrrp(packet_base.PacketBase):
 # max_adver_int is in seconds
 @vrrp.register_vrrp_version(VRRP_VERSION_V2, 1)
 class vrrpv2(vrrp):
+    """VRRPv2 (RFC 3768) header encoder/decoder class.
+
+    Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
+    create method should be used to instantiate an object of this class.
+    """
+
     _PACK_STR = '!BBBBBBH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _CHECKSUM_PACK_STR = '!H'
@@ -374,6 +425,14 @@ class vrrpv2(vrrp):
 
     @staticmethod
     def create(type_, vrid, priority, max_adver_int, ip_addresses):
+        """Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
+        this method should be used to instantiate an object of this class.
+
+        This method's arguments are same as ryu.lib.packet.vrrp.vrrp object's
+        attributes of the same name.  (except that *type_* corresponds to
+        *type* attribute.)
+        """
+
         return vrrp.create_version(VRRP_VERSION_V2, type_, vrid, priority,
                                    max_adver_int,
                                    ip_addresses,
@@ -451,6 +510,12 @@ class vrrpv2(vrrp):
 # max_adver_int is in centi seconds: 1 second = 100 centiseconds
 @vrrp.register_vrrp_version(VRRP_VERSION_V3, 100)
 class vrrpv3(vrrp):
+    """VRRPv3 (RFC 5798) header encoder/decoder class.
+
+    Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
+    create method should be used to instantiate an object of this class.
+    """
+
     _PACK_STR = '!BBBBHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _CHECKSUM_PACK_STR = '!H'
@@ -473,6 +538,13 @@ class vrrpv3(vrrp):
 
     @staticmethod
     def create(type_, vrid, priority, max_adver_int, ip_addresses):
+        """Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
+        this method should be used to instantiate an object of this class.
+
+        This method's arguments are same as ryu.lib.packet.vrrp.vrrp object's
+        attributes of the same name.  (except that *type_* corresponds to
+        *type* attribute.)
+        """
         return vrrp.create_version(VRRP_VERSION_V3, type_, vrid, priority,
                                    max_adver_int, ip_addresses)
 

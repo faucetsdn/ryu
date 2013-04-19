@@ -101,7 +101,7 @@ class icmp(packet_base.PacketBase):
 
 @icmp.register_icmp_type(ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST)
 class echo(object):
-    """ICMP sub encoder/decoder class.
+    """ICMP sub encoder/decoder class for Echo and Echo Reply messages.
 
     This is used with ryu.lib.packet.icmp.icmp for
     ICMP Echo and Echo Reply messages.
