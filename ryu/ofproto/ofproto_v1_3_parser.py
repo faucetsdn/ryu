@@ -2355,7 +2355,7 @@ class OFPGroupDescStats(object):
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP_DESC, OFPGroupDescStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupDescStatsRequest(OFPMultipartRequest):
-    def __init__(self, datapath, flags, port_no):
+    def __init__(self, datapath, flags):
         super(OFPGroupDescStatsRequest, self).__init__(datapath, flags)
 
 
@@ -2381,7 +2381,7 @@ class OFPGroupFeaturesStats(collections.namedtuple('OFPGroupFeaturesStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP_FEATURES, OFPGroupFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
-    def __init__(self, datapath, flags, port_no):
+    def __init__(self, datapath, flags):
         super(OFPGroupFeaturesRequest, self).__init__(datapath, flags)
 
 
@@ -2541,7 +2541,7 @@ class OFPMeterFeaturesStats(collections.namedtuple('OFPMeterFeaturesStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_METER_FEATURES, OFPMeterFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPMeterFeaturesStatsRequest(OFPMultipartRequest):
-    def __init__(self, datapath, flags, port_no):
+    def __init__(self, datapath, flags):
         super(OFPMeterFeaturesStatsRequest, self).__init__(datapath, flags)
 
 
