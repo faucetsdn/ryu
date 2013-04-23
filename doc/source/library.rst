@@ -8,4 +8,5 @@ Ryu provides some useful library for your network applications.
    :maxdepth: 1
 
    library_packet.rst
+   library_packet_ref.rst
    library_of_config.rst
