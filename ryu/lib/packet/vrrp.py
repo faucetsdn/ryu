@@ -406,7 +406,7 @@ class vrrpv2(vrrp):
     """VRRPv2 (RFC 3768) header encoder/decoder class.
 
     Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
-    create method should be used to instantiate an object of this class.
+    *create* method should be used to instantiate an object of this class.
     """
 
     _PACK_STR = '!BBBBBBH'
@@ -513,7 +513,7 @@ class vrrpv3(vrrp):
     """VRRPv3 (RFC 5798) header encoder/decoder class.
 
     Unlike other ryu.lib.packet.packet_base.PacketBase derived classes,
-    create method should be used to instantiate an object of this class.
+    *create* method should be used to instantiate an object of this class.
     """
 
     _PACK_STR = '!BBBBHH'

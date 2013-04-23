@@ -21,13 +21,17 @@ class Packet(object):
     """A packet decoder/encoder class.
 
     An instance is used to either decode or encode a single packet.
+
+    *data* is a bytearray to describe a raw datagram to decode.
+    When decoding, a Packet object is iteratable.
+    Iterated values are protocol (ethernet, ipv4, ...) headers and the payload.
+    Protocol headers are instances of subclass of packet_base.PacketBase.
+    The payload is a bytearray.  They are iterated in on-wire order.
+
+    *data* should be omitted when encoding a packet.
     """
 
     def __init__(self, data=None):
-        """*data* is a bytearray to describe a raw datagram to decode.
-        *data* should be omitted when encoding a packet.
-        """
-
         super(Packet, self).__init__()
         self.data = data
         self.protocols = []
@@ -80,8 +84,6 @@ class Packet(object):
         self.protocols.append(proto)
 
     def next(self):
-        """See __iter__."""
-
         try:
             p = self.protocols[self.protocol_idx]
         except:
@@ -92,13 +94,4 @@ class Packet(object):
         return p
 
     def __iter__(self):
-        """Iterate protocol (ethernet, ipv4, ...) headers and the payload.
-
-        This method is legal only when decoding a packet.
-
-        Protocol headers are instances of subclass of packet_base.PacketBase.
-        The payload is a bytearray.
-        They are iterated in on-wire order.
-        """
-
         return self

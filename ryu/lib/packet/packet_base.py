@@ -49,17 +49,18 @@ class PacketBase(object):
         Returns the following two objects.
 
         * An object to describe the decoded header.
-        It should have the following attributes at least.
+          It should have the following attributes at least.
 
-        =========== ============
-        Attribute   Description
-        =========== ============
-        length      The number of the corresponding on-wire octets
-        =========== ============
+          =========== ============
+          Attribute   Description
+          =========== ============
+          length      The number of the corresponding on-wire octets.
+          =========== ============
 
         * A packet_base.PacketBase subclass appropriate for the rest of
           the packet.  None when the rest of the packet should be considered
           as raw payload.
+
         """
         pass
 
