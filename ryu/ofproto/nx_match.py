@@ -22,7 +22,6 @@ from ryu import exception
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
-from . import ether
 from . import inet
 
 import logging
