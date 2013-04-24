@@ -1,5 +1,5 @@
 # Copyright (C) 2012 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2012 Isaku Yamahata <yamahata at valinux co jp>
+# Copyright (C) 2012, 2013 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -2793,6 +2793,8 @@ class OFPRoleRequest(MsgBase):
 class OFPRoleReply(MsgBase):
     def __init__(self, datapath):
         super(OFPRoleReply, self).__init__(datapath)
+        self.role = None
+        self.generation_id = None
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -2802,6 +2804,7 @@ class OFPRoleReply(MsgBase):
         (msg.role, msg.generation_id) = struct.unpack_from(
             ofproto_v1_3.OFP_ROLE_REQUEST_PACK_STR, msg.buf,
             ofproto_v1_3.OFP_HEADER_SIZE)
+        return msg
 
 
 @_set_msg_type(ofproto_v1_3.OFPT_GET_ASYNC_REQUEST)
@@ -2815,6 +2818,9 @@ class OFPGetAsyncRequest(MsgBase):
 class OFPGetAsyncReply(MsgBase):
     def __init__(self, datapath):
         super(OFPGetAsyncReply, self).__init__(datapath)
+        self.packet_in_mask = None
+        self.port_status_mask = None
+        self.flow_removed_mask = None
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -2825,20 +2831,20 @@ class OFPGetAsyncReply(MsgBase):
          msg.flow_removed_mask) = struct.unpack_from(
              ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
              ofproto_v1_3.OFP_HEADER_SIZE)
+        return msg
 
 
-@_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_SET_ASYNC)
 class OFPSetAsync(MsgBase):
-    def __init__(self, datapath):
+    def __init__(self, datapath,
+                 packet_in_mask, port_status_mask, flow_removed_mask):
         super(OFPSetAsync, self).__init__(datapath)
+        self.packet_in_mask = packet_in_mask
+        self.port_status_mask = port_status_mask
+        self.flow_removed_mask = flow_removed_mask
 
-    @classmethod
-    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        msg = super(OFPSetAsync, cls).parser(datapath, version,
-                                             msg_type, msg_len,
-                                             xid, buf)
-        (msg.packet_in_mask, msg.port_status_mask,
-         msg.flow_removed_mask) = struct.unpack_from(
-             ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
-             ofproto_v1_3.OFP_HEADER_SIZE)
+    def _serialize_body(self):
+        msg_pack_into(ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, self.buf,
+                      ofproto_v1_3.OFP_HEADER_SIZE,
+                      self.packet_in_mask, self.port_status_mask,
+                      self.flow_removed_mask)
