@@ -47,11 +47,11 @@ from ryu.lib import dpid as dpid_lib
 #
 # register the dpid of the other end of tunnel
 # Fail if the dpid is already registered
-# POST /v1.0/tunnels/switches/{dpid}/ports/{port-id}/{remote_dpip}
+# POST /v1.0/tunnels/switches/{dpid}/ports/{port-id}/{remote_dpid}
 #
 # register the dpid of the other end of tunnel
 # Success as nop even if the dpid is already registered
-# PUT /v1.0/tunnels/switches/{dpid}/ports/{port-id}/{remote_dpip}
+# PUT /v1.0/tunnels/switches/{dpid}/ports/{port-id}/{remote_dpid}
 
 
 class TunnelKeyController(ControllerBase):
