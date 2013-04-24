@@ -90,25 +90,37 @@ class OFPPhyPort(collections.namedtuple('OFPPhyPort', (
         return cls(*port)
 
 
-class OFPMatch(collections.namedtuple('OFPMatchBase', (
-        'wildcards', 'in_port', 'dl_src', 'dl_dst', 'dl_vlan',
-        'dl_vlan_pcp', 'dl_type', 'nw_tos', 'nw_proto',
-        'nw_src', 'nw_dst', 'tp_src', 'tp_dst'))):
-
-    def __new__(cls, *args):
-        # for convenience when dl_src/dl_dst are wildcard
-        if args[2] != 0 and args[3] != 0:
-            return super(cls, OFPMatch).__new__(cls, *args)
-
-        tmp = list(args)
-        if tmp[2] == 0:
-            tmp[2] = mac.DONTCARE
-        if tmp[3] == 0:
-            tmp[3] = mac.DONTCARE
-        return super(cls, OFPMatch).__new__(cls, *tmp)
+class OFPMatch(object):
+    def __init__(self, wildcards, in_port, dl_src, dl_dst, dl_vlan,
+                 dl_vlan_pcp, dl_type, nw_tos, nw_proto, nw_src,
+                 nw_dst, tp_src, tp_dst):
+        super(OFPMatch, self).__init__()
+        self.wildcards = wildcards
+        self.in_port = in_port
+        if dl_src == 0:
+            self.dl_src = mac.DONTCARE
+        else:
+            self.dl_src = dl_src
+        if dl_dst == 0:
+            self.dl_dst = mac.DONTCARE
+        else:
+            self.dl_dst = dl_dst
+        self.dl_vlan = dl_vlan
+        self.dl_vlan_pcp = dl_vlan_pcp
+        self.dl_type = dl_type
+        self.nw_tos = nw_tos
+        self.nw_proto = nw_proto
+        self.nw_src = nw_src
+        self.nw_dst = nw_dst
+        self.tp_src = tp_src
+        self.tp_dst = tp_dst
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset, *self)
+        msg_pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset,
+                      self.wildcards, self.in_port, self.dl_src,
+                      self.dl_dst, self.dl_vlan, self.dl_vlan_pcp,
+                      self.dl_type, self.nw_tos, self.nw_proto,
+                      self.nw_src, self.nw_dst, self.tp_src, self.tp_dst)
 
     @classmethod
     def parse(cls, buf, offset):
