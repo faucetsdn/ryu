@@ -613,6 +613,7 @@ class MFIPSrc(MFField):
     def __init__(self, header, value, mask=None):
         super(MFIPSrc, self).__init__(header, MFIPSrc.pack_str)
         self.value = value
+        self.mask = mask
 
     @classmethod
     def make(cls, header):
@@ -632,6 +633,7 @@ class MFIPDst(MFField):
     def __init__(self, header, value, mask=None):
         super(MFIPDst, self).__init__(header, MFIPDst.pack_str)
         self.value = value
+        self.mask = mask
 
     @classmethod
     def make(cls, header):
