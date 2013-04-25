@@ -196,7 +196,16 @@ class Datapath(object):
                 buf = self.send_q.get()
                 self.socket.sendall(buf)
         finally:
+            q = self.send_q
+            # first, clear self.send_q to prevent new references.
             self.send_q = None
+            # there might be threads currently blocking in send_q.put().
+            # unblock them by draining the queue.
+            try:
+                while q.get(block=False):
+                    pass
+            except hub.QueueEmpty:
+                pass
 
     def send(self, buf):
         if self.send_q:
