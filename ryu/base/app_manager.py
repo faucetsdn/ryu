@@ -60,7 +60,7 @@ class RyuApp(object):
         self.event_handlers = {}
         self.observers = {}
         self.threads = []
-        self.events = hub.Queue()
+        self.events = hub.Queue(128)
         self.replies = hub.Queue()
         self.logger = logging.getLogger(self.name)
         self.threads.append(hub.spawn(self._event_loop))
