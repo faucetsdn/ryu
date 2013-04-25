@@ -16,11 +16,11 @@
 import struct
 import socket
 import logging
-import gevent
 
 from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
+from ryu.lib import hub
 from ryu.lib import mac
 
 
@@ -187,13 +187,13 @@ def match_ip_to_str(value, mask):
 def send_stats_request(dp, stats, waiters, msgs):
     dp.set_xid(stats)
     waiters_per_dp = waiters.setdefault(dp.id, {})
-    lock = gevent.event.AsyncResult()
+    lock = hub.Event()
     waiters_per_dp[stats.xid] = (lock, msgs)
     dp.send_msg(stats)
 
     try:
-        lock.get(timeout=DEFAULT_TIMEOUT)
-    except gevent.Timeout:
+        lock.wait(timeout=DEFAULT_TIMEOUT)
+    except hub.Timeout:
         del waiters_per_dp[stats.xid]
 
 

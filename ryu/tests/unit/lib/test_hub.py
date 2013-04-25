@@ -79,13 +79,11 @@ class Test_hub(unittest.TestCase):
         ev = hub.Event()
         result = []
         with hub.Timeout(2):
-            hub.spawn(_child, ev, result)
-            try:
-                ev.wait(timeout=0.5)
-                raise BaseException("should timed out")
-            except hub.Timeout:
-                pass
+            t = hub.spawn(_child, ev, result)
+            ev.wait(timeout=0.5)
         assert len(result) == 0
+        ev.wait()
+        assert len(result) == 1
 
     def test_spawn_event3(self):
         def _child(ev, ev2, result):

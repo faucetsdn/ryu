@@ -114,5 +114,9 @@ if HUB_TYPE == 'eventlet':
         def wait(self, timeout=None):
             if timeout is None:
                 self._wait()
-            with Timeout(timeout):
-                self._wait()
+            else:
+                try:
+                    with Timeout(timeout):
+                        self._wait()
+                except Timeout:
+                    pass

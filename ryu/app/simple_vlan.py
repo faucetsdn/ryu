@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gevent
 import logging
 
 from ryu.app import (conf_switch_key,
@@ -27,6 +26,7 @@ from ryu.controller import (conf_switch,
                             tunnels)
 import ryu.exception as ryu_exc
 from ryu.lib import dpid as dpid_lib
+from ryu.lib import hub
 from ryu.lib.ovs import bridge
 from ryu.ofproto import nx_match
 
@@ -131,7 +131,7 @@ class SimpleVLAN(app_manager.RyuApp):
         port_name = port.name.rstrip('\x00')
         try:
             ovs_br.set_db_attribute("Port", port_name, "tag", tunnel_key)
-        except gevent.Timeout:
+        except hub.Timeout:
             self.logger.error('timeout')
             return
 

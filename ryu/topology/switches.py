@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import logging
-import gevent
 import struct
 import time
 import json
@@ -26,6 +25,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.exception import RyuException
+from ryu.lib import hub
 from ryu.lib.mac import DONTCARE, haddr_to_str
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
 from ryu.lib.port_no import port_no_to_str
@@ -453,17 +453,17 @@ class Switches(app_manager.RyuApp):
         if self.link_discovery:
             self.install_flow = CONF.install_lldp_flow
             self.explicit_drop = CONF.explicit_drop
-            self.lldp_event = gevent.event.Event()
-            self.link_event = gevent.event.Event()
-            self.threads.append(gevent.spawn_later(0, self.lldp_loop))
-            self.threads.append(gevent.spawn_later(0, self.link_loop))
+            self.lldp_event = hub.Event()
+            self.link_event = hub.Event()
+            self.threads.append(hub.spawn(self.lldp_loop))
+            self.threads.append(hub.spawn(self.link_loop))
 
     def close(self):
         self.is_active = False
         if self.link_discovery:
             self.lldp_event.set()
             self.link_event.set()
-            gevent.joinall(self.threads)
+            hub.joinall(self.threads)
 
     def _register(self, dp):
         assert dp.id is not None
@@ -745,7 +745,7 @@ class Switches(app_manager.RyuApp):
                 self.send_lldp_packet(port)
             for port in ports:
                 self.send_lldp_packet(port)
-                gevent.sleep(self.LLDP_SEND_GUARD)      # don't burst
+                hub.sleep(self.LLDP_SEND_GUARD)      # don't burst
 
             if timeout is not None and ports:
                 timeout = 0     # We have already slept

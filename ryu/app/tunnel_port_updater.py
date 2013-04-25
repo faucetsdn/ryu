@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import collections
-import gevent
 from oslo.config import cfg
 import logging
 import netaddr
@@ -29,6 +28,7 @@ from ryu.controller import (conf_switch,
                             network,
                             tunnels)
 from ryu.lib import dpid as dpid_lib
+from ryu.lib import hub
 from ryu.lib.ovs import bridge as ovs_bridge
 
 
@@ -120,8 +120,8 @@ class TunnelDP(object):
         self.conf_switch = conf_switch_
         self.inited = False
 
-        self.req_q = gevent.queue.Queue()
-        self.thr = gevent.spawn_later(0, self._serve_loop)
+        self.req_q = hub.Queue()
+        self.thr = hub.spawn(self._serve_loop)
 
     def _init(self):
         self.ovs_bridge.init()
@@ -289,7 +289,7 @@ class TunnelDP(object):
         if not self.inited:
             try:
                 self._init()
-            except gevent.timeout.Timeout:
+            except hub.Timeout:
                 self.logger.warn('_init timeouted')
 
         req = None
@@ -315,7 +315,7 @@ class TunnelDP(object):
                     self._del_tunnel_port_ip(req.remote_ip)
                 else:
                     self.logger.error('unknown request %s', req)
-            except gevent.timeout.Timeout:
+            except hub.Timeout:
                 # timeout. try again
                 self.logger.warn('timeout try again')
                 continue

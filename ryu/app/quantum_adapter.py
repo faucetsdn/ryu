@@ -36,10 +36,6 @@ from ryu.lib.ovs import bridge
 from ryu.lib.quantum_ifaces import QuantumIfaces
 
 
-from gevent import monkey
-monkey.patch_all()
-
-
 CONF = cfg.CONF
 
 

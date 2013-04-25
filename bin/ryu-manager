@@ -16,9 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gevent
-from gevent import monkey
-monkey.patch_all()
+from ryu.lib import hub
+hub.patch()
 
 # TODO:
 #   Right now, we have our own patched copy of ovs python bindings
@@ -69,16 +68,16 @@ def main():
     services = []
 
     ctlr = controller.OpenFlowController()
-    thr = gevent.spawn_later(0, ctlr)
+    thr = hub.spawn(ctlr)
     services.append(thr)
 
     webapp = wsgi.start_service(app_mgr)
     if webapp:
-        thr = gevent.spawn_later(0, webapp)
+        thr = hub.spawn(webapp)
         services.append(thr)
 
     try:
-        gevent.joinall(services)
+        hub.joinall(services)
     finally:
         app_mgr.close()
 

@@ -15,7 +15,6 @@
 # limitations under the License.
 
 
-import gevent
 import itertools
 import logging
 import operator
@@ -31,6 +30,7 @@ from ovs import (jsonrpc,
                  stream)
 from ovs.db import idl
 
+from ryu.lib import hub
 from ryu.lib.ovs import vswitch_idl
 
 LOG = logging.getLogger(__name__)       # use ovs.vlog?
@@ -1002,7 +1002,7 @@ class VSCtl(object):
         if timeout_sec is None:
             self._run_command(commands)
         else:
-            with gevent.Timeout(timeout_sec, exception):
+            with hub.Timeout(timeout_sec, exception):
                 self._run_command(commands)
 
     # commands

@@ -16,9 +16,9 @@
 import struct
 import socket
 import logging
-import gevent
 
 from ryu.ofproto import ofproto_v1_0
+from ryu.lib import hub
 from ryu.lib.mac import haddr_to_bin, haddr_to_str
 
 
@@ -195,13 +195,13 @@ def nw_dst_to_str(wildcards, addr):
 def send_stats_request(dp, stats, waiters, msgs):
     dp.set_xid(stats)
     waiters_per_dp = waiters.setdefault(dp.id, {})
-    lock = gevent.event.AsyncResult()
+    lock = hub.Event()
     waiters_per_dp[stats.xid] = (lock, msgs)
     dp.send_msg(stats)
 
     try:
-        lock.get(timeout=DEFAULT_TIMEOUT)
-    except gevent.Timeout:
+        lock.wait(timeout=DEFAULT_TIMEOUT)
+    except hub.Timeout:
         del waiters_per_dp[stats.xid]
 
 

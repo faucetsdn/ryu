@@ -110,7 +110,6 @@ Here is my sys.config used for this test.
 
 """
 
-import gevent
 import traceback
 
 import lxml.etree
@@ -118,6 +117,7 @@ import ncclient
 
 from ryu.base import app_manager
 from ryu.lib.netconf import constants as nc_consts
+from ryu.lib import hub
 from ryu.lib import of_config
 from ryu.lib.of_config import capable_switch
 from ryu.lib.of_config import constants as ofc_consts
@@ -218,7 +218,7 @@ class OFConfigClient(app_manager.RyuApp):
         self.switch = capable_switch.OFCapableSwitch(
             host=HOST, port=PORT, username=USERNAME, password=PASSWORD,
             unknown_host_cb=lambda host, fingeprint: True)
-        gevent.spawn(self._do_of_config)
+        hub.spawn(self._do_of_config)
 
     def _validate(self, tree):
         xmlschema = _get_schema()
