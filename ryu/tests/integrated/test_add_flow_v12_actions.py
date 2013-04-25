@@ -437,6 +437,7 @@ class RunTest(tester.TestFlowBase):
         self.add_apply_actions(dp, actions)
 
     def is_supported(self, t):
+        # Open vSwitch 1.10 does not support MPLS yet.
         unsupported = [
             'test_action_set_field_ip_proto',
             'test_action_set_field_dl_type',
@@ -444,6 +445,14 @@ class RunTest(tester.TestFlowBase):
             'test_action_set_field_ipv6',
             'test_action_set_field_icmp',
             'test_action_set_nw_ttl',
+            'test_action_copy_ttl_in',
+            'test_action_copy_ttl_out',
+            'test_action_dec_mpls_ttl',
+            'test_action_pop_mpls',
+            'test_action_push_mpls',
+            'test_action_set_field_mpls_label',
+            'test_action_set_field_mpls_tc',
+            'test_action_set_mpls_ttl'
         ]
         for u in unsupported:
             if t.find(u) != -1:

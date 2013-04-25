@@ -1187,7 +1187,9 @@ class RunTest(tester.TestFlowBase):
         self.add_matches(dp, match)
 
     def is_supported(self, t):
+        # Open vSwitch 1.10 does not support MPLS yet.
         unsupported = [
+            'test_rule_set_mpls_label',
             'test_rule_set_mpls_tc',
         ]
         for u in unsupported:
