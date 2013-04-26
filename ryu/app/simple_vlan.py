@@ -132,7 +132,7 @@ class SimpleVLAN(app_manager.RyuApp):
         try:
             ovs_br.set_db_attribute("Port", port_name, "tag", tunnel_key)
         except gevent.Timeout:
-            self.logger.error('timout')
+            self.logger.error('timeout')
             return
 
         return True
