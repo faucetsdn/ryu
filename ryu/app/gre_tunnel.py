@@ -337,7 +337,7 @@ class GRETunnel(app_manager.RyuApp):
     in_port(TUNNEL)             drop                    (catch-all drop rule)
 
     TUNNEL_OUT_TABLE
-    macth                       action
+    match                       action
     tun_id & dl_dst             out tunnel port & goto LOCAL_OUT_TABLE
                                                         (unicast or broadcast)
     tun_id                      goto LOCAL_OUT_TABLE    (catch-all rule)
