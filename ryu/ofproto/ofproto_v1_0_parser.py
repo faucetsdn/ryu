@@ -1092,6 +1092,18 @@ class NXFlowStats(object):
         return nxflow_stats
 
 
+class NXAggregateStats(collections.namedtuple('NXAggregateStats', (
+        'packet_count', 'byte_count', 'flow_count'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        agg = struct.unpack_from(
+            ofproto_v1_0.NX_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
+        stats = cls(*agg)
+        stats.length = ofproto_v1_0.NX_AGGREGATE_STATS_REPLY_SIZE
+
+        return stats
+
+
 class OFPQueuePropHeader(object):
     _QUEUE_PROPERTIES = {}
 
@@ -1932,6 +1944,13 @@ class NXFlowStatsReply(NXStatsReply):
         super(NXFlowStatsReply, self).__init__(datapath)
 
 
+@NXStatsReply.register_nx_stats_type()
+@_set_stats_type(ofproto_v1_0.NXST_AGGREGATE, NXAggregateStats)
+class NXAggregateStatsReply(NXStatsReply):
+    def __init__(self, datapath):
+        super(NXAggregateStatsReply, self).__init__(datapath)
+
+
 #
 # controller-to-switch message
 # serializer only
@@ -2223,5 +2242,27 @@ class NXFlowStatsRequest(NXStatsRequest):
 
         msg_pack_into(
             ofproto_v1_0.NX_FLOW_STATS_REQUEST_PACK_STR,
+            self.buf, ofproto_v1_0.NX_STATS_MSG_SIZE, self.out_port,
+            self.match_len, self.table_id)
+
+
+class NXAggregateStatsRequest(NXStatsRequest):
+    def __init__(self, datapath, flags, out_port, table_id, rule=None):
+        super(NXAggregateStatsRequest, self).__init__(
+            datapath, flags, ofproto_v1_0.NXST_AGGREGATE)
+        self.out_port = out_port
+        self.table_id = table_id
+        self.rule = rule
+        self.match_len = 0
+
+    def _serialize_vendor_stats_body(self):
+        if self.rule is not None:
+            offset = ofproto_v1_0.NX_STATS_MSG_SIZE + \
+                ofproto_v1_0.NX_AGGREGATE_STATS_REQUEST_SIZE
+            self.match_len = nx_match.serialize_nxm_match(
+                self.rule, self.buf, offset)
+
+        msg_pack_into(
+            ofproto_v1_0.NX_AGGREGATE_STATS_REQUEST_PACK_STR,
             self.buf, ofproto_v1_0.NX_STATS_MSG_SIZE, self.out_port,
             self.match_len, self.table_id)
