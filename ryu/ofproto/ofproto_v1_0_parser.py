@@ -91,29 +91,95 @@ class OFPPhyPort(collections.namedtuple('OFPPhyPort', (
 
 
 class OFPMatch(object):
-    def __init__(self, wildcards, in_port, dl_src, dl_dst, dl_vlan,
-                 dl_vlan_pcp, dl_type, nw_tos, nw_proto, nw_src,
-                 nw_dst, tp_src, tp_dst):
+    def __init__(self, wildcards=None, in_port=None, dl_src=None, dl_dst=None,
+                 dl_vlan=None, dl_vlan_pcp=None, dl_type=None, nw_tos=None,
+                 nw_proto=None, nw_src=None, nw_dst=None,
+                 tp_src=None, tp_dst=None):
         super(OFPMatch, self).__init__()
-        self.wildcards = wildcards
-        self.in_port = in_port
-        if dl_src == 0:
+        wc = ofproto_v1_0.OFPFW_ALL
+        if in_port is None:
+            self.in_port = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_IN_PORT
+            self.in_port = in_port
+
+        if dl_src is None:
             self.dl_src = mac.DONTCARE
         else:
-            self.dl_src = dl_src
-        if dl_dst == 0:
+            wc &= ~ofproto_v1_0.OFPFW_DL_SRC
+            if dl_src == 0:
+                self.dl_src = mac.DONTCARE
+            else:
+                self.dl_src = dl_src
+
+        if dl_dst is None:
             self.dl_dst = mac.DONTCARE
         else:
-            self.dl_dst = dl_dst
-        self.dl_vlan = dl_vlan
-        self.dl_vlan_pcp = dl_vlan_pcp
-        self.dl_type = dl_type
-        self.nw_tos = nw_tos
-        self.nw_proto = nw_proto
-        self.nw_src = nw_src
-        self.nw_dst = nw_dst
-        self.tp_src = tp_src
-        self.tp_dst = tp_dst
+            wc &= ~ofproto_v1_0.OFPFW_DL_DST
+            if dl_dst == 0:
+                self.dl_dst = mac.DONTCARE
+            else:
+                self.dl_dst = dl_dst
+
+        if dl_vlan is None:
+            self.dl_vlan = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_DL_VLAN
+            self.dl_vlan = dl_vlan
+
+        if dl_vlan_pcp is None:
+            self.dl_vlan_pcp = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_DL_VLAN_PCP
+            self.dl_vlan_pcp = dl_vlan_pcp
+
+        if dl_type is None:
+            self.dl_type = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_DL_TYPE
+            self.dl_type = dl_type
+
+        if nw_tos is None:
+            self.nw_tos = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_NW_TOS
+            self.nw_tos = nw_tos
+
+        if nw_proto is None:
+            self.nw_proto = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_NW_PROTO
+            self.nw_proto = nw_proto
+
+        if nw_src is None:
+            self.nw_src = 0
+        else:
+            # mask is not supported
+            wc &= ~ofproto_v1_0.OFPFW_NW_SRC_MASK
+            self.nw_src = nw_src
+
+        if nw_dst is None:
+            self.nw_dst = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_NW_DST_MASK
+            self.nw_dst = nw_dst
+
+        if tp_src is None:
+            self.tp_src = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_TP_SRC
+            self.tp_src = tp_src
+
+        if tp_dst is None:
+            self.tp_dst = 0
+        else:
+            wc &= ~ofproto_v1_0.OFPFW_TP_DST
+            self.tp_dst = tp_dst
+
+        if wildcards is None:
+            self.wildcards = wc
+        else:
+            self.wildcards = wildcards
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset,
