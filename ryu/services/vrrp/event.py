@@ -112,7 +112,7 @@ class VRRPConfig(object):
     def __init__(self, version=vrrp.VRRP_VERSION_V3, vrid=None,
                  priority=vrrp.VRRP_PRIORITY_BACKUP_DEFAULT, ip_addresses=None,
                  advertisement_interval=vrrp.VRRP_MAX_ADVER_INT_DEFAULT_IN_SEC,
-                 preempt_mode=True, accept_mode=False):
+                 preempt_mode=True, preempt_delay=0, accept_mode=False):
         # To allow version and priority default
         assert vrid is not None
         assert ip_addresses is not None
@@ -124,6 +124,7 @@ class VRRPConfig(object):
         self.ip_addresses = ip_addresses
         self.advertisement_interval = advertisement_interval
         self.preempt_mode = preempt_mode
+        self.preempt_delay = preempt_delay
         self.accept_mode = accept_mode
 
         self.is_ipv6 = vrrp.is_ipv6(ip_addresses[0])
@@ -139,13 +140,14 @@ class VRRPConfig(object):
                 self.ip_addresses == other.ip_addresses and
                 self.advertisement_interval == other.advertisement_interval and
                 self.preempt_mode == other.preempt_mode and
+                self.preempt_delay == other.preempt_delay and
                 self.accept_mode == other.accept_mode and
                 self.is_ipv6 == other.is_ipv6)
 
     def __hash__(self):
         hash((self.version, self.vrid, self.priority, self.ip_addresses,
-              self.advertisement_interval, self.preempt_mode, self.accept_mode,
-              self.is_ipv6))
+              self.advertisement_interval, self.preempt_mode,
+              self.preempt_delay, self.accept_mode, self.is_ipv6))
 
 
 class EventVRRPConfigRequest(event.EventRequestBase):
@@ -224,12 +226,13 @@ class EventVRRPConfigChangeRequest(event.EventRequestBase):
     """
     def __init__(self, instance_name, priority=None,
                  advertisement_interval=None, preempt_mode=None,
-                 accept_mode=None):
+                 preempt_delay=None, accept_mode=None):
         super(EventVRRPConfigChangeRequest, self).__init__()
         self.instance_name = instance_name
         self.priority = priority
         self.advertisement_interval = advertisement_interval
         self.preempt_mode = preempt_mode
+        self.preempt_delay = preempt_delay
         self.accept_mode = accept_mode
 
 
