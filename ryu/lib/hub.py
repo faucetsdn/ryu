@@ -120,3 +120,5 @@ if HUB_TYPE == 'eventlet':
                         self._wait()
                 except Timeout:
                     pass
+
+            return self._cond
