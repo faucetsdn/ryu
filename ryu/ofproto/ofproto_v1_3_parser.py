@@ -2828,10 +2828,14 @@ class OFPGetAsyncReply(MsgBase):
         msg = super(OFPGetAsyncReply, cls).parser(datapath, version,
                                                   msg_type, msg_len,
                                                   xid, buf)
-        (msg.packet_in_mask, msg.port_status_mask,
-         msg.flow_removed_mask) = struct.unpack_from(
+        (packet_in_mask_m, packet_in_mask_s,
+         port_status_mask_m, port_status_mask_s,
+         flow_removed_mask_m, flow_removed_mask_s) = struct.unpack_from(
              ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
              ofproto_v1_3.OFP_HEADER_SIZE)
+        msg.packet_in_mask = [packet_in_mask_m, packet_in_mask_s]
+        msg.port_status_mask = [port_status_mask_m, port_status_mask_s]
+        msg.flow_removed_mask = [flow_removed_mask_m, flow_removed_mask_s]
         return msg
 
 
