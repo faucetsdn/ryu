@@ -1405,9 +1405,9 @@ class OFPPortStatus(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPPortStatus, cls).parser(datapath, version, msg_type,
                                                msg_len, xid, buf)
-        (msg.reason,) = struct.unpack_from(
+        msg.reason = struct.unpack_from(
             ofproto_v1_3.OFP_PORT_STATUS_PACK_STR, msg.buf,
-            ofproto_v1_3.OFP_HEADER_SIZE)
+            ofproto_v1_3.OFP_HEADER_SIZE)[0]
         msg.desc = OFPPort.parser(msg.buf,
                                   ofproto_v1_3.OFP_PORT_STATUS_DESC_OFFSET)
         return msg
