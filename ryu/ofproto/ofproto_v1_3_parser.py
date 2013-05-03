@@ -2647,7 +2647,7 @@ class OFPQueueGetConfigRequest(MsgBase):
         super(OFPQueueGetConfigRequest, self).__init__(datapath)
         self.port = port
 
-    def _serialized_body(self):
+    def _serialize_body(self):
         msg_pack_into(ofproto_v1_3.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
                       self.buf, ofproto_v1_3.OFP_HEADER_SIZE, self.port)
 
