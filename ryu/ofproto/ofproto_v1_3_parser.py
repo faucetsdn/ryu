@@ -2176,6 +2176,7 @@ class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, table_id, out_port, out_group,
                  cookie, cookie_mask, match):
         super(OFPAggregateStatsRequest, self).__init__(datapath,
+                                                       flags,
                                                        table_id,
                                                        out_port,
                                                        out_group,
