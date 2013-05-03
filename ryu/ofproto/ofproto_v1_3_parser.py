@@ -2847,5 +2847,6 @@ class OFPSetAsync(MsgBase):
     def _serialize_body(self):
         msg_pack_into(ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, self.buf,
                       ofproto_v1_3.OFP_HEADER_SIZE,
-                      self.packet_in_mask, self.port_status_mask,
-                      self.flow_removed_mask)
+                      self.packet_in_mask[0], self.packet_in_mask[1],
+                      self.port_status_mask[0], self.port_status_mask[1],
+                      self.flow_removed_mask[0], self.flow_removed_mask[1])
