@@ -2383,7 +2383,7 @@ class OFPGroupFeaturesStats(collections.namedtuple('OFPGroupFeaturesStats', (
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
     def __init__(self, datapath, flags):
-        super(OFPGroupFeaturesRequest, self).__init__(datapath, flags)
+        super(OFPGroupFeaturesStatsRequest, self).__init__(datapath, flags)
 
 
 @OFPMultipartReply.register_stats_type()
