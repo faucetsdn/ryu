@@ -2331,7 +2331,7 @@ class OFPGroupDescStats(object):
         self.length = None
         self.type = None
         self.group_id = None
-        self.ofp_bucket = None
+        self.buckets = None
 
     @classmethod
     def parser(cls, buf, offset):
@@ -2341,11 +2341,11 @@ class OFPGroupDescStats(object):
             ofproto_v1_3.OFP_GROUP_DESC_STATS_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_GROUP_DESC_STATS_SIZE
 
-        stats.bucket = []
+        stats.buckets = []
         length = ofproto_v1_3.OFP_GROUP_DESC_STATS_SIZE
         while length < stats.length:
             bucket = OFPBucket.parser(buf, offset)
-            stats.bucket.append(bucket)
+            stats.buckets.append(bucket)
 
             offset += bucket.len
             length += bucket.len
