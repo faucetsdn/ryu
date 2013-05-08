@@ -33,6 +33,7 @@ if HUB_TYPE == 'eventlet':
     import eventlet.queue
     import eventlet.timeout
     import eventlet.wsgi
+    import greenlet
     import ssl
     import traceback
 
@@ -46,6 +47,8 @@ if HUB_TYPE == 'eventlet':
             # by not propergating an exception to the joiner.
             try:
                 func(*args, **kwargs)
+            except greenlet.GreenletExit:
+                pass
             except:
                 # log uncaught exception.
                 # note: this is an intentional divergence from gevent
@@ -60,7 +63,12 @@ if HUB_TYPE == 'eventlet':
 
     def joinall(threads):
         for t in threads:
-            t.wait()
+            # this try-except is necessary when killing an inactive
+            # greenthread
+            try:
+                t.wait()
+            except greenlet.GreenletExit:
+                pass
 
     Queue = eventlet.queue.Queue
     QueueEmpty = eventlet.queue.Empty
