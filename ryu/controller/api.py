@@ -41,7 +41,7 @@ class OFWireRpcSession(object):
             if type(v) == dict:
                 self._ofp_handle_params(dp, v)
                 clses = self._find_ofp_cls(dp.ofproto.OFP_VERSION, k)
-                if clses not None:
+                if clses is not None:
                     if issubclass(clses, MsgBase):
                         ins = clses(dp, **v)
                     else:
@@ -69,13 +69,13 @@ class OFWireRpcSession(object):
         dp = self.dpset.get(int(dpid))
         if dp is None:
             print self.dpset.get_all()
-            r = self.session.create_response(msg[1], 0, 0)
+            r = self.session.create_response(msg[1], 1, 0)
             self.socket.sendall(r)
+            return
 
-        for i in params:
-            self._ofp_handle_params(dp, i)
-            for k, v in i.items():
-                dp.send_msg(v)
+        self._ofp_handle_params(dp, params)
+        for k, v in params.items():
+            dp.send_msg(v)
 
         r = self.session.create_response(msg[1], 0, 0)
         self.socket.sendall(r)
@@ -84,15 +84,12 @@ class OFWireRpcSession(object):
         while True:
             ret = self.socket.recv(4096)
             if len(ret) == 0:
-                print "client disconnected"
                 break
             messages = self.session.get_messages(ret)
             for m in messages:
                 if m[0] == RpcMessage.REQUEST:
-                    if m[2] == 0:
+                    if m[2] == 'ofp':
                         self.ofp_handle_request(m)
-                    r = self.session.create_response(m[1], 0, 0)
-                    self.socket.sendall(r)
                 elif m[0] == RpcMessage.RESPONSE:
                     pass
                 elif m[0] == RpcMessage.NOTIFY:
@@ -109,18 +106,26 @@ class RpcApi(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         self.dpset = kwargs['dpset']
         super(RpcApi, self).__init__(*args, **kwargs)
-        self.server = eventlet.listen(('127.0.0.1', 6000))
+        self.server = eventlet.listen(('', 50000))
         self.pool = eventlet.GreenPool()
         self.pool.spawn_n(self.serve)
+        self.sessions = []
 
     def serve(self):
         while True:
             sock, address = self.server.accept()
-            print "accepted", address
             session = OFWireRpcSession(sock, self.dpset)
+            self.sessions.append(session)
             self.pool.spawn_n(session.serve)
 
-    @handler.set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
-    def handler_datapath(self, ev):
-        if ev.enter:
-            print "join", ev.dp.id
+    @handler.observe_all_events('ofp_event')
+    def handler(self, ev):
+        if hasattr(ev, 'msg'):
+            params = {}
+            params[type(ev.msg).__name__] = {}
+            for m in inspect.getmembers(ev.msg):
+                if not m[0].startswith('__'):
+                    # we need a mechnism to get _only_ OFP defined members.
+                    params[type(ev.msg).__name__][m[0]] = m[1]
+
+            # send this to all sessions as a notification.
