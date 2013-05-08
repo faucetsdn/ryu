@@ -21,7 +21,6 @@ from ryu.lib import hub
 from ryu.lib.hub import StreamServer
 import traceback
 import random
-import greenlet
 import ssl
 
 import ryu.base.app_manager
@@ -94,11 +93,6 @@ def _deactivate(method):
     def deactivate(self):
         try:
             method(self)
-        except greenlet.GreenletExit:
-            pass
-        except:
-            traceback.print_exc()
-            raise
         finally:
             self.is_active = False
     return deactivate
