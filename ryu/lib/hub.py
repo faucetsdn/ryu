@@ -47,6 +47,9 @@ if HUB_TYPE == 'eventlet':
             try:
                 func(*args, **kwargs)
             except:
+                # log uncaught exception.
+                # note: this is an intentional divergence from gevent
+                # behaviour.  gevent silently ignores such exceptions.
                 LOG.error('hub: uncaught exception: %s',
                           traceback.format_exc())
 
