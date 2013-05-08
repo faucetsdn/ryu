@@ -58,7 +58,9 @@ class RyuApp(object):
         super(RyuApp, self).__init__()
         self.name = self.__class__.__name__
         self.event_handlers = {}
+        self.all_events_handlers = []
         self.observers = {}
+        self.observers_all = []
         self.threads = []
         self.events = hub.Queue(128)
         self.replies = hub.Queue()
@@ -67,15 +69,22 @@ class RyuApp(object):
 
     def register_handler(self, ev_cls, handler):
         assert callable(handler)
-        self.event_handlers.setdefault(ev_cls, [])
-        self.event_handlers[ev_cls].append(handler)
+        if ev_cls is None:
+            self.all_events_handlers.append(handler)
+        else:
+            self.event_handlers.setdefault(ev_cls, [])
+            self.event_handlers[ev_cls].append(handler)
 
     def register_observer(self, ev_cls, name, states=None):
         states = states or []
         self.observers.setdefault(ev_cls, {})[name] = states
 
+    def register_observer_all(self, name):
+        self.observers_all.append(name)
+
     def get_handlers(self, ev):
-        return self.event_handlers.get(ev.__class__, [])
+        handlers = self.event_handlers.get(ev.__class__, [])
+        return set(self.all_events_handlers) | set(handlers)
 
     def get_observers(self, ev, state):
         observers = []
@@ -118,7 +127,9 @@ class RyuApp(object):
                       (self.name, name, ev.__class__.__name__))
 
     def send_event_to_observers(self, ev, state=None):
-        for observer in self.get_observers(ev, state):
+        observers = set(self.get_observers(ev, state))
+        observers |= set(self.observers_all)
+        for observer in observers:
             self.send_event(observer, ev)
 
     def reply_to_request(self, req, rep):
@@ -219,6 +230,14 @@ class AppManager(object):
                     if m.ev_cls in brick._EVENTS:
                         brick.register_observer(m.ev_cls, i.name,
                                                 m.dispatchers)
+
+            for _k, m in inspect.getmembers(i, inspect.ismethod):
+                if not hasattr(m, 'observer_all'):
+                    continue
+                name = m.observer_all
+                if name in SERVICE_BRICKS:
+                    brick = SERVICE_BRICKS[name]
+                    brick.register_observer_all(i.name)
 
         for brick, i in SERVICE_BRICKS.items():
             LOG.debug("BRICK %s" % brick)

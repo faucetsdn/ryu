@@ -46,6 +46,13 @@ def set_ev_handler(ev_cls, dispatchers=None):
     return _set_ev_cls_dec
 
 
+def observe_all_events(source):
+    def _set_ev_cls_dec(handler):
+        handler.observer_all = source
+        return handler
+    return _set_ev_cls_dec
+
+
 def _is_ev_cls(meth):
     return hasattr(meth, 'ev_cls')
 
@@ -63,3 +70,5 @@ def register_instance(i):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
         if _is_ev_cls(m):
             i.register_handler(m.ev_cls, m)
+        elif hasattr(m, 'observer_all'):
+            i.register_handler(None, m)
