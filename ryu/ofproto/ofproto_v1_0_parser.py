@@ -472,7 +472,7 @@ class OFPActionVendor(OFPAction):
 
 
 @OFPActionVendor.register_action_vendor(ofproto_v1_0.NX_VENDOR_ID)
-class NXActionHeader(object):
+class NXActionHeader(OFPActionVendor):
     _NX_ACTION_SUBTYPES = {}
 
     @staticmethod
@@ -484,9 +484,8 @@ class NXActionHeader(object):
         return _register_nx_action_subtype
 
     def __init__(self, subtype_, len_):
-        self.type = ofproto_v1_0.OFPAT_VENDOR
+        super(NXActionHeader, self).__init__(ofproto_v1_0.NX_VENDOR_ID)
         self.len = len_
-        self.vendor = ofproto_v1_0.NX_VENDOR_ID
         self.subtype = subtype_
 
     def serialize(self, buf, offset):
