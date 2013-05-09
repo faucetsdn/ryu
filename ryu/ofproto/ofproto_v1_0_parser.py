@@ -476,17 +476,17 @@ class NXActionHeader(OFPActionVendor):
     _NX_ACTION_SUBTYPES = {}
 
     @staticmethod
-    def register_nx_action_subtype(subtype):
+    def register_nx_action_subtype(subtype, len_):
         def _register_nx_action_subtype(cls):
+            cls.cls_action_len = len_
             cls.cls_subtype = subtype
             NXActionHeader._NX_ACTION_SUBTYPES[cls.cls_subtype] = cls
             return cls
         return _register_nx_action_subtype
 
-    def __init__(self, subtype_, len_):
+    def __init__(self):
         super(NXActionHeader, self).__init__()
-        self.len = len_
-        self.subtype = subtype_
+        self.subtype = self.cls_subtype
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
@@ -501,11 +501,10 @@ class NXActionHeader(OFPActionVendor):
 
 
 class NXActionResubmitBase(NXActionHeader):
-    def __init__(self, subtype, in_port, table):
-        assert subtype in (ofproto_v1_0.NXAST_RESUBMIT,
-                           ofproto_v1_0.NXAST_RESUBMIT_TABLE)
-        super(NXActionResubmitBase, self).__init__(
-            subtype, ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE)
+    def __init__(self, in_port, table):
+        super(NXActionResubmitBase, self).__init__()
+        assert self.subtype in (ofproto_v1_0.NXAST_RESUBMIT,
+                                ofproto_v1_0.NXAST_RESUBMIT_TABLE)
         self.in_port = in_port
         self.table = table
 
@@ -515,11 +514,11 @@ class NXActionResubmitBase(NXActionHeader):
                       self.in_port, self.table)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_RESUBMIT)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_RESUBMIT, ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE)
 class NXActionResubmit(NXActionResubmitBase):
     def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT):
-        super(NXActionResubmit, self).__init__(
-            ofproto_v1_0.NXAST_RESUBMIT, in_port, 0)
+        super(NXActionResubmit, self).__init__(in_port, 0)
 
     @classmethod
     def parser(cls, buf, offset):
@@ -528,11 +527,11 @@ class NXActionResubmit(NXActionResubmitBase):
         return cls(in_port)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_RESUBMIT_TABLE)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_RESUBMIT_TABLE, ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE)
 class NXActionResubmitTable(NXActionResubmitBase):
     def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT, table=0xff):
-        super(NXActionResubmitTable, self).__init__(
-            ofproto_v1_0.NXAST_RESUBMIT_TABLE, in_port, table)
+        super(NXActionResubmitTable, self).__init__(in_port, table)
 
     @classmethod
     def parser(cls, buf, offset):
@@ -541,13 +540,12 @@ class NXActionResubmitTable(NXActionResubmitBase):
         return cls(in_port, table)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_TUNNEL)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_SET_TUNNEL, ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE)
 class NXActionSetTunnel(NXActionHeader):
     def __init__(self, tun_id_):
+        super(NXActionSetTunnel, self).__init__()
         self.tun_id = tun_id_
-        super(NXActionSetTunnel, self).__init__(
-            ofproto_v1_0.NXAST_SET_TUNNEL,
-            ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE)
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf,
@@ -561,12 +559,11 @@ class NXActionSetTunnel(NXActionHeader):
         return cls(tun_id)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_QUEUE)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_SET_QUEUE, ofproto_v1_0.NX_ACTION_SET_QUEUE_SIZE)
 class NXActionSetQueue(NXActionHeader):
     def __init__(self, queue_id):
-        super(NXActionSetQueue, self).__init__(
-            ofproto_v1_0.NXAST_SET_QUEUE,
-            ofproto_v1_0.NX_ACTION_SET_QUEUE_SIZE)
+        super(NXActionSetQueue, self).__init__()
         self.queue_id = queue_id
 
     def serialize(self, buf, offset):
@@ -581,12 +578,11 @@ class NXActionSetQueue(NXActionHeader):
         return cls(queue_id)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_POP_QUEUE)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_POP_QUEUE, ofproto_v1_0.NX_ACTION_POP_QUEUE_SIZE)
 class NXActionPopQueue(NXActionHeader):
     def __init__(self):
-        super(NXActionPopQueue, self).__init__(
-            ofproto_v1_0.NXAST_POP_QUEUE,
-            ofproto_v1_0.NX_ACTION_POP_QUEUE_SIZE)
+        super(NXActionPopQueue, self).__init__()
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR, buf,
@@ -600,12 +596,11 @@ class NXActionPopQueue(NXActionHeader):
         return cls()
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_REG_MOVE)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_REG_MOVE, ofproto_v1_0.NX_ACTION_REG_MOVE_SIZE)
 class NXActionRegMove(NXActionHeader):
     def __init__(self, n_bits, src_ofs, dst_ofs, src, dst):
-        super(NXActionRegMove, self).__init__(
-            ofproto_v1_0.NXAST_REG_MOVE,
-            ofproto_v1_0.NX_ACTION_REG_MOVE_SIZE)
+        super(NXActionRegMove, self).__init__()
         self.n_bits = n_bits
         self.src_ofs = src_ofs
         self.dst_ofs = dst_ofs
@@ -626,12 +621,11 @@ class NXActionRegMove(NXActionHeader):
         return cls(n_bits, src_ofs, dst_ofs, src, dst)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_REG_LOAD)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_REG_LOAD, ofproto_v1_0.NX_ACTION_REG_LOAD_SIZE)
 class NXActionRegLoad(NXActionHeader):
     def __init__(self, ofs_nbits, dst, value):
-        super(NXActionRegLoad, self).__init__(
-            ofproto_v1_0.NXAST_REG_LOAD,
-            ofproto_v1_0.NX_ACTION_REG_LOAD_SIZE)
+        super(NXActionRegLoad, self).__init__()
         self.ofs_nbits = ofs_nbits
         self.dst = dst
         self.value = value
@@ -649,13 +643,12 @@ class NXActionRegLoad(NXActionHeader):
         return cls(ofs_nbits, dst, value)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_SET_TUNNEL64)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_SET_TUNNEL64, ofproto_v1_0.NX_ACTION_SET_TUNNEL64_SIZE)
 class NXActionSetTunnel64(NXActionHeader):
     def __init__(self, tun_id_):
+        super(NXActionSetTunnel64, self).__init__()
         self.tun_id = tun_id_
-        super(NXActionSetTunnel64, self).__init__(
-            ofproto_v1_0.NXAST_SET_TUNNEL64,
-            ofproto_v1_0.NX_ACTION_SET_TUNNEL64_SIZE)
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
@@ -669,13 +662,12 @@ class NXActionSetTunnel64(NXActionHeader):
         return cls(tun_id)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_MULTIPATH)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_MULTIPATH, ofproto_v1_0.NX_ACTION_MULTIPATH_SIZE)
 class NXActionMultipath(NXActionHeader):
     def __init__(self, fields, basis, algorithm, max_link, arg,
                  ofs_nbits, dst):
-        super(NXActionMultipath, self).__init__(
-            ofproto_v1_0.NXAST_MULTIPATH,
-            ofproto_v1_0.NX_ACTION_MULTIPATH_SIZE)
+        super(NXActionMultipath, self).__init__()
         self.fields = fields
         self.basis = basis
         self.algorithm = algorithm
@@ -699,17 +691,16 @@ class NXActionMultipath(NXActionHeader):
                    dst)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_NOTE)
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_NOTE, 0)
 class NXActionNote(NXActionHeader):
     def __init__(self, note):
+        super(NXActionNote, self).__init__()
         # should check here if the note is valid (only hex values)
         pad = (len(note) + 10) % 8
         if pad:
             note += [0x0 for i in range(8 - pad)]
         self.note = note
-        _len = len(note) + 10
-        super(NXActionNote, self).__init__(
-            ofproto_v1_0.NXAST_NOTE, _len)
+        self.len = len(note) + 10
 
     def serialize(self, buf, offset):
         note = self.note
@@ -741,11 +732,12 @@ class NXActionNote(NXActionHeader):
 
 
 class NXActionBundleBase(NXActionHeader):
-    def __init__(self, subtype, algorithm, fields, basis, slave_type, n_slaves,
+    def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
                  ofs_nbits, dst, slaves):
+        super(NXActionBundleBase, self).__init__()
         _len = ofproto_v1_0.NX_ACTION_BUNDLE_SIZE + len(slaves) * 2
         _len += (_len % 8)
-        super(NXActionBundleBase, self).__init__(subtype, _len)
+        self.len = _len
 
         self.algorithm = algorithm
         self.fields = fields
@@ -792,12 +784,11 @@ class NXActionBundleBase(NXActionHeader):
                           n_slaves, ofs_nbits, dst, slaves)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_BUNDLE)
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_BUNDLE, 0)
 class NXActionBundle(NXActionBundleBase):
     def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
                  ofs_nbits, dst, slaves):
         super(NXActionBundle, self).__init__(
-            ofproto_v1_0.NXAST_BUNDLE,
             algorithm, fields, basis, slave_type, n_slaves,
             ofs_nbits, dst, slaves)
 
@@ -806,12 +797,11 @@ class NXActionBundle(NXActionBundleBase):
         return NXActionBundleBase.parser(NXActionBundle, buf, offset)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_BUNDLE_LOAD)
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_BUNDLE_LOAD, 0)
 class NXActionBundleLoad(NXActionBundleBase):
     def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
                  ofs_nbits, dst, slaves):
         super(NXActionBundleLoad, self).__init__(
-            ofproto_v1_0.NXAST_BUNDLE_LOAD,
             algorithm, fields, basis, slave_type, n_slaves,
             ofs_nbits, dst, slaves)
 
@@ -820,12 +810,11 @@ class NXActionBundleLoad(NXActionBundleBase):
         return NXActionBundleBase.parser(NXActionBundleLoad, buf, offset)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_AUTOPATH)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_AUTOPATH, ofproto_v1_0.NX_ACTION_AUTOPATH_SIZE)
 class NXActionAutopath(NXActionHeader):
     def __init__(self, ofs_nbits, dst, id_):
-        super(NXActionAutopath, self).__init__(
-            ofproto_v1_0.NXAST_AUTOPATH,
-            ofproto_v1_0.NX_ACTION_AUTOPATH_SIZE)
+        super(NXActionAutopath, self).__init__()
         self.ofs_nbits = ofs_nbits
         self.dst = dst
         self.id = id_
@@ -843,12 +832,11 @@ class NXActionAutopath(NXActionHeader):
         return cls(ofs_nbits, dst, id_)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_OUTPUT_REG)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_OUTPUT_REG, ofproto_v1_0.NX_ACTION_OUTPUT_REG_SIZE)
 class NXActionOutputReg(NXActionHeader):
     def __init__(self, ofs_nbits, src, max_len):
-        super(NXActionOutputReg, self).__init__(
-            ofproto_v1_0.NXAST_OUTPUT_REG,
-            ofproto_v1_0.NX_ACTION_OUTPUT_REG_SIZE)
+        super(NXActionOutputReg, self).__init__()
         self.ofs_nbits = ofs_nbits
         self.src = src
         self.max_len = max_len
@@ -866,12 +854,11 @@ class NXActionOutputReg(NXActionHeader):
         return cls(ofs_nbits, src, max_len)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_EXIT)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_EXIT, ofproto_v1_0.NX_ACTION_HEADER_SIZE)
 class NXActionExit(NXActionHeader):
     def __init__(self):
-        super(NXActionExit, self).__init__(
-            ofproto_v1_0.NXAST_EXIT,
-            ofproto_v1_0.NX_ACTION_HEADER_SIZE)
+        super(NXActionExit, self).__init__()
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset,
@@ -884,12 +871,11 @@ class NXActionExit(NXActionHeader):
         return cls()
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_DEC_TTL)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_DEC_TTL, ofproto_v1_0.NX_ACTION_HEADER_SIZE)
 class NXActionDecTtl(NXActionHeader):
     def __init__(self):
-        super(NXActionDecTtl, self).__init__(
-            ofproto_v1_0.NXAST_DEC_TTL,
-            ofproto_v1_0.NX_ACTION_HEADER_SIZE)
+        super(NXActionDecTtl, self).__init__()
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset,
@@ -902,15 +888,15 @@ class NXActionDecTtl(NXActionHeader):
         return cls()
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_LEARN)
+@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_LEARN, 0)
 class NXActionLearn(NXActionHeader):
     def __init__(self, idle_timeout, hard_timeout, priority, cookie, flags,
                  table_id, fin_idle_timeout, fin_hard_timeout, spec):
+        super(NXActionLearn, self).__init__()
         len_ = len(spec) + ofproto_v1_0.NX_ACTION_LEARN_SIZE
         pad_len = 8 - (len_ % 8)
+        self.len = len_ + pad_len
 
-        super(NXActionLearn, self).__init__(
-            ofproto_v1_0.NXAST_LEARN, len_ + pad_len)
         self.idle_timeout = idle_timeout
         self.hard_timeout = hard_timeout
         self.priority = priority
@@ -941,12 +927,11 @@ class NXActionLearn(NXActionHeader):
                    fin_hard_timeout, spec)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_CONTROLLER)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_CONTROLLER, ofproto_v1_0.NX_ACTION_CONTROLLER_SIZE)
 class NXActionController(NXActionHeader):
     def __init__(self, max_len, controller_id, reason):
-        super(NXActionController, self).__init__(
-            ofproto_v1_0.NXAST_CONTROLLER,
-            ofproto_v1_0.NX_ACTION_CONTROLLER_SIZE)
+        super(NXActionController, self).__init__()
         self.max_len = max_len
         self.controller_id = controller_id
         self.reason = reason
@@ -964,12 +949,11 @@ class NXActionController(NXActionHeader):
         return cls(max_len, controller_id, reason)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_FIN_TIMEOUT)
+@NXActionHeader.register_nx_action_subtype(
+    ofproto_v1_0.NXAST_FIN_TIMEOUT, ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_SIZE)
 class NXActionFinTimeout(NXActionHeader):
     def __init__(self, fin_idle_timeout, fin_hard_timeout):
-        super(NXActionFinTimeout, self).__init__(
-            ofproto_v1_0.NXAST_FIN_TIMEOUT,
-            ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_SIZE)
+        super(NXActionFinTimeout, self).__init__()
         self.fin_idle_timeout = fin_idle_timeout
         self.fin_hard_timeout = fin_hard_timeout
 
