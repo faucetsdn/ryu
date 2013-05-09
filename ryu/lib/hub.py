@@ -35,6 +35,7 @@ if HUB_TYPE == 'eventlet':
     import eventlet.wsgi
     import greenlet
     import ssl
+    import socket
     import traceback
 
     getcurrent = eventlet.getcurrent
@@ -78,7 +79,12 @@ if HUB_TYPE == 'eventlet':
                      spawn='default', **ssl_args):
             assert backlog is None
             assert spawn == 'default'
-            self.server = eventlet.listen(listen_info)
+
+            if ':' in listen_info[0]:
+                self.server = eventlet.listen(listen_info,
+                                              family=socket.AF_INET6)
+            else:
+                self.server = eventlet.listen(listen_info)
             if ssl_args:
                 def wrap_and_handle(sock, addr):
                     ssl_args.setdefault('server_side', True)
