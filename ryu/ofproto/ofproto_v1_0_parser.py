@@ -459,9 +459,9 @@ class OFPActionVendor(OFPAction):
             return cls
         return _register_action_vendor
 
-    def __init__(self, vendor):
+    def __init__(self):
         super(OFPActionVendor, self).__init__()
-        self.vendor = vendor
+        self.vendor = self.cls_vendor
 
     @classmethod
     def parser(cls, buf, offset):
@@ -484,7 +484,7 @@ class NXActionHeader(OFPActionVendor):
         return _register_nx_action_subtype
 
     def __init__(self, subtype_, len_):
-        super(NXActionHeader, self).__init__(ofproto_v1_0.NX_VENDOR_ID)
+        super(NXActionHeader, self).__init__()
         self.len = len_
         self.subtype = subtype_
 
