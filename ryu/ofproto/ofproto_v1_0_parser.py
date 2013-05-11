@@ -1620,12 +1620,6 @@ class OFPSwitchFeatures(MsgBase):
     def __init__(self, datapath):
         super(OFPSwitchFeatures, self).__init__(datapath)
 
-    def __str__(self):
-        buf = super(OFPSwitchFeatures, self).__str__() + ' port'
-        for _port_no, p in getattr(self, 'ports', {}).items():
-            buf += ' ' + str(p)
-        return buf
-
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPSwitchFeatures, cls).parser(datapath, version, msg_type,
@@ -1675,11 +1669,6 @@ class OFPPacketIn(MsgBase):
     def __init__(self, datapath):
         super(OFPPacketIn, self).__init__(datapath)
 
-    def __str__(self):
-        buf = super(OFPPacketIn, self).__str__()
-        return msg_str_attr(self, buf,
-                            ('buffer_id', 'total_len', 'in_port', 'reason'))
-
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPPacketIn, cls).parser(datapath, version, msg_type,
@@ -1725,13 +1714,6 @@ class OFPBarrierReply(MsgBase):
 class OFPFlowRemoved(MsgBase):
     def __init__(self, datapath):
         super(OFPFlowRemoved, self).__init__(datapath)
-
-    def __str__(self):
-        buf = super(OFPFlowRemoved, self).__str__()
-        return msg_str_attr(self, buf,
-                            ('match', 'cookie', 'priority', 'reason',
-                             'duration_sec', 'duration_nsec',
-                             'idle_timeout', 'packet_count', 'byte_count'))
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
