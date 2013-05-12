@@ -147,14 +147,18 @@ def msg_pack_into(fmt, buf, offset, *args):
     struct.pack_into(fmt, buf, offset, *args)
 
 
+def ofp_attr(msg):
+    exclude = ['_attributes']
+    try:
+        exclude += msg._attributes
+    except AttributeError:
+        pass
+    return set(dir(msg)) - set(exclude)
+
+
 def msg_str_attr(msg, buf, attr_list=None):
     if attr_list is None:
-        exclude = ['_attributes']
-        try:
-            exclude += msg._attributes
-        except AttributeError:
-            pass
-        attr_list = set(dir(msg)) - set(exclude)
+        attr_list = ofp_attr(msg)
     for attr in attr_list:
         val = getattr(msg, attr, None)
         if val is not None:
