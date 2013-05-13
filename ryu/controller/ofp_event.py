@@ -16,6 +16,7 @@
 
 import inspect
 
+from ryu import ofproto
 from ryu import utils
 from . import event
 
@@ -65,14 +66,10 @@ def _create_ofp_msg_ev_from_module(modname):
         _create_ofp_msg_ev_class(cls)
 
 
-# TODO:XXX
-_PARSER_MODULE_LIST = ['ryu.ofproto.ofproto_v1_0_parser',
-                       'ryu.ofproto.ofproto_v1_2_parser',
-                       'ryu.ofproto.ofproto_v1_3_parser']
-
-for m in _PARSER_MODULE_LIST:
-    # print 'loading module %s' % m
-    _create_ofp_msg_ev_from_module(m)
+for ofp_mods in ofproto.get_ofp_module():
+    ofp_parser = ofp_mods[1]
+    # print 'loading module %s' % ofp_parser
+    _create_ofp_msg_ev_from_module(ofp_parser)
 
 
 class EventOFPStateChange(event.EventBase):
