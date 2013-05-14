@@ -266,6 +266,11 @@ class OFPSetConfig(MsgBase):
                       self.flags, self.miss_send_len)
 
 
+UINT64_MAX = (1 << 64) - 1
+UINT32_MAX = (1 << 32) - 1
+UINT16_MAX = (1 << 16) - 1
+
+
 class Flow(object):
     def __init__(self):
         self.in_port = 0
