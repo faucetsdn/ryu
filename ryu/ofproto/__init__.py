@@ -43,6 +43,13 @@ for parser_file_name in _OFPROTO_PARSER_FILE_NAMES:
     _OFPROTO_MODULES[consts_mod.OFP_VERSION] = (consts_mod, parser_mod)
 
 
+def get_ofp_modules():
+    """get modules pair for the constants and parser of OF-wire of
+    a given OF version.
+    """
+    return _OFPROTO_MODULES
+
+
 def get_ofp_module(ofp_version):
     """get modules pair for the constants and parser of OF-wire of
     a given OF version.
