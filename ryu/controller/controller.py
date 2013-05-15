@@ -38,6 +38,8 @@ from ryu.ofproto import nx_match
 from ryu.controller import handler
 from ryu.controller import ofp_event
 
+from ryu.lib.dpid import dpid_to_str
+
 LOG = logging.getLogger('ryu.controller.controller')
 
 CONF = cfg.CONF
@@ -314,5 +316,5 @@ def datapath_connection_factory(socket, address):
             # the parser raise exception.
             # Can we do anything more graceful?
             LOG.error("Error in the datapath %s from %s",
-                      datapath.id, address)
+                      dpid_to_str(datapath.id), address)
             raise
