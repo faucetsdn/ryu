@@ -17,6 +17,7 @@
 import logging
 import struct
 import functools
+import inspect
 
 from ryu import exception
 
@@ -51,17 +52,29 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
     return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
 
 
-def create_list_of_attributes(f):
+def create_list_of_base_attributes(f):
     @functools.wraps(f)
     def wrapper(self, *args, **kwargs):
         ret = f(self, *args, **kwargs)
-        self._attributes = set(dir(self))
+        self._base_attributes = set(dir(self))
         return ret
     return wrapper
 
 
-class MsgBase(object):
-    @create_list_of_attributes
+class StringifyMixin(object):
+    def __str__(self):
+        buf = ''
+        sep = ''
+        for k, v in ofp_attrs(self):
+            buf += sep
+            buf += "%s=%s" % (k, repr(v))  # repr() to escape binaries
+            sep = ','
+        return self.__class__.__name__ + '(' + buf + ')'
+    __repr__ = __str__  # note: str(list) uses __repr__ for elements
+
+
+class MsgBase(StringifyMixin):
+    @create_list_of_base_attributes
     def __init__(self, datapath):
         self.datapath = datapath
         self.version = None
@@ -86,10 +99,10 @@ class MsgBase(object):
         self.buf = buffer(buf)
 
     def __str__(self):
-        buf = 'version: 0x%x msg_type 0x%x xid 0x%x' % (self.version,
-                                                        self.msg_type,
-                                                        self.xid)
-        return msg_str_attr(self, buf)
+        buf = 'version: 0x%x msg_type 0x%x xid 0x%x ' % (self.version,
+                                                         self.msg_type,
+                                                         self.xid)
+        return buf + StringifyMixin.__str__(self)
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -147,11 +160,23 @@ def msg_pack_into(fmt, buf, offset, *args):
     struct.pack_into(fmt, buf, offset, *args)
 
 
+def ofp_attrs(msg):
+    base = getattr(msg, '_base_attributes', [])
+    for k, v in inspect.getmembers(msg):
+        if k.startswith('_'):
+            continue
+        if callable(v):
+            continue
+        if k in base:
+            continue
+        if hasattr(msg.__class__, k):
+            continue
+        yield (k, v)
+
+
 def msg_str_attr(msg, buf, attr_list=None):
     if attr_list is None:
-        exclude = ['_attributes']
-        exclude += getattr(msg, '_attributes', [])
-        attr_list = set(dir(msg)) - set(exclude)
+        attr_list = ofp_attr(msg)
     for attr in attr_list:
         val = getattr(msg, attr, None)
         if val is not None:
