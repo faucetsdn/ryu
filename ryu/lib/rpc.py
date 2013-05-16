@@ -19,6 +19,18 @@
 # msgpack-rpc
 # http://wiki.msgpack.org/display/MSGPACK/RPC+specification
 
+import sys
+import ryu.contrib
+try:
+    _m = ryu.contrib.import_system('msgpack')
+    # https://github.com/msgpack/msgpack-python/pull/64
+    assert isinstance(_m.unpackb(_m.packb(0x100000000)), int)
+    msgpack = _m
+except:
+    # XXX
+    sys.modules.pop('msgpack', None)
+    sys.modules.pop('msgpack._packer', None)
+    sys.modules.pop('msgpack._unpacker', None)
 import msgpack
 
 
