@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ -z "${PYTHON}" ]; then
+  PYTHON=python
+fi
+
 usage() {
   echo "Usage: $0 [OPTION]..."
   echo "Run Ryu's test suite(s)"
@@ -116,7 +120,7 @@ run_integrated() {
   sudo PYTHONPATH=. nosetests -s $INTEGRATED_TEST_RUNNER 
 }
 #NOSETESTS="nosetests $noseopts $noseargs"
-NOSETESTS="python ./ryu/tests/run_tests.py $noseopts $noseargs"
+NOSETESTS="${PYTHON} ./ryu/tests/run_tests.py $noseopts $noseargs"
 
 #if [ -n "$PLUGIN_DIR" ]
 #then
@@ -139,14 +143,14 @@ then
   else
     if [ $always_venv -eq 1 ]; then
       # Automatically install the virtualenv
-      python tools/install_venv.py
+      ${PYTHON} tools/install_venv.py
       wrapper="${with_venv}"
     else
       echo -e "No virtual environment found...create one? (Y/n) \c"
       read use_ve
       if [ "x$use_ve" = "xY" -o "x$use_ve" = "x" -o "x$use_ve" = "xy" ]; then
         # Install the virtualenv and run the test suite in it
-        python tools/install_venv.py
+        ${PYTHON} tools/install_venv.py
         wrapper=${with_venv}
       fi
     fi
