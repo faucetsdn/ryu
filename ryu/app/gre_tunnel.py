@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import collections
-import logging
 
 from ryu import exception as ryu_exc
 from ryu.app.rest_nw_id import (NW_ID_VPORT_GRE,
@@ -57,7 +56,7 @@ class PortSet(app_manager.RyuApp):
 
     class EventTunnelKeyDel(event.EventBase):
         def __init__(self, tunnel_key):
-            super(EventTunnelKeyDel, self).__init__()
+            super(PortSet.EventTunnelKeyDel, self).__init__()
             self.tunnel_key = tunnel_key
 
     class EventPortBase(event.EventBase):
