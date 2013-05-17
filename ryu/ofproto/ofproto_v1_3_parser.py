@@ -2739,7 +2739,7 @@ class OFPPacketQueue(MsgBase):
     @classmethod
     def parser(cls, buf, offset):
         (msg.queue_id, msg.port, msg.len) = struct.unpack_from(
-            ofproto_v1_3.OFP_PACKET_QUEUE_PACK_STR, buf, offset)
+            ofproto_v1_3.OFP_PACKET_QUEUE_PACK_STR, msg.buf, offset)
 
         length = ofproto_v1_3.OFP_PACKET_QUEUE_SIZE
         offset += ofproto_v1_3.OFP_PACKET_QUEUE_SIZE
@@ -2771,7 +2771,7 @@ class OFPQueueGetConfigReply(MsgBase):
 
         msg.queues = []
         offset += ofproto_v1_3.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
-        while offset < msg.length:
+        while offset < msg_len:
             queue = OFPPacketQueue.parser(buf, offset)
             msg.queues.append(queue)
             offset += queue.len
