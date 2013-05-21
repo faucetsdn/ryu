@@ -395,7 +395,7 @@ class vrrp(packet_base.PacketBase):
 
     def is_valid(self):
         cls = self._VRRP_VERSIONS.get(self.version, None)
-        if None:
+        if cls is None:
             return False
         return cls.is_valid(self)
 
@@ -499,8 +499,8 @@ class vrrpv2(vrrp):
         return (self.version == VRRP_VERSION_V2 and
                 self.type == VRRP_TYPE_ADVERTISEMENT and
                 VRRP_VRID_MIN <= self.vrid and self.vrid <= VRRP_VRID_MAX and
-                VRRP_PRIORITY_MIN <= self.vrid and
-                self.vrid <= VRRP_PRIORITY_MAX and
+                VRRP_PRIORITY_MIN <= self.priority and
+                self.priority <= VRRP_PRIORITY_MAX and
                 self.auth_type == VRRP_AUTH_NO_AUTH and
                 VRRP_V2_MAX_ADVER_INT_MIN <= self.max_adver_int and
                 self.max_adver_int <= VRRP_V2_MAX_ADVER_INT_MAX and
@@ -616,8 +616,8 @@ class vrrpv3(vrrp):
         return (self.version == VRRP_VERSION_V3 and
                 self.type == VRRP_TYPE_ADVERTISEMENT and
                 VRRP_VRID_MIN <= self.vrid and self.vrid <= VRRP_VRID_MAX and
-                VRRP_PRIORITY_MIN <= self.vrid and
-                self.vrid <= VRRP_PRIORITY_MAX and
+                VRRP_PRIORITY_MIN <= self.priority and
+                self.priority <= VRRP_PRIORITY_MAX and
                 VRRP_V3_MAX_ADVER_INT_MIN <= self.max_adver_int and
                 self.max_adver_int <= VRRP_V3_MAX_ADVER_INT_MAX and
                 self.count_ip == len(self.ip_addresses))
