@@ -2549,21 +2549,6 @@ class TestOFPQueuePropNone(unittest.TestCase):
 
         ok_(self.c.parser(buf, 0))
 
-    def test_str(self):
-        list_ = ('property', 'len')
-        check = {}
-        str_ = str(self.c)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(check['property'], str(self.property['val']))
-        eq_(check['len'], str(self.len['val']))
-
 
 class TestOFPQueuePropMinRate(unittest.TestCase):
     """ Test case for ofprotp_v1_0_parser.OFPQueuePropMinRate
@@ -2599,20 +2584,6 @@ class TestOFPQueuePropMinRate(unittest.TestCase):
     def test_parser(self):
         res = self.c.parser(self.buf, 0)
         eq_(self.rate['val'], res.rate)
-
-    def test_str(self):
-        list_ = ('rate',)
-        check = {}
-        str_ = str(self.c)
-        str_ = str_.rsplit()
-        i = 0
-
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(check['rate'], str(self.rate['val']))
 
 
 class TestOFPPacketQueue(unittest.TestCase):
@@ -2714,24 +2685,6 @@ class TestOFPHello(unittest.TestCase):
         eq_(xid, res.xid)
         eq_(buffer(buf), res.buf)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(ofproto_v1_0.OFP_VERSION).find(check['version:']), 0)
-        eq_(hex(ofproto_v1_0.OFPT_HELLO).find(check['msg_type']), 0)
-        eq_(hex(xid).find(check['xid']), 0)
-
     def test_serialize(self):
 
         class Datapath(object):
@@ -2790,22 +2743,6 @@ class TestOFPErrorMsg(unittest.TestCase):
         eq_(type['val'], res.type)
         eq_(code['val'], res.code)
         eq_(data, res.data)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         class Datapath(object):
@@ -2882,24 +2819,6 @@ class TestOFPEchoRequest(unittest.TestCase):
         eq_(xid['val'], res.xid)
         eq_(data, res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         class Datapath(object):
             ofproto = ofproto_v1_0
@@ -2967,24 +2886,6 @@ class TestOFPEchoReply(unittest.TestCase):
         eq_(msg_len['val'], res.msg_len)
         eq_(xid['val'], res.xid)
         eq_(data, res.data)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         class Datapath(object):
@@ -3056,24 +2957,6 @@ class TestOFPVendor(unittest.TestCase):
         eq_(xid['val'], res.xid)
         eq_(vendor['val'], res.vendor)
         eq_(data, res.data)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         class Datapath(object):
@@ -3559,26 +3442,6 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         eq_(supported['val'], port.supported)
         eq_(peer['val'], port.peer)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid', 'ports')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                if str_[i + 1].startswith('{'):  # "{1: OFPPhyPort..."
-                    check[str_[i]] = str_[i + 2]
-                else:
-                    check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(check['ports'].find('OFPPhyPort'), 0)
-
     def test_serialize(self):
         # Not used.
         pass
@@ -3667,22 +3530,6 @@ class TestOFPPortStatus(unittest.TestCase):
         eq_(supported['val'], desc.supported)
         eq_(peer['val'], desc.peer)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
@@ -3755,27 +3602,6 @@ class TestOFPPacketIn(unittest.TestCase):
         eq_(reason['val'], res.reason)
         eq_(data[0:16], res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',
-                 'buffer_id', 'total_len', 'in_port', 'reason',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(str(buffer_id['val']), check['buffer_id'])
-        eq_(str(total_len['val']), check['total_len'])
-        eq_(str(in_port['val']), check['in_port'])
-        eq_(str(reason['val']), check['reason'])
-
         return True
 
     def test_parser(self):
@@ -3841,22 +3667,6 @@ class TestOFPGetConfigReply(unittest.TestCase):
         eq_(flags['val'], res.flags)
         eq_(miss_send_len['val'], res.miss_send_len)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
@@ -3904,22 +3714,6 @@ class TestOFPBarrierReply(unittest.TestCase):
         eq_(msg_type['val'], res.msg_type)
         eq_(msg_len['val'], res.msg_len)
         eq_(xid['val'], res.xid)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         # Not used.
@@ -4058,34 +3852,6 @@ class TestOFPFlowRemoved(unittest.TestCase):
         eq_(tp_src['val'], match.tp_src)
         eq_(tp_dst['val'], match.tp_dst)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',
-                 'match', 'cookie', 'priority', 'reason',
-                 'duration_sec', 'duration_nsec',
-                 'idle_timeout', 'packet_count', 'byte_count')
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(str(cookie['val']), check['cookie'])
-        eq_(str(priority['val']), check['priority'])
-        eq_(str(reason['val']), check['reason'])
-        eq_(str(duration_sec['val']), check['duration_sec'])
-        eq_(str(duration_nsec['val']), check['duration_nsec'])
-        eq_(str(idle_timeout['val']), check['idle_timeout'])
-        eq_(str(packet_count['val']), check['packet_count'])
-        eq_(str(byte_count['val']), check['byte_count'])
-
     def test_serialize(self):
         # Not used.
         pass
@@ -4160,23 +3926,6 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
         queue = res.queues[0]
         eq_(queue_id['val'], queue.queue_id)
         eq_(len_['val'], queue.len)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         # Not used.
@@ -4260,23 +4009,6 @@ class TestOFPDescStatsReply(unittest.TestCase):
         eq_(sw_desc, body.sw_desc)
         eq_(serial_num, body.serial_num)
         eq_(dp_desc, body.dp_desc)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         # Not used.
@@ -4428,23 +4160,6 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         eq_(port['val'], action.port)
         eq_(max_len['val'], action.max_len)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
@@ -4524,23 +4239,6 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         eq_(packet_count['val'], body.packet_count)
         eq_(byte_count['val'], body.byte_count)
         eq_(flow_count['val'], body.flow_count)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         # Not used.
@@ -4634,23 +4332,6 @@ class TestOFPTableStatsReply(unittest.TestCase):
         eq_(active_count['val'], body.active_count)
         eq_(lookup_count['val'], body.lookup_count)
         eq_(matched_count['val'], body.matched_count)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         # Not used.
@@ -4775,23 +4456,6 @@ class TestOFPPortStatsReply(unittest.TestCase):
         eq_(rx_crc_err['val'], body.rx_crc_err)
         eq_(collisions['val'], body.collisions)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
@@ -4879,23 +4543,6 @@ class TestOFPQueueStatsReply(unittest.TestCase):
         eq_(tx_packets['val'], body.tx_packets)
         eq_(tx_errors['val'], body.tx_errors)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
@@ -4963,23 +4610,6 @@ class TestOFPVendorStatsReply(unittest.TestCase):
         # body
         body = res.body[0]
         eq_(specific_data, body)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
 
     def test_serialize(self):
         # Not used.
