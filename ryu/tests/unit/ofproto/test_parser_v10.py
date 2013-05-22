@@ -3560,7 +3560,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         eq_(peer['val'], port.peer)
 
         # test __str__()
-        list_ = ('version:', 'msg_type', 'xid', 'port')
+        list_ = ('version:', 'msg_type', 'xid', 'ports')
         check = {}
         str_ = str(res)
         str_ = str_.rsplit()
@@ -3568,13 +3568,16 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         i = 0
         for s in str_:
             if s in list_:
-                check[str_[i]] = str_[i + 1]
+                if str_[i + 1].startswith('{'):  # "{1: OFPPhyPort..."
+                    check[str_[i]] = str_[i + 2]
+                else:
+                    check[str_[i]] = str_[i + 1]
             i += 1
 
         eq_(hex(version['val']).find(check['version:']), 0)
         eq_(hex(msg_type['val']).find(check['msg_type']), 0)
         eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(check['port'].find('OFPPhyPort'), 0)
+        eq_(check['ports'].find('OFPPhyPort'), 0)
 
     def test_serialize(self):
         # Not used.

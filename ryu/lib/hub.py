@@ -33,7 +33,9 @@ if HUB_TYPE == 'eventlet':
     import eventlet.queue
     import eventlet.timeout
     import eventlet.wsgi
+    import greenlet
     import ssl
+    import socket
     import traceback
 
     getcurrent = eventlet.getcurrent
@@ -46,7 +48,12 @@ if HUB_TYPE == 'eventlet':
             # by not propergating an exception to the joiner.
             try:
                 func(*args, **kwargs)
+            except greenlet.GreenletExit:
+                pass
             except:
+                # log uncaught exception.
+                # note: this is an intentional divergence from gevent
+                # behaviour.  gevent silently ignores such exceptions.
                 LOG.error('hub: uncaught exception: %s',
                           traceback.format_exc())
 
@@ -57,7 +64,12 @@ if HUB_TYPE == 'eventlet':
 
     def joinall(threads):
         for t in threads:
-            t.wait()
+            # this try-except is necessary when killing an inactive
+            # greenthread
+            try:
+                t.wait()
+            except greenlet.GreenletExit:
+                pass
 
     Queue = eventlet.queue.Queue
     QueueEmpty = eventlet.queue.Empty
@@ -67,7 +79,12 @@ if HUB_TYPE == 'eventlet':
                      spawn='default', **ssl_args):
             assert backlog is None
             assert spawn == 'default'
-            self.server = eventlet.listen(listen_info)
+
+            if ':' in listen_info[0]:
+                self.server = eventlet.listen(listen_info,
+                                              family=socket.AF_INET6)
+            else:
+                self.server = eventlet.listen(listen_info)
             if ssl_args:
                 def wrap_and_handle(sock, addr):
                     ssl_args.setdefault('server_side', True)

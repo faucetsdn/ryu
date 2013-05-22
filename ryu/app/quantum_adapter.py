@@ -227,7 +227,6 @@ class OVSSwitch(object):
                 self.logger.error("quantum update port failed: %s", e)
                 # TODO: When authentication failure occurred,
                 # it should get auth token again
-            return
 
         # update {network, port, mac}
         self.network_api.update_network(network_id)

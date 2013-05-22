@@ -16,6 +16,7 @@
 
 import logging
 import struct
+import functools
 
 from ryu import exception
 
@@ -50,7 +51,17 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
     return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
 
 
+def create_list_of_attributes(f):
+    @functools.wraps(f)
+    def wrapper(self, *args, **kwargs):
+        ret = f(self, *args, **kwargs)
+        self._attributes = set(dir(self))
+        return ret
+    return wrapper
+
+
 class MsgBase(object):
+    @create_list_of_attributes
     def __init__(self, datapath):
         self.datapath = datapath
         self.version = None
@@ -75,9 +86,10 @@ class MsgBase(object):
         self.buf = buffer(buf)
 
     def __str__(self):
-        return 'version: 0x%x msg_type 0x%x xid 0x%x' % (self.version,
-                                                         self.msg_type,
-                                                         self.xid)
+        buf = 'version: 0x%x msg_type 0x%x xid 0x%x' % (self.version,
+                                                        self.msg_type,
+                                                        self.xid)
+        return msg_str_attr(self, buf)
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
@@ -135,7 +147,11 @@ def msg_pack_into(fmt, buf, offset, *args):
     struct.pack_into(fmt, buf, offset, *args)
 
 
-def msg_str_attr(msg, buf, attr_list):
+def msg_str_attr(msg, buf, attr_list=None):
+    if attr_list is None:
+        exclude = ['_attributes']
+        exclude += getattr(msg, '_attributes', [])
+        attr_list = set(dir(msg)) - set(exclude)
     for attr in attr_list:
         val = getattr(msg, attr, None)
         if val is not None:

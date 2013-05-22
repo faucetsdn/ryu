@@ -701,7 +701,7 @@ OFPGFC_CHAINING = 1 << 2  # Support chaining groups.
 OFPGFC_CHAINING_CHECKS = 1 << 3  # Check chaining for loops and delete
 
 # struct ofp_meter_multipart_request
-OFP_METER_MULTIPART_REQUEST_PACK_STR = '!I4B'
+OFP_METER_MULTIPART_REQUEST_PACK_STR = '!I4x'
 OFP_METER_MULTIPART_REQUEST_SIZE = 8
 assert (calcsize(OFP_METER_MULTIPART_REQUEST_PACK_STR) ==
         OFP_METER_MULTIPART_REQUEST_SIZE)

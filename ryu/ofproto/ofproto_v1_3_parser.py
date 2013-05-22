@@ -266,6 +266,11 @@ class OFPSetConfig(MsgBase):
                       self.flags, self.miss_send_len)
 
 
+UINT64_MAX = (1 << 64) - 1
+UINT32_MAX = (1 << 32) - 1
+UINT16_MAX = (1 << 16) - 1
+
+
 class Flow(object):
     def __init__(self):
         self.in_port = 0
@@ -1405,9 +1410,9 @@ class OFPPortStatus(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPPortStatus, cls).parser(datapath, version, msg_type,
                                                msg_len, xid, buf)
-        (msg.reason,) = struct.unpack_from(
+        msg.reason = struct.unpack_from(
             ofproto_v1_3.OFP_PORT_STATUS_PACK_STR, msg.buf,
-            ofproto_v1_3.OFP_HEADER_SIZE)
+            ofproto_v1_3.OFP_HEADER_SIZE)[0]
         msg.desc = OFPPort.parser(msg.buf,
                                   ofproto_v1_3.OFP_PORT_STATUS_DESC_OFFSET)
         return msg
@@ -2176,6 +2181,7 @@ class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, table_id, out_port, out_group,
                  cookie, cookie_mask, match):
         super(OFPAggregateStatsRequest, self).__init__(datapath,
+                                                       flags,
                                                        table_id,
                                                        out_port,
                                                        out_group,
@@ -2330,7 +2336,7 @@ class OFPGroupDescStats(object):
         self.length = None
         self.type = None
         self.group_id = None
-        self.ofp_bucket = None
+        self.buckets = None
 
     @classmethod
     def parser(cls, buf, offset):
@@ -2340,11 +2346,11 @@ class OFPGroupDescStats(object):
             ofproto_v1_3.OFP_GROUP_DESC_STATS_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_GROUP_DESC_STATS_SIZE
 
-        stats.bucket = []
+        stats.buckets = []
         length = ofproto_v1_3.OFP_GROUP_DESC_STATS_SIZE
         while length < stats.length:
             bucket = OFPBucket.parser(buf, offset)
-            stats.bucket.append(bucket)
+            stats.buckets.append(bucket)
 
             offset += bucket.len
             length += bucket.len
@@ -2382,7 +2388,7 @@ class OFPGroupFeaturesStats(collections.namedtuple('OFPGroupFeaturesStats', (
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
     def __init__(self, datapath, flags):
-        super(OFPGroupFeaturesRequest, self).__init__(datapath, flags)
+        super(OFPGroupFeaturesStatsRequest, self).__init__(datapath, flags)
 
 
 @OFPMultipartReply.register_stats_type()
@@ -2646,7 +2652,7 @@ class OFPQueueGetConfigRequest(MsgBase):
         super(OFPQueueGetConfigRequest, self).__init__(datapath)
         self.port = port
 
-    def _serialized_body(self):
+    def _serialize_body(self):
         msg_pack_into(ofproto_v1_3.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
                       self.buf, ofproto_v1_3.OFP_HEADER_SIZE, self.port)
 
@@ -2827,10 +2833,14 @@ class OFPGetAsyncReply(MsgBase):
         msg = super(OFPGetAsyncReply, cls).parser(datapath, version,
                                                   msg_type, msg_len,
                                                   xid, buf)
-        (msg.packet_in_mask, msg.port_status_mask,
-         msg.flow_removed_mask) = struct.unpack_from(
+        (packet_in_mask_m, packet_in_mask_s,
+         port_status_mask_m, port_status_mask_s,
+         flow_removed_mask_m, flow_removed_mask_s) = struct.unpack_from(
              ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
              ofproto_v1_3.OFP_HEADER_SIZE)
+        msg.packet_in_mask = [packet_in_mask_m, packet_in_mask_s]
+        msg.port_status_mask = [port_status_mask_m, port_status_mask_s]
+        msg.flow_removed_mask = [flow_removed_mask_m, flow_removed_mask_s]
         return msg
 
 
@@ -2846,5 +2856,6 @@ class OFPSetAsync(MsgBase):
     def _serialize_body(self):
         msg_pack_into(ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, self.buf,
                       ofproto_v1_3.OFP_HEADER_SIZE,
-                      self.packet_in_mask, self.port_status_mask,
-                      self.flow_removed_mask)
+                      self.packet_in_mask[0], self.packet_in_mask[1],
+                      self.port_status_mask[0], self.port_status_mask[1],
+                      self.flow_removed_mask[0], self.flow_removed_mask[1])

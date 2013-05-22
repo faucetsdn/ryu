@@ -186,6 +186,48 @@ class Test_hub(unittest.TestCase):
             hub.joinall(threads)
         assert len(result) == 0
 
+    def test_spawn_kill_nowait_joinall(self):
+        # XXX this test relies on the scheduling behaviour.
+        # the intention here is, killing threads before they get active.
+
+        def _child(result):
+            result.append(1)
+
+        threads = []
+        result = []
+        with hub.Timeout(2):
+            threads.append(hub.spawn(_child, result))
+            for t in threads:
+                hub.kill(t)
+            hub.joinall(threads)
+        assert len(result) == 0
+
+    def test_spawn_kill_die_joinall(self):
+        def _child(result):
+            result.append(1)
+
+        threads = []
+        result = []
+        with hub.Timeout(2):
+            threads.append(hub.spawn(_child, result))
+            threads.append(hub.spawn(_child, result))
+            hub.sleep(0.5)
+            for t in threads:
+                hub.kill(t)
+            hub.joinall(threads)
+        assert len(result) == 2
+
+    def test_spawn_exception_joinall(self):
+        def _child():
+            raise Exception("hoge")
+
+        threads = []
+        with hub.Timeout(2):
+            threads.append(hub.spawn(_child))
+            threads.append(hub.spawn(_child))
+            hub.sleep(0.5)
+            hub.joinall(threads)
+
     def test_event1(self):
         ev = hub.Event()
         ev.set()
