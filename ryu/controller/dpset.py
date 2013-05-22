@@ -24,6 +24,8 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 import ryu.exception as ryu_exc
 
+from ryu.lib.dpid import dpid_to_str
+
 LOG = logging.getLogger('ryu.controller.dpset')
 
 DPSET_EV_DISPATCHER = "dpset"
@@ -174,20 +176,20 @@ class DPSet(app_manager.RyuApp):
         if reason == ofproto.OFPPR_ADD:
             LOG.debug('DPSET: A port was added.' +
                       '(datapath id = %s, port number = %s)',
-                      datapath.id, port.port_no)
+                      dpid_to_str(datapath.id), port.port_no)
             self._port_added(datapath, port)
             self.send_event_to_observers(EventPortAdd(datapath, port))
         elif reason == ofproto.OFPPR_DELETE:
             LOG.debug('DPSET: A port was deleted.' +
                       '(datapath id = %s, port number = %s)',
-                      datapath.id, port.port_no)
+                      dpid_to_str(datapath.id), port.port_no)
             self._port_deleted(datapath, port)
             self.send_event_to_observers(EventPortDelete(datapath, port))
         else:
             assert reason == ofproto.OFPPR_MODIFY
             LOG.debug('DPSET: A port was modified.' +
                       '(datapath id = %s, port number = %s)',
-                      datapath.id, port.port_no)
+                      dpid_to_str(datapath.id), port.port_no)
             self.port_state[datapath.id].modify(port.port_no, port)
             self.send_event_to_observers(EventPortModify(datapath, port))
 

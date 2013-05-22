@@ -18,7 +18,7 @@ import collections
 import struct
 import binascii
 
-from ofproto_parser import MsgBase, msg_pack_into, msg_str_attr
+from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
@@ -90,7 +90,7 @@ class OFPPhyPort(collections.namedtuple('OFPPhyPort', (
         return cls(*port)
 
 
-class OFPMatch(object):
+class OFPMatch(StringifyMixin):
     def __init__(self, wildcards=None, in_port=None, dl_src=None, dl_dst=None,
                  dl_vlan=None, dl_vlan_pcp=None, dl_type=None, nw_tos=None,
                  nw_proto=None, nw_src=None, nw_dst=None,
@@ -195,7 +195,7 @@ class OFPMatch(object):
         return cls(*match)
 
 
-class OFPActionHeader(object):
+class OFPActionHeader(StringifyMixin):
     def __init__(self, type_, len_):
         self.type = type_
         self.len = len_
@@ -981,7 +981,7 @@ class OFPDescStats(collections.namedtuple('OFPDescStats', (
         return stats
 
 
-class OFPFlowStats(object):
+class OFPFlowStats(StringifyMixin):
     def __init__(self):
         super(OFPFlowStats, self).__init__()
         self.length = None
@@ -1087,7 +1087,7 @@ class OFPVendorStats(collections.namedtuple('OFPVendorStats',
         return stats
 
 
-class NXFlowStats(object):
+class NXFlowStats(StringifyMixin):
     def __init__(self):
         super(NXFlowStats, self).__init__()
         self.length = None
@@ -1153,7 +1153,7 @@ class NXAggregateStats(collections.namedtuple('NXAggregateStats', (
         return stats
 
 
-class OFPQueuePropHeader(object):
+class OFPQueuePropHeader(StringifyMixin):
     _QUEUE_PROPERTIES = {}
 
     @staticmethod
@@ -1168,10 +1168,6 @@ class OFPQueuePropHeader(object):
     def __init__(self):
         self.property = self.cls_prop_type
         self.len = self.cls_prop_len
-
-    def __str__(self):
-        buf = super(OFPQueuePropHeader, self).__str__()
-        return msg_str_attr(self, buf, ('property', 'len'))
 
     @classmethod
     def parser(cls, buf, offset):
@@ -1203,10 +1199,6 @@ class OFPQueuePropMinRate(OFPQueuePropHeader):
         super(OFPQueuePropMinRate, self).__init__()
         self.rate = rate
 
-    def __str__(self):
-        buf = super(OFPQueuePropMinRate, self).__str__()
-        return msg_str_attr(self, buf, ('rate',))
-
     @classmethod
     def parser(cls, buf, offset):
         (rate,) = struct.unpack_from(
@@ -1215,7 +1207,7 @@ class OFPQueuePropMinRate(OFPQueuePropHeader):
         return cls(rate)
 
 
-class OFPPacketQueue(object):
+class OFPPacketQueue(StringifyMixin):
     def __init__(self, queue_id, len_):
         self.queue_id = queue_id
         self.len = len_
