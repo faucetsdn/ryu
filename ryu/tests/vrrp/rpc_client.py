@@ -13,8 +13,7 @@ def main():
         client = rpc.Client(client_sock)
         client_sock.connect(("127.0.0.1", 51717))
         vrrp_param = rpc_manager.VRRPParam(vrrp.VRRP_VERSION_V2, 1, "10.0.0.1")
-        vrrp_param.appendPort(1, 1, "00:00:00:00:00:01", "10.0.0.101", 150)
-        vrrp_param.appendPort(2, 1, "00:00:00:00:00:02", "10.0.0.102", 150)
+        vrrp_param.setPort(1, 1, "00:00:00:00:00:01", "10.0.0.101", 150)
         result = client.call("vrrp_config", [vrrp_param.toArray()])
         print result
 

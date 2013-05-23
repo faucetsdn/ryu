@@ -18,19 +18,18 @@ class VRRPParam(object):
         self.version = version
         self.vrid = vrid
         self.ip_address = ip_address
-        self.ports = []
 
 
-    def appendPort(self, dpid, port_no, hw_addr, ip_address, priority):
-        self.ports.append({
+    def setPort(self, dpid, port_no, hw_addr, ip_address, priority):
+        self.port = {
             "hw_addr": hw_addr,
             "ip_address": ip_address,
             "dpid": dpid,
             "port_no": port_no,
-            "priority": priority})
+            "priority": priority}
 
     def toArray(self):
-        return [self.version, self.vrid, self.ip_address, self.ports]
+        return [self.version, self.vrid, self.ip_address, self.port]
 
 
 class RpcVRRPManager(app_manager.RyuApp):
@@ -77,16 +76,16 @@ class RpcVRRPManager(app_manager.RyuApp):
         self.logger.info('handle vrrp_config request')
         vrrp_params = params[0]
         print vrrp_params
-        for port in vrrp_params[3]:
-            interface = vrrp_event.VRRPInterfaceOpenFlow(
-                mac.haddr_to_bin(port["hw_addr"]),
-                netaddr.IPAddress(port["ip_address"]).value, None,
-                port["dpid"], port["port_no"])
+        port = vrrp_params[3]
+        interface = vrrp_event.VRRPInterfaceOpenFlow(
+            mac.haddr_to_bin(port["hw_addr"]),
+            netaddr.IPAddress(port["ip_address"]).value, None,
+            port["dpid"], port["port_no"])
 
-            config = vrrp_event.VRRPConfig(
-                version=vrrp_params[0], vrid=vrrp_params[1],
-                priority=port["priority"], ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value])
-            vrrp_api.vrrp_config(self, interface, config)
+        config = vrrp_event.VRRPConfig(
+            version=vrrp_params[0], vrid=vrrp_params[1],
+            priority=port["priority"], ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value])
+        vrrp_api.vrrp_config(self, interface, config)
         endpoint.send_response(msgid, error=None, result=0)
 
 
