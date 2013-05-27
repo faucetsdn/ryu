@@ -543,9 +543,9 @@ class NXActionResubmitTable(NXActionResubmitBase):
 @NXActionHeader.register_nx_action_subtype(
     ofproto_v1_0.NXAST_SET_TUNNEL, ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE)
 class NXActionSetTunnel(NXActionHeader):
-    def __init__(self, tun_id_):
+    def __init__(self, tun_id):
         super(NXActionSetTunnel, self).__init__()
-        self.tun_id = tun_id_
+        self.tun_id = tun_id
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf,
@@ -646,9 +646,9 @@ class NXActionRegLoad(NXActionHeader):
 @NXActionHeader.register_nx_action_subtype(
     ofproto_v1_0.NXAST_SET_TUNNEL64, ofproto_v1_0.NX_ACTION_SET_TUNNEL64_SIZE)
 class NXActionSetTunnel64(NXActionHeader):
-    def __init__(self, tun_id_):
+    def __init__(self, tun_id):
         super(NXActionSetTunnel64, self).__init__()
-        self.tun_id = tun_id_
+        self.tun_id = tun_id
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
