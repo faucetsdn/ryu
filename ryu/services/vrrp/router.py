@@ -254,7 +254,7 @@ class VRRPRouter(app_manager.RyuApp):
         # force to recreate cached vrrp packet
         self.vrrp = None
 
-        self.state_impl.vrrp_config_chnage_request(ev)
+        self.state_impl.vrrp_config_change_request(ev)
 
 
 # RFC defines that start timer, then change the state.
@@ -342,7 +342,7 @@ class VRRPV2StateMaster(VRRPState):
         vrrp_router = self.vrrp_router
         vrrp_router.logger.warn('%s vrrp_config_change_request',
                                 self.__class__.__name__)
-        if ev.priority is not None or ev.Advertisement_inerval is not None:
+        if ev.priority is not None or ev.advertisement_interval is not None:
             vrrp_router.adver_timer.cancel()
             self._adver()
 
