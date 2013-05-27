@@ -76,6 +76,7 @@ class StringifyMixin(object):
 class MsgBase(StringifyMixin):
     @create_list_of_base_attributes
     def __init__(self, datapath):
+        super(MsgBase, self).__init__()
         self.datapath = datapath
         self.version = None
         self.msg_type = None
@@ -106,10 +107,10 @@ class MsgBase(StringifyMixin):
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        msg = cls(datapath)
-        msg.set_headers(version, msg_type, msg_len, xid)
-        msg.set_buf(buf)
-        return msg
+        msg_ = cls(datapath)
+        msg_.set_headers(version, msg_type, msg_len, xid)
+        msg_.set_buf(buf)
+        return msg_
 
     def _serialize_pre(self):
         assert self.version is None
@@ -160,7 +161,7 @@ def msg_pack_into(fmt, buf, offset, *args):
     struct.pack_into(fmt, buf, offset, *args)
 
 
-def ofp_attrs(msg):
+def ofp_attrs(msg_):
     base = getattr(msg, '_base_attributes', [])
     for k, v in inspect.getmembers(msg):
         if k.startswith('_'):
@@ -169,16 +170,16 @@ def ofp_attrs(msg):
             continue
         if k in base:
             continue
-        if hasattr(msg.__class__, k):
+        if hasattr(msg_.__class__, k):
             continue
         yield (k, v)
 
 
-def msg_str_attr(msg, buf, attr_list=None):
+def msg_str_attr(msg_, buf, attr_list=None):
     if attr_list is None:
-        attr_list = ofp_attr(msg)
+        attr_list = ofp_attrs(msg_)
     for attr in attr_list:
-        val = getattr(msg, attr, None)
+        val = getattr(msg_, attr, None)
         if val is not None:
             buf += ' %s %s' % (attr, val)
 
