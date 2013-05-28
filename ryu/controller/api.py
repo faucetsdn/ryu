@@ -1,6 +1,7 @@
 import eventlet
 import sys
 import inspect
+import netaddr
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.controller import dpset
@@ -39,10 +40,22 @@ class OFWireRpcSession(object):
             m = self.send_queue.get()
             self.socket.sendall(m)
 
+    def _ofp_handle_matchfield(self, clses, params):
+        matchfield = getattr(clses, 'make')(**params)
+        return matchfield
+
     def _ofp_handle_match(self, clses, params):
         match = clses()
         for k, v in params.items():
             if hasattr(match, 'set_' + k):
+                if k.startswith('ipv4_'):
+                    if k.endswith('_masked'):
+                        addr = netaddr.IPNetwork(v).ip
+                        mask = netaddr.IPNetwork(v).netmask
+                        getattr(match, 'set_' + k)(int(addr), int(mask))
+                        return match
+                    else:
+                        v = int(netaddr.IPNetwork(v).ip)
                 getattr(match, 'set_' + k)(v)
         return match
 
@@ -57,6 +70,8 @@ class OFWireRpcSession(object):
                     else:
                         if k == 'OFPMatch' and dp.ofproto.OFP_VERSION > 2:
                             ins = self._ofp_handle_match(clses, v)
+                        elif k == 'OFPMatchField':
+                            ins = self._ofp_handle_matchfield(clses, v)
                         else:
                             ins = clses(**v)
                     params[k] = ins
@@ -78,9 +93,10 @@ class OFWireRpcSession(object):
         params = msg[3][1]
         dp = self.dpset.get(int(dpid))
         if dp is None:
-            r = self.session.create_response(msg[1], 1, 0)
-            self.send_queue.put(r)
-            return
+            # hack
+            for k, v in self.dpset.get_all():
+                dp = v
+                break
 
         self._ofp_handle_params(dp, params)
         result = {}
@@ -116,7 +132,7 @@ class RPCApi(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         self.dpset = kwargs['dpset']
         super(RPCApi, self).__init__(*args, **kwargs)
-        self.server = eventlet.listen(('', 50000))
+        self.server = eventlet.listen(('', 50001))
         self.pool = eventlet.GreenPool()
         self.pool.spawn_n(self.serve)
         self.sessions = []
