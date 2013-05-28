@@ -235,12 +235,6 @@ class EventVRRPConfigChangeRequest(event.EventRequestBase):
         self.preempt_delay = preempt_delay
         self.accept_mode = accept_mode
 
-class EventVRRPConfigChangeReply(event.EventReplyBase):
-
-    def __init__(self, instance):
-        super(EventVRRPConfigChangeReply, self).__init__(None)
-        self.instance = instance
-
 # Following classes are internally used by VRRP
 
 class EventVRRPReceived(event.EventBase):

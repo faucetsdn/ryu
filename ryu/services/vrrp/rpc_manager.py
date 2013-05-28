@@ -1,5 +1,9 @@
-import netaddr
+from oslo.config import cfg
+import socket
+import select
+from contextlib import closing
 
+import netaddr
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.services.vrrp import event as vrrp_event
@@ -7,16 +11,20 @@ from ryu.services.vrrp import api as vrrp_api
 from ryu.lib import rpc
 from ryu.lib import hub
 from ryu.lib import mac
-import socket
-from contextlib import closing
+
 
 VRRP_RPC_PORT = 51718
 CONF_KEY_PRIORITY = "priority"
 CONF_KEY_ADVERTISEMENT_INTERVAL = "advertisement_interval"
-CONF_KEY_PORT_NO = "port_no"
 CONF_KEY_PORT_IFNAME = "ifname"
 CONF_KEY_PORT_IP_ADDR = "ip_address"
 CONF_KEY_PORT_VLAN_ID = "vlan_id"
+
+CONF = cfg.CONF
+
+CONF.register_cli_opts([
+    cfg.IntOpt('vrrp-rpc-port', default=VRRP_RPC_PORT,
+               help='port for vrrp rpc interface')])
 
 
 class VRRPParam(object):
@@ -25,16 +33,13 @@ class VRRPParam(object):
         self.vrid = vrid
         self.ip_address = ip_address
 
-
-    def setPort(self, ifname, port_no, ip_address, priority, vlan_id=None):
+    def setPort(self, ifname, ip_address, priority, vlan_id=None):
         self.port = {
             CONF_KEY_PORT_IP_ADDR: ip_address,
             CONF_KEY_PORT_IFNAME: ifname,
-            CONF_KEY_PORT_NO: port_no,
             CONF_KEY_PRIORITY: priority,
             CONF_KEY_PORT_VLAN_ID: vlan_id
         }
-
 
     def toArray(self):
         return [self.version, self.vrid, self.ip_address, self.port]
@@ -47,27 +52,28 @@ class RpcVRRPManager(app_manager.RyuApp):
         self._kwargs = kwargs
         self.serverThread = hub.spawn(self._startRPCServer)
 
-
     def _startRPCServer(self):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_sock.setblocking(0)
         with closing(server_sock):
-            server_sock.bind(("0.0.0.0", VRRP_RPC_PORT))
+            server_sock.bind(("0.0.0.0", CONF.vrrp_rpc_port))
             server_sock.listen(1)
             self.logger.info("RPCServer starting.")
 
             while True:
-                conn, address = server_sock.accept()
-
+                reader, writer, err = select.select([server_sock], [], [])
+                if reader[0] == server_sock:
+                    conn, address = server_sock.accept()
+                    conn.setblocking(0)
                 table = {
                     rpc.MessageType.REQUEST: self._handle_vrrp_request,
                     rpc.MessageType.RESPONSE: self._handle_vrrp_response,
                     rpc.MessageType.NOTIFY: self._handle_vrrp_notification
                 }
+
                 self._requests = set()
-                #server_sock.setblocking(0)
                 self._server_endpoint = rpc.EndPoint(conn, disp_table=table)
                 self._server_thread = hub.spawn(self._server_endpoint.serve)
-
 
     @handler.set_ev_cls(vrrp_event.EventVRRPStateChanged)
     def vrrp_state_changed_handler(self, ev):
@@ -75,9 +81,9 @@ class RpcVRRPManager(app_manager.RyuApp):
         name = ev.instance_name
         old_state = ev.old_state
         new_state = ev.new_state
-        self.logger.info('%s: %s -> %s', name, old_state, new_state)
-        #TODO: notify
-
+        vrid = ev.config.vrid
+        self.logger.info('VRID:%s %s: %s -> %s', vrid, name, old_state, new_state)
+        self._server_endpoint.send_notification("notify_status", [vrid, old_state, new_state])
 
     def _config(self, endpoint, msgid, params):
         self.logger.debug('handle vrrp_config request')
@@ -94,9 +100,13 @@ class RpcVRRPManager(app_manager.RyuApp):
         config = vrrp_event.VRRPConfig(
             version=vrrp_params[0], vrid=vrrp_params[1],
             priority=port["priority"], ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value])
-        vrrp_api.vrrp_config(self, interface, config)
-        endpoint.send_response(msgid, error=None, result=0)
+        config_result = vrrp_api.vrrp_config(self, interface, config)
 
+        api_result = [config_result.config.vrid,
+                      config_result.config.priority,
+                      str(netaddr.IPAddress(config_result.config.ip_addresses[0]))]
+
+        endpoint.send_response(msgid, error=None, result=api_result)
 
     def _lookup(self, vrid):
         result = vrrp_api.vrrp_list(self)
@@ -109,7 +119,6 @@ class RpcVRRPManager(app_manager.RyuApp):
                 break
 
         return instance_name
-
 
     def _config_change(self, endpoint, msgid, params):
         self.logger.debug('handle vrrp_config_change request')
@@ -153,7 +162,6 @@ class RpcVRRPManager(app_manager.RyuApp):
             ret_list.append(info_dict)
         endpoint.send_response(msgid, error=None, result=ret_list)
 
-
     def _handle_vrrp_request(self, method):
         msgid, target_method, params = method
         endpoint = self._server_endpoint
@@ -163,7 +171,6 @@ class RpcVRRPManager(app_manager.RyuApp):
             self._list(endpoint, msgid, params)
         elif target_method == "vrrp_config_change":
             self._config_change(endpoint, msgid, params)
-
 
     def _handle_vrrp_response(self, method):
         pass

@@ -40,6 +40,7 @@ from ryu import version
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
+from ryu.services.vrrp import rpc_manager
 from ryu.topology import switches
 
 
@@ -56,22 +57,17 @@ CONF.register_cli_opts([
 
 def main():
     CONF(project='ryu', version='ryu-manager %s' % version)
-
     log.init_log()
     if CONF.cgitb:
         import cgitb
         cgitb.enable(format='text')
-
     # always enable ofp for now.
     app_lists = CONF.app_lists + CONF.app + ['ryu.controller.ofp_handler']
-
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
     contexts = app_mgr.create_contexts()
     app_mgr.instantiate_apps(**contexts)
-
     services = []
-
     ctlr = controller.OpenFlowController()
     thr = hub.spawn(ctlr)
     services.append(thr)

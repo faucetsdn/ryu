@@ -36,7 +36,6 @@ def vrrp_transmit(app, monitor_name, data):
 def vrrp_list(app, instance_name=None):
     list_request = vrrp_event.EventVRRPListRequest(instance_name)
     list_request.dst = vrrp_event.VRRP_MANAGER_NAME
-    list_request.sync = True
     #return app.send_request(vrrp_event.VRRP_MANAGER_NAME, list_request)
     return app.send_request(list_request)
 
@@ -47,6 +46,4 @@ def vrrp_config_change(app, instance_name,
     config_change = vrrp_event.EventVRRPConfigChangeRequest(
         instance_name, priority, advertisement_interval,
         preempt_mode, accept_mode)
-    config_change.sync = True
-    config_change.dst = vrrp_event.VRRP_MANAGER_NAME
-    return app.send_request(config_change)
+    return app.send_event(vrrp_event.VRRP_MANAGER_NAME, config_change)

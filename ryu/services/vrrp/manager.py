@@ -118,14 +118,7 @@ class VRRPManager(app_manager.RyuApp):
 
     @handler.set_ev_cls(vrrp_event.EventVRRPConfigChangeRequest)
     def config_change_request_handler(self, ev):
-        import copy
-        ev_clone = copy.copy(ev)
-        self.logger.debug("before ev.src : %s",ev.src)
-        instance = self._proxy_event(ev)
-        self.logger.debug("after ev.src : %s",ev.src)
-        reply = vrrp_event.EventVRRPConfigChangeReply(instance)
-
-        self.reply_to_request(ev_clone, reply)
+        self._proxy_event(ev)
 
     @handler.set_ev_cls(vrrp_event.EventVRRPStateChanged)
     def state_change_handler(self, ev):
