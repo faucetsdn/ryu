@@ -162,8 +162,8 @@ def msg_pack_into(fmt, buf, offset, *args):
 
 
 def ofp_attrs(msg_):
-    base = getattr(msg, '_base_attributes', [])
-    for k, v in inspect.getmembers(msg):
+    base = getattr(msg_, '_base_attributes', [])
+    for k, v in inspect.getmembers(msg_):
         if k.startswith('_'):
             continue
         if callable(v):
