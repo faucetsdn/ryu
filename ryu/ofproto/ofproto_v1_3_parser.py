@@ -1832,7 +1832,7 @@ class OFPActionPopMpls(OFPAction):
 class OFPActionSetField(OFPAction):
     def __init__(self, field):
         super(OFPActionSetField, self).__init__()
-        set.field = field
+        self.field = field
 
     @classmethod
     def parser(cls, buf, offset):
@@ -1884,13 +1884,12 @@ class OFPBucket(object):
 
     @classmethod
     def parser(cls, buf, offset):
-        (msg.len, msg.weigth, msg.watch_port,
-         msg.watch_group) = struct.unpack_from(
-             ofproto_v1_3.OFP_BUCKET_PACK_STR, buf, offset)
+        (len_, weigth, watch_port, watch_group) = struct.unpack_from(
+            ofproto_v1_3.OFP_BUCKET_PACK_STR, buf, offset)
+        msg = cls(len_, weight, watch_port, watch_group, [])
 
         length = ofproto_v1_3.OFP_BUCKET_SIZE
         offset += ofproto_v1_3.OFP_BUCKET_SIZE
-        msg.actions = []
         while length < msg.len:
             action = OFPAction.parser(buf, offset)
             msg.actions.append(action)
@@ -2402,7 +2401,7 @@ class OFPGroupFeaturesStatsReply(OFPMultipartReply):
 class OFPMeterBandStats(object):
     def __init__(self, packet_band_count, byte_band_count):
         super(OFPMeterBandStats, self).__init__()
-        self.packet_band_count = packet_bound_count
+        self.packet_band_count = packet_band_count
         self.byte_band_count = byte_band_count
 
     @classmethod
