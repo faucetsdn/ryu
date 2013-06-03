@@ -4,7 +4,7 @@
 
 <head>
 
-<title>Ryu</title>
+<title>Ryu SDN Framework</title>
 
 <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="author" content="NTT Software Innovation Center" />
@@ -25,18 +25,17 @@
 	<!--header -->
 	<div id="header">			
 				
-		<h1 id="logo-text"><a href="index.html" title="">Ryu</a></h1>		
+		<h1 id="logo-text"><a href="index.html" title="">Build SDN agilely</a></h1>
 		<p id="intro">
-		  Python-based OpenFlow controller but we aim for bigger pictures
+		  Ryu, a component-based software-defined networking framework
 		</p>	
 		
 		<div  id="nav">
 			<ul>
-				<li id="current"><a href="index.html">Home</a></li>
 				<li><a href="http://github.com/osrg/ryu">Download</a></li>
 				<li><a href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">Mailing List</a></li>
+				<li><a href="http://ryu.readthedocs.org/en/latest/">Documentation</a></li>
 				<li><a href="https://github.com/osrg/ryu/wiki">Wiki</a></li>
-				<li><a href="./doc/index.html">Documentation</a></li>
 
 			</ul>		
 		</div>	
@@ -53,11 +52,11 @@
 			<h2><a href="index.html">What is Ryu?</a></h2>
 			
 				
-            <p><strong>Ryu</strong> is an Operating System for Software Defined Network.
+            <p><strong>Ryu</strong> is a component-based software defined networking framework.
             
-Ryu aims to provide a logically centralized control and well defined
-API that make it easy for operators to create new network management
-and control applications. Currently, Ryu manages network devices by using <a href="http://www.openflow.org/">OpenFlow</a>. You can say that Ryu is an OpenFlow Controller, which supports fully OpenFlow 1.0, 1.2, 1.3 and Nicira Extensions.
+Ryu provides software components with well defined
+API that make it easy for developers to create new network management
+and control applications. Ryu supports various protocols for managing network devices, such as <a href="http://www.openflow.org/">OpenFlow</a>, Netconf, OF-config, etc. About OpenFlow, Ryu supports fully 1.0, 1.2, 1.3 and Nicira Extensions.
             </p>
 
 	    <p>
@@ -117,17 +116,7 @@ OpenStack notifies of Ryu and Ryu configures <a href="http://openvswitch.org">Op
 			</code>
 			</p>
 
-			<p>
-			You are ready for writing your Ryu application then simply just type:
-			</p>
-
-			<p>
-			<code>
-			  % ryu-manager yourapp.py
-			</code>
-			</p>
-			<p>
-			Do you want to know how to write Ryu applications? Let's start with <a href="https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py" >a simple example</a>.
+			Do you want to know how to write Ryu applications? Let's start with <a href="https://github.com/osrg/ryu/wiki/OpenFlow_Tutorial" >our tutorial</a>.
 			</p>
 
 		<!-- main ends -->	
@@ -145,19 +134,13 @@ OpenStack notifies of Ryu and Ryu configures <a href="http://openvswitch.org">Op
 			  involved in OSS projects such Linux kernel.
 			</p>
 
-
-			<h3>Ryu derivation</h3>
-			<p>
-
-			<strong>Ryu</strong> means <strong>flow</strong> in Japanese. You know why we chose the name now. We found that Japanese <strong>Ryu</strong> <a href="http://translate.google.com/#en|ja|ryu%0A">pronunciation</a> is too hard for non Japanese. Feel free to pronounce <strong>Ryu</strong> in the way you can pronounce.</p>
-			
 			<h3>Sidebar Menu</h3>
 			<ul class="sidemenu">				
 				<li><a href="index.html">Home</a></li>
 				<li><a href="http://github.com/osrg/ryu">Download</a></li>
 				<li><a href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">Mailing List</a></li>
-				<li><a href="https://github.com/osrg/ryu/wiki">Wiki</a></li>
 				<li><a href="./doc/index.html">Documentation</a></li>
+				<li><a href="https://github.com/osrg/ryu/wiki">Wiki</a></li>
 			</ul>	
 				
 			<h3>Slides</h3>
@@ -168,6 +151,12 @@ OpenStack notifies of Ryu and Ryu configures <a href="http://openvswitch.org">Op
 				<li><a href="slides/InteropTokyo2012-poster.pdf">InteropTokyo 2012 poster (Japanese)</a></li>
 			</ul>
 			
+			<h3>Ryu derivation</h3>
+			<p>
+
+			<strong>Ryu</strong> has two meanings in Japanese, <strong>flow</strong> and <strong>dragon</strong>. Also Japanese dragons are believed to be water gods. You know why we chose the name now. We found that Japanese <strong>Ryu</strong> <a href="http://upload.wikimedia.org/wikipedia/commons/4/40/Ryu.ogg">pronunciation</a> is too hard for non Japanese. Feel free to pronounce <strong>Ryu</strong> in the way you can pronounce.</p>
+                        <img src="images/LogoSet02.png" width=280px >
+		
 						
 		<!-- sidebar ends -->		
 		</div>
@@ -180,7 +169,7 @@ OpenStack notifies of Ryu and Ryu configures <a href="http://openvswitch.org">Op
 	
 		<div id="footer-left">
 			<p>
-			&copy; Copyright Nippon Telegraph and Telephone Corporation. 2012 &nbsp;
+			&copy; Copyright Nippon Telegraph and Telephone Corporation. 2013 &nbsp;
 			
 			</p>	
 		</div>

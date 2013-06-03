@@ -22,7 +22,7 @@ body {
 	/*color: #5E5E5E;*/
 	color: #000000;
 	margin: 0; 	padding: 0; 
-	background: #e8e8e8 url(flow.jpg) no-repeat center top;
+	background: #e8e8e8 url(header.jpg) no-repeat center top;
 	text-align: center;
 }
 
@@ -77,8 +77,8 @@ dd {
 
 /* images */
 img {
-	background: #1B1B1B;
-   border: 1px solid #1B1B1B;
+	#background: #1B1B1B;
+        #border: 1px solid #1B1B1B;
 	padding: 6px;
 }
 img.float-right {
@@ -233,17 +233,17 @@ input.button {
 #header p#intro {
 	position: absolute;
 	margin: 0; padding: 0;
-	font-family: Georgia, 'Times New Roman', Times, serif;
-	font-weight: normal;
+	/* font-family: Georgia, 'Times New Roman', Times, serif; */
+	/* font-weight: normal; */
+	/* font-size: 18px; */
+	font-family: 'Trebuchet MS', Tahoma, Helvetica, Arial, Sans-serif;
+	font-weight: bold;
 	font-size: 18px;
-	/* font-family: 'Trebuchet MS', Tahoma, Helvetica, Arial, Sans-serif; */
-	/* font-weight: bold; */
-	/* font-size: 16px; */
 	line-height: 1.5em;
 	font-style: normal;
 	text-transform: none;
-	color: #87cefa;
-	width: 400px;
+	color: #0044fa;
+	width: 800px;
 	
 	/* change the values of top and left to adjust the position */
 	top: 215px; left: 30px;		
