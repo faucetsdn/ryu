@@ -48,12 +48,12 @@ class OFWireRpcSession(object):
         match = clses()
         for k, v in params.items():
             if hasattr(match, 'set_' + k):
-                if k.startswith('ipv4_'):
+                if k.startswith('ipv4_') or k.startswith('arp_spa') or k.startswith('arp_tpa'):
                     if k.endswith('_masked'):
                         addr = netaddr.IPNetwork(v).ip
                         mask = netaddr.IPNetwork(v).netmask
                         getattr(match, 'set_' + k)(int(addr), int(mask))
-                        return match
+                        continue
                     else:
                         v = int(netaddr.IPNetwork(v).ip)
                 getattr(match, 'set_' + k)(v)
