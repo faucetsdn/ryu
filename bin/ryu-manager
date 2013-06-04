@@ -72,10 +72,10 @@ def main():
     thr = hub.spawn(ctlr)
     services.append(thr)
 
-    webapp = wsgi.start_service(app_mgr)
-    if webapp:
-        thr = hub.spawn(webapp)
-        services.append(thr)
+    # webapp = wsgi.start_service(app_mgr)
+    # if webapp:
+    #     thr = hub.spawn(webapp)
+    #     services.append(thr)
 
     try:
         hub.joinall(services)
