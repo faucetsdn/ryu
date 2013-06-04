@@ -73,9 +73,9 @@ def vrrp_config_change(client, args):
 def vrrp_list(client, args):
     vrid = args.vrid
     result = client.call("vrrp_list", [vrid])
-    info = result[0]
-    for key in info:
-        print key, " : ", info[key]
+    for info in result:
+        for key in info:
+            print key, " : ", info[key]
 
 
 def receive_notification_loop(client):
