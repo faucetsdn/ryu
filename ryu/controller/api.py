@@ -188,6 +188,6 @@ class RPCApi(app_manager.RyuApp):
             for k in params.keys():
                 params[k]['xid'] = ofmsg.xid
 
-            for s in self.sessions:
-                m = s.session.create_notification('ofp', params)
-                s.send_queue.put(m)
+            # for s in self.sessions:
+            #     m = s.session.create_notification('ofp', params)
+            #     s.send_queue.put(m)
