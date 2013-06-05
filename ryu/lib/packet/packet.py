@@ -95,3 +95,15 @@ class Packet(object):
 
     def __iter__(self):
         return self
+
+    def __getitem__(self, idx):
+        return self.protocols[idx]
+
+    def __setitem__(self, idx, item):
+        self.protocols[idx] = item
+
+    def __delitem__(self, idx):
+        del self.protocols[idx]
+
+    def __len__(self):
+        return len(self.protocols)
