@@ -43,7 +43,7 @@ class vlan(packet_base.PacketBase):
     _PACK_STR = "!HH"
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, pcp, cfi, vid, ethertype):
+    def __init__(self, pcp=0, cfi=0, vid=0, ethertype=ether.ETH_TYPE_IP):
         super(vlan, self).__init__()
         self.pcp = pcp
         self.cfi = cfi
