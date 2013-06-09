@@ -44,7 +44,7 @@ class mpls(packet_base.PacketBase):
     _PACK_STR = '!I'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, label, exp, bsb, ttl):
+    def __init__(self, label=0, exp=0, bsb=1, ttl=255):
         super(mpls, self).__init__()
         self.label = label
         self.exp = exp
