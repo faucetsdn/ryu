@@ -16,6 +16,8 @@
 import struct
 
 from ryu.ofproto import ether
+from ryu.lib import ip
+from ryu.lib import mac
 from . import packet_base
 
 ARP_HW_TYPE_ETHERNET = 1  # ethernet hardware type
@@ -52,8 +54,12 @@ class arp(packet_base.PacketBase):
     _PACK_STR = '!HHBBH6sI6sI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, hwtype, proto, hlen, plen, opcode,
-                 src_mac, src_ip, dst_mac, dst_ip):
+    def __init__(self, hwtype=ARP_HW_TYPE_ETHERNET, proto=ether.ETH_TYPE_IP,
+                 hlen=6, plen=4, opcode=ARP_REQUEST,
+                 src_mac=mac.haddr_to_bin('ff:ff:ff:ff:ff:ff'),
+                 src_ip=ip.ipv4_to_bin('0.0.0.0'),
+                 dst_mac=mac.haddr_to_bin('ff:ff:ff:ff:ff:ff'),
+                 dst_ip=ip.ipv4_to_bin('0.0.0.0')):
         super(arp, self).__init__()
         self.hwtype = hwtype
         self.proto = proto
