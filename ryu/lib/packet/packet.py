@@ -31,10 +31,13 @@ class Packet(object):
     *data* should be omitted when encoding a packet.
     """
 
-    def __init__(self, data=None, parse_cls=ethernet.ethernet):
+    def __init__(self, data=None, protocols=None, parse_cls=ethernet.ethernet):
         super(Packet, self).__init__()
         self.data = data
-        self.protocols = []
+        if protocols is None:
+            self.protocols = []
+        else:
+            self.protocols = protocols
         self.protocol_idx = 0
         self.parsed_bytes = 0
         if self.data:
