@@ -21,6 +21,7 @@ from . import icmp
 from . import udp
 from . import tcp
 from ryu.ofproto import inet
+from ryu.lib import ip
 
 
 IPV4_ADDRESS_PACK_STR = '!I'
@@ -64,9 +65,12 @@ class ipv4(packet_base.PacketBase):
     _PACK_STR = '!BBHHHBBHII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, version, header_length, tos, total_length,
-                 identification, flags, offset, ttl, proto, csum,
-                 src, dst, option=None):
+    def __init__(self, version=4, header_length=5, tos=0,
+                 total_length=0, identification=0, flags=0,
+                 offset=0, ttl=255, proto=0, csum=0,
+                 src=ip.ipv4_to_bin('0.0.0.0'),
+                 dst=ip.ipv4_to_bin('0.0.0.0'),
+                 option=None):
         super(ipv4, self).__init__()
         self.version = version
         self.header_length = header_length
