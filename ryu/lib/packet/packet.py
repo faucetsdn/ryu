@@ -87,6 +87,14 @@ class Packet(object):
 
         self.protocols.append(proto)
 
+    def get_protocols(self, protocol):
+        """Returns a list of protocols that matches to the specified protocol.
+        """
+        if isinstance(protocol, packet_base.PacketBase):
+            protocol = protocol.__class__
+        assert issubclass(protocol, packet_base.PacketBase)
+        return [p for p in self.protocols if isinstance(p, protocol)]
+
     def next(self):
         try:
             p = self.protocols[self.protocol_idx]
