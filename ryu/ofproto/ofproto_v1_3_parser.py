@@ -2702,12 +2702,9 @@ class OFPQueuePropMinRate(OFPQueueProp):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg = super(OFPQueuePropMinRate, cls).parser(cls, buf, offset)
-        offset += ofproto_v1_3.OFP_QUEUE_PROP_MIN_RATE_SIZE
-        (msg.rate,) = struct.unpack_from(
-            ofproto_v1_3.OFP_QUEUE_PROP_MIN_RATE_PACK_STR, buf,
-            offset)
-        return msg
+        (rate,) = struct.unpack_from(
+            ofproto_v1_3.OFP_QUEUE_PROP_MIN_RATE_PACK_STR, buf, offset)
+        return cls(rate)
 
 
 @OFPQueueProp.register_queue_property(
@@ -2715,41 +2712,40 @@ class OFPQueuePropMinRate(OFPQueueProp):
     ofproto_v1_3.OFP_QUEUE_PROP_MAX_RATE_SIZE)
 class OFPQueuePropMaxRate(OFPQueueProp):
     def __init__(self, rate):
-        super(OFPQueuePropMinRate, self).__init__()
+        super(OFPQueuePropMaxRate, self).__init__()
         self.rate = rate
 
     @classmethod
     def parser(cls, buf, offset):
-        msg = super(OFPQueuePropMinRate, cls).parser(cls, buf, offset)
-        offset += ofproto_v1_3.OFP_QUEUE_PROP_MIN_RATE_SIZE
-        (msg.rate,) = struct.unpack_from(
-            ofproto_v1_3.OFP_QUEUE_PROP_MIN_RATE_PACK_STR, buf,
-            offset)
-        return msg
+        (rate,) = struct.unpack_from(
+            ofproto_v1_3.OFP_QUEUE_PROP_MAX_RATE_PACK_STR, buf, offset)
+        return cls(rate)
 
 
 # TODO: add ofp_queue_prop_experimenter
 
 
-class OFPPacketQueue(MsgBase):
-    def __init__(self, datapath):
-        super(OFPPacketQueue, self).__init__(datapath)
+class OFPPacketQueue(object):
+    def __init__(self, queue_id, port, len_, properties):
+        super(OFPPacketQueue, self).__init__()
+        self.queue_id = queue_id
+        self.port = port
+        self.len = len_
+        self.properties = properties
 
     @classmethod
     def parser(cls, buf, offset):
-        (msg.queue_id, msg.port, msg.len) = struct.unpack_from(
-            ofproto_v1_3.OFP_PACKET_QUEUE_PACK_STR, msg.buf, offset)
-
+        (queue_id, port, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_PACKET_QUEUE_PACK_STR, buf, offset)
         length = ofproto_v1_3.OFP_PACKET_QUEUE_SIZE
         offset += ofproto_v1_3.OFP_PACKET_QUEUE_SIZE
-        msg.properties = []
-        while length < msg.len:
-            properties = OFPQueueProp.parser(buf, offset)
-            msg.properties.append(properties)
-            offset += properties.len
-            length += properties.len
-
-        return msg
+        properties = []
+        while length < len_:
+            queue_prop = OFPQueueProp.parser(buf, offset)
+            properties.append(queue_prop)
+            offset += queue_prop.len
+            length += queue_prop.len
+        return cls(queue_id, port, len_, properties)
 
 
 @_register_parser
@@ -2763,15 +2759,14 @@ class OFPQueueGetConfigReply(MsgBase):
         msg = super(OFPQueueGetConfigReply, cls).parser(datapath, version,
                                                         msg_type,
                                                         msg_len, xid, buf)
-        offset = ofproto_v1_3.OFP_HEADER_SIZE
         (msg.port,) = struct.unpack_from(
             ofproto_v1_3.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR, msg.buf,
-            offset)
+            ofproto_v1_3.OFP_HEADER_SIZE)
 
         msg.queues = []
-        offset += ofproto_v1_3.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
+        offset = ofproto_v1_3.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
         while offset < msg_len:
-            queue = OFPPacketQueue.parser(buf, offset)
+            queue = OFPPacketQueue.parser(msg.buf, offset)
             msg.queues.append(queue)
             offset += queue.len
 
