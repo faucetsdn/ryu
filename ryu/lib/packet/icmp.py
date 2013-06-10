@@ -24,6 +24,7 @@ ICMP_DEST_UNREACH = 3
 ICMP_SRC_QUENCH = 4
 ICMP_REDIRECT = 5
 ICMP_ECHO_REQUEST = 8
+ICMP_TIME_EXCEEDED = 11
 
 
 class icmp(packet_base.PacketBase):
@@ -141,6 +142,23 @@ class echo(object):
     def serialize(self):
         hdr = bytearray(struct.pack(echo._PACK_STR, self.id,
                                     self.seq))
+
+        if self.data is not None:
+            hdr += self.data
+
+        return hdr
+
+
+@icmp.register_icmp_type(ICMP_TIME_EXCEEDED)
+class TimeExceeded(object):
+    _PACK_STR = '!4x'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, data=None):
+        self.data = data
+
+    def serialize(self):
+        hdr = bytearray(TimeExceeded._MIN_LEN)
 
         if self.data is not None:
             hdr += self.data
