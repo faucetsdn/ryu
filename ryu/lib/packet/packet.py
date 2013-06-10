@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
+
 from . import packet_base
 from . import ethernet
 
@@ -109,3 +111,9 @@ class Packet(object):
 
     def __len__(self):
         return len(self.protocols)
+
+    def __contains__(self, protocol):
+        if (inspect.isclass(protocol) and
+                issubclass(protocol, packet_base.PacketBase)):
+            return protocol in [p.__class__ for p in self.protocols]
+        return protocol in self.protocols
