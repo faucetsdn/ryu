@@ -235,7 +235,7 @@ class OFPGetConfigReply(MsgBase):
 
 @_set_msg_type(ofproto_v1_2.OFPT_SET_CONFIG)
 class OFPSetConfig(MsgBase):
-    def __init__(self, datapath, flags=None, miss_send_len=None):
+    def __init__(self, datapath, flags=0, miss_send_len=0):
         super(OFPSetConfig, self).__init__(datapath)
         self.flags = flags
         self.miss_send_len = miss_send_len
