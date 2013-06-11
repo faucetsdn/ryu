@@ -5,6 +5,7 @@ import netaddr
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.controller import dpset
+from ryu.controller import ofp_event
 from ryu.ofproto.ofproto_parser import MsgBase
 from ryu.lib.rpc import RpcSession, RpcMessage
 from ryu.ofproto import ofproto_parser
@@ -14,6 +15,19 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
+from ryu.lib.packet import packet
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import arp
+from ryu.lib.packet import vlan
+from ryu.lib.packet import ipv4
+from ryu.lib.packet import ipv6
+from ryu.lib.packet import udp
+from ryu.lib.packet import tcp
+from ryu.lib.packet import icmp
+from ryu.lib import mac
+from ryu.lib import ip as ip_lib
+import netaddr
+import array
 
 
 def find_ofp_cls(ofp_version, name):
@@ -25,6 +39,7 @@ def find_ofp_cls(ofp_version, name):
             return i[1]
     return None
 
+traceroute_source = {}
 
 class OFWireRpcSession(object):
     def __init__(self, socket, dpset):
@@ -106,6 +121,14 @@ class OFWireRpcSession(object):
         r = self.session.create_response(msg[1], 0, result)
         self.send_queue.put(r)
 
+    def _tr_handle_notify(self, msg):
+        params = msg[2][0]
+        traceroute_source[params['vlan']] = {
+            'ip': params['ip'],
+            'port': params['port']
+            }
+        print traceroute_source
+
     def serve(self):
         while True:
             ret = self.socket.recv(4096)
@@ -119,7 +142,8 @@ class OFWireRpcSession(object):
                 elif m[0] == RpcMessage.RESPONSE:
                     pass
                 elif m[0] == RpcMessage.NOTIFY:
-                    pass
+                    if m[1] == 'traceroute':
+                        self._tr_handle_notify(m)
                 else:
                     print "invalid type", m
 
@@ -179,15 +203,91 @@ class RPCApi(app_manager.RyuApp):
             else:
                 _params[i] = v
 
-    @handler.observe_all_events('ofp_event')
-    def handler(self, ev):
-        if hasattr(ev, 'msg'):
-            ofmsg = ev.msg
-            params = {}
-            self._ofp_handle_ob(ofmsg.datapath, ofmsg, params)
-            for k in params.keys():
-                params[k]['xid'] = ofmsg.xid
+    # @handler.observe_all_events('ofp_event')
+    # def _handler(self, ev):
+    #     if hasattr(ev, 'msg'):
+    #         ofmsg = ev.msg
+    #         params = {}
+    #         self._ofp_handle_ob(ofmsg.datapath, ofmsg, params)
+    #         for k in params.keys():
+    #             params[k]['xid'] = ofmsg.xid
+    #         # for s in self.sessions:
+    #         #     m = s.session.create_notification('ofp', params)
+    #         #     s.send_queue.put(m)
 
-            # for s in self.sessions:
-            #     m = s.session.create_notification('ofp', params)
-            #     s.send_queue.put(m)
+    def handle_traceroute(self, msg):
+        dp = msg.datapath
+        in_port = None
+        for f in msg.match.fields:
+            if f.header == ofproto_v1_2.OXM_OF_IN_PORT:
+                in_port = f.value
+
+        if in_port is None:
+            print "in_port is missing"
+            return
+
+        pkt = packet.Packet(msg.data)
+        if not ipv4.ipv4 in pkt:
+            print "ip header doesn't exit"
+            return
+
+        if vlan.vlan in pkt:
+            o_vlan = pkt.get_protocols(vlan.vlan)[0]
+            vlan_p = vlan.vlan(vid=o_vlan.vid)
+        else:
+            print "vlan header doesn't exit"
+            return
+
+        o_eth = pkt.get_protocols(ethernet.ethernet)[0]
+        print mac.haddr_to_str(o_eth.dst), mac.haddr_to_str(o_eth.src)
+        eth = ethernet.ethernet(o_eth.src, o_eth.dst, o_eth.ethertype)
+        o_ip = pkt.get_protocols(ipv4.ipv4)[0]
+        print ip_lib.ipv4_to_str(o_ip.dst), ip_lib.ipv4_to_str(o_ip.src)
+        # needs to set src properly for either side (vlan or mpls)
+        # ip = ipv4.ipv4(src=ip_lib.ipv4_to_bin(V1_GS_IP), dst=o_ip.src,
+        #                proto=1)
+
+        src_ip = traceroute_source[o_vlan.vid]['ip']
+        in_port = traceroute_source[o_vlan.vid]['port']
+        
+        ip = ipv4.ipv4(src=ip_lib.ipv4_to_bin(src_ip), dst=o_ip.src, proto=1)
+        ip_offset = o_eth.length
+        # vlan header
+        ip_offset += 4
+        data = msg.data[ip_offset:ip_offset +
+                        (o_ip.header_length * 4 + 8)]
+        ic = icmp.icmp(icmp.ICMP_TIME_EXCEEDED, 0, 0,
+                       icmp.TimeExceeded(data))
+
+        proto_list = [eth, vlan_p, ip, ic]
+
+        p = packet.Packet(protocols=proto_list)
+        p.serialize()
+        self.send_openflow_packet(dp=dp, packet=p.data,
+                                  port_no=ofproto_v1_2.OFPP_TABLE,
+                                  inport=in_port)
+
+    def send_openflow_packet(self, dp, packet, port_no,
+                             inport=ofproto_v1_2.OFPP_CONTROLLER):
+
+        actions = [dp.ofproto_parser.OFPActionOutput(port_no, 0)]
+        dp.send_packet_out(in_port=inport, actions=actions, data=packet)
+
+    @handler.set_ev_cls(ofp_event.EventOFPPacketIn)
+    def packet_in_handler(self, ev):
+        msg = ev.msg
+        print "trace"
+        if ofproto_v1_2.OFPR_INVALID_TTL == msg.reason:
+            print "zero ttl packet"
+            self.handle_traceroute(msg)
+            return
+
+    @handler.set_ev_cls(dpset.EventDP)
+    def handler_datapath(self, ev):
+        print "join"
+        if ev.enter:
+            print "dp joined"
+            dp = ev.dp
+            m = dp.ofproto_parser.OFPSetConfig(dp, 1 << 2, miss_send_len=1600)
+            dp.send_msg(m)
+
