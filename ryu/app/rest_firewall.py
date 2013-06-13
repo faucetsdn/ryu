@@ -41,7 +41,14 @@ from ryu.ofproto import ofproto_v1_2_parser
 LOG = logging.getLogger('ryu.app.firewall')
 
 
-# REST API
+#=============================
+#          REST API
+#=============================
+#
+#  Note: specify switch and vlan group, as follows.
+#   {switch-id} : 'all' or switchID
+#   {vlan-id}   : 'all' or vlanID
+#
 #
 ## about Firewall status
 #
@@ -50,35 +57,78 @@ LOG = logging.getLogger('ryu.app.firewall')
 #
 # set enable the firewall switches
 # PUT /firewall/module/enable/{switch-id}
-#  {switch-id} is 'all' or switchID
 #
 # set disable the firewall switches
 # PUT /firewall/module/disable/{switch-id}
-#  {switch-id} is 'all' or switchID
 #
 #
 ## about Firewall rules
 #
 # get rules of the firewall switches
+# * for no vlan
 # GET /firewall/rules/{switch-id}
-#  {switch-id} is 'all' or switchID
+#
+# * for specific vlan group
+# GET /firewall/rules/{switch-id}/{vlan-id}
+#
 #
 # set a rule to the firewall switches
+# * for no vlan
 # POST /firewall/rules/{switch-id}
-#  {switch-id} is 'all' or switchID
+#
+# * for specific vlan group
+# POST /firewall/rules/{switch-id}/{vlan-id}
+#
+#  request body format:
+#   {"<field1>":"<value1>", "<field2>":"<value2>",...}
+#
+#     <field>  : <value>
+#    "priority": "0 to 65533"
+#    "in_port" : "<int>"
+#    "dl_src"  : "<xx:xx:xx:xx:xx:xx>"
+#    "dl_dst"  : "<xx:xx:xx:xx:xx:xx>"
+#    "dl_type" : "<ARP or IPv4>"
+#    "nw_src"  : "<A.B.C.D/M>"
+#    "nw_dst"  : "<A.B.C.D/M>"
+#    "nw_proto": "<TCP or UDP or ICMP>"
+#    "tp_src"  : "<int>"
+#    "tp_dst"  : "<int>"
+#    "actions" : "<ALLOW or DENY>"
+#
+#   Note: specifying nw_src/nw_dst
+#         without specifying dl-type as "ARP" or "IPv4"
+#         will automatically set dl-type as "IPv4".
+#
+#   Note: When "priority" has not been set up,
+#         "0" is set to "priority".
+#
+#   Note: When "actions" has not been set up,
+#         "ALLOW" is set to "actions".
+#
 #
 # delete a rule of the firewall switches from ruleID
+# * for no vlan
 # DELETE /firewall/rules/{switch-id}
-#  {switch-id} is 'all' or switchID
+#
+# * for specific vlan group
+# DELETE /firewall/rules/{switch-id}/{vlan-id}
+#
+#  request body format:
+#   {"<field>":"<value>"}
+#
+#     <field>  : <value>
+#    "rule_id" : "<int>" or "all"
 #
 
 OK = 0
 NG = -1
 
 SWITCHID_PATTERN = dpid_lib.DPID_PATTERN + r'|all'
+VLANID_PATTERN = r'[0-9]{1,4}|all'
 
 REST_ALL = 'all'
 REST_SWITCHID = 'switch_id'
+REST_VLANID = 'vlan_id'
 REST_RULE_ID = 'rule_id'
 REST_STATUS = 'status'
 REST_STATUS_ENABLE = 'enable'
@@ -92,6 +142,7 @@ REST_DST_MAC = 'dl_dst'
 REST_DL_TYPE = 'dl_type'
 REST_DL_TYPE_ARP = 'ARP'
 REST_DL_TYPE_IPV4 = 'IPv4'
+REST_DL_VLAN = 'dl_vlan'
 REST_SRC_IP = 'nw_src'
 REST_DST_IP = 'nw_dst'
 REST_NW_PROTO = 'nw_proto'
@@ -108,6 +159,11 @@ REST_ACTION_DENY = 'DENY'
 STATUS_FLOW_PRIORITY = ofproto_v1_2_parser.UINT16_MAX
 ARP_FLOW_PRIORITY = ofproto_v1_2_parser.UINT16_MAX - 1
 ACL_FLOW_PRIORITY_MAX = ofproto_v1_2_parser.UINT16_MAX - 2
+
+VLANID_NONE = 0
+VLANID_MIN = 2
+VLANID_MAX = 4094
+COOKIE_SHIFT_VLANID = 32
 
 
 class RestFirewallAPI(app_manager.RyuApp):
@@ -130,7 +186,8 @@ class RestFirewallAPI(app_manager.RyuApp):
         mapper = wsgi.mapper
         wsgi.registory['FirewallController'] = self.data
         path = '/firewall'
-        requirements = {'switchid': SWITCHID_PATTERN}
+        requirements = {'switchid': SWITCHID_PATTERN,
+                        'vlanid': VLANID_PATTERN}
 
         uri = path + '/module/status'
         mapper.connect('firewall', uri,
@@ -149,6 +206,7 @@ class RestFirewallAPI(app_manager.RyuApp):
                        conditions=dict(method=['PUT']),
                        requirements=requirements)
 
+        # for no VLAN data
         uri = path + '/rules/{switchid}'
         mapper.connect('firewall', uri,
                        controller=FirewallController, action='get_rules',
@@ -162,6 +220,23 @@ class RestFirewallAPI(app_manager.RyuApp):
 
         mapper.connect('firewall', uri,
                        controller=FirewallController, action='delete_rule',
+                       conditions=dict(method=['DELETE']),
+                       requirements=requirements)
+
+        # for VLAN data
+        uri += '/{vlanid}'
+        mapper.connect('firewall', uri, controller=FirewallController,
+                       action='get_vlan_rules',
+                       conditions=dict(method=['GET']),
+                       requirements=requirements)
+
+        mapper.connect('firewall', uri, controller=FirewallController,
+                       action='set_vlan_rule',
+                       conditions=dict(method=['POST']),
+                       requirements=requirements)
+
+        mapper.connect('firewall', uri, controller=FirewallController,
+                       action='delete_vlan_rule',
                        conditions=dict(method=['DELETE']),
                        requirements=requirements)
 
@@ -197,19 +272,6 @@ class RestFirewallAPI(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPStatsReply, MAIN_DISPATCHER)
     def stats_reply_handler_v1_2(self, ev):
         self.stats_reply_handler(ev)
-
-
-class FirewallOfs(object):
-    def __init__(self, dp):
-        super(FirewallOfs, self).__init__()
-        self.dp = dp
-        self.ctl = FirewallOfctl(dp)
-        self.cookie = 0
-
-    def get_cookie(self):
-        self.cookie += 1
-        self.cookie &= ofproto_v1_2_parser.UINT64_MAX
-        return self.cookie
 
 
 class FirewallOfsList(dict):
@@ -250,7 +312,7 @@ class FirewallController(ControllerBase):
     @staticmethod
     def regist_ofs(dp):
         try:
-            f_ofs = FirewallOfs(dp)
+            f_ofs = Firewall(dp)
         except OFPUnknownVersion, message:
             mes = 'dpid=%s : %s' % (dpid_lib.dpid_to_str(dp.id), message)
             LOG.info(mes)
@@ -258,8 +320,8 @@ class FirewallController(ControllerBase):
 
         FirewallController._OFS_LIST.setdefault(dp.id, f_ofs)
 
-        f_ofs.ctl.set_disable_flow()
-        f_ofs.ctl.set_arp_flow()
+        f_ofs.set_disable_flow()
+        f_ofs.set_arp_flow()
         LOG.info('dpid=%s : Join as firewall switch.' %
                  dpid_lib.dpid_to_str(dp.id))
 
@@ -279,7 +341,7 @@ class FirewallController(ControllerBase):
 
         msgs = {}
         for f_ofs in dps.values():
-            status = f_ofs.ctl.get_status(self.waiters)
+            status = f_ofs.get_status(self.waiters)
             msgs.update(status)
 
         body = json.dumps(msgs)
@@ -294,7 +356,7 @@ class FirewallController(ControllerBase):
 
         msgs = {}
         for f_ofs in dps.values():
-            msg = f_ofs.ctl.set_enable_flow()
+            msg = f_ofs.set_enable_flow()
             msgs.update(msg)
 
         body = json.dumps(msgs)
@@ -309,7 +371,7 @@ class FirewallController(ControllerBase):
 
         msgs = {}
         for f_ofs in dps.values():
-            msg = f_ofs.ctl.set_disable_flow()
+            msg = f_ofs.set_disable_flow()
             msgs.update(msg)
 
         body = json.dumps(msgs)
@@ -317,21 +379,44 @@ class FirewallController(ControllerBase):
 
     # GET /firewall/rules/{switchid}
     def get_rules(self, req, switchid, **_kwargs):
+        return self._get_rules(switchid)
+
+    # GET /firewall/rules/{switchid}/{vlanid}
+    def get_vlan_rules(self, req, switchid, vlanid, **_kwargs):
+        return self._get_rules(switchid, vlan_id=vlanid)
+
+    # POST /firewall/rules/{switchid}
+    def set_rule(self, req, switchid, **_kwargs):
+        return self._set_rule(req, switchid)
+
+    # POST /firewall/rules/{switchid}/{vlanid}
+    def set_vlan_rule(self, req, switchid, vlanid, **_kwargs):
+        return self._set_rule(req, switchid, vlan_id=vlanid)
+
+    # DELETE /firewall/rules/{switchid}
+    def delete_rule(self, req, switchid, **_kwargs):
+        return self._delete_rule(req, switchid)
+
+    # DELETE /firewall/rules/{switchid}/{vlanid}
+    def delete_vlan_rule(self, req, switchid, vlanid, **_kwargs):
+        return self._delete_rule(req, switchid, vlan_id=vlanid)
+
+    def _get_rules(self, switchid, vlan_id=VLANID_NONE):
         try:
             dps = self._OFS_LIST.get_ofs(switchid)
+            vid = FirewallController._conv_toint_vlanid(vlan_id)
         except ValueError, message:
             return Response(status=400, body=str(message))
 
         msgs = {}
         for f_ofs in dps.values():
-            rules = f_ofs.ctl.get_rules(self.waiters)
+            rules = f_ofs.get_rules(self.waiters, vid)
             msgs.update(rules)
 
         body = json.dumps(msgs)
         return Response(content_type='application/json', body=body)
 
-    # POST /firewall/rules/{switchid}
-    def set_rule(self, req, switchid, **_kwargs):
+    def _set_rule(self, req, switchid, vlan_id=VLANID_NONE):
         try:
             rule = eval(req.body)
         except SyntaxError:
@@ -340,13 +425,14 @@ class FirewallController(ControllerBase):
 
         try:
             dps = self._OFS_LIST.get_ofs(switchid)
+            vid = FirewallController._conv_toint_vlanid(vlan_id)
         except ValueError, message:
             return Response(status=400, body=str(message))
 
         msgs = {}
         for f_ofs in dps.values():
             try:
-                msg = f_ofs.ctl.set_rule(f_ofs.get_cookie(), rule)
+                msg = f_ofs.set_rule(rule, vid)
                 msgs.update(msg)
             except ValueError, message:
                 return Response(status=400, body=str(message))
@@ -354,8 +440,7 @@ class FirewallController(ControllerBase):
         body = json.dumps(msgs)
         return Response(content_type='application/json', body=body)
 
-    # DELETE /firewall/rules/{switchid}
-    def delete_rule(self, req, switchid, **_kwargs):
+    def _delete_rule(self, req, switchid, vlan_id=VLANID_NONE):
         try:
             ruleid = eval(req.body)
         except SyntaxError:
@@ -364,13 +449,14 @@ class FirewallController(ControllerBase):
 
         try:
             dps = self._OFS_LIST.get_ofs(switchid)
+            vid = FirewallController._conv_toint_vlanid(vlan_id)
         except ValueError, message:
             return Response(status=400, body=str(message))
 
         msgs = {}
         for f_ofs in dps.values():
             try:
-                msg = f_ofs.ctl.delete_rule(ruleid, self.waiters)
+                msg = f_ofs.delete_rule(ruleid, self.waiters, vid)
                 msgs.update(msg)
             except ValueError, message:
                 return Response(status=400, body=str(message))
@@ -378,14 +464,27 @@ class FirewallController(ControllerBase):
         body = json.dumps(msgs)
         return Response(content_type='application/json', body=body)
 
+    @staticmethod
+    def _conv_toint_vlanid(vlan_id):
+        if vlan_id != REST_ALL:
+            vlan_id = int(vlan_id)
+            if (vlan_id != VLANID_NONE and
+                    (vlan_id < VLANID_MIN or VLANID_MAX < vlan_id)):
+                msg = 'Invalid {vlan_id} value. Set [%d-%d]' % (VLANID_MIN,
+                                                                VLANID_MAX)
+                raise ValueError(msg)
+        return vlan_id
 
-class FirewallOfctl(object):
+
+class Firewall(object):
 
     _OFCTL = {ofproto_v1_0.OFP_VERSION: ofctl_v1_0,
               ofproto_v1_2.OFP_VERSION: ofctl_v1_2}
 
     def __init__(self, dp):
-        super(FirewallOfctl, self).__init__()
+        super(Firewall, self).__init__()
+        self.vlan_list = {}
+        self.vlan_list[VLANID_NONE] = 0  # for VLAN=None
         self.dp = dp
         version = dp.ofproto.OFP_VERSION
 
@@ -393,6 +492,32 @@ class FirewallOfctl(object):
             raise OFPUnknownVersion(version=version)
 
         self.ofctl = self._OFCTL[version]
+
+    def _update_vlan_list(self, vlan_list):
+        for vlan_id in self.vlan_list.keys():
+            if vlan_id is not VLANID_NONE and vlan_id not in vlan_list:
+                del self.vlan_list[vlan_id]
+
+    def _get_cookie(self, vlan_id):
+        if vlan_id == REST_ALL:
+            vlan_ids = self.vlan_list.keys()
+        else:
+            vlan_ids = [vlan_id]
+
+        cookie_list = []
+        for vlan_id in vlan_ids:
+            self.vlan_list.setdefault(vlan_id, 0)
+            self.vlan_list[vlan_id] += 1
+            self.vlan_list[vlan_id] &= ofproto_v1_2_parser.UINT32_MAX
+            cookie = (vlan_id << COOKIE_SHIFT_VLANID) + \
+                self.vlan_list[vlan_id]
+            cookie_list.append([cookie, vlan_id])
+
+        return cookie_list
+
+    @staticmethod
+    def _cookie_to_ruleid(cookie):
+        return cookie & ofproto_v1_2_parser.UINT32_MAX
 
     def get_status(self, waiters):
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
@@ -455,12 +580,24 @@ class FirewallOfctl(object):
         cmd = self.dp.ofproto.OFPFC_ADD
         self.ofctl.mod_flow_entry(self.dp, flow, cmd)
 
-    def set_rule(self, cookie, rest):
+    def set_rule(self, rest, vlan_id):
+        msgs = []
+        cookie_list = self._get_cookie(vlan_id)
+        for cookie, vid in cookie_list:
+            msg = self._set_rule(cookie, rest, vid)
+            msgs.append(msg)
+        switch_id = '%s: %s' % (REST_SWITCHID,
+                                dpid_lib.dpid_to_str(self.dp.id))
+        return {switch_id: msgs}
+
+    def _set_rule(self, cookie, rest, vlan_id):
         priority = int(rest.get(REST_PRIORITY, 0))
 
         if priority < 0 or ACL_FLOW_PRIORITY_MAX < priority:
             raise ValueError('Invalid priority value. Set [0-%d]'
                              % ACL_FLOW_PRIORITY_MAX)
+        if vlan_id:
+            rest[REST_DL_VLAN] = vlan_id
 
         match = Match.to_openflow(rest)
         actions = Action.to_openflow(self.dp, rest)
@@ -473,14 +610,17 @@ class FirewallOfctl(object):
         except:
             raise ValueError('Invalid rule parameter.')
 
+        rule_id = Firewall._cookie_to_ruleid(cookie)
         msg = {'result': 'success',
-               'details': 'Rule added. : rule_id=%d' % cookie}
+               'details': 'Rule added. : rule_id=%d' % rule_id}
 
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        if vlan_id == VLANID_NONE:
+            return msg
+        else:
+            vlan_id = '%s: %d' % (REST_VLANID, vlan_id)
+            return {vlan_id: msg}
 
-    def get_rules(self, waiters):
+    def get_rules(self, waiters, vlan_id):
         rules = {}
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
 
@@ -489,14 +629,25 @@ class FirewallOfctl(object):
             for flow_stat in flow_stats:
                 if (flow_stat[REST_PRIORITY] != STATUS_FLOW_PRIORITY
                         and flow_stat[REST_PRIORITY] != ARP_FLOW_PRIORITY):
-                    rule = self._to_rest_rule(flow_stat)
-                    rules.update(rule)
+                    vid = flow_stat[REST_MATCH][REST_DL_VLAN]
+                    if vlan_id == REST_ALL or vlan_id == vid:
+                        rule = self._to_rest_rule(flow_stat)
+                        rules.setdefault(vid, {})
+                        rules[vid].update(rule)
+
+        get_data = []
+        for vid, rule in rules.items():
+            if vid == VLANID_NONE:
+                get_data.append(rule)
+            else:
+                vid = '%s: %d' % (REST_VLANID, vid)
+                get_data.append({vid: rule})
 
         switch_id = '%s: %s' % (REST_SWITCHID,
                                 dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: rules}
+        return {switch_id: get_data}
 
-    def delete_rule(self, rest, waiters):
+    def delete_rule(self, rest, waiters, vlan_id):
         try:
             if rest[REST_RULE_ID] == REST_ALL:
                 rule_id = REST_ALL
@@ -505,6 +656,7 @@ class FirewallOfctl(object):
         except:
             raise ValueError('Invalid ruleID.')
 
+        vlan_list = []
         delete_list = []
 
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
@@ -512,15 +664,21 @@ class FirewallOfctl(object):
             flow_stats = msgs[str(self.dp.id)]
             for flow_stat in flow_stats:
                 cookie = flow_stat[REST_COOKIE]
+                ruleid = Firewall._cookie_to_ruleid(cookie)
                 priority = flow_stat[REST_PRIORITY]
+                dl_vlan = flow_stat[REST_MATCH][REST_DL_VLAN]
 
                 if (priority != STATUS_FLOW_PRIORITY
                         and priority != ARP_FLOW_PRIORITY):
-                    if rule_id == REST_ALL or rule_id == cookie:
+                    if ((rule_id == REST_ALL or rule_id == ruleid) and
+                            (vlan_id == dl_vlan or vlan_id == REST_ALL)):
                         match = Match.to_del_openflow(flow_stat[REST_MATCH])
                         delete_list.append([cookie, priority, match])
-                    if rule_id == cookie:
-                        break
+                    else:
+                        if dl_vlan not in vlan_list:
+                            vlan_list.append(dl_vlan)
+
+        self._update_vlan_list(vlan_list)
 
         if len(delete_list) == 0:
             msg_details = 'Rule is not exist.'
@@ -531,14 +689,26 @@ class FirewallOfctl(object):
         else:
             cmd = self.dp.ofproto.OFPFC_DELETE_STRICT
             actions = []
-            msg_details = 'Rule deleted. : ruleID='
+            delete_ids = {}
             for cookie, priority, match in delete_list:
                 flow = self._to_of_flow(cookie=cookie, priority=priority,
                                         match=match, actions=actions)
                 self.ofctl.mod_flow_entry(self.dp, flow, cmd)
-                msg_details += '%d,' % cookie
-            msg = {'result': 'success',
-                   'details': msg_details}
+
+                vid = match.get(REST_DL_VLAN, VLANID_NONE)
+                rule_id = Firewall._cookie_to_ruleid(cookie)
+                delete_ids.setdefault(vid, '')
+                delete_ids[vid] += '%d,' % rule_id
+
+            msg = []
+            for vid, rule_ids in delete_ids.items():
+                del_msg = {'result': 'success',
+                           'details': 'Rule deleted. : ruleID=%s' % rule_ids}
+                if vid == VLANID_NONE:
+                    msg.append(del_msg)
+                else:
+                    vid = '%s: %d' % (REST_VLANID, vid)
+                    msg.append({vid: del_msg})
 
         switch_id = '%s: %s' % (REST_SWITCHID,
                                 dpid_lib.dpid_to_str(self.dp.id))
@@ -555,7 +725,8 @@ class FirewallOfctl(object):
         return flow
 
     def _to_rest_rule(self, flow):
-        rule_id = '%s: %d' % (REST_RULE_ID, flow[REST_COOKIE])
+        ruleid = Firewall._cookie_to_ruleid(flow[REST_COOKIE])
+        rule_id = '%s: %d' % (REST_RULE_ID, ruleid)
 
         rule = {REST_PRIORITY: flow[REST_PRIORITY]}
         rule.update(Match.to_rest(flow))
