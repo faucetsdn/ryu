@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import inspect
+import struct
 
 from . import packet_base
 from . import ethernet
@@ -47,11 +48,13 @@ class Packet(object):
 
     def _parser(self, cls):
         while cls:
-            proto, cls = cls.parser(self.data[self.parsed_bytes:])
-            if proto:
-                self.parsed_bytes += proto.length
-                self.protocols.append(proto)
-
+            try:
+                proto, cls = cls.parser(self.data[self.parsed_bytes:])
+                if proto:
+                    self.parsed_bytes += proto.length
+                    self.protocols.append(proto)
+            except struct.error:
+                cls = None
         if len(self.data) > self.parsed_bytes:
             self.protocols.append(self.data[self.parsed_bytes:])
 
