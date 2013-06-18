@@ -50,6 +50,9 @@ def actions_to_str(instructions):
     actions = []
 
     for instruction in instructions:
+        if not isinstance(instruction,
+                          ofproto_v1_2_parser.OFPInstructionActions):
+            continue
         for a in instruction.actions:
             action_type = a.cls_action_type
 
