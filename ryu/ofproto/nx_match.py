@@ -114,6 +114,8 @@ class FlowWildcards(object):
 
 
 class ClsRule(object):
+    """describe a matching rule for OF 1.0 OFPMatch (and NX).
+    """
     def __init__(self):
         self.wc = FlowWildcards()
         self.flow = Flow()
@@ -309,6 +311,10 @@ class ClsRule(object):
         return ofproto_v1_0.NXFF_OPENFLOW10
 
     def match_tuple(self):
+        """return a tuple which can be used as *args for
+        ofproto_v1_0_parser.OFPMatch.__init__().
+        see Datapath.send_flow_mod.
+        """
         assert self.flow_format() == ofproto_v1_0.NXFF_OPENFLOW10
         wildcards = ofproto_v1_0.OFPFW_ALL
 
