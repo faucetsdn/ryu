@@ -315,6 +315,9 @@ def datapath_connection_factory(socket, address):
             # Especially malicious switch can send malformed packet,
             # the parser raise exception.
             # Can we do anything more graceful?
-            LOG.error("Error in the datapath %s from %s",
-                      dpid_to_str(datapath.id), address)
+            if datapath.id is None:
+                dpid_str = "%s" % datapath.id
+            else:
+                dpid_str = dpid_to_str(datapath.id)
+            LOG.error("Error in the datapath %s from %s", dpid_str, address)
             raise
