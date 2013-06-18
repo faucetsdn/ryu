@@ -134,6 +134,8 @@ class OVSSwitch(object):
         self.logger = logger
         self.q_api = q_api
         self.ctrl_addr = CONF.quantum_controller_addr
+        if not self.ctrl_addr:
+            raise ValueError('option quantum_controler_addr must be speicfied')
 
         self.ovsdb_addr = None
         self.tunnel_ip = None
