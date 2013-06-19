@@ -1589,6 +1589,26 @@ class OFPInstructionActions(object):
                       buf, offset, self.type, self.len)
 
 
+@OFPInstruction.register_instruction_type([ofproto_v1_3.OFPIT_METER])
+class OFPInstructionMeter(object):
+    def __init__(self, meter_id):
+        super(OFPInstructionMeter, self).__init__()
+        self.type = ofproto_v1_3.OFPIT_METER
+        self.len = ofproto_v1_3.OFP_INSTRUCTION_METER_SIZE
+        self.meter_id = meter_id
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, table_id) = struct.unpack_from(
+            ofproto_v1_3.OFP_INSTRUCTION_METER_PACK_STR,
+            buf, offset)
+        return cls(meter_id)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_3.OFP_INSTRUCTION_METER_PACK_STR,
+                      buf, offset, self.type, self.len, self.meter_id)
+
+
 class OFPActionHeader(object):
     def __init__(self, type_, len_):
         self.type = type_
