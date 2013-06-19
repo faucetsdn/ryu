@@ -1271,6 +1271,7 @@ class OFPGroupFeaturesStats(object):
         self.capabilities = capabilities
         self.max_groups = max_groups
         self.actions = actions
+        self.length = ofproto_v1_2.OFP_GROUP_FEATURES_STATS_SIZE
 
     @classmethod
     def parser(cls, buf, offset):
