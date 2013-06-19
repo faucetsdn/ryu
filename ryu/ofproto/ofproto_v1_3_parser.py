@@ -2331,7 +2331,7 @@ class OFPGroupStatsReply(OFPMultipartReply):
 
 class OFPGroupDescStats(object):
     def __init__(self):
-        super(OFPGroupDescStats).__init__()
+        super(OFPGroupDescStats, self).__init__()
         self.length = None
         self.type = None
         self.group_id = None
