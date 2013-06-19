@@ -195,12 +195,9 @@ class OFPExperimenter(MsgBase):
         (msg.experimenter, msg.exp_type) = struct.unpack_from(
             ofproto_v1_3.OFP_EXPERIMENTER_HEADER_PACK_STR, msg.buf,
             ofproto_v1_3.OFP_HEADER_SIZE)
-        return msg
+        msg.data = msg.buf[ofproto_v1_3.OFP_EXPERIMENTER_HEADER_SIZE:]
 
-    def _serialize_body(self):
-        msg.pack_into(ofproto_v1_3.OFP_EXPERIMENTER_HEADERPACK_STR,
-                      self.buf, ofproto_v1_3.OFP_HEADER_SIZE,
-                      self.experimenter, self.exp_type)
+        return msg
 
 
 @_set_msg_type(ofproto_v1_3.OFPT_FEATURES_REQUEST)
