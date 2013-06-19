@@ -1882,7 +1882,7 @@ class OFPBucket(object):
 
     @classmethod
     def parser(cls, buf, offset):
-        (len_, weigth, watch_port, watch_group) = struct.unpack_from(
+        (len_, weight, watch_port, watch_group) = struct.unpack_from(
             ofproto_v1_3.OFP_BUCKET_PACK_STR, buf, offset)
         msg = cls(len_, weight, watch_port, watch_group, [])
 
