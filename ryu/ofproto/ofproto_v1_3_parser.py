@@ -16,6 +16,7 @@
 
 import collections
 import struct
+import itertools
 
 from ryu.lib import mac
 from ryu import utils
