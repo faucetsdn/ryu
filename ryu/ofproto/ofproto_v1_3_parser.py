@@ -2032,12 +2032,14 @@ class OFPMultipartReply(MsgBase):
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        msg = super(OFPMultipartReply, cls).parser(datapath, version, msg_type,
-                                                   msg_len, xid, buf)
-        msg.type, msg.flags = struct.unpack_from(
+        type_, flags = struct.unpack_from(
             ofproto_v1_3.OFP_MULTIPART_REPLY_PACK_STR, buffer(buf),
             ofproto_v1_3.OFP_HEADER_SIZE)
-        stats_type_cls = cls._STATS_MSG_TYPES.get(msg.type)
+        stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
+        msg = super(OFPMultipartReply, stats_type_cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+        msg._type = type_
+        msg.flags = flags
 
         offset = ofproto_v1_3.OFP_MULTIPART_REPLY_SIZE
         body = []
