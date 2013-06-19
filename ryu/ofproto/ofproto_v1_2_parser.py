@@ -161,6 +161,7 @@ class OFPExperimenter(MsgBase):
         (msg.experimenter, msg.exp_type) = struct.unpack_from(
             ofproto_v1_2.OFP_EXPERIMENTER_HEADER_PACK_STR, msg.buf,
             ofproto_v1_2.OFP_HEADER_SIZE)
+        msg.data = msg.buf[ofproto_v1_2.OFP_EXPERIMENTER_HEADER_SIZE:]
 
         return msg
 
