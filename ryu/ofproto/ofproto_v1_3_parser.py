@@ -2379,7 +2379,11 @@ class OFPGroupFeaturesStats(collections.namedtuple('OFPGroupFeaturesStats', (
     def parser(cls, buf, offset):
         group_features = struct.unpack_from(
             ofproto_v1_3.OFP_GROUP_FEATURES_PACK_STR, buf, offset)
-        stats = cls(*group_features)
+        types = group_features[0]
+        capabilities = group_features[1]
+        max_groups = list(group_features[2:6])
+        actions = list(group_features[6:10])
+        stats = cls(types, capabilities, max_groups, actions)
         stats.length = ofproto_v1_3.OFP_GROUP_FEATURES_SIZE
         return stats
 
