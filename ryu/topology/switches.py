@@ -654,47 +654,46 @@ class Switches(app_manager.RyuApp):
             # This handler can receive all the packtes which can be
             # not-LLDP packet. Ignore it silently
             return
-        else:
-            dst_dpid = msg.datapath.id
-            dst_port_no = msg.in_port
 
-            src = self._get_port(src_dpid, src_port_no)
-            if not src or src.dpid == dst_dpid:
-                return
+        dst_dpid = msg.datapath.id
+        dst_port_no = msg.in_port
 
-            dst = self._get_port(dst_dpid, dst_port_no)
-            if not dst:
-                return
+        src = self._get_port(src_dpid, src_port_no)
+        if not src or src.dpid == dst_dpid:
+            return
+        try:
+            self.ports.lldp_received(src)
+        except KeyError:
+            # There are races between EventOFPPacketIn and
+            # EventDPPortAdd. So packet-in event can happend before
+            # port add event. In that case key error can happend.
+            # LOG.debug('lldp_received: KeyError %s', e)
+            pass
 
-            old_peer = self.links.get_peer(src)
-            # LOG.debug("Packet-In")
-            # LOG.debug("  src=%s", src)
-            # LOG.debug("  dst=%s", dst)
-            # LOG.debug("  old_peer=%s", old_peer)
-            if old_peer and old_peer != dst:
-                old_link = Link(src, old_peer)
-                self.send_event_to_observers(event.EventLinkDelete(old_link))
+        dst = self._get_port(dst_dpid, dst_port_no)
+        if not dst:
+            return
 
-            link = Link(src, dst)
-            if not link in self.links:
-                self.send_event_to_observers(event.EventLinkAdd(link))
+        old_peer = self.links.get_peer(src)
+        # LOG.debug("Packet-In")
+        # LOG.debug("  src=%s", src)
+        # LOG.debug("  dst=%s", dst)
+        # LOG.debug("  old_peer=%s", old_peer)
+        if old_peer and old_peer != dst:
+            old_link = Link(src, old_peer)
+            self.send_event_to_observers(event.EventLinkDelete(old_link))
 
-            if not self.links.update_link(src, dst):
-                # reverse link is not detected yet.
-                # So schedule the check early because it's very likely it's up
-                try:
-                    self.ports.lldp_received(dst)
-                except KeyError as e:
-                    # There are races between EventOFPPacketIn and
-                    # EventDPPortAdd. So packet-in event can happend before
-                    # port add event. In that case key error can happend.
-                    # LOG.debug('lldp_received: KeyError %s', e)
-                    pass
-                else:
-                    self.ports.move_front(dst)
-                    self.lldp_event.set()
-            if self.explicit_drop:
-                self._drop_packet(msg)
+        link = Link(src, dst)
+        if not link in self.links:
+            self.send_event_to_observers(event.EventLinkAdd(link))
+
+        if not self.links.update_link(src, dst):
+            # reverse link is not detected yet.
+            # So schedule the check early because it's very likely it's up
+            self.ports.move_front(dst)
+            self.lldp_event.set()
+        if self.explicit_drop:
+            self._drop_packet(msg)
 
     def send_lldp_packet(self, port):
         try:
