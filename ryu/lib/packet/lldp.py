@@ -137,9 +137,10 @@ class lldp(packet_base.PacketBase):
             tlv = cls._tlv_parsers[tlv_type](buf)
             tlvs.append(tlv)
             offset = LLDP_TLV_SIZE + tlv.len
+            if tlv.tlv_type == LLDP_TLV_END:
+                break
             buf = buf[offset:]
-            assert (len(buf) > 0 and tlv.tlv_type != LLDP_TLV_END) or \
-                   (len(buf) == 0 and tlv.tlv_type == LLDP_TLV_END)
+            assert len(buf) > 0
 
         lldp_pkt = cls(tlvs)
 
