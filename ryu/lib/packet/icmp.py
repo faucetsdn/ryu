@@ -26,6 +26,11 @@ ICMP_REDIRECT = 5
 ICMP_ECHO_REQUEST = 8
 ICMP_TIME_EXCEEDED = 11
 
+ICMP_ECHO_REPLY_CODE = 0
+ICMP_HOST_UNREACH_CODE = 1
+ICMP_PORT_UNREACH_CODE = 3
+ICMP_TTL_EXPIRED_CODE = 0
+
 
 class icmp(packet_base.PacketBase):
     """ICMP (RFC 792) header encoder/decoder class.
@@ -42,10 +47,18 @@ class icmp(packet_base.PacketBase):
     csum           CheckSum \
                    (0 means automatically-calculate when encoding)
     data           Payload. \
-                   Either a bytearray or ryu.lib.packet.icmp.echo object. \
-                   NOTE: This includes "unused" 16 bits and the following \
+                   Either a bytearray, or \
+                   ryu.lib.packet.icmp.echo or \
+                   ryu.lib.packet.icmp.dest_unreach or \
+                   ryu.lib.packet.icmp.TimeExceeded object \
+                   NOTE for icmp.echo: \
+                   This includes "unused" 16 bits and the following \
                    "Internet Header + 64 bits of Original Data Datagram" of \
-                   the ICMP header.
+                   the ICMP header. \
+                   NOTE for icmp.dest_unreach and icmp.TimeExceeded: \
+                   This includes "unused" 8 or 24 bits and the following \
+                   "Internet Header + leading octets of original datagram" \
+                   of the original packet.
     ============== ====================
     """
 
@@ -124,6 +137,7 @@ class echo(object):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, id_, seq, data=None):
+        super(echo, self).__init__()
         self.id = id_
         self.seq = seq
         self.data = data
@@ -149,16 +163,103 @@ class echo(object):
         return hdr
 
 
-@icmp.register_icmp_type(ICMP_TIME_EXCEEDED)
-class TimeExceeded(object):
-    _PACK_STR = '!4x'
+@icmp.register_icmp_type(ICMP_DEST_UNREACH)
+class dest_unreach(object):
+    """ICMP sub encoder/decoder class for Destination Unreachable Message.
+
+    This is used with ryu.lib.packet.icmp.icmp for
+    ICMP Destination Unreachable Message.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    [RFC1191] reserves bits for the "Next-Hop MTU" field.
+    [RFC4884] introduced 8-bit data length attribute.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    data_len       data length
+    mtu            Next-Hop MTU \
+                   NOTE: This field is required when icmp code is 4 \
+                    code 4 = fragmentation needed and DF set
+    data           Internet Header + leading octets of original datagram
+    ============== ====================
+    """
+
+    _PACK_STR = '!xBH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, data=None):
+    def __init__(self, data_len=0, mtu=0, data=None):
+        super(dest_unreach, self).__init__()
+        self.data_len = data_len
+        self.mtu = mtu
         self.data = data
 
+    @classmethod
+    def parser(cls, buf, offset):
+        (data_len, mtu) = struct.unpack_from(cls._PACK_STR,
+                                             buf, offset)
+        msg = cls(data_len, mtu)
+        offset += cls._MIN_LEN
+
+        if len(buf) > offset:
+            msg.data = buf[offset:]
+
+        return msg
+
     def serialize(self):
-        hdr = bytearray(TimeExceeded._MIN_LEN)
+        hdr = bytearray(struct.pack(dest_unreach._PACK_STR,
+                        self.data_len, self.mtu))
+
+        if self.data is not None:
+            hdr += self.data
+
+        return hdr
+
+
+@icmp.register_icmp_type(ICMP_TIME_EXCEEDED)
+class TimeExceeded(object):
+    """ICMP sub encoder/decoder class for Time Exceeded Message.
+
+    This is used with ryu.lib.packet.icmp.icmp for
+    ICMP Time Exceeded Message.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    [RFC4884] introduced 8-bit data length attribute.
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    data_len       data length
+    data           Internet Header + leading octets of original datagram
+    ============== ====================
+    """
+
+    _PACK_STR = '!xBxx'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, data_len=0, data=None):
+        self.data_len = data_len
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf, offset):
+        data_len = struct.unpack_from(cls._PACK_STR, buf, offset)
+        msg = cls(data_len)
+        offset += cls._MIN_LEN
+
+        if len(buf) > offset:
+            msg.data = buf[offset:]
+
+        return msg
+
+    def serialize(self):
+        hdr = bytearray(struct.pack(TimeExceeded._PACK_STR, self.data_len))
 
         if self.data is not None:
             hdr += self.data
