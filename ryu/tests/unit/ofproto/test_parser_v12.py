@@ -6064,8 +6064,8 @@ class TestOFPGroupFeaturesStats(unittest.TestCase):
         # max_groups and actions after the parser is tuple
         eq_(types, res.types)
         eq_(capabilities, res.capabilities)
-        eq_(tuple(max_groups), res.max_groups)
-        eq_(tuple(actions), res.actions)
+        eq_(max_groups, res.max_groups)
+        eq_(actions, res.actions)
 
     def test_parser_mid(self):
         self._test_parser(self.types, self.capabilities,

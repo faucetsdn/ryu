@@ -1279,8 +1279,8 @@ class OFPGroupFeaturesStats(object):
             ofproto_v1_2.OFP_GROUP_FEATURES_STATS_PACK_STR, buf, offset)
         types = stats[0]
         capabilities = stats[1]
-        max_groups = stats[2:6]
-        actions = stats[6:10]
+        max_groups = list(stats[2:6])
+        actions = list(stats[6:10])
 
         return cls(types, capabilities, max_groups, actions)
 
