@@ -2447,7 +2447,7 @@ class OFPMeterStats(object):
     def __init__(self):
         super(OFPMeterStats, self).__init__()
         self.meter_id = None
-        self.len = None
+        self.length = None
         self.flow_count = None
         self.packet_in_count = None
         self.byte_in_count = None
@@ -2459,7 +2459,7 @@ class OFPMeterStats(object):
     def parser(cls, buf, offset):
         meter_stats = cls()
 
-        (meter_stats.meter_id, meter_stats.len,
+        (meter_stats.meter_id, meter_stats.length,
          meter_stats.flow_count, meter_stats.packet_in_count,
          meter_stats.byte_in_count, meter_stats.duration_sec,
          meter_stats.duration_nsec) = struct.unpack_from(
@@ -2468,7 +2468,7 @@ class OFPMeterStats(object):
 
         meter_stats.band_stats = []
         length = ofproto_v1_3.OFP_METER_STATS_SIZE
-        while length < meter_stats.len:
+        while length < meter_stats.length:
             band_stats = OFPMeterBandStats.parser(buf, offset)
             meter_stats.band_stats.append(band_stats)
             offset += ofproto_v1_3.OFP_METER_BAND_STATS_SIZE
