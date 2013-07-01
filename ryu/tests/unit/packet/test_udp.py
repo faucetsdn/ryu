@@ -57,7 +57,7 @@ class Test_udp(unittest.TestCase):
         eq_(self.csum, self.u.csum)
 
     def test_parser(self):
-        r1, r2 = self.u.parser(self.buf)
+        r1, r2, _ = self.u.parser(self.buf)
 
         eq_(self.src_port, r1.src_port)
         eq_(self.dst_port, r1.dst_port)

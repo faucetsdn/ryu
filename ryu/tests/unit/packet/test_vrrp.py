@@ -73,7 +73,7 @@ class Test_vrrpv2(unittest.TestCase):
         eq_(self.auth_data, self.vrrpv2.auth_data)
 
     def test_parser(self):
-        vrrpv2, _cls = self.vrrpv2.parser(self.buf)
+        vrrpv2, _cls, _ = self.vrrpv2.parser(self.buf)
 
         eq_(self.version, vrrpv2.version)
         eq_(self.type_, vrrpv2.type)
@@ -216,7 +216,7 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         eq_(self.ip_address, self.vrrpv3.ip_addresses[0])
 
     def test_parser(self):
-        vrrpv3, _cls = self.vrrpv3.parser(self.buf)
+        vrrpv3, _cls, _ = self.vrrpv3.parser(self.buf)
 
         eq_(self.version, vrrpv3.version)
         eq_(self.type_, vrrpv3.type)
@@ -357,7 +357,7 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
         eq_(self.ip_address, self.vrrpv3.ip_addresses[0])
 
     def test_parser(self):
-        vrrpv3, _cls = self.vrrpv3.parser(self.buf)
+        vrrpv3, _cls, _ = self.vrrpv3.parser(self.buf)
 
         eq_(self.version, vrrpv3.version)
         eq_(self.type_, vrrpv3.type)

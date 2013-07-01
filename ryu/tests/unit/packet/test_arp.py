@@ -48,7 +48,6 @@ class Test_arp(unittest.TestCase):
     dst_ip = int(netaddr.IPAddress('24.166.173.159'))
 
     fmt = arp._PACK_STR
-    length = struct.calcsize(arp._PACK_STR)
     buf = pack(fmt, hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
                dst_mac, dst_ip)
 
@@ -76,7 +75,6 @@ class Test_arp(unittest.TestCase):
         eq_(self.src_ip, self.a.src_ip)
         eq_(self.dst_mac, self.a.dst_mac)
         eq_(self.dst_ip, self.a.dst_ip)
-        eq_(self.length, self.a.length)
 
     def test_parser(self):
         _res = self.a.parser(self.buf)
@@ -94,7 +92,6 @@ class Test_arp(unittest.TestCase):
         eq_(res.src_ip, self.src_ip)
         eq_(res.dst_mac, self.dst_mac)
         eq_(res.dst_ip, self.dst_ip)
-        eq_(res.length, self.length)
 
     def test_serialize(self):
         data = bytearray()
@@ -173,7 +170,6 @@ class Test_arp(unittest.TestCase):
         eq_(a.src_ip, self.src_ip)
         eq_(a.dst_mac, self.dst_mac)
         eq_(a.dst_ip, self.dst_ip)
-        eq_(a.length, self.length)
 
     @raises(Exception)
     def test_malformed_arp(self):

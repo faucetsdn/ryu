@@ -70,14 +70,13 @@ class arp(packet_base.PacketBase):
         self.src_ip = src_ip
         self.dst_mac = dst_mac
         self.dst_ip = dst_ip
-        self.length = arp._MIN_LEN
 
     @classmethod
     def parser(cls, buf):
         (hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
          dst_mac, dst_ip) = struct.unpack_from(cls._PACK_STR, buf)
         return cls(hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
-                   dst_mac, dst_ip), None
+                   dst_mac, dst_ip), None, buf[arp._MIN_LEN:]
 
     def serialize(self, payload, prev):
         return struct.pack(arp._PACK_STR, self.hwtype, self.proto,

@@ -172,10 +172,13 @@ class dhcp(packet_base.PacketBase):
         (hops, xid, secs, flags, ciaddr, yiaddr, siaddr, giaddr, chaddr,
          dummy, sname, boot_file
          ) = struct.unpack_from(unpack_str, buf)
+        length = min_len
         if len(buf) > min_len:
             parse_opt = options.parser(buf[min_len:])
-        return cls(op, chaddr, parse_opt, htype, hlen, hops, xid, secs, flags,
-                   ciaddr, yiaddr, siaddr, giaddr, sname, boot_file)
+            length += parse_opt.options_len
+        return (cls(op, chaddr, parse_opt, htype, hlen, hops, xid, secs, flags,
+                    ciaddr, yiaddr, siaddr, giaddr, sname, boot_file),
+                None, buf[length:])
 
     def serialize(self, payload, prev):
         seri_opt = self.options.serialize()

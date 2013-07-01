@@ -39,7 +39,6 @@ class Test_ethernet(unittest.TestCase):
     dst = mac.haddr_to_bin('AA:AA:AA:AA:AA:AA')
     src = mac.haddr_to_bin('BB:BB:BB:BB:BB:BB')
     ethertype = ether.ETH_TYPE_ARP
-    length = struct.calcsize(ethernet._PACK_STR)
 
     buf = pack(ethernet._PACK_STR, dst, src, ethertype)
 
@@ -60,16 +59,14 @@ class Test_ethernet(unittest.TestCase):
         eq_(self.dst, self.e.dst)
         eq_(self.src, self.e.src)
         eq_(self.ethertype, self.e.ethertype)
-        eq_(self.length, self.e.length)
 
     def test_parser(self):
-        res, ptype = self.e.parser(self.buf)
+        res, ptype, _ = self.e.parser(self.buf)
         LOG.debug((res, ptype))
 
         eq_(res.dst, self.dst)
         eq_(res.src, self.src)
         eq_(res.ethertype, self.ethertype)
-        eq_(res.length, self.length)
         eq_(ptype, arp)
 
     def test_serialize(self):

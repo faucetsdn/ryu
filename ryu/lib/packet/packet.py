@@ -42,21 +42,20 @@ class Packet(object):
         else:
             self.protocols = protocols
         self.protocol_idx = 0
-        self.parsed_bytes = 0
         if self.data:
             self._parser(parse_cls)
 
     def _parser(self, cls):
+        rest_data = self.data
         while cls:
             try:
-                proto, cls = cls.parser(self.data[self.parsed_bytes:])
-                if proto:
-                    self.parsed_bytes += proto.length
-                    self.protocols.append(proto)
+                proto, cls, rest_data = cls.parser(rest_data)
             except struct.error:
-                cls = None
-        if len(self.data) > self.parsed_bytes:
-            self.protocols.append(self.data[self.parsed_bytes:])
+                break
+            if proto:
+                self.protocols.append(proto)
+        if rest_data:
+            self.protocols.append(rest_data)
 
     def serialize(self):
         """Encode a packet and store the resulted bytearray in self.data.

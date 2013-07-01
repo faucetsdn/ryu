@@ -39,7 +39,6 @@ class PacketBase(object):
 
     def __init__(self):
         super(PacketBase, self).__init__()
-        self.length = 0
 
     @property
     def protocol_name(self):

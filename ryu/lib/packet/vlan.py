@@ -49,7 +49,6 @@ class vlan(packet_base.PacketBase):
         self.cfi = cfi
         self.vid = vid
         self.ethertype = ethertype
-        self.length = vlan._MIN_LEN
 
     @classmethod
     def parser(cls, buf):
@@ -57,7 +56,8 @@ class vlan(packet_base.PacketBase):
         pcp = tci >> 13
         cfi = (tci >> 12) & 1
         vid = tci & ((1 << 12) - 1)
-        return cls(pcp, cfi, vid, ethertype), vlan.get_packet_type(ethertype)
+        return (cls(pcp, cfi, vid, ethertype),
+                vlan.get_packet_type(ethertype), buf[vlan._MIN_LEN:])
 
     def serialize(self, payload, prev):
         tci = self.pcp << 13 | self.cfi << 12 | self.vid

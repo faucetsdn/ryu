@@ -74,7 +74,7 @@ class Test_tcp(unittest.TestCase):
         eq_(self.option, self.t.option)
 
     def test_parser(self):
-        r1, r2 = self.t.parser(self.buf)
+        r1, r2, _ = self.t.parser(self.buf)
 
         eq_(self.src_port, r1.src_port)
         eq_(self.dst_port, r1.dst_port)

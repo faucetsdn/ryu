@@ -49,8 +49,8 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
 
     def test_parse_without_ethernet(self):
         buf = self.data[ethernet.ethernet._MIN_LEN:]
-        (lldp_pkt, cls) = lldp.lldp.parser(buf)
-        eq_(lldp_pkt.length, len(buf))
+        (lldp_pkt, cls, rest_buf) = lldp.lldp.parser(buf)
+        eq_(len(rest_buf), 0)
 
         tlvs = lldp_pkt.tlvs
         eq_(tlvs[0].tlv_type, lldp.LLDP_TLV_CHASSIS_ID)
@@ -170,7 +170,6 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         eq_(type(pkt.next()), ethernet.ethernet)
         lldp_pkt = pkt.next()
         eq_(type(lldp_pkt), lldp.lldp)
-        eq_(lldp_pkt.length, len(buf) - ethernet.ethernet._MIN_LEN)
 
         tlvs = lldp_pkt.tlvs
 

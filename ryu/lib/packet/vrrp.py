@@ -270,7 +270,6 @@ class vrrp(packet_base.PacketBase):
         self.auth_data = auth_data
 
         self._is_ipv6 = is_ipv6(self.ip_addresses[0])
-        self.length = len(self)
         self.identification = 0         # used for ipv4 identification
 
     def checksum_ok(self, ipvx, vrrp_buf):
@@ -337,7 +336,7 @@ class vrrp(packet_base.PacketBase):
         if self.is_ipv6:
             traffic_class = 0xc0        # set tos to internetwork control
             flow_label = 0
-            payload_length = ipv6.ipv6._MIN_LEN + self.length   # XXX _MIN_LEN
+            payload_length = ipv6.ipv6._MIN_LEN + len(self)     # XXX _MIN_LEN
             e = ethernet.ethernet(VRRP_IPV6_DST_MAC_ADDRESS,
                                   vrrp_ipv6_src_mac_address(self.vrid),
                                   ether.ETH_TYPE_IPV6)
@@ -456,8 +455,9 @@ class vrrpv2(vrrp):
         offset += struct.calcsize(ip_addresses_pack_str)
         auth_data = struct.unpack_from(cls._AUTH_DATA_PACK_STR, buf, offset)
 
-        return cls(version, type_, vrid, priority, count_ip, adver_int,
-                   checksum, ip_addresses, auth_type, auth_data), None
+        msg = cls(version, type_, vrid, priority, count_ip, adver_int,
+                  checksum, ip_addresses, auth_type, auth_data)
+        return msg, None, buf[len(msg):]
 
     @staticmethod
     def serialize_static(vrrp_, prev):
@@ -534,7 +534,7 @@ class vrrpv3(vrrp):
         # http://www.ietf.org/mail-archive/web/vrrp/current/msg01473.html
         # if not self.is_ipv6:
         #     return packet_utils.checksum(vrrp_buf) == 0
-        return packet_utils.checksum_ip(ipvx, self.length, vrrp_buf) == 0
+        return packet_utils.checksum_ip(ipvx, len(self), vrrp_buf) == 0
 
     @staticmethod
     def create(type_, vrid, priority, max_adver_int, ip_addresses):
@@ -573,8 +573,9 @@ class vrrpv3(vrrp):
                     address_len, count_ip))
 
         ip_addresses = struct.unpack_from(pack_str, buf, offset)
-        return cls(version, type_, vrid, priority,
-                   count_ip, max_adver_int, checksum, ip_addresses), None
+        msg = cls(version, type_, vrid, priority,
+                  count_ip, max_adver_int, checksum, ip_addresses)
+        return msg, None, buf[len(msg):]
 
     @staticmethod
     def serialize_static(vrrp_, prev):

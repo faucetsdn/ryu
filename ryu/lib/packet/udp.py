@@ -47,14 +47,13 @@ class udp(packet_base.PacketBase):
         self.dst_port = dst_port
         self.total_length = total_length
         self.csum = csum
-        self.length = udp._MIN_LEN
 
     @classmethod
     def parser(cls, buf):
         (src_port, dst_port, total_length, csum) = struct.unpack_from(
             cls._PACK_STR, buf)
         msg = cls(src_port, dst_port, total_length, csum)
-        return msg, None
+        return msg, None, buf[msg._MIN_LEN:total_length]
 
     def serialize(self, payload, prev):
         if self.total_length == 0:

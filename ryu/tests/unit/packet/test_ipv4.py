@@ -85,11 +85,11 @@ class Test_ipv4(unittest.TestCase):
         eq_(self.csum, self.ip.csum)
         eq_(self.src, self.ip.src)
         eq_(self.dst, self.ip.dst)
-        eq_(self.length, self.ip.length)
+        eq_(self.length, len(self.ip))
         eq_(self.option, self.ip.option)
 
     def test_parser(self):
-        res, ptype = self.ip.parser(self.buf)
+        res, ptype, _ = self.ip.parser(self.buf)
 
         eq_(res.version, self.version)
         eq_(res.header_length, self.header_length)

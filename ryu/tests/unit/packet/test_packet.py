@@ -358,7 +358,7 @@ class TestPacket(unittest.TestCase):
         eq_(0b101010, p_tcp.bits)
         eq_(2048, p_tcp.window_size)
         eq_(0x6f, p_tcp.urgent)
-        eq_(len(t_buf), p_tcp.length)
+        eq_(len(t_buf), len(p_tcp))
         t = bytearray(t_buf)
         struct.pack_into('!H', t, 16, p_tcp.csum)
         ph = struct.pack('!IIBBH', self.src_ip, self.dst_ip, 0,

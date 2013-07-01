@@ -94,7 +94,7 @@ class icmp(packet_base.PacketBase):
             else:
                 msg.data = buf[offset:]
 
-        return msg, None
+        return msg, None, None
 
     def serialize(self, payload, prev):
         hdr = bytearray(struct.pack(icmp._PACK_STR, self.type,

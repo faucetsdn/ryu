@@ -43,12 +43,12 @@ class ethernet(packet_base.PacketBase):
         self.dst = dst
         self.src = src
         self.ethertype = ethertype
-        self.length = ethernet._MIN_LEN
 
     @classmethod
     def parser(cls, buf):
         dst, src, ethertype = struct.unpack_from(cls._PACK_STR, buf)
-        return cls(dst, src, ethertype), ethernet.get_packet_type(ethertype)
+        return (cls(dst, src, ethertype), ethernet.get_packet_type(ethertype),
+                buf[ethernet._MIN_LEN:])
 
     def serialize(self, payload, prev):
         return struct.pack(ethernet._PACK_STR, self.dst, self.src,

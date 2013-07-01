@@ -84,8 +84,10 @@ class ipv4(packet_base.PacketBase):
         self.csum = csum
         self.src = src
         self.dst = dst
-        self.length = header_length * 4
         self.option = option
+
+    def __len__(self):
+        return self.header_length * 4
 
     @classmethod
     def parser(cls, buf):
@@ -95,16 +97,19 @@ class ipv4(packet_base.PacketBase):
         version = version >> 4
         offset = flags & ((1 << 13) - 1)
         flags = flags >> 13
+        length = header_length * 4
+        if length > ipv4._MIN_LEN:
+            option = buf[ipv4._MIN_LEN:length]
+        else:
+            option = None
         msg = cls(version, header_length, tos, total_length, identification,
-                  flags, offset, ttl, proto, csum, src, dst)
+                  flags, offset, ttl, proto, csum, src, dst, option)
 
-        if msg.length > ipv4._MIN_LEN:
-            msg.option = buf[ipv4._MIN_LEN:msg.length]
-
-        return msg, ipv4.get_packet_type(proto)
+        return msg, ipv4.get_packet_type(proto), buf[length:total_length]
 
     def serialize(self, payload, prev):
-        hdr = bytearray(self.header_length * 4)
+        length = len(self)
+        hdr = bytearray(length)
         version = self.version << 4 | self.header_length
         flags = self.flags << 13 | self.offset
         if self.total_length == 0:
@@ -114,7 +119,7 @@ class ipv4(packet_base.PacketBase):
                          self.ttl, self.proto, 0, self.src, self.dst)
 
         if self.option:
-            assert (self.length - ipv4._MIN_LEN) >= len(self.option)
+            assert (length - ipv4._MIN_LEN) >= len(self.option)
             hdr[ipv4._MIN_LEN:ipv4._MIN_LEN + len(self.option)] = self.option
 
         self.csum = packet_utils.checksum(hdr)

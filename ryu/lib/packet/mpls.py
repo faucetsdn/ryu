@@ -50,7 +50,6 @@ class mpls(packet_base.PacketBase):
         self.exp = exp
         self.bsb = bsb
         self.ttl = ttl
-        self.length = mpls._MIN_LEN
 
     @classmethod
     def parser(cls, buf):
@@ -61,9 +60,9 @@ class mpls(packet_base.PacketBase):
         label = label >> 12
         msg = cls(label, exp, bsb, ttl)
         if bsb:
-            return msg, ipv4.ipv4
+            return msg, ipv4.ipv4, buf[msg._MIN_LEN:]
         else:
-            return msg, mpls
+            return msg, mpls, buf[msg._MIN_LEN:]
 
     def serialize(self, payload, prev):
         val = self.label << 12 | self.exp << 9 | self.bsb << 8 | self.ttl

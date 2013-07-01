@@ -61,7 +61,7 @@ class Test_icmpv6_header(unittest.TestCase):
         eq_(0, self.icmp.csum)
 
     def test_parser(self):
-        msg, n = self.icmp.parser(self.buf)
+        msg, n, _ = self.icmp.parser(self.buf)
 
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
@@ -110,7 +110,7 @@ class Test_icmpv6_echo_request(unittest.TestCase):
 
     def _test_parser(self, data=None):
         buf = self.buf + str(data or '')
-        msg, n = icmpv6.icmpv6.parser(buf)
+        msg, n, _ = icmpv6.icmpv6.parser(buf)
 
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
@@ -195,7 +195,7 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
 
     def _test_parser(self, data=None):
         buf = self.buf + str(data or '')
-        msg, n = icmpv6.icmpv6.parser(buf)
+        msg, n, _ = icmpv6.icmpv6.parser(buf)
 
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
@@ -300,7 +300,7 @@ class Test_icmpv6_router_solict(unittest.TestCase):
 
     def _test_parser(self, data=None):
         buf = self.buf + str(data or '')
-        msg, n = icmpv6.icmpv6.parser(buf)
+        msg, n, _ = icmpv6.icmpv6.parser(buf)
 
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)

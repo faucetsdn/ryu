@@ -63,24 +63,18 @@ class ipv6(packet_base.PacketBase):
         self.hop_limit = hop_limit
         self.src = src
         self.dst = dst
-        self.length = 40
 
     @classmethod
     def parser(cls, buf):
-        (v_tc_flow, plen, nxt, hlim, src, dst) = struct.unpack_from(
+        (v_tc_flow, payload_length, nxt, hlim, src, dst) = struct.unpack_from(
             cls._PACK_STR, buf)
         version = v_tc_flow >> 28
         traffic_class = (v_tc_flow >> 20) & 0xff
         flow_label = v_tc_flow & 0xfffff
-        payload_length = plen
         hop_limit = hlim
         msg = cls(version, traffic_class, flow_label, payload_length,
                   nxt, hop_limit, src, dst)
-
-        if msg.length > ipv6._MIN_LEN:
-            msg.option = buf[ipv6._MIN_LEN:msg.length]
-
-        return msg, ipv6.get_packet_type(nxt)
+        return msg, ipv6.get_packet_type(nxt), buf[cls._MIN_LEN:payload_length]
 
     def serialize(self, payload, prev):
         hdr = bytearray(40)

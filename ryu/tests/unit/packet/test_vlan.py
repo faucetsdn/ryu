@@ -42,7 +42,6 @@ class Test_vlan(unittest.TestCase):
     vid = 32
     tci = pcp << 15 | cfi << 12 | vid
     ethertype = ether.ETH_TYPE_IP
-    length = struct.calcsize(vlan._PACK_STR)
 
     buf = pack(vlan._PACK_STR, tci, ethertype)
 
@@ -64,16 +63,14 @@ class Test_vlan(unittest.TestCase):
         eq_(self.cfi, self.v.cfi)
         eq_(self.vid, self.v.vid)
         eq_(self.ethertype, self.v.ethertype)
-        eq_(self.length, self.v.length)
 
     def test_parser(self):
-        res, ptype = self.v.parser(self.buf)
+        res, ptype, _ = self.v.parser(self.buf)
 
         eq_(res.pcp, self.pcp)
         eq_(res.cfi, self.cfi)
         eq_(res.vid, self.vid)
         eq_(res.ethertype, self.ethertype)
-        eq_(res.length, self.length)
         eq_(ptype, ipv4)
 
     def test_serialize(self):
@@ -136,7 +133,6 @@ class Test_vlan(unittest.TestCase):
         eq_(v.cfi, self.cfi)
         eq_(v.vid, self.vid)
         eq_(v.ethertype, self.ethertype)
-        eq_(v.length, self.length)
 
     @raises(Exception)
     def test_malformed_vlan(self):
