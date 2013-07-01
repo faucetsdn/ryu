@@ -37,7 +37,10 @@ class PacketBase(object):
     def __init__(self):
         super(PacketBase, self).__init__()
         self.length = 0
-        self.protocol_name = self.__class__.__name__
+
+    @property
+    def protocol_name(self):
+        return self.__class__.__name__
 
     @classmethod
     def parser(cls, buf):
