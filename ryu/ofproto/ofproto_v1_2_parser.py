@@ -2154,8 +2154,6 @@ class OFPMatchField(StringifyMixin):
         del v['header']
         del v['length']
         del v['n_bytes']
-        if 'mask' in v and v['mask'] is None:
-            del v['mask']
         return d
 
     @classmethod
@@ -2163,6 +2161,19 @@ class OFPMatchField(StringifyMixin):
         # just pass the dict around.
         # it will be converted by OFPMatch.__init__().
         return {cls.__name__: dict_}
+
+    def stringify_attrs(self):
+        f = super(OFPMatchField, self).stringify_attrs
+        if not ofproto_v1_2.oxm_tlv_header_extract_hasmask(self.header):
+            # something like the following, but yield two values (k,v)
+            # return itertools.ifilter(lambda k, v: k != 'mask', iter())
+            def g():
+                for k, v in f():
+                    if k != 'mask':
+                        yield (k, v)
+            return g()
+        else:
+            return f()
 
 
 @OFPMatchField.register_field_header([ofproto_v1_2.OXM_OF_IN_PORT])
