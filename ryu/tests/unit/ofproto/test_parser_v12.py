@@ -6660,6 +6660,16 @@ class TestOFPMatch(unittest.TestCase):
         if mask and res.fields[0].mask is not None:
             eq_(res.fields[0].mask, mask)
 
+        # to_jsondict
+        jsondict = match.to_jsondict()
+
+        # from_jsondict
+        match2 = match.from_jsondict(jsondict["OFPMatch"])
+        buf2 = bytearray()
+        match2.serialize(buf2, 0)
+        eq_(str(match), str(match2))
+        eq_(buf, buf2)
+
     def test_parse_unknown_field(self):
         buf = bytearray()
         ofproto_parser.msg_pack_into('!HH', buf, 0, ofproto_v1_2.OFPMT_OXM,
