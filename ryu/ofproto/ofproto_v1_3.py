@@ -1046,6 +1046,18 @@ def oxm_tlv_header_w(field, length):
     return _oxm_tlv_header(OFPXMC_OPENFLOW_BASIC, field, 1, length * 2)
 
 
+def oxm_tlv_header_extract_hasmask(header):
+    return (header >> 8) & 1
+
+
+def oxm_tlv_header_extract_length(header):
+    if oxm_tlv_header_extract_hasmask(header):
+        length = (header & 0xff) / 2
+    else:
+        length = header & 0xff
+    return length
+
+
 OXM_OF_IN_PORT = oxm_tlv_header(OFPXMT_OFB_IN_PORT, 4)
 OXM_OF_IN_PHY_PORT = oxm_tlv_header(OFPXMT_OFB_IN_PHY_PORT, 4)
 OXM_OF_METADATA = oxm_tlv_header(OFPXMT_OFB_METADATA, 8)
