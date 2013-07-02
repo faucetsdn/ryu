@@ -781,7 +781,7 @@ class TestOFPErrorMsg(unittest.TestCase):
         eq_(res.msg_type, self.msg_type)
         eq_(res.msg_len, self.msg_len)
         eq_(res.xid, self.xid)
-        eq_(res.type, type_)
+        eq_(res._type, type_)
         eq_(res.exp_type, exp_type)
         eq_(res.experimenter, experimenter)
         eq_(res.data, data)
@@ -1216,7 +1216,7 @@ class TestOFPErrorExperimenterMsg(unittest.TestCase):
 
     def test_init(self):
         c = OFPErrorExperimenterMsg(_Datapath)
-        eq_(c.type, None)
+        eq_(c._type, None)
         eq_(c.exp_type, None)
         eq_(c.experimenter, None)
         eq_(c.data, None)
@@ -1247,7 +1247,7 @@ class TestOFPErrorExperimenterMsg(unittest.TestCase):
         eq_(res.msg_type, msg_type)
         eq_(res.msg_len, msg_len)
         eq_(res.xid, xid)
-        eq_(res.type, type_)
+        eq_(res._type, type_)
         eq_(res.exp_type, exp_type)
         eq_(res.experimenter, experimenter)
 
@@ -1839,7 +1839,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         eq_(res.n_buffers, n_buffers)
         eq_(res.n_tables, n_tables)
         eq_(res.capabilities, capabilities)
-        eq_(res.reserved, reserved)
+        eq_(res._reserved, reserved)
 
         for i in range(port_cnt):
             eq_(res.ports[i].port_no, i)
@@ -2457,7 +2457,7 @@ class TestOFPPacketOut(unittest.TestCase):
 
         eq_(buffer_id, c.buffer_id)
         eq_(in_port, c.in_port)
-        eq_(0, c.actions_len)
+        eq_(0, c._actions_len)
         eq_(data, c.data)
         eq_(actions, c.actions)
 
@@ -3770,8 +3770,6 @@ class TestOFPBucket(unittest.TestCase):
     def test_init(self):
         # OFP_BUCKET_PACK_STR
         # '!HHII4x'...len, weight, watch_port, watch_group, pad(4)
-        len_ = ofproto_v1_2.OFP_BUCKET_SIZE \
-            + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
         weight = 4386
         watch_port = 6606
         watch_group = 3
@@ -3781,8 +3779,7 @@ class TestOFPBucket(unittest.TestCase):
         max_len = 1500
         actions = [OFPActionOutput(port, max_len)]
 
-        c = OFPBucket(len_, weight, watch_port, watch_group, actions)
-        eq_(len_, c.len)
+        c = OFPBucket(weight, watch_port, watch_group, actions)
         eq_(weight, c.weight)
         eq_(watch_port, c.watch_port)
         eq_(watch_group, c.watch_group)
@@ -3813,7 +3810,6 @@ class TestOFPBucket(unittest.TestCase):
         res = OFPBucket.parser(buf, 0)
 
         # 16
-        eq_(len_, res.len)
         eq_(weight, res.weight)
         eq_(watch_port, res.watch_port)
         eq_(watch_group, res.watch_group)
@@ -3865,8 +3861,7 @@ class TestOFPBucket(unittest.TestCase):
             action = OFPActionOutput(port, max_len)
             actions.append(action)
 
-        c = OFPBucket(len_, weight, watch_port,
-                      watch_group, actions)
+        c = OFPBucket(weight, watch_port, watch_group, actions)
 
         buf = bytearray()
         c.serialize(buf, 0)
@@ -3925,8 +3920,6 @@ class TestOFPGroupMod(unittest.TestCase):
         group_id = 6606
 
         # OFP_BUCKET
-        len_ = ofproto_v1_2.OFP_BUCKET_SIZE \
-            + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
         weight = 4386
         watch_port = 8006
         watch_group = 3
@@ -3936,7 +3929,7 @@ class TestOFPGroupMod(unittest.TestCase):
         max_len = 2000
         actions = [OFPActionOutput(port, max_len)]
 
-        buckets = [OFPBucket(len_, weight, watch_port, watch_group, actions)]
+        buckets = [OFPBucket(weight, watch_port, watch_group, actions)]
 
         c = OFPGroupMod(_Datapath, command, type_, group_id, buckets)
         eq_(command, c.command)
@@ -3956,7 +3949,7 @@ class TestOFPGroupMod(unittest.TestCase):
             # OFP_BUCKET
             weight = watch_port = watch_group = port = b
             actions = [OFPActionOutput(port, 0)]
-            bucket = OFPBucket(len_, weight, watch_port, watch_group, actions)
+            bucket = OFPBucket(weight, watch_port, watch_group, actions)
             buckets.append(bucket)
 
         c = OFPGroupMod(_Datapath, command, type_, group_id, buckets)
@@ -3993,7 +3986,6 @@ class TestOFPGroupMod(unittest.TestCase):
 
         for d in range(bucket_cnt):
             e = 7 + d * 8
-            eq_(res[e], buckets[0].len)
             eq_(res[e + 1], buckets[d].weight)
             eq_(res[e + 2], buckets[d].watch_port)
             eq_(res[e + 3], buckets[d].watch_group)
@@ -4661,11 +4653,10 @@ class TestOFPFlowStats(unittest.TestCase):
 
         goto_table = 3
         instructions = [OFPInstructionGotoTable(goto_table)]
-        c = OFPFlowStats(length, table_id, duration_sec, duration_nsec,
+        c = OFPFlowStats(table_id, duration_sec, duration_nsec,
                          priority, idle_timeout, hard_timeout, cookie,
                          packet_count, byte_count, match, instructions)
 
-        eq_(length, c.length)
         eq_(table_id, c.table_id)
         eq_(duration_sec, c.duration_sec)
         eq_(duration_nsec, c.duration_nsec)
@@ -4711,7 +4702,7 @@ class TestOFPFlowStats(unittest.TestCase):
 
         # parse
         res = OFPFlowStats.parser(buf, 0)
-        eq_(length, res.length)
+        eq_(length, res._length)
         eq_(table_id, res.table_id)
         eq_(duration_sec, res.duration_sec)
         eq_(duration_nsec, res.duration_nsec)
@@ -5800,11 +5791,10 @@ class TestOFPGroupStats(unittest.TestCase):
         + buf_bucket_counters
 
     def test_init(self):
-        c = OFPGroupStats(self.length, self.group_id, self.ref_count,
+        c = OFPGroupStats(self.group_id, self.ref_count,
                           self.packet_count, self.byte_count,
                           self.bucket_counters)
 
-        eq_(self.length, c.length)
         eq_(self.group_id, c.group_id)
         eq_(self.ref_count, c.ref_count)
         eq_(self.packet_count, c.packet_count)
@@ -5836,7 +5826,7 @@ class TestOFPGroupStats(unittest.TestCase):
         res = OFPGroupStats.parser(buf, 0)
 
         # 32
-        eq_(length, res.length)
+        eq_(length, res._length)
         eq_(group_id, res.group_id)
         eq_(ref_count, res.ref_count)
         eq_(packet_count, res.packet_count)
@@ -5918,19 +5908,16 @@ class TestOFPGroupDescStats(unittest.TestCase):
     actions[0].serialize(buf_actions, 0)
 
     # OFP_BUCKET
-    len_ = ofproto_v1_2.OFP_BUCKET_SIZE + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
     weight = 4386
     watch_port = 8006
     watch_group = 3
-    buckets = [OFPBucket(len_, weight, watch_port, watch_group, actions)]
+    buckets = [OFPBucket(weight, watch_port, watch_group, actions)]
 
     bucket_cnt = 1024
 
     def test_init(self):
-        c = OFPGroupDescStats(self.length, self.type_, self.group_id,
-                              self.buckets)
+        c = OFPGroupDescStats(self.type_, self.group_id, self.buckets)
 
-        eq_(self.length, c.length)
         eq_(self.type_, c.type)
         eq_(self.group_id, c.group_id)
         eq_(self.buckets, c.buckets)
@@ -5948,7 +5935,7 @@ class TestOFPGroupDescStats(unittest.TestCase):
         for b in range(bucket_cnt):
             # OFP_BUCKET
             weight = watch_port = watch_group = b
-            bucket = OFPBucket(self.len_, weight,
+            bucket = OFPBucket(weight,
                                watch_port, watch_group,
                                self.actions)
             buckets.append(bucket)
@@ -5960,13 +5947,11 @@ class TestOFPGroupDescStats(unittest.TestCase):
 
         # 8 byte
         eq_(type_, res.type)
-        eq_(length, res.length)
         eq_(group_id, res.group_id)
 
         # 8 + ( 16 + 16 ) * b < 65535 byte
         # b <= 2047 byte
         for b in range(bucket_cnt):
-            eq_(buckets[b].len, res.buckets[b].len)
             eq_(buckets[b].weight, res.buckets[b].weight)
             eq_(buckets[b].watch_port, res.buckets[b].watch_port)
             eq_(buckets[b].watch_group, res.buckets[b].watch_group)
@@ -6182,8 +6167,8 @@ class TestOFPQueuePropHeader(unittest.TestCase):
 
     def test_init(self):
         c = OFPQueuePropHeader(self.property_, self.len_)
-        eq_(self.property_, c.property)
-        eq_(self.len_, c.len)
+        eq_(self.property_, c._property)
+        eq_(self.len_, c._len)
 
     def _test_serialize(self, property_, len_):
         c = OFPQueuePropHeader(property_, len_)
@@ -6215,11 +6200,10 @@ class TestOFPPacketQueue(unittest.TestCase):
         port = 2
         len_ = 3
         properties = [4, 5, 6]
-        c = OFPPacketQueue(queue_id, port, len_, properties)
+        c = OFPPacketQueue(queue_id, port, properties)
 
         eq_(queue_id, c.queue_id)
         eq_(port, c.port)
-        eq_(len_, c.len)
         eq_(properties, c.properties)
 
     def _test_parser(self, queue_id, port, prop_cnt):
@@ -6246,12 +6230,12 @@ class TestOFPPacketQueue(unittest.TestCase):
 
         eq_(queue_id, res.queue_id)
         eq_(port, res.port)
-        eq_(queue_len, res.len)
+        eq_(queue_len, res._len)
         eq_(prop_cnt, len(res.properties))
 
         for rate, p in enumerate(res.properties):
-            eq_(prop_type, p.property)
-            eq_(prop_len, p.len)
+            eq_(prop_type, p._property)
+            eq_(prop_len, p._len)
             eq_(rate, p.rate)
 
     def test_parser_mid(self):
@@ -6385,12 +6369,12 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
             c = queues[i]
             eq_(c['queue_id'], val.queue_id)
             eq_(c['queue_port'], val.port)
-            eq_(c['queue_len'], val.len)
+            eq_(c['queue_len'], val._len)
             eq_(1, len(val.properties))
 
             prop = val.properties[0]
-            eq_(c['prop_type'], prop.property)
-            eq_(c['prop_len'], prop.len)
+            eq_(c['prop_type'], prop._property)
+            eq_(c['prop_len'], prop._len)
             eq_(c['prop_rate'], prop.rate)
 
     def test_parser_mid(self):
