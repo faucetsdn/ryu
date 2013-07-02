@@ -14,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import logging
 import struct
+import sys
 import functools
-import inspect
 
 from ryu import exception
+from ryu.lib import stringify
 
 from . import ofproto_common
 
@@ -61,16 +63,23 @@ def create_list_of_base_attributes(f):
     return wrapper
 
 
-class StringifyMixin(object):
-    def __str__(self):
-        buf = ''
-        sep = ''
-        for k, v in ofp_attrs(self):
-            buf += sep
-            buf += "%s=%s" % (k, repr(v))  # repr() to escape binaries
-            sep = ','
-        return self.__class__.__name__ + '(' + buf + ')'
-    __repr__ = __str__  # note: str(list) uses __repr__ for elements
+def ofp_msg_from_jsondict(dp, jsondict):
+    parser = dp.ofproto_parser
+    assert len(jsondict) == 1
+    for k, v in jsondict.iteritems():
+        cls = getattr(parser, k)
+        assert issubclass(cls, MsgBase)
+        return cls.from_jsondict(v, datapath=dp)
+
+
+class StringifyMixin(stringify.StringifyMixin):
+    _class_prefixes = ["OFP", "MT"]
+
+    @classmethod
+    def cls_from_jsondict_key(cls, k):
+        obj_cls = super(StringifyMixin, cls).cls_from_jsondict_key(k)
+        assert not issubclass(obj_cls, MsgBase)
+        return obj_cls
 
 
 class MsgBase(StringifyMixin):
@@ -161,23 +170,16 @@ def msg_pack_into(fmt, buf, offset, *args):
     struct.pack_into(fmt, buf, offset, *args)
 
 
-def ofp_attrs(msg_):
-    base = getattr(msg_, '_base_attributes', [])
-    for k, v in inspect.getmembers(msg_):
-        if k.startswith('_'):
-            continue
-        if callable(v):
-            continue
-        if k in base:
-            continue
-        if hasattr(msg_.__class__, k):
-            continue
-        yield (k, v)
+def namedtuple(typename, fields, **kwargs):
+    class _namedtuple(StringifyMixin,
+                      collections.namedtuple(typename, fields, **kwargs)):
+        pass
+    return _namedtuple
 
 
 def msg_str_attr(msg_, buf, attr_list=None):
     if attr_list is None:
-        attr_list = ofp_attrs(msg_)
+        attr_list = stringify.obj_attrs(msg_)
     for attr in attr_list:
         val = getattr(msg_, attr, None)
         if val is not None:
