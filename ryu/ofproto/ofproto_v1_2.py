@@ -861,3 +861,5 @@ OFP_VERSION = 0x03
 OFP_TCP_PORT = 6633
 
 MAX_XID = 0xffffffff
+
+OFP_NO_BUFFER = 0xffffffff

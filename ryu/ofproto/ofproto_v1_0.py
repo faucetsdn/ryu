@@ -29,6 +29,8 @@ OFP_SSL_PORT = 6633
 OFP_ETH_ALEN = 6
 OFP_ETH_ALEN_STR = str(OFP_ETH_ALEN)
 
+OFP_NO_BUFFER = 0xffffffff
+
 # enum ofp_port
 OFPP_MAX = 0xff00
 OFPP_IN_PORT = 0xfff8   # Send the packet out the input port. This
