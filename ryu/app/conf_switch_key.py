@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-OVSDB_ADDR = 'ovsdb_addr'               # value <method>:<port>[:<ip>]
+OVSDB_ADDR = 'ovsdb_addr'               # value <method>:<ip>[:<port>]
 OVS_TUNNEL_ADDR = 'ovs_tunnel_addr'     # ip address of tunnel
