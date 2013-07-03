@@ -632,8 +632,8 @@ class Switches(app_manager.RyuApp):
     @staticmethod
     def _drop_packet(msg):
         buffer_id = msg.buffer_id
-        if buffer_id == 0xffffffff:
-            return  # TODO:use constant instead of -1
+        if buffer_id == msg.datapath.ofproto.OFP_NO_BUFFER:
+            return
 
         dp = msg.datapath
         # TODO:XXX

@@ -74,7 +74,7 @@ class SimpleIsolation(app_manager.RyuApp):
             rule=rule, cookie=0, command=datapath.ofproto.OFPFC_ADD,
             idle_timeout=0, hard_timeout=0,
             priority=ofproto.OFP_DEFAULT_PRIORITY,
-            buffer_id=0xffffffff, out_port=ofproto.OFPP_NONE,
+            buffer_id=ofproto.OFP_NO_BUFFER, out_port=ofproto.OFPP_NONE,
             flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
 
         datapath.send_packet_out(msg.buffer_id, msg.in_port, actions)

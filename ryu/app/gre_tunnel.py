@@ -958,5 +958,5 @@ class GRETunnel(app_manager.RyuApp):
         # for debug
         msg = ev.msg
         self.logger.debug('packet in ev %s msg %s', ev, ev.msg)
-        if msg.buffer_id != 0xffffffff:  # TODO:XXX use constant instead of -1
+        if msg.buffer_id != msg.datapath.ofproto.OFP_NO_BUFFER:
             msg.datapath.send_packet_out(msg.buffer_id, msg.in_port, [])

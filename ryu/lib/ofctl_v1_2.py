@@ -244,7 +244,7 @@ def mod_flow_entry(dp, flow, cmd):
     idle_timeout = int(flow.get('idle_timeout', 0))
     hard_timeout = int(flow.get('hard_timeout', 0))
     priority = int(flow.get('priority', 0))
-    buffer_id = int(flow.get('buffer_id', 0xffffffff))
+    buffer_id = int(flow.get('buffer_id', dp.ofproto.OFP_NO_BUFFER))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
     out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
     flags = int(flow.get('flags', 0))
