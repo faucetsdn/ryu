@@ -57,8 +57,8 @@ class RyuApp(object):
     def __init__(self, *_args, **_kwargs):
         super(RyuApp, self).__init__()
         self.name = self.__class__.__name__
-        self.event_handlers = {}
-        self.observers = {}
+        self.event_handlers = {}        # ev_cls -> handlers:list
+        self.observers = {}     # ev_cls -> observer-name -> states:set
         self.threads = []
         self.events = hub.Queue(128)
         self.replies = hub.Queue()
@@ -71,11 +71,17 @@ class RyuApp(object):
         self.event_handlers[ev_cls].append(handler)
 
     def register_observer(self, ev_cls, name, states=None):
-        states = states or []
-        self.observers.setdefault(ev_cls, {})[name] = states
+        states = states or set()
+        ev_cls_observers = self.observers.setdefault(ev_cls, {})
+        ev_cls_observers.setdefault(name, set()).update(states)
 
-    def get_handlers(self, ev):
-        return self.event_handlers.get(ev.__class__, [])
+    def get_handlers(self, ev, state=None):
+        handlers = self.event_handlers.get(ev.__class__, [])
+        if state is None:
+            return handlers
+
+        return [handler for handler in handlers
+                if not handler.dispatchers or state in handler.dispatchers]
 
     def get_observers(self, ev, state):
         observers = []
@@ -98,28 +104,28 @@ class RyuApp(object):
 
     def _event_loop(self):
         while True:
-            ev = self.events.get()
-            handlers = self.get_handlers(ev)
+            ev, state = self.events.get()
+            handlers = self.get_handlers(ev, state)
             for handler in handlers:
                 handler(ev)
 
-    def _send_event(self, ev):
-        self.events.put(ev)
+    def _send_event(self, ev, state):
+        self.events.put((ev, state))
 
-    def send_event(self, name, ev):
+    def send_event(self, name, ev, state=None):
         if name in SERVICE_BRICKS:
             if isinstance(ev, EventRequestBase):
                 ev.src = self.name
             LOG.debug("EVENT %s->%s %s" %
                       (self.name, name, ev.__class__.__name__))
-            SERVICE_BRICKS[name]._send_event(ev)
+            SERVICE_BRICKS[name]._send_event(ev, state)
         else:
             LOG.debug("EVENT LOST %s->%s %s" %
                       (self.name, name, ev.__class__.__name__))
 
     def send_event_to_observers(self, ev, state=None):
         for observer in self.get_observers(ev, state):
-            self.send_event(observer, ev)
+            self.send_event(observer, ev, state)
 
     def reply_to_request(self, req, rep):
         rep.dst = req.src
