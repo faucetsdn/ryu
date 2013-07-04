@@ -24,13 +24,13 @@ If you prefer to install Ryu from the source code::
    % cd ryu; python ./setup.py install
 
 If you want to use Ryu with `OpenStack <http://openstack.org/>`_,
-please refer `detailed documents <http://osrg.github.com/ryu/doc/using_with_openstack.html>`_.
+please refer `detailed documents <http://ryu.readthedocs.org/en/latest/using_with_openstack.html>`_.
 You can create tens of thousands of isolated virtual networks without
 using VLAN.  The Ryu application is included in OpenStack mainline as
 of Essex release.
 
 If you want to write your Ryu application, have a look at
-`Writing ryu application <http://osrg.github.com/ryu/doc/writing_ryu_app.html>`_ document.
+`Writing ryu application <http://ryu.readthedocs.org/en/latest/writing_ryu_app.html>`_ document.
 After writing your application, just type::
 
    % ryu-manager yourapp.py
@@ -38,7 +38,7 @@ After writing your application, just type::
 
 Support
 =======
-Ryu Official site is `<http://osrg.github.com/ryu/>`_.
+Ryu Official site is `<http://osrg.github.io/ryu/>`_.
 
 If you have any
 questions, suggestions, and patches, the mailing list is available at
