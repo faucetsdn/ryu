@@ -1,11 +1,10 @@
 include LICENSE
 include MANIFEST.in
 include *.rst
-recursive-include *.xsd
-graft contrib
+recursive-include ryu *.xsd
 graft doc
 graft etc
-recursive-exclude doc/build/*/ *
+recursive-exclude doc/build *
 global-exclude *~
 global-exclude *.pyc
 global-exclude .gitignore
