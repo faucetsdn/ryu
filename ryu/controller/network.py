@@ -78,14 +78,15 @@ class Networks(dict):
 
     def remove_network(self, network_id):
         try:
-            network = self[network_id]
+            ports = self[network_id]
         except KeyError:
             raise NetworkNotFound(network_id=network_id)
 
-        for (dpid, port_no) in network:
-            self.send_event(EventNetworkPort(network_id, dpid, port_no, False))
-        self.send_event(EventNetworkDel(network_id))
-        del self[network_id]
+        while ports:
+            (dpid, port_no) = ports.pop()
+            self._remove_event(network_id, dpid, port_no)
+        if self.pop(network_id, None) is not None:
+            self.send_event(EventNetworkDel(network_id))
 
     def list_ports(self, network_id):
         try:
@@ -106,11 +107,14 @@ class Networks(dict):
     #     self.add_raw(network_id, dpid, port_no)
     #     self.add_event(network_id, dpid, port_no)
 
+    def _remove_event(self, network_id, dpid, port_no):
+        self.send_event(EventNetworkPort(network_id, dpid, port_no, False))
+
     def remove_raw(self, network_id, dpid, port_no):
         ports = self[network_id]
         if (dpid, port_no) in ports:
             ports.remove((dpid, port_no))
-            self.send_event(EventNetworkPort(network_id, dpid, port_no, False))
+            self._remove_event(network_id, dpid, port_no)
 
     def remove(self, network_id, dpid, port_no):
         try:
