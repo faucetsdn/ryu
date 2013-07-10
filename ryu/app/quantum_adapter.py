@@ -50,12 +50,12 @@ CONF = cfg.CONF
 
 def _get_auth_token(logger):
     httpclient = q_client.HTTPClient(
-        username=CONF.quantum_admin_username,
-        tenant_name=CONF.quantum_admin_tenant_name,
-        password=CONF.quantum_admin_password,
-        auth_url=CONF.quantum_admin_auth_url,
-        timeout=CONF.quantum_url_timeout,
-        auth_strategy=CONF.quantum_auth_strategy)
+        username=CONF.neutron_admin_username,
+        tenant_name=CONF.neutron_admin_tenant_name,
+        password=CONF.neutron_admin_password,
+        auth_url=CONF.neutron_admin_auth_url,
+        timeout=CONF.neutron_url_timeout,
+        auth_strategy=CONF.neutron_auth_strategy)
     try:
         httpclient.authenticate()
     except (q_exc.Unauthorized, q_exc.Forbidden, q_exc.EndpointNotFound) as e:
@@ -68,12 +68,12 @@ def _get_auth_token(logger):
 def _get_quantum_client(token):
     if token:
         my_client = q_clientv2.Client(
-            endpoint_url=CONF.quantum_url,
-            token=token, timeout=CONF.quantum_url_timeout)
+            endpoint_url=CONF.neutron_url,
+            token=token, timeout=CONF.neutron_url_timeout)
     else:
         my_client = q_clientv2.Client(
-            endpoint_url=CONF.quantum_url,
-            auth_strategy=None, timeout=CONF.quantum_url_timeout)
+            endpoint_url=CONF.neutron_url,
+            auth_strategy=None, timeout=CONF.neutron_url_timeout)
     return my_client
 
 
@@ -133,7 +133,7 @@ class OVSSwitch(object):
     def __init__(self, dpid, nw, ifaces, logger):
         # TODO: clean up
         token = None
-        if CONF.quantum_auth_strategy:
+        if CONF.neutron_auth_strategy:
             token = _get_auth_token(logger)
         q_api = _get_quantum_client(token)
 
@@ -142,9 +142,9 @@ class OVSSwitch(object):
         self.ifaces = ifaces
         self.logger = logger
         self.q_api = q_api
-        self.ctrl_addr = CONF.quantum_controller_addr
+        self.ctrl_addr = CONF.neutron_controller_addr
         if not self.ctrl_addr:
-            raise ValueError('option quantum_controler_addr must be speicfied')
+            raise ValueError('option neutron_controler_addr must be speicfied')
 
         self.ovsdb_addr = None
         self.tunnel_ip = None
