@@ -245,6 +245,7 @@ class QuantumIfaceClientV1_0(RyuClientBase):
 
 
 QuantumIfaceClient = QuantumIfaceClientV1_0
+NeutronIfaceClient = QuantumIfaceClient   # project rename quantum -> neutron
 
 
 class TopologyClientV1_0(RyuClientBase):
