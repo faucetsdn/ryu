@@ -107,9 +107,10 @@ class Networks(dict):
     #     self.add_event(network_id, dpid, port_no)
 
     def remove_raw(self, network_id, dpid, port_no):
-        if (dpid, port_no) in self[network_id]:
+        ports = self[network_id]
+        if (dpid, port_no) in ports:
+            ports.remove((dpid, port_no))
             self.send_event(EventNetworkPort(network_id, dpid, port_no, False))
-            self[network_id].remove((dpid, port_no))
 
     def remove(self, network_id, dpid, port_no):
         try:
@@ -167,13 +168,12 @@ class DPIDs(dict):
         try:
             # self.dpids[dpid][port_no] can be already deleted by
             # port_deleted()
-            port = self[dpid].get(port_no)
+            port = self[dpid].pop(port_no, None)
             if port and port.network_id and port.mac_address:
                 self.send_event(EventMacAddress(dpid, port_no,
                                                 port.network_id,
                                                 port.mac_address,
                                                 False))
-            self[dpid].pop(port_no, None)
         except KeyError:
             raise PortNotFound(dpid=dpid, port=port_no, network_id=None)
 
