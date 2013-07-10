@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import traceback
 from oslo.config import cfg
 
 try:
@@ -36,6 +37,7 @@ from ryu.controller import (conf_switch,
                             dpset,
                             handler,
                             network)
+from ryu import exception as ryu_exc
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import mac as mac_lib
 from ryu.lib import quantum_ifaces
@@ -189,6 +191,11 @@ class OVSSwitch(object):
                                          self.dpid, port.ofport)
 
     def _update_vif_port(self, port, add=True):
+        # When ovs port is updated, the corresponding network id may or
+        # may not exist because the order between the notification of
+        # ovs port deletion via OVSDB protocol and the notification
+        # network id/port deletion via REST from quantum plugin
+        # isn't deterministic.
         self.logger.debug("_update_vif_port: %s %s", port, add)
         iface_id = port.ext_ids.get('iface-id')
         if iface_id is None:
@@ -200,7 +207,11 @@ class OVSSwitch(object):
             return
 
         if not add:
-            self.network_api.remove_port(network_id, self.dpid, port.ofport)
+            try:
+                self.network_api.remove_port(network_id,
+                                             self.dpid, port.ofport)
+            except (network.NetworkNotFound, ryu_exc.PortNotFound) as e:
+                self.logger.debug('remove_port %s', traceback.format_exc())
             ports = self.ifaces.get_key(iface_id, QuantumIfaces.KEY_PORTS)
             other_ovs_ports = None
             for p in ports:
@@ -232,12 +243,16 @@ class OVSSwitch(object):
             return
 
         # update {network, port, mac}
-        self.network_api.update_network(network_id)
-        self.network_api.update_port(network_id, self.dpid, port.ofport)
-        mac = port.ext_ids.get('attached-mac')
-        if mac:
-            self.network_api.update_mac(network_id, self.dpid, port.ofport,
-                                        mac_lib.haddr_to_bin(mac))
+        try:
+            self.network_api.update_network(network_id)
+            self.network_api.update_port(network_id, self.dpid, port.ofport)
+            mac = port.ext_ids.get('attached-mac')
+            if mac:
+                self.network_api.update_mac(network_id, self.dpid, port.ofport,
+                                            mac_lib.haddr_to_bin(mac))
+        except (network.NetworkNotFound, ryu_exc.PortNotFound) as e:
+            self.logger.debug('update network/port/mac %s',
+                              traceback.format_exc())
 
     def update_port(self, port_no, port_name, add):
         self.logger.debug('update_port port_no %d %s %s', port_no, port_name,
