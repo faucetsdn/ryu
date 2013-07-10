@@ -6633,7 +6633,7 @@ class TestOFPMatch(unittest.TestCase):
         eq_(res._flow.ipv6_nd_target, [])
         eq_(res._flow.ipv6_nd_sll, 0)
         eq_(res._flow.ipv6_nd_tll, 0)
-        eq_(res._flow.mpls_lable, 0)
+        eq_(res._flow.mpls_label, 0)
         eq_(res._flow.mpls_tc, 0)
 
         # flow check

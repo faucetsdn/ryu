@@ -1497,7 +1497,7 @@ class Flow(object):
         self.ipv6_nd_target = []
         self.ipv6_nd_sll = 0
         self.ipv6_nd_tll = 0
-        self.mpls_lable = 0
+        self.mpls_label = 0
         self.mpls_tc = 0
 
 
