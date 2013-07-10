@@ -221,13 +221,14 @@ class PortSet(app_manager.RyuApp):
 
     @handler.set_ev_cls(tunnels.EventTunnelKeyAdd)
     def tunnel_key_add_handler(self, ev):
-        for (dpid, port_no) in self.nw.list_ports(ev.network_id):
-            self._vm_port_mac_handler(dpid, port_no, ev.network_id, True)
+        network_id = ev.network_id
+        for (dpid, port_no) in self.nw.list_ports_noraise(network_id):
+            self._vm_port_mac_handler(dpid, port_no, network_id, True)
 
     @handler.set_ev_cls(tunnels.EventTunnelKeyDel)
     def tunnel_key_del_handler(self, ev):
         network_id = ev.network_id
-        for (dpid, port_no) in self.nw.list_ports(network_id):
+        for (dpid, port_no) in self.nw.list_ports_noraise(network_id):
             self._vm_port_mac_handler(dpid, port_no, network_id, False)
         if self.nw.has_network(network_id):
             self._tunnel_key_del(ev.tunnel_key)
