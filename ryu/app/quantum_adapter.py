@@ -17,9 +17,14 @@
 from oslo.config import cfg
 import logging
 
-from quantumclient import client as q_client
-from quantumclient.common import exceptions as q_exc
-from quantumclient.v2_0 import client as q_clientv2
+try:
+    from neutronclient import client as q_client
+    from neutronclient.common import exceptions as q_exc
+    from neutronclient.v2_0 import client as q_clientv2
+except ImportError:
+    from quantumclient import client as q_client
+    from quantumclient.common import exceptions as q_exc
+    from quantumclient.v2_0 import client as q_clientv2
 
 from ryu.app import conf_switch_key as cs_key
 from ryu.app import rest_nw_id
