@@ -199,7 +199,7 @@ class SimpleVLAN(app_manager.RyuApp):
     def tunnel_key_add_handler(self, ev):
         self.logger.debug('tunnel_add %s', ev)
         tunnel_key = ev.tunnel_key
-        for (dpid, port_no) in self.nw.list_ports(ev.network_id):
+        for (dpid, port_no) in self.nw.list_ports_noraise(ev.network_id):
             dp = self.dpset.get(dpid)
             if dp is None:
                 continue
