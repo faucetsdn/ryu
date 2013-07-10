@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import collections
-import logging
 
 from ryu.base import app_manager
 import ryu.exception as ryu_exc
