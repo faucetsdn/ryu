@@ -231,7 +231,7 @@ class PortSet(app_manager.RyuApp):
         network_id = ev.network_id
         for (dpid, port_no) in self.nw.list_ports(network_id):
             self._vm_port_mac_handler(dpid, port_no, network_id, False)
-        if self.nw.has_networks(network_id):
+        if self.nw.has_network(network_id):
             self._tunnel_key_del(ev.tunnel_key)
 
     @handler.set_ev_cls(tunnels.EventTunnelPort)
