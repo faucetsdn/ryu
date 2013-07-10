@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from ryu.app import (conf_switch_key,
                      rest_nw_id)
 from ryu.base import app_manager
