@@ -25,7 +25,7 @@ LOG = logging.getLogger('test_ofproto_common')
 
 
 class TestOfprotCommon(unittest.TestCase):
-    """ Test case for ofprotp_common
+    """ Test case for ofproto_common
     """
 
     def test_struct_ofp_header(self):

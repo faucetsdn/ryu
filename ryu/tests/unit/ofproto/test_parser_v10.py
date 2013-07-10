@@ -26,7 +26,7 @@ LOG = logging.getLogger('test_ofproto_v10')
 
 
 class TestOFPPhyPort(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPhyPort
+    """ Test case for ofproto_v1_0_parser.OFPPhyPort
     """
 
     # OFP_PHY_PORT_PACK_STR
@@ -94,7 +94,7 @@ class TestOFPPhyPort(unittest.TestCase):
 
 
 class TestOFPMatch(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPMatch
+    """ Test case for ofproto_v1_0_parser.OFPMatch
     """
 
     # OFP_MATCH_PACK_STR
@@ -220,7 +220,7 @@ class TestOFPMatch(unittest.TestCase):
 
 
 class TestOFPActionHeader(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionHeader
+    """ Test case for ofproto_v1_0_parser.OFPActionHeader
     """
 
     # OFP_ACTION_HEADER_PACK_STR
@@ -257,7 +257,7 @@ class TestOFPActionHeader(unittest.TestCase):
 
 
 class TestOFPActionOutput(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionOutput
+    """ Test case for ofproto_v1_0_parser.OFPActionOutput
     """
 
     # OFP_ACTION_OUTPUT_PACK_STR
@@ -326,7 +326,7 @@ class TestOFPActionOutput(unittest.TestCase):
 
 
 class TestOFPActionVlanVid(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionVlanVid
+    """ Test case for ofproto_v1_0_parser.OFPActionVlanVid
     """
 
     # OFP_ACTION_VLAN_VID_PACK_STR
@@ -392,7 +392,7 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
 
 class TestOFPActionVlanPcp(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionVlanPcp
+    """ Test case for ofproto_v1_0_parser.OFPActionVlanPcp
     """
 
     # OFP_ACTION_VLAN_PCP_PACK_STR
@@ -457,7 +457,7 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
 
 class TestOFPActionStripVlan(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionStripVlan
+    """ Test case for ofproto_v1_0_parser.OFPActionStripVlan
     """
 
     # OFP_ACTION_HEADER_PACK_STR
@@ -506,7 +506,7 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
 
 class TestOFPActionSetDlSrc(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetDlSrc
+    """ Test case for ofproto_v1_0_parser.OFPActionSetDlSrc
     """
 
     # OFP_ACTION_DL_ADDR_PACK_STR
@@ -580,7 +580,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
 
 class TestOFPActionSetDlDst(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetDlDst
+    """ Test case for ofproto_v1_0_parser.OFPActionSetDlDst
     """
 
     # OFP_ACTION_DL_ADDR_PACK_STR
@@ -654,7 +654,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
 
 class TestOFPActionSetNwSrc(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetNwSrc
+    """ Test case for ofproto_v1_0_parser.OFPActionSetNwSrc
     """
 
     # OFP_ACTION_NW_ADDR_PACK_STR
@@ -725,7 +725,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
 
 class TestOFPActionSetNwDst(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetNwDst
+    """ Test case for ofproto_v1_0_parser.OFPActionSetNwDst
     """
 
     # OFP_ACTION_NW_ADDR_PACK_STR
@@ -796,7 +796,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
 
 class TestOFPActionSetNwTos(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetNwTos
+    """ Test case for ofproto_v1_0_parser.OFPActionSetNwTos
     """
 
     # OFP_ACTION_NW_TOS_PACK_STR
@@ -861,7 +861,7 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
 
 class TestOFPActionSetTpSrc(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetTpSrc
+    """ Test case for ofproto_v1_0_parser.OFPActionSetTpSrc
     """
 
     # OFP_ACTION_TP_PORT_PACK_STR
@@ -937,7 +937,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
 
 class TestOFPActionSetTpDst(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetTpDst
+    """ Test case for ofproto_v1_0_parser.OFPActionSetTpDst
     """
 
     # OFP_ACTION_TP_PORT_PACK_STR
@@ -1013,7 +1013,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
 
 class TestOFPActionEnqueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionEnqueue
+    """ Test case for ofproto_v1_0_parser.OFPActionEnqueue
     """
 
     # OFP_ACTION_ENQUEUE_PACK_STR
@@ -1086,7 +1086,7 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
 
 class TestNXActionResubmit(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionResubmit
+    """ Test case for ofproto_v1_0_parser.NXActionResubmit
     """
 
     # NX_ACTION_RESUBMIT_PACK_STR
@@ -1142,7 +1142,7 @@ class TestNXActionResubmit(unittest.TestCase):
 
 
 class TestNXActionResubmitTable(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionResubmitTable
+    """ Test case for ofproto_v1_0_parser.NXActionResubmitTable
     """
 
     # NX_ACTION_RESUBMIT_PACK_STR
@@ -1199,7 +1199,7 @@ class TestNXActionResubmitTable(unittest.TestCase):
 
 
 class TestNXActionSetTunnel(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionSetTunnel
+    """ Test case for ofproto_v1_0_parser.NXActionSetTunnel
     """
 
     # NX_ACTION_SET_TUNNEL_PACK_STR
@@ -1252,7 +1252,7 @@ class TestNXActionSetTunnel(unittest.TestCase):
 
 
 class TestNXActionSetQueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionSetQueue
+    """ Test case for ofproto_v1_0_parser.NXActionSetQueue
     """
 
     # NX_ACTION_SET_QUEUE_PACK_STR
@@ -1305,7 +1305,7 @@ class TestNXActionSetQueue(unittest.TestCase):
 
 
 class TestNXActionPopQueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionPopQueue
+    """ Test case for ofproto_v1_0_parser.NXActionPopQueue
     """
 
     # NX_ACTION_POP_QUEUE_PACK_STR
@@ -1357,7 +1357,7 @@ class TestNXActionPopQueue(unittest.TestCase):
 
 
 class TestNXActionRegMove(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionRegMove
+    """ Test case for ofproto_v1_0_parser.NXActionRegMove
     """
 
     # NX_ACTION_REG_MOVE_PACK_STR
@@ -1433,7 +1433,7 @@ class TestNXActionRegMove(unittest.TestCase):
 
 
 class TestNXActionRegLoad(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionRegLoad
+    """ Test case for ofproto_v1_0_parser.NXActionRegLoad
     """
 
     # NX_ACTION_REG_LOAD_PACK_STR
@@ -1498,7 +1498,7 @@ class TestNXActionRegLoad(unittest.TestCase):
 
 
 class TestNXActionSetTunnel64(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionSetTunnel64
+    """ Test case for ofproto_v1_0_parser.NXActionSetTunnel64
     """
 
     # NX_ACTION_SET_TUNNEL64_PACK_STR
@@ -1552,7 +1552,7 @@ class TestNXActionSetTunnel64(unittest.TestCase):
 
 
 class TestNXActionMultipath(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionMultipath
+    """ Test case for ofproto_v1_0_parser.NXActionMultipath
     """
 
     # NX_ACTION_MULTIPATH_PACK_STR
@@ -1641,7 +1641,7 @@ class TestNXActionMultipath(unittest.TestCase):
 
 
 class TestNXActionBundle(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionBundle
+    """ Test case for ofproto_v1_0_parser.NXActionBundle
     """
 
     # NX_ACTION_BUNDLE_PACK_STR
@@ -1759,7 +1759,7 @@ class TestNXActionBundle(unittest.TestCase):
 
 
 class TestNXActionBundleLoad(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionBundleLoad
+    """ Test case for ofproto_v1_0_parser.NXActionBundleLoad
     """
 
     # NX_ACTION_BUNDLE_PACK_STR
@@ -1877,7 +1877,7 @@ class TestNXActionBundleLoad(unittest.TestCase):
 
 
 class TestNXActionAutopath(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionAutopath
+    """ Test case for ofproto_v1_0_parser.NXActionAutopath
     """
 
     # NX_ACTION_AUTOPATH_PACK_STR
@@ -1948,7 +1948,7 @@ class TestNXActionAutopath(unittest.TestCase):
 
 
 class TestNXActionOutputReg(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionOutputReg
+    """ Test case for ofproto_v1_0_parser.NXActionOutputReg
     """
 
     # NX_ACTION_OUTPUT_REG_PACK_STR
@@ -2019,7 +2019,7 @@ class TestNXActionOutputReg(unittest.TestCase):
 
 
 class TestNXActionExit(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionExit
+    """ Test case for ofproto_v1_0_parser.NXActionExit
     """
 
     # NX_ACTION_HEADER_PACK_STR
@@ -2071,7 +2071,7 @@ class TestNXActionExit(unittest.TestCase):
 
 
 class TestOFPDescStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPDescStats
+    """ Test case for ofproto_v1_0_parser.OFPDescStats
     """
 
     # OFP_DESC_STATS_PACK_STR
@@ -2114,7 +2114,7 @@ class TestOFPDescStats(unittest.TestCase):
 
 
 class TestOFPFlowStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowStats
+    """ Test case for ofproto_v1_0_parser.OFPFlowStats
     """
 
     # OFP_FLOW_STATS_0_PACK_STR
@@ -2230,7 +2230,7 @@ class TestOFPFlowStats(unittest.TestCase):
 
 
 class TestOFPAggregateStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPAggregateStats
+    """ Test case for ofproto_v1_0_parser.OFPAggregateStats
     """
 
     # OFP_AGGREGATE_STATS_REPLY_PACK_STR
@@ -2272,7 +2272,7 @@ class TestOFPAggregateStats(unittest.TestCase):
 
 
 class TestOFPTableStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPTableStats
+    """ Test case for ofproto_v1_0_parser.OFPTableStats
     """
 
     # OFP_TABLE_STATS_PACK_STR
@@ -2334,7 +2334,7 @@ class TestOFPTableStats(unittest.TestCase):
 
 
 class TestOFPPortStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStats
+    """ Test case for ofproto_v1_0_parser.OFPPortStats
     """
 
     # OFP_PORT_STATS_PACK_STR
@@ -2438,7 +2438,7 @@ class TestOFPPortStats(unittest.TestCase):
 
 
 class TestOFPQueueStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueStats
+    """ Test case for ofproto_v1_0_parser.OFPQueueStats
     """
 
     # OFP_QUEUE_STATS_PACK_STR
@@ -2490,7 +2490,7 @@ class TestOFPQueueStats(unittest.TestCase):
 
 
 class TestOFPVendorStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendorStats
+    """ Test case for ofproto_v1_0_parser.OFPVendorStats
     """
 
     specific_data = 'specific_data'
@@ -2514,7 +2514,7 @@ class TestOFPVendorStats(unittest.TestCase):
 
 
 class TestOFPQueuePropNone(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueuePropNone
+    """ Test case for ofproto_v1_0_parser.OFPQueuePropNone
     """
 
     # OFP_QUEUE_PROP_HEADER_PACK_STR
@@ -2551,7 +2551,7 @@ class TestOFPQueuePropNone(unittest.TestCase):
 
 
 class TestOFPQueuePropMinRate(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueuePropMinRate
+    """ Test case for ofproto_v1_0_parser.OFPQueuePropMinRate
     """
 
     # OFP_QUEUE_PROP_MIN_RATE_PACK_STR
@@ -2587,7 +2587,7 @@ class TestOFPQueuePropMinRate(unittest.TestCase):
 
 
 class TestOFPPacketQueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPacketQueue
+    """ Test case for ofproto_v1_0_parser.OFPPacketQueue
     """
 
     # OFP_PACKET_QUEUE_PQCK_STR
@@ -2653,7 +2653,7 @@ class TestOFPPacketQueue(unittest.TestCase):
 
 
 class TestOFPHello(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPHello
+    """ Test case for ofproto_v1_0_parser.OFPHello
     """
 
     def setUp(self):
@@ -2699,7 +2699,7 @@ class TestOFPHello(unittest.TestCase):
 
 
 class TestOFPErrorMsg(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPErrorMsg
+    """ Test case for ofproto_v1_0_parser.OFPErrorMsg
     """
 
     def setUp(self):
@@ -2780,7 +2780,7 @@ class TestOFPErrorMsg(unittest.TestCase):
 
 
 class TestOFPEchoRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPEchoRequest
+    """ Test case for ofproto_v1_0_parser.OFPEchoRequest
     """
 
     def setUp(self):
@@ -2848,7 +2848,7 @@ class TestOFPEchoRequest(unittest.TestCase):
 
 
 class TestOFPEchoReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPEchoReply
+    """ Test case for ofproto_v1_0_parser.OFPEchoReply
     """
 
     def setUp(self):
@@ -2916,7 +2916,7 @@ class TestOFPEchoReply(unittest.TestCase):
 
 
 class TestOFPVendor(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendor
+    """ Test case for ofproto_v1_0_parser.OFPVendor
     """
 
     def setUp(self):
@@ -2993,7 +2993,7 @@ class TestOFPVendor(unittest.TestCase):
 
 #class TestNXTRequest(unittest.TestCase):
 class TestNiciraHeader(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NiciraHeader
+    """ Test case for ofproto_v1_0_parser.NiciraHeader
     """
 
     def setUp(self):
@@ -3046,7 +3046,7 @@ class TestNiciraHeader(unittest.TestCase):
 
 
 class TestNXTSetFlowFormat(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTSetFlowFormat
+    """ Test case for ofproto_v1_0_parser.NXTSetFlowFormat
     """
 
     def setUp(self):
@@ -3096,7 +3096,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
 
 
 class TestNXTFlowMod(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTFlowMod
+    """ Test case for ofproto_v1_0_parser.NXTFlowMod
     """
 
     # NX_FLOW_MOD_PACK_STR
@@ -3241,7 +3241,7 @@ class TestNXTFlowMod(unittest.TestCase):
 
 
 class TestNXTRoleRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTRoleRequest
+    """ Test case for ofproto_v1_0_parser.NXTRoleRequest
     """
 
     # NX_ROLE_PACK_STR
@@ -3292,7 +3292,7 @@ class TestNXTRoleRequest(unittest.TestCase):
 
 
 class TestNXTFlowModTableId(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTFlowModTableId
+    """ Test case for ofproto_v1_0_parser.NXTFlowModTableId
     """
 
     # NX_FLOW_MOD_TABLE_ID_PACK_STR
@@ -3343,7 +3343,7 @@ class TestNXTFlowModTableId(unittest.TestCase):
 
 
 class TestOFPSwitchFeatures(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPSwitchFeatures
+    """ Test case for ofproto_v1_0_parser.OFPSwitchFeatures
     """
 
     class Datapath(object):
@@ -3448,7 +3448,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
 
 
 class TestOFPPortStatus(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStatus
+    """ Test case for ofproto_v1_0_parser.OFPPortStatus
     """
 
     class Datapath(object):
@@ -3536,7 +3536,7 @@ class TestOFPPortStatus(unittest.TestCase):
 
 
 class TestOFPPacketIn(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPacketIn
+    """ Test case for ofproto_v1_0_parser.OFPPacketIn
     """
 
     class Datapath(object):
@@ -3616,7 +3616,7 @@ class TestOFPPacketIn(unittest.TestCase):
 
 
 class TestOFPGetConfigReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPGetConfigReply
+    """ Test case for ofproto_v1_0_parser.OFPGetConfigReply
     """
 
     class Datapath(object):
@@ -3673,7 +3673,7 @@ class TestOFPGetConfigReply(unittest.TestCase):
 
 
 class TestOFPBarrierReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPBarrierReply
+    """ Test case for ofproto_v1_0_parser.OFPBarrierReply
     """
 
     class Datapath(object):
@@ -3721,7 +3721,7 @@ class TestOFPBarrierReply(unittest.TestCase):
 
 
 class TestOFPFlowRemoved(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowRemoved
+    """ Test case for ofproto_v1_0_parser.OFPFlowRemoved
     """
 
     class Datapath(object):
@@ -3858,7 +3858,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
 
 
 class TestOFPQueueGetConfigReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueGetConfigReply
+    """ Test case for ofproto_v1_0_parser.OFPQueueGetConfigReply
     """
 
     class Datapath(object):
@@ -3933,7 +3933,7 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
 
 
 class TestOFPDescStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPDescStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPDescStatsReply
     """
 
     class Datapath(object):
@@ -4016,7 +4016,7 @@ class TestOFPDescStatsReply(unittest.TestCase):
 
 
 class TestOFPFlowStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPFlowStatsReply
     """
 
     class Datapath(object):
@@ -4166,7 +4166,7 @@ class TestOFPFlowStatsReply(unittest.TestCase):
 
 
 class TestOFPAggregateStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPAggregateStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPAggregateStatsReply
     """
 
     class Datapath(object):
@@ -4246,7 +4246,7 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
 
 
 class TestOFPTableStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPTableStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPTableStatsReply
     """
 
     class Datapath(object):
@@ -4339,7 +4339,7 @@ class TestOFPTableStatsReply(unittest.TestCase):
 
 
 class TestOFPPortStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPPortStatsReply
     """
 
     class Datapath(object):
@@ -4462,7 +4462,7 @@ class TestOFPPortStatsReply(unittest.TestCase):
 
 
 class TestOFPQueueStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPQueueStatsReply
     """
 
     class Datapath(object):
@@ -4549,7 +4549,7 @@ class TestOFPQueueStatsReply(unittest.TestCase):
 
 
 class TestOFPVendorStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendorStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPVendorStatsReply
     """
 
     class Datapath(object):
@@ -4617,7 +4617,7 @@ class TestOFPVendorStatsReply(unittest.TestCase):
 
 
 class TestOFPFeaturesRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFeaturesRequest
+    """ Test case for ofproto_v1_0_parser.OFPFeaturesRequest
     """
 
     class Datapath(object):
@@ -4656,7 +4656,7 @@ class TestOFPFeaturesRequest(unittest.TestCase):
 
 
 class TestOFPGetConfigRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPGetConfigRequest
+    """ Test case for ofproto_v1_0_parser.OFPGetConfigRequest
     """
 
     class Datapath(object):
@@ -4695,7 +4695,7 @@ class TestOFPGetConfigRequest(unittest.TestCase):
 
 
 class TestOFPSetConfig(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPSetConfig
+    """ Test case for ofproto_v1_0_parser.OFPSetConfig
     """
 
     class Datapath(object):
@@ -4746,7 +4746,7 @@ class TestOFPSetConfig(unittest.TestCase):
 
 
 class TestOFPPacketOut(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPacketOut
+    """ Test case for ofproto_v1_0_parser.OFPPacketOut
     """
 
     port = 0x2ae0
@@ -4836,7 +4836,7 @@ class TestOFPPacketOut(unittest.TestCase):
 
 
 class TestOFPFlowMod(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowMod
+    """ Test case for ofproto_v1_0_parser.OFPFlowMod
     """
 
     # OFP_FLOW_MOD_PACK_STR0
@@ -4991,7 +4991,7 @@ class TestOFPFlowMod(unittest.TestCase):
 
 
 class TestOFPBarrierRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPBarrierRequest
+    """ Test case for ofproto_v1_0_parser.OFPBarrierRequest
     """
 
     class Datapath(object):
@@ -5030,7 +5030,7 @@ class TestOFPBarrierRequest(unittest.TestCase):
 
 
 class TestOFPQueueGetConfigRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueGetConfigRequest
+    """ Test case for ofproto_v1_0_parser.OFPQueueGetConfigRequest
     """
 
     class Datapath(object):
@@ -5078,7 +5078,7 @@ class TestOFPQueueGetConfigRequest(unittest.TestCase):
 
 
 class TestOFPDescStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPDescStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPDescStatsRequest
     """
 
     class Datapath(object):
@@ -5128,7 +5128,7 @@ class TestOFPDescStatsRequest(unittest.TestCase):
 
 
 class TestOFPFlowStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPFlowStatsRequest
     """
 
     class Datapath(object):
@@ -5249,7 +5249,7 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
 
 
 class TestOFPAggregateStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPAggregateStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPAggregateStatsRequest
     """
 
     class Datapath(object):
@@ -5370,7 +5370,7 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
 
 
 class TestOFPTableStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPTableStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPTableStatsRequest
     """
 
     class Datapath(object):
@@ -5420,7 +5420,7 @@ class TestOFPTableStatsRequest(unittest.TestCase):
 
 
 class TestOFPPortStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPPortStatsRequest
     """
 
     class Datapath(object):
@@ -5481,7 +5481,7 @@ class TestOFPPortStatsRequest(unittest.TestCase):
 
 
 class TestOFPQueueStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPQueueStatsRequest
     """
 
     class Datapath(object):
@@ -5546,7 +5546,7 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
 
 
 class TestOFPVendorStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendorStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPVendorStatsRequest
     """
 
     class Datapath(object):

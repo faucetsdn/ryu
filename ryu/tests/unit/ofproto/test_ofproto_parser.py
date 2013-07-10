@@ -135,7 +135,7 @@ class TestOfproto_Parser(unittest.TestCase):
 
 
 class TestMsgBase(unittest.TestCase):
-    """ Test case for ofprotp_parser.MsgBase
+    """ Test case for ofproto_parser.MsgBase
     """
 
     def setUp(self):
