@@ -368,7 +368,12 @@ class Network(app_manager.RyuApp):
         old_mac_address = self._get_old_mac(network_id, dpid, port_no)
 
         self.dpids.remove_port(dpid, port_no)
-        self.networks.remove(network_id, dpid, port_no)
+        try:
+            self.networks.remove(network_id, dpid, port_no)
+        except NetworkNotFound:
+            # port deletion can be called after network deletion
+            # due to Openstack auto deletion port.(dhcp/router port)
+            pass
         if old_mac_address is not None:
             self.mac_addresses.remove_port(network_id, dpid, port_no,
                                            old_mac_address)
