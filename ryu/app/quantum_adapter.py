@@ -20,10 +20,14 @@ import logging
 try:
     from neutronclient import client as q_client
     from neutronclient.common import exceptions as q_exc
+    from neutronclient.common.exceptions import (NeutronClientException as
+                                                 client_exc)
     from neutronclient.v2_0 import client as q_clientv2
 except ImportError:
     from quantumclient import client as q_client
     from quantumclient.common import exceptions as q_exc
+    from quantumclient.common.exceptions import (QuantumClientException as
+                                                 client_exc)
     from quantumclient.v2_0 import client as q_clientv2
 
 from ryu.app import conf_switch_key as cs_key
@@ -223,7 +227,7 @@ class OVSSwitch(object):
 
             try:
                 self.q_api.update_port(port.ext_ids['iface-id'], body)
-            except (q_exc.ConnectionFailed, q_exc.QuantumClientException) as e:
+            except (q_exc.ConnectionFailed, client_exc) as e:
                 self.logger.error("quantum update port failed: %s", e)
                 # TODO: When authentication failure occurred,
                 # it should get auth token again
