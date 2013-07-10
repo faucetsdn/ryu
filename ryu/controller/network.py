@@ -321,6 +321,12 @@ class Network(app_manager.RyuApp):
     def list_ports(self, network_id):
         return self.networks.list_ports(network_id)
 
+    def list_ports_noraise(self, network_id):
+        try:
+            return self.list_ports(network_id)
+        except NetworkNotFound:
+            return []
+
     def _update_port(self, network_id, dpid, port, port_may_exist):
         def _known_nw_id(nw_id):
             return nw_id is not None and nw_id != self.nw_id_unknown
