@@ -2071,6 +2071,26 @@ class OFPPortMod(MsgBase):
                       self.mask, self.advertise)
 
 
+@_set_msg_type(ofproto_v1_3.OFPT_METER_MOD)
+class OFPMeterMod(MsgBase):
+    def __init__(self, datapath, command, flags, meter_id, bands):
+        super(OFPMeterMod, self).__init__(datapath)
+        self.command = command
+        self.flags = flags
+        self.meter_id = meter_id
+        self.bands = bands
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto_v1_3.OFP_METER_MOD_PACK_STR, self.buf,
+                      ofproto_v1_3.OFP_HEADER_SIZE,
+                      self.command, self.flags, self.meter_id)
+
+        offset = ofproto_v1_3.OFP_METER_MOD_SIZE
+        for b in self.bands:
+            b.serialize(self.buf, offset)
+            offset += b.len
+
+
 @_set_msg_type(ofproto_v1_3.OFPT_TABLE_MOD)
 class OFPTableMod(MsgBase):
     def __init__(self, datapath, table_id, config):
@@ -2602,18 +2622,81 @@ class OFPMeterStatsReply(OFPMultipartReply):
         super(OFPMeterStatsReply, self).__init__(datapath, **kwargs)
 
 
-class OFPMeterBandHeader(StringifyMixin):
-    def __init__(self, type_, len_, rate, burst_size):
+class OFPMeterBand(StringifyMixin):
+    def __init__(self, type_, len_):
+        super(OFPMeterBand, self).__init__()
         self.type = type_
         self.len = len_
-        self.rate = rate
-        self.burst_size = burst_size
+
+
+class OFPMeterBandHeader(OFPMeterBand):
+    @staticmethod
+    def register_meter_band_type(type_, len_):
+        def _register_meter_band_type(cls):
+            cls.cls_meter_band_type = type_
+            cls.cls_meter_band_len = len_
+            return cls
+        return _register_meter_band_type
+
+    def __init__(self):
+        cls = self.__class__
+        super(OFPMeterBandHeader, self).__init__(cls.cls_meter_band_type,
+                                                 cls.cls_meter_band_len)
 
     @classmethod
     def parser(cls, buf, offset):
         band_header = struct.unpack_from(
             ofproto_v1_3.OFP_METER_BAND_HEADER_PACK_STR, buf, offset)
         return cls(*band_header)
+
+
+@OFPMeterBandHeader.register_meter_band_type(
+    ofproto_v1_3.OFPMBT_DROP, ofproto_v1_3.OFP_METER_BAND_DROP_SIZE)
+class OFPMeterBandDrop(OFPMeterBandHeader):
+    def __init__(self, rate, burst_size):
+        super(OFPMeterBandDrop, self).__init__()
+        self.rate = rate
+        self.burst_size = burst_size
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_3.OFP_METER_BAND_DROP_PACK_STR, buf, offset,
+                      self.type, self.len, self.rate, self.burst_size)
+
+
+@OFPMeterBandHeader.register_meter_band_type(
+    ofproto_v1_3.OFPMBT_DSCP_REMARK,
+    ofproto_v1_3.OFP_METER_BAND_DSCP_REMARK_SIZE)
+class OFPMeterBandDscpRemark(OFPMeterBandHeader):
+    def __init__(self, rate, burst_size, prec_level):
+        super(OFPMeterBandDscpRemark, self).__init__()
+        self.rate = rate
+        self.burst_size = burst_size
+        self.prec_level = prec_level
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_3.OFP_METER_BAND_DSCP_REMARK_PACK_STR, buf,
+                      offset, self.type, self.len, self.rate, self.burst_size,
+                      self.prec_level)
+
+    # TODO: Add parser method here
+
+
+@OFPMeterBandHeader.register_meter_band_type(
+    ofproto_v1_3.OFPMBT_EXPERIMENTER,
+    ofproto_v1_3.OFP_METER_BAND_EXPERIMENTER_SIZE)
+class OFPMeterBandExperimenter(OFPMeterBandHeader):
+    def __init__(self, rate, burst_size, experimenter):
+        super(OFPMeterBandDscpRemark, self).__init__()
+        self.rate = rate
+        self.burst_size = burst_size
+        self.experimenter = experimenter
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_3.OFP_METER_BAND_EXPERIMENTER_PACK_STR, buf,
+                      offset, self.type, self.len, self.rate, self.burst_size,
+                      self.experimenter)
+
+    # TODO: Add parser method here
 
 
 class OFPMeterConfigStats(StringifyMixin):
@@ -2637,6 +2720,7 @@ class OFPMeterConfigStats(StringifyMixin):
         length = ofproto_v1_3.OFP_METER_CONFIG_SIZE
         while length < meter_config._length:
             band_header = OFPMeterBandHeader.parser(buf, offset)
+            #TODO: Parse all types of MeterBands, not only common header
             meter_config.bands.append(band_header)
             offset += band_header.len
             length += band_header.len
