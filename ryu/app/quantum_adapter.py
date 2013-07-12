@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from oslo.config import cfg
-import logging
 
 try:
     from neutronclient import client as q_client
@@ -35,7 +34,6 @@ from ryu.app import rest_nw_id
 from ryu.base import app_manager
 from ryu.controller import (conf_switch,
                             dpset,
-                            event,
                             handler,
                             network)
 from ryu.lib import dpid as dpid_lib
