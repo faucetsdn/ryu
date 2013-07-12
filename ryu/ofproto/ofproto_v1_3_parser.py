@@ -2630,9 +2630,12 @@ class OFPMeterBand(StringifyMixin):
 
 
 class OFPMeterBandHeader(OFPMeterBand):
+    _METER_BAND = {}
+
     @staticmethod
     def register_meter_band_type(type_, len_):
         def _register_meter_band_type(cls):
+            OFPMeterBandHeader._METER_BAND[type_] = cls
             cls.cls_meter_band_type = type_
             cls.cls_meter_band_len = len_
             return cls
@@ -2645,9 +2648,11 @@ class OFPMeterBandHeader(OFPMeterBand):
 
     @classmethod
     def parser(cls, buf, offset):
-        band_header = struct.unpack_from(
+        type_, len_, _rate, _burst_size = struct.unpack_from(
             ofproto_v1_3.OFP_METER_BAND_HEADER_PACK_STR, buf, offset)
-        return cls(*band_header)
+        cls_ = cls._METER_BAND[type_]
+        assert cls_.cls_meter_band_len == len_
+        return cls_.parser(buf, offset)
 
 
 @OFPMeterBandHeader.register_meter_band_type(
@@ -2661,6 +2666,14 @@ class OFPMeterBandDrop(OFPMeterBandHeader):
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_METER_BAND_DROP_PACK_STR, buf, offset,
                       self.type, self.len, self.rate, self.burst_size)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, rate, burst_size = struct.unpack_from(
+            ofproto_v1_3.OFP_METER_BAND_DROP_PACK_STR, buf, offset)
+        assert cls.cls_meter_band_type == type_
+        assert cls.cls_meter_band_len == len_
+        return cls(rate, burst_size)
 
 
 @OFPMeterBandHeader.register_meter_band_type(
@@ -2678,7 +2691,13 @@ class OFPMeterBandDscpRemark(OFPMeterBandHeader):
                       offset, self.type, self.len, self.rate, self.burst_size,
                       self.prec_level)
 
-    # TODO: Add parser method here
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, rate, burst_size, prec_level = struct.unpack_from(
+            ofproto_v1_3.OFP_METER_BAND_DSCP_REMARK_PACK_STR, buf, offset)
+        assert cls.cls_meter_band_type == type_
+        assert cls.cls_meter_band_len == len_
+        return cls(rate, burst_size, prec_level)
 
 
 @OFPMeterBandHeader.register_meter_band_type(
@@ -2696,7 +2715,13 @@ class OFPMeterBandExperimenter(OFPMeterBandHeader):
                       offset, self.type, self.len, self.rate, self.burst_size,
                       self.experimenter)
 
-    # TODO: Add parser method here
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, rate, burst_size, experimenter = struct.unpack_from(
+            ofproto_v1_3.OFP_METER_BAND_EXPERIMENTER_PACK_STR, buf, offset)
+        assert cls.cls_meter_band_type == type_
+        assert cls.cls_meter_band_len == len_
+        return cls(rate, burst_size, experimenter)
 
 
 class OFPMeterConfigStats(StringifyMixin):
@@ -2719,11 +2744,10 @@ class OFPMeterConfigStats(StringifyMixin):
         meter_config.bands = []
         length = ofproto_v1_3.OFP_METER_CONFIG_SIZE
         while length < meter_config._length:
-            band_header = OFPMeterBandHeader.parser(buf, offset)
-            #TODO: Parse all types of MeterBands, not only common header
-            meter_config.bands.append(band_header)
-            offset += band_header.len
-            length += band_header.len
+            band = OFPMeterBandHeader.parser(buf, offset)
+            meter_config.bands.append(band)
+            offset += band.len
+            length += band.len
 
         return meter_config
 
