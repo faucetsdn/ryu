@@ -87,7 +87,7 @@ class SimpleSwitch(app_manager.RyuApp):
         #Field MTArpTha(header=2147496454,length=10,n_bytes=6,value='\x00\x00\x00\x00\x00\x00')
 
         for o in match.fields:
-            if type(o) is MTInPort:
+            if type(o) is ofproto_v1_2.MTInPort:
                 in_port = o.value
                 break
 
