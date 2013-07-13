@@ -21,7 +21,7 @@ from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
 from ryu.lib.mac import haddr_to_str
 
 
@@ -87,7 +87,7 @@ class SimpleSwitch(app_manager.RyuApp):
         #Field MTArpTha(header=2147496454,length=10,n_bytes=6,value='\x00\x00\x00\x00\x00\x00')
 
         for o in match.fields:
-            if isinstance(o, MTInPort):
+            if isinstance(o, ofproto_v1_2_parser.MTInPort):
                 in_port = o.value
                 break
 
