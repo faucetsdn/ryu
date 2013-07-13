@@ -74,14 +74,27 @@ class SimpleSwitch(app_manager.RyuApp):
         self.mac_to_port.setdefault(dpid, {})
         
         match = msg.match
-        in_port = match._flow.in_port
+        in_port = 0
+        #iterate through fields because WHY IS THIS SO HARD
+        #packet in dpid 20015998343868 from 08:00:27:15:d4:53 to ff:ff:ff:ff:ff:ff log_port 0 phy_port 0
+        #Field MTInPort(header=2147483652,length=8,n_bytes=4,value=2)
+        #Field MTEthType(header=2147486210,length=6,n_bytes=2,value=2054)
+        #Field MTArpOp(header=2147494402,length=6,n_bytes=2,value=1)
+        #Field MTMetadata(header=2147484680,length=12,n_bytes=8,value=18446744073709551615L)
+        #Field MTArpSha(header=2147495942,length=10,n_bytes=6,value="\x08\x00'\x15\xd4S")
+        #Field MTEthDst(header=2147485190,length=10,n_bytes=6,value='\xff\xff\xff\xff\xff\xff')
+        #Field MTArpSpa(header=2147494916,length=8,n_bytes=4,value=167772161)
+        #Field MTArpTha(header=2147496454,length=10,n_bytes=6,value='\x00\x00\x00\x00\x00\x00')
+
+        for o in match.fields:
+            if type(o) is MTInPort:
+                in_port = o.value
+                break
 
         self.logger.info("packet in dpid %s from %s to %s log_port %s phy_port %s",
                          dpid, haddr_to_str(src), haddr_to_str(dst),
                          in_port, match._flow.in_phy_port)
-        #iterate through fields because WHY IS THIS SO HARD
-        for o in match.fields:
-            self.logger.info("Field %s", str(o))
+        
         
         
     
