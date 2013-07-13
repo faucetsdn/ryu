@@ -74,11 +74,17 @@ class SimpleSwitch(app_manager.RyuApp):
         self.mac_to_port.setdefault(dpid, {})
         
         match = msg.match
-        in_port = match.flow.in_port
+        in_port = match._flow.in_port
 
         self.logger.info("packet in dpid %s from %s to %s log_port %s phy_port %s",
                          dpid, haddr_to_str(src), haddr_to_str(dst),
-                         in_port, match.flow.in_phy_port)
+                         in_port, match._flow.in_phy_port)
+        #iterate through fields because WHY IS THIS SO HARD
+        for o in match.fields:
+            self.logger.info("Field %s", str(o))
+        
+        
+    
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
