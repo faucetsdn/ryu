@@ -77,7 +77,7 @@ class SimpleSwitch(app_manager.RyuApp):
         
         match = msg.match
         in_port = 0
-        #iterate through fields because WHY IS THIS SO HARD
+        #iterate through fields - parser should handle this
         #packet in dpid 20015998343868 from 08:00:27:15:d4:53 to ff:ff:ff:ff:ff:ff log_port 0 phy_port 0
         #Field MTInPort(header=2147483652,length=8,n_bytes=4,value=2)
         #Field MTEthType(header=2147486210,length=6,n_bytes=2,value=2054)
