@@ -114,11 +114,11 @@ class SimpleSwitch(app_manager.RyuApp):
 
         # install a flow to avoid packet_in next time
         if out_port != ofproto_v1_2.OFPP_FLOOD:
-            self.add_flow(datapath, in_port, dst, actions)
+            self.add_flow(datapath, in_port, dst, instructions)
 
         out = datapath.ofproto_parser.OFPPacketOut(
             datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
-            instructions=instructions)
+            actions=actions)
         datapath.send_msg(out)
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
