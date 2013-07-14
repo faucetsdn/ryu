@@ -55,12 +55,16 @@ class SimpleSwitch(app_manager.RyuApp):
         match = datapath.ofproto_parser.OFPMatch()
         match.set_in_port(in_port)
         match.set_dl_dst(dst)
-
+        
+        #datapath, cookie, cookie_mask, table_id, command,
+        #         idle_timeout, hard_timeout, priority, buffer_id, out_port,
+        #         out_group, flags, match, instructions)
         mod = datapath.ofproto_parser.OFPFlowMod(
-            datapath=datapath, match=match, cookie=0,
+            datapath=datapath, cookie=0, cookie_mask=0, table_id=0,
             command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
-            priority=0x8000,
-            flags=ofproto.OFPFF_SEND_FLOW_REM, instructions=instructions)
+            priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER,
+            out_port=ofproto_v1_2.OFPP_ANY, out_group=ofproto_v1_2.OFPG_ANY,
+            flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
