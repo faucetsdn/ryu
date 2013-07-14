@@ -40,7 +40,7 @@ class SimpleSwitch(app_manager.RyuApp):
         super(SimpleSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
 
-    def add_flow(self, datapath, table_id, match, instructions):
+    def add_flow(self, datapath, table_id, match, instructions, buffer_id=ofproto_v1_2.OFP_NO_BUFFER):
         ofproto = datapath.ofproto
 
         #wildcards = ofproto_v1_2.OFPFW_ALL
@@ -58,7 +58,7 @@ class SimpleSwitch(app_manager.RyuApp):
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, cookie=0, cookie_mask=0, table_id=table_id,
             command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
-            priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER,
+            priority=0x8000, buffer_id=buffer_id,
             out_port=ofproto_v1_2.OFPP_ANY, out_group=ofproto_v1_2.OFPG_ANY,
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
@@ -111,22 +111,18 @@ class SimpleSwitch(app_manager.RyuApp):
 
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
-        else:
-            out_port = ofproto_v1_2.OFPP_FLOOD
-
-        actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
-
-        # install a flow to avoid packet_in next time
-        if out_port != ofproto_v1_2.OFPP_FLOOD:
+            actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
             match = datapath.ofproto_parser.OFPMatch()
             match.set_dl_dst(dst)
             instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-            self.add_flow(datapath, 1, match, instructions)
-
-        out = datapath.ofproto_parser.OFPPacketOut(
-            datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
-            actions=actions)
-        datapath.send_msg(out)
+            self.add_flow(datapath, 1, match, instructions, buffer_id=msg.buffer_id)
+        else:
+            out_port = ofproto_v1_2.OFPP_FLOOD
+            actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
+            out = datapath.ofproto_parser.OFPPacketOut(
+                datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
+                actions=actions)
+            datapath.send_msg(out)
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
