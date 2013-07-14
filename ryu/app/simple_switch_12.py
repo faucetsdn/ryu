@@ -40,7 +40,7 @@ class SimpleSwitch(app_manager.RyuApp):
         super(SimpleSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
 
-    def add_flow(self, datapath, in_port, dst, instructions):
+    def add_flow(self, datapath, table_id, match, instructions):
         ofproto = datapath.ofproto
 
         #wildcards = ofproto_v1_2.OFPFW_ALL
@@ -52,15 +52,11 @@ class SimpleSwitch(app_manager.RyuApp):
         #    wildcards, in_port, 0, dst,
         #    0, 0, 0, 0, 0, 0, 0, 0, 0)
         
-        match = datapath.ofproto_parser.OFPMatch()
-        match.set_in_port(in_port)
-        match.set_dl_dst(dst)
-        
         #datapath, cookie, cookie_mask, table_id, command,
         #         idle_timeout, hard_timeout, priority, buffer_id, out_port,
         #         out_group, flags, match, instructions)
         mod = datapath.ofproto_parser.OFPFlowMod(
-            datapath=datapath, cookie=0, cookie_mask=0, table_id=0,
+            datapath=datapath, cookie=0, cookie_mask=0, table_id=table_id,
             command=ofproto.OFPFC_ADD, idle_timeout=0, hard_timeout=0,
             priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER,
             out_port=ofproto_v1_2.OFPP_ANY, out_group=ofproto_v1_2.OFPG_ANY,
@@ -99,14 +95,14 @@ class SimpleSwitch(app_manager.RyuApp):
         self.logger.info("packet in dpid %s from %s to %s log_port %s",
                          dpid, haddr_to_str(src), haddr_to_str(dst),
                          in_port)
-    
-    
-
-        # learn the mac address to avoid FLOOD next time.
-        self.mac_to_port[dpid][src] = in_port
         
-        # update on our list of mac addresses
-        print self.mac_to_port[dpid]
+        
+        # do we know the mac?
+        if src not in self.mac_to_port[dpid]:
+            # learn the mac address to avoid FLOOD next time.
+            self.mac_to_port[dpid][src] = in_port
+            # set a flow to table 0 to allow packets through to table 1
+            
 
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
@@ -114,11 +110,14 @@ class SimpleSwitch(app_manager.RyuApp):
             out_port = ofproto_v1_2.OFPP_FLOOD
 
         actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
-        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
 
         # install a flow to avoid packet_in next time
         if out_port != ofproto_v1_2.OFPP_FLOOD:
-            self.add_flow(datapath, in_port, dst, instructions)
+            match = datapath.ofproto_parser.OFPMatch()
+            match.set_in_port(in_port)
+            match.set_dl_dst(dst)
+            instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+            self.add_flow(datapath, 0, match, instructions)
 
         out = datapath.ofproto_parser.OFPPacketOut(
             datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
