@@ -42,8 +42,7 @@ class SPE(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SPE, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        map(lambda ev_cls: self.register_observer(ev_cls, self.name),
-            [dpset.EventDP])
+        app_manager.register_app(self)
 
     def add_flow(self, datapath, table_id, match, instructions, priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER):
         ofproto = datapath.ofproto
@@ -69,7 +68,7 @@ class SPE(app_manager.RyuApp):
         datapath.send_msg(mod)
     
     # taken from gre_tunnel.py
-    @set_ev_handler(dpset.EventDP)
+    @set_ev_cls(dpset.EventDP)
     def dp_handler(self, ev):
         self.logger.info('SPE.dp_handler()')
         self.send_event_to_observers(ev)
