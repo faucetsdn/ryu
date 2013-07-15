@@ -71,7 +71,7 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
     
-    def add_arp_reply_catcher(self, datapath, ipaddr = None, port = None, table_id=0):
+    def add_arp_reply_catcher(self, datapath, ipaddr, port, table_id=0):
         match = datapath.ofproto_parser.OFPMatch()
         match.set_dl_type(ether.ETH_TYPE_ARP)
         match.set_arp_opcode(2)
@@ -96,8 +96,6 @@ class SPE(app_manager.RyuApp):
     
     def init_flows(self, datapath):
         ofproto = datapath.ofproto
-        # send arp replies to controller always
-        self.add_arp_reply_catcher(datapath)
         for port, ipaddr in spe_config.ports.iteritems():
             self.add_arp_reply_catcher(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, table_id=1)
             self.add_arp_request_forwarder(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, table_id=1)
