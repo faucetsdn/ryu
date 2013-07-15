@@ -70,6 +70,7 @@ class SPE(app_manager.RyuApp):
         # send arp replies to controller always
         match = datapath.ofproto_parser.OFPMatch()
         match.set_arp_opcode(2)
+        ofproto = datapath.ofproto
         actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, 1500)]
         instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
         self.add_flow(datapath, 0, match, instructions, priority=0x9000)
