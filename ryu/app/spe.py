@@ -166,7 +166,10 @@ class SPE(app_manager.RyuApp):
             # if ARP reply then drop
             arp_pkt = pkt.next()
             if arp_pkt.opcode == 2:
-                return
+                # check config
+                if ip.ipv4_to_bin(spe_config.ports[in_port]) != arp_pkt.src_ip:
+                    self.logger.info("Dropping spoofed ARP from port %d IP %s (expected IP %s)", in_port, ip.ipv4_to_str(arp_pkt.src_ip), spe_config.ports[in_port])
+                    return
             out_port = ofproto_v1_2.OFPP_FLOOD
             actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
             out = datapath.ofproto_parser.OFPPacketOut(
