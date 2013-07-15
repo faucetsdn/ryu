@@ -103,7 +103,7 @@ class SPE(app_manager.RyuApp):
         self.add_arp_reply_catcher(datapath)
         for port, ipaddr in spe_config.ports.iteritems():
             self.add_arp_reply_catcher(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, accept=True, table_id=1)
-            self.add_arp_request_forwarder(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, accept=True, table_id=1)
+            self.add_arp_request_forwarder(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, table_id=1)
         
         # make a flow to flood ARP packets
         #match = datapath.ofproto_parser.OFPMatch()
