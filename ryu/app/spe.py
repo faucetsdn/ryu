@@ -24,7 +24,7 @@ from ryu.topology import event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import set_ev_handler
-from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
+from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser, ether
 from ryu.lib.mac import haddr_to_str
 
 
@@ -70,6 +70,7 @@ class SPE(app_manager.RyuApp):
     def init_flows(self, datapath):
         # send arp replies to controller always
         match = datapath.ofproto_parser.OFPMatch()
+        match.set_dl_type(ether.ETH_TYPE_ARP)
         match.set_arp_opcode(2)
         ofproto = datapath.ofproto
         actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, 1500)]
