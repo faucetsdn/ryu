@@ -68,7 +68,13 @@ class SPE(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def switch_enter_handler(self, ev):
-        self.logger.info("OFP state change %s", ev.datapath)
+        dp = ev.datapath
+        if ev.state == MAIN_DISPATCHER:
+            self.logger.info("Switch added: %s", dp)
+        elif ev.state == DEAD_DISPATCHER:
+            if dp.id is None:
+                return
+            self.logger.info("Switch added: %s", dp)
     
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
