@@ -21,7 +21,7 @@ from ryu.base import app_manager
 from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.topology import event
-from ryu.controller.handler import MAIN_DISPATCHER
+from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import set_ev_handler
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
