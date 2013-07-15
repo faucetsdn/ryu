@@ -79,17 +79,17 @@ class SPE(app_manager.RyuApp):
             match.set_arp_spa(ip)
         ofproto = datapath.ofproto
         if accept:
-            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
-        else:    
             instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
+        else:    
+            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
         self.add_flow(datapath, table_id, match, instructions, priority=0x8000)
     
     
     def init_flows(self, datapath):
         # send arp replies to controller always
         self.add_arp_reply_catcher(datapath)
-        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, table_id=2)
-        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, table_id=2)
+        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, table_id=1)
+        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, table_id=1)
     
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -103,8 +103,6 @@ class SPE(app_manager.RyuApp):
             if dp.id is None:
                 return
             self.logger.info("Switch left: %s", dp.id)
-            # remove from dps
-            del self.dps[dp.id]
     
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -151,7 +149,7 @@ class SPE(app_manager.RyuApp):
             match = datapath.ofproto_parser.OFPMatch()
             match.set_in_port(in_port)
             match.set_dl_src(src)
-            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
+            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
             self.add_flow(datapath, 0, match, instructions)
             
 
@@ -161,7 +159,7 @@ class SPE(app_manager.RyuApp):
             match = datapath.ofproto_parser.OFPMatch()
             match.set_dl_dst(dst)
             instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-            self.add_flow(datapath, 1, match, instructions, buffer_id=msg.buffer_id)
+            self.add_flow(datapath, 2, match, instructions, buffer_id=msg.buffer_id)
         else:
             out_port = ofproto_v1_2.OFPP_FLOOD
             actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
