@@ -139,6 +139,7 @@ class SPE(app_manager.RyuApp):
         
         # we should build a dictionary of MTXXXX class names to speed this up
         for o in match.fields:
+            self.logger.info("Field %s", str(o))
             if isinstance(o, ofproto_v1_2_parser.MTInPort):
                 in_port = o.value
                 break
