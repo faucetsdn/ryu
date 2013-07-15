@@ -152,7 +152,8 @@ class SPE(app_manager.RyuApp):
         # parse packet
         
         pkt = packet.Packet(msg.data)
-        self.logger.info("Packet ethertype: %s", pkt.ethertype)
+        eth_pkt = pkt.next()
+        self.logger.info("Packet ethertype: %s", eth_pkt.ethertype)
         
         ## is it an arp reply?
         #for o in match.fields:
