@@ -41,6 +41,7 @@ class SPE(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(SPE, self).__init__(*args, **kwargs)
+        self.dps = {}
         self.mac_to_port = {}
 
     def add_flow(self, datapath, table_id, match, instructions, priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER):
@@ -81,12 +82,13 @@ class SPE(app_manager.RyuApp):
         dp = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             self.logger.info("Switch entered: %s", dp.id)
-            # load init flows
-            self.init_flows(datapath = dp)
+            
         elif ev.state == DEAD_DISPATCHER:
             if dp.id is None:
                 return
             self.logger.info("Switch left: %s", dp.id)
+            # remove from dps
+            del self.dps[dp.id]
     
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -98,6 +100,11 @@ class SPE(app_manager.RyuApp):
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
+        
+        # if dpid not present then set default flows
+        if dpid not in self.dps:
+            self.dps[dpid] = datapath
+            self.init_flows(datapath)
         
         match = msg.match
         in_port = 0
