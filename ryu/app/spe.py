@@ -86,10 +86,18 @@ class SPE(app_manager.RyuApp):
     
     
     def init_flows(self, datapath):
+        ofproto = datapath.ofproto
         # send arp replies to controller always
         self.add_arp_reply_catcher(datapath)
         self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, table_id=1)
         self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, table_id=1)
+        # make a flow to flood ARP packets
+        match = datapath.ofproto_parser.OFPMatch()
+        match.set_dl_type(ether.ETH_TYPE_ARP)
+        match.set_arp_opcode(1)
+        actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_FLOOD, 1500)]
+        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_flow(datapath, 0, match, instructions)
     
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -117,6 +125,7 @@ class SPE(app_manager.RyuApp):
         
         match = msg.match
         in_port = 0
+        ethtype = 0
         #iterate through fields - parser should handle this
         #packet in dpid 20015998343868 from 08:00:27:15:d4:53 to ff:ff:ff:ff:ff:ff log_port 0 phy_port 0
         #Field MTInPort(header=2147483652,length=8,n_bytes=4,value=2)
@@ -145,7 +154,20 @@ class SPE(app_manager.RyuApp):
                     # drop arp reply if it's gotten to the controller
                     return
         
+        # get ethertype
+        for o in match.fields:
+            if isinstance(o, ofproto_v1_2_parser.MTEthType):
+                ethtype = o.value
+                break
         
+        # if ARP (request) then flood and don't make a flow
+        if ethtype == ether.ETH_TYPE_ARP:
+            out_port = ofproto_v1_2.OFPP_FLOOD
+            actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
+            out = datapath.ofproto_parser.OFPPacketOut(
+                datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
+                actions=actions)
+            datapath.send_msg(out)
         
         # do we know the mac?
         if src not in self.mac_to_port[dpid]:
@@ -155,15 +177,16 @@ class SPE(app_manager.RyuApp):
             match = datapath.ofproto_parser.OFPMatch()
             match.set_in_port(in_port)
             match.set_dl_src(src)
+            match.set_dl_type(ethtype)
             instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
             self.add_flow(datapath, 0, match, instructions)
             
 
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
-            actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
             match = datapath.ofproto_parser.OFPMatch()
             match.set_dl_dst(dst)
+            actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
             instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
             self.add_flow(datapath, 2, match, instructions, buffer_id=msg.buffer_id)
         else:
