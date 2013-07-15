@@ -71,14 +71,14 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
     
-    def add_arp_reply_catcher(self, datapath, ip = None, port = None, accept = False, table_id=0):
+    def add_arp_reply_catcher(self, datapath, ipaddr = None, port = None, accept = False, table_id=0):
         match = datapath.ofproto_parser.OFPMatch()
         match.set_dl_type(ether.ETH_TYPE_ARP)
         match.set_arp_opcode(2)
         if port:
             match.set_in_port(port)
-        if ip:
-            match.set_arp_spa(ip)
+        if ipaddr:
+            match.set_arp_spa(ipaddr)
         ofproto = datapath.ofproto
         if accept:
             instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
@@ -86,11 +86,11 @@ class SPE(app_manager.RyuApp):
             instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
         self.add_flow(datapath, table_id, match, instructions, priority=0x8000)
     
-    def add_arp_request_forwarder(self, datapath, ip, port, table_id=0):
+    def add_arp_request_forwarder(self, datapath, ipaddr, port, table_id=0):
         match = datapath.ofproto_parser.OFPMatch()
         match.set_dl_type(ether.ETH_TYPE_ARP)
         match.set_arp_opcode(1)
-        match.set_arp_tpa(ip)
+        match.set_arp_tpa(ipaddr)
         ofproto = datapath.ofproto
         actions = [datapath.ofproto_parser.OFPActionOutput(port, 1500)]
         instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
@@ -101,17 +101,17 @@ class SPE(app_manager.RyuApp):
         ofproto = datapath.ofproto
         # send arp replies to controller always
         self.add_arp_reply_catcher(datapath)
-        for port, ip in spe_config.ports.iteritems():
-            self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin(ip), port=port, accept=True, table_id=1)
-            self.add_arp_request_forwarder(datapath, ip=ip.ipv4_to_bin(ip), port=port, accept=True, table_id=1)
+        for port, ipaddr in spe_config.ports.iteritems():
+            self.add_arp_reply_catcher(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, accept=True, table_id=1)
+            self.add_arp_request_forwarder(datapath, ipaddr=ip.ipv4_to_bin(ipaddr), port=port, accept=True, table_id=1)
         
         # make a flow to flood ARP packets
-        match = datapath.ofproto_parser.OFPMatch()
-        match.set_dl_type(ether.ETH_TYPE_ARP)
-        match.set_arp_opcode(1)
-        actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_FLOOD, 1500)]
-        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        self.add_flow(datapath, 0, match, instructions)
+        #match = datapath.ofproto_parser.OFPMatch()
+        #match.set_dl_type(ether.ETH_TYPE_ARP)
+        #match.set_arp_opcode(1)
+        #actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_FLOOD, 1500)]
+        #instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        #self.add_flow(datapath, 0, match, instructions)
     
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
