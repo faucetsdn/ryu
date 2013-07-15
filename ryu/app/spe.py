@@ -20,7 +20,7 @@ import struct
 from ryu.base import app_manager
 from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
-from ryu.controller import dpset
+from ryu.topology import event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import set_ev_handler
@@ -66,6 +66,10 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
 
+    @handler.set_ev_cls(event.EventSwitchEnter)
+    def switch_enter_handler(self, ev):
+        self.logger.info("New datapath %s", ev.datapath)
+    
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
