@@ -66,9 +66,9 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
 
-    @set_ev_cls(event.EventSwitchEnter, [MAIN_DISPATCHER, DEAD_DISPATCHER])
+    @set_ev_cls(event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def switch_enter_handler(self, ev):
-        self.logger.info("New datapath %s", ev.datapath)
+        self.logger.info("OFP state change %s", ev.datapath)
     
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
