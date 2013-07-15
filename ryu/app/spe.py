@@ -28,6 +28,7 @@ from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser, ether
 from ryu.lib.mac import haddr_to_str
 from ryu.lib import ip
 from ryu.lib.packet import packet
+import spe_config
 
 
 
@@ -85,13 +86,25 @@ class SPE(app_manager.RyuApp):
             instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
         self.add_flow(datapath, table_id, match, instructions, priority=0x8000)
     
+    def add_arp_request_forwarder(self, datapath, ip, port, table_id=0):
+        match = datapath.ofproto_parser.OFPMatch()
+        match.set_dl_type(ether.ETH_TYPE_ARP)
+        match.set_arp_opcode(1)
+        match.set_arp_tpa(ip)
+        ofproto = datapath.ofproto
+        actions = [datapath.ofproto_parser.OFPActionOutput(port, 1500)]
+        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_flow(datapath, table_id, match, instructions, priority=0x8000)
+    
     
     def init_flows(self, datapath):
         ofproto = datapath.ofproto
         # send arp replies to controller always
         self.add_arp_reply_catcher(datapath)
-        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, table_id=1)
-        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, table_id=1)
+        for port, ip in spe_config.ports.iteritems():
+            self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin(ip), port=port, accept=True, table_id=1)
+            self.add_arp_request_forwarder(datapath, ip=ip.ipv4_to_bin(ip), port=port, accept=True, table_id=1)
+        
         # make a flow to flood ARP packets
         match = datapath.ofproto_parser.OFPMatch()
         match.set_dl_type(ether.ETH_TYPE_ARP)
