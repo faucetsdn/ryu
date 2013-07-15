@@ -153,23 +153,14 @@ class SPE(app_manager.RyuApp):
         
         pkt = packet.Packet(msg.data)
         eth_pkt = pkt.next()
-        self.logger.info("Packet ethertype: %s", eth_pkt.ethertype)
-        
-        ## is it an arp reply?
-        #for o in match.fields:
-        #    if isinstance(o, ofproto_v1_2_parser.MTArpOp):
-        #        if o.value == 2:
-        #            # drop arp reply if it's gotten to the controller
-        #            return
-        #
-        ## get ethertype
-        #for o in match.fields:
-        #    if isinstance(o, ofproto_v1_2_parser.MTEthType):
-        #        ethtype = o.value
-        #        break
+        ethtype = eth_pkt.ethertype
         
         # if ARP (request) then flood and don't make a flow
         if ethtype == ether.ETH_TYPE_ARP:
+            # if ARP reply then drop
+            arp_pkt = eth_pkt.next()
+            if arp_pkt.opcode == 2:
+                return
             out_port = ofproto_v1_2.OFPP_FLOOD
             actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
             out = datapath.ofproto_parser.OFPPacketOut(
