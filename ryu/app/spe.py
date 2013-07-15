@@ -65,12 +65,23 @@ class SPE(app_manager.RyuApp):
             out_port=ofproto_v1_2.OFPP_ANY, out_group=ofproto_v1_2.OFPG_ANY,
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
+    
+    def init_flows(self, datapath):
+        # send arp replies to controller always
+        match = datapath.ofproto_parser.OFPMatch()
+        match.set_arp_opcode(2)
+        actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, 1500)]
+        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_flow(datapath, 0, match, instructions, priority=0x9000)
+    
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def switch_enter_handler(self, ev):
         dp = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             self.logger.info("Switch entered: %s", dp.id)
+            # load init flows
+            self.init_flows(datapath = dp)
         elif ev.state == DEAD_DISPATCHER:
             if dp.id is None:
                 return
