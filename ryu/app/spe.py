@@ -65,7 +65,7 @@ class SPE(app_manager.RyuApp):
         datapath.send_msg(mod)
     
     # taken from gre_tunnel.py
-    @handler.set_ev_cls(dpset.EventDP)
+    @set_ev_cls(dpset.EventDP, MAIN_DISPATCHER)
     def dp_handler(self, ev):
         self.send_event_to_observers(ev)
         enter_leave = ev.enter
