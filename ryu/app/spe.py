@@ -115,9 +115,6 @@ class SPE(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
         
-        if dpid not in self.dps:
-            self.dps[dpid] = datapath
-        
         match = msg.match
         in_port = 0
         #iterate through fields - parser should handle this
@@ -130,7 +127,8 @@ class SPE(app_manager.RyuApp):
         #Field MTEthDst(header=2147485190,length=10,n_bytes=6,value='\xff\xff\xff\xff\xff\xff')
         #Field MTArpSpa(header=2147494916,length=8,n_bytes=4,value=167772161)
         #Field MTArpTha(header=2147496454,length=10,n_bytes=6,value='\x00\x00\x00\x00\x00\x00')
-
+        
+        # we should build a dictionary of MTXXXX class names to speed this up
         for o in match.fields:
             if isinstance(o, ofproto_v1_2_parser.MTInPort):
                 in_port = o.value
@@ -139,6 +137,14 @@ class SPE(app_manager.RyuApp):
         self.logger.info("packet in dpid %s from %s to %s log_port %s",
                          dpid, haddr_to_str(src), haddr_to_str(dst),
                          in_port)
+        
+        # is it an arp reply?
+        for o in match.fields:
+            if isinstance(o, ofproto_v1_2_parser.MTArpOp):
+                if o.value == 2:
+                    # drop arp reply if it's gotten to the controller
+                    return
+        
         
         
         # do we know the mac?
