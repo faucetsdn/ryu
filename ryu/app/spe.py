@@ -26,6 +26,8 @@ from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import set_ev_handler
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser, ether
 from ryu.lib.mac import haddr_to_str
+from ryu.lib import ip
+
 
 
 # TODO: we should split the handler into two parts, protocol
@@ -67,15 +69,28 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
     
-    def init_flows(self, datapath):
-        # send arp replies to controller always
+    def add_arp_reply_catcher(self, datapath, ip = None, port = None, accept = False, priority = 0x9000):
         match = datapath.ofproto_parser.OFPMatch()
         match.set_dl_type(ether.ETH_TYPE_ARP)
         match.set_arp_opcode(2)
+        if port:
+            match.set_in_port(port)
+        if ip:
+            match.set_arp_spa(ip)
         ofproto = datapath.ofproto
-        actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, 1500)]
-        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        self.add_flow(datapath, 0, match, instructions, priority=0x9000)
+        if accept:
+            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
+        else:    
+            actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, 1500)]
+            instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_flow(datapath, 0, match, instructions, priority=priority)
+    
+    
+    def init_flows(self, datapath):
+        # send arp replies to controller always
+        self.add_arp_reply_catcher(datapath)
+        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, priority=0x9100)
+        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, priority=0x9100)
     
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -103,10 +118,8 @@ class SPE(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
         
-        # if dpid not present then set default flows
         if dpid not in self.dps:
             self.dps[dpid] = datapath
-            #self.init_flows(datapath)
         
         match = msg.match
         in_port = 0
