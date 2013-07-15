@@ -23,6 +23,7 @@ from ryu.controller import ofp_event
 from ryu.controller import dpset
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+from ryu.controller.handler import set_ev_handler
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
 from ryu.lib.mac import haddr_to_str
 
