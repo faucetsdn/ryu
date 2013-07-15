@@ -42,7 +42,6 @@ class SPE(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SPE, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        app_manager.register_app(self)
 
     def add_flow(self, datapath, table_id, match, instructions, priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER):
         ofproto = datapath.ofproto
@@ -66,27 +65,6 @@ class SPE(app_manager.RyuApp):
             out_port=ofproto_v1_2.OFPP_ANY, out_group=ofproto_v1_2.OFPG_ANY,
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
-    
-    # taken from gre_tunnel.py
-    @set_ev_cls(dpset.EventDP)
-    def dp_handler(self, ev):
-        self.logger.info('SPE.dp_handler()')
-        self.send_event_to_observers(ev)
-        enter_leave = ev.enter
-        if not enter_leave:
-            # TODO:XXX
-            # What to do on datapath disconnection?
-            self.logger.info('dp disconnection ev:%s', ev)
-        else:
-            self.logger.info('dp connection ev:%s', ev)
-        
-        # will handle ports later
-        
-        #dpid = ev.dp.id
-        #ports = set(port.port_no for port in ev.ports)
-        #ports.update(port.port_no for port in self.nw.get_ports(dpid))
-        #for port_no in ports:
-        #    self._port_handler(dpid, port_no, enter_leave)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
