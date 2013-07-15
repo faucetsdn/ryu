@@ -158,7 +158,7 @@ class SPE(app_manager.RyuApp):
         # if ARP (request) then flood and don't make a flow
         if ethtype == ether.ETH_TYPE_ARP:
             # if ARP reply then drop
-            arp_pkt = eth_pkt.next()
+            arp_pkt = pkt.next()
             if arp_pkt.opcode == 2:
                 return
             out_port = ofproto_v1_2.OFPP_FLOOD
