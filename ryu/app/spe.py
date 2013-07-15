@@ -66,7 +66,7 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
 
-    @handler.set_ev_cls(event.EventSwitchEnter)
+    @set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
         self.logger.info("New datapath %s", ev.datapath)
     
