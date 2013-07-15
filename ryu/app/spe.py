@@ -69,7 +69,7 @@ class SPE(app_manager.RyuApp):
             flags=ofproto.OFPFF_SEND_FLOW_REM, match=match, instructions=instructions)
         datapath.send_msg(mod)
     
-    def add_arp_reply_catcher(self, datapath, ip = None, port = None, accept = False, priority = 0x9000):
+    def add_arp_reply_catcher(self, datapath, ip = None, port = None, accept = False, table_id=0):
         match = datapath.ofproto_parser.OFPMatch()
         match.set_dl_type(ether.ETH_TYPE_ARP)
         match.set_arp_opcode(2)
@@ -81,16 +81,15 @@ class SPE(app_manager.RyuApp):
         if accept:
             instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(1)]
         else:    
-            actions = [datapath.ofproto_parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, 1500)]
-            instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        self.add_flow(datapath, 0, match, instructions, priority=priority)
+            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
+        self.add_flow(datapath, table_id, match, instructions, priority=0x8000)
     
     
     def init_flows(self, datapath):
         # send arp replies to controller always
         self.add_arp_reply_catcher(datapath)
-        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, priority=0x9100)
-        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, priority=0x9100)
+        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.1'), port=1, accept=True, table_id=2)
+        self.add_arp_reply_catcher(datapath, ip=ip.ipv4_to_bin('10.1.1.2'), port=2, accept=True, table_id=2)
     
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
