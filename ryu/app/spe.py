@@ -42,6 +42,8 @@ class SPE(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SPE, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
+        map(lambda ev_cls: self.port_set.register_observer(ev_cls, self.name),
+            [dpset.EventDP])
 
     def add_flow(self, datapath, table_id, match, instructions, priority=0x8000, buffer_id=ofproto_v1_2.OFP_NO_BUFFER):
         ofproto = datapath.ofproto
