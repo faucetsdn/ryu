@@ -83,7 +83,7 @@ class SPE(app_manager.RyuApp):
         dp = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             self.logger.info("Switch entered: %s", dp.id)
-            self.init_flows(datapath)
+            self.init_flows(dp)
             
         elif ev.state == DEAD_DISPATCHER:
             if dp.id is None:
