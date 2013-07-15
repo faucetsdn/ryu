@@ -26,7 +26,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import set_ev_handler
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser, ether
 from ryu.lib.mac import haddr_to_str
-from ryu.lib import ip
+from ryu.lib import ip, packet
 
 
 
@@ -148,18 +148,23 @@ class SPE(app_manager.RyuApp):
                          dpid, haddr_to_str(src), haddr_to_str(dst),
                          in_port)
         
-        # is it an arp reply?
-        for o in match.fields:
-            if isinstance(o, ofproto_v1_2_parser.MTArpOp):
-                if o.value == 2:
-                    # drop arp reply if it's gotten to the controller
-                    return
+        # parse packet
         
-        # get ethertype
-        for o in match.fields:
-            if isinstance(o, ofproto_v1_2_parser.MTEthType):
-                ethtype = o.value
-                break
+        pkt = packet.Packet(data)
+        self.logger.info("Packet ethertype: %s", pkt.ethertype)
+        
+        ## is it an arp reply?
+        #for o in match.fields:
+        #    if isinstance(o, ofproto_v1_2_parser.MTArpOp):
+        #        if o.value == 2:
+        #            # drop arp reply if it's gotten to the controller
+        #            return
+        #
+        ## get ethertype
+        #for o in match.fields:
+        #    if isinstance(o, ofproto_v1_2_parser.MTEthType):
+        #        ethtype = o.value
+        #        break
         
         # if ARP (request) then flood and don't make a flow
         if ethtype == ether.ETH_TYPE_ARP:
