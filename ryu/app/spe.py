@@ -173,12 +173,15 @@ class SPE(app_manager.RyuApp):
                 if ip.ipv4_to_bin(spe_config.ports[in_port]) != arp_pkt.src_ip:
                     self.logger.info("Dropping spoofed ARP from port %d IP %s (expected IP %s)", in_port, ip.ipv4_to_str(arp_pkt.src_ip), spe_config.ports[in_port])
                     return
-            out_port = ofproto_v1_2.OFPP_FLOOD
-            actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
-            out = datapath.ofproto_parser.OFPPacketOut(
-                datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
-                actions=actions)
-            datapath.send_msg(out)
+            # don't flood here - we'll do it later
+            #out_port = ofproto_v1_2.OFPP_FLOOD
+            #actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
+            #out = datapath.ofproto_parser.OFPPacketOut(
+            #    datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
+            #    actions=actions)
+            #datapath.send_msg(out)
+            # set ethtype to IP for the next part
+            ethtype=ether.ETH_TYPE_IP
         
         # do we know the mac?
         #if src not in self.mac_to_port[dpid]:
