@@ -178,18 +178,55 @@ class SPE(app_manager.RyuApp):
             datapath.send_msg(out)
         
         # do we know the mac?
-        if src not in self.mac_to_port[dpid]:
-            # learn the mac address to avoid FLOOD next time.
-            self.mac_to_port[dpid][src] = in_port
-            # set a flow to table 0 to allow packets through to table 1
-            match = datapath.ofproto_parser.OFPMatch()
-            match.set_in_port(in_port)
-            match.set_dl_src(src)
-            match.set_dl_type(ethtype)
-            instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
-            self.add_flow(datapath, 0, match, instructions)
-            
-
+        #if src not in self.mac_to_port[dpid]:
+        #    # learn the mac address to avoid FLOOD next time.
+        #    self.mac_to_port[dpid][src] = in_port
+        #    # set a flow to table 0 to allow packets through to table 1
+        #    match = datapath.ofproto_parser.OFPMatch()
+        #    match.set_in_port(in_port)
+        #    match.set_dl_src(src)
+        #    match.set_dl_type(ethtype)
+        #    instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
+        #    self.add_flow(datapath, 0, match, instructions)
+        #    
+        #
+        #if dst in self.mac_to_port[dpid]:
+        #    out_port = self.mac_to_port[dpid][dst]
+        #    match = datapath.ofproto_parser.OFPMatch()
+        #    match.set_dl_dst(dst)
+        #    actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
+        #    instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        #    self.add_flow(datapath, 2, match, instructions, buffer_id=msg.buffer_id)
+        #else:
+        #    out_port = ofproto_v1_2.OFPP_FLOOD
+        #    actions = [datapath.ofproto_parser.OFPActionOutput(out_port, 1500)]
+        #    out = datapath.ofproto_parser.OFPPacketOut(
+        #        datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
+        #        actions=actions)
+        #    datapath.send_msg(out)
+        
+        # new way of handling this
+        # if packet got to us then we probably don't know the MAC
+        # so add table->2 flow to first table, and out action on table 2
+        
+        # learn the mac address to avoid FLOOD next time.
+        self.mac_to_port[dpid][src] = in_port
+        # set a flow to table 0 to allow packets through to table 1
+        match = datapath.ofproto_parser.OFPMatch()
+        match.set_in_port(in_port)
+        match.set_dl_src(src)
+        match.set_dl_type(ethtype)
+        instructions = [datapath.ofproto_parser.OFPInstructionGotoTable(2)]
+        self.add_flow(datapath, 0, match, instructions)
+        
+        match = datapath.ofproto_parser.OFPMatch()
+        match.set_dl_dst(src)
+        actions = [datapath.ofproto_parser.OFPActionOutput(in_port, 1500)]
+        instructions = [datapath.ofproto_parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self.add_flow(datapath, 2, match, instructions)
+        
+        # then, just in case there's no out flow, we'll do that too
+        
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
             match = datapath.ofproto_parser.OFPMatch()
