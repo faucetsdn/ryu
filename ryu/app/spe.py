@@ -169,6 +169,7 @@ class SPE(app_manager.RyuApp):
                 # check config
                 if in_port not in spe_config.ports:
                     self.logger.info("Port %d not configured, trying to ARP as %s", in_port, ip.ipv4_to_str(arp_pkt.src_ip))
+                    return
                 if ip.ipv4_to_bin(spe_config.ports[in_port]) != arp_pkt.src_ip:
                     self.logger.info("Dropping spoofed ARP from port %d IP %s (expected IP %s)", in_port, ip.ipv4_to_str(arp_pkt.src_ip), spe_config.ports[in_port])
                     return
