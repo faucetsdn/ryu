@@ -132,16 +132,11 @@ class OVSPort(object):
 class OVSSwitch(object):
     def __init__(self, dpid, nw, ifaces, logger):
         # TODO: clean up
-        token = None
-        if CONF.neutron_auth_strategy:
-            token = _get_auth_token(logger)
-        q_api = _get_quantum_client(token)
-
         self.dpid = dpid
         self.network_api = nw
         self.ifaces = ifaces
         self.logger = logger
-        self.q_api = q_api
+        self._q_api = None      # lazy initialization
         self.ctrl_addr = CONF.neutron_controller_addr
         if not self.ctrl_addr:
             raise ValueError('option neutron_controler_addr must be speicfied')
@@ -153,6 +148,15 @@ class OVSSwitch(object):
         self.ports = {}  # port_no -> OVSPort
 
         super(OVSSwitch, self).__init__()
+
+    @property
+    def q_api(self):
+        if self._q_api is None:
+            token = None
+            if CONF.neutron_auth_strategy:
+                token = _get_auth_token(self.logger)
+            self._q_api = _get_quantum_client(token)
+        return self._q_api
 
     def set_ovsdb_addr(self, dpid, ovsdb_addr):
         # easy check if the address format valid
