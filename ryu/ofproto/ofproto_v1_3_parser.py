@@ -1485,7 +1485,7 @@ class OFPPort(ofproto_parser.namedtuple('OFPPort', (
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_3.OFP_PORT_PACK_STR, buf, offset)
         ofpport = cls(*port)
-        ofpport.length = ofproto_v1_3.OFP_PORT_SIZE
+        ofpport._length = ofproto_v1_3.OFP_PORT_SIZE
         return ofpport
 
 
