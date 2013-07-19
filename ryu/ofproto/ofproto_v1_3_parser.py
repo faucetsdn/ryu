@@ -2625,8 +2625,8 @@ class OFPMeterStatsReply(OFPMultipartReply):
 class OFPMeterBand(StringifyMixin):
     def __init__(self, type_, len_):
         super(OFPMeterBand, self).__init__()
-        self.type = type_
-        self.len = len_
+        self._type = type_
+        self._len = len_
 
 
 class OFPMeterBandHeader(OFPMeterBand):
@@ -2665,7 +2665,7 @@ class OFPMeterBandDrop(OFPMeterBandHeader):
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_METER_BAND_DROP_PACK_STR, buf, offset,
-                      self.type, self.len, self.rate, self.burst_size)
+                      self._type, self._len, self.rate, self.burst_size)
 
     @classmethod
     def parser(cls, buf, offset):
@@ -2688,8 +2688,8 @@ class OFPMeterBandDscpRemark(OFPMeterBandHeader):
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_METER_BAND_DSCP_REMARK_PACK_STR, buf,
-                      offset, self.type, self.len, self.rate, self.burst_size,
-                      self.prec_level)
+                      offset, self._type, self._len, self.rate,
+                      self.burst_size, self.prec_level)
 
     @classmethod
     def parser(cls, buf, offset):
@@ -2712,8 +2712,8 @@ class OFPMeterBandExperimenter(OFPMeterBandHeader):
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_METER_BAND_EXPERIMENTER_PACK_STR, buf,
-                      offset, self.type, self.len, self.rate, self.burst_size,
-                      self.experimenter)
+                      offset, self._type, self._len, self.rate,
+                      self.burst_size, self.experimenter)
 
     @classmethod
     def parser(cls, buf, offset):
@@ -2746,8 +2746,8 @@ class OFPMeterConfigStats(StringifyMixin):
         while length < meter_config._length:
             band = OFPMeterBandHeader.parser(buf, offset)
             meter_config.bands.append(band)
-            offset += band.len
-            length += band.len
+            offset += band._len
+            length += band._len
 
         return meter_config
 
