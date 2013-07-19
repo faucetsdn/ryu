@@ -1,0 +1,9 @@
+{
+   "OFPPacketIn" : {
+      "buffer_id" : 2,
+      "total_len" : 42,
+      "reason" : 1,
+      "data" : "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD",
+      "in_port" : 99
+   }
+}

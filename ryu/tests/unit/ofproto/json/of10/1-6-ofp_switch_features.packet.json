@@ -1,0 +1,37 @@
+{
+   "OFPSwitchFeatures" : {
+      "ports" : {
+         "6" : {
+            "OFPPhyPort" : {
+               "curr" : 648,
+               "name" : "UG9ydAYAAAAAAAAAAAAAAA==",
+               "supported" : 648,
+               "state" : 2,
+               "port_no" : 6,
+               "advertised" : 640,
+               "config" : 0,
+               "peer" : 648,
+               "hw_addr" : "8gukffjq"
+            }
+         },
+         "7" : {
+            "OFPPhyPort" : {
+               "curr" : 648,
+               "name" : "UG9ydAcAAAAAAAAAAAAAAA==",
+               "supported" : 648,
+               "state" : 16,
+               "port_no" : 7,
+               "advertised" : 640,
+               "config" : 0,
+               "peer" : 648,
+               "hw_addr" : "8guk0D9w"
+            }
+         }
+      },
+      "actions" : 2115,
+      "n_tables" : 255,
+      "capabilities" : 169,
+      "n_buffers" : 0,
+      "datapath_id" : 1095522080376
+   }
+}

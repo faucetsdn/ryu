@@ -1,0 +1,43 @@
+{
+   "OFPQueueGetConfigReply" : {
+      "port" : 4294967295,
+      "queues" : [
+         {
+            "OFPPacketQueue" : {
+               "queue_id" : 99,
+               "port" : 77,
+               "properties" : [
+                  {
+                     "OFPQueuePropMinRate" : {
+                        "rate" : 10
+                     }
+                  },
+                  {
+                     "OFPQueuePropMaxRate" : {
+                        "rate" : 900
+                     }
+                  }
+               ]
+            }
+         },
+         {
+            "OFPPacketQueue" : {
+               "queue_id" : 88,
+               "port" : 77,
+               "properties" : [
+                  {
+                     "OFPQueuePropMinRate" : {
+                        "rate" : 100
+                     }
+                  },
+                  {
+                     "OFPQueuePropMaxRate" : {
+                        "rate" : 200
+                     }
+                  }
+               ]
+            }
+         }
+      ]
+   }
+}

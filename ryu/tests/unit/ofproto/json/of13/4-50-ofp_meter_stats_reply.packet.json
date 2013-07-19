@@ -1,0 +1,25 @@
+{
+   "OFPMeterStatsReply" : {
+      "body" : [
+         {
+            "OFPMeterStats" : {
+               "flow_count" : 0,
+               "duration_sec" : 0,
+               "meter_id" : 100,
+               "byte_in_count" : 0,
+               "duration_nsec" : 480000,
+               "packet_in_count" : 0,
+               "band_stats" : [
+                  {
+                     "OFPMeterBandStats" : {
+                        "packet_band_count" : 0,
+                        "byte_band_count" : 0
+                     }
+                  }
+               ]
+            }
+         }
+      ],
+      "flags" : 0
+   }
+}

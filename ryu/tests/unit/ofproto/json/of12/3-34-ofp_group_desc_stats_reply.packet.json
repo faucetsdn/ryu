@@ -1,0 +1,30 @@
+{
+   "OFPStatsReply" : {
+      "body" : [
+         {
+            "OFPGroupDescStats" : {
+               "group_id" : 1,
+               "buckets" : [
+                  {
+                     "OFPBucket" : {
+                        "watch_port" : 1,
+                        "actions" : [
+                           {
+                              "OFPActionOutput" : {
+                                 "max_len" : 65535,
+                                 "port" : 2
+                              }
+                           }
+                        ],
+                        "watch_group" : 1,
+                        "weight" : 1
+                     }
+                  }
+               ],
+               "type" : 0
+            }
+         }
+      ],
+      "flags" : 0
+   }
+}

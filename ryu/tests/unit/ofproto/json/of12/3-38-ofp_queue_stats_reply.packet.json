@@ -1,0 +1,34 @@
+{
+   "OFPStatsReply" : {
+      "body" : [
+         {
+            "OFPQueueStats" : {
+               "port_no" : 7,
+               "tx_packets" : 0,
+               "tx_bytes" : 0,
+               "queue_id" : 1,
+               "tx_errors" : 0
+            }
+         },
+         {
+            "OFPQueueStats" : {
+               "port_no" : 6,
+               "tx_packets" : 0,
+               "tx_bytes" : 0,
+               "queue_id" : 1,
+               "tx_errors" : 0
+            }
+         },
+         {
+            "OFPQueueStats" : {
+               "port_no" : 7,
+               "tx_packets" : 0,
+               "tx_bytes" : 0,
+               "queue_id" : 2,
+               "tx_errors" : 0
+            }
+         }
+      ],
+      "flags" : 0
+   }
+}

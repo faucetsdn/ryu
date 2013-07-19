@@ -1,0 +1,40 @@
+{
+   "OFPSwitchFeatures" : {
+      "ports" : {
+         "6" : {
+            "OFPPort" : {
+               "curr" : 10248,
+               "name" : "UG9ydAYAAAAAAAAAAAAAAA==",
+               "max_speed" : 5000,
+               "supported" : 10248,
+               "state" : 4,
+               "curr_speed" : 5000,
+               "port_no" : 6,
+               "advertised" : 10240,
+               "config" : 0,
+               "peer" : 10248,
+               "hw_addr" : "8gukffjq"
+            }
+         },
+         "7" : {
+            "OFPPort" : {
+               "curr" : 10248,
+               "name" : "UG9ydAcAAAAAAAAAAAAAAA==",
+               "max_speed" : 5000,
+               "supported" : 10248,
+               "state" : 4,
+               "curr_speed" : 5000,
+               "port_no" : 7,
+               "advertised" : 10240,
+               "config" : 0,
+               "peer" : 10248,
+               "hw_addr" : "8guk0D9w"
+            }
+         }
+      },
+      "n_tables" : 255,
+      "capabilities" : 79,
+      "n_buffers" : 0,
+      "datapath_id" : 603603843768844288
+   }
+}

@@ -1,0 +1,61 @@
+{
+   "OFPPacketIn" : {
+      "table_id" : 1,
+      "buffer_id" : 2,
+      "total_len" : 42,
+      "reason" : 1,
+      "match" : {
+         "OFPMatch" : {
+            "fields" : [
+               {
+                  "MTInPort" : {
+                     "value" : 6
+                  }
+               },
+               {
+                  "MTEthType" : {
+                     "value" : 2054
+                  }
+               },
+               {
+                  "MTEthDst" : {
+                     "value" : "////////"
+                  }
+               },
+               {
+                  "MTEthSrc" : {
+                     "value" : "8gukffjq"
+                  }
+               },
+               {
+                  "MTArpOp" : {
+                     "value" : 1
+                  }
+               },
+               {
+                  "MTArpSpa" : {
+                     "value" : 167772161
+                  }
+               },
+               {
+                  "MTArpTpa" : {
+                     "value" : 167772163
+                  }
+               },
+               {
+                  "MTArpSha" : {
+                     "value" : "8gukffjq"
+                  }
+               },
+               {
+                  "MTArpTha" : {
+                     "value" : "AAAAAAAA"
+                  }
+               }
+            ],
+            "type" : 1
+         }
+      },
+      "data" : "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD"
+   }
+}

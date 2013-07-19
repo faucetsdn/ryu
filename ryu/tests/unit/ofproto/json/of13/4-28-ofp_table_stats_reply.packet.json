@@ -1,0 +1,23 @@
+{
+   "OFPTableStatsReply" : {
+      "body" : [
+         {
+            "OFPTableStats" : {
+               "table_id" : 0,
+               "matched_count" : 4,
+               "lookup_count" : 4,
+               "active_count" : 4
+            }
+         },
+         {
+            "OFPTableStats" : {
+               "table_id" : 1,
+               "matched_count" : 4,
+               "lookup_count" : 4,
+               "active_count" : 4
+            }
+         }
+      ],
+      "flags" : 0
+   }
+}

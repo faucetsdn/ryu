@@ -1,0 +1,138 @@
+{
+   "OFPStatsReply" : {
+      "body" : [
+         {
+            "OFPFlowStats" : {
+               "table_id" : 0,
+               "priority" : 65535,
+               "hard_timeout" : 0,
+               "instructions" : [],
+               "duration_nsec" : 115277000,
+               "match" : {
+                  "OFPMatch" : {
+                     "fields" : [],
+                     "type" : 1
+                  }
+               },
+               "idle_timeout" : 0,
+               "cookie" : 0,
+               "byte_count" : 0,
+               "duration_sec" : 358,
+               "packet_count" : 0
+            }
+         },
+         {
+            "OFPFlowStats" : {
+               "table_id" : 0,
+               "priority" : 65534,
+               "hard_timeout" : 0,
+               "instructions" : [
+                  {
+                     "OFPInstructionActions" : {
+                        "actions" : [
+                           {
+                              "OFPActionOutput" : {
+                                 "max_len" : 0,
+                                 "port" : 4294967290
+                              }
+                           }
+                        ],
+                        "type" : 4
+                     }
+                  }
+               ],
+               "duration_nsec" : 115055000,
+               "match" : {
+                  "OFPMatch" : {
+                     "fields" : [
+                        {
+                           "MTEthType" : {
+                              "value" : 2054
+                           }
+                        }
+                     ],
+                     "type" : 1
+                  }
+               },
+               "idle_timeout" : 0,
+               "cookie" : 0,
+               "byte_count" : 0,
+               "duration_sec" : 358,
+               "packet_count" : 0
+            }
+         },
+         {
+            "OFPFlowStats" : {
+               "table_id" : 0,
+               "priority" : 123,
+               "hard_timeout" : 0,
+               "instructions" : [
+                  {
+                     "OFPInstructionGotoTable" : {
+                        "table_id" : 1
+                     }
+                  }
+               ],
+               "duration_nsec" : 511582000,
+               "match" : {
+                  "OFPMatch" : {
+                     "fields" : [
+                        {
+                           "MTInPort" : {
+                              "value" : 6
+                           }
+                        },
+                        {
+                           "MTEthSrc" : {
+                              "value" : "8gukffjq"
+                           }
+                        }
+                     ],
+                     "type" : 1
+                  }
+               },
+               "idle_timeout" : 0,
+               "cookie" : 0,
+               "byte_count" : 238,
+               "duration_sec" : 316220,
+               "packet_count" : 3
+            }
+         },
+         {
+            "OFPFlowStats" : {
+               "table_id" : 0,
+               "priority" : 0,
+               "hard_timeout" : 0,
+               "instructions" : [
+                  {
+                     "OFPInstructionActions" : {
+                        "actions" : [
+                           {
+                              "OFPActionOutput" : {
+                                 "max_len" : 65535,
+                                 "port" : 4294967293
+                              }
+                           }
+                        ],
+                        "type" : 3
+                     }
+                  }
+               ],
+               "duration_nsec" : 980901000,
+               "match" : {
+                  "OFPMatch" : {
+                     "fields" : [],
+                     "type" : 1
+                  }
+               },
+               "idle_timeout" : 0,
+               "cookie" : 0,
+               "byte_count" : 98,
+               "duration_sec" : 313499,
+               "packet_count" : 1
+            }
+         }
+      ],
+      "flags" : 0
+   }
+}

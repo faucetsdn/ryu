@@ -1,0 +1,15 @@
+{
+   "OFPAggregateStatsRequest" : {
+      "table_id" : 255,
+      "out_group" : 4294967295,
+      "flags" : 0,
+      "match" : {
+         "OFPMatch" : {
+            "fields" : []
+         }
+      },
+      "cookie" : 0,
+      "out_port" : 4294967295,
+      "cookie_mask" : 0
+   }
+}
