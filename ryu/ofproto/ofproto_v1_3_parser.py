@@ -2802,21 +2802,23 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
 
 
 class OFPTableFeaturesStats(StringifyMixin):
-    def __init__(self):
+    def __init__(self, table_id=None, name=None, metadata_match=None,
+                 metadata_write=None, config=None, max_entries=None,
+                 properties=None):
         super(OFPTableFeaturesStats, self).__init__()
-        self.length = None
-        self.table_id = None
-        self.name = None
-        self.metadata_match = None
-        self.metadata_write = None
-        self.config = None
-        self.max_entries = None
-        self.properties = None
+        self._length = None
+        self.table_id = table_id
+        self.name = name
+        self.metadata_match = metadata_match
+        self.metadata_write = metadata_write
+        self.config = config
+        self.max_entries = max_entries
+        self.properties = properties
 
     @classmethod
     def parser(cls, buf, offset):
         table_features = cls()
-        (table_features.length, table_features.table_id,
+        (table_features._length, table_features.table_id,
          table_features.name, table_features.metadata_match,
          table_features.metadata_write, table_features.config,
          table_features.max_entries
@@ -2854,8 +2856,8 @@ class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPTableFeaturesStatsReply(OFPMultipartReply):
-    def __init__(self, datapath):
-        super(OFPTableFeaturesStatsReply, self).__init__(datapath)
+    def __init__(self, datapath, **kwargs):
+        super(OFPTableFeaturesStatsReply, self).__init__(datapath, **kwargs)
 
 
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_DESC, OFPPort)
