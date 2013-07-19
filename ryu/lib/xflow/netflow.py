@@ -117,7 +117,7 @@ class NetFlowV5Flow(object):
         (srcaddr, dstaddr, nexthop, input_, output, dpkts, doctets,
          first, last, srcport, dstport, tcp_flags, prot, tos, src_as,
          dst_as, src_mask, dst_mask) = struct.unpack_from(
-             cls._PACK_STR, buf, offset)
+            cls._PACK_STR, buf, offset)
         msg = cls(srcaddr, dstaddr, nexthop, input_, output, dpkts,
                   doctets, first, last, srcport, dstport, tcp_flags,
                   prot, tos, src_as, dst_as, src_mask, dst_mask)

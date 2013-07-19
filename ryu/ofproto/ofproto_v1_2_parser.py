@@ -205,8 +205,8 @@ class OFPSwitchFeatures(MsgBase):
          msg.n_tables,
          msg.capabilities,
          msg._reserved) = struct.unpack_from(
-             ofproto_v1_2.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
-             ofproto_v1_2.OFP_HEADER_SIZE)
+            ofproto_v1_2.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
+            ofproto_v1_2.OFP_HEADER_SIZE)
 
         msg.ports = {}
         n_ports = ((msg_len - ofproto_v1_2.OFP_SWITCH_FEATURES_SIZE) /
@@ -278,8 +278,8 @@ class OFPPacketIn(MsgBase):
                                              msg_len, xid, buf)
         (msg.buffer_id, msg.total_len, msg.reason,
          msg.table_id) = struct.unpack_from(
-             ofproto_v1_2.OFP_PACKET_IN_PACK_STR,
-             msg.buf, ofproto_v1_2.OFP_HEADER_SIZE)
+            ofproto_v1_2.OFP_PACKET_IN_PACK_STR,
+            msg.buf, ofproto_v1_2.OFP_HEADER_SIZE)
 
         msg.match = OFPMatch.parser(msg.buf, ofproto_v1_2.OFP_PACKET_IN_SIZE -
                                     ofproto_v1_2.OFP_MATCH_SIZE)
@@ -324,9 +324,9 @@ class OFPFlowRemoved(MsgBase):
          msg.table_id, msg.duration_sec, msg.duration_nsec,
          msg.idle_timeout, msg.hard_timeout, msg.packet_count,
          msg.byte_count) = struct.unpack_from(
-             ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR0,
-             msg.buf,
-             ofproto_v1_2.OFP_HEADER_SIZE)
+            ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR0,
+            msg.buf,
+            ofproto_v1_2.OFP_HEADER_SIZE)
 
         offset = (ofproto_v1_2.OFP_FLOW_REMOVED_SIZE -
                   ofproto_v1_2.OFP_MATCH_SIZE)
@@ -1075,8 +1075,8 @@ class OFPFlowStats(StringifyMixin):
          duration_nsec, priority,
          idle_timeout, hard_timeout,
          cookie, packet_count, byte_count) = struct.unpack_from(
-             ofproto_v1_2.OFP_FLOW_STATS_PACK_STR,
-             buf, offset)
+            ofproto_v1_2.OFP_FLOW_STATS_PACK_STR,
+            buf, offset)
         offset += (ofproto_v1_2.OFP_FLOW_STATS_SIZE -
                    ofproto_v1_2.OFP_MATCH_SIZE)
         match = OFPMatch.parser(buf, offset)
@@ -1274,8 +1274,8 @@ class OFPGroupStats(StringifyMixin):
     def parser(cls, buf, offset):
         (length, group_id, ref_count, packet_count,
          byte_count) = struct.unpack_from(
-             ofproto_v1_2.OFP_GROUP_STATS_PACK_STR,
-             buf, offset)
+            ofproto_v1_2.OFP_GROUP_STATS_PACK_STR,
+            buf, offset)
 
         bucket_len = length - ofproto_v1_2.OFP_GROUP_STATS_SIZE
         offset += ofproto_v1_2.OFP_GROUP_STATS_SIZE

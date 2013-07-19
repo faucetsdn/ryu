@@ -394,7 +394,7 @@ class GRETunnel(app_manager.RyuApp):
         self.port_set = PortSet(**kwargs)
         map(lambda ev_cls: self.port_set.register_observer(ev_cls, self.name),
             [dpset.EventDP, PortSet.EventTunnelKeyDel, PortSet.EventVMPort,
-            PortSet.EventTunnelPort, ofp_event.EventOFPPacketIn])
+             PortSet.EventTunnelPort, ofp_event.EventOFPPacketIn])
 
     # TODO: track active vm/tunnel ports
 

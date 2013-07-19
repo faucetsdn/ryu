@@ -228,8 +228,8 @@ class OFPSwitchFeatures(MsgBase):
          msg.auxiliary_id,
          msg.capabilities,
          msg._reserved) = struct.unpack_from(
-             ofproto_v1_3.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
-             ofproto_v1_3.OFP_HEADER_SIZE)
+            ofproto_v1_3.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
+            ofproto_v1_3.OFP_HEADER_SIZE)
         return msg
 
 
@@ -1420,8 +1420,8 @@ class OFPPacketIn(MsgBase):
                                              msg_len, xid, buf)
         (msg.buffer_id, msg.total_len, msg.reason,
          msg.table_id, msg.cookie) = struct.unpack_from(
-             ofproto_v1_3.OFP_PACKET_IN_PACK_STR,
-             msg.buf, ofproto_v1_3.OFP_HEADER_SIZE)
+            ofproto_v1_3.OFP_PACKET_IN_PACK_STR,
+            msg.buf, ofproto_v1_3.OFP_HEADER_SIZE)
 
         msg.match = OFPMatch.parser(msg.buf, ofproto_v1_3.OFP_PACKET_IN_SIZE -
                                     ofproto_v1_3.OFP_MATCH_SIZE)
@@ -1466,8 +1466,8 @@ class OFPFlowRemoved(MsgBase):
          msg.table_id, msg.duration_sec, msg.duration_nsec,
          msg.idle_timeout, msg.hard_timeout, msg.packet_count,
          msg.byte_count) = struct.unpack_from(
-             ofproto_v1_3.OFP_FLOW_REMOVED_PACK_STR0,
-             msg.buf, ofproto_v1_3.OFP_HEADER_SIZE)
+            ofproto_v1_3.OFP_FLOW_REMOVED_PACK_STR0,
+            msg.buf, ofproto_v1_3.OFP_HEADER_SIZE)
 
         offset = (ofproto_v1_3.OFP_FLOW_REMOVED_SIZE -
                   ofproto_v1_3.OFP_MATCH_SIZE)
@@ -2254,7 +2254,7 @@ class OFPFlowStats(StringifyMixin):
          flow_stats.hard_timeout, flow_stats.flags,
          flow_stats.cookie, flow_stats.packet_count,
          flow_stats.byte_count) = struct.unpack_from(
-             ofproto_v1_3.OFP_FLOW_STATS_0_PACK_STR, buf, offset)
+            ofproto_v1_3.OFP_FLOW_STATS_0_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_FLOW_STATS_0_SIZE
 
         flow_stats.match = OFPMatch.parser(buf, offset)
@@ -2523,7 +2523,7 @@ class OFPGroupDescStatsReply(OFPMultipartReply):
 
 class OFPGroupFeaturesStats(ofproto_parser.namedtuple('OFPGroupFeaturesStats',
                             ('types', 'capabilities', 'max_groups',
-                            'actions'))):
+                             'actions'))):
     @classmethod
     def parser(cls, buf, offset):
         group_features = struct.unpack_from(
@@ -2586,7 +2586,7 @@ class OFPMeterStats(StringifyMixin):
          meter_stats.flow_count, meter_stats.packet_in_count,
          meter_stats.byte_in_count, meter_stats.duration_sec,
          meter_stats.duration_nsec) = struct.unpack_from(
-             ofproto_v1_3.OFP_METER_STATS_PACK_STR, buf, offset)
+            ofproto_v1_3.OFP_METER_STATS_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_METER_STATS_SIZE
 
         meter_stats.band_stats = []
@@ -2738,7 +2738,7 @@ class OFPMeterConfigStats(StringifyMixin):
 
         (meter_config._length, meter_config.flags,
          meter_config.meter_id) = struct.unpack_from(
-             ofproto_v1_3.OFP_METER_CONFIG_PACK_STR, buf, offset)
+            ofproto_v1_3.OFP_METER_CONFIG_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_METER_CONFIG_SIZE
 
         meter_config.bands = []
@@ -2776,7 +2776,7 @@ class OFPMeterConfigStatsReply(OFPMultipartReply):
 
 class OFPMeterFeaturesStats(ofproto_parser.namedtuple('OFPMeterFeaturesStats',
                             ('max_meter', 'band_types', 'capabilities',
-                            'max_band', 'max_color'))):
+                             'max_band', 'max_color'))):
     @classmethod
     def parser(cls, buf, offset):
         meter_features = struct.unpack_from(
@@ -3078,8 +3078,8 @@ class OFPGetAsyncReply(MsgBase):
         (packet_in_mask_m, packet_in_mask_s,
          port_status_mask_m, port_status_mask_s,
          flow_removed_mask_m, flow_removed_mask_s) = struct.unpack_from(
-             ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
-             ofproto_v1_3.OFP_HEADER_SIZE)
+            ofproto_v1_3.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
+            ofproto_v1_3.OFP_HEADER_SIZE)
         msg.packet_in_mask = [packet_in_mask_m, packet_in_mask_s]
         msg.port_status_mask = [port_status_mask_m, port_status_mask_s]
         msg.flow_removed_mask = [flow_removed_mask_m, flow_removed_mask_s]

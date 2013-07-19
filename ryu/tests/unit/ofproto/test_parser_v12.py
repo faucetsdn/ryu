@@ -5926,7 +5926,7 @@ class TestOFPGroupDescStats(unittest.TestCase):
         # OFP_GROUP_DESC_STATS_PACK_STR = '!HBxI'
         length = ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE \
             + (ofproto_v1_2.OFP_BUCKET_SIZE
-            + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE) * bucket_cnt
+               + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE) * bucket_cnt
 
         fmt = ofproto_v1_2.OFP_GROUP_DESC_STATS_PACK_STR
         buf = pack(fmt, length, type_, group_id)

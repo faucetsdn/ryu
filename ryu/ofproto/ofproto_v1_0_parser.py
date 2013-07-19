@@ -618,7 +618,7 @@ class NXActionRegMove(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, n_bits, src_ofs, dst_ofs,
             src, dst) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
         return cls(n_bits, src_ofs, dst_ofs, src, dst)
 
 
@@ -640,7 +640,7 @@ class NXActionRegLoad(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
             value) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, value)
 
 
@@ -687,7 +687,7 @@ class NXActionMultipath(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, fields, basis, algorithm,
             max_link, arg, ofs_nbits, dst) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
         return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
                    dst)
 
@@ -772,7 +772,7 @@ class NXActionBundleBase(NXActionHeader):
     def parser(cls, action_cls, buf, offset):
         (type_, len_, vendor, subtype, algorithm, fields, basis,
             slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
         slave_offset = offset + ofproto_v1_0.NX_ACTION_BUNDLE_SIZE
 
         slaves = []
@@ -829,7 +829,7 @@ class NXActionAutopath(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
             id_) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, id_)
 
 
@@ -851,7 +851,7 @@ class NXActionOutputReg(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, src,
             max_len) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
         return cls(ofs_nbits, src, max_len)
 
 
@@ -921,7 +921,7 @@ class NXActionLearn(NXActionHeader):
         (type_, len_, vendor, subtype, idle_timeout, hard_timeout, priority,
             cookie, flags, table_id, fin_idle_timeout,
             fin_hard_timeout) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset)
         spec = buf[offset + ofproto_v1_0.NX_ACTION_LEARN_SIZE:]
         return cls(idle_timeout, hard_timeout, priority,
                    cookie, flags, table_id, fin_idle_timeout,
@@ -946,7 +946,7 @@ class NXActionController(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, max_len, controller_id, reason,
             _zero) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
         return cls(max_len, controller_id, reason)
 
 
@@ -967,7 +967,7 @@ class NXActionFinTimeout(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, fin_idle_timeout,
             fin_hard_timeout) = struct.unpack_from(
-                ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
         return cls(fin_idle_timeout, fin_hard_timeout)
 
 
@@ -1017,7 +1017,7 @@ class OFPFlowStats(StringifyMixin):
          flow_stats.cookie,
          flow_stats.packet_count,
          flow_stats.byte_count) = struct.unpack_from(
-             ofproto_v1_0.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
+            ofproto_v1_0.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
         offset += ofproto_v1_0.OFP_FLOW_STATS_1_SIZE
 
         flow_stats.actions = []
@@ -1116,7 +1116,7 @@ class NXFlowStats(StringifyMixin):
          nxflow_stats.idle_age, nxflow_stats.hard_age,
          nxflow_stats.cookie, nxflow_stats.packet_count,
          nxflow_stats.byte_count) = struct.unpack_from(
-             ofproto_v1_0.NX_FLOW_STATS_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_FLOW_STATS_PACK_STR, buf, offset)
         offset += ofproto_v1_0.NX_FLOW_STATS_SIZE
 
         fields = []
@@ -1506,7 +1506,7 @@ class NXTFlowRemoved(NiciraHeader):
         (cookie, priority, reason, duration_sec, duration_nsec,
          idle_timeout, match_len,
          packet_count, byte_count) = struct.unpack_from(
-             ofproto_v1_0.NX_FLOW_REMOVED_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_FLOW_REMOVED_PACK_STR, buf, offset)
         offset += (ofproto_v1_0.NX_FLOW_REMOVED_SIZE
                    - ofproto_v1_0.NICIRA_HEADER_SIZE)
         match = nx_match.NXMatch.parser(buf, offset, match_len)
@@ -1547,7 +1547,7 @@ class NXTPacketIn(NiciraHeader):
     def parser(cls, datapath, buf, offset):
         (buffer_id, total_len, reason, table_id,
          cookie, match_len) = struct.unpack_from(
-             ofproto_v1_0.NX_PACKET_IN_PACK_STR, buf, offset)
+            ofproto_v1_0.NX_PACKET_IN_PACK_STR, buf, offset)
 
         offset += (ofproto_v1_0.NX_PACKET_IN_SIZE
                    - ofproto_v1_0.NICIRA_HEADER_SIZE)
@@ -1629,8 +1629,8 @@ class OFPSwitchFeatures(MsgBase):
          msg.n_tables,
          msg.capabilities,
          msg.actions) = struct.unpack_from(
-             ofproto_v1_0.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
-             ofproto_v1_0.OFP_HEADER_SIZE)
+            ofproto_v1_0.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
+            ofproto_v1_0.OFP_HEADER_SIZE)
 
         msg.ports = {}
         n_ports = ((msg_len - ofproto_v1_0.OFP_SWITCH_FEATURES_SIZE) /
@@ -1685,8 +1685,8 @@ class OFPPacketIn(MsgBase):
          msg.total_len,
          msg.in_port,
          msg.reason) = struct.unpack_from(
-             ofproto_v1_0.OFP_PACKET_IN_PACK_STR,
-             msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
+            ofproto_v1_0.OFP_PACKET_IN_PACK_STR,
+            msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
         msg.data = msg.buf[ofproto_v1_0.OFP_PACKET_IN_DATA_OFFSET:]
         if msg.total_len < len(msg.data):
             # discard padding for 8-byte alignment of OFP packet
@@ -1738,8 +1738,8 @@ class OFPFlowRemoved(MsgBase):
          msg.idle_timeout,
          msg.packet_count,
          msg.byte_count) = struct.unpack_from(
-             ofproto_v1_0.OFP_FLOW_REMOVED_PACK_STR0, msg.buf,
-             ofproto_v1_0.OFP_HEADER_SIZE + ofproto_v1_0.OFP_MATCH_SIZE)
+            ofproto_v1_0.OFP_FLOW_REMOVED_PACK_STR0, msg.buf,
+            ofproto_v1_0.OFP_HEADER_SIZE + ofproto_v1_0.OFP_MATCH_SIZE)
 
         return msg
 
