@@ -2869,8 +2869,8 @@ class OFPPortDescStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_DESC, OFPPort)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPPortDescStatsReply(OFPMultipartReply):
-    def __init__(self, datapath):
-        super(OFPPortDescStatsReply, self).__init__(datapath)
+    def __init__(self, datapath, **kwargs):
+        super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
 # TODO: OFPMP_EXPERIMENTER
