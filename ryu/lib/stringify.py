@@ -53,13 +53,10 @@ class StringifyMixin(object):
         return obj_python_attrs(self)
 
     def __str__(self):
-        buf = ''
-        sep = ''
-        for k, v in self.stringify_attrs():
-            buf += sep
-            buf += "%s=%s" % (k, repr(v))  # repr() to escape binaries
-            sep = ','
-        return self.__class__.__name__ + '(' + buf + ')'
+        # repr() to escape binaries
+        return self.__class__.__name__ + '(' + \
+            ','.join("%s=%s" % (k, repr(v)) for k, v in
+                     self.stringify_attrs()) + ')'
     __repr__ = __str__  # note: str(list) uses __repr__ for elements
 
     @classmethod
