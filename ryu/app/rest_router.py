@@ -528,7 +528,7 @@ class Router(dict):
                 if msg[REST_RESULT] == REST_NG:
                     # Data setting is failure.
                     self._del_vlan_router(vlan_router.vlan_id, waiters)
-            except Exception as err_msg:
+            except ValueError as err_msg:
                 # Data setting is failure.
                 self._del_vlan_router(vlan_router.vlan_id, waiters)
                 raise err_msg
