@@ -135,7 +135,9 @@ def from_user(name_to_field, name, user_value):
             num = int(name.split('_')[1])
         else:
             raise KeyError('unknown match field ' + name)
-    if isinstance(user_value, tuple):
+    # the 'list' case below is a bit hack; json.dumps silently maps
+    # python tuples into json lists.
+    if isinstance(user_value, (tuple, list)):
         (value, mask) = user_value
     else:
         value = user_value
