@@ -1605,7 +1605,7 @@ class FlowWildcards(object):
 
 
 class OFPMatch(StringifyMixin):
-    def __init__(self, fields=[], type_=None):
+    def __init__(self, fields=[], type_=None, **kwargs):
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
         self._flow = Flow()
@@ -1635,10 +1635,53 @@ class OFPMatch(StringifyMixin):
                     f = cls(header, value, mask)
                     self.fields.append(f)
 
+        # eg.
+        #   OFPMatch(eth_src=('ff:ff:ff:00:00:00'), eth_type=0x800,
+        #            ipv4_src='10.0.0.1')
+        self._fields2 = dict(ofproto_v1_2.oxm_normalize_user(k, uv) for (k, uv)
+                             in kwargs.iteritems())
+
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
 
     def serialize(self, buf, offset):
+        # XXX compat
+        if self.fields or self._wc.__dict__ != FlowWildcards().__dict__:
+            return self.serialize_old(buf, offset)
+
+        fields = [ofproto_v1_2.oxm_from_user(k, v) for (k, v)
+                  in self._fields2.iteritems()]
+
+        # assumption: sorting by OXM type values makes fields
+        # meet ordering requirements (eg. eth_type before ipv4_src)
+        fields.sort()
+
+        hdr_pack_str = '!HH'
+        field_offset = offset + struct.calcsize(hdr_pack_str)
+        for (n, value, mask) in fields:
+            if mask:
+                assert len(value) == len(mask)
+                pack_str = "!I%ds%ds" % (len(value), len(mask))
+                msg_pack_into(pack_str, buf, field_offset,
+                              ofproto_v1_2.oxm_tlv_header_w(n, len(value)),
+                              value, mask)
+            else:
+                pack_str = "!I%ds" % (len(value),)
+                msg_pack_into(pack_str, buf, field_offset,
+                              ofproto_v1_2.oxm_tlv_header(n, len(value)),
+                              value)
+            field_offset += struct.calcsize(pack_str)
+
+        length = field_offset - offset
+        msg_pack_into(hdr_pack_str, buf, offset,
+                      ofproto_v1_2.OFPMT_OXM, length)
+
+        pad_len = utils.round_up(length, 8) - length
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
+
+        return length + pad_len
+
+    def serialize_old(self, buf, offset):
         if self._wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PORT):
             self.append_field(ofproto_v1_2.OXM_OF_IN_PORT,
                               self._flow.in_port)
