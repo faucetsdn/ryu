@@ -1653,6 +1653,15 @@ class OFPMatch(StringifyMixin):
     def get(self, key, default=None):
         return self._fields2.get(key, default)
 
+    stringify_attrs = iteritems
+
+    def to_jsondict(self):
+        return super(OFPMatch, self).to_jsondict(lambda x: x)
+
+    @classmethod
+    def from_jsondict(cls, dict_):
+        return super(OFPMatch, cls).from_jsondict(dict_, lambda x: x)
+
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
 
