@@ -1024,7 +1024,7 @@ class OFPMatchField(StringifyMixin):
 
     def _put_header(self, buf, offset):
         ofproto_parser.msg_pack_into('!I', buf, offset, self.header)
-        self.length += 4
+        self.length = 4
 
     def _put(self, buf, offset, value):
         ofproto_parser.msg_pack_into(self.pack_str, buf, offset, value)
