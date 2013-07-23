@@ -1656,7 +1656,18 @@ class OFPMatch(StringifyMixin):
     stringify_attrs = iteritems
 
     def to_jsondict(self):
-        return super(OFPMatch, self).to_jsondict(lambda x: x)
+        # XXX old api compat
+        if self._composed_with_old_api():
+            # copy object first because serialize_old is destructive
+            o2 = OFPMatch()
+            o2.fields = self.fields[:]
+            # serialize and parse to fill OFPMatch._fields2
+            buf = bytearray()
+            o2.serialize(buf, 0)
+            o = OFPMatch.parser(str(buf), 0)
+        else:
+            o = self
+        return super(OFPMatch, o).to_jsondict(lambda x: x)
 
     @classmethod
     def from_jsondict(cls, dict_):
