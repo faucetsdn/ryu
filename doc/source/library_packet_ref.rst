@@ -62,3 +62,21 @@ Protocol Header classes
    :members:
 .. autoclass:: ryu.lib.packet.slow.lacp
    :members:
+
+.. autoclass:: ryu.lib.packet.llc.llc
+   :members:
+.. autoclass:: ryu.lib.packet.llc.ControlFormatI
+   :members:
+.. autoclass:: ryu.lib.packet.llc.ControlFormatS
+   :members:
+.. autoclass:: ryu.lib.packet.llc.ControlFormatU
+   :members:
+
+.. autoclass:: ryu.lib.packet.bpdu.bpdu
+   :members:
+.. autoclass:: ryu.lib.packet.bpdu.ConfigurationBPDUs
+   :members:
+.. autoclass:: ryu.lib.packet.bpdu.TopologyChangeNotificationBPDUs
+   :members:
+.. autoclass:: ryu.lib.packet.bpdu.RstBPDUs
+   :members:
