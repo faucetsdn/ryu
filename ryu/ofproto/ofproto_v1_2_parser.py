@@ -1641,6 +1641,12 @@ class OFPMatch(StringifyMixin):
         self._fields2 = dict(ofproto_v1_2.oxm_normalize_user(k, uv) for (k, uv)
                              in kwargs.iteritems())
 
+    def __getitem__(self, key):
+        return self._fields2[key]
+
+    def __contains__(self, key):
+        return key in self._fields2
+
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
 
