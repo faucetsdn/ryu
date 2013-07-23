@@ -57,3 +57,8 @@ Protocol Header classes
    :members:
 .. autoclass:: ryu.lib.packet.vrrp.vrrpv3
    :members:
+
+.. autoclass:: ryu.lib.packet.slow.slow
+   :members:
+.. autoclass:: ryu.lib.packet.slow.lacp
+   :members:
