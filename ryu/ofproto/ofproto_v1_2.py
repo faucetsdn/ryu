@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ryu.ofproto import oxm_fields
+
 from struct import calcsize
 
 # struct ofp_header
@@ -163,44 +165,6 @@ OFPXMC_NXM_0 = 0x0000  # Backward compatibility with NXM
 OFPXMC_NXM_1 = 0x0001  # Backward compatibility with NXM
 OFPXMC_OPENFLOW_BASIC = 0x8000  # Basic class for OpenFlow
 OFPXMC_EXPERIMENTER = 0xFFFF  # Experimenter class
-
-# enmu oxm_ofb_match_fields
-OFPXMT_OFB_IN_PORT = 0  # Switch input port.
-OFPXMT_OFB_IN_PHY_PORT = 1  # Switch physical input port.
-OFPXMT_OFB_METADATA = 2  # Metadata passed between tables.
-OFPXMT_OFB_ETH_DST = 3  # Ethernet destination address.
-OFPXMT_OFB_ETH_SRC = 4  # Ethernet source address.
-OFPXMT_OFB_ETH_TYPE = 5  # Ethernet frame type.
-OFPXMT_OFB_VLAN_VID = 6  # VLAN id.
-OFPXMT_OFB_VLAN_PCP = 7  # VLAN priority.
-OFPXMT_OFB_IP_DSCP = 8  # IP DSCP (6 bits in ToS field).
-OFPXMT_OFB_IP_ECN = 9  # IP ECN (2 bits in ToS field).
-OFPXMT_OFB_IP_PROTO = 10  # IP protocol.
-OFPXMT_OFB_IPV4_SRC = 11  # IPv4 source address.
-OFPXMT_OFB_IPV4_DST = 12  # IPv4 destination address.
-OFPXMT_OFB_TCP_SRC = 13  # TCP source port.
-OFPXMT_OFB_TCP_DST = 14  # TCP destination port.
-OFPXMT_OFB_UDP_SRC = 15  # UDP source port.
-OFPXMT_OFB_UDP_DST = 16  # UDP destination port.
-OFPXMT_OFB_SCTP_SRC = 17  # SCTP source port.
-OFPXMT_OFB_SCTP_DST = 18  # SCTP destination port.
-OFPXMT_OFB_ICMPV4_TYPE = 19  # ICMP type.
-OFPXMT_OFB_ICMPV4_CODE = 20  # ICMP code.
-OFPXMT_OFB_ARP_OP = 21  # ARP opcode.
-OFPXMT_OFB_ARP_SPA = 22  # ARP source IPv4 address.
-OFPXMT_OFB_ARP_TPA = 23  # ARP target IPv4 address.
-OFPXMT_OFB_ARP_SHA = 24  # ARP source hardware address.
-OFPXMT_OFB_ARP_THA = 25  # ARP target hardware address.
-OFPXMT_OFB_IPV6_SRC = 26  # IPv6 source address.
-OFPXMT_OFB_IPV6_DST = 27  # IPv6 destination address.
-OFPXMT_OFB_IPV6_FLABEL = 28  # IPv6 Flow Label
-OFPXMT_OFB_ICMPV6_TYPE = 29  # ICMPv6 type.
-OFPXMT_OFB_ICMPV6_CODE = 30  # ICMPv6 code.
-OFPXMT_OFB_IPV6_ND_TARGET = 31  # Target address for ND.
-OFPXMT_OFB_IPV6_ND_SLL = 32  # Source link-layer for ND.
-OFPXMT_OFB_IPV6_ND_TLL = 33  # Target link-layer for ND.
-OFPXMT_OFB_MPLS_LABEL = 34  # MPLS label.
-OFPXMT_OFB_MPLS_TC = 35  # MPLS TC.
 
 # enum ofp_vlan_id
 OFPVID_PRESENT = 0x1000  # bit that indicate that a VLAN id is set.
@@ -816,56 +780,46 @@ def oxm_tlv_header_extract_length(header):
         length = header & 0xff
     return length
 
+oxm_types = [
+    oxm_fields.OpenFlowBasic('in_port', 0, oxm_fields.Int4),
+    oxm_fields.OpenFlowBasic('in_phy_port', 1, oxm_fields.Int4),
+    oxm_fields.OpenFlowBasic('metadata', 2, oxm_fields.Int8),
+    oxm_fields.OpenFlowBasic('eth_dst', 3, oxm_fields.MacAddr),
+    oxm_fields.OpenFlowBasic('eth_src', 4, oxm_fields.MacAddr),
+    oxm_fields.OpenFlowBasic('eth_type', 5, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('vlan_vid', 6, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('vlan_pcp', 7, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('ip_dscp', 8, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('ip_ecn', 9, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('ip_proto', 10, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('ipv4_src', 11, oxm_fields.IPv4Addr),
+    oxm_fields.OpenFlowBasic('ipv4_dst', 12, oxm_fields.IPv4Addr),
+    oxm_fields.OpenFlowBasic('tcp_src', 13, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('tcp_dst', 14, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('udp_src', 15, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('udp_dst', 16, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('sctp_src', 17, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('sctp_dst', 18, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('icmpv4_type', 19, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('icmpv4_code', 20, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('arp_op', 21, oxm_fields.Int2),
+    oxm_fields.OpenFlowBasic('arp_spa', 22, oxm_fields.IPv4Addr),
+    oxm_fields.OpenFlowBasic('arp_tpa', 23, oxm_fields.IPv4Addr),
+    oxm_fields.OpenFlowBasic('arp_sha', 24, oxm_fields.MacAddr),
+    oxm_fields.OpenFlowBasic('arp_tha', 25, oxm_fields.MacAddr),
+    oxm_fields.OpenFlowBasic('ipv6_src', 26, oxm_fields.IPv6Addr),
+    oxm_fields.OpenFlowBasic('ipv6_dst', 27, oxm_fields.IPv6Addr),
+    oxm_fields.OpenFlowBasic('ipv6_flabel', 28, oxm_fields.Int4),
+    oxm_fields.OpenFlowBasic('icmpv6_type', 29, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('icmpv6_code', 30, oxm_fields.Int1),
+    oxm_fields.OpenFlowBasic('ipv6_nd_target', 31, oxm_fields.IPv6Addr),
+    oxm_fields.OpenFlowBasic('ipv6_nd_sll', 32, oxm_fields.MacAddr),
+    oxm_fields.OpenFlowBasic('ipv6_nd_tll', 33, oxm_fields.MacAddr),
+    oxm_fields.OpenFlowBasic('mpls_label', 34, oxm_fields.Int4),
+    oxm_fields.OpenFlowBasic('mpls_tc', 35, oxm_fields.Int1),
+]
 
-OXM_OF_IN_PORT = oxm_tlv_header(OFPXMT_OFB_IN_PORT, 4)
-OXM_OF_IN_PHY_PORT = oxm_tlv_header(OFPXMT_OFB_IN_PHY_PORT, 4)
-OXM_OF_METADATA = oxm_tlv_header(OFPXMT_OFB_METADATA, 8)
-OXM_OF_METADATA_W = oxm_tlv_header_w(OFPXMT_OFB_METADATA, 8)
-OXM_OF_ETH_DST = oxm_tlv_header(OFPXMT_OFB_ETH_DST, 6)
-OXM_OF_ETH_DST_W = oxm_tlv_header_w(OFPXMT_OFB_ETH_DST, 6)
-OXM_OF_ETH_SRC = oxm_tlv_header(OFPXMT_OFB_ETH_SRC, 6)
-OXM_OF_ETH_SRC_W = oxm_tlv_header_w(OFPXMT_OFB_ETH_SRC, 6)
-OXM_OF_ETH_TYPE = oxm_tlv_header(OFPXMT_OFB_ETH_TYPE, 2)
-OXM_OF_VLAN_VID = oxm_tlv_header(OFPXMT_OFB_VLAN_VID, 2)
-OXM_OF_VLAN_VID_W = oxm_tlv_header_w(OFPXMT_OFB_VLAN_VID, 2)
-OXM_OF_VLAN_PCP = oxm_tlv_header(OFPXMT_OFB_VLAN_PCP, 1)
-OXM_OF_IP_DSCP = oxm_tlv_header(OFPXMT_OFB_IP_DSCP, 1)
-OXM_OF_IP_ECN = oxm_tlv_header(OFPXMT_OFB_IP_ECN, 1)
-OXM_OF_IP_PROTO = oxm_tlv_header(OFPXMT_OFB_IP_PROTO, 1)
-OXM_OF_IPV4_SRC = oxm_tlv_header(OFPXMT_OFB_IPV4_SRC, 4)
-OXM_OF_IPV4_SRC_W = oxm_tlv_header_w(OFPXMT_OFB_IPV4_SRC, 4)
-OXM_OF_IPV4_DST = oxm_tlv_header(OFPXMT_OFB_IPV4_DST, 4)
-OXM_OF_IPV4_DST_W = oxm_tlv_header_w(OFPXMT_OFB_IPV4_DST, 4)
-OXM_OF_TCP_SRC = oxm_tlv_header(OFPXMT_OFB_TCP_SRC, 2)
-OXM_OF_TCP_DST = oxm_tlv_header(OFPXMT_OFB_TCP_DST, 2)
-OXM_OF_UDP_SRC = oxm_tlv_header(OFPXMT_OFB_UDP_SRC, 2)
-OXM_OF_UDP_DST = oxm_tlv_header(OFPXMT_OFB_UDP_DST, 2)
-OXM_OF_SCTP_SRC = oxm_tlv_header(OFPXMT_OFB_SCTP_SRC, 2)
-OXM_OF_SCTP_DST = oxm_tlv_header(OFPXMT_OFB_SCTP_DST, 2)
-OXM_OF_ICMPV4_TYPE = oxm_tlv_header(OFPXMT_OFB_ICMPV4_TYPE, 1)
-OXM_OF_ICMPV4_CODE = oxm_tlv_header(OFPXMT_OFB_ICMPV4_CODE, 1)
-OXM_OF_ARP_OP = oxm_tlv_header(OFPXMT_OFB_ARP_OP, 2)
-OXM_OF_ARP_SPA = oxm_tlv_header(OFPXMT_OFB_ARP_SPA, 4)
-OXM_OF_ARP_SPA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_SPA, 4)
-OXM_OF_ARP_TPA = oxm_tlv_header(OFPXMT_OFB_ARP_TPA, 4)
-OXM_OF_ARP_TPA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_TPA, 4)
-OXM_OF_ARP_SHA = oxm_tlv_header(OFPXMT_OFB_ARP_SHA, 6)
-OXM_OF_ARP_SHA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_SHA, 6)
-OXM_OF_ARP_THA = oxm_tlv_header(OFPXMT_OFB_ARP_THA, 6)
-OXM_OF_ARP_THA_W = oxm_tlv_header_w(OFPXMT_OFB_ARP_THA, 6)
-OXM_OF_IPV6_SRC = oxm_tlv_header(OFPXMT_OFB_IPV6_SRC, 16)
-OXM_OF_IPV6_SRC_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_SRC, 16)
-OXM_OF_IPV6_DST = oxm_tlv_header(OFPXMT_OFB_IPV6_DST, 16)
-OXM_OF_IPV6_DST_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_DST, 16)
-OXM_OF_IPV6_FLABEL = oxm_tlv_header(OFPXMT_OFB_IPV6_FLABEL, 4)
-OXM_OF_IPV6_FLABEL_W = oxm_tlv_header_w(OFPXMT_OFB_IPV6_FLABEL, 4)
-OXM_OF_ICMPV6_TYPE = oxm_tlv_header(OFPXMT_OFB_ICMPV6_TYPE, 1)
-OXM_OF_ICMPV6_CODE = oxm_tlv_header(OFPXMT_OFB_ICMPV6_CODE, 1)
-OXM_OF_IPV6_ND_TARGET = oxm_tlv_header(OFPXMT_OFB_IPV6_ND_TARGET, 16)
-OXM_OF_IPV6_ND_SLL = oxm_tlv_header(OFPXMT_OFB_IPV6_ND_SLL, 6)
-OXM_OF_IPV6_ND_TLL = oxm_tlv_header(OFPXMT_OFB_IPV6_ND_TLL, 6)
-OXM_OF_MPLS_LABEL = oxm_tlv_header(OFPXMT_OFB_MPLS_LABEL, 4)
-OXM_OF_MPLS_TC = oxm_tlv_header(OFPXMT_OFB_MPLS_TC, 1)
+oxm_fields.generate(__name__)
 
 
 # define constants
