@@ -1650,6 +1650,9 @@ class OFPMatch(StringifyMixin):
     def iteritems(self):
         return self._fields2.iteritems()
 
+    def get(self, key, default=None):
+        return self._fields2.get(key, default)
+
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
 
