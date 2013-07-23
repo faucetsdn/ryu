@@ -24,7 +24,9 @@ from ryu.controller import dpset
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ofproto_v1_3
 from ryu.lib import ofctl_v1_0
+from ryu.lib import ofctl_v1_3
 from ryu.app.wsgi import ControllerBase, WSGIApplication
 
 
@@ -94,6 +96,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             flows = ofctl_v1_0.get_flow_stats(dp, self.waiters)
+        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            flows = ofctl_v1_3.get_flow_stats(dp, self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -138,6 +142,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.mod_flow_entry(dp, flow, cmd)
+        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ofctl_v1_3.mod_flow_entry(dp, flow, cmd)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -159,7 +165,8 @@ class StatsController(ControllerBase):
 
 
 class RestStatsApi(app_manager.RyuApp):
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
+                    ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
         'dpset': dpset.DPSet,
         'wsgi': WSGIApplication
@@ -218,7 +225,13 @@ class RestStatsApi(app_manager.RyuApp):
         lock, msgs = self.waiters[dp.id][msg.xid]
         msgs.append(msg)
 
-        if msg.flags & dp.ofproto.OFPSF_REPLY_MORE:
+        flags = 0
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            flags = dp.ofproto.OFPSF_REPLY_MORE
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            flags = dp.ofproto.OFPMPF_REPLY_MORE
+
+        if msg.flags & flags:
             return
         del self.waiters[dp.id][msg.xid]
         lock.set()
