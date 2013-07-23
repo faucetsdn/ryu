@@ -1892,13 +1892,42 @@ class OFPMatch(StringifyMixin):
         # ofp_match adjustment
         offset += 4
         length -= 4
+
+        # XXXcompat
+        cls.parser_old(match, buf, offset, length)
+
+        fields = {}
+        while length > 0:
+            hdr_pack_str = '!I'
+            (header, ) = struct.unpack_from(hdr_pack_str, buf, offset)
+            hdr_len = struct.calcsize(hdr_pack_str)
+            oxm_type = header >> 9  # class|field
+            oxm_hasmask = ofproto_v1_2.oxm_tlv_header_extract_hasmask(header)
+            value_len = ofproto_v1_2.oxm_tlv_header_extract_length(header)
+            value_pack_str = '!%ds' % value_len
+            assert struct.calcsize(value_pack_str) == value_len
+            (value, ) = struct.unpack_from(value_pack_str, buf,
+                                           offset + hdr_len)
+            if oxm_hasmask:
+                (mask, ) = struct.unpack_from(value_pack_str, buf,
+                                              offset + hdr_len + value_len)
+            else:
+                mask = None
+            k, uv = ofproto_v1_2.oxm_to_user(oxm_type, value, mask)
+            fields[k] = uv
+            field_len = hdr_len + (header & 0xff)
+            offset += field_len
+            length -= field_len
+        match._fields2 = fields
+        return match
+
+    @staticmethod
+    def parser_old(match, buf, offset, length):
         while length > 0:
             field = OFPMatchField.parser(buf, offset)
             offset += field.length
             length -= field.length
             match.fields.append(field)
-
-        return match
 
     def set_in_port(self, port):
         self._wc.ft_set(ofproto_v1_2.OFPXMT_OFB_IN_PORT)
