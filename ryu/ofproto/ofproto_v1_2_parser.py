@@ -1605,7 +1605,7 @@ class FlowWildcards(object):
 
 
 class OFPMatch(StringifyMixin):
-    def __init__(self, fields=[], type_=None, **kwargs):
+    def __init__(self, fields=[], type_=None, _normalize=False, **kwargs):
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
         self._flow = Flow()
@@ -1638,8 +1638,12 @@ class OFPMatch(StringifyMixin):
         # eg.
         #   OFPMatch(eth_src=('ff:ff:ff:00:00:00'), eth_type=0x800,
         #            ipv4_src='10.0.0.1')
-        self._fields2 = dict(ofproto_v1_2.oxm_normalize_user(k, uv) for (k, uv)
-                             in kwargs.iteritems())
+        if _normalize:
+            self._fields2 = dict(ofproto_v1_2.oxm_normalize_user(k, uv)
+                                 for (k, uv)
+                                 in kwargs.iteritems())
+        else:
+            self._fields2 = kwargs
 
     def __getitem__(self, key):
         return self._fields2[key]
@@ -1671,12 +1675,32 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def from_jsondict(cls, dict_):
-        o = super(OFPMatch, cls).from_jsondict(dict_, lambda x: x)
+        # XXX old api compat
+        # the following _normalize=False is a compat hack.
+        # see test_parser_v12.
+        o = super(OFPMatch, cls).from_jsondict(dict_, lambda x: x,
+                                               _normalize=False)
         # XXX old api compat
         # serialize and parse to fill OFPMatch.fields
         buf = bytearray()
         o.serialize(buf, 0)
         return OFPMatch.parser(str(buf), 0)
+
+    def __str__(self):
+        # XXX old api compat
+        if self._composed_with_old_api():
+            # copy object first because serialize_old is destructive
+            o2 = OFPMatch()
+            o2.fields = self.fields[:]
+            # serialize and parse to fill OFPMatch._fields2
+            buf = bytearray()
+            o2.serialize(buf, 0)
+            o = OFPMatch.parser(str(buf), 0)
+        else:
+            o = self
+        return super(OFPMatch, o).__str__()
+
+    __repr__ = __str__
 
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
