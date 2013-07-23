@@ -1605,35 +1605,11 @@ class FlowWildcards(object):
 
 
 class OFPMatch(StringifyMixin):
-    def __init__(self, fields=[], type_=None, _normalize=False, **kwargs):
+    def __init__(self, _normalize=False, **kwargs):
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
         self._flow = Flow()
         self.fields = []
-        # accept type_ and length to be compatible with parser
-        if not type_ is None:
-            self.type = type_
-        if fields:
-            # we are doing de-stringify.
-            # we have two goals:
-            #   - the resulted object should be serialize()-able.
-            #   - the resulted object should be inspectable by applications.
-            #     ie. fields[] should be filled.
-            # mimic appropriate set_foo calls and the first half of serialize.
-            import sys
-            this_module = sys.modules[__name__]
-            for o in fields:
-                assert len(o) == 1
-                for k, v in o.iteritems():
-                    cls = getattr(this_module, k)
-                    mask = v.get("mask", None)
-                    header = OFPMatchField.cls_to_header(cls, not mask is None)
-                    value = v["value"]
-                    value = self._decode_value(value)
-                    if not mask is None:
-                        mask = self._decode_value(mask)
-                    f = cls(header, value, mask)
-                    self.fields.append(f)
 
         # eg.
         #   OFPMatch(eth_src=('ff:ff:ff:00:00:00'), eth_type=0x800,
