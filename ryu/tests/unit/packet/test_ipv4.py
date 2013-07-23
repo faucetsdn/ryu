@@ -50,8 +50,8 @@ class Test_ipv4(unittest.TestCase):
     ttl = 64
     proto = inet.IPPROTO_TCP
     csum = 0xadc6
-    src = int(netaddr.IPAddress('131.151.32.21'))
-    dst = int(netaddr.IPAddress('131.151.32.129'))
+    src = netaddr.IPAddress('131.151.32.21').packed
+    dst = netaddr.IPAddress('131.151.32.129').packed
     length = header_length * 4
     option = '\x86\x28\x00\x00\x00\x01\x01\x22' \
         + '\x00\x01\xae\x00\x00\x00\x00\x00' \

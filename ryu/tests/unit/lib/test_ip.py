@@ -26,11 +26,11 @@ class Test_ip(unittest.TestCase):
         ipv4_str = '10.28.197.1'
         val = 0x0a1cc501
 
-        res = ip.ipv4_to_bin(ipv4_str)
+        (res,) = struct.unpack('!I', ip.ipv4_to_bin(ipv4_str))
         eq_(val, res)
 
     def test_ipv4_to_str(self):
-        ipv4_bin = 0x0a1cc501
+        ipv4_bin = struct.pack('!I', 0x0a1cc501)
         val = '10.28.197.1'
 
         res = ip.ipv4_to_str(ipv4_bin)

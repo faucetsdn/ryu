@@ -26,7 +26,7 @@ from ryu.lib import ip
 
 IPV4_ADDRESS_PACK_STR = '!I'
 IPV4_ADDRESS_LEN = struct.calcsize(IPV4_ADDRESS_PACK_STR)
-IPV4_PSEUDO_HEADER_PACK_STR = '!II2xHH'
+IPV4_PSEUDO_HEADER_PACK_STR = '!4s4s2xHH'
 
 
 class ipv4(packet_base.PacketBase):
@@ -62,7 +62,7 @@ class ipv4(packet_base.PacketBase):
     ============== ====================
     """
 
-    _PACK_STR = '!BBHHHBBHII'
+    _PACK_STR = '!BBHHHBBH4s4s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, version=4, header_length=5, tos=0,

@@ -35,7 +35,7 @@ def checksum(data):
 
 
 # avoid circular import
-_IPV4_PSEUDO_HEADER_PACK_STR = '!IIxBH'
+_IPV4_PSEUDO_HEADER_PACK_STR = '!4s4sxBH'
 _IPV6_PSEUDO_HEADER_PACK_STR = '!16s16sI3xB'
 
 

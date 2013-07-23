@@ -36,10 +36,8 @@ class TestPacket(unittest.TestCase):
 
     dst_mac = mac.haddr_to_bin('AA:AA:AA:AA:AA:AA')
     src_mac = mac.haddr_to_bin('BB:BB:BB:BB:BB:BB')
-    dst_ip = int(netaddr.IPAddress('192.168.128.10'))
-    dst_ip_bin = struct.pack('!I', dst_ip)
-    src_ip = int(netaddr.IPAddress('192.168.122.20'))
-    src_ip_bin = struct.pack('!I', src_ip)
+    dst_ip_bin = dst_ip = netaddr.IPAddress('192.168.128.10').packed
+    src_ip_bin = src_ip = netaddr.IPAddress('192.168.122.20').packed
     payload = '\x06\x06\x47\x50\x00\x00\x00\x00' \
         + '\xcd\xc5\x00\x00\x00\x00\x00\x00' \
         + '\x10\x11\x12\x13\x14\x15\x16\x17' \
@@ -262,7 +260,7 @@ class TestPacket(unittest.TestCase):
         eq_(0x77b2, p_udp.csum)
         t = bytearray(u_buf)
         struct.pack_into('!H', t, 6, p_udp.csum)
-        ph = struct.pack('!IIBBH', self.src_ip, self.dst_ip, 0,
+        ph = struct.pack('!4s4sBBH', self.src_ip, self.dst_ip, 0,
                          17, len(u_buf) + len(self.payload))
         t = ph + t + self.payload
         eq_(packet_utils.checksum(t), 0)
@@ -361,7 +359,7 @@ class TestPacket(unittest.TestCase):
         eq_(len(t_buf), len(p_tcp))
         t = bytearray(t_buf)
         struct.pack_into('!H', t, 16, p_tcp.csum)
-        ph = struct.pack('!IIBBH', self.src_ip, self.dst_ip, 0,
+        ph = struct.pack('!4s4sBBH', self.src_ip, self.dst_ip, 0,
                          6, len(t_buf) + len(self.payload))
         t = ph + t + self.payload
         eq_(packet_utils.checksum(t), 0)

@@ -43,9 +43,9 @@ class Test_arp(unittest.TestCase):
     plen = 4
     opcode = 1
     src_mac = mac.haddr_to_bin('00:07:0d:af:f4:54')
-    src_ip = int(netaddr.IPAddress('24.166.172.1'))
+    src_ip = netaddr.IPAddress('24.166.172.1').packed
     dst_mac = mac.haddr_to_bin('00:00:00:00:00:00')
-    dst_ip = int(netaddr.IPAddress('24.166.173.159'))
+    dst_ip = netaddr.IPAddress('24.166.173.159').packed
 
     fmt = arp._PACK_STR
     buf = pack(fmt, hwtype, proto, hlen, plen, opcode, src_mac, src_ip,

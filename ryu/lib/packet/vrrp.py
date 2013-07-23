@@ -88,7 +88,7 @@ VRRP_IPV4_SRC_MAC_ADDRESS = netaddr.EUI(VRRP_IPV4_SRC_MAC_ADDRESS_STR).packed
 VRRP_IPV4_DST_MAC_ADDRESS_STR = '01:00:5E:00:00:12'
 VRRP_IPV4_DST_MAC_ADDRESS = netaddr.EUI(VRRP_IPV4_DST_MAC_ADDRESS_STR).packed
 VRRP_IPV4_DST_ADDRESS_STR = '224.0.0.18'
-VRRP_IPV4_DST_ADDRESS = netaddr.IPAddress(VRRP_IPV4_DST_ADDRESS_STR).value
+VRRP_IPV4_DST_ADDRESS = netaddr.IPAddress(VRRP_IPV4_DST_ADDRESS_STR).packed
 VRRP_IPV4_TTL = 255
 
 
@@ -166,10 +166,9 @@ VRRP_V2_MAX_ADVER_INT_MAX = 0xff
 
 
 def is_ipv6(ip_address):
-    if type(ip_address) == int:
-        return False
-
     assert type(ip_address) == str
+    if len(ip_address) == 4:
+        return False
     assert len(ip_address) == 16
     return True
 
@@ -203,7 +202,7 @@ class vrrp(packet_base.PacketBase):
     """
 
     _VERSION_PACK_STR = '!B'
-    _IPV4_ADDRESS_PACK_STR_RAW = 'I'
+    _IPV4_ADDRESS_PACK_STR_RAW = '4s'
     _IPV4_ADDRESS_PACK_STR = '!' + _IPV4_ADDRESS_PACK_STR_RAW
     _IPV4_ADDRESS_LEN = struct.calcsize(_IPV4_ADDRESS_PACK_STR)
     _IPV6_ADDRESS_LEN = 16
@@ -580,7 +579,8 @@ class vrrpv3(vrrp):
     @staticmethod
     def serialize_static(vrrp_, prev):
         if isinstance(prev, ipv4.ipv4):
-            assert type(vrrp_.ip_addresses[0]) == int
+            assert type(vrrp_.ip_addresses[0]) == str
+            assert len(vrrp_.ip_addresses[0]) == 4
             ip_address_pack_raw = vrrpv3._IPV4_ADDRESS_PACK_STR_RAW
         elif isinstance(prev, ipv6.ipv6):
             assert type(vrrp_.ip_addresses[0]) == str

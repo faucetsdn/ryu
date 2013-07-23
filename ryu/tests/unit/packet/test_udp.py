@@ -71,8 +71,8 @@ class Test_udp(unittest.TestCase):
         total_length = 0
         csum = 0
 
-        src_ip = int(netaddr.IPAddress('192.168.10.1'))
-        dst_ip = int(netaddr.IPAddress('192.168.100.1'))
+        src_ip = netaddr.IPAddress('192.168.10.1').packed
+        dst_ip = netaddr.IPAddress('192.168.100.1').packed
         prev = ipv4(4, 5, 0, 0, 0, 0, 0, 64,
                     inet.IPPROTO_UDP, 0, src_ip, dst_ip)
 
@@ -85,7 +85,7 @@ class Test_udp(unittest.TestCase):
         eq_(res[2], struct.calcsize(udp._PACK_STR))
 
         # checksum
-        ph = struct.pack('!IIBBH', src_ip, dst_ip, 0, 17, res[2])
+        ph = struct.pack('!4s4sBBH', src_ip, dst_ip, 0, 17, res[2])
         d = ph + buf + bytearray()
         s = packet_utils.checksum(d)
         eq_(0, s)

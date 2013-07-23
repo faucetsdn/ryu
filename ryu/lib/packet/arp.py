@@ -51,7 +51,7 @@ class arp(packet_base.PacketBase):
     ============== ====================
     """
 
-    _PACK_STR = '!HHBBH6sI6sI'
+    _PACK_STR = '!HHBBH6s4s6s4s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, hwtype=ARP_HW_TYPE_ETHERNET, proto=ether.ETH_TYPE_IP,

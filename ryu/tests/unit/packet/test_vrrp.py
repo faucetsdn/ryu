@@ -46,11 +46,11 @@ class Test_vrrpv2(unittest.TestCase):
     auth_type = vrrp.VRRP_AUTH_NO_AUTH
     max_adver_int = 100
     checksum = 0
-    ip_address = netaddr.IPAddress('192.168.0.1').value
+    ip_address = netaddr.IPAddress('192.168.0.1').packed
     auth_data = (0, 0)
     vrrpv2 = vrrp.vrrpv2.create(type_, vrid, priority, max_adver_int,
                                 [ip_address])
-    buf = struct.pack(vrrp.vrrpv2._PACK_STR + 'III',
+    buf = struct.pack(vrrp.vrrpv2._PACK_STR + '4sII',
                       vrrp.vrrp_to_version_type(vrrp.VRRP_VERSION_V2, type_),
                       vrid, priority, count_ip,
                       auth_type, max_adver_int, checksum, ip_address,
@@ -84,12 +84,12 @@ class Test_vrrpv2(unittest.TestCase):
         eq_(self.max_adver_int, vrrpv2.max_adver_int)
         eq_(self.checksum, vrrpv2.checksum)
         eq_(1, len(vrrpv2.ip_addresses))
-        eq_(int, type(vrrpv2.ip_addresses[0]))
+        eq_(str, type(vrrpv2.ip_addresses[0]))
         eq_(self.ip_address, vrrpv2.ip_addresses[0])
         eq_(self.auth_data, vrrpv2.auth_data)
 
     def test_serialize(self):
-        src_ip = netaddr.IPAddress('192.168.0.1').value
+        src_ip = netaddr.IPAddress('192.168.0.1').packed
         dst_ip = vrrp.VRRP_IPV4_DST_ADDRESS
         prev = ipv4.ipv4(4, 5, 0, 0, 0, 0, 0, vrrp.VRRP_IPV4_TTL,
                          inet.IPPROTO_VRRP, 0, src_ip, dst_ip)
@@ -98,14 +98,14 @@ class Test_vrrpv2(unittest.TestCase):
         vrid = 5
         priority = 10
         max_adver_int = 30
-        ip_address = netaddr.IPAddress('192.168.0.2').value
+        ip_address = netaddr.IPAddress('192.168.0.2').packed
         ip_addresses = [ip_address]
 
         vrrp_ = vrrp.vrrpv2.create(
             type_, vrid, priority, max_adver_int, ip_addresses)
 
         buf = vrrp_.serialize(bytearray(), prev)
-        pack_str = vrrp.vrrpv2._PACK_STR + 'III'
+        pack_str = vrrp.vrrpv2._PACK_STR + '4sII'
         pack_len = struct.calcsize(pack_str)
         res = struct.unpack(pack_str, str(buf))
         eq_(res[0], vrrp.vrrp_to_version_type(vrrp.VRRP_VERSION_V2, type_))
@@ -130,7 +130,7 @@ class Test_vrrpv2(unittest.TestCase):
         vrrp.vrrp.parser(m_short_buf)
 
     def test_create_packet(self):
-        primary_ip = netaddr.IPAddress('192.168.0.2').value
+        primary_ip = netaddr.IPAddress('192.168.0.2').packed
         p0 = self.vrrpv2.create_packet(primary_ip)
         p0.serialize()
         p1 = packet.Packet(str(p0.data))
@@ -193,10 +193,10 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
     count_ip = 1
     max_adver_int = 111
     checksum = 0
-    ip_address = netaddr.IPAddress('192.168.0.1').value
+    ip_address = netaddr.IPAddress('192.168.0.1').packed
     vrrpv3 = vrrp.vrrpv3.create(type_, vrid, priority, max_adver_int,
                                 [ip_address])
-    buf = struct.pack(vrrp.vrrpv3._PACK_STR + 'I',
+    buf = struct.pack(vrrp.vrrpv3._PACK_STR + '4s',
                       vrrp.vrrp_to_version_type(vrrp.VRRP_VERSION_V3, type_),
                       vrid, priority, count_ip,
                       max_adver_int, checksum, ip_address)
@@ -226,11 +226,11 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         eq_(self.max_adver_int, vrrpv3.max_adver_int)
         eq_(self.checksum, vrrpv3.checksum)
         eq_(1, len(vrrpv3.ip_addresses))
-        eq_(int, type(vrrpv3.ip_addresses[0]))
+        eq_(str, type(vrrpv3.ip_addresses[0]))
         eq_(self.ip_address, vrrpv3.ip_addresses[0])
 
     def test_serialize(self):
-        src_ip = netaddr.IPAddress('192.168.0.1').value
+        src_ip = netaddr.IPAddress('192.168.0.1').packed
         dst_ip = vrrp.VRRP_IPV4_DST_ADDRESS
         prev = ipv4.ipv4(4, 5, 0, 0, 0, 0, 0, vrrp.VRRP_IPV4_TTL,
                          inet.IPPROTO_VRRP, 0, src_ip, dst_ip)
@@ -239,7 +239,7 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         vrid = 5
         priority = 10
         max_adver_int = 30
-        ip_address = netaddr.IPAddress('192.168.0.2').value
+        ip_address = netaddr.IPAddress('192.168.0.2').packed
         ip_addresses = [ip_address]
 
         vrrp_ = vrrp.vrrpv3.create(
@@ -247,7 +247,7 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
 
         buf = vrrp_.serialize(bytearray(), prev)
         print(len(buf), type(buf), buf)
-        pack_str = vrrp.vrrpv3._PACK_STR + 'I'
+        pack_str = vrrp.vrrpv3._PACK_STR + '4s'
         pack_len = struct.calcsize(pack_str)
         res = struct.unpack(pack_str, str(buf))
         eq_(res[0], vrrp.vrrp_to_version_type(vrrp.VRRP_VERSION_V3, type_))
@@ -261,7 +261,8 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         print(res)
 
         # checksum
-        ph = struct.pack('!IIxBH', src_ip, dst_ip, inet.IPPROTO_VRRP, pack_len)
+        ph = struct.pack('!4s4sxBH', src_ip, dst_ip, inet.IPPROTO_VRRP,
+                         pack_len)
         s = packet_utils.checksum(ph + buf)
         eq_(0, s)
 
@@ -271,7 +272,7 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         vrrp.vrrp.parser(m_short_buf)
 
     def test_create_packet(self):
-        primary_ip = netaddr.IPAddress('192.168.0.2').value
+        primary_ip = netaddr.IPAddress('192.168.0.2').packed
         p0 = self.vrrpv3.create_packet(primary_ip)
         p0.serialize()
         p1 = packet.Packet(str(p0.data))

@@ -100,8 +100,8 @@ class Test_vlan(unittest.TestCase):
         ttl = 64
         proto = inet.IPPROTO_ICMP
         csum = 0xa7f2
-        src = int(netaddr.IPAddress('131.151.32.21'))
-        dst = int(netaddr.IPAddress('131.151.32.129'))
+        src = netaddr.IPAddress('131.151.32.21').packed
+        dst = netaddr.IPAddress('131.151.32.129').packed
         option = 'TEST'
         ip = ipv4(version, header_length, tos, total_length, identification,
                   flags, offset, ttl, proto, csum, src, dst, option)
