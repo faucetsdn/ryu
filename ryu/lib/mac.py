@@ -14,13 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ryu.lib import addrconv
+
 import itertools
 
 # string representation
 HADDR_PATTERN = r'([0-9a-f]{2}:){5}[0-9a-f]{2}'
-
-# Internal representation of mac address is string[6]
-_HADDR_LEN = 6
 
 DONTCARE = '\x00' * 6
 BROADCAST = '\xff' * 6
@@ -37,17 +36,19 @@ def haddr_to_str(addr):
     form"""
     if addr is None:
         return 'None'
-    assert len(addr) == _HADDR_LEN
-    return ':'.join('%02x' % ord(char) for char in addr)
+    try:
+        return addrconv.mac.bin_to_text(addr)
+    except:
+        raise AssertionError
 
 
 def haddr_to_bin(string):
     """Parse mac address string in human readable format into
     internal representation"""
-    hexes = string.split(':')
-    if len(hexes) != _HADDR_LEN:
-        raise ValueError('Invalid format for mac address: %s' % string)
-    return ''.join(chr(int(h, 16)) for h in hexes)
+    try:
+        return addrconv.mac.text_to_bin(string)
+    except:
+        raise ValueError
 
 
 def haddr_bitand(addr, mask):
