@@ -1,61 +1,22 @@
 {
    "OFPPacketIn" : {
-      "buffer_id" : 2,
       "table_id" : 1,
+      "buffer_id" : 2,
       "total_len" : 42,
-      "cookie" : 283686884868096,
       "match" : {
          "OFPMatch" : {
-            "fields" : [
-               {
-                  "MTInPort" : {
-                     "value" : 6
-                  }
-               },
-               {
-                  "MTEthType" : {
-                     "value" : 2054
-                  }
-               },
-               {
-                  "MTEthDst" : {
-                     "value" : "////////"
-                  }
-               },
-               {
-                  "MTEthSrc" : {
-                     "value" : "8gukffjq"
-                  }
-               },
-               {
-                  "MTArpOp" : {
-                     "value" : 1
-                  }
-               },
-               {
-                  "MTArpSpa" : {
-                     "value" : 167772161
-                  }
-               },
-               {
-                  "MTArpTpa" : {
-                     "value" : 167772163
-                  }
-               },
-               {
-                  "MTArpSha" : {
-                     "value" : "8gukffjq"
-                  }
-               },
-               {
-                  "MTArpTha" : {
-                     "value" : "AAAAAAAA"
-                  }
-               }
-            ],
-            "type" : 1
+            "eth_src" : "f2:0b:a4:7d:f8:ea",
+            "in_port" : 6,
+            "eth_dst" : "ff:ff:ff:ff:ff:ff",
+            "arp_tha" : "00:00:00:00:00:00",
+            "arp_spa" : "10.0.0.1",
+            "eth_type" : 2054,
+            "arp_sha" : "f2:0b:a4:7d:f8:ea",
+            "arp_op" : 1,
+            "arp_tpa" : "10.0.0.3"
          }
       },
+      "cookie" : 283686884868096,
       "reason" : 1,
       "data" : "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD"
    }

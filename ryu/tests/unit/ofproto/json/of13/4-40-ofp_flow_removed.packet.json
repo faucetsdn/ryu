@@ -6,14 +6,7 @@
       "duration_nsec" : 48825000,
       "match" : {
          "OFPMatch" : {
-            "fields" : [
-               {
-                  "MTEthDst" : {
-                     "value" : "8gukffjq"
-                  }
-               }
-            ],
-            "type" : 1
+            "eth_dst" : "f2:0b:a4:7d:f8:ea"
          }
       },
       "reason" : 0,

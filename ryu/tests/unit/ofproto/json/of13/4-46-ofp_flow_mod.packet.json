@@ -2,9 +2,8 @@
    "OFPFlowMod" : {
       "table_id" : 1,
       "priority" : 123,
-      "hard_timeout" : 0,
       "buffer_id" : 65535,
-      "out_group" : 4294967295,
+      "hard_timeout" : 0,
       "instructions" : [
          {
             "OFPInstructionMeter" : {
@@ -25,20 +24,15 @@
             }
          }
       ],
+      "out_group" : 4294967295,
       "flags" : 0,
       "match" : {
          "OFPMatch" : {
-            "fields" : [
-               {
-                  "MTEthDst" : {
-                     "value" : "8gukffjq"
-                  }
-               }
-            ]
+            "eth_dst" : "f2:0b:a4:7d:f8:ea"
          }
       },
-      "idle_timeout" : 0,
       "cookie" : 0,
+      "idle_timeout" : 0,
       "cookie_mask" : 0,
       "out_port" : 4294967295,
       "command" : 0
