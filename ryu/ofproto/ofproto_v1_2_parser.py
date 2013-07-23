@@ -1647,6 +1647,9 @@ class OFPMatch(StringifyMixin):
     def __contains__(self, key):
         return key in self._fields2
 
+    def iteritems(self):
+        return self._fields2.iteritems()
+
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
 
