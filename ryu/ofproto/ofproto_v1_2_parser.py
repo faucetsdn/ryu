@@ -1660,14 +1660,23 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def from_jsondict(cls, dict_):
-        return super(OFPMatch, cls).from_jsondict(dict_, lambda x: x)
+        o = super(OFPMatch, cls).from_jsondict(dict_, lambda x: x)
+        # XXX old api compat
+        # serialize and parse to fill OFPMatch.fields
+        buf = bytearray()
+        o.serialize(buf, 0)
+        return OFPMatch.parser(str(buf), 0)
 
     def append_field(self, header, value, mask=None):
         self.fields.append(OFPMatchField.make(header, value, mask))
 
+    def _composed_with_old_api(self):
+        return (self.fields and not self._fields2) or \
+            self._wc.__dict__ != FlowWildcards().__dict__
+
     def serialize(self, buf, offset):
         # XXX compat
-        if self.fields or self._wc.__dict__ != FlowWildcards().__dict__:
+        if self._composed_with_old_api():
             return self.serialize_old(buf, offset)
 
         fields = [ofproto_v1_2.oxm_from_user(k, v) for (k, v)
