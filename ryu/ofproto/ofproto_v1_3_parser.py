@@ -2705,7 +2705,7 @@ class OFPMeterBandDscpRemark(OFPMeterBandHeader):
     ofproto_v1_3.OFP_METER_BAND_EXPERIMENTER_SIZE)
 class OFPMeterBandExperimenter(OFPMeterBandHeader):
     def __init__(self, rate, burst_size, experimenter):
-        super(OFPMeterBandDscpRemark, self).__init__()
+        super(OFPMeterBandExperimenter, self).__init__()
         self.rate = rate
         self.burst_size = burst_size
         self.experimenter = experimenter
