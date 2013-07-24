@@ -2088,7 +2088,7 @@ class OFPMeterMod(MsgBase):
         offset = ofproto_v1_3.OFP_METER_MOD_SIZE
         for b in self.bands:
             b.serialize(self.buf, offset)
-            offset += b.len
+            offset += b._len
 
 
 @_set_msg_type(ofproto_v1_3.OFPT_TABLE_MOD)
