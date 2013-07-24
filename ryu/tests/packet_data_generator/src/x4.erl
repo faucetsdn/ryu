@@ -384,16 +384,18 @@ x() ->
             }
         },
 
-% ryu doesn't have the implementation
-%       #ofp_meter_mod{
-%           command = add,
-%           flags = [pktps, burst, stats],
-%           meter_id = 100,
-%           bands = [
-%               #ofp_meter_band_drop{rate = 1000, burst_size = 10}
-%           ]
-%       }
-        skip,
+        #ofp_meter_mod{
+            command = add,
+            flags = [pktps, burst, stats],
+            meter_id = 100,
+            bands = [
+                #ofp_meter_band_drop{rate = 1000, burst_size = 10},
+                #ofp_meter_band_dscp_remark{rate = 1000, burst_size = 10,
+                                            prec_level = 1},
+                #ofp_meter_band_experimenter{rate = 1000, burst_size = 10,
+                                             experimenter = 999}
+            ]
+        },
 
         #ofp_flow_mod{
             cookie = <<0,0,0,0,0,0,0,0>>,
