@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
@@ -40,30 +38,3 @@ class mac_mydialect(netaddr.mac_unix):
     word_fmt = '%.2x'
 mac = AddressConverter(netaddr.EUI, netaddr.strategy.eui48, version=48,
                        dialect=mac_mydialect)
-
-if __name__ == '__main__':
-        def eq_(a, b):
-            if a != b:
-                print a
-                print b
-
-        l = ['127.0.0.1', '255.255.0.0']
-        conv = ipv4
-        b2t = conv.bin_to_text
-        t2b = conv.text_to_bin
-        for a in l:
-            eq_(b2t(t2b(a)), a)
-
-        l = ['ff02::1', 'fe80::f00b:a4ff:fe7d:f8ea', '::']
-        conv = ipv6
-        b2t = conv.bin_to_text
-        t2b = conv.text_to_bin
-        for a in l:
-            eq_(b2t(t2b(a)), a)
-
-        l = ['f2:0b:a4:01:0a:23']
-        conv = mac
-        b2t = conv.bin_to_text
-        t2b = conv.text_to_bin
-        for a in l:
-            eq_(b2t(t2b(a)), a)
