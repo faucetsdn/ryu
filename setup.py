@@ -14,52 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import setuptools
 
-from setuptools import find_packages
-from setuptools import setup
 
-from ryu import version
-from ryu import utils
-
-requires = utils.parse_requirements()
-
-doing_bdist = any(arg.startswith('bdist') for arg in sys.argv[1:])
-
-long_description = open('README.rst').read() + '\n\n'
-
-if doing_bdist:
-    start = long_description.find('=\n') + 2
-    long_description = long_description[
-        start:long_description.find('\n\n\n', start)]
-
-classifiers = [
-    'Development Status :: 5 - Production/Stable',
-    'License :: OSI Approved :: Apache Software License',
-    'Topic :: System :: Networking',
-    'Natural Language :: English',
-    'Programming Language :: Python',
-    'Operating System :: Unix',
-]
-
-if sys.platform == 'win32':
-    data_files = [('etc/ryu', ['etc/ryu/ryu.conf'])]
-else:
-    data_files = [('/etc/ryu', ['etc/ryu/ryu.conf'])]
-
-setup(name='ryu',
-      version=version,
-      description=("Ryu Network Operating System"),
-      long_description=long_description,
-      classifiers=classifiers,
-      keywords='openflow openvswitch openstack',
-      url='http://osrg.github.io/ryu/',
-      author='Ryu project team',
-      author_email='ryu-devel@lists.sourceforge.net',
-      install_requires=requires,
-      license='Apache License 2.0',
-      packages=find_packages(),
-      scripts=['bin/ryu-manager', ],
-      data_files=data_files,
-      include_package_data=True,
-      )
+setuptools.setup(name='ryu',
+                 setup_requires=['d2to1', 'pbr'],
+                 d2to1=True)

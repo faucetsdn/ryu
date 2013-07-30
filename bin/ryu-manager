@@ -53,7 +53,11 @@ CONF.register_cli_opts([
 
 
 def main():
-    CONF(project='ryu', version='ryu-manager %s' % version)
+    try:
+        CONF(project='ryu', version='ryu-manager %s' % version,
+             default_config_files=['/usr/local/etc/ryu/ryu.conf'])
+    except cfg.ConfigFilesNotFoundError:
+        CONF(project='ryu', version='ryu-manager %s' % version)
 
     log.init_log()
 
