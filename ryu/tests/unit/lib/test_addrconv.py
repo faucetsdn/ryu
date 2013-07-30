@@ -20,7 +20,7 @@ from nose.tools import eq_
 import addrconv
 
 
-class Test_hub(unittest.TestCase):
+class Test_addrconv(unittest.TestCase):
     """ Test case for ryu.lib.addrconv
     """
 
