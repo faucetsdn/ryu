@@ -367,3 +367,95 @@ class TestPacket(unittest.TestCase):
         # payload
         ok_('payload' in protocols)
         eq_(self.payload, protocols['payload'].tostring())
+
+    def test_llc_bpdu(self):
+        # buid packet
+        e = ethernet.ethernet(self.dst_mac, self.src_mac,
+                              ether.ETH_TYPE_IEEE802_3)
+        llc_control = llc.ControlFormatU(0, 0, 0)
+        l = llc.llc(llc.SAP_BDPU, llc.SAP_BDPU, llc_control)
+        b = bpdu.ConfigurationBPDUs(flags=0,
+                                    root_priority=32768,
+                                    root_system_id_extension=0,
+                                    root_mac_address=self.src_mac,
+                                    root_path_cost=0,
+                                    bridge_priority=32768,
+                                    bridge_system_id_extension=0,
+                                    bridge_mac_address=self.dst_mac,
+                                    port_priority=128,
+                                    port_number=4,
+                                    message_age=1,
+                                    max_age=20,
+                                    hello_time=2,
+                                    forward_delay=15)
+
+        p = packet.Packet()
+        p.add_protocol(e)
+        p.add_protocol(l)
+        p.add_protocol(b)
+        p.serialize()
+
+        # ethernet !6s6sH
+        e_buf = self.dst_mac + self.src_mac + '\x05\xdc'
+
+        # llc !BBB
+        l_buf = ('\x42'
+                 '\x42'
+                 '\x03')
+
+        # bpdu !HBBBQIQHHHHH
+        b_buf = ('\x00\x00'
+                 '\x00'
+                 '\x00'
+                 '\x00'
+                 '\x80\x64\xaa\xaa\xaa\xaa\xaa\xaa'
+                 '\x00\x00\x00\x04'
+                 '\x80\x64\xbb\xbb\xbb\xbb\xbb\xbb'
+                 '\x80\x04'
+                 '\x01\x00'
+                 '\x14\x00'
+                 '\x02\x00'
+                 '\x0f\x00')
+
+        buf = e_buf + l_buf + b_buf
+
+        # parse
+        pkt = packet.Packet(array.array('B', p.data))
+        protocols = self.get_protocols(pkt)
+        p_eth = protocols['ethernet']
+        p_llc = protocols['llc']
+        p_bpdu = protocols['ConfigurationBPDUs']
+
+        # ethernet
+        ok_(p_eth)
+        eq_(self.dst_mac, p_eth.dst)
+        eq_(self.src_mac, p_eth.src)
+        eq_(ether.ETH_TYPE_IEEE802_3, p_eth.ethertype)
+
+        # llc
+        ok_(p_llc)
+        eq_(llc.SAP_BDPU, p_llc.dsap_addr)
+        eq_(llc.SAP_BDPU, p_llc.ssap_addr)
+        eq_(0, p_llc.control.modifier_function1)
+        eq_(0, p_llc.control.pf_bit)
+        eq_(0, p_llc.control.modifier_function2)
+
+        # bpdu
+        ok_(p_bpdu)
+        eq_(bpdu.PROTOCOL_IDENTIFIER, p_bpdu.protocol_id)
+        eq_(bpdu.PROTOCOLVERSION_ID_BPDU, p_bpdu.version_id)
+        eq_(bpdu.TYPE_CONFIG_BPDU, p_bpdu.bpdu_type)
+        eq_(0, p_bpdu.flags)
+        eq_(32768, p_bpdu.root_priority)
+        eq_(0, p_bpdu.root_system_id_extension)
+        eq_(self.src_mac, p_bpdu.root_mac_address)
+        eq_(0, p_bpdu.root_path_cost)
+        eq_(32768, p_bpdu.bridge_priority)
+        eq_(0, p_bpdu.bridge_system_id_extension)
+        eq_(self.dst_mac, p_bpdu.bridge_mac_address)
+        eq_(128, p_bpdu.port_priority)
+        eq_(4, p_bpdu.port_number)
+        eq_(1, p_bpdu.message_age)
+        eq_(20, p_bpdu.max_age)
+        eq_(2, p_bpdu.hello_time)
+        eq_(15, p_bpdu.forward_delay)
