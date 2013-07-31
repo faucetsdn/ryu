@@ -20,6 +20,7 @@ from . import ipv4
 from . import ipv6
 from . import lldp
 from . import slow
+from . import llc
 from ryu.ofproto import ether
 from ryu.ofproto.ofproto_parser import msg_pack_into
 
@@ -52,6 +53,18 @@ class vlan(packet_base.PacketBase):
         self.ethertype = ethertype
 
     @classmethod
+    def get_packet_type(cls, type_):
+        """Override method for the Length/Type field (self.ethertype).
+        The Length/Type field means Length or Type interpretation,
+        same as ethernet IEEE802.3.
+        If the value of Length/Type field is less than or equal to
+        1500 decimal(05DC hexadecimal), it means Length interpretation
+        and be passed to the LLC sublayer."""
+        if type_ <= ether.ETH_TYPE_IEEE802_3:
+            type_ = ether.ETH_TYPE_IEEE802_3
+        return cls._TYPES.get(type_)
+
+    @classmethod
     def parser(cls, buf):
         tci, ethertype = struct.unpack_from(cls._PACK_STR, buf)
         pcp = tci >> 13
@@ -69,3 +82,4 @@ vlan.register_packet_type(ipv4.ipv4, ether.ETH_TYPE_IP)
 vlan.register_packet_type(ipv6.ipv6, ether.ETH_TYPE_IPV6)
 vlan.register_packet_type(lldp.lldp, ether.ETH_TYPE_LLDP)
 vlan.register_packet_type(slow.slow, ether.ETH_TYPE_SLOW)
+vlan.register_packet_type(llc.llc, ether.ETH_TYPE_IEEE802_3)
