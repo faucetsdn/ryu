@@ -85,7 +85,8 @@ class RpcVRRPManager(app_manager.RyuApp):
         new_state = ev.new_state
         vrid = ev.config.vrid
         self.logger.info('VRID:%s %s: %s -> %s', vrid, name, old_state, new_state)
-        self._server_endpoint.send_notification("notify_status", [vrid, old_state, new_state])
+        params = {'vrid': vrid, 'old_state': old_state, 'new_state': new_state}
+        self._server_endpoint.send_notification("notify_status", [params])
 
     def _config(self, endpoint, msgid, params):
         self.logger.debug('handle vrrp_config request')
