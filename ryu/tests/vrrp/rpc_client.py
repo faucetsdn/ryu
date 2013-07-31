@@ -12,7 +12,7 @@ sudo PYTHONPATH=. ./bin/ryu-manager \
 
 ex. sudo PYTHONPATH=. ./bin/ryu-manager \
                ./ryu/services/vrrp/manager.py \
-               ./ryu/services/vrrp/rpc_manager.py --vrrp-rpc-port 51720
+               ./ryu/services/vrrp/rpc_manager.py --vrrp-rpc-port 50004
 
 
 2. client side
@@ -25,7 +25,7 @@ PYTHONPATH=. python ./ryu/tests/vrrp/rpc_client.py --host <server-host> --port <
           list
 
 ex.
-  PYTHONPATH=. python ./ryu/tests/vrrp/rpc_client.py 127.0.0.1 51720 config
+  PYTHONPATH=. python ./ryu/tests/vrrp/rpc_client.py 127.0.0.1 50004 config
   PYTHONPATH=. python ./ryu/tests/vrrp/rpc_client.py --host 172.16.10.1 --port 51820 --method config \
                     --vrid 10 --priority 255 --ifname veth1 --ifipaddr 172.16.10.1
 
@@ -125,7 +125,7 @@ def _parse_args():
     parser.add_argument("--priority", dest="priority", type=int, default="100")
     parser.add_argument("--interval", dest="interval", type=int, default="1")
     parser.add_argument("--host", dest="host", type=str, default="127.0.0.1")
-    parser.add_argument("--port", dest="port", type=int, default="51820")
+    parser.add_argument("--port", dest="port", type=int, default="50004")
     return parser.parse_args()
 
 

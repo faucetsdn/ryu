@@ -13,7 +13,7 @@ from ryu.lib import hub
 from ryu.lib import mac
 
 
-VRRP_RPC_PORT = 51718
+VRRP_RPC_PORT = 50004
 CONF_KEY_PRIORITY = "priority"
 CONF_KEY_ADVERTISEMENT_INTERVAL = "advertisement_interval"
 CONF_KEY_PORT_IFNAME = "ifname"
