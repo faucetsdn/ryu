@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Ryu'
-copyright = u'2011, 2012 Nippon Telegraph and Telephone Corporation'
+copyright = u'2011-2013 Nippon Telegraph and Telephone Corporation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
