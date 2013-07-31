@@ -54,6 +54,8 @@ class RpcVRRPManager(app_manager.RyuApp):
 
     def _startRPCServer(self):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         server_sock.setblocking(0)
         with closing(server_sock):
             server_sock.bind(("0.0.0.0", CONF.vrrp_rpc_port))
