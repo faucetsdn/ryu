@@ -79,10 +79,10 @@ is building an arp packet.
 
 .. code-block:: python
     
-    dst = 'a' * 6
-    src = 'b' * 6
     e = ethernet.ethernet(dst, src, ether.ETH_TYPE_8021Q)
-    a = arp.arp(1, 0x0800, 6, 4, 2, '\a' * 6, 50, '\b' * 6, 30)
+    a = arp.arp(hwtype=1, proto=0x0800, hlen=6, plen=4, opcode=2,
+                src='08:60:6e:7f:74:e7', src_ip='192.0.2.1',
+                dst='00:00:00:00:00:00', dst_ip='192.0.2.2')
     p = packet.Packet()
     p.add_protocol(e)
     p.add_protocol(a)
