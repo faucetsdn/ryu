@@ -26,7 +26,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.exception import RyuException
 from ryu.lib import hub
-from ryu.lib.mac import DONTCARE, haddr_to_str
+from ryu.lib.mac import DONTCARE_STR, haddr_to_str
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
 from ryu.lib.port_no import port_no_to_str
 from ryu.lib.packet import packet, ethernet, lldp
@@ -431,7 +431,7 @@ class Switches(app_manager.RyuApp):
                event.EventLinkAdd, event.EventLinkDelete]
 
     DEFAULT_TTL = 120  # unused. ignored.
-    LLDP_PACKET_LEN = len(LLDPPacket.lldp_packet(0, 0, DONTCARE, 0))
+    LLDP_PACKET_LEN = len(LLDPPacket.lldp_packet(0, 0, DONTCARE_STR, 0))
 
     LLDP_SEND_GUARD = .05
     LLDP_SEND_PERIOD_PER_PORT = .9
