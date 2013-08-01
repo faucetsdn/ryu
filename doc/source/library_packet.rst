@@ -10,6 +10,13 @@ packets. dpkt is the popular library for the same purpose, however it
 is not designed to handle protocols that are interleaved; vlan, mpls,
 gre, etc. So we implemented our own packet library.
 
+Network Addresses
+=================
+
+Unless otherwise specified, MAC/IPv4/IPv6 addresses are specified
+using human readable strings for this library.
+For example, '08:60:6e:7f:74:e7', '192.0.2.1', 'fe80::a60:6eff:fe7f:74e7'.
+
 Parsing Packet
 ==============
 
