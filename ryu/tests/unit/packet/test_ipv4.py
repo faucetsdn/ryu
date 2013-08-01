@@ -118,8 +118,8 @@ class Test_ipv4(unittest.TestCase):
         eq_(res[4], self.flg_off)
         eq_(res[5], self.ttl)
         eq_(res[6], self.proto)
-        eq_(addrconv.ipv4.bin_to_text(res[8]), self.src)
-        eq_(addrconv.ipv4.bin_to_text(res[9]), self.dst)
+        eq_(res[8], addrconv.ipv4.text_to_bin(self.src))
+        eq_(res[9], addrconv.ipv4.text_to_bin(self.dst))
         eq_(option, self.option)
 
         # checksum

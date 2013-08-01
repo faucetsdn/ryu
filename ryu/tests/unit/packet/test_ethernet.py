@@ -79,8 +79,8 @@ class Test_ethernet(unittest.TestCase):
         fmt = ethernet._PACK_STR
         res = struct.unpack(fmt, buf)
 
-        eq_(addrconv.mac.bin_to_text(res[0]), self.dst)
-        eq_(addrconv.mac.bin_to_text(res[1]), self.src)
+        eq_(res[0], addrconv.mac.text_to_bin(self.dst))
+        eq_(res[1], addrconv.mac.text_to_bin(self.src))
         eq_(res[2], self.ethertype)
 
     @raises(Exception)

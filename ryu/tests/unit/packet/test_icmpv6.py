@@ -203,7 +203,8 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(msg.code, self.code)
         eq_(msg.csum, self.csum)
         eq_(msg.data.res >> 29, self.res)
-        eq_(msg.data.dst, self.dst)
+        eq_(addrconv.ipv6.text_to_bin(msg.data.dst),
+            addrconv.ipv6.text_to_bin(self.dst))
         eq_(n, None)
         if data:
             nd = msg.data
@@ -234,7 +235,7 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(code, self.code)
         eq_(csum, nd_csum)
         eq_(res >> 29, self.res)
-        eq_(addrconv.ipv6.bin_to_text(dst), self.dst)
+        eq_(dst, addrconv.ipv6.text_to_bin(self.dst))
         eq_(data, '')
 
     def test_serialize_with_data(self):
@@ -257,10 +258,10 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(code, self.code)
         eq_(csum, nd_csum)
         eq_(res >> 29, self.res)
-        eq_(addrconv.ipv6.bin_to_text(dst), self.dst)
+        eq_(dst, addrconv.ipv6.text_to_bin(self.dst))
         eq_(nd_type, self.nd_type)
         eq_(nd_length, self.nd_length)
-        eq_(addrconv.mac.bin_to_text(nd_hw_src), self.nd_hw_src)
+        eq_(nd_hw_src, addrconv.mac.text_to_bin(self.nd_hw_src))
 
 
 class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solict):

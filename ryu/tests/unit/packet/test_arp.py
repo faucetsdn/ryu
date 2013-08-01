@@ -108,10 +108,10 @@ class Test_arp(unittest.TestCase):
         eq_(res[2], self.hlen)
         eq_(res[3], self.plen)
         eq_(res[4], self.opcode)
-        eq_(addrconv.mac.bin_to_text(res[5]), self.src_mac)
-        eq_(addrconv.ipv4.bin_to_text(res[6]), self.src_ip)
-        eq_(addrconv.mac.bin_to_text(res[7]), self.dst_mac)
-        eq_(addrconv.ipv4.bin_to_text(res[8]), self.dst_ip)
+        eq_(res[5], addrconv.mac.text_to_bin(self.src_mac))
+        eq_(res[6], addrconv.ipv4.text_to_bin(self.src_ip))
+        eq_(res[7], addrconv.mac.text_to_bin(self.dst_mac))
+        eq_(res[8], addrconv.ipv4.text_to_bin(self.dst_ip))
 
     def _build_arp(self, vlan_enabled):
         if vlan_enabled is True:

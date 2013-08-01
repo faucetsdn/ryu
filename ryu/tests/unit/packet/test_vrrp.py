@@ -116,7 +116,7 @@ class Test_vrrpv2(unittest.TestCase):
         eq_(res[4], vrrp.VRRP_AUTH_NO_AUTH)
         eq_(res[5], max_adver_int)
         # res[6] is checksum
-        eq_(addrconv.ipv4.bin_to_text(res[7]), ip_address)
+        eq_(res[7], addrconv.ipv4.text_to_bin(ip_address))
         eq_(res[8], 0)
         eq_(res[9], 0)
         eq_(len(buf), pack_len)
@@ -258,7 +258,7 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         eq_(res[3], len(ip_addresses))
         eq_(res[4], max_adver_int)
         # res[5] is checksum
-        eq_(addrconv.ipv4.bin_to_text(res[6]), ip_address)
+        eq_(res[6], addrconv.ipv4.text_to_bin(ip_address))
         eq_(len(buf), pack_len)
         print(res)
 
@@ -403,7 +403,7 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
         eq_(res[3], len(ip_addresses))
         eq_(res[4], max_adver_int)
         # res[5] is checksum
-        eq_(addrconv.ipv6.bin_to_text(res[6]), ip_address)
+        eq_(res[6], addrconv.ipv6.text_to_bin(ip_address))
         eq_(len(buf), pack_len)
         print(res)
 
