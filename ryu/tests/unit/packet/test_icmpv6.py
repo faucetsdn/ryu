@@ -18,7 +18,6 @@
 import unittest
 import logging
 import struct
-import netaddr
 
 from nose.tools import ok_, eq_, nottest, raises
 from nose.plugins.skip import Skip, SkipTest
@@ -28,13 +27,16 @@ from ryu.lib.packet.packet import Packet
 from ryu.lib.packet import icmpv6
 from ryu.lib.packet.ipv6 import ipv6
 from ryu.lib.packet import packet_utils
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger(__name__)
 
 
 def icmpv6_csum(prev, buf):
-    ph = struct.pack('!16s16sI3xB', prev.src, prev.dst,
+    ph = struct.pack('!16s16sI3xB',
+                     addrconv.ipv6.text_to_bin(prev.src),
+                     addrconv.ipv6.text_to_bin(prev.dst),
                      prev.payload_length, prev.nxt)
     h = bytearray(buf)
     struct.pack_into('!H', h, 2, 0)
@@ -70,8 +72,8 @@ class Test_icmpv6_header(unittest.TestCase):
         eq_(n, None)
 
     def test_serialize(self):
-        src_ipv6 = netaddr.IPAddress('fe80::200:ff:fe00:ef').packed
-        dst_ipv6 = netaddr.IPAddress('fe80::200:ff:fe00:1').packed
+        src_ipv6 = 'fe80::200:ff:fe00:ef'
+        dst_ipv6 = 'fe80::200:ff:fe00:1'
         prev = ipv6(6, 0, 0, 4, 58, 255, src_ipv6, dst_ipv6)
 
         buf = self.icmp.serialize(bytearray(), prev)
@@ -128,8 +130,8 @@ class Test_icmpv6_echo_request(unittest.TestCase):
 
     def _test_serialize(self, echo_data=None):
         buf = self.buf + str(echo_data or '')
-        src_ipv6 = netaddr.IPAddress('3ffe:507:0:1:200:86ff:fe05:80da').packed
-        dst_ipv6 = netaddr.IPAddress('3ffe:501:0:1001::2').packed
+        src_ipv6 = '3ffe:507:0:1:200:86ff:fe05:80da'
+        dst_ipv6 = '3ffe:501:0:1001::2'
         prev = ipv6(6, 0, 0, len(buf), 64, 255, src_ipv6, dst_ipv6)
         echo_csum = icmpv6_csum(prev, buf)
 
@@ -168,16 +170,16 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
     code = 0
     csum = 0x952d
     res = 0
-    dst = netaddr.IPAddress('3ffe:507:0:1:200:86ff:fe05:80da').packed
+    dst = '3ffe:507:0:1:200:86ff:fe05:80da'
     nd_type = 1
     nd_length = 1
-    nd_hw_src = '\x00\x60\x97\x07\x69\xea'
+    nd_hw_src = '00:60:97:07:69:ea'
     data = '\x01\x01\x00\x60\x97\x07\x69\xea'
     buf = '\x87\x00\x95\x2d\x00\x00\x00\x00' \
         + '\x3f\xfe\x05\x07\x00\x00\x00\x01' \
         + '\x02\x00\x86\xff\xfe\x05\x80\xda'
-    src_ipv6 = netaddr.IPAddress('3ffe:507:0:1:200:86ff:fe05:80da').packed
-    dst_ipv6 = netaddr.IPAddress('3ffe:501:0:1001::2').packed
+    src_ipv6 = '3ffe:507:0:1:200:86ff:fe05:80da'
+    dst_ipv6 = '3ffe:501:0:1001::2'
 
     def setUp(self):
         pass
@@ -232,7 +234,7 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(code, self.code)
         eq_(csum, nd_csum)
         eq_(res >> 29, self.res)
-        eq_(dst, self.dst)
+        eq_(addrconv.ipv6.bin_to_text(dst), self.dst)
         eq_(data, '')
 
     def test_serialize_with_data(self):
@@ -255,10 +257,10 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(code, self.code)
         eq_(csum, nd_csum)
         eq_(res >> 29, self.res)
-        eq_(dst, self.dst)
+        eq_(addrconv.ipv6.bin_to_text(dst), self.dst)
         eq_(nd_type, self.nd_type)
         eq_(nd_length, self.nd_length)
-        eq_(nd_hw_src, self.nd_hw_src)
+        eq_(addrconv.mac.bin_to_text(nd_hw_src), self.nd_hw_src)
 
 
 class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solict):
@@ -266,11 +268,11 @@ class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solict):
         self.type_ = 136
         self.csum = 0xb8ba
         self.res = 7
-        self.dst = netaddr.IPAddress('3ffe:507:0:1:260:97ff:fe07:69ea').packed
+        self.dst = '3ffe:507:0:1:260:97ff:fe07:69ea'
         self.nd_type = 2
         self.nd_length = 1
         self.nd_data = None
-        self.nd_hw_src = '\x00\x60\x97\x07\x69\xea'
+        self.nd_hw_src = '00:60:97:07:69:ea'
         self.data = '\x02\x01\x00\x60\x97\x07\x69\xea'
         self.buf = '\x88\x00\xb8\xba\xe0\x00\x00\x00' \
             + '\x3f\xfe\x05\x07\x00\x00\x00\x01' \
@@ -316,8 +318,8 @@ class Test_icmpv6_router_solict(unittest.TestCase):
     def _test_serialize(self, nd_data=None):
         nd_data = str(nd_data or '')
         buf = self.buf + nd_data
-        src_ipv6 = netaddr.IPAddress('fe80::102d:a5ff:fe6d:bc0f').packed
-        dst_ipv6 = netaddr.IPAddress('ff02::2').packed
+        src_ipv6 = 'fe80::102d:a5ff:fe6d:bc0f'
+        dst_ipv6 = 'ff02::2'
         prev = ipv6(6, 0, 0, len(buf), 58, 255, src_ipv6, dst_ipv6)
         nd_csum = icmpv6_csum(prev, buf)
 

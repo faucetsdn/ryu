@@ -18,13 +18,12 @@
 import unittest
 import logging
 import struct
-import netaddr
 import array
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
-from ryu.lib import mac
 from ryu.lib.packet import *
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_packet')
@@ -34,10 +33,14 @@ class TestPacket(unittest.TestCase):
     """ Test case for packet
     """
 
-    dst_mac = mac.haddr_to_bin('AA:AA:AA:AA:AA:AA')
-    src_mac = mac.haddr_to_bin('BB:BB:BB:BB:BB:BB')
-    dst_ip_bin = dst_ip = netaddr.IPAddress('192.168.128.10').packed
-    src_ip_bin = src_ip = netaddr.IPAddress('192.168.122.20').packed
+    dst_mac = 'aa:aa:aa:aa:aa:aa'
+    src_mac = 'bb:bb:bb:bb:bb:bb'
+    dst_mac_bin = addrconv.mac.text_to_bin(dst_mac)
+    src_mac_bin = addrconv.mac.text_to_bin(src_mac)
+    dst_ip = '192.168.128.10'
+    src_ip = '192.168.122.20'
+    dst_ip_bin = addrconv.ipv4.text_to_bin(dst_ip)
+    src_ip_bin = addrconv.ipv4.text_to_bin(src_ip)
     payload = '\x06\x06\x47\x50\x00\x00\x00\x00' \
         + '\xcd\xc5\x00\x00\x00\x00\x00\x00' \
         + '\x10\x11\x12\x13\x14\x15\x16\x17' \
@@ -71,8 +74,8 @@ class TestPacket(unittest.TestCase):
         p.serialize()
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac \
-            + self.src_mac \
+        e_buf = self.dst_mac_bin \
+            + self.src_mac_bin \
             + '\x08\x06'
 
         # arp !HHBBH6sI6sI
@@ -81,9 +84,9 @@ class TestPacket(unittest.TestCase):
             + '\x06' \
             + '\x04' \
             + '\x00\x02' \
-            + self.src_mac \
+            + self.src_mac_bin \
             + self.src_ip_bin \
-            + self.dst_mac \
+            + self.dst_mac_bin \
             + self.dst_ip_bin
 
         buf = e_buf + a_buf
@@ -128,8 +131,8 @@ class TestPacket(unittest.TestCase):
         p.serialize()
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac \
-            + self.src_mac \
+        e_buf = self.dst_mac_bin \
+            + self.src_mac_bin \
             + '\x81\x00'
 
         # vlan !HH
@@ -142,9 +145,9 @@ class TestPacket(unittest.TestCase):
             + '\x06' \
             + '\x04' \
             + '\x00\x02' \
-            + self.src_mac \
+            + self.src_mac_bin \
             + self.src_ip_bin \
-            + self.dst_mac \
+            + self.dst_mac_bin \
             + self.dst_ip_bin
 
         buf = e_buf + v_buf + a_buf
@@ -198,8 +201,8 @@ class TestPacket(unittest.TestCase):
         p.serialize()
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac \
-            + self.src_mac \
+        e_buf = self.dst_mac_bin \
+            + self.src_mac_bin \
             + '\x08\x00'
 
         # ipv4 !BBHHHBBHII
@@ -260,7 +263,7 @@ class TestPacket(unittest.TestCase):
         eq_(0x77b2, p_udp.csum)
         t = bytearray(u_buf)
         struct.pack_into('!H', t, 6, p_udp.csum)
-        ph = struct.pack('!4s4sBBH', self.src_ip, self.dst_ip, 0,
+        ph = struct.pack('!4s4sBBH', self.src_ip_bin, self.dst_ip_bin, 0,
                          17, len(u_buf) + len(self.payload))
         t = ph + t + self.payload
         eq_(packet_utils.checksum(t), 0)
@@ -286,8 +289,8 @@ class TestPacket(unittest.TestCase):
         p.serialize()
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac \
-            + self.src_mac \
+        e_buf = self.dst_mac_bin \
+            + self.src_mac_bin \
             + '\x08\x00'
 
         # ipv4 !BBHHHBBHII
@@ -359,7 +362,7 @@ class TestPacket(unittest.TestCase):
         eq_(len(t_buf), len(p_tcp))
         t = bytearray(t_buf)
         struct.pack_into('!H', t, 16, p_tcp.csum)
-        ph = struct.pack('!4s4sBBH', self.src_ip, self.dst_ip, 0,
+        ph = struct.pack('!4s4sBBH', self.src_ip_bin, self.dst_ip_bin, 0,
                          6, len(t_buf) + len(self.payload))
         t = ph + t + self.payload
         eq_(packet_utils.checksum(t), 0)

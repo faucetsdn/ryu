@@ -21,9 +21,9 @@ import copy
 from struct import pack, unpack_from
 from nose.tools import ok_, eq_, raises
 from ryu.ofproto import ether
-from ryu.lib import mac
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
+from ryu.lib import addrconv
 from ryu.lib.packet.slow import slow, lacp
 from ryu.lib.packet.slow import SLOW_PROTOCOL_MULTICAST
 from ryu.lib.packet.slow import SLOW_SUBTYPE_LACP
@@ -41,7 +41,7 @@ class Test_slow(unittest.TestCase):
         self.actor_tag = lacp.LACP_TLV_TYPE_ACTOR
         self.actor_length = 20
         self.actor_system_priority = 65534
-        self.actor_system = mac.haddr_to_bin('00:07:0d:af:f4:54')
+        self.actor_system = '00:07:0d:af:f4:54'
         self.actor_key = 1
         self.actor_port_priority = 65535
         self.actor_port = 1
@@ -65,7 +65,7 @@ class Test_slow(unittest.TestCase):
         self.partner_tag = lacp.LACP_TLV_TYPE_PARTNER
         self.partner_length = 20
         self.partner_system_priority = 0
-        self.partner_system = mac.haddr_to_bin('00:00:00:00:00:00')
+        self.partner_system = '00:00:00:00:00:00'
         self.partner_key = 0
         self.partner_port_priority = 0
         self.partner_port = 0
@@ -167,7 +167,7 @@ class Test_lacp(unittest.TestCase):
         self.actor_tag = lacp.LACP_TLV_TYPE_ACTOR
         self.actor_length = 20
         self.actor_system_priority = 65534
-        self.actor_system = mac.haddr_to_bin('00:07:0d:af:f4:54')
+        self.actor_system = '00:07:0d:af:f4:54'
         self.actor_key = 1
         self.actor_port_priority = 65535
         self.actor_port = 1
@@ -191,7 +191,7 @@ class Test_lacp(unittest.TestCase):
         self.partner_tag = lacp.LACP_TLV_TYPE_PARTNER
         self.partner_length = 20
         self.partner_system_priority = 0
-        self.partner_system = mac.haddr_to_bin('00:00:00:00:00:00')
+        self.partner_system = '00:00:00:00:00:00'
         self.partner_key = 0
         self.partner_port_priority = 0
         self.partner_port = 0
@@ -237,7 +237,7 @@ class Test_lacp(unittest.TestCase):
                             self.actor_tag,
                             self.actor_length,
                             self.actor_system_priority,
-                            self.actor_system,
+                            addrconv.mac.text_to_bin(self.actor_system),
                             self.actor_key,
                             self.actor_port_priority,
                             self.actor_port,
@@ -246,7 +246,7 @@ class Test_lacp(unittest.TestCase):
                             self.partner_tag,
                             self.partner_length,
                             self.partner_system_priority,
-                            self.partner_system,
+                            addrconv.mac.text_to_bin(self.partner_system),
                             self.partner_key,
                             self.partner_port_priority,
                             self.partner_port,
@@ -423,7 +423,7 @@ class Test_lacp(unittest.TestCase):
         eq_(act_res[0], self.actor_tag)
         eq_(act_res[1], self.actor_length)
         eq_(act_res[2], self.actor_system_priority)
-        eq_(act_res[3], self.actor_system)
+        eq_(addrconv.mac.bin_to_text(act_res[3]), self.actor_system)
         eq_(act_res[4], self.actor_key)
         eq_(act_res[5], self.actor_port_priority)
         eq_(act_res[6], self.actor_port)
@@ -432,7 +432,7 @@ class Test_lacp(unittest.TestCase):
         eq_(prt_res[0], self.partner_tag)
         eq_(prt_res[1], self.partner_length)
         eq_(prt_res[2], self.partner_system_priority)
-        eq_(prt_res[3], self.partner_system)
+        eq_(addrconv.mac.bin_to_text(prt_res[3]), self.partner_system)
         eq_(prt_res[4], self.partner_key)
         eq_(prt_res[5], self.partner_port_priority)
         eq_(prt_res[6], self.partner_port)

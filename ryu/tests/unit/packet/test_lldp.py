@@ -24,6 +24,7 @@ from ryu.ofproto import ether
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import lldp
+from ryu.lib import addrconv
 
 LOG = logging.getLogger(__name__)
 
@@ -98,13 +99,14 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         pkt = packet.Packet()
 
         dst = lldp.LLDP_MAC_NEAREST_BRIDGE
-        src = '\x00\x04\x96\x1f\xa7\x26'
+        src = '00:04:96:1f:a7:26'
         ethertype = ether.ETH_TYPE_LLDP
         eth_pkt = ethernet.ethernet(dst, src, ethertype)
         pkt.add_protocol(eth_pkt)
 
         tlv_chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
-                                        chassis_id=src)
+                                        chassis_id=addrconv.mac.
+                                        text_to_bin(src))
         tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
                                   port_id='1/3')
         tlv_ttl = lldp.TTL(ttl=120)
@@ -216,13 +218,14 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         pkt = packet.Packet()
 
         dst = lldp.LLDP_MAC_NEAREST_BRIDGE
-        src = '\x00\x01\x30\xf9\xad\xa0'
+        src = '00:01:30:f9:ad:a0'
         ethertype = ether.ETH_TYPE_LLDP
         eth_pkt = ethernet.ethernet(dst, src, ethertype)
         pkt.add_protocol(eth_pkt)
 
         tlv_chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
-                                        chassis_id=src)
+                                        chassis_id=addrconv.mac.
+                                        text_to_bin(src))
         tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
                                   port_id='1/1')
         tlv_ttl = lldp.TTL(ttl=120)

@@ -18,6 +18,7 @@ from . import packet_base
 from . import vlan
 from . import mpls
 from ryu.ofproto import ether
+from ryu.lib import addrconv
 
 
 class ethernet(packet_base.PacketBase):
@@ -47,11 +48,15 @@ class ethernet(packet_base.PacketBase):
     @classmethod
     def parser(cls, buf):
         dst, src, ethertype = struct.unpack_from(cls._PACK_STR, buf)
-        return (cls(dst, src, ethertype), ethernet.get_packet_type(ethertype),
+        return (cls(addrconv.mac.bin_to_text(dst),
+                    addrconv.mac.bin_to_text(src), ethertype),
+                ethernet.get_packet_type(ethertype),
                 buf[ethernet._MIN_LEN:])
 
     def serialize(self, payload, prev):
-        return struct.pack(ethernet._PACK_STR, self.dst, self.src,
+        return struct.pack(ethernet._PACK_STR,
+                           addrconv.mac.text_to_bin(self.dst),
+                           addrconv.mac.text_to_bin(self.src),
                            self.ethertype)
 
     @classmethod

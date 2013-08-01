@@ -15,10 +15,10 @@
 
 import struct
 from . import packet_base
-from ryu.lib import mac
+from ryu.lib import addrconv
 
 # Slow Protocol Multicast destination
-SLOW_PROTOCOL_MULTICAST = '\x01\x80\xc2\x00\x00\x02'
+SLOW_PROTOCOL_MULTICAST = '01:80:c2:00:00:02'
 
 # Slow Protocol SubType
 SLOW_SUBTYPE_LACP = 0x01
@@ -368,7 +368,7 @@ class lacp(packet_base.PacketBase):
 
     def __init__(self, version=LACP_VERSION_NUMBER,
                  actor_system_priority=0,
-                 actor_system=mac.haddr_to_bin('00:00:00:00:00:00'),
+                 actor_system='00:00:00:00:00:00',
                  actor_key=0, actor_port_priority=0, actor_port=0,
                  actor_state_activity=0, actor_state_timeout=0,
                  actor_state_aggregation=0,
@@ -376,7 +376,7 @@ class lacp(packet_base.PacketBase):
                  actor_state_collecting=0, actor_state_distributing=0,
                  actor_state_defaulted=0, actor_state_expired=0,
                  partner_system_priority=0,
-                 partner_system=mac.haddr_to_bin('00:00:00:00:00:00'),
+                 partner_system='00:00:00:00:00:00',
                  partner_key=0, partner_port_priority=0, partner_port=0,
                  partner_state_activity=0, partner_state_timeout=0,
                  partner_state_aggregation=0,
@@ -537,14 +537,17 @@ class lacp(packet_base.PacketBase):
          ) = struct.unpack_from(cls._TRM_PACK_STR, buf, offset)
         assert cls.LACP_TLV_TYPE_TERMINATOR == terminator_tag
         assert 0 == terminator_length
-        return cls(version, actor_system_priority,
-                   actor_system, actor_key, actor_port_priority,
+        return cls(version,
+                   actor_system_priority,
+                   addrconv.mac.bin_to_text(actor_system),
+                   actor_key, actor_port_priority,
                    actor_port, actor_state_activity,
                    actor_state_timeout, actor_state_aggregation,
                    actor_state_synchronization, actor_state_collecting,
                    actor_state_distributing, actor_state_defaulted,
                    actor_state_expired, partner_system_priority,
-                   partner_system, partner_key, partner_port_priority,
+                   addrconv.mac.bin_to_text(partner_system),
+                   partner_key, partner_port_priority,
                    partner_port, partner_state_activity,
                    partner_state_timeout, partner_state_aggregation,
                    partner_state_synchronization,
@@ -558,13 +561,15 @@ class lacp(packet_base.PacketBase):
         actor = struct.pack(self._ACTPRT_INFO_PACK_STR,
                             self.actor_tag, self.actor_length,
                             self.actor_system_priority,
-                            self.actor_system, self.actor_key,
+                            addrconv.mac.text_to_bin(self.actor_system),
+                            self.actor_key,
                             self.actor_port_priority, self.actor_port,
                             self.actor_state)
         partner = struct.pack(self._ACTPRT_INFO_PACK_STR,
                               self.partner_tag, self.partner_length,
                               self.partner_system_priority,
-                              self.partner_system, self.partner_key,
+                              addrconv.mac.text_to_bin(self.partner_system),
+                              self.partner_key,
                               self.partner_port_priority,
                               self.partner_port, self.partner_state)
         collector = struct.pack(self._COL_INFO_PACK_STR,

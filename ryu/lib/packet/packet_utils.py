@@ -16,6 +16,7 @@
 import array
 import socket
 import struct
+from ryu.lib import addrconv
 
 
 def carry_around_add(a, b):
@@ -83,10 +84,14 @@ def checksum_ip(ipvx, length, payload):
     """
     if ipvx.version == 4:
         header = struct.pack(_IPV4_PSEUDO_HEADER_PACK_STR,
-                             ipvx.src, ipvx.dst, ipvx.proto, length)
+                             addrconv.ipv4.text_to_bin(ipvx.src),
+                             addrconv.ipv4.text_to_bin(ipvx.dst),
+                             ipvx.proto, length)
     elif ipvx.version == 6:
         header = struct.pack(_IPV6_PSEUDO_HEADER_PACK_STR,
-                             ipvx.src, ipvx.dst, length, ipvx.nxt)
+                             addrconv.ipv6.text_to_bin(ipvx.src),
+                             addrconv.ipv6.text_to_bin(ipvx.dst),
+                             length, ipvx.nxt)
     else:
         raise ValueError('Unknown IP version %d' % ipvx.version)
 

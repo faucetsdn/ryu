@@ -18,16 +18,15 @@
 import unittest
 import logging
 import struct
-import netaddr
 from struct import *
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether
-from ryu.lib import mac
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
 from ryu.lib.packet.arp import arp
 from ryu.lib.packet.vlan import vlan
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_arp')
@@ -42,14 +41,17 @@ class Test_arp(unittest.TestCase):
     hlen = 6
     plen = 4
     opcode = 1
-    src_mac = mac.haddr_to_bin('00:07:0d:af:f4:54')
-    src_ip = netaddr.IPAddress('24.166.172.1').packed
-    dst_mac = mac.haddr_to_bin('00:00:00:00:00:00')
-    dst_ip = netaddr.IPAddress('24.166.173.159').packed
+    src_mac = '00:07:0d:af:f4:54'
+    src_ip = '24.166.172.1'
+    dst_mac = '00:00:00:00:00:00'
+    dst_ip = '24.166.173.159'
 
     fmt = arp._PACK_STR
-    buf = pack(fmt, hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
-               dst_mac, dst_ip)
+    buf = pack(fmt, hwtype, proto, hlen, plen, opcode,
+               addrconv.mac.text_to_bin(src_mac),
+               addrconv.ipv4.text_to_bin(src_ip),
+               addrconv.mac.text_to_bin(dst_mac),
+               addrconv.ipv4.text_to_bin(dst_ip))
 
     a = arp(hwtype, proto, hlen, plen, opcode, src_mac, src_ip, dst_mac,
             dst_ip)
@@ -106,10 +108,10 @@ class Test_arp(unittest.TestCase):
         eq_(res[2], self.hlen)
         eq_(res[3], self.plen)
         eq_(res[4], self.opcode)
-        eq_(res[5], self.src_mac)
-        eq_(res[6], self.src_ip)
-        eq_(res[7], self.dst_mac)
-        eq_(res[8], self.dst_ip)
+        eq_(addrconv.mac.bin_to_text(res[5]), self.src_mac)
+        eq_(addrconv.ipv4.bin_to_text(res[6]), self.src_ip)
+        eq_(addrconv.mac.bin_to_text(res[7]), self.dst_mac)
+        eq_(addrconv.ipv4.bin_to_text(res[8]), self.dst_ip)
 
     def _build_arp(self, vlan_enabled):
         if vlan_enabled is True:

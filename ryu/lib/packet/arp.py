@@ -16,8 +16,7 @@
 import struct
 
 from ryu.ofproto import ether
-from ryu.lib import ip
-from ryu.lib import mac
+from ryu.lib import addrconv
 from . import packet_base
 
 ARP_HW_TYPE_ETHERNET = 1  # ethernet hardware type
@@ -56,10 +55,10 @@ class arp(packet_base.PacketBase):
 
     def __init__(self, hwtype=ARP_HW_TYPE_ETHERNET, proto=ether.ETH_TYPE_IP,
                  hlen=6, plen=4, opcode=ARP_REQUEST,
-                 src_mac=mac.haddr_to_bin('ff:ff:ff:ff:ff:ff'),
-                 src_ip=ip.ipv4_to_bin('0.0.0.0'),
-                 dst_mac=mac.haddr_to_bin('ff:ff:ff:ff:ff:ff'),
-                 dst_ip=ip.ipv4_to_bin('0.0.0.0')):
+                 src_mac='ff:ff:ff:ff:ff:ff',
+                 src_ip='0.0.0.0',
+                 dst_mac='ff:ff:ff:ff:ff:ff',
+                 dst_ip='0.0.0.0'):
         super(arp, self).__init__()
         self.hwtype = hwtype
         self.proto = proto
@@ -75,14 +74,19 @@ class arp(packet_base.PacketBase):
     def parser(cls, buf):
         (hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
          dst_mac, dst_ip) = struct.unpack_from(cls._PACK_STR, buf)
-        return cls(hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
-                   dst_mac, dst_ip), None, buf[arp._MIN_LEN:]
+        return cls(hwtype, proto, hlen, plen, opcode,
+                   addrconv.mac.bin_to_text(src_mac),
+                   addrconv.ipv4.bin_to_text(src_ip),
+                   addrconv.mac.bin_to_text(dst_mac),
+                   addrconv.ipv4.bin_to_text(dst_ip)), None, buf[arp._MIN_LEN:]
 
     def serialize(self, payload, prev):
         return struct.pack(arp._PACK_STR, self.hwtype, self.proto,
                            self.hlen, self.plen, self.opcode,
-                           self.src_mac, self.src_ip, self.dst_mac,
-                           self.dst_ip)
+                           addrconv.mac.text_to_bin(self.src_mac),
+                           addrconv.ipv4.text_to_bin(self.src_ip),
+                           addrconv.mac.text_to_bin(self.dst_mac),
+                           addrconv.ipv4.text_to_bin(self.dst_ip))
 
 
 def arp_ip(opcode, src_mac, src_ip, dst_mac, dst_ip):

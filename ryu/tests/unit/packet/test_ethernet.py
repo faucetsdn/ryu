@@ -23,10 +23,10 @@ from struct import *
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
-from ryu.lib import mac
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
 from ryu.lib.packet.arp import arp
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_ethernet')
@@ -36,11 +36,13 @@ class Test_ethernet(unittest.TestCase):
     """ Test case for ethernet
     """
 
-    dst = mac.haddr_to_bin('AA:AA:AA:AA:AA:AA')
-    src = mac.haddr_to_bin('BB:BB:BB:BB:BB:BB')
+    dst = 'aa:aa:aa:aa:aa:aa'
+    src = 'bb:bb:bb:bb:bb:bb'
     ethertype = ether.ETH_TYPE_ARP
 
-    buf = pack(ethernet._PACK_STR, dst, src, ethertype)
+    buf = pack(ethernet._PACK_STR,
+               addrconv.mac.text_to_bin(dst),
+               addrconv.mac.text_to_bin(src), ethertype)
 
     e = ethernet(dst, src, ethertype)
 
@@ -77,8 +79,8 @@ class Test_ethernet(unittest.TestCase):
         fmt = ethernet._PACK_STR
         res = struct.unpack(fmt, buf)
 
-        eq_(res[0], self.dst)
-        eq_(res[1], self.src)
+        eq_(addrconv.mac.bin_to_text(res[0]), self.dst)
+        eq_(addrconv.mac.bin_to_text(res[1]), self.src)
         eq_(res[2], self.ethertype)
 
     @raises(Exception)

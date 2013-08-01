@@ -130,7 +130,7 @@ Rapid Spanning Tree BPDUs(RST BPDUs) format
 import binascii
 import struct
 from . import packet_base
-from ryu.lib.mac import haddr_to_bin
+from ryu.lib import addrconv
 
 
 # BPDU destination
@@ -243,10 +243,10 @@ class ConfigurationBPDUs(bpdu):
 
     def __init__(self, flags=0, root_priority=DEFAULT_BRIDGE_PRIORITY,
                  root_system_id_extension=0,
-                 root_mac_address=haddr_to_bin('00:00:00:00:00:00'),
+                 root_mac_address='00:00:00:00:00:00',
                  root_path_cost=0, bridge_priority=DEFAULT_BRIDGE_PRIORITY,
                  bridge_system_id_extension=0,
-                 bridge_mac_address=haddr_to_bin('00:00:00:00:00:00'),
+                 bridge_mac_address='00:00:00:00:00:00',
                  port_priority=DEFAULT_PORT_PRIORITY, port_number=0,
                  message_age=0, max_age=DEFAULT_MAX_AGE,
                  hello_time=DEFAULT_HELLO_TIME,
@@ -336,13 +336,15 @@ class ConfigurationBPDUs(bpdu):
         mac_addr_list = [format((mac_addr >> (8 * i)) & 0xff, '02x')
                          for i in range(0, 6)]
         mac_addr_list.reverse()
-        mac_address = binascii.a2b_hex(''.join(mac_addr_list))
+        mac_address_bin = binascii.a2b_hex(''.join(mac_addr_list))
+        mac_address = addrconv.mac.bin_to_text(mac_address_bin)
 
         return priority, system_id_extension, mac_address
 
     @staticmethod
     def encode_bridge_id(priority, system_id_extension, mac_address):
-        mac_addr = int(binascii.hexlify(mac_address), 16)
+        mac_addr = int(binascii.hexlify(addrconv.mac.text_to_bin(mac_address)),
+                       16)
         return ((priority + system_id_extension) << 48) + mac_addr
 
     @staticmethod
@@ -429,10 +431,10 @@ class RstBPDUs(ConfigurationBPDUs):
 
     def __init__(self, flags=0, root_priority=DEFAULT_BRIDGE_PRIORITY,
                  root_system_id_extension=0,
-                 root_mac_address=haddr_to_bin('00:00:00:00:00:00'),
+                 root_mac_address='00:00:00:00:00:00',
                  root_path_cost=0, bridge_priority=DEFAULT_BRIDGE_PRIORITY,
                  bridge_system_id_extension=0,
-                 bridge_mac_address=haddr_to_bin('00:00:00:00:00:00'),
+                 bridge_mac_address='00:00:00:00:00:00',
                  port_priority=DEFAULT_PORT_PRIORITY, port_number=0,
                  message_age=0, max_age=DEFAULT_MAX_AGE,
                  hello_time=DEFAULT_HELLO_TIME,

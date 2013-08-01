@@ -22,13 +22,12 @@ from struct import *
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
-from ryu.lib import mac
 from ryu.lib.packet import packet_utils
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
 from ryu.lib.packet.ipv4 import ipv4
 from ryu.lib.packet.tcp import tcp
-import netaddr
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_ipv4')
@@ -50,8 +49,8 @@ class Test_ipv4(unittest.TestCase):
     ttl = 64
     proto = inet.IPPROTO_TCP
     csum = 0xadc6
-    src = netaddr.IPAddress('131.151.32.21').packed
-    dst = netaddr.IPAddress('131.151.32.129').packed
+    src = '131.151.32.21'
+    dst = '131.151.32.129'
     length = header_length * 4
     option = '\x86\x28\x00\x00\x00\x01\x01\x22' \
         + '\x00\x01\xae\x00\x00\x00\x00\x00' \
@@ -60,7 +59,9 @@ class Test_ipv4(unittest.TestCase):
         + '\x00\x00\x00\x00\x00\x00\x00\x01'
 
     buf = pack(ipv4._PACK_STR, ver_hlen, tos, total_length, identification,
-               flg_off, ttl, proto, csum, src, dst) \
+               flg_off, ttl, proto, csum,
+               addrconv.ipv4.text_to_bin(src),
+               addrconv.ipv4.text_to_bin(dst)) \
         + option
 
     ip = ipv4(version, header_length, tos, total_length, identification,
@@ -117,8 +118,8 @@ class Test_ipv4(unittest.TestCase):
         eq_(res[4], self.flg_off)
         eq_(res[5], self.ttl)
         eq_(res[6], self.proto)
-        eq_(res[8], self.src)
-        eq_(res[9], self.dst)
+        eq_(addrconv.ipv4.bin_to_text(res[8]), self.src)
+        eq_(addrconv.ipv4.bin_to_text(res[9]), self.dst)
         eq_(option, self.option)
 
         # checksum

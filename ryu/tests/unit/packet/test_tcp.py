@@ -18,17 +18,15 @@
 import unittest
 import logging
 import struct
-import netaddr
 from struct import *
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
-from ryu.lib import mac
-from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
 from ryu.lib.packet.tcp import tcp
 from ryu.lib.packet.ipv4 import ipv4
 from ryu.lib.packet import packet_utils
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_tcp')
@@ -92,8 +90,8 @@ class Test_tcp(unittest.TestCase):
         offset = 5
         csum = 0
 
-        src_ip = netaddr.IPAddress('192.168.10.1').packed
-        dst_ip = netaddr.IPAddress('192.168.100.1').packed
+        src_ip = '192.168.10.1'
+        dst_ip = '192.168.100.1'
         prev = ipv4(4, 5, 0, 0, 0, 0, 0, 64,
                     inet.IPPROTO_TCP, 0, src_ip, dst_ip)
 
@@ -112,7 +110,9 @@ class Test_tcp(unittest.TestCase):
         eq_(res[8], self.urgent)
 
         # checksum
-        ph = struct.pack('!4s4sBBH', src_ip, dst_ip, 0, 6, offset * 4)
+        ph = struct.pack('!4s4sBBH',
+                         addrconv.ipv4.text_to_bin(src_ip),
+                         addrconv.ipv4.text_to_bin(dst_ip), 0, 6, offset * 4)
         d = ph + buf + bytearray()
         s = packet_utils.checksum(d)
         eq_(0, s)
@@ -122,8 +122,8 @@ class Test_tcp(unittest.TestCase):
         csum = 0
         option = '\x01\x02'
 
-        src_ip = netaddr.IPAddress('192.168.10.1').packed
-        dst_ip = netaddr.IPAddress('192.168.100.1').packed
+        src_ip = '192.168.10.1'
+        dst_ip = '192.168.100.1'
         prev = ipv4(4, 5, 0, 0, 0, 0, 0, 64,
                     inet.IPPROTO_TCP, 0, src_ip, dst_ip)
 

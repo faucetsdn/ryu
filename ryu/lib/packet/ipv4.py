@@ -21,7 +21,7 @@ from . import icmp
 from . import udp
 from . import tcp
 from ryu.ofproto import inet
-from ryu.lib import ip
+from ryu.lib import addrconv
 
 
 IPV4_ADDRESS_PACK_STR = '!I'
@@ -68,8 +68,8 @@ class ipv4(packet_base.PacketBase):
     def __init__(self, version=4, header_length=5, tos=0,
                  total_length=0, identification=0, flags=0,
                  offset=0, ttl=255, proto=0, csum=0,
-                 src=ip.ipv4_to_bin('0.0.0.0'),
-                 dst=ip.ipv4_to_bin('0.0.0.0'),
+                 src='0.0.0.0',
+                 dst='0.0.0.0',
                  option=None):
         super(ipv4, self).__init__()
         self.version = version
@@ -103,7 +103,9 @@ class ipv4(packet_base.PacketBase):
         else:
             option = None
         msg = cls(version, header_length, tos, total_length, identification,
-                  flags, offset, ttl, proto, csum, src, dst, option)
+                  flags, offset, ttl, proto, csum,
+                  addrconv.ipv4.bin_to_text(src),
+                  addrconv.ipv4.bin_to_text(dst), option)
 
         return msg, ipv4.get_packet_type(proto), buf[length:total_length]
 
@@ -116,7 +118,9 @@ class ipv4(packet_base.PacketBase):
             self.total_length = self.header_length * 4 + len(payload)
         struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
                          self.total_length, self.identification, flags,
-                         self.ttl, self.proto, 0, self.src, self.dst)
+                         self.ttl, self.proto, 0,
+                         addrconv.ipv4.text_to_bin(self.src),
+                         addrconv.ipv4.text_to_bin(self.dst))
 
         if self.option:
             assert (length - ipv4._MIN_LEN) >= len(self.option)

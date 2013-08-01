@@ -18,12 +18,10 @@
 import unittest
 import logging
 import struct
-import netaddr
 from struct import *
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
-from ryu.lib import mac
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
 from ryu.lib.packet.ipv4 import ipv4
@@ -85,8 +83,8 @@ class Test_vlan(unittest.TestCase):
         eq_(res[1], self.ethertype)
 
     def _build_vlan(self):
-        src_mac = mac.haddr_to_bin('00:07:0d:af:f4:54')
-        dst_mac = mac.haddr_to_bin('00:00:00:00:00:00')
+        src_mac = '00:07:0d:af:f4:54'
+        dst_mac = '00:00:00:00:00:00'
         ethertype = ether.ETH_TYPE_8021Q
         e = ethernet(dst_mac, src_mac, ethertype)
 
@@ -100,8 +98,8 @@ class Test_vlan(unittest.TestCase):
         ttl = 64
         proto = inet.IPPROTO_ICMP
         csum = 0xa7f2
-        src = netaddr.IPAddress('131.151.32.21').packed
-        dst = netaddr.IPAddress('131.151.32.129').packed
+        src = '131.151.32.21'
+        dst = '131.151.32.129'
         option = 'TEST'
         ip = ipv4(version, header_length, tos, total_length, identification,
                   flags, offset, ttl, proto, csum, src, dst, option)

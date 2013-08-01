@@ -20,7 +20,7 @@ import binascii
 
 from . import packet_base
 from . import packet_utils
-from ryu.lib.mac import haddr_to_bin, haddr_to_str
+from ryu.lib import addrconv
 
 ICMPV6_DST_UNREACH = 1       # dest unreachable, codes:
 ICMPV6_PACKET_TOO_BIG = 2       # packet too big
@@ -181,7 +181,7 @@ class nd_neighbor(object):
     @classmethod
     def parser(cls, buf, offset):
         (res, dst) = struct.unpack_from(cls._PACK_STR, buf, offset)
-        msg = cls(res >> 29, dst)
+        msg = cls(res >> 29, addrconv.ipv6.bin_to_text(dst))
         offset += cls._MIN_LEN
         if len(buf) > offset:
             (msg.type_, msg.length) = struct.unpack_from('!BB', buf, offset)
@@ -195,7 +195,8 @@ class nd_neighbor(object):
         return msg
 
     def serialize(self):
-        hdr = bytearray(struct.pack(nd_neighbor._PACK_STR, self.res, self.dst))
+        hdr = bytearray(struct.pack(nd_neighbor._PACK_STR, self.res,
+                                    addrconv.ipv6.text_to_bin(self.dst)))
 
         if self.type_ is not None:
             hdr += bytearray(struct.pack('!BB', self.type_, self.length))
@@ -244,7 +245,7 @@ class nd_option_la(object):
     @classmethod
     def parser(cls, buf, offset):
         (hw_src, ) = struct.unpack_from(cls._PACK_STR, buf, offset)
-        msg = cls(hw_src)
+        msg = cls(addrconv.mac.bin_to_text(hw_src))
         offset += cls._MIN_LEN
         if len(buf) > offset:
             msg.data = buf[offset:]
@@ -252,7 +253,8 @@ class nd_option_la(object):
         return msg
 
     def serialize(self):
-        hdr = bytearray(struct.pack(self._PACK_STR, self.hw_src))
+        hdr = bytearray(struct.pack(self._PACK_STR,
+                                    addrconv.mac.text_to_bin(self.hw_src)))
 
         if self.data is not None:
             hdr += bytearray(self.data)

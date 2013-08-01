@@ -67,7 +67,6 @@ VRRP v3 packet format
 
 """
 
-import netaddr
 import struct
 
 from ryu.lib.packet import ethernet
@@ -79,36 +78,31 @@ from ryu.lib.packet import packet_utils
 from ryu.lib.packet import vlan
 from ryu.ofproto import ether
 from ryu.ofproto import inet
+from ryu.lib import addrconv
 
 
 # IPv4
 # the LSB 8 bits is used for VRID
-VRRP_IPV4_SRC_MAC_ADDRESS_STR = '00:00:5E:00:01:00'
-VRRP_IPV4_SRC_MAC_ADDRESS = netaddr.EUI(VRRP_IPV4_SRC_MAC_ADDRESS_STR).packed
-VRRP_IPV4_DST_MAC_ADDRESS_STR = '01:00:5E:00:00:12'
-VRRP_IPV4_DST_MAC_ADDRESS = netaddr.EUI(VRRP_IPV4_DST_MAC_ADDRESS_STR).packed
-VRRP_IPV4_DST_ADDRESS_STR = '224.0.0.18'
-VRRP_IPV4_DST_ADDRESS = netaddr.IPAddress(VRRP_IPV4_DST_ADDRESS_STR).packed
+VRRP_IPV4_SRC_MAC_ADDRESS_FMT = '00:00:5E:00:01:%02x'
+VRRP_IPV4_DST_MAC_ADDRESS = '01:00:5E:00:00:12'
+VRRP_IPV4_DST_ADDRESS = '224.0.0.18'
 VRRP_IPV4_TTL = 255
 
 
 def vrrp_ipv4_src_mac_address(vrid):
-    return VRRP_IPV4_SRC_MAC_ADDRESS[:-1] + chr(vrid)
+    return VRRP_IPV4_SRC_MAC_ADDRESS_FMT % vrid
 
 
 # IPv6
 # the LSB 8 bits is used for VRID
-VRRP_IPV6_SRC_MAC_ADDRESS_STR = '00:00:5E:00:02:00'
-VRRP_IPV6_SRC_MAC_ADDRESS = netaddr.EUI(VRRP_IPV6_SRC_MAC_ADDRESS_STR).packed
-VRRP_IPV6_DST_MAC_ADDRESS_STR = '33:33:00:00:00:12'
-VRRP_IPV6_DST_MAC_ADDRESS = netaddr.EUI(VRRP_IPV6_DST_MAC_ADDRESS_STR).packed
-VRRP_IPV6_DST_ADDRESS_STR = 'FF02:0:0:0:0:0:0:12'
-VRRP_IPV6_DST_ADDRESS = netaddr.IPAddress(VRRP_IPV6_DST_ADDRESS_STR).packed
+VRRP_IPV6_SRC_MAC_ADDRESS_FMT = '00:00:5E:00:02:%02x'
+VRRP_IPV6_DST_MAC_ADDRESS = '33:33:00:00:00:12'
+VRRP_IPV6_DST_ADDRESS = 'ff02::12'
 VRRP_IPV6_HOP_LIMIT = 255
 
 
 def vrrp_ipv6_src_mac_address(vrid):
-    return VRRP_IPV6_SRC_MAC_ADDRESS[:-1] + chr(vrid)
+    return VRRP_IPV6_SRC_MAC_ADDRESS_FMT % vrid
 
 
 VRRP_VERSION_SHIFT = 4
@@ -167,10 +161,12 @@ VRRP_V2_MAX_ADVER_INT_MAX = 0xff
 
 def is_ipv6(ip_address):
     assert type(ip_address) == str
-    if len(ip_address) == 4:
-        return False
-    assert len(ip_address) == 16
-    return True
+    try:
+        addrconv.ipv4.text_to_bin(ip_address)
+    except:
+        addrconv.ipv6.text_to_bin(ip_address)  # sanity
+        return True
+    return False
 
 
 class vrrp(packet_base.PacketBase):
@@ -449,7 +445,10 @@ class vrrpv2(vrrp):
 
         offset = cls._MIN_LEN
         ip_addresses_pack_str = cls._ip_addresses_pack_str(count_ip)
-        ip_addresses = struct.unpack_from(ip_addresses_pack_str, buf, offset)
+        ip_addresses_bin = struct.unpack_from(ip_addresses_pack_str, buf,
+                                              offset)
+        ip_addresses = map(lambda x: addrconv.ipv4.bin_to_text(x),
+                           ip_addresses_bin)
 
         offset += struct.calcsize(ip_addresses_pack_str)
         auth_data = struct.unpack_from(cls._AUTH_DATA_PACK_STR, buf, offset)
@@ -484,7 +483,8 @@ class vrrpv2(vrrp):
                          vrrp_.checksum)
         offset += vrrpv2._MIN_LEN
         struct.pack_into(ip_addresses_pack_str, buf, offset,
-                         *vrrp_.ip_addresses)
+                         *map(lambda x: addrconv.ipv4.text_to_bin(x),
+                              vrrp_.ip_addresses))
         offset += ip_addresses_len
         struct.pack_into(vrrpv2._AUTH_DATA_PACK_STR, buf, offset,
                          *vrrp_.auth_data)
@@ -564,14 +564,17 @@ class vrrpv3(vrrp):
         # Unfortunately it isn't available. Guess it by vrrp packet length.
         if address_len == cls._IPV4_ADDRESS_LEN:
             pack_str = '!' + cls._IPV4_ADDRESS_PACK_STR_RAW * count_ip
+            conv = addrconv.ipv4.bin_to_text
         elif address_len == cls._IPV6_ADDRESS_LEN:
             pack_str = '!' + cls._IPV6_ADDRESS_PACK_STR_RAW * count_ip
+            conv = addrconv.ipv6.bin_to_text
         else:
             raise ValueError(
                 'unknown address version address_len %d count_ip %d' % (
                     address_len, count_ip))
 
-        ip_addresses = struct.unpack_from(pack_str, buf, offset)
+        ip_addresses_bin = struct.unpack_from(pack_str, buf, offset)
+        ip_addresses = map(lambda x: conv(x), ip_addresses_bin)
         msg = cls(version, type_, vrid, priority,
                   count_ip, max_adver_int, checksum, ip_addresses)
         return msg, None, buf[len(msg):]
@@ -580,11 +583,11 @@ class vrrpv3(vrrp):
     def serialize_static(vrrp_, prev):
         if isinstance(prev, ipv4.ipv4):
             assert type(vrrp_.ip_addresses[0]) == str
-            assert len(vrrp_.ip_addresses[0]) == 4
+            conv = addrconv.ipv4.text_to_bin
             ip_address_pack_raw = vrrpv3._IPV4_ADDRESS_PACK_STR_RAW
         elif isinstance(prev, ipv6.ipv6):
             assert type(vrrp_.ip_addresses[0]) == str
-            assert len(vrrp_.ip_addresses[0]) == vrrp._IPV6_ADDRESS_LEN
+            conv = addrconv.ipv6.text_to_bin
             ip_address_pack_raw = vrrpv3._IPV6_ADDRESS_PACK_STR_RAW
         else:
             raise ValueError('Unkown network layer %s' % type(prev))
@@ -605,7 +608,7 @@ class vrrpv3(vrrp):
                          vrrp_.vrid, vrrp_.priority,
                          vrrp_.count_ip, vrrp_.max_adver_int, vrrp_.checksum)
         struct.pack_into(ip_addresses_pack_str, buf, vrrpv3._MIN_LEN,
-                         *vrrp_.ip_addresses)
+                         *map(lambda x: conv(x), vrrp_.ip_addresses))
 
         if checksum:
             vrrp_.checksum = packet_utils.checksum_ip(prev, len(buf), buf)

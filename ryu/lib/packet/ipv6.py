@@ -20,6 +20,7 @@ from . import packet_utils
 from . import icmpv6
 from . import tcp
 from ryu.ofproto import inet
+from ryu.lib import addrconv
 
 
 IPV6_ADDRESS_PACK_STR = '!16s'
@@ -73,7 +74,8 @@ class ipv6(packet_base.PacketBase):
         flow_label = v_tc_flow & 0xfffff
         hop_limit = hlim
         msg = cls(version, traffic_class, flow_label, payload_length,
-                  nxt, hop_limit, src, dst)
+                  nxt, hop_limit, addrconv.ipv6.bin_to_text(src),
+                  addrconv.ipv6.bin_to_text(dst))
         return msg, ipv6.get_packet_type(nxt), buf[cls._MIN_LEN:payload_length]
 
     def serialize(self, payload, prev):
@@ -82,7 +84,8 @@ class ipv6(packet_base.PacketBase):
                      self.flow_label << 12)
         struct.pack_into(ipv6._PACK_STR, hdr, 0, v_tc_flow,
                          self.payload_length, self.nxt, self.hop_limit,
-                         self.src, self.dst)
+                         addrconv.ipv6.text_to_bin(self.src),
+                         addrconv.ipv6.text_to_bin(self.dst))
         return hdr
 
 ipv6.register_packet_type(icmpv6.icmpv6, inet.IPPROTO_ICMPV6)
