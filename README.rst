@@ -1,12 +1,12 @@
 What's Ryu
 ==========
-Ryu is an Operating System for Software Defined Networking.
-            
-Ryu aims to provide a logically centralized control and well defined
-API that make it easy for operators to create new network management
-and control applications. Currently, Ryu manages network devices by
-using OpenFlow. You can say that Ryu is an OpenFlow Controller, which
-support OpenFlow v1.0, v1.2, v1.3, and Nicira Extensions.
+Ryu is a component-based software defined networking framework.
+
+Ryu provides software components with well defined API that make it
+easy for developers to create new network management and control
+applications. Ryu supports various protocols for managing network
+devices, such as OpenFlow, Netconf, OF-config, etc. About OpenFlow,
+Ryu supports fully 1.0, 1.2, 1.3 and Nicira Extensions.
 
 All of the code is freely available under the Apache 2.0 license. Ryu
 is fully written in Python.
