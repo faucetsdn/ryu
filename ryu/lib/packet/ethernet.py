@@ -25,15 +25,16 @@ class ethernet(packet_base.PacketBase):
     """Ethernet header encoder/decoder class.
 
     An instance has the following attributes at least.
+    MAC addresses are represented as a string like '08:60:6e:7f:74:e7'.
     __init__ takes the correspondig args in this order.
 
-    =========== ====================
-    Attribute   Description
-    =========== ====================
-    dst         destination address
-    src         source address
-    ethertype   ether type
-    =========== ====================
+    ============== ==================== =====================
+    Attribute      Description          Example
+    ============== ==================== =====================
+    dst            destination address  'ff:ff:ff:ff:ff:ff'
+    src            source address       '08:60:6e:7f:74:e7'
+    ethertype      ether type           0x0800
+    ============== ==================== =====================
     """
 
     _PACK_STR = '!6s6sH'

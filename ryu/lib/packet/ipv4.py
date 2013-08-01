@@ -38,28 +38,31 @@ class ipv4(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
+    IPv4 addresses are represented as a string like '192.0.2.1'.
     __init__ takes the correspondig args in this order.
 
-    ============== ====================
-    Attribute      Description
-    ============== ====================
+    ============== ======================================== ==================
+    Attribute      Description                              Example
+    ============== ======================================== ==================
     version        Version
     header_length  IHL
     tos            Type of Service
-    total_length   Total Length \
-                   (0 means automatically-calculate when encoding)
+    total_length   Total Length
+                   (0 means automatically-calculate
+                   when encoding)
     identification Identification
     flags          Flags
     offset         Fragment Offset
     ttl            Time to Live
     proto          Protocol
-    csum           Header Checksum \
-                   (Ignored and automatically-calculated when encoding)
-    src            Source Address
-    dst            Destination Address
-    option         A bytearray which contains the entire Options, or None for \
-                   no Options
-    ============== ====================
+    csum           Header Checksum
+                   (Ignored and automatically-calculated
+                   when encoding)
+    src            Source Address                           '192.0.2.1'
+    dst            Destination Address                      '192.0.2.2'
+    option         A bytearray which contains the entire
+                   Options, or None for  no Options
+    ============== ======================================== ==================
     """
 
     _PACK_STR = '!BBHHHBBH4s4s'

@@ -33,21 +33,23 @@ class arp(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
+    IPv4 addresses are represented as a string like '192.0.2.1'.
+    MAC addresses are represented as a string like '08:60:6e:7f:74:e7'.
     __init__ takes the correspondig args in this order.
 
-    ============== ====================
-    Attribute      Description
-    ============== ====================
+    ============== ==================== =====================
+    Attribute      Description          Example
+    ============== ==================== =====================
     hwtype         ar$hrd
     proto          ar$pro
     hlen           ar$hln
     plen           ar$pln
     opcode         ar$op
-    src_mac        ar$sha
-    src_ip         ar$spa
-    dst_mac        ar$tha
-    dst_ip         ar$tpa
-    ============== ====================
+    src_mac        ar$sha               '08:60:6e:7f:74:e7'
+    src_ip         ar$spa               '192.0.2.1'
+    dst_mac        ar$tha               '00:00:00:00:00:00'
+    dst_ip         ar$tpa               '192.0.2.2'
+    ============== ==================== =====================
     """
 
     _PACK_STR = '!HHBBH6s4s6s4s'

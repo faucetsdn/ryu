@@ -33,21 +33,23 @@ class ipv6(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
+    IPv6 addresses are represented as a string like 'ff02::1'.
     __init__ takes the correspondig args in this order.
 
-    ============== ====================
-    Attribute      Description
-    ============== ====================
+    ============== ======================================== ==================
+    Attribute      Description                              Example
+    ============== ======================================== ==================
     version        Version
     traffic_class  Traffic Class
-    flow_label     When decoding, Flow Label. \
-                   When encoding, the most significant 8 bits of Flow Label.
+    flow_label     When decoding, Flow Label.
+                   When encoding, the most significant 8
+                   bits of Flow Label.
     payload_length Payload Length
     nxt            Next Header
     hop_limit      Hop Limit
-    src            Source Address
-    dst            Destination Address
-    ============== ====================
+    src            Source Address                           'ff02::1'
+    dst            Destination Address                      '::'
+    ============== ======================================== ==================
     """
 
     _PACK_STR = '!IHBB16s16s'
