@@ -33,6 +33,7 @@ from ryu.exception import RyuException
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import hub
 from ryu.lib import mac as mac_lib
+from ryu.lib import addrconv
 from ryu.lib.packet import arp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import icmp
@@ -1121,8 +1122,8 @@ class VlanRouter(object):
         for send_port in self.port_data.values():
             if in_port is None or in_port != send_port.port_no:
                 src_mac = send_port.mac
-                dst_mac = mac_lib.BROADCAST
-                arp_target_mac = mac_lib.DONTCARE
+                dst_mac = mac_lib.BROADCAST_STR
+                arp_target_mac = mac_lib.DONTCARE_STR
                 inport = self.ofctl.dp.ofproto.OFPP_CONTROLLER
                 output = send_port.port_no
                 self.ofctl.send_arp(arp.ARP_REQUEST, self.vlan_id,
@@ -1236,7 +1237,7 @@ class Port(object):
     def __init__(self, port_no, hw_addr):
         super(Port, self).__init__()
         self.port_no = port_no
-        self.mac = hw_addr
+        self.mac = addrconv.mac.bin_to_text(hw_addr)
 
 
 class AddressData(dict):
@@ -1636,8 +1637,8 @@ class OfCtl_v1_0(OfCtl):
 
         match = ofp_parser.OFPMatch(wildcards, 0, 0, dl_dst, dl_vlan, 0,
                                     dl_type, 0, nw_proto,
-                                    ipv4_bytes_to_int(nw_src),
-                                    ipv4_bytes_to_int(nw_dst),
+                                    ipv4_text_to_int(nw_src),
+                                    ipv4_text_to_int(nw_dst),
                                     0, 0)
         actions = actions or []
 
@@ -1728,10 +1729,10 @@ class OfCtl_v1_2(OfCtl):
         if dl_vlan:
             match.set_vlan_vid(dl_vlan)
         if nw_src:
-            match.set_ipv4_src_masked(ipv4_bytes_to_int(nw_src),
+            match.set_ipv4_src_masked(ipv4_text_to_int(nw_src),
                                       mask_ntob(src_mask))
         if nw_dst:
-            match.set_ipv4_dst_masked(ipv4_bytes_to_int(nw_dst),
+            match.set_ipv4_dst_masked(ipv4_text_to_int(nw_dst),
                                       mask_ntob(dst_mask))
         if nw_proto:
             if dl_type == ether.ETH_TYPE_IP:
@@ -1795,7 +1796,7 @@ class OfCtl_v1_2(OfCtl):
 
 def ip_addr_aton(ip_str, err_msg=None):
     try:
-        return socket.inet_aton(ip_str)
+        return addrconv.ipv4.bin_to_text(socket.inet_aton(ip_str))
     except (struct.error, socket.error) as e:
         if err_msg is not None:
             e.message = '%s %s' % (err_msg, e.message)
@@ -1803,7 +1804,7 @@ def ip_addr_aton(ip_str, err_msg=None):
 
 
 def ip_addr_ntoa(ip):
-    return socket.inet_ntoa(ip)
+    return socket.inet_ntoa(addrconv.ipv4.text_to_bin(ip))
 
 
 def mask_ntob(mask, err_msg=None):
@@ -1819,21 +1820,19 @@ def mask_ntob(mask, err_msg=None):
 def ipv4_apply_mask(address, prefix_len, err_msg=None):
     import itertools
 
-    assert isinstance(address, bytes)
-    assert len(address) == 4
-    mask = ipv4_int_to_bytes(mask_ntob(prefix_len, err_msg))
-    return ''.join(chr(ord(x) & ord(y)) for (x, y) in
-                   itertools.izip(address, mask))
+    assert isinstance(address, str)
+    address_int = ipv4_text_to_int(address)
+    return ipv4_int_to_text(address_int & mask_ntob(prefix_len, err_msg))
 
 
-def ipv4_int_to_bytes(ip_int):
+def ipv4_int_to_text(ip_int):
     assert isinstance(ip_int, (int, long))
-    return struct.pack('!I', ip_int)
+    return addrconv.ipv4.bin_to_text(struct.pack('!I', ip_int))
 
 
-def ipv4_bytes_to_int(ip_bytes):
-    assert isinstance(ip_bytes, bytes)
-    return struct.unpack('!I', ip_bytes)[0]
+def ipv4_text_to_int(ip_text):
+    assert isinstance(ip_text, str)
+    return struct.unpack('!I', addrconv.ipv4.text_to_bin(ip_text))[0]
 
 
 def nw_addr_aton(nw_addr, err_msg=None):
