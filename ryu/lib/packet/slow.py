@@ -366,6 +366,8 @@ class lacp(packet_base.PacketBase):
     _ALL_PACK_LEN = _HLEN_PACK_LEN + _ACTPRT_INFO_PACK_LEN * 2 + \
         _COL_INFO_PACK_LEN + _TRM_PACK_LEN
 
+    _MIN_LEN = _ALL_PACK_LEN
+
     def __init__(self, version=LACP_VERSION_NUMBER,
                  actor_system_priority=0,
                  actor_system='00:00:00:00:00:00',
