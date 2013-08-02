@@ -58,7 +58,11 @@ def create_list_of_base_attributes(f):
     @functools.wraps(f)
     def wrapper(self, *args, **kwargs):
         ret = f(self, *args, **kwargs)
-        self._base_attributes = set(dir(self))
+        cls = self.__class__
+        # hasattr(cls, '_base_attributes') doesn't work because super class
+        # may already have the attribute.
+        if '_base_attributes' not in cls.__dict__:
+            cls._base_attributes = set(dir(self))
         return ret
     return wrapper
 
