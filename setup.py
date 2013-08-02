@@ -15,8 +15,11 @@
 # limitations under the License.
 
 import setuptools
+import os
+from ryu import version
 
 
+os.environ["PBR_VERSION"] = str(version)
 setuptools.setup(name='ryu',
                  setup_requires=['d2to1', 'pbr'],
                  d2to1=True)
