@@ -216,20 +216,18 @@ class vrrp(packet_base.PacketBase):
 
     @staticmethod
     def get_payload(packet_):
-        protocols = packet_.protocols
+        may_ip = None
+        may_vrrp = None
 
-        try:
-            may_ip, may_vrrp = protocols[-2], protocols[-1]
-            if isinstance(may_vrrp, bytearray):
-                may_ip, may_vrrp = protocols[-3], protocols[-2]
-        except IndexError:
-            return None, None
+        for protocol in packet_.protocols:
+            if isinstance(protocol, ipv4.ipv4) or isinstance(protocol,
+                                                             ipv6.ipv6):
+                may_ip = protocol
+                continue
 
-        if (not isinstance(may_ip, ipv4.ipv4) and
-                not isinstance(may_ip, ipv6.ipv6)):
-            return None, None
-        if not isinstance(may_vrrp, vrrp):
-            return None, None
+            if isinstance(protocol, vrrp):
+                may_vrrp = protocol
+
         return may_ip, may_vrrp
 
     @classmethod
@@ -560,6 +558,7 @@ class vrrpv3(vrrp):
 
         offset = cls._MIN_LEN
         address_len = (len(buf) - offset) / count_ip
+        address_len = cls._IPV4_ADDRESS_LEN
         # Address version (IPv4 or IPv6) is determined by network layer
         # header type.
         # Unfortunately it isn't available. Guess it by vrrp packet length.
