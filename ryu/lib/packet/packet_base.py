@@ -40,6 +40,9 @@ class PacketBase(object):
     def __init__(self):
         super(PacketBase, self).__init__()
 
+    def __len__(self):
+        return self._MIN_LEN
+
     @property
     def protocol_name(self):
         return self.__class__.__name__
