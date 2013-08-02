@@ -158,6 +158,8 @@ class bpdu(packet_base.PacketBase):
     _PACK_LEN = struct.calcsize(_PACK_STR)
     _BPDU_TYPES = {}
 
+    _MIN_LEN = _PACK_LEN
+
     @staticmethod
     def register_bpdu_type(sub_cls):
         bpdu._BPDU_TYPES[sub_cls.BPDU_TYPE] = sub_cls
