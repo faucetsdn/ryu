@@ -124,6 +124,8 @@ class llc(packet_base.PacketBase):
     _CTR_TYPES = {}
     _CTR_PACK_STR = '!2xB'
 
+    _MIN_LEN = _PACK_LEN
+
     @staticmethod
     def register_control_type(register_cls):
         llc._CTR_TYPES[register_cls.TYPE] = register_cls
