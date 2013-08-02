@@ -167,6 +167,9 @@ class lldp(packet_base.PacketBase):
             return tlv_cls
         return _set_type
 
+    def __len__(self):
+        return sum(LLDP_TLV_SIZE + tlv.len for tlv in self.tlvs)
+
 
 @lldp.set_tlv_type(LLDP_TLV_END)
 class End(LLDPBasicTLV):
