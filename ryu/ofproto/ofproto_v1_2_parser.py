@@ -1704,12 +1704,12 @@ class OFPMatch(StringifyMixin):
                 assert len(value) == len(mask)
                 pack_str = "!I%ds%ds" % (len(value), len(mask))
                 msg_pack_into(pack_str, buf, field_offset,
-                              ofproto_v1_2.oxm_tlv_header_w(n, len(value)),
+                              (n << 9) | (1 << 8) | (len(value) * 2),
                               value, mask)
             else:
                 pack_str = "!I%ds" % (len(value),)
                 msg_pack_into(pack_str, buf, field_offset,
-                              ofproto_v1_2.oxm_tlv_header(n, len(value)),
+                              (n << 9) | (0 << 8) | len(value),
                               value)
             field_offset += struct.calcsize(pack_str)
 
