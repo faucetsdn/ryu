@@ -1490,6 +1490,28 @@ class MTPbbIsid(OFPMatchField):
         self.value = value
         self.mask = mask
 
+    @classmethod
+    def field_parser(cls, header, buf, offset):
+        hasmask = (header >> 8) & 1
+        mask = None
+        if ofproto_v1_3.oxm_tlv_header_extract_hasmask(header):
+            pack_str = '!' + cls.pack_str[1:] * 2
+            (v1, v2, v3, m1, m2, m3) = struct.unpack_from(pack_str, buf,
+                                                          offset + 4)
+            value = v1 << 16 | v2 << 8 | v3
+            mask = m1 << 16 | m2 << 8 | m3
+        else:
+            (v1, v2, v3,) = struct.unpack_from(cls.pack_str, buf, offset + 4)
+            value = v1 << 16 | v2 << 8 | v3
+        return cls(header, value, mask)
+
+    def _put(self, buf, offset, value):
+        ofproto_parser.msg_pack_into(self.pack_str, buf, offset,
+                                     (value >> 16) & 0xff,
+                                     (value >> 8) & 0xff,
+                                     (value >> 0) & 0xff)
+        self.length += self.n_bytes
+
 
 @OFPMatchField.register_field_header([ofproto_v1_3.OXM_OF_TUNNEL_ID,
                                       ofproto_v1_3.OXM_OF_TUNNEL_ID_W])
