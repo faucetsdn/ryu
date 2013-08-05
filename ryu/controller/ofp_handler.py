@@ -191,6 +191,8 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         # while.
         if datapath.ofproto.OFP_VERSION < 0x04:
             datapath.ports = msg.ports
+        else:
+            datapath.ports = {}
 
         ofproto = datapath.ofproto
         ofproto_parser = datapath.ofproto_parser
@@ -200,6 +202,23 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         )
         datapath.send_msg(set_config)
 
+        if datapath.ofproto.OFP_VERSION < 0x04:
+            self.logger.debug('move onto main mode')
+            ev.msg.datapath.set_state(MAIN_DISPATCHER)
+        else:
+            port_desc = datapath.ofproto_parser.OFPPortDescStatsRequest(
+                datapath, 0)
+            datapath.send_msg(port_desc)
+
+    @set_ev_handler(ofp_event.EventOFPPortDescStatsReply, CONFIG_DISPATCHER)
+    def multipart_reply_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        for port in msg.body:
+            datapath.ports[port.port_no] = port
+
+        if msg.flags & datapath.ofproto.OFPMPF_REPLY_MORE:
+            return
         self.logger.debug('move onto main mode')
         ev.msg.datapath.set_state(MAIN_DISPATCHER)
 

@@ -163,7 +163,9 @@ class DPSet(app_manager.RyuApp):
     def switch_features_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
-        datapath.ports = msg.ports
+        # ofp_handler.py does the following so we could remove...
+        if datapath.ofproto.OFP_VERSION < 0x04:
+            datapath.ports = msg.ports
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, handler.MAIN_DISPATCHER)
     def port_status_handler(self, ev):
