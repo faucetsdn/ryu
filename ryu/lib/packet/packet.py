@@ -127,3 +127,7 @@ class Packet(object):
                 issubclass(protocol, packet_base.PacketBase)):
             return protocol in [p.__class__ for p in self.protocols]
         return protocol in self.protocols
+
+    def __str__(self):
+        return ', '.join(repr(protocol) for protocol in self.protocols)
+    __repr__ = __str__  # note: str(list) uses __repr__ for elements
