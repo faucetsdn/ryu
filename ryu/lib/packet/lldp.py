@@ -41,6 +41,7 @@ optional TLV may be inserted in any order
 """
 
 import struct
+from ryu.lib import stringify
 from ryu.lib.packet import packet_base
 
 
@@ -70,7 +71,7 @@ LLDP_TLV_MANAGEMENT_ADDRESS = 8         # Management Address
 LLDP_TLV_ORGANIZATIONALLY_SPECIFIC = 127  # organizationally Specific TLVs
 
 
-class LLDPBasicTLV(object):
+class LLDPBasicTLV(stringify.StringifyMixin):
     _LEN_MIN = 0
     _LEN_MAX = 511
     tlv_type = None
@@ -106,7 +107,6 @@ class LLDPBasicTLV(object):
 
 class lldp(packet_base.PacketBase):
     _tlv_parsers = {}
-    tlvs = []
 
     def __init__(self, tlvs):
         super(lldp, self).__init__()

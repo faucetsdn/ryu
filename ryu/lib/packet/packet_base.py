@@ -14,9 +14,10 @@
 # limitations under the License.
 
 import abc
+from ryu.lib import stringify
 
 
-class PacketBase(object):
+class PacketBase(stringify.StringifyMixin):
     """A base class for a protocol (ethernet, ipv4, ...) header."""
     __metaclass__ = abc.ABCMeta
     _TYPES = {}

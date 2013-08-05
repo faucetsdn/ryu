@@ -90,6 +90,7 @@ Control field
 import struct
 from . import bpdu
 from . import packet_base
+from ryu.lib import stringify
 
 
 SAP_BDPU = 0x42
@@ -164,7 +165,7 @@ class llc(packet_base.PacketBase):
 
 
 @llc.register_control_type
-class ControlFormatI(object):
+class ControlFormatI(stringify.StringifyMixin):
     """LLC sub encoder/decoder class for control I-format field.
 
     An instance has the following attributes at least.
@@ -213,7 +214,7 @@ class ControlFormatI(object):
 
 
 @llc.register_control_type
-class ControlFormatS(object):
+class ControlFormatS(stringify.StringifyMixin):
     """LLC sub encoder/decoder class for control S-format field.
 
     An instance has the following attributes at least.
@@ -265,7 +266,7 @@ class ControlFormatS(object):
 
 
 @llc.register_control_type
-class ControlFormatU(object):
+class ControlFormatU(stringify.StringifyMixin):
     """LLC sub encoder/decoder class for control U-format field.
 
     An instance has the following attributes at least.

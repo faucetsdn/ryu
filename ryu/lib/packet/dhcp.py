@@ -58,6 +58,8 @@ import socket
 import struct
 
 from . import packet_base
+from ryu.lib import stringify
+
 
 DHCP_BOOT_REQUEST = 1
 DHCP_BOOT_REPLY = 2
@@ -190,7 +192,7 @@ class dhcp(packet_base.PacketBase):
                            self.chaddr, self.sname, self.boot_file, seri_opt)
 
 
-class options(object):
+class options(stringify.StringifyMixin):
     """DHCP (RFC 2132) options encoder/decoder class.
 
     This is used with ryu.lib.packet.dhcp.dhcp.
@@ -250,7 +252,7 @@ class options(object):
         return seri_opt
 
 
-class option(object):
+class option(stringify.StringifyMixin):
     """DHCP (RFC 2132) options encoder/decoder class.
 
     This is used with ryu.lib.packet.dhcp.dhcp.options.

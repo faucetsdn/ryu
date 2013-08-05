@@ -21,6 +21,7 @@ import binascii
 from . import packet_base
 from . import packet_utils
 from ryu.lib import addrconv
+from ryu.lib import stringify
 
 ICMPV6_DST_UNREACH = 1       # dest unreachable, codes:
 ICMPV6_PACKET_TOO_BIG = 2       # packet too big
@@ -125,7 +126,7 @@ class icmpv6(packet_base.PacketBase):
 
 
 @icmpv6.register_icmpv6_type(ND_NEIGHBOR_SOLICIT, ND_NEIGHBOR_ADVERT)
-class nd_neighbor(object):
+class nd_neighbor(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor Solicitation and
     Neighbor Advertisement messages. (RFC 4861)
 
@@ -210,7 +211,7 @@ class nd_neighbor(object):
 
 @nd_neighbor.register_nd_option_type(nd_neighbor.ND_OPTION_SLA,
                                      nd_neighbor.ND_OPTION_TLA)
-class nd_option_la(object):
+class nd_option_la(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Source/Target Link-Layer Address Option. (RFC 4861)
 
@@ -263,7 +264,7 @@ class nd_option_la(object):
 
 
 @icmpv6.register_icmpv6_type(ICMPV6_ECHO_REPLY, ICMPV6_ECHO_REQUEST)
-class echo(object):
+class echo(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Echo Request and Echo Reply
     messages.
 

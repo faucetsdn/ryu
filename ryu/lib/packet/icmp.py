@@ -17,6 +17,7 @@ import struct
 
 from . import packet_base
 from . import packet_utils
+from ryu.lib import stringify
 
 
 ICMP_ECHO_REPLY = 0
@@ -114,7 +115,7 @@ class icmp(packet_base.PacketBase):
 
 
 @icmp.register_icmp_type(ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST)
-class echo(object):
+class echo(stringify.StringifyMixin):
     """ICMP sub encoder/decoder class for Echo and Echo Reply messages.
 
     This is used with ryu.lib.packet.icmp.icmp for
@@ -164,7 +165,7 @@ class echo(object):
 
 
 @icmp.register_icmp_type(ICMP_DEST_UNREACH)
-class dest_unreach(object):
+class dest_unreach(stringify.StringifyMixin):
     """ICMP sub encoder/decoder class for Destination Unreachable Message.
 
     This is used with ryu.lib.packet.icmp.icmp for
@@ -220,7 +221,7 @@ class dest_unreach(object):
 
 
 @icmp.register_icmp_type(ICMP_TIME_EXCEEDED)
-class TimeExceeded(object):
+class TimeExceeded(stringify.StringifyMixin):
     """ICMP sub encoder/decoder class for Time Exceeded Message.
 
     This is used with ryu.lib.packet.icmp.icmp for
