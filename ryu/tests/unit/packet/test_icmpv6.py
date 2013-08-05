@@ -18,6 +18,7 @@
 import unittest
 import logging
 import struct
+import inspect
 
 from nose.tools import ok_, eq_, nottest, raises
 from nose.plugins.skip import Skip, SkipTest
@@ -157,6 +158,30 @@ class Test_icmpv6_echo_request(unittest.TestCase):
     def test_serialize_with_data(self):
         self._test_serialize(self.data)
 
+    def test_to_string(self):
+        ec = icmpv6.echo(self.id_, self.seq, self.data)
+        ic = icmpv6.icmpv6(self.type_, self.code, self.csum, ec)
+
+        echo_values = {'id': self.id_,
+                       'seq': self.seq,
+                       'data': self.data}
+        _echo_str = ','.join(['%s=%s' % (k, repr(echo_values[k]))
+                              for k, v in inspect.getmembers(ec)
+                              if k in echo_values])
+        echo_str = '%s(%s)' % (icmpv6.echo.__name__, _echo_str)
+
+        icmp_values = {'type_': repr(self.type_),
+                       'code': repr(self.code),
+                       'csum': repr(self.csum),
+                       'data': echo_str}
+        _ic_str = ','.join(['%s=%s' % (k, icmp_values[k])
+                            for k, v in inspect.getmembers(ic)
+                            if k in icmp_values])
+        ic_str = '%s(%s)' % (icmpv6.icmpv6.__name__, _ic_str)
+
+        eq_(str(ic), ic_str)
+        eq_(repr(ic), ic_str)
+
 
 class Test_icmpv6_echo_reply(Test_icmpv6_echo_request):
     def setUp(self):
@@ -263,6 +288,41 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(nd_length, self.nd_length)
         eq_(nd_hw_src, addrconv.mac.text_to_bin(self.nd_hw_src))
 
+    def test_to_string(self):
+        nd_opt = icmpv6.nd_option_la(self.nd_hw_src)
+        nd = icmpv6.nd_neighbor(
+            self.res, self.dst, self.nd_type, self.nd_length, nd_opt)
+        ic = icmpv6.icmpv6(self.type_, self.code, self.csum, nd)
+
+        nd_opt_values = {'hw_src': self.nd_hw_src,
+                         'data': None}
+        _nd_opt_str = ','.join(['%s=%s' % (k, repr(nd_opt_values[k]))
+                                for k, v in inspect.getmembers(nd_opt)
+                                if k in nd_opt_values])
+        nd_opt_str = '%s(%s)' % (icmpv6.nd_option_la.__name__, _nd_opt_str)
+
+        nd_values = {'res': repr(nd.res),
+                     'dst': repr(self.dst),
+                     'type_': repr(self.nd_type),
+                     'length': repr(self.nd_length),
+                     'data': nd_opt_str}
+        _nd_str = ','.join(['%s=%s' % (k, nd_values[k])
+                            for k, v in inspect.getmembers(nd)
+                            if k in nd_values])
+        nd_str = '%s(%s)' % (icmpv6.nd_neighbor.__name__, _nd_str)
+
+        icmp_values = {'type_': repr(self.type_),
+                       'code': repr(self.code),
+                       'csum': repr(self.csum),
+                       'data': nd_str}
+        _ic_str = ','.join(['%s=%s' % (k, icmp_values[k])
+                            for k, v in inspect.getmembers(ic)
+                            if k in icmp_values])
+        ic_str = '%s(%s)' % (icmpv6.icmpv6.__name__, _ic_str)
+
+        eq_(str(ic), ic_str)
+        eq_(repr(ic), ic_str)
+
 
 class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solict):
     def setUp(self):
@@ -339,3 +399,18 @@ class Test_icmpv6_router_solict(unittest.TestCase):
 
     def test_serialize_with_data(self):
         self._test_serialize(self.data)
+
+    def test_to_string(self):
+        ic = icmpv6.icmpv6(self.type_, self.code, self.csum, self.data)
+
+        icmp_values = {'type_': self.type_,
+                       'code': self.code,
+                       'csum': self.csum,
+                       'data': self.data}
+        _ic_str = ','.join(['%s=%s' % (k, repr(icmp_values[k]))
+                            for k, v in inspect.getmembers(ic)
+                            if k in icmp_values])
+        ic_str = '%s(%s)' % (icmpv6.icmpv6.__name__, _ic_str)
+
+        eq_(str(ic), ic_str)
+        eq_(repr(ic), ic_str)

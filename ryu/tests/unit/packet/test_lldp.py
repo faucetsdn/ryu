@@ -18,6 +18,7 @@
 import unittest
 import logging
 import struct
+import inspect
 from nose.tools import ok_, eq_, nottest
 
 from ryu.ofproto import ether
@@ -119,6 +120,62 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
 
         pkt.serialize()
         eq_(pkt.data, self.data)
+
+    def test_to_string(self):
+        chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
+                                    chassis_id='\x00\x04\x96\x1f\xa7\x26')
+        port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
+                              port_id='1/3')
+        ttl = lldp.TTL(ttl=120)
+        end = lldp.End()
+        tlvs = (chassis_id, port_id, ttl, end)
+        lldp_pkt = lldp.lldp(tlvs)
+
+        chassis_id_values = {'subtype': lldp.ChassisID.SUB_MAC_ADDRESS,
+                             'chassis_id': '\x00\x04\x96\x1f\xa7\x26',
+                             'len': chassis_id.len,
+                             'typelen': chassis_id.typelen}
+        _ch_id_str = ','.join(['%s=%s' % (k, repr(chassis_id_values[k]))
+                               for k, v in inspect.getmembers(chassis_id)
+                               if k in chassis_id_values])
+        tlv_chassis_id_str = '%s(%s)' % (lldp.ChassisID.__name__, _ch_id_str)
+
+        port_id_values = {'subtype': port_id.subtype,
+                          'port_id': port_id.port_id,
+                          'len': port_id.len,
+                          'typelen': port_id.typelen}
+        _port_id_str = ','.join(['%s=%s' % (k, repr(port_id_values[k]))
+                                 for k, v in inspect.getmembers(port_id)
+                                 if k in port_id_values])
+        tlv_port_id_str = '%s(%s)' % (lldp.PortID.__name__, _port_id_str)
+
+        ttl_values = {'ttl': ttl.ttl,
+                      'len': ttl.len,
+                      'typelen': ttl.typelen}
+        _ttl_str = ','.join(['%s=%s' % (k, repr(ttl_values[k]))
+                             for k, v in inspect.getmembers(ttl)
+                             if k in ttl_values])
+        tlv_ttl_str = '%s(%s)' % (lldp.TTL.__name__, _ttl_str)
+
+        end_values = {'len': end.len,
+                      'typelen': end.typelen}
+        _end_str = ','.join(['%s=%s' % (k, repr(end_values[k]))
+                             for k, v in inspect.getmembers(end)
+                             if k in end_values])
+        tlv_end_str = '%s(%s)' % (lldp.End.__name__, _end_str)
+
+        _tlvs_str = '(%s, %s, %s, %s)'
+        tlvs_str = _tlvs_str % (tlv_chassis_id_str,
+                                tlv_port_id_str,
+                                tlv_ttl_str,
+                                tlv_end_str)
+
+        _lldp_str = '%s(tlvs=%s)'
+        lldp_str = _lldp_str % (lldp.lldp.__name__,
+                                tlvs_str)
+
+        eq_(str(lldp_pkt), lldp_str)
+        eq_(repr(lldp_pkt), lldp_str)
 
 
 class TestLLDPOptionalTLV(unittest.TestCase):
@@ -260,3 +317,158 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         # self.data has many organizationally specific TLVs
         data = str(pkt.data[:-2])
         eq_(data, self.data[:len(data)])
+
+    def test_to_string(self):
+        chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
+                                    chassis_id='\x00\x01\x30\xf9\xad\xa0')
+        port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
+                              port_id='1/1')
+        ttl = lldp.TTL(ttl=120)
+        port_desc = lldp.PortDescription(
+            port_description='Summit300-48-Port 1001\x00')
+        sys_name = lldp.SystemName(system_name='Summit300-48\x00')
+        sys_desc = lldp.SystemDescription(
+            system_description='Summit300-48 - Version 7.4e.1 (Build 5) '
+                               + 'by Release_Master 05/27/05 04:53:11\x00')
+        sys_cap = lldp.SystemCapabilities(
+            subtype=lldp.ChassisID.SUB_CHASSIS_COMPONENT,
+            system_cap=0x14,
+            enabled_cap=0x14)
+        man_addr = lldp.ManagementAddress(
+            addr_subtype=0x06, addr='\x00\x01\x30\xf9\xad\xa0',
+            intf_subtype=0x02, intf_num=1001,
+            oid='')
+        org_spec = lldp.OrganizationallySpecific(
+            oui='\x00\x12\x0f', subtype=0x02, info='\x07\x01\x00')
+        end = lldp.End()
+        tlvs = (chassis_id, port_id, ttl, port_desc, sys_name,
+                sys_desc, sys_cap, man_addr, org_spec, end)
+        lldp_pkt = lldp.lldp(tlvs)
+
+        # ChassisID string
+        chassis_id_values = {'subtype': lldp.ChassisID.SUB_MAC_ADDRESS,
+                             'chassis_id': '\x00\x01\x30\xf9\xad\xa0',
+                             'len': chassis_id.len,
+                             'typelen': chassis_id.typelen}
+        _ch_id_str = ','.join(['%s=%s' % (k, repr(chassis_id_values[k]))
+                               for k, v in inspect.getmembers(chassis_id)
+                               if k in chassis_id_values])
+        tlv_chassis_id_str = '%s(%s)' % (lldp.ChassisID.__name__, _ch_id_str)
+
+        # PortID string
+        port_id_values = {'subtype': port_id.subtype,
+                          'port_id': port_id.port_id,
+                          'len': port_id.len,
+                          'typelen': port_id.typelen}
+        _port_id_str = ','.join(['%s=%s' % (k, repr(port_id_values[k]))
+                                 for k, v in inspect.getmembers(port_id)
+                                 if k in port_id_values])
+        tlv_port_id_str = '%s(%s)' % (lldp.PortID.__name__, _port_id_str)
+
+        # TTL string
+        ttl_values = {'ttl': ttl.ttl,
+                      'len': ttl.len,
+                      'typelen': ttl.typelen}
+        _ttl_str = ','.join(['%s=%s' % (k, repr(ttl_values[k]))
+                             for k, v in inspect.getmembers(ttl)
+                             if k in ttl_values])
+        tlv_ttl_str = '%s(%s)' % (lldp.TTL.__name__, _ttl_str)
+
+        # PortDescription string
+        port_desc_values = {'tlv_info': port_desc.tlv_info,
+                            'len': port_desc.len,
+                            'typelen': port_desc.typelen}
+        _port_desc_str = ','.join(['%s=%s' % (k, repr(port_desc_values[k]))
+                                   for k, v in inspect.getmembers(port_desc)
+                                   if k in port_desc_values])
+        tlv_port_desc_str = '%s(%s)' % (lldp.PortDescription.__name__,
+                                        _port_desc_str)
+
+        # SystemName string
+        sys_name_values = {'tlv_info': sys_name.tlv_info,
+                           'len': sys_name.len,
+                           'typelen': sys_name.typelen}
+        _system_name_str = ','.join(['%s=%s' % (k, repr(sys_name_values[k]))
+                                     for k, v in inspect.getmembers(sys_name)
+                                     if k in sys_name_values])
+        tlv_system_name_str = '%s(%s)' % (lldp.SystemName.__name__,
+                                          _system_name_str)
+
+        # SystemDescription string
+        sys_desc_values = {'tlv_info': sys_desc.tlv_info,
+                           'len': sys_desc.len,
+                           'typelen': sys_desc.typelen}
+        _sys_desc_str = ','.join(['%s=%s' % (k, repr(sys_desc_values[k]))
+                                  for k, v in inspect.getmembers(sys_desc)
+                                  if k in sys_desc_values])
+        tlv_sys_desc_str = '%s(%s)' % (lldp.SystemDescription.__name__,
+                                       _sys_desc_str)
+
+        # SystemCapabilities string
+        sys_cap_values = {'subtype': lldp.ChassisID.SUB_CHASSIS_COMPONENT,
+                          'system_cap': 0x14,
+                          'enabled_cap': 0x14,
+                          'len': sys_cap.len,
+                          'typelen': sys_cap.typelen}
+        _sys_cap_str = ','.join(['%s=%s' % (k, repr(sys_cap_values[k]))
+                                 for k, v in inspect.getmembers(sys_cap)
+                                 if k in sys_cap_values])
+        tlv_sys_cap_str = '%s(%s)' % (lldp.SystemCapabilities.__name__,
+                                      _sys_cap_str)
+
+        # ManagementAddress string
+        man_addr_values = {'addr_subtype': 0x06,
+                           'addr': '\x00\x01\x30\xf9\xad\xa0',
+                           'addr_len': man_addr.addr_len,
+                           'intf_subtype': 0x02,
+                           'intf_num': 1001,
+                           'oid': '',
+                           'oid_len': man_addr.oid_len,
+                           'len': man_addr.len,
+                           'typelen': man_addr.typelen}
+        _man_addr_str = ','.join(['%s=%s' % (k, repr(man_addr_values[k]))
+                                  for k, v in inspect.getmembers(man_addr)
+                                  if k in man_addr_values])
+        tlv_man_addr_str = '%s(%s)' % (lldp.ManagementAddress.__name__,
+                                       _man_addr_str)
+
+        # OrganizationallySpecific string
+        org_spec_values = {'oui': '\x00\x12\x0f',
+                           'subtype': 0x02,
+                           'info': '\x07\x01\x00',
+                           'len': org_spec.len,
+                           'typelen': org_spec.typelen}
+        _org_spec_str = ','.join(['%s=%s' % (k, repr(org_spec_values[k]))
+                                  for k, v in inspect.getmembers(org_spec)
+                                  if k in org_spec_values])
+        tlv_org_spec_str = '%s(%s)' % (lldp.OrganizationallySpecific.__name__,
+                                       _org_spec_str)
+
+        # End string
+        end_values = {'len': end.len,
+                      'typelen': end.typelen}
+        _end_str = ','.join(['%s=%s' % (k, repr(end_values[k]))
+                             for k, v in inspect.getmembers(end)
+                             if k in end_values])
+        tlv_end_str = '%s(%s)' % (lldp.End.__name__, _end_str)
+
+        # tlvs string
+        _tlvs_str = '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        tlvs_str = _tlvs_str % (tlv_chassis_id_str,
+                                tlv_port_id_str,
+                                tlv_ttl_str,
+                                tlv_port_desc_str,
+                                tlv_system_name_str,
+                                tlv_sys_desc_str,
+                                tlv_sys_cap_str,
+                                tlv_man_addr_str,
+                                tlv_org_spec_str,
+                                tlv_end_str)
+
+        # lldp string
+        _lldp_str = '%s(tlvs=%s)'
+        lldp_str = _lldp_str % (lldp.lldp.__name__,
+                                tlvs_str)
+
+        eq_(str(lldp_pkt), lldp_str)
+        eq_(repr(lldp_pkt), lldp_str)

@@ -19,6 +19,7 @@ import unittest
 import logging
 import struct
 import array
+import inspect
 from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
@@ -116,6 +117,40 @@ class TestPacket(unittest.TestCase):
         eq_(self.dst_mac, p_arp.dst_mac)
         eq_(self.dst_ip, p_arp.dst_ip)
 
+        # to string
+        eth_values = {'dst': self.dst_mac,
+                      'src': self.src_mac,
+                      'ethertype': ether.ETH_TYPE_ARP}
+        _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
+                             for k, v in inspect.getmembers(p_eth)
+                             if k in eth_values])
+        eth_str = '%s(%s)' % (ethernet.ethernet.__name__, _eth_str)
+
+        arp_values = {'hwtype': 1,
+                      'proto': ether.ETH_TYPE_IP,
+                      'hlen': 6,
+                      'plen': 4,
+                      'opcode': 2,
+                      'src_mac': self.src_mac,
+                      'dst_mac': self.dst_mac,
+                      'src_ip': self.src_ip,
+                      'dst_ip': self.dst_ip}
+        _arp_str = ','.join(['%s=%s' % (k, repr(arp_values[k]))
+                             for k, v in inspect.getmembers(p_arp)
+                             if k in arp_values])
+        arp_str = '%s(%s)' % (arp.arp.__name__, _arp_str)
+
+        pkt_str = '%s, %s' % (eth_str, arp_str)
+
+        eq_(eth_str, str(p_eth))
+        eq_(eth_str, repr(p_eth))
+
+        eq_(arp_str, str(p_arp))
+        eq_(arp_str, repr(p_arp))
+
+        eq_(pkt_str, str(pkt))
+        eq_(pkt_str, repr(pkt))
+
     def test_vlan_arp(self):
         # buid packet
         e = ethernet.ethernet(self.dst_mac, self.src_mac,
@@ -184,6 +219,52 @@ class TestPacket(unittest.TestCase):
         eq_(self.src_ip, p_arp.src_ip)
         eq_(self.dst_mac, p_arp.dst_mac)
         eq_(self.dst_ip, p_arp.dst_ip)
+
+        # to string
+        eth_values = {'dst': self.dst_mac,
+                      'src': self.src_mac,
+                      'ethertype': ether.ETH_TYPE_8021Q}
+        _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
+                             for k, v in inspect.getmembers(p_eth)
+                             if k in eth_values])
+        eth_str = '%s(%s)' % (ethernet.ethernet.__name__, _eth_str)
+
+        vlan_values = {'pcp': 0b111,
+                       'cfi': 0b1,
+                       'vid': 3,
+                       'ethertype': ether.ETH_TYPE_ARP}
+        _vlan_str = ','.join(['%s=%s' % (k, repr(vlan_values[k]))
+                             for k, v in inspect.getmembers(p_vlan)
+                             if k in vlan_values])
+        vlan_str = '%s(%s)' % (vlan.vlan.__name__, _vlan_str)
+
+        arp_values = {'hwtype': 1,
+                      'proto': ether.ETH_TYPE_IP,
+                      'hlen': 6,
+                      'plen': 4,
+                      'opcode': 2,
+                      'src_mac': self.src_mac,
+                      'dst_mac': self.dst_mac,
+                      'src_ip': self.src_ip,
+                      'dst_ip': self.dst_ip}
+        _arp_str = ','.join(['%s=%s' % (k, repr(arp_values[k]))
+                             for k, v in inspect.getmembers(p_arp)
+                             if k in arp_values])
+        arp_str = '%s(%s)' % (arp.arp.__name__, _arp_str)
+
+        pkt_str = '%s, %s, %s' % (eth_str, vlan_str, arp_str)
+
+        eq_(eth_str, str(p_eth))
+        eq_(eth_str, repr(p_eth))
+
+        eq_(vlan_str, str(p_vlan))
+        eq_(vlan_str, repr(p_vlan))
+
+        eq_(arp_str, str(p_arp))
+        eq_(arp_str, repr(p_arp))
+
+        eq_(pkt_str, str(pkt))
+        eq_(pkt_str, repr(pkt))
 
     def test_ipv4_udp(self):
         # buid packet
@@ -271,6 +352,57 @@ class TestPacket(unittest.TestCase):
         # payload
         ok_('payload' in protocols)
         eq_(self.payload, protocols['payload'].tostring())
+
+        # to string
+        eth_values = {'dst': self.dst_mac,
+                      'src': self.src_mac,
+                      'ethertype': ether.ETH_TYPE_IP}
+        _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
+                             for k, v in inspect.getmembers(p_eth)
+                             if k in eth_values])
+        eth_str = '%s(%s)' % (ethernet.ethernet.__name__, _eth_str)
+
+        ipv4_values = {'version': 4,
+                       'header_length': 5,
+                       'tos': 1,
+                       'total_length': l,
+                       'identification': 3,
+                       'flags': 1,
+                       'offset': p_ipv4.offset,
+                       'ttl': 64,
+                       'proto': inet.IPPROTO_UDP,
+                       'csum': p_ipv4.csum,
+                       'src': self.src_ip,
+                       'dst': self.dst_ip,
+                       'option': None}
+        _ipv4_str = ','.join(['%s=%s' % (k, repr(ipv4_values[k]))
+                              for k, v in inspect.getmembers(p_ipv4)
+                              if k in ipv4_values])
+        ipv4_str = '%s(%s)' % (ipv4.ipv4.__name__, _ipv4_str)
+
+        udp_values = {'src_port': 0x190f,
+                      'dst_port': 0x1F90,
+                      'total_length': len(u_buf) + len(self.payload),
+                      'csum': 0x77b2}
+        _udp_str = ','.join(['%s=%s' % (k, repr(udp_values[k]))
+                             for k, v in inspect.getmembers(p_udp)
+                             if k in udp_values])
+        udp_str = '%s(%s)' % (udp.udp.__name__, _udp_str)
+
+        pkt_str = '%s, %s, %s, %s' % (eth_str, ipv4_str, udp_str,
+                                      repr(protocols['payload']))
+
+        eq_(eth_str, str(p_eth))
+        eq_(eth_str, repr(p_eth))
+
+        eq_(ipv4_str, str(p_ipv4))
+        eq_(ipv4_str, repr(p_ipv4))
+
+        eq_(udp_str, str(p_udp))
+        eq_(udp_str, repr(p_udp))
+
+        eq_(pkt_str, str(pkt))
+        eq_(pkt_str, repr(pkt))
 
     def test_ipv4_tcp(self):
         # buid packet
@@ -371,6 +503,63 @@ class TestPacket(unittest.TestCase):
         ok_('payload' in protocols)
         eq_(self.payload, protocols['payload'].tostring())
 
+        # to string
+        eth_values = {'dst': self.dst_mac,
+                      'src': self.src_mac,
+                      'ethertype': ether.ETH_TYPE_IP}
+        _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
+                             for k, v in inspect.getmembers(p_eth)
+                             if k in eth_values])
+        eth_str = '%s(%s)' % (ethernet.ethernet.__name__, _eth_str)
+
+        ipv4_values = {'version': 4,
+                       'header_length': 5,
+                       'tos': 0,
+                       'total_length': l,
+                       'identification': 0,
+                       'flags': 0,
+                       'offset': p_ipv4.offset,
+                       'ttl': 64,
+                       'proto': inet.IPPROTO_TCP,
+                       'csum': p_ipv4.csum,
+                       'src': self.src_ip,
+                       'dst': self.dst_ip,
+                       'option': None}
+        _ipv4_str = ','.join(['%s=%s' % (k, repr(ipv4_values[k]))
+                              for k, v in inspect.getmembers(p_ipv4)
+                              if k in ipv4_values])
+        ipv4_str = '%s(%s)' % (ipv4.ipv4.__name__, _ipv4_str)
+
+        tcp_values = {'src_port': 0x190f,
+                      'dst_port': 0x1F90,
+                      'seq': 0x123,
+                      'ack': 1,
+                      'offset': 6,
+                      'bits': 0b101010,
+                      'window_size': 2048,
+                      'csum': p_tcp.csum,
+                      'urgent': 0x6f,
+                      'option': p_tcp.option}
+        _tcp_str = ','.join(['%s=%s' % (k, repr(tcp_values[k]))
+                             for k, v in inspect.getmembers(p_tcp)
+                             if k in tcp_values])
+        tcp_str = '%s(%s)' % (tcp.tcp.__name__, _tcp_str)
+
+        pkt_str = '%s, %s, %s, %s' % (eth_str, ipv4_str, tcp_str,
+                                      repr(protocols['payload']))
+
+        eq_(eth_str, str(p_eth))
+        eq_(eth_str, repr(p_eth))
+
+        eq_(ipv4_str, str(p_ipv4))
+        eq_(ipv4_str, repr(p_ipv4))
+
+        eq_(tcp_str, str(p_tcp))
+        eq_(tcp_str, repr(p_tcp))
+
+        eq_(pkt_str, str(pkt))
+        eq_(pkt_str, repr(pkt))
+
     def test_llc_bpdu(self):
         # buid packet
         e = ethernet.ethernet(self.dst_mac, self.src_mac,
@@ -462,3 +651,64 @@ class TestPacket(unittest.TestCase):
         eq_(20, p_bpdu.max_age)
         eq_(2, p_bpdu.hello_time)
         eq_(15, p_bpdu.forward_delay)
+
+        # to string
+        eth_values = {'dst': self.dst_mac,
+                      'src': self.src_mac,
+                      'ethertype': ether.ETH_TYPE_IEEE802_3}
+        _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
+                             for k, v in inspect.getmembers(p_eth)
+                             if k in eth_values])
+        eth_str = '%s(%s)' % (ethernet.ethernet.__name__, _eth_str)
+
+        ctrl_values = {'modifier_function1': 0,
+                       'pf_bit': 0,
+                       'modifier_function2': 0}
+        _ctrl_str = ','.join(['%s=%s' % (k, repr(ctrl_values[k]))
+                             for k, v in inspect.getmembers(p_llc.control)
+                             if k in ctrl_values])
+        ctrl_str = '%s(%s)' % (llc.ControlFormatU.__name__, _ctrl_str)
+
+        llc_values = {'dsap_addr': repr(llc.SAP_BDPU),
+                      'ssap_addr': repr(llc.SAP_BDPU),
+                      'control': ctrl_str}
+        _llc_str = ','.join(['%s=%s' % (k, llc_values[k])
+                             for k, v in inspect.getmembers(p_llc)
+                             if k in llc_values])
+        llc_str = '%s(%s)' % (llc.llc.__name__, _llc_str)
+
+        bpdu_values = {'protocol_id': bpdu.PROTOCOL_IDENTIFIER,
+                       'version_id': bpdu.PROTOCOLVERSION_ID_BPDU,
+                       'bpdu_type': bpdu.TYPE_CONFIG_BPDU,
+                       'flags': 0,
+                       'root_priority': long(32768),
+                       'root_system_id_extension': long(0),
+                       'root_mac_address': self.src_mac,
+                       'root_path_cost': 0,
+                       'bridge_priority': long(32768),
+                       'bridge_system_id_extension': long(0),
+                       'bridge_mac_address': self.dst_mac,
+                       'port_priority': 128,
+                       'port_number': 4,
+                       'message_age': float(1),
+                       'max_age': float(20),
+                       'hello_time': float(2),
+                       'forward_delay': float(15)}
+        _bpdu_str = ','.join(['%s=%s' % (k, repr(bpdu_values[k]))
+                             for k, v in inspect.getmembers(p_bpdu)
+                             if k in bpdu_values])
+        bpdu_str = '%s(%s)' % (bpdu.ConfigurationBPDUs.__name__, _bpdu_str)
+
+        pkt_str = '%s, %s, %s' % (eth_str, llc_str, bpdu_str)
+
+        eq_(eth_str, str(p_eth))
+        eq_(eth_str, repr(p_eth))
+
+        eq_(llc_str, str(p_llc))
+        eq_(llc_str, repr(p_llc))
+
+        eq_(bpdu_str, str(p_bpdu))
+        eq_(bpdu_str, repr(p_bpdu))
+
+        eq_(pkt_str, str(pkt))
+        eq_(pkt_str, repr(pkt))

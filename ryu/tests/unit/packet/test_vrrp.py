@@ -19,6 +19,7 @@
 import unittest
 import logging
 import struct
+import inspect
 
 from nose.tools import eq_, ok_
 from nose.tools import raises
@@ -183,6 +184,26 @@ class Test_vrrpv2(unittest.TestCase):
         max_adver_int = vrrp.VRRP_V2_MAX_ADVER_INT_MAX + 1
         ok_(not self._test_is_valid(max_adver_int=max_adver_int))
 
+    def test_to_string(self):
+        vrrpv2_values = {'version': self.version,
+                         'type': self.type_,
+                         'vrid': self.vrid,
+                         'priority': self.priority,
+                         'count_ip': self.count_ip,
+                         'max_adver_int': self.max_adver_int,
+                         'checksum': self.vrrpv2.checksum,
+                         'ip_addresses': [self.ip_address],
+                         'auth_type': self.auth_type,
+                         'auth_data': self.auth_data,
+                         'identification': self.vrrpv2.identification}
+        _vrrpv2_str = ','.join(['%s=%s' % (k, repr(vrrpv2_values[k]))
+                                for k, v in inspect.getmembers(self.vrrpv2)
+                                if k in vrrpv2_values])
+        vrrpv2_str = '%s(%s)' % (vrrp.vrrpv2.__name__, _vrrpv2_str)
+
+        eq_(str(self.vrrpv2), vrrpv2_str)
+        eq_(repr(self.vrrpv2), vrrpv2_str)
+
 
 class Test_vrrpv3_ipv4(unittest.TestCase):
     """ Test case for vrrp v3 IPv4
@@ -328,6 +349,26 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
         max_adver_int = vrrp.VRRP_V3_MAX_ADVER_INT_MAX + 1
         ok_(not self._test_is_valid(max_adver_int=max_adver_int))
 
+    def test_to_string(self):
+        vrrpv3_values = {'version': self.version,
+                         'type': self.type_,
+                         'vrid': self.vrid,
+                         'priority': self.priority,
+                         'count_ip': self.count_ip,
+                         'max_adver_int': self.max_adver_int,
+                         'checksum': self.vrrpv3.checksum,
+                         'ip_addresses': [self.ip_address],
+                         'auth_type': None,
+                         'auth_data': None,
+                         'identification': self.vrrpv3.identification}
+        _vrrpv3_str = ','.join(['%s=%s' % (k, repr(vrrpv3_values[k]))
+                                for k, v in inspect.getmembers(self.vrrpv3)
+                                if k in vrrpv3_values])
+        vrrpv3_str = '%s(%s)' % (vrrp.vrrpv3.__name__, _vrrpv3_str)
+
+        eq_(str(self.vrrpv3), vrrpv3_str)
+        eq_(repr(self.vrrpv3), vrrpv3_str)
+
 
 class Test_vrrpv3_ipv6(unittest.TestCase):
     """ Test case for vrrp v3 IPv6
@@ -430,3 +471,23 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
         print(len(p0.data), p0.data)
         print(len(p1.data), p1.data)
         eq_(p0.data, p1.data)
+
+    def test_to_string(self):
+        vrrpv3_values = {'version': self.version,
+                         'type': self.type_,
+                         'vrid': self.vrid,
+                         'priority': self.priority,
+                         'count_ip': self.count_ip,
+                         'max_adver_int': self.max_adver_int,
+                         'checksum': self.vrrpv3.checksum,
+                         'ip_addresses': [self.ip_address],
+                         'auth_type': None,
+                         'auth_data': None,
+                         'identification': self.vrrpv3.identification}
+        _vrrpv3_str = ','.join(['%s=%s' % (k, repr(vrrpv3_values[k]))
+                                for k, v in inspect.getmembers(self.vrrpv3)
+                                if k in vrrpv3_values])
+        vrrpv3_str = '%s(%s)' % (vrrp.vrrpv3.__name__, _vrrpv3_str)
+
+        eq_(str(self.vrrpv3), vrrpv3_str)
+        eq_(repr(self.vrrpv3), vrrpv3_str)
