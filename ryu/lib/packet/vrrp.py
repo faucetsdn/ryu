@@ -211,21 +211,25 @@ class vrrp(packet_base.PacketBase):
 
     @staticmethod
     def get_payload(packet_):
-        protocols = packet_.protocols
+        may_ip = None
+        may_vrrp = None
 
-        try:
-            may_ip, may_vrrp = protocols[-2], protocols[-1]
-            if isinstance(may_vrrp, bytearray):
-                may_ip, may_vrrp = protocols[-3], protocols[-2]
-        except IndexError:
-            return None, None
+        idx = 0
+        for protocol in packet_:
+            if isinstance(protocol, ipv4.ipv4) or isinstance(protocol,
+                                                             ipv6.ipv6):
+                may_ip = protocol
+                try:
+                    if isinstance(packet_.protocols[idx + 1], vrrp):
+                        may_vrrp = packet_.protocols[idx + 1]
+                finally:
+                    break
+            idx += 1
 
-        if (not isinstance(may_ip, ipv4.ipv4) and
-                not isinstance(may_ip, ipv6.ipv6)):
+        if may_ip and may_vrrp:
+            return may_ip, may_vrrp
+        else:
             return None, None
-        if not isinstance(may_vrrp, vrrp):
-            return None, None
-        return may_ip, may_vrrp
 
     @classmethod
     def register_vrrp_version(cls, version,
