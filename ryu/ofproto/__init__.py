@@ -22,25 +22,27 @@ from ryu import utils
 
 
 _OFPROTO_DIR = os.path.dirname(__file__)
+
 _OFPROTO_PARSER_FILE_NAMES = glob.glob(os.path.join(
-    _OFPROTO_DIR, 'ofproto_v[0-9]*_[0-9]*_parser.py'))
+    _OFPROTO_DIR, 'ofproto_v[0-9]*_[0-9]*_parser.py*'))
 _OFPROTO_PARSER_FILE_NAMES = [os.path.basename(name)
                               for name in _OFPROTO_PARSER_FILE_NAMES]
 
 
 _OFPROTO_MODULES = {}
 for parser_file_name in _OFPROTO_PARSER_FILE_NAMES:
-    # drop lasting '.py'
-    parser_mod_name = __name__ + '.' + parser_file_name[:-3]
-    consts_mod_name = parser_mod_name[:-7]      # drop lasting '_parser'
+    # drop tailing '.py*'
+    parser_mod_name = __name__ + '.' + \
+        '.'.join(parser_file_name.split('.')[:-1])
+    consts_mod_name = parser_mod_name[:-7]      # drop trailing '_parser'
     try:
         parser_mod = utils.import_module(parser_mod_name)
         consts_mod = utils.import_module(consts_mod_name)
     except:
         continue
 
-    assert consts_mod.OFP_VERSION not in _OFPROTO_MODULES
-    _OFPROTO_MODULES[consts_mod.OFP_VERSION] = (consts_mod, parser_mod)
+    if consts_mod.OFP_VERSION not in _OFPROTO_MODULES:
+        _OFPROTO_MODULES[consts_mod.OFP_VERSION] = (consts_mod, parser_mod)
 
 
 def get_ofp_modules():
