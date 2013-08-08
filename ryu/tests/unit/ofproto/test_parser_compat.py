@@ -19,6 +19,8 @@ import unittest
 from nose.tools import eq_
 from nose.tools import ok_
 
+from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3_parser
 
@@ -38,6 +40,11 @@ class Test_Parser_Compat(unittest.TestCase):
         pass
 
     def _test(self, name, ofpp):
+        ofp = {
+            ofproto_v1_2_parser: ofproto_v1_2,
+            ofproto_v1_3_parser: ofproto_v1_3,
+        }[ofpp]
+
         in_port = 987654321
         eth_src = 'aa:bb:cc:dd:ee:ff'
         ipv4_src = '192.0.2.9'
@@ -75,6 +82,7 @@ class Test_Parser_Compat(unittest.TestCase):
 
         # ensure that old and new api produces the same thing
 
+        # old api
         old = ofpp.OFPMatch()
         old.set_in_port(old_in_port)
         old.set_dl_src(old_eth_src)
@@ -84,10 +92,23 @@ class Test_Parser_Compat(unittest.TestCase):
         old_buf = bytearray()
         old.serialize(old_buf, 0)
 
-        # note: you can't inspect an object composed with the old api
+        # note: you can't inspect an object composed with the old set_XXX api
         # before serialize().
         check_old(old)
 
+        # another variant of old api; originally it was intended to be
+        # internal but actually used in the field.  eg. LINC l2_switch_v1_3.py
+        old2 = ofpp.OFPMatch()
+        old2.append_field(ofp.OXM_OF_IN_PORT, old_in_port)
+        old2.append_field(ofp.OXM_OF_ETH_SRC, old_eth_src)
+        old2.append_field(ofp.OXM_OF_IPV4_SRC, old_ipv4_src)
+        old2.append_field(ofp.OXM_OF_IPV6_SRC, old_ipv6_src)
+        check_old(old2)
+
+        old2_buf = bytearray()
+        old2.serialize(old2_buf, 0)
+
+        # new api
         new = ofpp.OFPMatch(in_port=in_port, eth_src=eth_src,
                             ipv4_src=ipv4_src, ipv6_src=ipv6_src)
         check_new(new)
@@ -95,12 +116,16 @@ class Test_Parser_Compat(unittest.TestCase):
         new_buf = bytearray()
         new.serialize(new_buf, 0)
         eq_(new_buf, old_buf)
+        eq_(new_buf, old2_buf)
 
         old_jsondict = old.to_jsondict()
+        old2_jsondict = old2.to_jsondict()
         new_jsondict = new.to_jsondict()
         eq_(new_jsondict, old_jsondict)
+        eq_(new_jsondict, old2_jsondict)
 
         eq_(str(new), str(old))
+        eq_(str(new), str(old2))
 
         # a parsed object can be inspected by old and new api
 
