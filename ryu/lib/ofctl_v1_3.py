@@ -254,7 +254,7 @@ def mod_flow_entry(dp, flow, cmd):
     out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
     flags = int(flow.get('flags', 0))
     match = to_match(dp, flow.get('match', {}))
-    inst = to_actions(dp, flow.get('actions', {}))
+    inst = to_actions(dp, flow.get('actions', []))
 
     flow_mod = dp.ofproto_parser.OFPFlowMod(
         dp, cookie, cookie_mask, table_id, cmd, idle_timeout,

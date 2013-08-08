@@ -285,7 +285,7 @@ def mod_flow_entry(dp, flow, cmd):
     flags = int(flow.get('flags', 0))
     idle_timeout = int(flow.get('idle_timeout', 0))
     hard_timeout = int(flow.get('hard_timeout', 0))
-    actions = to_actions(dp, flow.get('actions', {}))
+    actions = to_actions(dp, flow.get('actions', []))
     match = to_match(dp, flow.get('match', {}))
 
     flow_mod = dp.ofproto_parser.OFPFlowMod(
