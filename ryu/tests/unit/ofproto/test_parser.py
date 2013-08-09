@@ -154,10 +154,9 @@ class Test_Parser(unittest.TestCase):
 
         # json -> OFPxxx -> json
         msg2 = self._jsondict_to_msg(dp, json_dict)
-        msg2.serialize()
-        eq_(self._msg_to_jsondict(msg2), json_dict)
-
         if has_serializer:
+            msg2.serialize()
+            eq_(self._msg_to_jsondict(msg2), json_dict)
             eq_(wire_msg, msg2.buf)
 
 
