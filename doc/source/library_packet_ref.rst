@@ -80,3 +80,7 @@ Protocol Header classes
    :members:
 .. autoclass:: ryu.lib.packet.bpdu.RstBPDUs
    :members:
+
+.. autoclass:: ryu.lib.packet.igmp.igmp
+   :members:
+

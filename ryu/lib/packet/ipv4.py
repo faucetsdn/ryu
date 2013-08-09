@@ -18,6 +18,7 @@ import struct
 from . import packet_base
 from . import packet_utils
 from . import icmp
+from . import igmp
 from . import udp
 from . import tcp
 from ryu.ofproto import inet
@@ -134,5 +135,6 @@ class ipv4(packet_base.PacketBase):
         return hdr
 
 ipv4.register_packet_type(icmp.icmp, inet.IPPROTO_ICMP)
+ipv4.register_packet_type(igmp.igmp, inet.IPPROTO_IGMP)
 ipv4.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
 ipv4.register_packet_type(udp.udp, inet.IPPROTO_UDP)
