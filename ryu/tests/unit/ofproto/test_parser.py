@@ -30,6 +30,71 @@ from ryu.ofproto import ofproto_v1_3_parser
 import json
 
 
+# (has_parser, has_serializer)
+implemented = {
+    1: {
+        ofproto_v1_0.OFPT_PACKET_OUT: (False, True),
+        ofproto_v1_0.OFPT_FEATURES_REQUEST: (False, True),
+        ofproto_v1_0.OFPT_FEATURES_REPLY: (True, False),
+        ofproto_v1_0.OFPT_PACKET_IN: (True, False),
+        ofproto_v1_0.OFPT_FLOW_MOD: (False, True),
+    },
+    3: {
+        ofproto_v1_2.OFPT_ERROR: (True, False),  # OFPET_EXPERIMENTER lacks
+                                                 # serializer
+        ofproto_v1_2.OFPT_EXPERIMENTER: (True, False),
+        ofproto_v1_2.OFPT_FEATURES_REQUEST: (False, True),
+        ofproto_v1_2.OFPT_FEATURES_REPLY: (True, False),
+        ofproto_v1_2.OFPT_GET_CONFIG_REQUEST: (False, True),
+        ofproto_v1_2.OFPT_GET_CONFIG_REPLY: (True, False),
+        ofproto_v1_2.OFPT_SET_CONFIG: (False, True),
+        ofproto_v1_2.OFPT_PACKET_IN: (True, False),
+        ofproto_v1_2.OFPT_FLOW_REMOVED: (True, False),
+        ofproto_v1_2.OFPT_PORT_STATUS: (True, False),
+        ofproto_v1_2.OFPT_PACKET_OUT: (False, True),
+        ofproto_v1_2.OFPT_FLOW_MOD: (False, True),
+        ofproto_v1_2.OFPT_GROUP_MOD: (False, True),
+        ofproto_v1_2.OFPT_PORT_MOD: (False, True),
+        ofproto_v1_2.OFPT_TABLE_MOD: (False, True),
+        ofproto_v1_2.OFPT_STATS_REQUEST: (False, True),
+        ofproto_v1_2.OFPT_STATS_REPLY: (True, False),
+        ofproto_v1_2.OFPT_BARRIER_REQUEST: (False, True),
+        ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REQUEST: (False, True),
+        ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REPLY: (True, False),
+        ofproto_v1_2.OFPT_ROLE_REQUEST: (False, True),
+        ofproto_v1_2.OFPT_ROLE_REPLY: (True, False),
+    },
+    4: {
+        ofproto_v1_3.OFPT_HELLO: (True, False),
+        ofproto_v1_3.OFPT_EXPERIMENTER: (True, False),
+        ofproto_v1_3.OFPT_FEATURES_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_FEATURES_REPLY: (True, False),
+        ofproto_v1_3.OFPT_GET_CONFIG_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_GET_CONFIG_REPLY: (True, False),
+        ofproto_v1_3.OFPT_SET_CONFIG: (False, True),
+        ofproto_v1_3.OFPT_PACKET_IN: (True, False),
+        ofproto_v1_3.OFPT_FLOW_REMOVED: (True, False),
+        ofproto_v1_3.OFPT_PORT_STATUS: (True, False),
+        ofproto_v1_3.OFPT_PACKET_OUT: (False, True),
+        ofproto_v1_3.OFPT_FLOW_MOD: (False, True),
+        ofproto_v1_3.OFPT_GROUP_MOD: (False, True),
+        ofproto_v1_3.OFPT_PORT_MOD: (False, True),
+        ofproto_v1_3.OFPT_METER_MOD: (False, True),
+        ofproto_v1_3.OFPT_TABLE_MOD: (False, True),
+        ofproto_v1_3.OFPT_MULTIPART_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_MULTIPART_REPLY: (True, False),
+        ofproto_v1_3.OFPT_BARRIER_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_QUEUE_GET_CONFIG_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_QUEUE_GET_CONFIG_REPLY: (True, False),
+        ofproto_v1_3.OFPT_ROLE_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_ROLE_REPLY: (True, False),
+        ofproto_v1_3.OFPT_GET_ASYNC_REQUEST: (False, True),
+        ofproto_v1_3.OFPT_GET_ASYNC_REPLY: (True, False),
+        ofproto_v1_3.OFPT_SET_ASYNC: (False, True),
+    },
+}
+
+
 # XXX dummy dp for testing
 class DummyDatapath(object):
     def __init__(self, ofp, ofpp):
@@ -71,23 +136,21 @@ class Test_Parser(unittest.TestCase):
     def _test_msg(self, name, wire_msg, json_str):
         json_dict = json.loads(json_str)
         # on-wire -> OFPxxx -> json
-        has_parser = False
         (version, msg_type, msg_len, xid) = ofproto_parser.header(wire_msg)
         try:
-            dp = DummyDatapath(*self._ofp_versions[version])
+            has_parser, has_serializer = implemented[version][msg_type]
+        except KeyError:
+            has_parser = True
+            has_serializer = True
+
+        dp = DummyDatapath(*self._ofp_versions[version])
+        if has_parser:
             msg = ofproto_parser.msg(dp, version, msg_type, msg_len, xid,
                                      wire_msg)
             json_dict2 = self._msg_to_jsondict(msg)
             # XXXdebug code
             open(('/tmp/%s.json' % name), 'wb').write(json.dumps(json_dict2))
             eq_(json_dict, json_dict2)
-            has_parser = True
-        except TypeError:
-            # not all msg_type has a proper parser
-            pass
-
-        # XXX either of parser or serializer should work at least
-        has_serializer = not has_parser
 
         # json -> OFPxxx -> json
         msg2 = self._jsondict_to_msg(dp, json_dict)
