@@ -349,7 +349,59 @@ class FlowWildcards(object):
 
 
 class OFPMatch(StringifyMixin):
+    """
+    Flow Match Structure
+
+    This class is implementation of the flow match structure having
+    compose/query API.
+    There are new API and old API for compatibility. the old API is
+    supposed to be removed later.
+
+    new API::
+        >>> # compose
+        >>> match = parser.OFPMatch(
+        ...     in_port=1,
+        ...     eth_type=0x86dd,
+        ...     ipv6_src=('2001:db8:bd05:1d2:288a:1fc0:1:10ee',
+        ...               'ffff:ffff:ffff:ffff::'),
+        ...     ipv6_dst='2001:db8:bd05:1d2:288a:1fc0:1:10ee')
+        >>> # query
+        >>> if 'ipv6_src' in match:
+        ...     print match['ipv6_src']
+        ...
+        ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
+        >>>
+
+    old API::
+        >>> # compose
+        >>> match = parser.OFPMatch()
+        >>> match.set_in_port(1)
+        >>> match.set_dl_type(0x86dd)
+        >>> ipv6 = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
+        >>> mask = 'ffff:ffff:ffff:ffff:0:0:0:0'
+        >>> ipv6 = [int(x, 16) for x in ipv6.split(':')]
+        >>> mask = [int(x, 16) for x in mask.split(':')]
+        >>> match.set_ipv6_src_masked(ipv6, mask)
+        >>> match.set_ipv6_dst(ipv6)
+        >>>
+        >>> # query
+        >>> buf = bytearray()
+        >>> match.serialize(buf, 0)
+        80
+        >>> for f in match.fields:
+        ...     if f.header == ofproto.OXM_OF_IPV6_SRC_W:
+        ...             print ['%x' % x for x in f.value]
+        ...
+        ['2001', 'db8', 'bd05', '1d2', '0', '0', '0', '0']
+        >>>
+    """
+
     def __init__(self, _normalize=False, **kwargs):
+        """
+        You can define the flow match by the keyword arguments.
+        Please refer to ofproto_v1_3.oxm_types for the key which you can
+        define.
+        """
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
         self._flow = Flow()
@@ -380,6 +432,9 @@ class OFPMatch(StringifyMixin):
     stringify_attrs = iteritems
 
     def to_jsondict(self):
+        """
+        Returns a dict expressing the flow match.
+        """
         # XXX old api compat
         if self._composed_with_old_api():
             # copy object first because serialize_old is destructive
@@ -395,6 +450,12 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def from_jsondict(cls, dict_):
+        """
+        Returns an object which is generated from a dict.
+
+        Exception raises:
+        KeyError -- Unknown match field is defined in dict
+        """
         # XXX old api compat
         # the following _normalize=False is a compat hack.
         # see test_parser_v12.
@@ -423,6 +484,16 @@ class OFPMatch(StringifyMixin):
     __repr__ = __str__
 
     def append_field(self, header, value, mask=None):
+        """
+        Append a match field.
+
+        Arguments:
+        header -- match field header ID which is defined automatically in
+                  ofproto_v1_3. Formed by OXM_OF_ + upper case of the match
+                  field name.
+        value  -- match field value
+        mask   -- mask value to the match field
+        """
         self.fields.append(OFPMatchField.make(header, value, mask))
 
     def _composed_with_old_api(self):
@@ -430,6 +501,11 @@ class OFPMatch(StringifyMixin):
             self._wc.__dict__ != FlowWildcards().__dict__
 
     def serialize(self, buf, offset):
+        """
+        Outputs the expression of the wire protocol of the flow match into
+        the buf.
+        Returns the output length.
+        """
         # XXX compat
         if self._composed_with_old_api():
             return self.serialize_old(buf, offset)
@@ -696,6 +772,10 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def parser(cls, buf, offset):
+        """
+        Returns an object which is generated from a buffer including the
+        expression of the wire protocol of the flow match.
+        """
         match = OFPMatch()
         type_, length = struct.unpack_from('!HH', buf, offset)
 
