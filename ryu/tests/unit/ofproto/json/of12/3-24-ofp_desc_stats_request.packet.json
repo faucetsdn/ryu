@@ -1,5 +1,5 @@
 {
-   "OFPDescStatsRequest" : {
-      "flags" : 0
+   "OFPDescStatsRequest": {
+      "flags": 0
    }
 }

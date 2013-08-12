@@ -1,5 +1,5 @@
 {
-   "OFPQueueGetConfigRequest" : {
-      "port" : 4294967295
+   "OFPQueueGetConfigRequest": {
+      "port": 4294967295
    }
 }

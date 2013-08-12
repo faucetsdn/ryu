@@ -1,13 +1,13 @@
 {
-   "OFPFlowStatsRequest" : {
-      "table_id" : 0,
-      "out_group" : 4294967295,
-      "flags" : 0,
-      "out_port" : 4294967295,
-      "cookie" : 0,
-      "match" : {
-         "OFPMatch" : {}
-      },
-      "cookie_mask" : 0
+   "OFPFlowStatsRequest": {
+      "cookie": 0, 
+      "cookie_mask": 0, 
+      "flags": 0, 
+      "match": {
+         "OFPMatch": {}
+      }, 
+      "out_group": 4294967295, 
+      "out_port": 4294967295, 
+      "table_id": 0
    }
 }

@@ -1,20 +1,20 @@
 {
-   "OFPPortStatus" : {
-      "desc" : {
-         "OFPPort" : {
-            "curr" : 10248,
-            "name" : "UG9ydAcAAAAAAAAAAAAAAA==",
-            "max_speed" : 5000,
-            "state" : 4,
-            "supported" : 10248,
-            "curr_speed" : 5000,
-            "port_no" : 7,
-            "advertised" : 10240,
-            "config" : 0,
-            "peer" : 10248,
-            "hw_addr" : "8guk0D9w"
+   "OFPPortStatus": {
+      "desc": {
+         "OFPPort": {
+            "advertised": 10240, 
+            "config": 0, 
+            "curr": 10248, 
+            "curr_speed": 5000, 
+            "hw_addr": "8guk0D9w", 
+            "max_speed": 5000, 
+            "name": "UG9ydAcAAAAAAAAAAAAAAA==", 
+            "peer": 10248, 
+            "port_no": 7, 
+            "state": 4, 
+            "supported": 10248
          }
-      },
-      "reason" : 0
+      }, 
+      "reason": 0
    }
 }

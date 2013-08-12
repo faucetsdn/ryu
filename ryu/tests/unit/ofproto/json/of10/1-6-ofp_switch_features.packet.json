@@ -1,37 +1,37 @@
 {
-   "OFPSwitchFeatures" : {
-      "ports" : {
-         "6" : {
-            "OFPPhyPort" : {
-               "curr" : 648,
-               "name" : "UG9ydAYAAAAAAAAAAAAAAA==",
-               "supported" : 648,
-               "state" : 2,
-               "port_no" : 6,
-               "advertised" : 640,
-               "config" : 0,
-               "peer" : 648,
-               "hw_addr" : "8gukffjq"
+   "OFPSwitchFeatures": {
+      "actions": 2115, 
+      "capabilities": 169, 
+      "datapath_id": 1095522080376, 
+      "n_buffers": 0, 
+      "n_tables": 255, 
+      "ports": {
+         "6": {
+            "OFPPhyPort": {
+               "advertised": 640, 
+               "config": 0, 
+               "curr": 648, 
+               "hw_addr": "8gukffjq", 
+               "name": "UG9ydAYAAAAAAAAAAAAAAA==", 
+               "peer": 648, 
+               "port_no": 6, 
+               "state": 2, 
+               "supported": 648
             }
-         },
-         "7" : {
-            "OFPPhyPort" : {
-               "curr" : 648,
-               "name" : "UG9ydAcAAAAAAAAAAAAAAA==",
-               "supported" : 648,
-               "state" : 16,
-               "port_no" : 7,
-               "advertised" : 640,
-               "config" : 0,
-               "peer" : 648,
-               "hw_addr" : "8guk0D9w"
+         }, 
+         "7": {
+            "OFPPhyPort": {
+               "advertised": 640, 
+               "config": 0, 
+               "curr": 648, 
+               "hw_addr": "8guk0D9w", 
+               "name": "UG9ydAcAAAAAAAAAAAAAAA==", 
+               "peer": 648, 
+               "port_no": 7, 
+               "state": 16, 
+               "supported": 648
             }
          }
-      },
-      "actions" : 2115,
-      "n_tables" : 255,
-      "capabilities" : 169,
-      "n_buffers" : 0,
-      "datapath_id" : 1095522080376
+      }
    }
 }

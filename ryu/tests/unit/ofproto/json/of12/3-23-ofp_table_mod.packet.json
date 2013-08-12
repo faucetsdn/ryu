@@ -1,6 +1,6 @@
 {
-   "OFPTableMod" : {
-      "table_id" : 255,
-      "config" : 0
+   "OFPTableMod": {
+      "config": 0, 
+      "table_id": 255
    }
 }

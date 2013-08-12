@@ -1,6 +1,6 @@
 {
-   "OFPPortStatsRequest" : {
-      "port_no" : 4294967295,
-      "flags" : 0
+   "OFPPortStatsRequest": {
+      "flags": 0, 
+      "port_no": 4294967295
    }
 }

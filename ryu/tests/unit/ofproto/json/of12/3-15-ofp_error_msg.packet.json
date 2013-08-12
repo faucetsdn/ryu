@@ -1,7 +1,7 @@
 {
-   "OFPErrorMsg" : {
-      "data" : "ZnVnYWZ1Z2E=",
-      "type" : 2,
-      "code" : 11
+   "OFPErrorMsg": {
+      "code": 11, 
+      "data": "ZnVnYWZ1Z2E=", 
+      "type": 2
    }
 }

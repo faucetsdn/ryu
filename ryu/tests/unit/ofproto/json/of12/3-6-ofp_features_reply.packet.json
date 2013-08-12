@@ -1,40 +1,40 @@
 {
-   "OFPSwitchFeatures" : {
-      "ports" : {
-         "6" : {
-            "OFPPort" : {
-               "curr" : 10248,
-               "name" : "UG9ydAYAAAAAAAAAAAAAAA==",
-               "max_speed" : 5000,
-               "supported" : 10248,
-               "state" : 4,
-               "curr_speed" : 5000,
-               "port_no" : 6,
-               "advertised" : 10240,
-               "config" : 0,
-               "peer" : 10248,
-               "hw_addr" : "8gukffjq"
+   "OFPSwitchFeatures": {
+      "capabilities": 79, 
+      "datapath_id": 603603843768844288, 
+      "n_buffers": 0, 
+      "n_tables": 255, 
+      "ports": {
+         "6": {
+            "OFPPort": {
+               "advertised": 10240, 
+               "config": 0, 
+               "curr": 10248, 
+               "curr_speed": 5000, 
+               "hw_addr": "8gukffjq", 
+               "max_speed": 5000, 
+               "name": "UG9ydAYAAAAAAAAAAAAAAA==", 
+               "peer": 10248, 
+               "port_no": 6, 
+               "state": 4, 
+               "supported": 10248
             }
-         },
-         "7" : {
-            "OFPPort" : {
-               "curr" : 10248,
-               "name" : "UG9ydAcAAAAAAAAAAAAAAA==",
-               "max_speed" : 5000,
-               "supported" : 10248,
-               "state" : 4,
-               "curr_speed" : 5000,
-               "port_no" : 7,
-               "advertised" : 10240,
-               "config" : 0,
-               "peer" : 10248,
-               "hw_addr" : "8guk0D9w"
+         }, 
+         "7": {
+            "OFPPort": {
+               "advertised": 10240, 
+               "config": 0, 
+               "curr": 10248, 
+               "curr_speed": 5000, 
+               "hw_addr": "8guk0D9w", 
+               "max_speed": 5000, 
+               "name": "UG9ydAcAAAAAAAAAAAAAAA==", 
+               "peer": 10248, 
+               "port_no": 7, 
+               "state": 4, 
+               "supported": 10248
             }
          }
-      },
-      "n_tables" : 255,
-      "capabilities" : 79,
-      "n_buffers" : 0,
-      "datapath_id" : 603603843768844288
+      }
    }
 }

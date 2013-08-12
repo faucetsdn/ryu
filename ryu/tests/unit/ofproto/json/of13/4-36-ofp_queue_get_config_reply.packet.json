@@ -1,41 +1,41 @@
 {
-   "OFPQueueGetConfigReply" : {
-      "port" : 4294967295,
-      "queues" : [
+   "OFPQueueGetConfigReply": {
+      "port": 4294967295, 
+      "queues": [
          {
-            "OFPPacketQueue" : {
-               "queue_id" : 99,
-               "port" : 77,
-               "properties" : [
+            "OFPPacketQueue": {
+               "port": 77, 
+               "properties": [
                   {
-                     "OFPQueuePropMinRate" : {
-                        "rate" : 10
+                     "OFPQueuePropMinRate": {
+                        "rate": 10
                      }
-                  },
+                  }, 
                   {
-                     "OFPQueuePropMaxRate" : {
-                        "rate" : 900
+                     "OFPQueuePropMaxRate": {
+                        "rate": 900
                      }
                   }
-               ]
+               ], 
+               "queue_id": 99
             }
-         },
+         }, 
          {
-            "OFPPacketQueue" : {
-               "queue_id" : 88,
-               "port" : 77,
-               "properties" : [
+            "OFPPacketQueue": {
+               "port": 77, 
+               "properties": [
                   {
-                     "OFPQueuePropMinRate" : {
-                        "rate" : 100
+                     "OFPQueuePropMinRate": {
+                        "rate": 100
                      }
-                  },
+                  }, 
                   {
-                     "OFPQueuePropMaxRate" : {
-                        "rate" : 200
+                     "OFPQueuePropMaxRate": {
+                        "rate": 200
                      }
                   }
-               ]
+               ], 
+               "queue_id": 88
             }
          }
       ]

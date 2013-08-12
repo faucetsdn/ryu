@@ -1,117 +1,117 @@
 {
-   "OFPTableFeaturesStatsReply" : {
-      "body" : [
+   "OFPTableFeaturesStatsReply": {
+      "body": [
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 0,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDAwAAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDAwAAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 0
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 1,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDAxAAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDAxAAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 1
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 2,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDAyAAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDAyAAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 2
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 3,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDAzAAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDAzAAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 3
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 4,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDA0AAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDA0AAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 4
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 5,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDA1AAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDA1AAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 5
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 6,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDA2AAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDA2AAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 6
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 7,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDA3AAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDA3AAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 7
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 8,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDA4AAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDA4AAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 8
             }
-         },
+         }, 
          {
-            "OFPTableFeaturesStats" : {
-               "table_id" : 9,
-               "max_entries" : 16777216,
-               "metadata_match" : 18446744073709551615,
-               "metadata_write" : 18446744073709551615,
-               "name" : "RmxvdyBUYWJsZSAweDA5AAAAAAAAAAAAAAAAAAAAAAA=",
-               "config" : 0,
-               "properties" : []
+            "OFPTableFeaturesStats": {
+               "config": 0, 
+               "max_entries": 16777216, 
+               "metadata_match": 18446744073709551615, 
+               "metadata_write": 18446744073709551615, 
+               "name": "RmxvdyBUYWJsZSAweDA5AAAAAAAAAAAAAAAAAAAAAAA=", 
+               "properties": [], 
+               "table_id": 9
             }
          }
-      ],
-      "flags" : 2
+      ], 
+      "flags": 2
    }
 }

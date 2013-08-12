@@ -1,21 +1,21 @@
 {
-   "OFPMeterConfigStatsReply" : {
-      "body" : [
+   "OFPMeterConfigStatsReply": {
+      "body": [
          {
-            "OFPMeterConfigStats" : {
-               "meter_id" : 100,
-               "flags" : 14,
-               "bands" : [
+            "OFPMeterConfigStats": {
+               "bands": [
                   {
-                     "OFPMeterBandDrop" : {
-                        "rate" : 1000,
-                        "burst_size" : 10
+                     "OFPMeterBandDrop": {
+                        "burst_size": 10, 
+                        "rate": 1000
                      }
                   }
-               ]
+               ], 
+               "flags": 14, 
+               "meter_id": 100
             }
          }
-      ],
-      "flags" : 0
+      ], 
+      "flags": 0
    }
 }

@@ -1,37 +1,37 @@
 {
-   "OFPPortDescStatsReply" : {
-      "body" : [
+   "OFPPortDescStatsReply": {
+      "body": [
          {
-            "OFPPort" : {
-               "curr" : 10248,
-               "name" : "UG9ydDcAAAAAAAAAAAAAAA==",
-               "max_speed" : 5000,
-               "state" : 4,
-               "supported" : 10248,
-               "curr_speed" : 5000,
-               "port_no" : 7,
-               "advertised" : 10240,
-               "config" : 0,
-               "peer" : 10248,
-               "hw_addr" : "8guk0D9w"
+            "OFPPort": {
+               "advertised": 10240, 
+               "config": 0, 
+               "curr": 10248, 
+               "curr_speed": 5000, 
+               "hw_addr": "8guk0D9w", 
+               "max_speed": 5000, 
+               "name": "UG9ydDcAAAAAAAAAAAAAAA==", 
+               "peer": 10248, 
+               "port_no": 7, 
+               "state": 4, 
+               "supported": 10248
             }
-         },
+         }, 
          {
-            "OFPPort" : {
-               "curr" : 10248,
-               "name" : "UG9ydDYAAAAAAAAAAAAAAA==",
-               "max_speed" : 5000,
-               "state" : 4,
-               "supported" : 10248,
-               "curr_speed" : 5000,
-               "port_no" : 6,
-               "advertised" : 10240,
-               "config" : 0,
-               "peer" : 10248,
-               "hw_addr" : "8gukffjq"
+            "OFPPort": {
+               "advertised": 10240, 
+               "config": 0, 
+               "curr": 10248, 
+               "curr_speed": 5000, 
+               "hw_addr": "8gukffjq", 
+               "max_speed": 5000, 
+               "name": "UG9ydDYAAAAAAAAAAAAAAA==", 
+               "peer": 10248, 
+               "port_no": 6, 
+               "state": 4, 
+               "supported": 10248
             }
          }
-      ],
-      "flags" : 0
+      ], 
+      "flags": 0
    }
 }

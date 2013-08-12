@@ -1,5 +1,5 @@
 {
-   "OFPPortDescStatsRequest" : {
-      "flags" : 0
+   "OFPPortDescStatsRequest": {
+      "flags": 0
    }
 }

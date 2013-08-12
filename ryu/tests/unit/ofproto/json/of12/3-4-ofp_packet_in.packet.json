@@ -1,22 +1,22 @@
 {
-   "OFPPacketIn" : {
-      "table_id" : 1,
-      "buffer_id" : 2,
-      "total_len" : 42,
-      "match" : {
-         "OFPMatch" : {
-            "eth_src" : "f2:0b:a4:7d:f8:ea",
-            "in_port" : 6,
-            "eth_dst" : "ff:ff:ff:ff:ff:ff",
-            "arp_tha" : "00:00:00:00:00:00",
-            "arp_spa" : "10.0.0.1",
-            "eth_type" : 2054,
-            "arp_sha" : "f2:0b:a4:7d:f8:ea",
-            "arp_op" : 1,
-            "arp_tpa" : "10.0.0.3"
+   "OFPPacketIn": {
+      "buffer_id": 2, 
+      "data": "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD", 
+      "match": {
+         "OFPMatch": {
+            "arp_op": 1, 
+            "arp_sha": "f2:0b:a4:7d:f8:ea", 
+            "arp_spa": "10.0.0.1", 
+            "arp_tha": "00:00:00:00:00:00", 
+            "arp_tpa": "10.0.0.3", 
+            "eth_dst": "ff:ff:ff:ff:ff:ff", 
+            "eth_src": "f2:0b:a4:7d:f8:ea", 
+            "eth_type": 2054, 
+            "in_port": 6
          }
-      },
-      "reason" : 1,
-      "data" : "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD"
+      }, 
+      "reason": 1, 
+      "table_id": 1, 
+      "total_len": 42
    }
 }

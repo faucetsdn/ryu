@@ -1,118 +1,118 @@
 {
-   "OFPFlowStatsReply" : {
-      "body" : [
+   "OFPFlowStatsReply": {
+      "body": [
          {
-            "OFPFlowStats" : {
-               "table_id" : 0,
-               "hard_timeout" : 0,
-               "priority" : 65535,
-               "instructions" : [],
-               "flags" : 0,
-               "duration_nsec" : 115277000,
-               "match" : {
-                  "OFPMatch" : {}
-               },
-               "cookie" : 0,
-               "idle_timeout" : 0,
-               "byte_count" : 0,
-               "duration_sec" : 358,
-               "packet_count" : 0
+            "OFPFlowStats": {
+               "byte_count": 0, 
+               "cookie": 0, 
+               "duration_nsec": 115277000, 
+               "duration_sec": 358, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "instructions": [], 
+               "match": {
+                  "OFPMatch": {}
+               }, 
+               "packet_count": 0, 
+               "priority": 65535, 
+               "table_id": 0
             }
-         },
+         }, 
          {
-            "OFPFlowStats" : {
-               "table_id" : 0,
-               "hard_timeout" : 0,
-               "priority" : 65534,
-               "instructions" : [
+            "OFPFlowStats": {
+               "byte_count": 0, 
+               "cookie": 0, 
+               "duration_nsec": 115055000, 
+               "duration_sec": 358, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "instructions": [
                   {
-                     "OFPInstructionActions" : {
-                        "actions" : [
+                     "OFPInstructionActions": {
+                        "actions": [
                            {
-                              "OFPActionOutput" : {
-                                 "max_len" : 0,
-                                 "port" : 4294967290
+                              "OFPActionOutput": {
+                                 "max_len": 0, 
+                                 "port": 4294967290
                               }
                            }
-                        ],
-                        "type" : 4
+                        ], 
+                        "type": 4
                      }
                   }
-               ],
-               "flags" : 0,
-               "duration_nsec" : 115055000,
-               "match" : {
-                  "OFPMatch" : {
-                     "eth_type" : 2054
+               ], 
+               "match": {
+                  "OFPMatch": {
+                     "eth_type": 2054
                   }
-               },
-               "cookie" : 0,
-               "idle_timeout" : 0,
-               "byte_count" : 0,
-               "duration_sec" : 358,
-               "packet_count" : 0
+               }, 
+               "packet_count": 0, 
+               "priority": 65534, 
+               "table_id": 0
             }
-         },
+         }, 
          {
-            "OFPFlowStats" : {
-               "table_id" : 0,
-               "hard_timeout" : 0,
-               "priority" : 123,
-               "instructions" : [
+            "OFPFlowStats": {
+               "byte_count": 238, 
+               "cookie": 0, 
+               "duration_nsec": 511582000, 
+               "duration_sec": 316220, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "instructions": [
                   {
-                     "OFPInstructionGotoTable" : {
-                        "table_id" : 1
+                     "OFPInstructionGotoTable": {
+                        "table_id": 1
                      }
                   }
-               ],
-               "flags" : 0,
-               "duration_nsec" : 511582000,
-               "match" : {
-                  "OFPMatch" : {
-                     "eth_src" : "f2:0b:a4:7d:f8:ea",
-                     "in_port" : 6
+               ], 
+               "match": {
+                  "OFPMatch": {
+                     "eth_src": "f2:0b:a4:7d:f8:ea", 
+                     "in_port": 6
                   }
-               },
-               "cookie" : 0,
-               "idle_timeout" : 0,
-               "byte_count" : 238,
-               "duration_sec" : 316220,
-               "packet_count" : 3
+               }, 
+               "packet_count": 3, 
+               "priority": 123, 
+               "table_id": 0
             }
-         },
+         }, 
          {
-            "OFPFlowStats" : {
-               "table_id" : 0,
-               "hard_timeout" : 0,
-               "priority" : 0,
-               "instructions" : [
+            "OFPFlowStats": {
+               "byte_count": 98, 
+               "cookie": 0, 
+               "duration_nsec": 980901000, 
+               "duration_sec": 313499, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "instructions": [
                   {
-                     "OFPInstructionActions" : {
-                        "actions" : [
+                     "OFPInstructionActions": {
+                        "actions": [
                            {
-                              "OFPActionOutput" : {
-                                 "max_len" : 65535,
-                                 "port" : 4294967293
+                              "OFPActionOutput": {
+                                 "max_len": 65535, 
+                                 "port": 4294967293
                               }
                            }
-                        ],
-                        "type" : 3
+                        ], 
+                        "type": 3
                      }
                   }
-               ],
-               "flags" : 0,
-               "duration_nsec" : 980901000,
-               "match" : {
-                  "OFPMatch" : {}
-               },
-               "cookie" : 0,
-               "idle_timeout" : 0,
-               "byte_count" : 98,
-               "duration_sec" : 313499,
-               "packet_count" : 1
+               ], 
+               "match": {
+                  "OFPMatch": {}
+               }, 
+               "packet_count": 1, 
+               "priority": 0, 
+               "table_id": 0
             }
          }
-      ],
-      "flags" : 0
+      ], 
+      "flags": 0
    }
 }

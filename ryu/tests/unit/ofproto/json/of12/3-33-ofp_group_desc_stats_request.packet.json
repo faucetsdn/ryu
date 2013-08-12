@@ -1,5 +1,5 @@
 {
-   "OFPGroupDescStatsRequest" : {
-      "flags" : 0
+   "OFPGroupDescStatsRequest": {
+      "flags": 0
    }
 }

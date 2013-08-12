@@ -1,30 +1,30 @@
 {
-   "OFPStatsReply" : {
-      "body" : [
+   "OFPStatsReply": {
+      "body": [
          {
-            "OFPGroupDescStats" : {
-               "group_id" : 1,
-               "buckets" : [
+            "OFPGroupDescStats": {
+               "buckets": [
                   {
-                     "OFPBucket" : {
-                        "watch_port" : 1,
-                        "actions" : [
+                     "OFPBucket": {
+                        "actions": [
                            {
-                              "OFPActionOutput" : {
-                                 "max_len" : 65535,
-                                 "port" : 2
+                              "OFPActionOutput": {
+                                 "max_len": 65535, 
+                                 "port": 2
                               }
                            }
-                        ],
-                        "watch_group" : 1,
-                        "weight" : 1
+                        ], 
+                        "watch_group": 1, 
+                        "watch_port": 1, 
+                        "weight": 1
                      }
                   }
-               ],
-               "type" : 0
+               ], 
+               "group_id": 1, 
+               "type": 0
             }
          }
-      ],
-      "flags" : 0
+      ], 
+      "flags": 0
    }
 }

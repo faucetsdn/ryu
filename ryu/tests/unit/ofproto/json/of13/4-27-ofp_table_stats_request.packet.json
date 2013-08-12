@@ -1,5 +1,5 @@
 {
-   "OFPTableStatsRequest" : {
-      "flags" : 0
+   "OFPTableStatsRequest": {
+      "flags": 0
    }
 }

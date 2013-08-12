@@ -1,12 +1,12 @@
 {
-   "OFPStatsReply" : {
-      "body" : {
-         "OFPAggregateStatsReply" : {
-            "flow_count" : 6,
-            "byte_count" : 574,
-            "packet_count" : 7
+   "OFPStatsReply": {
+      "body": {
+         "OFPAggregateStatsReply": {
+            "byte_count": 574, 
+            "flow_count": 6, 
+            "packet_count": 7
          }
-      },
-      "flags" : 0
+      }, 
+      "flags": 0
    }
 }

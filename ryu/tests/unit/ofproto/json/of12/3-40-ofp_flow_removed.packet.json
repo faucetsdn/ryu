@@ -1,19 +1,19 @@
 {
-   "OFPFlowRemoved" : {
-      "table_id" : 0,
-      "hard_timeout" : 0,
-      "priority" : 65535,
-      "duration_nsec" : 48825000,
-      "match" : {
-         "OFPMatch" : {
-            "eth_dst" : "f2:0b:a4:7d:f8:ea"
+   "OFPFlowRemoved": {
+      "byte_count": 86, 
+      "cookie": 0, 
+      "duration_nsec": 48825000, 
+      "duration_sec": 3, 
+      "hard_timeout": 0, 
+      "idle_timeout": 3, 
+      "match": {
+         "OFPMatch": {
+            "eth_dst": "f2:0b:a4:7d:f8:ea"
          }
-      },
-      "reason" : 0,
-      "cookie" : 0,
-      "idle_timeout" : 3,
-      "byte_count" : 86,
-      "duration_sec" : 3,
-      "packet_count" : 1
+      }, 
+      "packet_count": 1, 
+      "priority": 65535, 
+      "reason": 0, 
+      "table_id": 0
    }
 }

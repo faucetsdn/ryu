@@ -1,6 +1,6 @@
 {
-   "OFPSetConfig" : {
-      "flags" : 0,
-      "miss_send_len" : 128
+   "OFPSetConfig": {
+      "flags": 0, 
+      "miss_send_len": 128
    }
 }
