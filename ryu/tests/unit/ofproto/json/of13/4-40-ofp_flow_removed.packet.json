@@ -8,7 +8,15 @@
       "idle_timeout": 3, 
       "match": {
          "OFPMatch": {
-            "eth_dst": "f2:0b:a4:7d:f8:ea"
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }
+            ]
          }
       }, 
       "packet_count": 1, 
