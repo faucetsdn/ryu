@@ -102,7 +102,7 @@ The option for oslo.config.cfg::
 
 Invoking Example
 ================
-The exmaple is as follows::
+The example is as follows::
 
 % PYTHONPATH=. ./bin/ryu-manager --wsapi-port 8081 --verbose --app-lists ryu.app.simple_isolation,ryu.app.rest
 loading app ryu.app.simple_isolation
