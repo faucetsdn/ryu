@@ -11,7 +11,9 @@
                "idle_timeout": 0, 
                "instructions": [], 
                "match": {
-                  "OFPMatch": {}
+                  "OFPMatch": {
+                     "oxm_fields": []
+                  }
                }, 
                "packet_count": 0, 
                "priority": 65535, 
@@ -43,7 +45,15 @@
                ], 
                "match": {
                   "OFPMatch": {
-                     "eth_type": 2054
+                     "oxm_fields": [
+                        {
+                           "OXMTlv": {
+                              "field": "eth_type", 
+                              "mask": null, 
+                              "value": 2054
+                           }
+                        }
+                     ]
                   }
                }, 
                "packet_count": 0, 
@@ -68,8 +78,22 @@
                ], 
                "match": {
                   "OFPMatch": {
-                     "eth_src": "f2:0b:a4:7d:f8:ea", 
-                     "in_port": 6
+                     "oxm_fields": [
+                        {
+                           "OXMTlv": {
+                              "field": "in_port", 
+                              "mask": null, 
+                              "value": 6
+                           }
+                        }, 
+                        {
+                           "OXMTlv": {
+                              "field": "eth_src", 
+                              "mask": null, 
+                              "value": "f2:0b:a4:7d:f8:ea"
+                           }
+                        }
+                     ]
                   }
                }, 
                "packet_count": 3, 
@@ -101,7 +125,9 @@
                   }
                ], 
                "match": {
-                  "OFPMatch": {}
+                  "OFPMatch": {
+                     "oxm_fields": []
+                  }
                }, 
                "packet_count": 1, 
                "priority": 0, 
