@@ -396,7 +396,7 @@ class OFPMatch(StringifyMixin):
         >>>
     """
 
-    def __init__(self, _normalize=False, **kwargs):
+    def __init__(self, _ordered_fields=None, **kwargs):
         """
         You can define the flow match by the keyword arguments.
         Please refer to ofproto_v1_3.oxm_types for the key which you can
@@ -407,29 +407,37 @@ class OFPMatch(StringifyMixin):
         self._flow = Flow()
         self.fields = []
 
-        # eg.
-        #   OFPMatch(eth_src=('ff:ff:ff:00:00:00'), eth_type=0x800,
-        #            ipv4_src='10.0.0.1')
-        if _normalize:
-            self._fields2 = dict(ofproto_v1_3.oxm_normalize_user(k, uv)
-                                 for (k, uv)
-                                 in kwargs.iteritems())
+        if not _ordered_fields is None:
+            assert not kwargs
+            self._fields2 = _ordered_fields
         else:
-            self._fields2 = kwargs
+            # eg.
+            #   OFPMatch(eth_src=('ff:ff:ff:00:00:00'), eth_type=0x800,
+            #            ipv4_src='10.0.0.1')
+            kwargs = dict(ofproto_v1_3.oxm_normalize_user(k, v) for
+                          (k, v) in kwargs.iteritems())
+            fields = [ofproto_v1_3.oxm_from_user(k, v) for (k, v)
+                      in kwargs.iteritems()]
+            # assumption: sorting by OXM type values makes fields
+            # meet ordering requirements (eg. eth_type before ipv4_src)
+            fields.sort()
+            self._fields2 = [ofproto_v1_3.oxm_to_user(n, v, m) for (n, v, m)
+                             in fields]
 
     def __getitem__(self, key):
-        return self._fields2[key]
+        return dict(self._fields2)[key]
 
     def __contains__(self, key):
-        return key in self._fields2
+        return key in dict(self._fields2)
 
     def iteritems(self):
-        return self._fields2.iteritems()
+        return dict(self._fields2).iteritems()
 
     def get(self, key, default=None):
-        return self._fields2.get(key, default)
+        return dict(self._fields2).get(key, default)
 
-    stringify_attrs = iteritems
+    def stringify_attrs(self):
+        yield "oxm_fields", dict(self._fields2)
 
     def to_jsondict(self):
         """
@@ -446,7 +454,10 @@ class OFPMatch(StringifyMixin):
             o = OFPMatch.parser(str(buf), 0)
         else:
             o = self
-        return super(OFPMatch, o).to_jsondict(lambda x: x)
+
+        body = {"oxm_fields": [ofproto_v1_3.oxm_to_jsondict(k, uv) for k, uv
+                               in o._fields2]}
+        return {self.__class__.__name__: body}
 
     @classmethod
     def from_jsondict(cls, dict_):
@@ -456,11 +467,9 @@ class OFPMatch(StringifyMixin):
         Exception raises:
         KeyError -- Unknown match field is defined in dict
         """
-        # XXX old api compat
-        # the following _normalize=False is a compat hack.
-        # see test_parser_v12.
-        o = super(OFPMatch, cls).from_jsondict(dict_, lambda x: x,
-                                               _normalize=False)
+        fields = [ofproto_v1_3.oxm_from_jsondict(f) for f
+                  in dict_['oxm_fields']]
+        o = OFPMatch(_ordered_fields=fields)
         # XXX old api compat
         # serialize and parse to fill OFPMatch.fields
         buf = bytearray()
@@ -510,12 +519,8 @@ class OFPMatch(StringifyMixin):
         if self._composed_with_old_api():
             return self.serialize_old(buf, offset)
 
-        fields = [ofproto_v1_3.oxm_from_user(k, v) for (k, v)
-                  in self._fields2.iteritems()]
-
-        # assumption: sorting by OXM type values makes fields
-        # meet ordering requirements (eg. eth_type before ipv4_src)
-        fields.sort()
+        fields = [ofproto_v1_3.oxm_from_user(k, uv) for (k, uv)
+                  in self._fields2]
 
         hdr_pack_str = '!HH'
         field_offset = offset + struct.calcsize(hdr_pack_str)
@@ -779,11 +784,11 @@ class OFPMatch(StringifyMixin):
         # XXXcompat
         cls.parser_old(match, buf, offset, length)
 
-        fields = {}
+        fields = []
         while length > 0:
             n, value, mask, field_len = ofproto_v1_3.oxm_parse(buf, offset)
             k, uv = ofproto_v1_3.oxm_to_user(n, value, mask)
-            fields[k] = uv
+            fields.append((k, uv))
             offset += field_len
             length -= field_len
         match._fields2 = fields
