@@ -1700,18 +1700,8 @@ class OFPMatch(StringifyMixin):
         hdr_pack_str = '!HH'
         field_offset = offset + struct.calcsize(hdr_pack_str)
         for (n, value, mask) in fields:
-            if mask:
-                assert len(value) == len(mask)
-                pack_str = "!I%ds%ds" % (len(value), len(mask))
-                msg_pack_into(pack_str, buf, field_offset,
-                              (n << 9) | (1 << 8) | (len(value) * 2),
-                              value, mask)
-            else:
-                pack_str = "!I%ds" % (len(value),)
-                msg_pack_into(pack_str, buf, field_offset,
-                              (n << 9) | (0 << 8) | len(value),
-                              value)
-            field_offset += struct.calcsize(pack_str)
+            field_offset += ofproto_v1_2.oxm_serialize(n, value, mask, buf,
+                                                       field_offset)
 
         length = field_offset - offset
         msg_pack_into(hdr_pack_str, buf, offset,
@@ -1939,24 +1929,9 @@ class OFPMatch(StringifyMixin):
 
         fields = {}
         while length > 0:
-            hdr_pack_str = '!I'
-            (header, ) = struct.unpack_from(hdr_pack_str, buf, offset)
-            hdr_len = struct.calcsize(hdr_pack_str)
-            oxm_type = header >> 9  # class|field
-            oxm_hasmask = ofproto_v1_2.oxm_tlv_header_extract_hasmask(header)
-            value_len = ofproto_v1_2.oxm_tlv_header_extract_length(header)
-            value_pack_str = '!%ds' % value_len
-            assert struct.calcsize(value_pack_str) == value_len
-            (value, ) = struct.unpack_from(value_pack_str, buf,
-                                           offset + hdr_len)
-            if oxm_hasmask:
-                (mask, ) = struct.unpack_from(value_pack_str, buf,
-                                              offset + hdr_len + value_len)
-            else:
-                mask = None
-            k, uv = ofproto_v1_2.oxm_to_user(oxm_type, value, mask)
+            n, value, mask, field_len = ofproto_v1_2.oxm_parse(buf, offset)
+            k, uv = ofproto_v1_2.oxm_to_user(n, value, mask)
             fields[k] = uv
-            field_len = hdr_len + (header & 0xff)
             offset += field_len
             length -= field_len
         match._fields2 = fields
