@@ -104,32 +104,32 @@ Invoking Example
 ================
 The example is as follows::
 
-% PYTHONPATH=. ./bin/ryu-manager --wsapi-port 8081 --verbose --app-lists ryu.app.simple_isolation,ryu.app.rest
-loading app ryu.app.simple_isolation
-loading app ryu.app.rest
-loading app ryu.controller.ofp_handler
-creating context dpset
-creating context wsgi
-creating context network
-instantiating app ryu.app.simple_isolation
-instantiating app ryu.app.rest
-instantiating app ryu.controller.ofp_handler
-BRICK dpset
-  CONSUMES EventOFPStateChange
-  CONSUMES EventOFPPortStatus
-  CONSUMES EventOFPSwitchFeatures
-BRICK ofp_event
-  PROVIDES EventOFPStateChange TO ['dpset']
-  PROVIDES EventOFPPortStatus TO ['dpset', 'SimpleIsolation']
-  PROVIDES EventOFPPacketIn TO ['SimpleIsolation']
-  PROVIDES EventOFPSwitchFeatures TO ['dpset', 'SimpleIsolation']
-  CONSUMES EventOFPEchoRequest
-  CONSUMES EventOFPErrorMsg
-  CONSUMES EventOFPSwitchFeatures
-  CONSUMES EventOFPHello
-BRICK network
-BRICK RestAPI
-BRICK SimpleIsolation
-  CONSUMES EventOFPPacketIn
-  CONSUMES EventOFPPortStatus
-  CONSUMES EventOFPSwitchFeatures
+    % PYTHONPATH=. ./bin/ryu-manager --wsapi-port 8081 --verbose --app-lists ryu.app.simple_isolation,ryu.app.rest
+    loading app ryu.app.simple_isolation
+    loading app ryu.app.rest
+    loading app ryu.controller.ofp_handler
+    creating context dpset
+    creating context wsgi
+    creating context network
+    instantiating app ryu.app.simple_isolation
+    instantiating app ryu.app.rest
+    instantiating app ryu.controller.ofp_handler
+    BRICK dpset
+      CONSUMES EventOFPStateChange
+      CONSUMES EventOFPPortStatus
+      CONSUMES EventOFPSwitchFeatures
+    BRICK ofp_event
+      PROVIDES EventOFPStateChange TO ['dpset']
+      PROVIDES EventOFPPortStatus TO ['dpset', 'SimpleIsolation']
+      PROVIDES EventOFPPacketIn TO ['SimpleIsolation']
+      PROVIDES EventOFPSwitchFeatures TO ['dpset', 'SimpleIsolation']
+      CONSUMES EventOFPEchoRequest
+      CONSUMES EventOFPErrorMsg
+      CONSUMES EventOFPSwitchFeatures
+      CONSUMES EventOFPHello
+    BRICK network
+    BRICK RestAPI
+    BRICK SimpleIsolation
+      CONSUMES EventOFPPacketIn
+      CONSUMES EventOFPPortStatus
+      CONSUMES EventOFPSwitchFeatures
