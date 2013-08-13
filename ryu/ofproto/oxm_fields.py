@@ -25,6 +25,8 @@
 #   mask is None if no mask.
 
 import itertools
+import struct
+from ofproto_parser import msg_pack_into
 
 from ryu.lib import addrconv
 
@@ -122,6 +124,10 @@ def generate(modname):
     add_attr('oxm_from_user', functools.partial(from_user, name_to_field))
     add_attr('oxm_to_user', functools.partial(to_user, num_to_field))
     add_attr('oxm_normalize_user', functools.partial(normalize_user, mod))
+    add_attr('oxm_parse', functools.partial(parse, mod))
+    add_attr('oxm_serialize', serialize)
+    add_attr('oxm_to_jsondict', to_jsondict)
+    add_attr('oxm_from_jsondict', from_jsondict)
 
 
 def from_user(name_to_field, name, user_value):
@@ -173,3 +179,57 @@ def normalize_user(mod, k, uv):
     (k2, uv2) = mod.oxm_to_user(n, v, m)
     assert k2 == k
     return (k2, uv2)
+
+
+def parse(mod, buf, offset):
+    hdr_pack_str = '!I'
+    (header, ) = struct.unpack_from(hdr_pack_str, buf, offset)
+    hdr_len = struct.calcsize(hdr_pack_str)
+    oxm_type = header >> 9  # class|field
+    oxm_hasmask = mod.oxm_tlv_header_extract_hasmask(header)
+    value_len = mod.oxm_tlv_header_extract_length(header)
+    value_pack_str = '!%ds' % value_len
+    assert struct.calcsize(value_pack_str) == value_len
+    (value, ) = struct.unpack_from(value_pack_str, buf,
+                                   offset + hdr_len)
+    if oxm_hasmask:
+        (mask, ) = struct.unpack_from(value_pack_str, buf,
+                                      offset + hdr_len + value_len)
+    else:
+        mask = None
+    field_len = hdr_len + (header & 0xff)
+    return oxm_type, value, mask, field_len
+
+
+def serialize(n, value, mask, buf, offset):
+    if mask:
+        assert len(value) == len(mask)
+        pack_str = "!I%ds%ds" % (len(value), len(mask))
+        msg_pack_into(pack_str, buf, offset,
+                      (n << 9) | (1 << 8) | (len(value) * 2), value, mask)
+    else:
+        pack_str = "!I%ds" % (len(value),)
+        msg_pack_into(pack_str, buf, offset,
+                      (n << 9) | (0 << 8) | len(value), value)
+    return struct.calcsize(pack_str)
+
+
+def to_jsondict(k, uv):
+    if isinstance(uv, tuple):
+        (value, mask) = uv
+    else:
+        value = uv
+        mask = None
+    return {"OXMTlv": {"field": k, "value": value, "mask": mask}}
+
+
+def from_jsondict(j):
+    tlv = j['OXMTlv']
+    field = tlv['field']
+    value = tlv['value']
+    mask = tlv['mask']
+    if mask is None:
+        uv = value
+    else:
+        uv = (value, mask)
+    return (field, uv)
