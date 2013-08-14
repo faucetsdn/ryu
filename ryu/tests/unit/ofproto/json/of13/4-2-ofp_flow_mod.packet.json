@@ -12,6 +12,17 @@
             "OFPInstructionActions": {
                "actions": [
                   {
+                     "OFPActionSetField": {
+                        "field": {
+                           "OXMTlv": {
+                              "field": "vlan_vid", 
+                              "mask": null, 
+                              "value": 258
+                           }
+                        }
+                     }
+                  }, 
+                  {
                      "OFPActionOutput": {
                         "max_len": 65535, 
                         "port": 6
