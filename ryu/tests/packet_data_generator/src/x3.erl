@@ -54,7 +54,10 @@ x() ->
             instructions =
                 [#ofp_instruction_write_actions{
                      actions =
-                         [#ofp_action_output{port = 6,max_len = 65535}]}]},
+                         [#ofp_action_set_field{
+                             field = #ofp_field{name = vlan_vid,
+                                                value = <<1,2>> }},
+                          #ofp_action_output{port = 6,max_len = 65535}]}]},
         #ofp_flow_mod{
             cookie = <<0,0,0,0,0,0,0,0>>,
             cookie_mask = <<0,0,0,0,0,0,0,0>>,
