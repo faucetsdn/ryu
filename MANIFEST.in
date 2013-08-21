@@ -6,6 +6,7 @@ graft doc
 graft etc
 graft tools
 recursive-exclude doc/build *
+recursive-exclude ryu/tests/packet_data_generator *
 global-exclude *~
 global-exclude *.pyc
 global-exclude .gitignore
