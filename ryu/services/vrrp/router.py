@@ -401,12 +401,11 @@ class VRRPV2StateBackup(VRRPState):
                 vrrp_router.preempt_delay_timer.cancel()
                 vrrp_router.master_down_timer.start(
                     params.master_down_interval)
-            elif (config.preempt_mode and config.preempt_delay > 0 and
-                  config.priority > vrrp_.priority):
-                if not vrrp_router.preempt_delay_timer.is_running():
+            elif config.preempt_mode and config.priority > vrrp_.priority:
+                if (config.preempt_delay > 0) and ( 
+                    not vrrp_router.preempt_delay_timer.is_running()):
                     vrrp_router.preempt_delay_timer.start(config.preempt_delay)
-                vrrp_router.master_down_timer.start(
-                    params.master_down_interval)
+                # Nothing else to do, simply discard packet.
 
     def vrrp_shutdown_request(self, ev):
         vrrp_router = self.vrrp_router
@@ -615,12 +614,11 @@ class VRRPV3StateBackup(VRRPState):
                 params.master_adver_interval = vrrp_.max_adver_int_in_sec
                 vrrp_router.master_down_timer.start(
                     params.master_down_interval)
-            elif (config.preempt_mode and config.preempt_delay > 0 and
-                  config.priority > vrrp_.priority):
-                if not vrrp_router.preempt_delay_timer.is_running():
+            elif config.preempt_mode and config.priority > vrrp_.priority:
+                if (config.preempt_delay > 0) and (
+                    not vrrp_router.preempt_delay_timer.is_running()):
                     vrrp_router.preempt_delay_timer.start(config.preempt_delay)
-                vrrp_router.master_down_timer.start(
-                    params.master_down_interval)
+                # Nothing else to do, simply discard packet.
 
     def vrrp_shutdown_request(self, ev):
         vrrp_router = self.vrrp_router

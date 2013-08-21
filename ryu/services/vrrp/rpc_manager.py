@@ -19,6 +19,8 @@ CONF_KEY_ADVERTISEMENT_INTERVAL = "advertisement_interval"
 CONF_KEY_PORT_IFNAME = "ifname"
 CONF_KEY_PORT_IP_ADDR = "ip_address"
 CONF_KEY_PORT_VLAN_ID = "vlan_id"
+CONF_KEY_PORT_PREEMPT_MODE = "preempt_mode"
+CONF_KEY_PORT_PREEMPT_DELAY = "preempt_delay"
 
 CONF = cfg.CONF
 
@@ -102,7 +104,12 @@ class RpcVRRPManager(app_manager.RyuApp):
 
         config = vrrp_event.VRRPConfig(
             version=vrrp_params[0], vrid=vrrp_params[1],
-            priority=port["priority"], ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value])
+            priority=port["priority"], 
+            ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value],
+            advertisement_interval=port[CONF_KEY_ADVERTISEMENT_INTERVAL]
+            #preempt_mode=port[CONF_KEY_PORT_PREEMPT_MODE],
+            #preempt_delay=port[CONF_KEY_PORT_PREEMPT_DELAY]
+            )
         config_result = vrrp_api.vrrp_config(self, interface, config)
 
         api_result = [config_result.config.vrid,
