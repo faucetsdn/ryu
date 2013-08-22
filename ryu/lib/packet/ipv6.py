@@ -78,7 +78,7 @@ class ipv6(packet_base.PacketBase):
         msg = cls(version, traffic_class, flow_label, payload_length,
                   nxt, hop_limit, addrconv.ipv6.bin_to_text(src),
                   addrconv.ipv6.bin_to_text(dst))
-        return msg, ipv6.get_packet_type(nxt), buf[cls._MIN_LEN:payload_length]
+        return msg, ipv6.get_packet_type(nxt), buf[cls._MIN_LEN:cls._MIN_LEN+payload_length]
 
     def serialize(self, payload, prev):
         hdr = bytearray(40)
