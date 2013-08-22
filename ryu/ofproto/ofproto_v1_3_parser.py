@@ -2015,7 +2015,7 @@ class OFPAction(OFPActionHeader):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_OUTPUT,
                                 ofproto_v1_3.OFP_ACTION_OUTPUT_SIZE)
 class OFPActionOutput(OFPAction):
-    def __init__(self, port, max_len):
+    def __init__(self, port, max_len=0):
         super(OFPActionOutput, self).__init__()
         self.port = port
         self.max_len = max_len
