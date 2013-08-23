@@ -48,7 +48,9 @@ Testing TLS Connection
 Configuring ovs-vswitchd to use CA files using the ovs-vsctl "set-ssl"
 command, e.g.::
 
-    % ovs-vsctl set-ssl /etc/openvswitch/sc-privkey.pem /etc/openvswitch/sc-cert.pem /usr/local/var/lib/openvswitch/pki/controllerca/cacert.pem
+    % ovs-vsctl set-ssl /etc/openvswitch/sc-privkey.pem \
+      /etc/openvswitch/sc-cert.pem \
+      /usr/local/var/lib/openvswitch/pki/controllerca/cacert.pem
     % ovs-vsctl add-br br0
     % ovs-vsctl set-controller br0 ssl:127.0.0.1:6633
 
@@ -72,9 +74,13 @@ You can see something like::
       CONSUMES EventOFPErrorMsg
       CONSUMES EventOFPHello
       CONSUMES EventOFPEchoRequest
-    connected socket:<SSLSocket fileno=4 sock=127.0.0.1:6633 peer=127.0.0.1:61302> address:('127.0.0.1', 61302)
+    connected socket:<SSLSocket fileno=4 sock=127.0.0.1:6633 peer=127.0.0.1:61302> a
+    ddress:('127.0.0.1', 61302)
     hello ev <ryu.controller.ofp_event.EventOFPHello object at 0x1047806d0>
     move onto config mode
-    switch features ev version: 0x1 msg_type 0x6 xid 0xb0bb34e5 port OFPPhyPort(port_no=65534, hw_addr='\x16\xdc\xa2\xe2}K', name='br0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', config=0, state=0, curr=0, advertised=0, supported=0, peer=0)
+    switch features ev version: 0x1 msg_type 0x6 xid 0xb0bb34e5 port OFPPhyPort(port
+    _no=65534, hw_addr='\x16\xdc\xa2\xe2}K', name='br0\x00\x00\x00\x00\x00\x00\x00\x
+    00\x00\x00\x00\x00\x00', config=0, state=0, curr=0, advertised=0, supported=0, p
+    eer=0)
     move onto main mode
 
