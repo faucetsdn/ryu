@@ -1690,6 +1690,74 @@ class FlowWildcards(object):
 
 
 class OFPMatch(StringifyMixin):
+    """
+    Flow Match Structure
+
+    This class is implementation of the flow match structure having
+    compose/query API.
+    There are new API and old API for compatibility. the old API is
+    supposed to be removed later.
+
+    You can define the flow match by the keyword arguments.
+    The following arguments are available.
+
+    ================ =============== ==================================
+    Argument         Value           Description
+    ================ =============== ==================================
+    in_port          Integer 32bit   Switch input port
+    in_phy_port      Integer 32bit   Switch physical input port
+    metadata         Integer 64bit   Metadata passed between tables
+    eth_dst          MAC address     Ethernet destination address
+    eth_src          MAC address     Ethernet source address
+    eth_type         Integer 16bit   Ethernet frame type
+    vlan_vid         Integer 16bit   VLAN id
+    vlan_pcp         Integer 8bit    VLAN priority
+    ip_dscp          Integer 8bit    IP DSCP (6 bits in ToS field)
+    ip_ecn           Integer 8bit    IP ECN (2 bits in ToS field)
+    ip_proto         Integer 8bit    IP protocol
+    ipv4_src         IPv4 address    IPv4 source address
+    ipv4_dst         IPv4 address    IPv4 destination address
+    tcp_src          Integer 16bit   TCP source port
+    tcp_dst          Integer 16bit   TCP destination port
+    udp_src          Integer 16bit   UDP source port
+    udp_dst          Integer 16bit   UDP destination port
+    sctp_src         Integer 16bit   SCTP source port
+    sctp_dst         Integer 16bit   SCTP destination port
+    icmpv4_type      Integer 8bit    ICMP type
+    icmpv4_code      Integer 8bit    ICMP code
+    arp_op           Integer 16bit   ARP opcode
+    arp_spa          IPv4 address    ARP source IPv4 address
+    arp_tpa          IPv4 address    ARP target IPv4 address
+    arp_sha          MAC address     ARP source hardware address
+    arp_tha          MAC address     ARP target hardware address
+    ipv6_src         IPv6 address    IPv6 source address
+    ipv6_dst         IPv6 address    IPv6 destination address
+    ipv6_flabel      Integer 32bit   IPv6 Flow Label
+    icmpv6_type      Integer 8bit    ICMPv6 type
+    icmpv6_code      Integer 8bit    ICMPv6 code
+    ipv6_nd_target   IPv6 address    Target address for ND
+    ipv6_nd_sll      MAC address     Source link-layer for ND
+    ipv6_nd_tll      MAC address     Target link-layer for ND
+    mpls_label       Integer 32bit   MPLS label
+    mpls_tc          Integer 8bit    MPLS TC
+    ================ =============== ==================================
+
+    Example::
+
+        >>> # compose
+        >>> match = parser.OFPMatch(
+        ...     in_port=1,
+        ...     eth_type=0x86dd,
+        ...     ipv6_src=('2001:db8:bd05:1d2:288a:1fc0:1:10ee',
+        ...               'ffff:ffff:ffff:ffff::'),
+        ...     ipv6_dst='2001:db8:bd05:1d2:288a:1fc0:1:10ee')
+        >>> # query
+        >>> if 'ipv6_src' in match:
+        ...     print match['ipv6_src']
+        ...
+        ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
+    """
+
     def __init__(self, _ordered_fields=None, **kwargs):
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
@@ -1729,6 +1797,9 @@ class OFPMatch(StringifyMixin):
         yield "oxm_fields", dict(self._fields2)
 
     def to_jsondict(self):
+        """
+        Returns a dict expressing the flow match.
+        """
         # XXX old api compat
         if self._composed_with_old_api():
             # copy object first because serialize_old is destructive
@@ -1747,6 +1818,12 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def from_jsondict(cls, dict_):
+        """
+        Returns an object which is generated from a dict.
+
+        Exception raises:
+        KeyError -- Unknown match field is defined in dict
+        """
         fields = [ofproto_v1_2.oxm_from_jsondict(f) for f
                   in dict_['oxm_fields']]
         o = OFPMatch(_ordered_fields=fields)
@@ -1773,6 +1850,61 @@ class OFPMatch(StringifyMixin):
     __repr__ = __str__
 
     def append_field(self, header, value, mask=None):
+        """
+        Append a match field.
+
+        ========= =======================================================
+        Argument  Description
+        ========= =======================================================
+        header    match field header ID which is defined automatically in
+                  ``ofproto_v1_3``
+        value     match field value
+        mask      mask value to the match field
+        ========= =======================================================
+
+        The available ``header`` is as follows.
+
+        ====================== ===================================
+        Header ID              Description
+        ====================== ===================================
+        OXM_OF_IN_PORT         Switch input port
+        OXM_OF_IN_PHY_PORT     Switch physical input port
+        OXM_OF_METADATA        Metadata passed between tables
+        OXM_OF_ETH_DST         Ethernet destination address
+        OXM_OF_ETH_SRC         Ethernet source address
+        OXM_OF_ETH_TYPE        Ethernet frame type
+        OXM_OF_VLAN_VID        VLAN id
+        OXM_OF_VLAN_PCP        VLAN priority
+        OXM_OF_IP_DSCP         IP DSCP (6 bits in ToS field)
+        OXM_OF_IP_ECN          IP ECN (2 bits in ToS field)
+        OXM_OF_IP_PROTO        IP protocol
+        OXM_OF_IPV4_SRC        IPv4 source address
+        OXM_OF_IPV4_DST        IPv4 destination address
+        OXM_OF_TCP_SRC         TCP source port
+        OXM_OF_TCP_DST         TCP destination port
+        OXM_OF_UDP_SRC         UDP source port
+        OXM_OF_UDP_DST         UDP destination port
+        OXM_OF_SCTP_SRC        SCTP source port
+        OXM_OF_SCTP_DST        SCTP destination port
+        OXM_OF_ICMPV4_TYPE     ICMP type
+        OXM_OF_ICMPV4_CODE     ICMP code
+        OXM_OF_ARP_OP          ARP opcode
+        OXM_OF_ARP_SPA         ARP source IPv4 address
+        OXM_OF_ARP_TPA         ARP target IPv4 address
+        OXM_OF_ARP_SHA         ARP source hardware address
+        OXM_OF_ARP_THA         ARP target hardware address
+        OXM_OF_IPV6_SRC        IPv6 source address
+        OXM_OF_IPV6_DST        IPv6 destination address
+        OXM_OF_IPV6_FLABEL     IPv6 Flow Label
+        OXM_OF_ICMPV6_TYPE     ICMPv6 type
+        OXM_OF_ICMPV6_CODE     ICMPv6 code
+        OXM_OF_IPV6_ND_TARGET  Target address for ND
+        OXM_OF_IPV6_ND_SLL     Source link-layer for ND
+        OXM_OF_IPV6_ND_TLL     Target link-layer for ND
+        OXM_OF_MPLS_LABEL      MPLS label
+        OXM_OF_MPLS_TC         MPLS TC
+        ====================== ===================================
+        """
         self.fields.append(OFPMatchField.make(header, value, mask))
 
     def _composed_with_old_api(self):
@@ -1780,6 +1912,11 @@ class OFPMatch(StringifyMixin):
             self._wc.__dict__ != FlowWildcards().__dict__
 
     def serialize(self, buf, offset):
+        """
+        Outputs the expression of the wire protocol of the flow match into
+        the buf.
+        Returns the output length.
+        """
         # XXX compat
         if self._composed_with_old_api():
             return self.serialize_old(buf, offset)
@@ -2004,6 +2141,10 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def parser(cls, buf, offset):
+        """
+        Returns an object which is generated from a buffer including the
+        expression of the wire protocol of the flow match.
+        """
         match = OFPMatch()
         type_, length = struct.unpack_from('!HH', buf, offset)
 

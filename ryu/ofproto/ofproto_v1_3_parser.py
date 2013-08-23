@@ -357,7 +357,56 @@ class OFPMatch(StringifyMixin):
     There are new API and old API for compatibility. the old API is
     supposed to be removed later.
 
-    new API::
+    You can define the flow match by the keyword arguments.
+    The following arguments are available.
+
+    ================ =============== ==================================
+    Argument         Value           Description
+    ================ =============== ==================================
+    in_port          Integer 32bit   Switch input port
+    in_phy_port      Integer 32bit   Switch physical input port
+    metadata         Integer 64bit   Metadata passed between tables
+    eth_dst          MAC address     Ethernet destination address
+    eth_src          MAC address     Ethernet source address
+    eth_type         Integer 16bit   Ethernet frame type
+    vlan_vid         Integer 16bit   VLAN id
+    vlan_pcp         Integer 8bit    VLAN priority
+    ip_dscp          Integer 8bit    IP DSCP (6 bits in ToS field)
+    ip_ecn           Integer 8bit    IP ECN (2 bits in ToS field)
+    ip_proto         Integer 8bit    IP protocol
+    ipv4_src         IPv4 address    IPv4 source address
+    ipv4_dst         IPv4 address    IPv4 destination address
+    tcp_src          Integer 16bit   TCP source port
+    tcp_dst          Integer 16bit   TCP destination port
+    udp_src          Integer 16bit   UDP source port
+    udp_dst          Integer 16bit   UDP destination port
+    sctp_src         Integer 16bit   SCTP source port
+    sctp_dst         Integer 16bit   SCTP destination port
+    icmpv4_type      Integer 8bit    ICMP type
+    icmpv4_code      Integer 8bit    ICMP code
+    arp_op           Integer 16bit   ARP opcode
+    arp_spa          IPv4 address    ARP source IPv4 address
+    arp_tpa          IPv4 address    ARP target IPv4 address
+    arp_sha          MAC address     ARP source hardware address
+    arp_tha          MAC address     ARP target hardware address
+    ipv6_src         IPv6 address    IPv6 source address
+    ipv6_dst         IPv6 address    IPv6 destination address
+    ipv6_flabel      Integer 32bit   IPv6 Flow Label
+    icmpv6_type      Integer 8bit    ICMPv6 type
+    icmpv6_code      Integer 8bit    ICMPv6 code
+    ipv6_nd_target   IPv6 address    Target address for ND
+    ipv6_nd_sll      MAC address     Source link-layer for ND
+    ipv6_nd_tll      MAC address     Target link-layer for ND
+    mpls_label       Integer 32bit   MPLS label
+    mpls_tc          Integer 8bit    MPLS TC
+    mpls_bos         Integer 8bit    MPLS BoS bit
+    pbb_isid         Integer 24bit   PBB I-SID
+    tunnel_id        Integer 64bit   Logical Port Metadata
+    ipv6_exthdr      Integer 16bit   IPv6 Extension Header pseudo-field
+    ================ =============== ==================================
+
+    Example::
+
         >>> # compose
         >>> match = parser.OFPMatch(
         ...     in_port=1,
@@ -370,38 +419,9 @@ class OFPMatch(StringifyMixin):
         ...     print match['ipv6_src']
         ...
         ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
-        >>>
-
-    old API::
-        >>> # compose
-        >>> match = parser.OFPMatch()
-        >>> match.set_in_port(1)
-        >>> match.set_dl_type(0x86dd)
-        >>> ipv6 = '2001:db8:bd05:1d2:288a:1fc0:1:10ee'
-        >>> mask = 'ffff:ffff:ffff:ffff:0:0:0:0'
-        >>> ipv6 = [int(x, 16) for x in ipv6.split(':')]
-        >>> mask = [int(x, 16) for x in mask.split(':')]
-        >>> match.set_ipv6_src_masked(ipv6, mask)
-        >>> match.set_ipv6_dst(ipv6)
-        >>>
-        >>> # query
-        >>> buf = bytearray()
-        >>> match.serialize(buf, 0)
-        80
-        >>> for f in match.fields:
-        ...     if f.header == ofproto.OXM_OF_IPV6_SRC_W:
-        ...             print ['%x' % x for x in f.value]
-        ...
-        ['2001', 'db8', 'bd05', '1d2', '0', '0', '0', '0']
-        >>>
     """
 
     def __init__(self, _ordered_fields=None, **kwargs):
-        """
-        You can define the flow match by the keyword arguments.
-        Please refer to ofproto_v1_3.oxm_types for the key which you can
-        define.
-        """
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
         self._flow = Flow()
@@ -496,12 +516,61 @@ class OFPMatch(StringifyMixin):
         """
         Append a match field.
 
-        Arguments:
-        header -- match field header ID which is defined automatically in
-                  ofproto_v1_3. Formed by OXM_OF_ + upper case of the match
-                  field name.
-        value  -- match field value
-        mask   -- mask value to the match field
+        ========= =======================================================
+        Argument  Description
+        ========= =======================================================
+        header    match field header ID which is defined automatically in
+                  ``ofproto_v1_3``
+        value     match field value
+        mask      mask value to the match field
+        ========= =======================================================
+
+        The available ``header`` is as follows.
+
+        ====================== ===================================
+        Header ID              Description
+        ====================== ===================================
+        OXM_OF_IN_PORT         Switch input port
+        OXM_OF_IN_PHY_PORT     Switch physical input port
+        OXM_OF_METADATA        Metadata passed between tables
+        OXM_OF_ETH_DST         Ethernet destination address
+        OXM_OF_ETH_SRC         Ethernet source address
+        OXM_OF_ETH_TYPE        Ethernet frame type
+        OXM_OF_VLAN_VID        VLAN id
+        OXM_OF_VLAN_PCP        VLAN priority
+        OXM_OF_IP_DSCP         IP DSCP (6 bits in ToS field)
+        OXM_OF_IP_ECN          IP ECN (2 bits in ToS field)
+        OXM_OF_IP_PROTO        IP protocol
+        OXM_OF_IPV4_SRC        IPv4 source address
+        OXM_OF_IPV4_DST        IPv4 destination address
+        OXM_OF_TCP_SRC         TCP source port
+        OXM_OF_TCP_DST         TCP destination port
+        OXM_OF_UDP_SRC         UDP source port
+        OXM_OF_UDP_DST         UDP destination port
+        OXM_OF_SCTP_SRC        SCTP source port
+        OXM_OF_SCTP_DST        SCTP destination port
+        OXM_OF_ICMPV4_TYPE     ICMP type
+        OXM_OF_ICMPV4_CODE     ICMP code
+        OXM_OF_ARP_OP          ARP opcode
+        OXM_OF_ARP_SPA         ARP source IPv4 address
+        OXM_OF_ARP_TPA         ARP target IPv4 address
+        OXM_OF_ARP_SHA         ARP source hardware address
+        OXM_OF_ARP_THA         ARP target hardware address
+        OXM_OF_IPV6_SRC        IPv6 source address
+        OXM_OF_IPV6_DST        IPv6 destination address
+        OXM_OF_IPV6_FLABEL     IPv6 Flow Label
+        OXM_OF_ICMPV6_TYPE     ICMPv6 type
+        OXM_OF_ICMPV6_CODE     ICMPv6 code
+        OXM_OF_IPV6_ND_TARGET  Target address for ND
+        OXM_OF_IPV6_ND_SLL     Source link-layer for ND
+        OXM_OF_IPV6_ND_TLL     Target link-layer for ND
+        OXM_OF_MPLS_LABEL      MPLS label
+        OXM_OF_MPLS_TC         MPLS TC
+        OXM_OF_MPLS_BOS        MPLS BoS bit
+        OXM_OF_PBB_ISID        PBB I-SID
+        OXM_OF_TUNNEL_ID       Logical Port Metadata
+        OXM_OF_IPV6_EXTHDR     IPv6 Extension Header pseudo-field
+        ====================== ===================================
         """
         self.fields.append(OFPMatchField.make(header, value, mask))
 

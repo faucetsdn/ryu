@@ -2,8 +2,8 @@
 OpenFlow protocol API Reference
 *******************************
 
-OpenFlow 1.3 classes
-====================
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: ryu.ofproto.ofproto_v1_3_parser
-   :members:
+   ofproto_v1_2_ref.rst
+   ofproto_v1_3_ref.rst
