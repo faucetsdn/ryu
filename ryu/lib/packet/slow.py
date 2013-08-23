@@ -88,53 +88,57 @@ class lacp(packet_base.PacketBase):
     | Version Number                                 | 1      |
     +------------+-----------------------------------+--------+
     | TLV        | TLV_type = Actor Information      | 1      |
-    | Actor      +-----------------------------------+--------+
+    | Actor      |                                   |        |
+    +------------+-----------------------------------+--------+
     |            | Actor_Information_Length = 20     | 1      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Actor_System_Priority             | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Actor_System                      | 6      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Actor_Key                         | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Actor_Port_Priority               | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Actor_Port                        | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Actor_State                       | 1      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Reserved                          | 3      |
     +------------+-----------------------------------+--------+
     | TLV        | TLV_type = Partner Information    | 1      |
-    | Partner    +-----------------------------------+--------+
+    | Partner    |                                   |        |
+    +------------+-----------------------------------+--------+
     |            | Partner_Information_Length = 20   | 1      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Partner_System_Priority           | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Partner_System                    | 6      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Partner_Key                       | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Partner_Port_Priority             | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Partner_Port                      | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Partner_State                     | 1      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Reserved                          | 3      |
     +------------+-----------------------------------+--------+
     | TLV        | TLV_type = Collector Information  | 1      |
-    | Collector  +-----------------------------------+--------+
+    | Collector  |                                   |        |
+    +------------+-----------------------------------+--------+
     |            | Collector_Information_Length = 16 | 1      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Collector_Max_Delay               | 2      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Reserved                          | 12     |
     +------------+-----------------------------------+--------+
     | TLV        | TLV_type = Terminator             | 1      |
-    | Terminator +-----------------------------------+--------+
+    | Terminator |                                   |        |
+    +------------+-----------------------------------+--------+
     |            | Terminator_Length = 0             | 1      |
-    |            +-----------------------------------+--------+
+    +------------+-----------------------------------+--------+
     |            | Reserved                          | 50     |
     +------------+-----------------------------------+--------+
 
@@ -187,6 +191,8 @@ class lacp(packet_base.PacketBase):
     order.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     =============================== ====================================
     Attribute                       Description
     =============================== ====================================
@@ -209,60 +215,74 @@ class lacp(packet_base.PacketBase):
 
     actor_state_activity            .. _lacp_activity:
 
-                                    | about the activity control value
-                                      with regard to this link.
-                                    | LACP_STATE_ACTIVE(1)
-                                    | LACP_STATE_PASSIVE(0)
+                                    about the activity control value
+                                    with regard to this link.
+
+                                    LACP_STATE_ACTIVE(1)
+
+                                    LACP_STATE_PASSIVE(0)
 
     actor_state_timeout             .. _lacp_timeout:
 
-                                    | about the timeout control value
-                                      with regard to this link.
-                                    | LACP_STATE_SHORT_TIMEOUT(1)
-                                    | LACP_STATE_LONG_TIMEOUT(0)
+                                    about the timeout control value
+                                    with regard to this link.
+
+                                    LACP_STATE_SHORT_TIMEOUT(1)
+
+                                    LACP_STATE_LONG_TIMEOUT(0)
 
     actor_state_aggregation         .. _lacp_aggregation:
 
-                                    | about how the system regards this
-                                      link from the point of view of the
-                                      aggregation.
-                                    | LACP_STATE_AGGREGATEABLE(1)
-                                    | LACP_STATE_INDIVIDUAL(0)
+                                    about how the system regards this
+                                    link from the point of view of the
+                                    aggregation.
+
+                                    LACP_STATE_AGGREGATEABLE(1)
+
+                                    LACP_STATE_INDIVIDUAL(0)
 
     actor_state_synchronization     .. _lacp_synchronization:
 
-                                    | about how the system regards this
-                                      link from the point of view of the
-                                      synchronization.
-                                    | LACP_STATE_IN_SYNC(1)
-                                    | LACP_STATE_OUT_OF_SYNC(0)
+                                    about how the system regards this
+                                    link from the point of view of the
+                                    synchronization.
+
+                                    LACP_STATE_IN_SYNC(1)
+
+                                    LACP_STATE_OUT_OF_SYNC(0)
 
     actor_state_collecting          .. _lacp_collecting:
 
-                                    | about collecting of incoming
-                                      frames.
-                                    | LACP_STATE_COLLECTING_ENABLED(1)
-                                    | LACP_STATE_COLLECTING_DISABLED(0)
+                                    about collecting of incoming frames.
+
+                                    LACP_STATE_COLLECTING_ENABLED(1)
+
+                                    LACP_STATE_COLLECTING_DISABLED(0)
 
     actor_state_distributing        .. _lacp_distributing:
 
-                                    | about distributing of outgoing
-                                      frames.
-                                    | LACP_STATE_DISTRIBUTING_ENABLED(1)
-                                    | LACP_STATE_DISTRIBUTING_DISABLED(0)
+                                    about distributing of outgoing frames.
+
+                                    LACP_STATE_DISTRIBUTING_ENABLED(1)
+
+                                    LACP_STATE_DISTRIBUTING_DISABLED(0)
 
     actor_state_defaulted           .. _lacp_defaulted:
 
-                                    | about the Partner information
-                                      which the the Actor use.
-                                    | LACP_STATE_DEFAULTED_PARTNER(1)
-                                    | LACP_STATE_OPERATIONAL_PARTNER(0)
+                                    about the Partner information
+                                    which the the Actor use.
+
+                                    LACP_STATE_DEFAULTED_PARTNER(1)
+
+                                    LACP_STATE_OPERATIONAL_PARTNER(0)
 
     actor_state_expired             .. _lacp_expired:
 
-                                    | about the state of the Actor.
-                                    | LACP_STATE_EXPIRED(1)
-                                    | LACP_STATE_NOT_EXPIRED(0)
+                                    about the state of the Actor.
+
+                                    LACP_STATE_EXPIRED(1)
+
+                                    LACP_STATE_NOT_EXPIRED(0)
 
     partner_system_priority         The priority assigned to the
                                     Partner System.

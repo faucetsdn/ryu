@@ -98,6 +98,8 @@ class dhcp(packet_base.PacketBase):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     ============== ====================
     Attribute      Description
     ============== ====================
@@ -200,6 +202,8 @@ class options(stringify.StringifyMixin):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
+
+    .. tabularcolumns:: |l|L|
 
     ============== ====================
     Attribute      Description

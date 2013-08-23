@@ -104,6 +104,8 @@ class llc(packet_base.PacketBase):
     order.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     =============== ===============================================
     Attribute       Description
     =============== ===============================================

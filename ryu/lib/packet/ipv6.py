@@ -36,6 +36,8 @@ class ipv6(packet_base.PacketBase):
     IPv6 addresses are represented as a string like 'ff02::1'.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|p{30em}|l|
+
     ============== ======================================== ==================
     Attribute      Description                              Example
     ============== ======================================== ==================

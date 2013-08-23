@@ -40,6 +40,8 @@ class icmp(packet_base.PacketBase):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     ============== ====================
     Attribute      Description
     ============== ====================
@@ -125,6 +127,8 @@ class echo(stringify.StringifyMixin):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     ============== ====================
     Attribute      Description
     ============== ====================
@@ -178,15 +182,19 @@ class dest_unreach(stringify.StringifyMixin):
     [RFC1191] reserves bits for the "Next-Hop MTU" field.
     [RFC4884] introduced 8-bit data length attribute.
 
-    ============== ====================
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== =====================================================
     Attribute      Description
-    ============== ====================
+    ============== =====================================================
     data_len       data length
-    mtu            Next-Hop MTU \
-                   NOTE: This field is required when icmp code is 4 \
-                    code 4 = fragmentation needed and DF set
+    mtu            Next-Hop MTU
+
+                   NOTE: This field is required when icmp code is 4
+
+                   code 4 = fragmentation needed and DF set
     data           Internet Header + leading octets of original datagram
-    ============== ====================
+    ============== =====================================================
     """
 
     _PACK_STR = '!xBH'
@@ -232,6 +240,8 @@ class TimeExceeded(stringify.StringifyMixin):
     __init__ takes the correspondig args in this order.
 
     [RFC4884] introduced 8-bit data length attribute.
+
+    .. tabularcolumns:: |l|L|
 
     ============== ====================
     Attribute      Description

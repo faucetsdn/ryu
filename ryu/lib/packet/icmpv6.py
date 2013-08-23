@@ -64,14 +64,17 @@ class icmpv6(packet_base.PacketBase):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
+    .. tabularcolumns:: |l|p{35em}|
+
     ============== ====================
     Attribute      Description
     ============== ====================
     type\_         Type
     code           Code
-    csum           CheckSum \
+    csum           CheckSum
                    (0 means automatically-calculate when encoding)
-    data           Payload. \
+    data           Payload.
+
                    ryu.lib.packet.icmpv6.echo object, or \
                    ryu.lib.packet.icmpv6.nd_neighbor object, or a bytearray.
     ============== ====================
@@ -135,6 +138,8 @@ class nd_neighbor(stringify.StringifyMixin):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
 
     ============== ====================
     Attribute      Description
@@ -220,6 +225,8 @@ class nd_option_la(stringify.StringifyMixin):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
 
     ============== ====================
     Attribute      Description
