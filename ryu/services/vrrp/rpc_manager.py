@@ -14,6 +14,7 @@ from ryu.lib import mac
 
 
 VRRP_RPC_PORT = 50004
+CONF_KEY_ADMIN_STATE = "admin_state"
 CONF_KEY_PRIORITY = "priority"
 CONF_KEY_ADVERTISEMENT_INTERVAL = "advertisement_interval"
 CONF_KEY_PORT_IFNAME = "ifname"
@@ -104,11 +105,12 @@ class RpcVRRPManager(app_manager.RyuApp):
 
         config = vrrp_event.VRRPConfig(
             version=vrrp_params[0], vrid=vrrp_params[1],
+            admin_state=port[CONF_KEY_ADMIN_STATE],
             priority=port["priority"], 
             ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value],
-            advertisement_interval=port[CONF_KEY_ADVERTISEMENT_INTERVAL]
-            #preempt_mode=port[CONF_KEY_PORT_PREEMPT_MODE],
-            #preempt_delay=port[CONF_KEY_PORT_PREEMPT_DELAY]
+            advertisement_interval=port[CONF_KEY_ADVERTISEMENT_INTERVAL],
+            preempt_mode=port[CONF_KEY_PORT_PREEMPT_MODE],
+            preempt_delay=port[CONF_KEY_PORT_PREEMPT_DELAY]
             )
         config_result = vrrp_api.vrrp_config(self, interface, config)
 
