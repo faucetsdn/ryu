@@ -983,10 +983,23 @@ class NXActionFinTimeout(NXActionHeader):
 
 class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
         'mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
+
+    _TYPE = {
+        'ascii': [
+            'mfr_desc',
+            'hw_desc',
+            'sw_desc',
+            'serial_num',
+            'dp_desc',
+        ]
+    }
+
     @classmethod
     def parser(cls, buf, offset):
         desc = struct.unpack_from(ofproto_v1_0.OFP_DESC_STATS_PACK_STR,
                                   buf, offset)
+        desc = list(desc)
+        desc = map(lambda x: x.rstrip('\0'), desc)
         stats = cls(*desc)
         stats.length = ofproto_v1_0.OFP_DESC_STATS_SIZE
         return stats
