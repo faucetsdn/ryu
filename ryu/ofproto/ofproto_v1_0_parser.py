@@ -86,6 +86,10 @@ class OFPPhyPort(ofproto_parser.namedtuple('OFPPhyPort', (
     _TYPE = {
         'ascii': [
             'hw_addr',
+
+            # XXX OF spec is unclear about the encoding of name.
+            # OVS seems to use UTF-8.
+            # 'name',
         ]
     }
 
@@ -93,9 +97,11 @@ class OFPPhyPort(ofproto_parser.namedtuple('OFPPhyPort', (
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_0.OFP_PHY_PORT_PACK_STR,
                                   buf, offset)
-        i = cls._fields.index('hw_addr')
         port = list(port)
+        i = cls._fields.index('hw_addr')
         port[i] = addrconv.mac.bin_to_text(port[i])
+        i = cls._fields.index('name')
+        port[i] = port[i].rstrip('\0')
         return cls(*port)
 
 
