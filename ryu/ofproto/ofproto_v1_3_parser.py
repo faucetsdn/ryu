@@ -2567,10 +2567,23 @@ class OFPMultipartReply(MsgBase):
 
 class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
         'mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
+
+    _TYPE = {
+        'ascii': [
+            'mfr_desc',
+            'hw_desc',
+            'sw_desc',
+            'serial_num',
+            'dp_desc',
+        ]
+    }
+
     @classmethod
     def parser(cls, buf, offset):
         desc = struct.unpack_from(ofproto_v1_3.OFP_DESC_PACK_STR,
                                   buf, offset)
+        desc = list(desc)
+        desc = map(lambda x: x.rstrip('\0'), desc)
         stats = cls(*desc)
         stats._length = ofproto_v1_3.OFP_DESC_SIZE
         return stats
