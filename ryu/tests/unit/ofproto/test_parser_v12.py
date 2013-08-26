@@ -4985,7 +4985,6 @@ class TestOFPTableStats(unittest.TestCase):
 
         eq_(table_id, res.table_id)
         eq_(name, res.name.replace('\x00', ''))
-        eq_(ofproto_v1_2.OFP_MAX_TABLE_NAME_LEN, len(res.name))
         eq_(match, res.match)
         eq_(wildcards, res.wildcards)
         eq_(write_actions, res.write_actions)
