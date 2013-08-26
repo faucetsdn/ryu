@@ -70,7 +70,7 @@ x() ->
             ports = 
                 [#ofp_phy_port{
                      port_no = 7,hw_addr = <<"\362\v\244\320?p">>,
-                     name = <<80,111,114,116,7>>,
+                     name = <<"Port7">>,
                      config = [],
                      state = [stp_block],
                      curr = [autoneg,copper,'100mb_fd'],
@@ -79,7 +79,7 @@ x() ->
                      peer = [autoneg,copper,'100mb_fd']},
                  #ofp_phy_port{
                      port_no = 6,hw_addr = <<"\362\v\244}\370\352">>,
-                     name = <<80,111,114,116,6>>,
+                     name = <<"Port6">>,
                      config = [],
                      state = [stp_listen],
                      curr = [autoneg,copper,'100mb_fd'],
