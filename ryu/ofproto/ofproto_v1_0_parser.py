@@ -83,6 +83,12 @@ class OFPPhyPort(ofproto_parser.namedtuple('OFPPhyPort', (
         'port_no', 'hw_addr', 'name', 'config', 'state', 'curr', 'advertised',
         'supported', 'peer'))):
 
+    _TYPE = {
+        'ascii': [
+            'hw_addr',
+        ]
+    }
+
     @classmethod
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_0.OFP_PHY_PORT_PACK_STR,
@@ -2102,6 +2108,13 @@ class OFPFlowMod(MsgBase):
 
 @_set_msg_type(ofproto_v1_0.OFPT_PORT_MOD)
 class OFPPortMod(MsgBase):
+
+    _TYPE = {
+        'ascii': [
+            'hw_addr',
+        ]
+    }
+
     def __init__(self, datapath, port_no, hw_addr, config, mask, advertise):
         super(OFPPortMod, self).__init__(datapath)
         self.port_no = port_no
