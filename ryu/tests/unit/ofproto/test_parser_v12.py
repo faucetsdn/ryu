@@ -26,6 +26,7 @@ from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ether
 from ryu.ofproto.ofproto_parser import MsgBase
 from ryu import utils
+from ryu.lib import addrconv
 
 LOG = logging.getLogger('test_ofproto_v12')
 
@@ -1499,7 +1500,7 @@ class TestOFPPort(unittest.TestCase):
         #                          name, config, state, curr, advertised,
         #                          peer, curr_speed, max_speed
         port_no = 1119692796
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         name = 'name'.ljust(16)
         config = 2226555987
         state = 1678244809
@@ -1533,7 +1534,8 @@ class TestOFPPort(unittest.TestCase):
                      supported, peer, curr_speed, max_speed):
         name = 'name'.ljust(16)
         fmt = ofproto_v1_2.OFP_PORT_PACK_STR
-        buf = pack(fmt, port_no, hw_addr, name, config, state, curr,
+        buf = pack(fmt, port_no, addrconv.mac.text_to_bin(hw_addr), name,
+                   config, state, curr,
                    advertised, supported, peer, curr_speed, max_speed)
 
         res = OFPPort.parser(buf, 0)
@@ -1552,7 +1554,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_mid(self):
         port_no = 1119692796
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = 2226555987
         state = 1678244809
         curr = 2850556459
@@ -1566,7 +1568,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_max(self):
         port_no = ofproto_v1_2.OFPP_ANY
-        hw_addr = '\xff' * 6
+        hw_addr = 'ff:ff:ff:ff:ff:ff'
         config = 4294967295
         state = 4294967295
         curr = 4294967295
@@ -1580,7 +1582,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_min(self):
         port_no = 0
-        hw_addr = '\x00' * 6
+        hw_addr = '00:00:00:00:00:00'
         config = 0
         state = 0
         curr = 0
@@ -1594,7 +1596,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p1(self):
         port_no = ofproto_v1_2.OFPP_MAX
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_PORT_DOWN
         state = ofproto_v1_2.OFPPS_LINK_DOWN
         curr = advertised = supported \
@@ -1605,7 +1607,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p2(self):
         port_no = ofproto_v1_2.OFPP_IN_PORT
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_RECV
         state = ofproto_v1_2.OFPPS_BLOCKED
         curr = advertised = supported \
@@ -1616,7 +1618,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p3(self):
         port_no = ofproto_v1_2.OFPP_TABLE
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_FWD
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1627,7 +1629,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p4(self):
         port_no = ofproto_v1_2.OFPP_NORMAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1638,7 +1640,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p5(self):
         port_no = ofproto_v1_2.OFPP_FLOOD
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1649,7 +1651,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p6(self):
         port_no = ofproto_v1_2.OFPP_ALL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1660,7 +1662,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p7(self):
         port_no = ofproto_v1_2.OFPP_CONTROLLER
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1671,7 +1673,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p8(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1682,7 +1684,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p9(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1693,7 +1695,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p10(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1704,7 +1706,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p11(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1715,7 +1717,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p12(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1726,7 +1728,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p13(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1737,7 +1739,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p14(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1748,7 +1750,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p15(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -1759,7 +1761,7 @@ class TestOFPPort(unittest.TestCase):
 
     def test_parser_p16(self):
         port_no = ofproto_v1_2.OFPP_LOCAL
-        hw_addr = '\xc0\x26\x53\xc4\x29\xe2'
+        hw_addr = 'c0:26:53:c4:29:e2'
         config = ofproto_v1_2.OFPPC_NO_PACKET_IN
         state = ofproto_v1_2.OFPPS_LIVE
         curr = advertised = supported \
@@ -2344,12 +2346,12 @@ class TestOFPPortStatus(unittest.TestCase):
         # '!I4x6s2x16sIIIIIIII'... port_no, pad(4), hw_addr, pad(2),
         #                          name, config, state, curr, advertised,
         #                          peer, curr_speed, max_speed
-        hw_addr = '\x80\xff\x9a\xe3\x72\x85'
+        hw_addr = '80:ff:9a:e3:72:85'
         name = 'name'.ljust(16)
 
         fmt = ofproto_v1_2.OFP_PORT_STATUS_PACK_STR
-        buf += pack(fmt, reason, port_no, hw_addr, name,
-                    config, state, curr, advertised,
+        buf += pack(fmt, reason, port_no, addrconv.mac.text_to_bin(hw_addr),
+                    name, config, state, curr, advertised,
                     supported, peer, curr_speed, max_speed)
 
         res = OFPPortStatus.parser(object, version, msg_type, msg_len,
@@ -4045,7 +4047,7 @@ class TestOFPPortMod(unittest.TestCase):
     # '!I4xs2xIII4x'...port_no, pad(4), hw_addr, pad(2),
     #                  config, mask, advertise, pad(4)
     port_no = 1119692796
-    hw_addr = '\xe8\xfe\x5e\xa9\x68\x6c'
+    hw_addr = 'e8:fe:5e:a9:68:6c'
     config = 2226555987
     mask = 1678244809
     advertise = 2025421682
@@ -4079,7 +4081,7 @@ class TestOFPPortMod(unittest.TestCase):
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], port_no)
-        eq_(res[5], hw_addr)
+        eq_(res[5], addrconv.mac.text_to_bin(hw_addr))
         eq_(res[6], config)
         eq_(res[7], mask)
         eq_(res[8], advertise)
@@ -4090,7 +4092,7 @@ class TestOFPPortMod(unittest.TestCase):
 
     def test_serialize_max(self):
         port_no = ofproto_v1_2.OFPP_ANY
-        hw_addr = '\xff' * 6
+        hw_addr = 'ff:ff:ff:ff:ff:ff'
         config = 0xffffffff
         mask = 0xffffffff
         advertise = 0xffffffff
@@ -4098,7 +4100,7 @@ class TestOFPPortMod(unittest.TestCase):
 
     def test_serialize_min(self):
         port_no = 0
-        hw_addr = '\x00' * 6
+        hw_addr = '00:00:00:00:00:00'
         config = 0
         mask = 0
         advertise = 0
