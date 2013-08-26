@@ -1237,7 +1237,7 @@ class Port(object):
     def __init__(self, port_no, hw_addr):
         super(Port, self).__init__()
         self.port_no = port_no
-        self.mac = addrconv.mac.bin_to_text(hw_addr)
+        self.mac = hw_addr
 
 
 class AddressData(dict):
