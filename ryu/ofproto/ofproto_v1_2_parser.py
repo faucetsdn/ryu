@@ -173,6 +173,12 @@ class OFPPort(ofproto_parser.namedtuple('OFPPort', (
         'port_no', 'hw_addr', 'name', 'config', 'state', 'curr',
         'advertised', 'supported', 'peer', 'curr_speed', 'max_speed'))):
 
+    _TYPE = {
+        'ascii': [
+            'hw_addr',
+        ]
+    }
+
     @classmethod
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_2.OFP_PORT_PACK_STR, buf, offset)
@@ -990,6 +996,13 @@ class OFPGroupMod(MsgBase):
 
 @_set_msg_type(ofproto_v1_2.OFPT_PORT_MOD)
 class OFPPortMod(MsgBase):
+
+    _TYPE = {
+        'ascii': [
+            'hw_addr',
+        ]
+    }
+
     def __init__(self, datapath, port_no, hw_addr, config, mask, advertise):
         super(OFPPortMod, self).__init__(datapath)
         self.port_no = port_no
