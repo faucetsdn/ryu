@@ -227,7 +227,7 @@ def from_jsondict(j):
     tlv = j['OXMTlv']
     field = tlv['field']
     value = tlv['value']
-    mask = tlv['mask']
+    mask = tlv.get('mask')
     if mask is None:
         uv = value
     else:
