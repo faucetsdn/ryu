@@ -43,6 +43,26 @@ _RESERVED_KEYWORD = dir(__builtin__)
 
 _mapdict = lambda f, d: dict([(k, f(v)) for k, v in d.items()])
 _mapdict_key = lambda f, d: dict([(f(k), v) for k, v in d.items()])
+_mapdict_kv = lambda f, d: dict([(k, f(k, v)) for k, v in d.items()])
+
+
+class TypeDescr(object):
+    pass
+
+
+class AsciiStringType(TypeDescr):
+    @staticmethod
+    def encode(v):
+        return unicode(v, 'ascii')
+
+    @staticmethod
+    def decode(v):
+        return v.encode('ascii')
+
+
+_types = {
+    'ascii': AsciiStringType,
+}
 
 
 class StringifyMixin(object):
@@ -78,32 +98,52 @@ class StringifyMixin(object):
         return False
 
     @classmethod
-    def _encode_value(cls, v, encode_string=base64.b64encode):
-        encode = lambda x: cls._encode_value(x, encode_string)
-        if isinstance(v, (bytes, unicode)):
-            json_value = encode_string(v)
-        elif isinstance(v, list):
-            json_value = map(encode, v)
-        elif isinstance(v, dict):
-            json_value = _mapdict(encode, v)
-            # while a python dict key can be any hashable object,
-            # a JSON object key should be a string.
-            json_value = _mapdict_key(str, json_value)
-            assert not cls._is_class(json_value)
-        else:
-            try:
-                json_value = v.to_jsondict()
-            except:
-                json_value = v
-        return json_value
+    def _get_type(cls, k):
+        if hasattr(cls, '_TYPE'):
+            for t, attrs in cls._TYPE.iteritems():
+                if k in attrs:
+                    return _types[t]
+        return None
+
+    @classmethod
+    def _get_encoder(cls, k, encode_string):
+        t = cls._get_type(k)
+        if t:
+            return t.encode
+        return cls._get_default_encoder(encode_string)
+
+    @classmethod
+    def _encode_value(cls, k, v, encode_string=base64.b64encode):
+        return cls._get_encoder(k, encode_string)(v)
+
+    @classmethod
+    def _get_default_encoder(cls, encode_string):
+        def _encode(v):
+            if isinstance(v, (bytes, unicode)):
+                json_value = encode_string(v)
+            elif isinstance(v, list):
+                json_value = map(_encode, v)
+            elif isinstance(v, dict):
+                json_value = _mapdict(_encode, v)
+                # while a python dict key can be any hashable object,
+                # a JSON object key should be a string.
+                json_value = _mapdict_key(str, json_value)
+                assert not cls._is_class(json_value)
+            else:
+                try:
+                    json_value = v.to_jsondict()
+                except:
+                    json_value = v
+            return json_value
+        return _encode
 
     def to_jsondict(self, encode_string=base64.b64encode):
         """returns an object to feed json.dumps()
         """
         dict_ = {}
-        encode = lambda x: self._encode_value(x, encode_string)
+        encode = lambda k, x: self._encode_value(k, x, encode_string)
         for k, v in obj_attrs(self):
-            dict_[k] = encode(v)
+            dict_[k] = encode(k, v)
         return {self.__class__.__name__: dict_}
 
     @classmethod
@@ -121,26 +161,39 @@ class StringifyMixin(object):
             return obj_cls.from_jsondict(v)
 
     @classmethod
-    def _decode_value(cls, json_value, decode_string=base64.b64decode):
-        decode = lambda x: cls._decode_value(x, decode_string)
-        if isinstance(json_value, (bytes, unicode)):
-            v = decode_string(json_value)
-        elif isinstance(json_value, list):
-            v = map(decode, json_value)
-        elif isinstance(json_value, dict):
-            if cls._is_class(json_value):
-                v = cls.obj_from_jsondict(json_value)
+    def _get_decoder(cls, k, decode_string):
+        t = cls._get_type(k)
+        if t:
+            return t.decode
+        return cls._get_default_decoder(decode_string)
+
+    @classmethod
+    def _decode_value(cls, k, json_value, decode_string=base64.b64decode):
+        return cls._get_decoder(k, decode_string)(json_value)
+
+    @classmethod
+    def _get_default_decoder(cls, decode_string):
+        def _decode(json_value):
+            if isinstance(json_value, (bytes, unicode)):
+                v = decode_string(json_value)
+            elif isinstance(json_value, list):
+                v = map(_decode, json_value)
+            elif isinstance(json_value, dict):
+                if cls._is_class(json_value):
+                    v = cls.obj_from_jsondict(json_value)
+                else:
+                    v = _mapdict(_decode, json_value)
+                    # XXXhack
+                    # try to restore integer keys used by
+                    # OFPSwitchFeatures.ports.
+                    try:
+                        v = _mapdict_key(int, v)
+                    except ValueError:
+                        pass
             else:
-                v = _mapdict(decode, json_value)
-                # XXXhack
-                # try to restore integer keys used by OFPSwitchFeatures.ports.
-                try:
-                    v = _mapdict_key(int, v)
-                except ValueError:
-                    pass
-        else:
-            v = json_value
-        return v
+                v = json_value
+            return v
+        return _decode
 
     @staticmethod
     def _restore_args(dict_):
@@ -155,8 +208,8 @@ class StringifyMixin(object):
                       **additional_args):
         """create an instance from a result of json.loads()
         """
-        decode = lambda x: cls._decode_value(x, decode_string)
-        kwargs = cls._restore_args(_mapdict(decode, dict_))
+        decode = lambda k, x: cls._decode_value(k, x, decode_string)
+        kwargs = cls._restore_args(_mapdict_kv(decode, dict_))
         try:
             return cls(**dict(kwargs, **additional_args))
         except TypeError:
