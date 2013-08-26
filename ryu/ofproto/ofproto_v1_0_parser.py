@@ -1079,6 +1079,9 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
     def parser(cls, buf, offset):
         tbl = struct.unpack_from(ofproto_v1_0.OFP_TABLE_STATS_PACK_STR,
                                  buf, offset)
+        tbl = list(tbl)
+        i = cls._fields.index('name')
+        tbl[i] = tbl[i].rstrip('\0')
         stats = cls(*tbl)
         stats.length = ofproto_v1_0.OFP_TABLE_STATS_SIZE
         return stats
