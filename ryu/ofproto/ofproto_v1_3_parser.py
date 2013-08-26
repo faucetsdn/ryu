@@ -3205,11 +3205,12 @@ class OFPTableFeaturesStats(StringifyMixin):
     def parser(cls, buf, offset):
         table_features = cls()
         (table_features._length, table_features.table_id,
-         table_features.name, table_features.metadata_match,
+         name, table_features.metadata_match,
          table_features.metadata_write, table_features.config,
          table_features.max_entries
          ) = struct.unpack_from(ofproto_v1_3.OFP_TABLE_FEATURES_PACK_STR,
                                 buf, offset)
+        table_features.name = name.rstrip('\0')
         offset += ofproto_v1_3.OFP_TABLE_FEATURES_SIZE
 
         # TODO: parse ofp_table_feature_prop_header
