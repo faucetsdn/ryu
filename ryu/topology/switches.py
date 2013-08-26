@@ -26,7 +26,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.exception import RyuException
 from ryu.lib import hub
-from ryu.lib.mac import DONTCARE_STR, haddr_to_str
+from ryu.lib.mac import DONTCARE_STR
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
 from ryu.lib.port_no import port_no_to_str
 from ryu.lib.packet import packet, ethernet, lldp
@@ -82,7 +82,7 @@ class Port(object):
     def to_dict(self):
         return {'dpid': dpid_to_str(self.dpid),
                 'port_no': port_no_to_str(self.port_no),
-                'hw_addr': haddr_to_str(self.hw_addr),
+                'hw_addr': self.hw_addr,
                 'name': self.name.rstrip('\0')}
 
     # for Switch.del_port()
