@@ -18,6 +18,7 @@ import struct
 import binascii
 
 from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
+from ryu.lib import addrconv
 from ryu.lib import mac
 from . import ofproto_parser
 from . import ofproto_v1_0
@@ -86,6 +87,9 @@ class OFPPhyPort(ofproto_parser.namedtuple('OFPPhyPort', (
     def parser(cls, buf, offset):
         port = struct.unpack_from(ofproto_v1_0.OFP_PHY_PORT_PACK_STR,
                                   buf, offset)
+        i = cls._fields.index('hw_addr')
+        port = list(port)
+        port[i] = addrconv.mac.bin_to_text(port[i])
         return cls(*port)
 
 
@@ -2109,7 +2113,7 @@ class OFPPortMod(MsgBase):
     def _serialize_body(self):
         msg_pack_into(ofproto_v1_0.OFP_PORT_MOD_PACK_STR,
                       self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
-                      self.port_no, self.hw_addr,
+                      self.port_no, addrconv.mac.text_to_bin(self.hw_addr),
                       self.config, self.mask, self.advertise)
 
 
