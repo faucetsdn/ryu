@@ -20,6 +20,7 @@ import logging
 from nose.tools import *
 from ryu.ofproto.ofproto_v1_0_parser import *
 from ryu.ofproto import ofproto_v1_0_parser
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_ofproto_v10')
@@ -33,7 +34,7 @@ class TestOFPPhyPort(unittest.TestCase):
     # '!H6s16sIIIIII'... port_no, hw_addr, name, config, state
     #                    curr, advertised, supported, peer
     port_no = {'buf': '\xe7\x6b', 'val': 59243}
-    hw_addr = '\x52\x54\x54\x10\x20\x99'
+    hw_addr = '52:54:54:10:20:99'
     name = 'name'.ljust(16)
     config = {'buf': '\x84\xb6\x8c\x53', 'val': 2226555987}
     state = {'buf': '\x64\x07\xfb\xc9', 'val': 1678244809}
@@ -43,7 +44,7 @@ class TestOFPPhyPort(unittest.TestCase):
     peer = {'buf': '\xa4\x5b\x8b\xed', 'val': 2757463021}
 
     buf = port_no['buf'] \
-        + hw_addr \
+        + addrconv.mac.text_to_bin(hw_addr) \
         + name \
         + config['buf'] \
         + state['buf'] \
@@ -3384,7 +3385,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         # '!H6s16sIIIIII'... port_no, hw_addr, name, config, state
         #                    curr, advertised, supported, peer
         port_no = {'buf': '\xe7\x6b', 'val': 59243}
-        hw_addr = '\x3c\xd1\x2b\x8d\x3f\xd6'
+        hw_addr = '3c:d1:2b:8d:3f:d6'
         name = 'name'.ljust(16)
         config = {'buf': '\x84\xb6\x8c\x53', 'val': 2226555987}
         state = {'buf': '\x64\x07\xfb\xc9', 'val': 1678244809}
@@ -3404,7 +3405,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
             + capabilities['buf'] \
             + actions['buf'] \
             + port_no['buf'] \
-            + hw_addr \
+            + addrconv.mac.text_to_bin(hw_addr) \
             + name \
             + config['buf'] \
             + state['buf'] \
@@ -3433,7 +3434,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         # port
         port = res.ports[port_no['val']]
         eq_(port_no['val'], port.port_no)
-        eq_(hw_addr, port.hw_addr)
+        eq_(hw_addr, hw_addr)
         eq_(name, port.name)
         eq_(config['val'], port.config)
         eq_(state['val'], port.state)
@@ -3480,7 +3481,7 @@ class TestOFPPortStatus(unittest.TestCase):
         reason = {'buf': '\x71', 'val': 113}
         zfill = '\x00' * 7
         port_no = {'buf': '\x48\xd8', 'val': 18648}
-        hw_addr = '\x41\xf7\xa3\x52\x8f\x6b'
+        hw_addr = '41:f7:a3:52:8f:6b'
         name = 'name'.ljust(16)
         config = {'buf': '\xae\x73\x90\xec', 'val': 2926809324}
         state = {'buf': '\x41\x37\x32\x1d', 'val': 1094136349}
@@ -3496,7 +3497,7 @@ class TestOFPPortStatus(unittest.TestCase):
             + reason['buf'] \
             + zfill \
             + port_no['buf'] \
-            + hw_addr \
+            + addrconv.mac.text_to_bin(hw_addr) \
             + name \
             + config['buf'] \
             + state['buf'] \
