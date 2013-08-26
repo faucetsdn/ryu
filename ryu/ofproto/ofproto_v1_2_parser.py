@@ -1287,6 +1287,9 @@ class OFPTableStats(
         table = struct.unpack_from(
             ofproto_v1_2.OFP_TABLE_STATS_PACK_STR,
             buf, offset)
+        table = list(table)
+        i = cls._fields.index('name')
+        table[i] = table[i].rstrip('\0')
         stats = cls(*table)
         stats._length = ofproto_v1_2.OFP_TABLE_STATS_SIZE
         return stats
