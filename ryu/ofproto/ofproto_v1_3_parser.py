@@ -1821,9 +1821,13 @@ class OFPPacketOut(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
-    def __init__(self, datapath, cookie, cookie_mask, table_id, command,
-                 idle_timeout, hard_timeout, priority, buffer_id, out_port,
-                 out_group, flags, match, instructions):
+    def __init__(self, datapath, cookie=0, cookie_mask=0, table_id=0,
+                 command=ofproto_v1_3.OFPFC_ADD,
+                 idle_timeout=0, hard_timeout=0, priority=0,
+                 buffer_id=ofproto_v1_3.OFP_NO_BUFFER,
+                 out_port=0, out_group=0, flags=0,
+                 match=None,
+                 instructions=[]):
         super(OFPFlowMod, self).__init__(datapath)
         self.cookie = cookie
         self.cookie_mask = cookie_mask
@@ -1836,6 +1840,8 @@ class OFPFlowMod(MsgBase):
         self.out_port = out_port
         self.out_group = out_group
         self.flags = flags
+        if match is None:
+            match = OFPMatch()
         self.match = match
         self.instructions = instructions
 
