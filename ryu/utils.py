@@ -39,15 +39,46 @@ import re
 LOG = logging.getLogger('ryu.utils')
 
 
+def chop_py_suffix(p):
+    for suf in ['.py', '.pyc', '.pyo']:
+        if p.endswith(suf):
+            return p[:-len(suf)]
+    return p
+
+
+def _likely_same(a, b):
+    if os.path.samefile(a, b):
+        return True
+    if chop_py_suffix(a) == chop_py_suffix(b):
+        return True
+    return False
+
+
+def _find_loaded_module(modpath):
+    # copy() to avoid RuntimeError: dictionary changed size during iteration
+    for k, m in sys.modules.copy().iteritems():
+        if not hasattr(m, '__file__'):
+            continue
+        if _likely_same(m.__file__, modpath):
+            return m
+    return None
+
+
 def import_module(modname):
     try:
         __import__(modname)
     except:
-        sys.path.append(os.path.dirname(os.path.abspath(modname)))
+        abspath = os.path.abspath(modname)
+        mod = _find_loaded_module(abspath)
+        if mod:
+            return mod
+        opath = sys.path
+        sys.path.append(os.path.dirname(abspath))
         name = os.path.basename(modname)
         if name.endswith('.py'):
             name = name[:-3]
         __import__(name)
+        sys.path = opath
         return sys.modules[name]
     return sys.modules[modname]
 
