@@ -128,18 +128,6 @@ class VRRPConfig(object):
         self.preempt_mode = preempt_mode
         self.preempt_delay = preempt_delay
         self.accept_mode = accept_mode
-        print "TEST...."
-        print version
-        print vrid
-        print admin_state
-        print priority
-        print ip_addresses
-        print advertisement_interval
-        print preempt_mode
-        print preempt_delay
-        print accept_mode
-
-
         self.is_ipv6 = vrrp.is_ipv6(ip_addresses[0])
 
     @property
