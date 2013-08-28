@@ -1831,6 +1831,8 @@ def ipv4_int_to_text(ip_int):
 
 
 def ipv4_text_to_int(ip_text):
+    if ip_text == 0:
+        return ip_text
     assert isinstance(ip_text, str)
     return struct.unpack('!I', addrconv.ipv4.text_to_bin(ip_text))[0]
 
