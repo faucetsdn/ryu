@@ -677,11 +677,19 @@ class OFPMatch(StringifyMixin):
         ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
     """
 
-    def __init__(self, _ordered_fields=None, **kwargs):
+    def __init__(self, type_=None, length=None, _ordered_fields=None,
+                 **kwargs):
+        """
+        You can define the flow match by the keyword arguments.
+        Please refer to ofproto_v1_3.oxm_types for the key which you can
+        define.
+        """
         super(OFPMatch, self).__init__()
         self._wc = FlowWildcards()
         self._flow = Flow()
         self.fields = []
+        self.type = ofproto_v1_3.OFPMT_OXM
+        self.length = length
 
         if not _ordered_fields is None:
             assert not kwargs
@@ -732,7 +740,9 @@ class OFPMatch(StringifyMixin):
             o = self
 
         body = {"oxm_fields": [ofproto_v1_3.oxm_to_jsondict(k, uv) for k, uv
-                               in o._fields2]}
+                               in o._fields2],
+                "length": o.length,
+                "type": o.type}
         return {self.__class__.__name__: body}
 
     @classmethod
@@ -856,6 +866,7 @@ class OFPMatch(StringifyMixin):
         length = field_offset - offset
         msg_pack_into(hdr_pack_str, buf, offset,
                       ofproto_v1_3.OFPMT_OXM, length)
+        self.length = length
 
         pad_len = utils.round_up(length, 8) - length
         ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
@@ -1100,7 +1111,7 @@ class OFPMatch(StringifyMixin):
         type_, length = struct.unpack_from('!HH', buf, offset)
 
         match.type = type_
-        match._length = length
+        match.length = length
 
         # ofp_match adjustment
         offset += 4
@@ -1990,7 +2001,7 @@ class OFPPacketIn(MsgBase):
         msg.match = OFPMatch.parser(msg.buf, ofproto_v1_3.OFP_PACKET_IN_SIZE -
                                     ofproto_v1_3.OFP_MATCH_SIZE)
 
-        match_len = utils.round_up(msg.match._length, 8)
+        match_len = utils.round_up(msg.match.length, 8)
         msg.data = msg.buf[(ofproto_v1_3.OFP_PACKET_IN_SIZE -
                             ofproto_v1_3.OFP_MATCH_SIZE + match_len + 2):]
 
@@ -3485,7 +3496,7 @@ class OFPFlowStats(StringifyMixin):
         offset += ofproto_v1_3.OFP_FLOW_STATS_0_SIZE
 
         flow_stats.match = OFPMatch.parser(buf, offset)
-        match_length = utils.round_up(flow_stats.match._length, 8)
+        match_length = utils.round_up(flow_stats.match.length, 8)
         inst_length = (flow_stats._length - (ofproto_v1_3.OFP_FLOW_STATS_SIZE -
                                              ofproto_v1_3.OFP_MATCH_SIZE +
                                              match_length))
