@@ -60,7 +60,8 @@ def to_actions(dp, acts):
             ethertype = int(a.get('ethertype'))
             actions.append(parser.OFPActionPushMpls(ethertype))
         elif action_type == 'POP_MPLS':
-            actions.append(parser.OFPActionPopMpls())
+            ethertype = int(a.get('ethertype'))
+            actions.append(parser.OFPActionPopMpls(ethertype))
         elif action_type == 'SET_QUEUE':
             queue_id = int(a.get('queue_id'))
             actions.append(parser.OFPActionSetQueue(queue_id))
