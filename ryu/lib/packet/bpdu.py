@@ -134,7 +134,7 @@ from ryu.lib import addrconv
 
 
 # BPDU destination
-BRIDGE_GROUP_ADDRESS = '\x01\x80\xc2\x00\x00\x00'
+BRIDGE_GROUP_ADDRESS = '01:80:c2:00:00:00'
 
 
 PROTOCOL_IDENTIFIER = 0
