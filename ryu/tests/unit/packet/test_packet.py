@@ -565,7 +565,7 @@ class TestPacket(unittest.TestCase):
         e = ethernet.ethernet(self.dst_mac, self.src_mac,
                               ether.ETH_TYPE_IEEE802_3)
         llc_control = llc.ControlFormatU(0, 0, 0)
-        l = llc.llc(llc.SAP_BDPU, llc.SAP_BDPU, llc_control)
+        l = llc.llc(llc.SAP_BPDU, llc.SAP_BPDU, llc_control)
         b = bpdu.ConfigurationBPDUs(flags=0,
                                     root_priority=32768,
                                     root_system_id_extension=0,
@@ -626,8 +626,8 @@ class TestPacket(unittest.TestCase):
 
         # llc
         ok_(p_llc)
-        eq_(llc.SAP_BDPU, p_llc.dsap_addr)
-        eq_(llc.SAP_BDPU, p_llc.ssap_addr)
+        eq_(llc.SAP_BPDU, p_llc.dsap_addr)
+        eq_(llc.SAP_BPDU, p_llc.ssap_addr)
         eq_(0, p_llc.control.modifier_function1)
         eq_(0, p_llc.control.pf_bit)
         eq_(0, p_llc.control.modifier_function2)
@@ -669,8 +669,8 @@ class TestPacket(unittest.TestCase):
                              if k in ctrl_values])
         ctrl_str = '%s(%s)' % (llc.ControlFormatU.__name__, _ctrl_str)
 
-        llc_values = {'dsap_addr': repr(llc.SAP_BDPU),
-                      'ssap_addr': repr(llc.SAP_BDPU),
+        llc_values = {'dsap_addr': repr(llc.SAP_BPDU),
+                      'ssap_addr': repr(llc.SAP_BPDU),
                       'control': ctrl_str}
         _llc_str = ','.join(['%s=%s' % (k, llc_values[k])
                              for k, v in inspect.getmembers(p_llc)

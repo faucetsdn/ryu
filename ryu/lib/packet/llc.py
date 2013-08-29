@@ -93,7 +93,7 @@ from . import packet_base
 from ryu.lib import stringify
 
 
-SAP_BDPU = 0x42
+SAP_BPDU = 0x42
 
 
 class llc(packet_base.PacketBase):
@@ -317,4 +317,4 @@ class ControlFormatU(stringify.StringifyMixin):
         return struct.pack(self._PACK_STR, control)
 
 
-llc.register_packet_type(bpdu.bpdu, SAP_BDPU)
+llc.register_packet_type(bpdu.bpdu, SAP_BPDU)
