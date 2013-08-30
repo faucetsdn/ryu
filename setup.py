@@ -16,10 +16,14 @@
 
 import setuptools
 import os
-from ryu import version
 
 
-os.environ["PBR_VERSION"] = str(version)
+# the latest versions of pbr generate scripts which don't support
+# multiversion.  to avoid importing modules from older multiversion-aware
+# installations of ryu, we prefer multiversion-aware scripts.
+PBR_VERSION = '0.5.19'
+
+os.environ["PBR_VERSION"] = PBR_VERSION
 setuptools.setup(name='ryu',
-                 setup_requires=['pbr'],
+                 setup_requires=['pbr==%s' % (PBR_VERSION,)],
                  pbr=True)
