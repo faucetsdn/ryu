@@ -54,6 +54,21 @@ def msg_parser(datapath, version, msg_type, msg_len, xid, buf):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_HELLO)
 class OFPHello(MsgBase):
+    """
+    Hello message
+
+    When connection is started, the hello message is exchanged between a
+    switch and a controller.
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    elements   list of ``OFPHelloElemVersionBitmap`` instance
+    ========== =========================================================
+    """
     def __init__(self, datapath, elements=[]):
         super(OFPHello, self).__init__(datapath)
         self.elements = elements
@@ -82,6 +97,15 @@ class OFPHello(MsgBase):
 
 
 class OFPHelloElemVersionBitmap(StringifyMixin):
+    """
+    Version bitmap Hello Element
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    versions   list of versions of OpenFlow protocol a device supports
+    ========== =========================================================
+    """
     def __init__(self, versions):
         super(OFPHelloElemVersionBitmap, self).__init__()
         self._type = ofproto_v1_3.OFPHET_VERSIONBITMAP
@@ -118,6 +142,52 @@ class OFPHelloElemVersionBitmap(StringifyMixin):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_ERROR)
 class OFPErrorMsg(MsgBase):
+    """
+    Error message
+
+    The switch notifies controller of problems by this message.
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    type       High level type of error
+    code       Details depending on the type
+    data       Variable length data depending on the type and code
+    ========== =========================================================
+
+    Types and codes are defined in ``ryu.ofproto.ofproto_v1_3``.
+
+    ============================= ===========
+    Type                          Code
+    ============================= ===========
+    OFPET_HELLO_FAILED            OFPHFC_*
+    OFPET_BAD_REQUEST             OFPBRC_*
+    OFPET_BAD_ACTION              OFPBAC_*
+    OFPET_BAD_INSTRUCTION         OFPBIC_*
+    OFPET_BAD_MATCH               OFPBMC_*
+    OFPET_FLOW_MOD_FAILED         OFPFMFC_*
+    OFPET_GROUP_MOD_FAILED        OFPGMFC_*
+    OFPET_PORT_MOD_FAILED         OFPPMFC_*
+    OFPET_TABLE_MOD_FAILED        OFPTMFC_*
+    OFPET_QUEUE_OP_FAILED         OFPQOFC_*
+    OFPET_SWITCH_CONFIG_FAILED    OFPSCFC_*
+    OFPET_ROLE_REQUEST_FAILED     OFPRRFC_*
+    OFPET_METER_MOD_FAILED        OFPMMFC_*
+    OFPET_TABLE_FEATURES_FAILED   OFPTFFC_*
+    OFPET_EXPERIMENTER            N/A
+    ============================= ===========
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPErrorMsg,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+        def error_msg_handler(self, ev):
+            msg = ev.msg
+
+            self.logger.debug('OFPErrorMsg received: type=0x%02x code=0x%02x '
+                              'message=%s',
+                              msg.type, msg.code, utils.hex_array(msg.data))
+    """
     def __init__(self, datapath, type_=None, code=None, data=None):
         super(OFPErrorMsg, self).__init__(datapath)
         self.type = type_
@@ -144,6 +214,33 @@ class OFPErrorMsg(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_ECHO_REQUEST)
 class OFPEchoRequest(MsgBase):
+    """
+    Echo request message
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    data       An arbitrary length data
+    ========== =========================================================
+
+    Example::
+
+        def send_echo_request(self, datapath, data):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPEchoRequest(datapath, data)
+            datapath.send_msg(req)
+
+        @set_ev_cls(ofp_event.EventOFPEchoRequest,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+        def echo_request_handler(self, ev):
+            self.logger.debug('OFPEchoRequest received: data=%s',
+                              utils.hex_array(ev.msg.data))
+    """
     def __init__(self, datapath, data=None):
         super(OFPEchoRequest, self).__init__(datapath)
         self.data = data
@@ -163,6 +260,33 @@ class OFPEchoRequest(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_ECHO_REPLY)
 class OFPEchoReply(MsgBase):
+    """
+    Echo reply message
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    data       An arbitrary length data
+    ========== =========================================================
+
+    Example::
+
+        def send_echo_reply(self, datapath, data):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            reply = ofp_parser.OFPEchoReply(datapath, data)
+            datapath.send_msg(reply)
+
+        @set_ev_cls(ofp_event.EventOFPEchoReply,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+        def echo_reply_handler(self, ev):
+            self.logger.debug('OFPEchoReply received: data=%s',
+                              utils.hex_array(ev.msg.data))
+    """
     def __init__(self, datapath, data=None):
         super(OFPEchoReply, self).__init__(datapath)
         self.data = data
@@ -182,6 +306,17 @@ class OFPEchoReply(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_EXPERIMENTER)
 class OFPExperimenter(MsgBase):
+    """
+    Experimenter extension message
+
+    ============= =========================================================
+    Attribute     Description
+    ============= =========================================================
+    experimenter  Experimenter ID
+    exp_type      Experimenter defined
+    data          Experimenter defined arbitrary additional data
+    ============= =========================================================
+    """
     def __init__(self, datapath, experimenter=None, exp_type=None, data=None):
         super(OFPExperimenter, self).__init__(datapath)
         self.experimenter = experimenter
@@ -203,6 +338,23 @@ class OFPExperimenter(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_FEATURES_REQUEST)
 class OFPFeaturesRequest(MsgBase):
+    """
+    Features request message
+
+    The controller sends a feature request to the switch upon session
+    establishment.
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    Example::
+
+        def send_features_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPFeaturesRequest(datapath)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath):
         super(OFPFeaturesRequest, self).__init__(datapath)
 
@@ -210,6 +362,28 @@ class OFPFeaturesRequest(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_FEATURES_REPLY)
 class OFPSwitchFeatures(MsgBase):
+    """
+    Features reply message
+
+    The switch responds with a features reply message to a features
+    request.
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+        def switch_features_handler(self, ev):
+            msg = ev.msg
+
+            self.logger.debug('OFPSwitchFeatures received: '
+                              'datapath_id=0x%016x n_buffers=%d '
+                              'n_tables=%d auxiliary_id=%d '
+                              'capabilities=0x%08x',
+                              msg.datapath_id, msg.n_buffers, msg.n_tables,
+                              msg.auxiliary_id, msg.capabilities)
+    """
     def __init__(self, datapath, datapath_id=None, n_buffers=None,
                  n_tables=None, auxiliary_id=None, capabilities=None):
         super(OFPSwitchFeatures, self).__init__(datapath)
@@ -236,6 +410,20 @@ class OFPSwitchFeatures(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_GET_CONFIG_REQUEST)
 class OFPGetConfigRequest(MsgBase):
+    """
+    Get config request message
+
+    The controller sends a get config request to query configuration
+    parameters in the switch.
+
+    Example::
+
+        def send_get_config_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGetConfigRequest(datapath)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath):
         super(OFPGetConfigRequest, self).__init__(datapath)
 
@@ -243,6 +431,46 @@ class OFPGetConfigRequest(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_GET_CONFIG_REPLY)
 class OFPGetConfigReply(MsgBase):
+    """
+    Get config reply message
+
+    The switch responds to a configuration request with a get config reply
+    message.
+
+    ============= =========================================================
+    Attribute     Description
+    ============= =========================================================
+    flags         One of the following configuration flags.
+                  OFPC_FRAG_NORMAL
+                  OFPC_FRAG_DROP
+                  OFPC_FRAG_REASM
+                  OFPC_FRAG_MASK
+    miss_send_len Max bytes of new flow that datapath should send to the
+                  controller
+    ============= =========================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGetConfigReply, MAIN_DISPATCHER)
+        def get_config_reply_handler(self, ev):
+            msg = ev.msg
+            dp = msg.datapath
+            ofp = dp.ofproto
+
+            if msg.flags == ofp.OFPC_FRAG_NORMAL:
+                flags = 'NORMAL'
+            elif msg.flags == ofp.OFPC_FRAG_DROP:
+                flags = 'DROP'
+            elif msg.flags == ofp.OFPC_FRAG_REASM:
+                flags = 'REASM'
+            elif msg.flags == ofp.OFPC_FRAG_MASK:
+                flags = 'MASK'
+            else:
+                flags = 'unknown'
+            self.logger.debug('OFPGetConfigReply received: '
+                              'flags=%s miss_send_len=%d',
+                              flags, msg.miss_send_len)
+    """
     def __init__(self, datapath, flags=None, miss_send_len=None):
         super(OFPGetConfigReply, self).__init__(datapath)
         self.flags = flags
@@ -260,6 +488,33 @@ class OFPGetConfigReply(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_SET_CONFIG)
 class OFPSetConfig(MsgBase):
+    """
+    Set config request message
+
+    The controller sends a set config request message to set configuraion
+    parameters.
+
+    ============= =========================================================
+    Attribute     Description
+    ============= =========================================================
+    flags         One of the following configuration flags.
+                  OFPC_FRAG_NORMAL
+                  OFPC_FRAG_DROP
+                  OFPC_FRAG_REASM
+                  OFPC_FRAG_MASK
+    miss_send_len Max bytes of new flow that datapath should send to the
+                  controller
+    ============= =========================================================
+
+    Example::
+
+        def send_set_config(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPSetConfig(datapath, ofp.OFPC_FRAG_NORMAL, 256)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags=0, miss_send_len=0):
         super(OFPSetConfig, self).__init__(datapath)
         self.flags = flags
@@ -1668,6 +1923,50 @@ class MTIPv6ExtHdr(OFPMatchField):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_PACKET_IN)
 class OFPPacketIn(MsgBase):
+    """
+    Packet-In message
+
+    The switch sends the packet that received to the controller by this
+    message.
+
+    ============= =========================================================
+    Attribute     Description
+    ============= =========================================================
+    buffer_id     ID assigned by datapath
+    total_len     Full length of frame
+    reason        Reason packet is being sent.
+                  OFPR_NO_MATCH
+                  OFPR_ACTION
+                  OFPR_INVALID_TTL
+    table_id      ID of the table that was looked up
+    cookie        Cookie of the flow entry that was looked up
+    match         Instance of ``OFPMatch``
+    data          Ethernet frame
+    ============= =========================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+        def packet_in_handler(self, ev):
+            msg = ev.msg
+            ofp = dp.ofproto
+
+            if msg.reason == ofp.OFPR_NO_MATCH:
+                reason = 'NO MATCH'
+            elif msg.reason == ofp.OFPR_ACTION:
+                reason = 'ACTION'
+            elif msg.reason == ofp.OFPR_INVALID_TTL:
+                reason = 'INVALID TTL'
+            else:
+                reason = 'unknown'
+
+            self.logger.debug('OFPPacketIn received: '
+                              'buffer_id=%x total_len=%d reason=%s '
+                              'table_id=%d cookie=%d match=%s data=%s',
+                              msg.buffer_id, msg.total_len, reason,
+                              msg.table_id, msg.cookie, msg.match,
+                              utils.hex_array(msg.data))
+    """
     def __init__(self, datapath, buffer_id=None, total_len=None, reason=None,
                  table_id=None, cookie=None, match=None, data=None):
         super(OFPPacketIn, self).__init__(datapath)
@@ -1705,6 +2004,61 @@ class OFPPacketIn(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_FLOW_REMOVED)
 class OFPFlowRemoved(MsgBase):
+    """
+    Flow removed message
+
+    When flow entries time out or are deleted, the switch notifies controller
+    with this message.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    cookie           Opaque controller-issued identifier
+    priority         Priority level of flow entry
+    reason           One of the following values.
+                     OFPRR_IDLE_TIMEOUT
+                     OFPRR_HARD_TIMEOUT
+                     OFPRR_DELETE
+                     OFPRR_GROUP_DELETE
+    table_id         ID of the table
+    duration_sec     Time flow was alive in seconds
+    duration_nsec    Time flow was alive in nanoseconds beyond duration_sec
+    idle_timeout     Idle timeout from original flow mod
+    hard_timeout     Hard timeout from original flow mod
+    packet_count     Number of packets that was associated with the flow
+    byte_count       Number of bytes that was associated with the flow
+    match            Instance of ``OFPMatch``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
+        def flow_removed_handler(self, ev):
+            msg = ev.msg
+            dp = msg.datapath
+            ofp = dp.ofproto
+
+            if msg.reason == ofp.OFPRR_IDLE_TIMEOUT:
+                reason = 'IDLE TIMEOUT'
+            elif msg.reason == ofp.OFPRR_HARD_TIMEOUT:
+                reason = 'HARD TIMEOUT'
+            elif msg.reason == ofp.OFPRR_DELETE:
+                reason = 'DELETE'
+            elif msg.reason == ofp.OFPRR_GROUP_DELETE:
+                reason = 'GROUP DELETE'
+            else:
+                reason = 'unknown'
+
+            self.logger.debug('OFPFlowRemoved received: '
+                              'cookie=%d priority=%d reason=%s table_id=%d '
+                              'duration_sec=%d duration_nsec=%d '
+                              'idle_timeout=%d hard_timeout=%d '
+                              'packet_count=%d byte_count=%d match.fields=%s',
+                              msg.cookie, msg.priority, reason, msg.table_id,
+                              msg.duration_sec, msg.duration_nsec,
+                              msg.idle_timeout, msg.hard_timeout,
+                              msg.packet_count, msg.byte_count, msg.match)
+    """
     def __init__(self, datapath, cookie=None, priority=None, reason=None,
                  table_id=None, duration_sec=None, duration_nsec=None,
                  idle_timeout=None, hard_timeout=None, packet_count=None,
@@ -1772,6 +2126,41 @@ class OFPPort(ofproto_parser.namedtuple('OFPPort', (
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_PORT_STATUS)
 class OFPPortStatus(MsgBase):
+    """
+    Port status message
+
+    The switch notifies controller of change of ports.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    reason           One of the following values.
+                     OFPPR_ADD
+                     OFPPR_DELETE
+                     OFPPR_MODIFY
+    desc             instance of ``OFPPort``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
+        def port_status_handler(self, ev):
+            msg = ev.msg
+            dp = msg.datapath
+            ofp = dp.ofproto
+
+            if msg.reason == ofp.OFPPR_ADD:
+                reason = 'ADD'
+            elif msg.reason == ofp.OFPPR_DELETE:
+                reason = 'DELETE'
+            elif msg.reason == ofp.OFPPR_MODIFY:
+                reason = 'MODIFY'
+            else:
+                reason = 'unknown'
+
+            self.logger.debug('OFPPortStatus received: reason=%s desc=%s',
+                              reason, msg.desc)
+    """
     def __init__(self, datapath, reason=None, desc=None):
         super(OFPPortStatus, self).__init__(datapath)
         self.reason = reason
@@ -1791,6 +2180,32 @@ class OFPPortStatus(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
+    """
+    Packet-Out message
+
+    The controller uses this message to send a packet out throught the
+    switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    buffer_id        ID assigned by datapath (0xffffffff if none)
+    in_port          Packet's input port or ``OFPP_CONTROLLER``
+    actions          list of OpenFlow action class
+    data             Packet data
+    ================ ======================================================
+
+    Example::
+
+        def send_packet_out(self, datapath, buffer_id, in_port):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD, 0)]
+            req = ofp_parser.OFPPacketOut(datapath, buffer_id,
+                                          in_port, actions)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, buffer_id=None, in_port=None, actions=None,
                  data=None):
         assert in_port is not None
@@ -1821,6 +2236,67 @@ class OFPPacketOut(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
+    """
+    Modify Flow entry message
+
+    The controller sends this message to modify the flow table.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    cookie           Opaque controller-issued identifier
+    cookie_mask      Mask used to restrict the cookie bits that must match
+                     when the command is ``OPFFC_MODIFY*`` or
+                     ``OFPFC_DELETE*``
+    table_id         ID of the table to put the flow in
+    command          One of the following values.
+                     OFPFC_ADD
+                     OFPFC_MODIFY
+                     OFPFC_MODIFY_STRICT
+                     OFPFC_DELETE
+                     OFPFC_DELETE_STRICT
+    idle_timeout     Idle time before discarding (seconds)
+    hard_timeout     Max time before discarding (seconds)
+    priority         Priority level of flow entry
+    buffer_id        Buffered packet to apply to (or 0xffffffff)
+    out_port         For ``OFPFC_DELETE*`` commands, require matching
+                     entries to include this as an output port
+    out_group        For ``OFPFC_DELETE*`` commands, require matching
+                     entries to include this as an output group
+    flags            One of the following values.
+                     OFPFF_SEND_FLOW_REM
+                     OFPFF_CHECK_OVERLAP
+                     OFPFF_RESET_COUNTS
+                     OFPFF_NO_PKT_COUNTS
+                     OFPFF_NO_BYT_COUNTS
+    match            Instance of ``OFPMatch``
+    instructions     list of ``OFPInstruction*`` instance
+    ================ ======================================================
+
+    Example::
+
+        def send_flow_mod(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            cookie = cookie_mask = 0
+            table_id = 0
+            idle_timeout = hard_timeout = 0
+            priority = 32768
+            buffer_id = 0xffffffff
+            match = ofp_parser.OFPMatch(in_port=1, eth_dst='ff:ff:ff:ff:ff:ff')
+            actions = [ofp_parser.OFPActionOutput(ofp.OFPP_NORMAL, 0)]
+            inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
+                                                     actions)]
+            req = ofp_parser.OFPFlowMod(datapath, cookie, cookie_mask,
+                                        table_id, ofp.OFPFC_ADD,
+                                        idle_timeout, hard_timeout,
+                                        priority, buffer_id,
+                                        ofp.OFPP_ANY, ofp.OFPG_ANY,
+                                        ofp.OFPFF_SEND_FLOW_REM,
+                                        match, inst)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, cookie=0, cookie_mask=0, table_id=0,
                  command=ofproto_v1_3.OFPFC_ADD,
                  idle_timeout=0, hard_timeout=0, priority=0,
@@ -1884,6 +2360,17 @@ class OFPInstruction(object):
 
 @OFPInstruction.register_instruction_type([ofproto_v1_3.OFPIT_GOTO_TABLE])
 class OFPInstructionGotoTable(StringifyMixin):
+    """
+    Goto table instruction
+
+    This instruction indicates the next table in the processing pipeline.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    table_id         Next table
+    ================ ======================================================
+    """
     _base_attributes = ['type', 'len']
 
     def __init__(self, table_id):
@@ -1906,6 +2393,18 @@ class OFPInstructionGotoTable(StringifyMixin):
 
 @OFPInstruction.register_instruction_type([ofproto_v1_3.OFPIT_WRITE_METADATA])
 class OFPInstructionWriteMetadata(StringifyMixin):
+    """
+    Write metadata instruction
+
+    This instruction writes the masked metadata value into the metadata field.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    metadata         Metadata value to write
+    metadata_mask    Metadata write bitmask
+    ================ ======================================================
+    """
     _base_attributes = ['type', 'len']
 
     def __init__(self, metadata, metadata_mask):
@@ -1932,6 +2431,21 @@ class OFPInstructionWriteMetadata(StringifyMixin):
                                            ofproto_v1_3.OFPIT_APPLY_ACTIONS,
                                            ofproto_v1_3.OFPIT_CLEAR_ACTIONS])
 class OFPInstructionActions(StringifyMixin):
+    """
+    Actions instruction
+
+    This instruction writes/applies/clears the actions.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    type             One of following values.
+                     OFPIT_WRITE_ACTIONS
+                     OFPIT_APPLY_ACTIONS
+                     OFPIT_CLEAR_ACTIONS
+    actions          list of OpenFlow action class
+    ================ ======================================================
+    """
     _base_attributes = ['len']
 
     def __init__(self, type_, actions=None):
@@ -1976,6 +2490,17 @@ class OFPInstructionActions(StringifyMixin):
 
 @OFPInstruction.register_instruction_type([ofproto_v1_3.OFPIT_METER])
 class OFPInstructionMeter(StringifyMixin):
+    """
+    Meter instruction
+
+    This instruction applies the meter.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    meter_id         Meter instance
+    ================ ======================================================
+    """
     _base_attributes = ['type', 'len']
 
     def __init__(self, meter_id):
@@ -2037,6 +2562,18 @@ class OFPAction(OFPActionHeader):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_OUTPUT,
                                 ofproto_v1_3.OFP_ACTION_OUTPUT_SIZE)
 class OFPActionOutput(OFPAction):
+    """
+    Output action
+
+    This action indicates output a packet to the switch port.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    port             Output port
+    max_len          Max length to send to controller
+    ================ ======================================================
+    """
     def __init__(self, port, max_len=0):
         super(OFPActionOutput, self).__init__()
         self.port = port
@@ -2056,6 +2593,17 @@ class OFPActionOutput(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_GROUP,
                                 ofproto_v1_3.OFP_ACTION_GROUP_SIZE)
 class OFPActionGroup(OFPAction):
+    """
+    Group action
+
+    This action indicates the group used to process the packet.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    group_id         Group identifier
+    ================ ======================================================
+    """
     def __init__(self, group_id):
         super(OFPActionGroup, self).__init__()
         self.group_id = group_id
@@ -2074,6 +2622,18 @@ class OFPActionGroup(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_QUEUE,
                                 ofproto_v1_3.OFP_ACTION_SET_QUEUE_SIZE)
 class OFPActionSetQueue(OFPAction):
+    """
+    Set queue action
+
+    This action sets the queue id that will be used to map a flow to an
+    already-configured queue on a port.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    queue_id         Queue ID for the packets
+    ================ ======================================================
+    """
     def __init__(self, queue_id):
         super(OFPActionSetQueue, self).__init__()
         self.queue_id = queue_id
@@ -2092,6 +2652,17 @@ class OFPActionSetQueue(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_MPLS_TTL,
                                 ofproto_v1_3.OFP_ACTION_MPLS_TTL_SIZE)
 class OFPActionSetMplsTtl(OFPAction):
+    """
+    Set MPLS TTL action
+
+    This action sets the MPLS TTL.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    mpls_ttl         MPLS TTL
+    ================ ======================================================
+    """
     def __init__(self, mpls_ttl):
         super(OFPActionSetMplsTtl, self).__init__()
         self.mpls_ttl = mpls_ttl
@@ -2110,6 +2681,11 @@ class OFPActionSetMplsTtl(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_DEC_MPLS_TTL,
                                 ofproto_v1_3.OFP_ACTION_HEADER_SIZE)
 class OFPActionDecMplsTtl(OFPAction):
+    """
+    Decrement MPLS TTL action
+
+    This action decrements the MPLS TTL.
+    """
     def __init__(self):
         super(OFPActionDecMplsTtl, self).__init__()
 
@@ -2117,6 +2693,17 @@ class OFPActionDecMplsTtl(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_NW_TTL,
                                 ofproto_v1_3.OFP_ACTION_NW_TTL_SIZE)
 class OFPActionSetNwTtl(OFPAction):
+    """
+    Set IP TTL action
+
+    This action sets the IP TTL.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    nw_ttl           IP TTL
+    ================ ======================================================
+    """
     def __init__(self, nw_ttl):
         super(OFPActionSetNwTtl, self).__init__()
         self.nw_ttl = nw_ttl
@@ -2135,6 +2722,11 @@ class OFPActionSetNwTtl(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_DEC_NW_TTL,
                                 ofproto_v1_3.OFP_ACTION_HEADER_SIZE)
 class OFPActionDecNwTtl(OFPAction):
+    """
+    Decrement IP TTL action
+
+    This action decrements the IP TTL.
+    """
     def __init__(self):
         super(OFPActionDecNwTtl, self).__init__()
 
@@ -2147,6 +2739,12 @@ class OFPActionDecNwTtl(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_COPY_TTL_OUT,
                                 ofproto_v1_3.OFP_ACTION_HEADER_SIZE)
 class OFPActionCopyTtlOut(OFPAction):
+    """
+    Copy TTL Out action
+
+    This action copies the TTL from the next-to-outermost header with TTL to
+    the outermost header with TTL.
+    """
     def __init__(self):
         super(OFPActionCopyTtlOut, self).__init__()
 
@@ -2159,6 +2757,12 @@ class OFPActionCopyTtlOut(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_COPY_TTL_IN,
                                 ofproto_v1_3.OFP_ACTION_HEADER_SIZE)
 class OFPActionCopyTtlIn(OFPAction):
+    """
+    Copy TTL In action
+
+    This action copies the TTL from the outermost header with TTL to the
+    next-to-outermost header with TTL.
+    """
     def __init__(self):
         super(OFPActionCopyTtlIn, self).__init__()
 
@@ -2171,6 +2775,17 @@ class OFPActionCopyTtlIn(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_PUSH_VLAN,
                                 ofproto_v1_3.OFP_ACTION_PUSH_SIZE)
 class OFPActionPushVlan(OFPAction):
+    """
+    Push VLAN action
+
+    This action pushes a new VLAN tag to the packet.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    ethertype        Ether type
+    ================ ======================================================
+    """
     def __init__(self, ethertype):
         super(OFPActionPushVlan, self).__init__()
         self.ethertype = ethertype
@@ -2189,6 +2804,17 @@ class OFPActionPushVlan(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_PUSH_MPLS,
                                 ofproto_v1_3.OFP_ACTION_PUSH_SIZE)
 class OFPActionPushMpls(OFPAction):
+    """
+    Push MPLS action
+
+    This action pushes a new MPLS header to the packet.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    ethertype        Ether type
+    ================ ======================================================
+    """
     def __init__(self, ethertype):
         super(OFPActionPushMpls, self).__init__()
         self.ethertype = ethertype
@@ -2207,6 +2833,11 @@ class OFPActionPushMpls(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_POP_VLAN,
                                 ofproto_v1_3.OFP_ACTION_HEADER_SIZE)
 class OFPActionPopVlan(OFPAction):
+    """
+    Pop VLAN action
+
+    This action pops the outermost VLAN tag from the packet.
+    """
     def __init__(self):
         super(OFPActionPopVlan, self).__init__()
 
@@ -2219,6 +2850,11 @@ class OFPActionPopVlan(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_POP_MPLS,
                                 ofproto_v1_3.OFP_ACTION_POP_MPLS_SIZE)
 class OFPActionPopMpls(OFPAction):
+    """
+    Pop MPLS action
+
+    This action pops the MPLS header from the packet.
+    """
     def __init__(self, ethertype):
         super(OFPActionPopMpls, self).__init__()
         self.ethertype = ethertype
@@ -2237,6 +2873,17 @@ class OFPActionPopMpls(OFPAction):
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_FIELD,
                                 ofproto_v1_3.OFP_ACTION_SET_FIELD_SIZE)
 class OFPActionSetField(OFPAction):
+    """
+    Set field action
+
+    This action modifies a header field in the packet.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    field            Instance of ``OFPMatchField``
+    ================ ======================================================
+    """
     def __init__(self, field=None, **kwargs):
         # old api
         #   OFPActionSetField(field)
@@ -2350,6 +2997,17 @@ class OFPActionSetField(OFPAction):
     ofproto_v1_3.OFPAT_EXPERIMENTER,
     ofproto_v1_3.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
 class OFPActionExperimenter(OFPAction):
+    """
+    Experimenter action
+
+    This action is an extensible action for the experimenter.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    experimenter     Experimenter ID
+    ================ ======================================================
+    """
     def __init__(self, experimenter):
         super(OFPActionExperimenter, self).__init__()
         self.experimenter = experimenter
@@ -2407,6 +3065,48 @@ class OFPBucket(StringifyMixin):
 
 @_set_msg_type(ofproto_v1_3.OFPT_GROUP_MOD)
 class OFPGroupMod(MsgBase):
+    """
+    Modify group entry message
+
+    The controller sends this message to modify the group table.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    command          One of the following values.
+                     OFPFC_ADD
+                     OFPFC_MODIFY
+                     OFPFC_DELETE
+    type             One of the following values.
+                     OFPGT_ALL
+                     OFPGT_SELECT
+                     OFPGT_INDIRECT
+                     OFPGT_FF
+    group_id         Group identifier
+    buckets          list of ``OFPBucket``
+    ================ ======================================================
+
+    Example::
+
+        def send_group_mod(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            port = 1
+            max_len = 2000
+            actions = [ofp_parser.OFPActionOutput(port, max_len)]
+
+            weight = 100
+            watch_port = 0
+            watch_group = 0
+            buckets = [ofp_parser.OFPBucket(weight, watch_port, watch_group,
+                                            actions)]
+
+            group_id = 1
+            req = ofp_parser.OFPGroupMod(datapath, ofp.OFPFC_ADD,
+                                         ofp.OFPGT_SELECT, group_id, buckets)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, command, type_, group_id, buckets):
         super(OFPGroupMod, self).__init__(datapath)
         self.command = command
@@ -2427,6 +3127,61 @@ class OFPGroupMod(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_PORT_MOD)
 class OFPPortMod(MsgBase):
+    """
+    Port modification message
+
+    The controller sneds this message to modify the behavior of the port.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    port_no          Port number to modify
+    hw_addr          The hardware address that must be the same as hw_addr
+                     of ``OFPPort`` of ``OFPSwitchFeatures``
+    config           Bitmap of configuration flags.
+                     OFPPC_PORT_DOWN
+                     OFPPC_NO_RECV
+                     OFPPC_NO_FWD
+                     OFPPC_NO_PACKET_IN
+    mask             Bitmap of configuration flags above to be changed
+    advertise        Bitmap of the following flags.
+                     OFPPF_10MB_HD
+                     OFPPF_10MB_FD
+                     OFPPF_100MB_HD
+                     OFPPF_100MB_FD
+                     OFPPF_1GB_HD
+                     OFPPF_1GB_FD
+                     OFPPF_10GB_FD
+                     OFPPF_40GB_FD
+                     OFPPF_100GB_FD
+                     OFPPF_1TB_FD
+                     OFPPF_OTHER
+                     OFPPF_COPPER
+                     OFPPF_FIBER
+                     OFPPF_AUTONEG
+                     OFPPF_PAUSE
+                     OFPPF_PAUSE_ASYM
+    ================ ======================================================
+
+    Example::
+
+        def send_port_mod(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            port_no = 3
+            hw_addr = 'fa:c8:e8:76:1d:7e'
+            config = 0
+            mask = (ofp.OFPPC_PORT_DOWN | ofp.OFPPC_NO_RECV |
+                    ofp.OFPPC_NO_FWD | ofp.OFPPC_NO_PACKET_IN)
+            advertise = (ofp.OFPPF_10MB_HD | ofp.OFPPF_100MB_FD |
+                         ofp.OFPPF_1GB_FD | ofp.OFPPF_COPPER |
+                         ofp.OFPPF_AUTONEG | ofp.OFPPF_PAUSE |
+                         ofp.OFPPF_PAUSE_ASYM)
+            req = ofp_parser.OFPPortMod(datapath, port_no, hw_addr, config,
+                                        mask, advertise)
+            datapath.send_msg(req)
+    """
 
     _TYPE = {
         'ascii': [
@@ -2452,6 +3207,30 @@ class OFPPortMod(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_METER_MOD)
 class OFPMeterMod(MsgBase):
+    """
+    Meter modification message
+
+    The controller sends this message to modify the meter.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    command          One of the following values.
+                     OFPMC_ADD
+                     OFPMC_MODIFY
+                     OFPMC_DELETE
+    flags            One of the following flags.
+                     OFPMF_KBPS
+                     OFPMF_PKTPS
+                     OFPMF_BURST
+                     OFPMF_STATS
+    meter_id         Meter instance
+    bands            list of the following class instance.
+                     OFPMeterBandDrop
+                     OFPMeterBandDscpRemark
+                     OFPMeterBandExperimenter
+    ================ ======================================================
+    """
     def __init__(self, datapath, command, flags, meter_id, bands):
         super(OFPMeterMod, self).__init__(datapath)
         self.command = command
@@ -2472,6 +3251,28 @@ class OFPMeterMod(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_TABLE_MOD)
 class OFPTableMod(MsgBase):
+    """
+    Flow table configuration message
+
+    The controller sends this message to configure table state.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    table_id         ID of the table (OFPTT_ALL indicates all tables)
+    config           Bitmap of the following flags.
+                     OFPTC_DEPRECATED_MASK (3)
+    ================ ======================================================
+
+    Example::
+
+        def send_table_mod(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPTableMod(datapath, 1, 3)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, table_id, config):
         super(OFPTableMod, self).__init__(datapath)
         self.table_id = table_id
@@ -2604,6 +3405,26 @@ class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_DESC, OFPDescStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPDescStatsRequest(OFPMultipartRequest):
+    """
+    Description statistics request message
+
+    The controller uses this message to query description of the switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_desc_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags):
         super(OFPDescStatsRequest, self).__init__(datapath, flags)
 
@@ -2612,6 +3433,29 @@ class OFPDescStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_DESC, OFPDescStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPDescStatsReply(OFPMultipartReply):
+    """
+    Description statistics reply message
+
+    The switch responds with this message to a description statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPDescStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPDescStatsReply, MAIN_DISPATCHER)
+        def desc_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('DescStats: mfr_desc=%s hw_desc=%s sw_desc=%s '
+                              'serial_num=%s dp_desc=%s',
+                              body.mfr_desc, body.hw_desc, body.sw_desc,
+                              body.serial_num, body.dp_desc)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPDescStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2690,6 +3534,40 @@ class OFPFlowStatsRequestBase(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_FLOW, OFPFlowStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPFlowStatsRequest(OFPFlowStatsRequestBase):
+    """
+    Individual flow statistics request message
+
+    The controller uses this message to query individual flow statistics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    table_id         ID of table to read
+    out_port         Require matching entries to include this as an output
+                     port
+    out_group        Require matching entries to include this as an output
+                     group
+    cookie           Require matching entries to contain this cookie value
+    cookie_mask      Mask used to restrict the cookie bits that must match
+    match            Instance of ``OFPMatch``
+    ================ ======================================================
+
+    Example::
+
+        def send_flow_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            cookie = cookie_mask = 0
+            match = ofp_parser.OFPMatch(in_port=1)
+            req = ofp_parser.OFPFlowStatsRequest(datapath, 0,
+                                                 ofp.OFPTT_ALL,
+                                                 ofp.OFPP_ANY, ofp.OFPG_ANY,
+                                                 cookie, cookie_mask,
+                                                 match)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, table_id, out_port, out_group,
                  cookie, cookie_mask, match):
         super(OFPFlowStatsRequest, self).__init__(datapath, flags, table_id,
@@ -2701,6 +3579,38 @@ class OFPFlowStatsRequest(OFPFlowStatsRequestBase):
 @_set_stats_type(ofproto_v1_3.OFPMP_FLOW, OFPFlowStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPFlowStatsReply(OFPMultipartReply):
+    """
+    Individual flow statistics reply message
+
+    The switch responds with this message to an individual flow statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPFlowStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
+        def flow_stats_reply_handler(self, ev):
+            flows = []
+            for stat in ev.msg.body:
+                flows.append('table_id=%s '
+                             'duration_sec=%d duration_nsec=%d '
+                             'priority=%d '
+                             'idle_timeout=%d hard_timeout=%d flags=0x%04x '
+                             'cookie=%d packet_count=%d byte_count=%d '
+                             'match=%s instructions=%s' %
+                             (stat.table_id,
+                              stat.duration_sec, stat.duration_nsec,
+                              stat.priority,
+                              stat.idle_timeout, stat.hard_timeout, stat.flags,
+                              stat.cookie, stat.packet_count, stat.byte_count,
+                              stat.match, stat.instructions))
+            self.logger.debug('FlowStats: %s', flows)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPFlowStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2719,6 +3629,41 @@ class OFPAggregateStats(ofproto_parser.namedtuple('OFPAggregateStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_AGGREGATE, OFPAggregateStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
+    """
+    Aggregate flow statistics request message
+
+    The controller uses this message to query aggregate flow statictics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    table_id         ID of table to read
+    out_port         Require matching entries to include this as an output
+                     port
+    out_group        Require matching entries to include this as an output
+                     group
+    cookie           Require matching entries to contain this cookie value
+    cookie_mask      Mask used to restrict the cookie bits that must match
+    match            Instance of ``OFPMatch``
+    ================ ======================================================
+
+    Example::
+
+        def send_aggregate_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            cookie = cookie_mask = 0
+            match = ofp_parser.OFPMatch(in_port=1)
+            req = ofp_parser.OFPAggregateStatsRequest(datapath, 0,
+                                                      ofp.OFPTT_ALL,
+                                                      ofp.OFPP_ANY,
+                                                      ofp.OFPG_ANY,
+                                                      cookie, cookie_mask,
+                                                      match)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, table_id, out_port, out_group,
                  cookie, cookie_mask, match):
         super(OFPAggregateStatsRequest, self).__init__(datapath,
@@ -2735,6 +3680,29 @@ class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
 @_set_stats_type(ofproto_v1_3.OFPMP_AGGREGATE, OFPAggregateStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPAggregateStatsReply(OFPMultipartReply):
+    """
+    Aggregate flow statistics reply message
+
+    The switch responds with this message to an aggregate flow statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPAggregateStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPAggregateStatsReply, MAIN_DISPATCHER)
+        def aggregate_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('AggregateStats: packet_count=%d byte_count=%d '
+                              'flow_count=%d',
+                              body.packet_count, body.byte_count,
+                              body.flow_count)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPAggregateStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2754,6 +3722,26 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_TABLE, OFPTableStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPTableStatsRequest(OFPMultipartRequest):
+    """
+    Table statistics request message
+
+    The controller uses this message to query flow table statictics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_table_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPTableStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags):
         super(OFPTableStatsRequest, self).__init__(datapath, flags)
 
@@ -2762,6 +3750,29 @@ class OFPTableStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_TABLE, OFPTableStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPTableStatsReply(OFPMultipartReply):
+    """
+    Table statistics reply message
+
+    The switch responds with this message to a table statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPTableStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPTableStatsReply, MAIN_DISPATCHER)
+        def table_stats_reply_handler(self, ev):
+            tables = []
+            for stat in ev.msg.body:
+                tables.append('table_id=%d active_count=%d lookup_count=%d '
+                              ' matched_count=%d' %
+                              (stat.table_id, stat.active_count,
+                               stat.lookup_count, stat.matched_count))
+             self.logger.debug('TableStats: %s', tables)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPTableStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2783,6 +3794,28 @@ class OFPPortStats(ofproto_parser.namedtuple('OFPPortStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_STATS, OFPPortStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPPortStatsRequest(OFPMultipartRequest):
+    """
+    Port statistics request message
+
+    The controller uses this message to query information about ports
+    statistics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    port_no          Port number to read (OFPP_ANY to all ports)
+    ================ ======================================================
+
+    Example::
+
+        def send_port_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, port_no):
         super(OFPPortStatsRequest, self).__init__(datapath, flags)
         self.port_no = port_no
@@ -2798,6 +3831,40 @@ class OFPPortStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_STATS, OFPPortStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPPortStatsReply(OFPMultipartReply):
+    """
+    Port statistics reply message
+
+    The switch responds with this message to a port statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPPortStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
+        def port_stats_reply_handler(self, ev):
+            ports = []
+            for stat in ev.msg.body:
+                ports.append('port_no=%d '
+                             'rx_packets=%d tx_packets=%d '
+                             'rx_bytes=%d tx_bytes=%d '
+                             'rx_dropped=%d tx_dropped=%d '
+                             'rx_errors=%d tx_errors=%d '
+                             'rx_frame_err=%d rx_over_err=%d rx_crc_err=%d '
+                             'collisions=%d duration_sec=%d duration_nsec=%d' %
+                             (stat.port_no,
+                              stat.rx_packets, stat.tx_packets,
+                              stat.rx_bytes, stat.tx_bytes,
+                              stat.rx_dropped, stat.tx_dropped,
+                              stat.rx_errors, stat.tx_errors,
+                              stat.rx_frame_err, stat.rx_over_err,
+                              stat.rx_crc_err, stat.collisions,
+                              stat.duration_sec, stat.duration_nsec))
+        self.logger.debug('PortStats: %s', ports)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPPortStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2817,6 +3884,29 @@ class OFPQueueStats(ofproto_parser.namedtuple('OFPQueueStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_QUEUE, OFPQueueStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPQueueStatsRequest(OFPMultipartRequest):
+    """
+    Queue statistics request message
+
+    The controller uses this message to query queue statictics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    port_no          Port number to read
+    queue_id         ID of queue to read
+    ================ ======================================================
+
+    Example::
+
+        def send_queue_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPQueueStatsRequest(datapath, 0, ofp.OFPP_ANY,
+                                                  ofp.OFPQ_ALL)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, port_no, queue_id):
         super(OFPQueueStatsRequest, self).__init__(datapath, flags)
         self.port_no = port_no
@@ -2833,6 +3923,32 @@ class OFPQueueStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_QUEUE, OFPQueueStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPQueueStatsReply(OFPMultipartReply):
+    """
+    Queue statistics reply message
+
+    The switch responds with this message to an aggregate flow statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPQueueStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPQueueStatsReply, MAIN_DISPATCHER)
+        def queue_stats_reply_handler(self, ev):
+            queues = []
+            for stat in ev.msg.body:
+                queues.append('port_no=%d queue_id=%d '
+                              'tx_bytes=%d tx_packets=%d tx_errors=%d '
+                              'duration_sec=%d duration_nsec=%d' %
+                              (stat.port_no, stat.queue_id,
+                               stat.tx_bytes, stat.tx_packets, stat.tx_errors,
+                               stat.duration_sec, stat.duration_nsec))
+            self.logger.debug('QueueStats: %s', queues)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPQueueStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2852,6 +3968,28 @@ class OFPGroupStats(ofproto_parser.namedtuple('OFPGroupStats', (
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP, OFPGroupStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupStatsRequest(OFPMultipartRequest):
+    """
+    Group statistics request message
+
+    The controller uses this message to query statistics of one or more
+    groups.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    group_id         ID of group to read (OFPG_ALL to all groups)
+    ================ ======================================================
+
+    Example::
+
+        def send_group_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGroupStatsRequest(datapath, 0, ofp.OFPG_ALL)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, group_id):
         super(OFPGroupStatsRequest, self).__init__(datapath, flags)
         self.group_id = group_id
@@ -2867,6 +4005,32 @@ class OFPGroupStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP, OFPGroupStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPGroupStatsReply(OFPMultipartReply):
+    """
+    Group statistics reply message
+
+    The switch responds with this message to a group statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPGroupStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGroupStatsReply, MAIN_DISPATCHER)
+        def group_stats_reply_handler(self, ev):
+            groups = []
+            for stat in ev.msg.body:
+                groups.append('length=%d group_id=%d '
+                              'ref_count=%d packet_count=%d byte_count=%d '
+                              'duration_sec=%d duration_nsec=%d' %
+                              (stat.length, stat.group_id,
+                               stat.ref_count, stat.packet_count,
+                               stat.byte_count, stat.duration_sec,
+                               stat.duration_nsec))
+            self.logger.debug('GroupStats: %s', groups)
+    """
     def __init__(self, datapath):
         super(OFPGroupStatsReply, self).__init__(datapath)
 
@@ -2901,6 +4065,26 @@ class OFPGroupDescStats(StringifyMixin):
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP_DESC, OFPGroupDescStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupDescStatsRequest(OFPMultipartRequest):
+    """
+    Group description request message
+
+    The controller uses this message to list the set of groups on a switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_group_desc_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGroupDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags):
         super(OFPGroupDescStatsRequest, self).__init__(datapath, flags)
 
@@ -2909,6 +4093,29 @@ class OFPGroupDescStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP_DESC, OFPGroupDescStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPGroupDescStatsReply(OFPMultipartReply):
+    """
+    Group description reply message
+
+    The switch responds with this message to a group description request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPGroupDescStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGroupDescStatsReply, MAIN_DISPATCHER)
+        def group_desc_stats_reply_handler(self, ev):
+            descs = []
+            for stat in ev.msg.body:
+                descs.append('length=%d type=%d group_id=%d '
+                             'buckets=%s' %
+                             (stat.length, stat.type, stat.group_id,
+                              stat.bucket))
+            self.logger.debug('GroupDescStats: %s', groups)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPGroupDescStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2932,6 +4139,27 @@ class OFPGroupFeaturesStats(ofproto_parser.namedtuple('OFPGroupFeaturesStats',
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP_FEATURES, OFPGroupFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
+    """
+    Group features request message
+
+    The controller uses this message to list the capabilities of groups on
+    a switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_group_features_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGroupFeaturesStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags):
         super(OFPGroupFeaturesStatsRequest, self).__init__(datapath, flags)
 
@@ -2940,6 +4168,29 @@ class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP_FEATURES, OFPGroupFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPGroupFeaturesStatsReply(OFPMultipartReply):
+    """
+    Group features reply message
+
+    The switch responds with this message to a group features request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPGroupFeaturesStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGroupFeaturesStatsReply, MAIN_DISPATCHER)
+        def group_features_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('GroupFeaturesStats: types=%d '
+                              'capabilities=0x%08x max_groups=%s '
+                              'actions=%s',
+                              body.types, body.capabilities,
+                              body.max_groups, body.actions)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPGroupFeaturesStatsReply, self).__init__(datapath, **kwargs)
 
@@ -2995,6 +4246,28 @@ class OFPMeterStats(StringifyMixin):
 @_set_stats_type(ofproto_v1_3.OFPMP_METER, OFPMeterStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPMeterStatsRequest(OFPMultipartRequest):
+    """
+    Meter statistics request message
+
+    The controller uses this message to query statistics for one or more
+    meters.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    meter_id         ID of meter to read (OFPM_ALL to all meters)
+    ================ ======================================================
+
+    Example::
+
+        def send_meter_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPMeterStatsRequest(datapath, 0, ofp.OFPM_ALL)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, meter_id):
         super(OFPMeterStatsRequest, self).__init__(datapath, flags)
         self.meter_id = meter_id
@@ -3010,6 +4283,33 @@ class OFPMeterStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_METER, OFPMeterStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPMeterStatsReply(OFPMultipartReply):
+    """
+    Meter statistics reply message
+
+    The switch responds with this message to a meter statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPMeterStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPMeterStatsReply, MAIN_DISPATCHER)
+        def meter_stats_reply_handler(self, ev):
+            meters = []
+            for stat in ev.msg.body:
+                meters.append('meter_id=0x%08x len=%d flow_count=%d '
+                              'packet_in_count=%d byte_in_count=%d '
+                              'duration_sec=%d duration_nsec=%d '
+                              'band_stats=%s' %
+                              (stat.meter_id, stat.len, stat.flow_count,
+                               stat.packet_in_count, stat.byte_in_count,
+                               stat.duration_sec, stat.duration_nsec,
+                               stat.band_stats))
+            self.logger.debug('MeterStats: %s', meters)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPMeterStatsReply, self).__init__(datapath, **kwargs)
 
@@ -3147,6 +4447,29 @@ class OFPMeterConfigStats(StringifyMixin):
 @_set_stats_type(ofproto_v1_3.OFPMP_METER_CONFIG, OFPMeterConfigStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPMeterConfigStatsRequest(OFPMultipartRequest):
+    """
+    Meter configuration statistics request message
+
+    The controller uses this message to query configuration for one or more
+    meters.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    meter_id         ID of meter to read (OFPM_ALL to all meters)
+    ================ ======================================================
+
+    Example::
+
+        def send_meter_config_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPMeterConfigStatsRequest(datapath, 0,
+                                                        ofp.OFPM_ALL)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags, meter_id):
         super(OFPMeterConfigStatsRequest, self).__init__(datapath, flags)
         self.meter_id = meter_id
@@ -3162,6 +4485,30 @@ class OFPMeterConfigStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_METER_CONFIG, OFPMeterConfigStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPMeterConfigStatsReply(OFPMultipartReply):
+    """
+    Meter configuration statistics reply message
+
+    The switch responds with this message to a meter configuration
+    statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPMeterConfigStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply, MAIN_DISPATCHER)
+        def meter_config_stats_reply_handler(self, ev):
+            configs = []
+            for stat in ev.msg.body:
+                configs.append('length=%d flags=0x%04x meter_id=0x%08x '
+                               'bands=%s' %
+                               (stat.length, stat.flags, stat.meter_id,
+                                stat.bands))
+            self.logger.debug('MeterConfigStats: %s', configs)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPMeterConfigStatsReply, self).__init__(datapath, **kwargs)
 
@@ -3181,6 +4528,26 @@ class OFPMeterFeaturesStats(ofproto_parser.namedtuple('OFPMeterFeaturesStats',
 @_set_stats_type(ofproto_v1_3.OFPMP_METER_FEATURES, OFPMeterFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPMeterFeaturesStatsRequest(OFPMultipartRequest):
+    """
+    Meter features statistics request message
+
+    The controller uses this message to query the set of features of the
+    metering subsystem.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_meter_features_stats_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPMeterFeaturesStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags):
         super(OFPMeterFeaturesStatsRequest, self).__init__(datapath, flags)
 
@@ -3189,6 +4556,32 @@ class OFPMeterFeaturesStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_METER_FEATURES, OFPMeterFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPMeterFeaturesStatsReply(OFPMultipartReply):
+    """
+    Meter features statistics reply message
+
+    The switch responds with this message to a meter features statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPMeterFeaturesStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPMeterFeaturesStatsReply, MAIN_DISPATCHER)
+        def meter_features_stats_reply_handler(self, ev):
+            features = []
+            for stat in ev.msg.body:
+                features.append('max_meter=%d band_types=0x%08x '
+                                'capabilities=0x%08x max_band=%d '
+                                'max_color=%d' %
+                                (stat.max_meter, stat.band_types,
+                                 stat.capabilities, stat.max_band,
+                                 stat.max_color))
+            self.logger.debug('MeterFeaturesStats: %s', configs)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPMeterFeaturesStatsReply, self).__init__(datapath, **kwargs)
 
@@ -3256,6 +4649,25 @@ class OFPTableFeaturesStatsReply(OFPMultipartReply):
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_DESC, OFPPort)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPPortDescStatsRequest(OFPMultipartRequest):
+    """
+    Port description request message
+
+    The controller uses this message to query description of all the ports.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_port_desc_stats_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, flags):
         super(OFPPortDescStatsRequest, self).__init__(datapath, flags)
 
@@ -3264,6 +4676,34 @@ class OFPPortDescStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_PORT_DESC, OFPPort)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPPortDescStatsReply(OFPMultipartReply):
+    """
+    Port description reply message
+
+    The switch responds with this message to a port description request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPPortDescStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
+        def port_desc_stats_reply_handler(self, ev):
+            ports = []
+            for p in ev.msg.body:
+                ports.append('port_no=%d hw_addr=%s name=%s config=0x%08x '
+                             'state=0x%08x curr=0x%08x advertised=0x%08x '
+                             'supported=0x%08x peer=0x%08x curr_speed=%d '
+                             'max_speed=%d' %
+                             (p.port_no, p.hw_addr,
+                              p.name, p.config,
+                              p.state, p.curr, p.advertised,
+                              p.supported, p.peer, p.curr_speed,
+                              p.max_speed))
+            self.logger.debug('OFPPortDescStatsReply received: %s', ports)
+    """
     def __init__(self, datapath, **kwargs):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
@@ -3273,6 +4713,20 @@ class OFPPortDescStatsReply(OFPMultipartReply):
 
 @_set_msg_type(ofproto_v1_3.OFPT_BARRIER_REQUEST)
 class OFPBarrierRequest(MsgBase):
+    """
+    Barrier request message
+
+    The controller sends this message to ensure message dependencies have
+    been met or receive notifications for completed operations.
+
+    Example::
+
+        def send_barrier_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPBarrierRequest(datapath)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath):
         super(OFPBarrierRequest, self).__init__(datapath)
 
@@ -3280,12 +4734,41 @@ class OFPBarrierRequest(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_BARRIER_REPLY)
 class OFPBarrierReply(MsgBase):
+    """
+    Barrier reply message
+
+    The switch responds with this message to a barrier request.
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
+        def barrier_reply_handler(self, ev):
+            self.logger.debug('OFPBarrierReply received')
+    """
     def __init__(self, datapath):
         super(OFPBarrierReply, self).__init__(datapath)
 
 
 @_set_msg_type(ofproto_v1_3.OFPT_QUEUE_GET_CONFIG_REQUEST)
 class OFPQueueGetConfigRequest(MsgBase):
+    """
+    Queue configuration request message
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    port             Port to be queried (OFPP_ANY to all configured queues)
+    ================ ======================================================
+
+    Example::
+
+        def send_queue_get_config_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPQueueGetConfigRequest(datapath, ofp.OFPP_ANY)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, port):
         super(OFPQueueGetConfigRequest, self).__init__(datapath)
         self.port = port
@@ -3392,6 +4875,28 @@ class OFPPacketQueue(StringifyMixin):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_QUEUE_GET_CONFIG_REPLY)
 class OFPQueueGetConfigReply(MsgBase):
+    """
+    Queue configuration reply message
+
+    The switch responds with this message to a queue configuration request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    queues           list of ``OFPPacketQueue`` instance
+    port             Port which was queried
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPQueueGetConfigReply, MAIN_DISPATCHER)
+        def queue_get_config_reply_handler(self, ev):
+            msg = ev.msg
+
+            self.logger.debug('OFPQueueGetConfigReply received: '
+                              'port=%s queues=%s',
+                              msg.port, msg.queues)
+    """
     def __init__(self, datapath, queues=None, port=None):
         super(OFPQueueGetConfigReply, self).__init__(datapath)
         self.queues = queues
@@ -3418,6 +4923,31 @@ class OFPQueueGetConfigReply(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_ROLE_REQUEST)
 class OFPRoleRequest(MsgBase):
+    """
+    Role request message
+
+    The controller uses this message to change its role.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    role             One of the following values.
+                     OFPCR_ROLE_NOCHANGE
+                     OFPCR_ROLE_EQUAL
+                     OFPCR_ROLE_MASTER
+                     OFPCR_ROLE_SLAVE
+    generation_id    Master Election Generation ID
+    ================ ======================================================
+
+    Example::
+
+        def send_role_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPRoleRequest(datapath, ofp.OFPCR_ROLE_EQUAL, 0)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath, role=None, generation_id=None):
         super(OFPRoleRequest, self).__init__(datapath)
         self.role = role
@@ -3434,6 +4964,44 @@ class OFPRoleRequest(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_ROLE_REPLY)
 class OFPRoleReply(MsgBase):
+    """
+    Role reply message
+
+    The switch responds with this message to a role request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    role             One of the following values.
+                     OFPCR_ROLE_NOCHANGE
+                     OFPCR_ROLE_EQUAL
+                     OFPCR_ROLE_MASTER
+                     OFPCR_ROLE_SLAVE
+    generation_id    Master Election Generation ID
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPRoleReply, MAIN_DISPATCHER)
+        def role_reply_handler(self, ev):
+            msg = ev.msg
+            ofp = dp.ofproto
+
+            if msg.role == ofp.OFPCR_ROLE_NOCHANGE:
+                role = 'NOCHANGE'
+            elif msg.role == ofp.OFPCR_ROLE_EQUAL:
+                role = 'EQUAL'
+            elif msg.role == ofp.OFPCR_ROLE_MASTER:
+                role = 'MASTER'
+            elif msg.role == ofp.OFPCR_ROLE_SLAVE:
+                role = 'SLAVE'
+            else:
+                role = 'unknown'
+
+            self.logger.debug('OFPRoleReply received: '
+                              'role=%s generation_id=%d',
+                              role, msg.generation_id)
+    """
     def __init__(self, datapath, role=None, generation_id=None):
         super(OFPRoleReply, self).__init__(datapath)
         self.role = role
@@ -3452,6 +5020,19 @@ class OFPRoleReply(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_GET_ASYNC_REQUEST)
 class OFPGetAsyncRequest(MsgBase):
+    """
+    Get asynchronous configuration request message
+
+    The controller uses this message to query the asynchronous message.
+
+    Example::
+
+        def send_get_async_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGetAsyncRequest(datapath)
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath):
         super(OFPGetAsyncRequest, self).__init__(datapath)
 
@@ -3459,6 +5040,52 @@ class OFPGetAsyncRequest(MsgBase):
 @_register_parser
 @_set_msg_type(ofproto_v1_3.OFPT_GET_ASYNC_REPLY)
 class OFPGetAsyncReply(MsgBase):
+    """
+    Get asynchronous configuration reply message
+
+    The switch responds with this message to a get asynchronous configuration
+    request.
+
+    ================== ====================================================
+    Attribute          Description
+    ================== ====================================================
+    packet_in_mask     2-element array: element 0, when the controller has a
+                       OFPCR_ROLE_EQUAL or OFPCR_ROLE_MASTER role. element 1,
+                       OFPCR_ROLE_SLAVE role controller.
+                       Bitmasks of following values.
+                       OFPR_NO_MATCH
+                       OFPR_ACTION
+                       OFPR_INVALID_TTL
+    port_status_mask   2-element array.
+                       Bitmasks of following values.
+                       OFPPR_ADD
+                       OFPPR_DELETE
+                       OFPPR_MODIFY
+    flow_removed_mask  2-element array.
+                       Bitmasks of following values.
+                       OFPRR_IDLE_TIMEOUT
+                       OFPRR_HARD_TIMEOUT
+                       OFPRR_DELETE
+                       OFPRR_GROUP_DELETE
+    ================== ====================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGetAsyncReply, MAIN_DISPATCHER)
+        def get_async_reply_handler(self, ev):
+            msg = ev.msg
+
+            self.logger.debug('OFPGetAsyncReply received: '
+                              'packet_in_mask=0x%08x:0x%08x '
+                              'port_status_mask=0x%08x:0x%08x '
+                              'flow_removed_mask=0x%08x:0x%08x',
+                              msg.packet_in_mask[0],
+                              msg.packet_in_mask[1],
+                              msg.port_status_mask[0],
+                              msg.port_status_mask[1],
+                              msg.flow_removed_mask[0],
+                              msg.flow_removed_mask[1])
+    """
     def __init__(self, datapath, packet_in_mask=None, port_status_mask=None,
                  flow_removed_mask=None):
         super(OFPGetAsyncReply, self).__init__(datapath)
@@ -3484,6 +5111,53 @@ class OFPGetAsyncReply(MsgBase):
 
 @_set_msg_type(ofproto_v1_3.OFPT_SET_ASYNC)
 class OFPSetAsync(MsgBase):
+    """
+    Set asynchronous configuration message
+
+    The controller sends this message to set the asynchronous messages that
+    it wants to receive on a given OpneFlow channel.
+
+    ================== ====================================================
+    Attribute          Description
+    ================== ====================================================
+    packet_in_mask     2-element array: element 0, when the controller has a
+                       OFPCR_ROLE_EQUAL or OFPCR_ROLE_MASTER role. element 1,
+                       OFPCR_ROLE_SLAVE role controller.
+                       Bitmasks of following values.
+                       OFPR_NO_MATCH
+                       OFPR_ACTION
+                       OFPR_INVALID_TTL
+    port_status_mask   2-element array.
+                       Bitmasks of following values.
+                       OFPPR_ADD
+                       OFPPR_DELETE
+                       OFPPR_MODIFY
+    flow_removed_mask  2-element array.
+                       Bitmasks of following values.
+                       OFPRR_IDLE_TIMEOUT
+                       OFPRR_HARD_TIMEOUT
+                       OFPRR_DELETE
+                       OFPRR_GROUP_DELETE
+    ================== ====================================================
+
+    Example::
+
+        def send_set_async(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            packet_in_mask = ofp.OFPR_ACTION | ofp.OFPR_INVALID_TTL
+            port_status_mask = (ofp.OFPPR_ADD | ofp.OFPPR_DELETE |
+                                ofp.OFPPR_MODIFY)
+            flow_removed_mask = (ofp.OFPRR_IDLE_TIMEOUT |
+                                 ofp.OFPRR_HARD_TIMEOUT |
+                                 ofp.OFPRR_DELETE)
+            req = ofp_parser.OFPSetAsync(datapath,
+                                         [packet_in_mask, 0],
+                                         [port_status_mask, 0],
+                                         [flow_removed_mask, 0])
+            datapath.send_msg(req)
+    """
     def __init__(self, datapath,
                  packet_in_mask, port_status_mask, flow_removed_mask):
         super(OFPSetAsync, self).__init__(datapath)
