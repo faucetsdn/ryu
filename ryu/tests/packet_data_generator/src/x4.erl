@@ -29,7 +29,7 @@ x() ->
         #ofp_packet_out{
             buffer_id = no_buffer,in_port = controller,
             actions = 
-                [#ofp_action_output{port = all,max_len = 65535}],
+                [#ofp_action_output{port = all,max_len = no_buffer}],
             data = 
                 <<242,11,164,208,63,112,242,11,164,125,248,234,8,0,69,0,
                   0,84,248,26,0,0,255,1,175,139,10,0,0,1,10,0,0,2,8,0,2,
@@ -57,7 +57,7 @@ x() ->
                          [#ofp_action_set_field{
                              field = #ofp_field{name = vlan_vid,
                                                 value = <<1,2>> }},
-                          #ofp_action_output{port = 6,max_len = 65535}]}]},
+                          #ofp_action_output{port = 6,max_len = no_buffer}]}]},
         #ofp_flow_mod{
             cookie = <<0,0,0,0,0,0,0,0>>,
             cookie_mask = <<0,0,0,0,0,0,0,0>>,
@@ -210,7 +210,7 @@ x() ->
                               actions =
                                   [#ofp_action_output{
                                        port = controller,
-                                       max_len = 65535}]}]}]},
+                                       max_len = no_buffer}]}]}]},
         #ofp_echo_request{
             data = <<"hoge">>
         },
@@ -242,7 +242,7 @@ x() ->
                 [#ofp_bucket{
                      weight = 1,watch_port = 1,watch_group = 1,
                      actions = 
-                         [#ofp_action_output{port = 2,max_len = 65535}]}]},
+                         [#ofp_action_output{port = 2,max_len = no_buffer}]}]},
         #ofp_port_mod{port_no = 1, hw_addr = <<0,17,0,0,17,17>>,
             config = [],mask = [], advertise = [fiber]},
         #ofp_table_mod{table_id = all},
@@ -304,7 +304,7 @@ x() ->
                               weight = 1,watch_port = 1,watch_group = 1,
                               actions = 
                                   [#ofp_action_output{
-                                       port = 2, max_len = 65535}]}]}]},
+                                       port = 2, max_len = no_buffer}]}]}]},
         #ofp_queue_get_config_request{port = any},
         #ofp_queue_get_config_reply{port = any,queues = [
             #ofp_packet_queue{queue_id = 99, port_no = 77,
@@ -418,7 +418,7 @@ x() ->
                 [#ofp_instruction_meter{meter_id = 1},
                  #ofp_instruction_write_actions{
                      actions =
-                         [#ofp_action_output{port = 6,max_len = 65535}]}]},
+                         [#ofp_action_output{port = 6,max_len = no_buffer}]}]},
 
         #ofp_meter_config_request{meter_id = all},
         #ofp_meter_config_reply{
