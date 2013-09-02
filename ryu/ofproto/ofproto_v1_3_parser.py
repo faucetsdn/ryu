@@ -4771,12 +4771,12 @@ class OFPQueueGetConfigRequest(MsgBase):
 
 class OFPQueuePropHeader(StringifyMixin):
     def __init__(self, property_, len_):
-        self._property = property_
+        self.property = property_
         self.len = len_
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto_v1_3.OFP_QUEUE_PROP_HEADER_PACK_STR,
-                      buf, offset, self._property, self.len)
+                      buf, offset, self.property, self.len)
 
 
 class OFPQueueProp(OFPQueuePropHeader):
@@ -4810,7 +4810,7 @@ class OFPQueueProp(OFPQueuePropHeader):
     ofproto_v1_3.OFPQT_MIN_RATE,
     ofproto_v1_3.OFP_QUEUE_PROP_MIN_RATE_SIZE)
 class OFPQueuePropMinRate(OFPQueueProp):
-    def __init__(self, rate, len_=None):
+    def __init__(self, rate, property_=None, len_=None):
         super(OFPQueuePropMinRate, self).__init__()
         self.rate = rate
 
@@ -4825,7 +4825,7 @@ class OFPQueuePropMinRate(OFPQueueProp):
     ofproto_v1_3.OFPQT_MAX_RATE,
     ofproto_v1_3.OFP_QUEUE_PROP_MAX_RATE_SIZE)
 class OFPQueuePropMaxRate(OFPQueueProp):
-    def __init__(self, rate, len_=None):
+    def __init__(self, rate, property_=None, len_=None):
         super(OFPQueuePropMaxRate, self).__init__()
         self.rate = rate
 
