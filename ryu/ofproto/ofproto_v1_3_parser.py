@@ -155,6 +155,8 @@ class OFPErrorMsg(MsgBase):
     data       Variable length data depending on the type and code
     ========== =========================================================
 
+    ``type`` attribute corresponds to ``type_`` parameter of __init__.
+
     Types and codes are defined in ``ryu.ofproto.ofproto_v1_3``.
 
     ============================= ===========
@@ -2200,7 +2202,7 @@ class OFPPacketOut(MsgBase):
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
-    buffer_id        ID assigned by datapath (0xffffffff if none)
+    buffer_id        ID assigned by datapath (OFP_NO_BUFFER if none)
     in_port          Packet's input port or ``OFPP_CONTROLLER``
     actions          list of OpenFlow action class
     data             Packet data
@@ -2269,7 +2271,7 @@ class OFPFlowMod(MsgBase):
     idle_timeout     Idle time before discarding (seconds)
     hard_timeout     Max time before discarding (seconds)
     priority         Priority level of flow entry
-    buffer_id        Buffered packet to apply to (or 0xffffffff)
+    buffer_id        Buffered packet to apply to (or OFP_NO_BUFFER)
     out_port         For ``OFPFC_DELETE*`` commands, require matching
                      entries to include this as an output port
     out_group        For ``OFPFC_DELETE*`` commands, require matching
@@ -2294,7 +2296,7 @@ class OFPFlowMod(MsgBase):
             table_id = 0
             idle_timeout = hard_timeout = 0
             priority = 32768
-            buffer_id = 0xffffffff
+            buffer_id = ofp.OFP_NO_BUFFER
             match = ofp_parser.OFPMatch(in_port=1, eth_dst='ff:ff:ff:ff:ff:ff')
             actions = [ofp_parser.OFPActionOutput(ofp.OFPP_NORMAL, 0)]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
@@ -2452,6 +2454,8 @@ class OFPInstructionActions(StringifyMixin):
                      OFPIT_CLEAR_ACTIONS
     actions          list of OpenFlow action class
     ================ ======================================================
+
+    ``type`` attribute corresponds to ``type_`` parameter of __init__.
     """
     def __init__(self, type_, actions=None, len_=None):
         super(OFPInstructionActions, self).__init__()
@@ -3087,6 +3091,8 @@ class OFPGroupMod(MsgBase):
     group_id         Group identifier
     buckets          list of ``OFPBucket``
     ================ ======================================================
+
+    ``type`` attribute corresponds to ``type_`` parameter of __init__.
 
     Example::
 
