@@ -32,6 +32,7 @@
       ], 
       "match": {
          "OFPMatch": {
+            "length": 14, 
             "oxm_fields": [
                {
                   "OXMTlv": {
@@ -40,7 +41,8 @@
                      "value": "f2:0b:a4:7d:f8:ea"
                   }
                }
-            ]
+            ], 
+            "type": 1
          }
       }, 
       "out_group": 4294967295, 
