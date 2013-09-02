@@ -10,6 +10,7 @@
                "hard_timeout": 0, 
                "idle_timeout": 0, 
                "instructions": [], 
+               "length": 56, 
                "match": {
                   "OFPMatch": {
                      "length": 4, 
@@ -48,6 +49,7 @@
                      }
                   }
                ], 
+               "length": 88, 
                "match": {
                   "OFPMatch": {
                      "length": 10, 
@@ -85,6 +87,7 @@
                      }
                   }
                ], 
+               "length": 80, 
                "match": {
                   "OFPMatch": {
                      "length": 22, 
@@ -138,6 +141,7 @@
                      }
                   }
                ], 
+               "length": 80, 
                "match": {
                   "OFPMatch": {
                      "length": 4, 
