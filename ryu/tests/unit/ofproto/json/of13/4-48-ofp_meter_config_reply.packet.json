@@ -7,7 +7,9 @@
                   {
                      "OFPMeterBandDrop": {
                         "burst_size": 10, 
-                        "rate": 1000
+                        "len": 16, 
+                        "rate": 1000, 
+                        "type": 1
                      }
                   }
                ], 
