@@ -126,10 +126,6 @@ class MsgBase(StringifyMixin):
         return msg_
 
     def _serialize_pre(self):
-        assert self.version is None
-        assert self.msg_type is None
-        assert self.buf is None
-
         self.version = self.datapath.ofproto.OFP_VERSION
         self.msg_type = self.cls_msg_type
         self.buf = bytearray(self.datapath.ofproto.OFP_HEADER_SIZE)
@@ -138,7 +134,6 @@ class MsgBase(StringifyMixin):
         # buffer length is determined after trailing data is formated.
         assert self.version is not None
         assert self.msg_type is not None
-        assert self.msg_len is None
         assert self.buf is not None
         assert len(self.buf) >= self.datapath.ofproto.OFP_HEADER_SIZE
 

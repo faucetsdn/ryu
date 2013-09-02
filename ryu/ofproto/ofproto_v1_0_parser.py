@@ -2081,7 +2081,6 @@ class OFPPacketOut(MsgBase):
     def _serialize_body(self):
         assert self.buffer_id is not None
         assert self.in_port is not None
-        assert self._actions_len is None
         assert self.actions is not None
 
         self._actions_len = 0

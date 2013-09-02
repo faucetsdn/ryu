@@ -204,26 +204,13 @@ class TestMsgBase(unittest.TestCase):
     def test_parser_check_msg_type(self):
         self._test_parser(ofproto_v1_0.OFPT_ERROR)
 
-    def _test_serialize(self, version=True, msg_type=True,
-                        msg_len=True, buf=True):
+    def _test_serialize(self):
 
         class Datapath(object):
             ofproto = ofproto_v1_0
             ofproto_parser = ofproto_v1_0_parser
 
         c = ofproto_v1_0_parser.OFPHello(Datapath)
-
-        if not version:
-            c.version = ofproto_v1_0.OFP_VERSION
-
-        if not msg_type:
-            c.msg_type = ofproto_v1_0.OFPT_HELLO
-
-        if not msg_len:
-            c.msg_len = ofproto_v1_0.OFP_HEADER_PACK_STR
-
-        if not buf:
-            c.buf = bytearray()
 
         c.serialize()
         eq_(ofproto_v1_0.OFP_VERSION, c.version)
@@ -234,22 +221,6 @@ class TestMsgBase(unittest.TestCase):
 
     def test_serialize(self):
         ok_(self._test_serialize())
-
-    @raises(AssertionError)
-    def test_serialize_check_version(self):
-        self._test_serialize(version=False)
-
-    @raises(AssertionError)
-    def test_serialize_check_msg_type(self):
-        self._test_serialize(msg_type=False)
-
-    @raises(AssertionError)
-    def test_serialize_check_msg_len(self):
-        self._test_serialize(msg_len=False)
-
-    @raises(AssertionError)
-    def test_serialize_check_buf(self):
-        self._test_serialize(buf=False)
 
 
 class TestMsgPackInto(unittest.TestCase):
