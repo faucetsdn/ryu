@@ -2459,7 +2459,7 @@ class TestOFPPacketOut(unittest.TestCase):
 
         eq_(buffer_id, c.buffer_id)
         eq_(in_port, c.in_port)
-        eq_(0, c._actions_len)
+        eq_(0, c.actions_len)
         eq_(data, c.data)
         eq_(actions, c.actions)
 
