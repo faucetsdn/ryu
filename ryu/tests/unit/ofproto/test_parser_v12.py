@@ -782,7 +782,7 @@ class TestOFPErrorMsg(unittest.TestCase):
         eq_(res.msg_type, self.msg_type)
         eq_(res.msg_len, self.msg_len)
         eq_(res.xid, self.xid)
-        eq_(res._type, type_)
+        eq_(res.type, type_)
         eq_(res.exp_type, exp_type)
         eq_(res.experimenter, experimenter)
         eq_(res.data, data)
@@ -1217,7 +1217,7 @@ class TestOFPErrorExperimenterMsg(unittest.TestCase):
 
     def test_init(self):
         c = OFPErrorExperimenterMsg(_Datapath)
-        eq_(c._type, None)
+        eq_(c.type, 65535)
         eq_(c.exp_type, None)
         eq_(c.experimenter, None)
         eq_(c.data, None)
@@ -1248,7 +1248,7 @@ class TestOFPErrorExperimenterMsg(unittest.TestCase):
         eq_(res.msg_type, msg_type)
         eq_(res.msg_len, msg_len)
         eq_(res.xid, xid)
-        eq_(res._type, type_)
+        eq_(res.type, type_)
         eq_(res.exp_type, exp_type)
         eq_(res.experimenter, experimenter)
 
