@@ -179,6 +179,9 @@ class Test_Parser(unittest.TestCase):
             msg3.serialize()
             eq_(wire_msg, msg3.buf)
 
+            msg2.serialize()
+            eq_(wire_msg, msg2.buf)
+
 
 def _add_tests():
     import os
