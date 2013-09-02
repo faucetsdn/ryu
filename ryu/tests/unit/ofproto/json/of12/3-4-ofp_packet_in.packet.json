@@ -4,6 +4,7 @@
       "data": "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD", 
       "match": {
          "OFPMatch": {
+            "length": 80, 
             "oxm_fields": [
                {
                   "OXMTlv": {
@@ -68,7 +69,8 @@
                      "value": "00:00:00:00:00:00"
                   }
                }
-            ]
+            ], 
+            "type": 1
          }
       }, 
       "reason": 1, 

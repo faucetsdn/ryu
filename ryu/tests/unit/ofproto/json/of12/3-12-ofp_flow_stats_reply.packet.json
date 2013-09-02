@@ -12,7 +12,9 @@
                "instructions": [], 
                "match": {
                   "OFPMatch": {
-                     "oxm_fields": []
+                     "length": 4, 
+                     "oxm_fields": [], 
+                     "type": 1
                   }
                }, 
                "packet_count": 0, 
@@ -48,6 +50,7 @@
                ], 
                "match": {
                   "OFPMatch": {
+                     "length": 10, 
                      "oxm_fields": [
                         {
                            "OXMTlv": {
@@ -56,7 +59,8 @@
                               "value": 2054
                            }
                         }
-                     ]
+                     ], 
+                     "type": 1
                   }
                }, 
                "packet_count": 0, 
@@ -83,6 +87,7 @@
                ], 
                "match": {
                   "OFPMatch": {
+                     "length": 22, 
                      "oxm_fields": [
                         {
                            "OXMTlv": {
@@ -98,7 +103,8 @@
                               "value": "f2:0b:a4:7d:f8:ea"
                            }
                         }
-                     ]
+                     ], 
+                     "type": 1
                   }
                }, 
                "packet_count": 3, 
@@ -134,7 +140,9 @@
                ], 
                "match": {
                   "OFPMatch": {
-                     "oxm_fields": []
+                     "length": 4, 
+                     "oxm_fields": [], 
+                     "type": 1
                   }
                }, 
                "packet_count": 1, 
