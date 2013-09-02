@@ -45,12 +45,6 @@ from ryu.lib import addrconv
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import packet_utils
 
-QUERY_RESPONSE_INTERVAL = 10.0
-LAST_MEMBER_QUERY_INTERVAL = 1.0
-
-MULTICAST_IP_ALL_HOST = '224.0.0.1'
-MULTICAST_MAC_ALL_HOST = '01:00:5e:00:00:01'
-
 
 IGMP_TYPE_QUERY = 0x11
 IGMP_TYPE_REPORT_V1 = 0x12
