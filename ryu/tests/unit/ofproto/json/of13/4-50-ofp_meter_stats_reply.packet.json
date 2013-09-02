@@ -15,6 +15,7 @@
                "duration_nsec": 480000, 
                "duration_sec": 0, 
                "flow_count": 0, 
+               "length": 56, 
                "meter_id": 100, 
                "packet_in_count": 0
             }

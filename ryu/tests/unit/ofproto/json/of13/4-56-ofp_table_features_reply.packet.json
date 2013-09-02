@@ -4,6 +4,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1112, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -15,6 +16,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1112, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -26,6 +28,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -37,6 +40,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -48,6 +52,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -59,6 +64,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -70,6 +76,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -81,6 +88,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -92,6 +100,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -103,6 +112,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
+               "length": 1104, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
