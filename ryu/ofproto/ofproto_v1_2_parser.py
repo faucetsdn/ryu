@@ -1831,13 +1831,6 @@ class OFPStatsReply(MsgBase):
         self.flags = flags
         self.body = body
 
-    def to_jsondict(self):
-        # remove some redundant attributes
-        d = super(OFPStatsReply, self).to_jsondict()
-        v = d[self.__class__.__name__]
-        del v['type']  # implied by subclass
-        return d
-
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPStatsReply, cls).parser(datapath, version, msg_type,
