@@ -3,8 +3,10 @@
       "actions": [
          {
             "OFPActionOutput": {
+               "len": 16, 
                "max_len": 65535, 
-               "port": 4294967292
+               "port": 4294967292, 
+               "type": 0
             }
          }
       ], 

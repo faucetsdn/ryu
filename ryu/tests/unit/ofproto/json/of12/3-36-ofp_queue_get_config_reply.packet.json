@@ -4,15 +4,18 @@
       "queues": [
          {
             "OFPPacketQueue": {
+               "len": 48, 
                "port": 77, 
                "properties": [
                   {
                      "OFPQueuePropMinRate": {
+                        "len": 16, 
                         "rate": 10
                      }
                   }, 
                   {
                      "OFPQueuePropMaxRate": {
+                        "len": 16, 
                         "rate": 900
                      }
                   }
@@ -22,15 +25,18 @@
          }, 
          {
             "OFPPacketQueue": {
+               "len": 48, 
                "port": 77, 
                "properties": [
                   {
                      "OFPQueuePropMinRate": {
+                        "len": 16, 
                         "rate": 100
                      }
                   }, 
                   {
                      "OFPQueuePropMaxRate": {
+                        "len": 16, 
                         "rate": 200
                      }
                   }

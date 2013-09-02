@@ -34,11 +34,14 @@
                         "actions": [
                            {
                               "OFPActionOutput": {
+                                 "len": 16, 
                                  "max_len": 0, 
-                                 "port": 4294967290
+                                 "port": 4294967290, 
+                                 "type": 0
                               }
                            }
                         ], 
+                        "len": 24, 
                         "type": 4
                      }
                   }
@@ -72,7 +75,9 @@
                "instructions": [
                   {
                      "OFPInstructionGotoTable": {
-                        "table_id": 1
+                        "len": 8, 
+                        "table_id": 1, 
+                        "type": 1
                      }
                   }
                ], 
@@ -115,11 +120,14 @@
                         "actions": [
                            {
                               "OFPActionOutput": {
+                                 "len": 16, 
                                  "max_len": 65535, 
-                                 "port": 4294967293
+                                 "port": 4294967293, 
+                                 "type": 0
                               }
                            }
                         ], 
+                        "len": 24, 
                         "type": 3
                      }
                   }
