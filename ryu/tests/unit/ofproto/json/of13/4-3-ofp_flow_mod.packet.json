@@ -10,7 +10,9 @@
       "instructions": [
          {
             "OFPInstructionGotoTable": {
-               "table_id": 1
+               "len": 8, 
+               "table_id": 1, 
+               "type": 1
             }
          }
       ], 

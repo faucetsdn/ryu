@@ -9,11 +9,14 @@
                         "actions": [
                            {
                               "OFPActionOutput": {
+                                 "len": 16, 
                                  "max_len": 65535, 
-                                 "port": 2
+                                 "port": 2, 
+                                 "type": 0
                               }
                            }
                         ], 
+                        "len": 32, 
                         "watch_group": 1, 
                         "watch_port": 1, 
                         "weight": 1
