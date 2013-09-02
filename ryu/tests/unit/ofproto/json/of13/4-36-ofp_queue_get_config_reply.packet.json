@@ -10,12 +10,14 @@
                   {
                      "OFPQueuePropMinRate": {
                         "len": 16, 
+                        "property": 1, 
                         "rate": 10
                      }
                   }, 
                   {
                      "OFPQueuePropMaxRate": {
                         "len": 16, 
+                        "property": 2, 
                         "rate": 900
                      }
                   }
@@ -31,12 +33,14 @@
                   {
                      "OFPQueuePropMinRate": {
                         "len": 16, 
+                        "property": 1, 
                         "rate": 100
                      }
                   }, 
                   {
                      "OFPQueuePropMaxRate": {
                         "len": 16, 
+                        "property": 2, 
                         "rate": 200
                      }
                   }
