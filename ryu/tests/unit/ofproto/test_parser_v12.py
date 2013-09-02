@@ -6168,7 +6168,7 @@ class TestOFPQueuePropHeader(unittest.TestCase):
 
     def test_init(self):
         c = OFPQueuePropHeader(self.property_, self.len_)
-        eq_(self.property_, c._property)
+        eq_(self.property_, c.property)
         eq_(self.len_, c.len)
 
     def _test_serialize(self, property_, len_):
@@ -6235,7 +6235,7 @@ class TestOFPPacketQueue(unittest.TestCase):
         eq_(prop_cnt, len(res.properties))
 
         for rate, p in enumerate(res.properties):
-            eq_(prop_type, p._property)
+            eq_(prop_type, p.property)
             eq_(prop_len, p.len)
             eq_(rate, p.rate)
 
@@ -6374,7 +6374,7 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
             eq_(1, len(val.properties))
 
             prop = val.properties[0]
-            eq_(c['prop_type'], prop._property)
+            eq_(c['prop_type'], prop.property)
             eq_(c['prop_len'], prop.len)
             eq_(c['prop_rate'], prop.rate)
 
