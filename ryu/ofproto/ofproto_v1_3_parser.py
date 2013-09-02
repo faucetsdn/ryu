@@ -2130,7 +2130,7 @@ class OFPPort(ofproto_parser.namedtuple('OFPPort', (
         i = cls._fields.index('name')
         port[i] = port[i].rstrip('\0')
         ofpport = cls(*port)
-        ofpport._length = ofproto_v1_3.OFP_PORT_SIZE
+        ofpport.length = ofproto_v1_3.OFP_PORT_SIZE
         return ofpport
 
 
@@ -3371,7 +3371,7 @@ class OFPMultipartReply(MsgBase):
         while offset < msg_len:
             b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
             body.append(b)
-            offset += b._length
+            offset += b.length
 
         if stats_type_cls.cls_body_single_struct:
             msg.body = body[0]
@@ -3400,7 +3400,7 @@ class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
         desc = list(desc)
         desc = map(lambda x: x.rstrip('\0'), desc)
         stats = cls(*desc)
-        stats._length = ofproto_v1_3.OFP_DESC_SIZE
+        stats.length = ofproto_v1_3.OFP_DESC_SIZE
         return stats
 
 
@@ -3466,9 +3466,10 @@ class OFPFlowStats(StringifyMixin):
     def __init__(self, table_id=None, duration_sec=None, duration_nsec=None,
                  priority=None, idle_timeout=None, hard_timeout=None,
                  flags=None, cookie=None, packet_count=None,
-                 byte_count=None, match=None, instructions=None):
+                 byte_count=None, match=None, instructions=None,
+                 length=None):
         super(OFPFlowStats, self).__init__()
-        self._length = 0
+        self.length = 0
         self.table_id = table_id
         self.duration_sec = duration_sec
         self.duration_nsec = duration_nsec
@@ -3486,7 +3487,7 @@ class OFPFlowStats(StringifyMixin):
     def parser(cls, buf, offset):
         flow_stats = cls()
 
-        (flow_stats._length, flow_stats.table_id,
+        (flow_stats.length, flow_stats.table_id,
          flow_stats.duration_sec, flow_stats.duration_nsec,
          flow_stats.priority, flow_stats.idle_timeout,
          flow_stats.hard_timeout, flow_stats.flags,
@@ -3497,9 +3498,9 @@ class OFPFlowStats(StringifyMixin):
 
         flow_stats.match = OFPMatch.parser(buf, offset)
         match_length = utils.round_up(flow_stats.match.length, 8)
-        inst_length = (flow_stats._length - (ofproto_v1_3.OFP_FLOW_STATS_SIZE -
-                                             ofproto_v1_3.OFP_MATCH_SIZE +
-                                             match_length))
+        inst_length = (flow_stats.length - (ofproto_v1_3.OFP_FLOW_STATS_SIZE -
+                                            ofproto_v1_3.OFP_MATCH_SIZE +
+                                            match_length))
         offset += match_length
         instructions = []
         while inst_length > 0:
@@ -3624,7 +3625,7 @@ class OFPAggregateStats(ofproto_parser.namedtuple('OFPAggregateStats', (
         agg = struct.unpack_from(
             ofproto_v1_3.OFP_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
         stats = cls(*agg)
-        stats._length = ofproto_v1_3.OFP_AGGREGATE_STATS_REPLY_SIZE
+        stats.length = ofproto_v1_3.OFP_AGGREGATE_STATS_REPLY_SIZE
         return stats
 
 
@@ -3717,7 +3718,7 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
         tbl = struct.unpack_from(ofproto_v1_3.OFP_TABLE_STATS_PACK_STR,
                                  buf, offset)
         stats = cls(*tbl)
-        stats._length = ofproto_v1_3.OFP_TABLE_STATS_SIZE
+        stats.length = ofproto_v1_3.OFP_TABLE_STATS_SIZE
         return stats
 
 
@@ -3789,7 +3790,7 @@ class OFPPortStats(ofproto_parser.namedtuple('OFPPortStats', (
         port = struct.unpack_from(ofproto_v1_3.OFP_PORT_STATS_PACK_STR,
                                   buf, offset)
         stats = cls(*port)
-        stats._length = ofproto_v1_3.OFP_PORT_STATS_SIZE
+        stats.length = ofproto_v1_3.OFP_PORT_STATS_SIZE
         return stats
 
 
@@ -3879,7 +3880,7 @@ class OFPQueueStats(ofproto_parser.namedtuple('OFPQueueStats', (
         queue = struct.unpack_from(ofproto_v1_3.OFP_QUEUE_STATS_PACK_STR,
                                    buf, offset)
         stats = cls(*queue)
-        stats._length = ofproto_v1_3.OFP_QUEUE_STATS_SIZE
+        stats.length = ofproto_v1_3.OFP_QUEUE_STATS_SIZE
         return stats
 
 
@@ -3963,7 +3964,7 @@ class OFPGroupStats(ofproto_parser.namedtuple('OFPGroupStats', (
         group = struct.unpack_from(ofproto_v1_3.OFP_GROUP_STATS_PACK_STR,
                                    buf, offset)
         stats = cls(*group)
-        stats._length = ofproto_v1_3.OFP_GROUP_STATS_SIZE
+        stats.length = ofproto_v1_3.OFP_GROUP_STATS_SIZE
         return stats
 
 
@@ -4038,7 +4039,7 @@ class OFPGroupStatsReply(OFPMultipartReply):
 
 
 class OFPGroupDescStats(StringifyMixin):
-    def __init__(self, type_=None, group_id=None, buckets=None):
+    def __init__(self, type_=None, group_id=None, buckets=None, length=None):
         super(OFPGroupDescStats, self).__init__()
         self.type = type_
         self.group_id = group_id
@@ -4048,13 +4049,13 @@ class OFPGroupDescStats(StringifyMixin):
     def parser(cls, buf, offset):
         stats = cls()
 
-        (stats._length, stats.type, stats.group_id) = struct.unpack_from(
+        (stats.length, stats.type, stats.group_id) = struct.unpack_from(
             ofproto_v1_3.OFP_GROUP_DESC_STATS_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_GROUP_DESC_STATS_SIZE
 
         stats.buckets = []
         length = ofproto_v1_3.OFP_GROUP_DESC_STATS_SIZE
-        while length < stats._length:
+        while length < stats.length:
             bucket = OFPBucket.parser(buf, offset)
             stats.buckets.append(bucket)
 
@@ -4134,7 +4135,7 @@ class OFPGroupFeaturesStats(ofproto_parser.namedtuple('OFPGroupFeaturesStats',
         max_groups = list(group_features[2:6])
         actions = list(group_features[6:10])
         stats = cls(types, capabilities, max_groups, actions)
-        stats._length = ofproto_v1_3.OFP_GROUP_FEATURES_SIZE
+        stats.length = ofproto_v1_3.OFP_GROUP_FEATURES_SIZE
         return stats
 
 
@@ -4213,7 +4214,7 @@ class OFPMeterBandStats(StringifyMixin):
 class OFPMeterStats(StringifyMixin):
     def __init__(self, meter_id=None, flow_count=None, packet_in_count=None,
                  byte_in_count=None, duration_sec=None, duration_nsec=None,
-                 band_stats=None):
+                 band_stats=None, length=None):
         super(OFPMeterStats, self).__init__()
         self.meter_id = meter_id
         self.flow_count = flow_count
@@ -4227,7 +4228,7 @@ class OFPMeterStats(StringifyMixin):
     def parser(cls, buf, offset):
         meter_stats = cls()
 
-        (meter_stats.meter_id, meter_stats._length,
+        (meter_stats.meter_id, meter_stats.length,
          meter_stats.flow_count, meter_stats.packet_in_count,
          meter_stats.byte_in_count, meter_stats.duration_sec,
          meter_stats.duration_nsec) = struct.unpack_from(
@@ -4236,7 +4237,7 @@ class OFPMeterStats(StringifyMixin):
 
         meter_stats.band_stats = []
         length = ofproto_v1_3.OFP_METER_STATS_SIZE
-        while length < meter_stats._length:
+        while length < meter_stats.length:
             band_stats = OFPMeterBandStats.parser(buf, offset)
             meter_stats.band_stats.append(band_stats)
             offset += ofproto_v1_3.OFP_METER_BAND_STATS_SIZE
@@ -4419,9 +4420,9 @@ class OFPMeterBandExperimenter(OFPMeterBandHeader):
 
 
 class OFPMeterConfigStats(StringifyMixin):
-    def __init__(self, flags=None, meter_id=None, bands=None):
+    def __init__(self, flags=None, meter_id=None, bands=None, length=None):
         super(OFPMeterConfigStats, self).__init__()
-        self._length = None
+        self.length = None
         self.flags = flags
         self.meter_id = meter_id
         self.bands = bands
@@ -4430,14 +4431,14 @@ class OFPMeterConfigStats(StringifyMixin):
     def parser(cls, buf, offset):
         meter_config = cls()
 
-        (meter_config._length, meter_config.flags,
+        (meter_config.length, meter_config.flags,
          meter_config.meter_id) = struct.unpack_from(
             ofproto_v1_3.OFP_METER_CONFIG_PACK_STR, buf, offset)
         offset += ofproto_v1_3.OFP_METER_CONFIG_SIZE
 
         meter_config.bands = []
         length = ofproto_v1_3.OFP_METER_CONFIG_SIZE
-        while length < meter_config._length:
+        while length < meter_config.length:
             band = OFPMeterBandHeader.parser(buf, offset)
             meter_config.bands.append(band)
             offset += band._len
@@ -4523,7 +4524,7 @@ class OFPMeterFeaturesStats(ofproto_parser.namedtuple('OFPMeterFeaturesStats',
         meter_features = struct.unpack_from(
             ofproto_v1_3.OFP_METER_FEATURES_PACK_STR, buf, offset)
         stats = cls(*meter_features)
-        stats._length = ofproto_v1_3.OFP_METER_FEATURES_SIZE
+        stats.length = ofproto_v1_3.OFP_METER_FEATURES_SIZE
         return stats
 
 
@@ -4591,9 +4592,9 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
 class OFPTableFeaturesStats(StringifyMixin):
     def __init__(self, table_id=None, name=None, metadata_match=None,
                  metadata_write=None, config=None, max_entries=None,
-                 properties=None):
+                 properties=None, length=None):
         super(OFPTableFeaturesStats, self).__init__()
-        self._length = None
+        self.length = None
         self.table_id = table_id
         self.name = name
         self.metadata_match = metadata_match
@@ -4605,7 +4606,7 @@ class OFPTableFeaturesStats(StringifyMixin):
     @classmethod
     def parser(cls, buf, offset):
         table_features = cls()
-        (table_features._length, table_features.table_id,
+        (table_features.length, table_features.table_id,
          name, table_features.metadata_match,
          table_features.metadata_write, table_features.config,
          table_features.max_entries
