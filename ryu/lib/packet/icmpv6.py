@@ -471,14 +471,14 @@ class nd_option_pi(stringify.StringifyMixin):
     Attribute      Description
     ============== ====================
     pl             Prefix Length.
-    res1           L,A,R* Flags for Prefix Information.
+    res1           L,A,R\* Flags for Prefix Information.
     val_l          Valid Lifetime.
     pre_l          Preferred Lifetime.
     res2           This field is unused. It MUST be initialized to zero.
     prefix         An IP address or a prefix of an IP address.
     ============== ====================
 
-    *R flag is defined in (RFC 3775)
+    \*R flag is defined in (RFC 3775)
     """
 
     _PACK_STR = '!BBIII16s'
