@@ -1,5 +1,6 @@
 {
    "OFPGroupFeaturesStatsRequest": {
-      "flags": 0
+      "flags": 0, 
+      "type": 8
    }
 }

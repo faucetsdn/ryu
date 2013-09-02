@@ -9,6 +9,7 @@
             "sw_desc": "sw"
          }
       }, 
-      "flags": 0
+      "flags": 0, 
+      "type": 0
    }
 }

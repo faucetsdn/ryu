@@ -12,6 +12,7 @@
       }, 
       "out_group": 4294967295, 
       "out_port": 4294967295, 
-      "table_id": 0
+      "table_id": 0, 
+      "type": 1
    }
 }

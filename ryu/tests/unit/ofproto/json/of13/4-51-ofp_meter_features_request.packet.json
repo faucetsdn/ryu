@@ -1,5 +1,6 @@
 {
    "OFPMeterFeaturesStatsRequest": {
-      "flags": 0
+      "flags": 0, 
+      "type": 11
    }
 }
