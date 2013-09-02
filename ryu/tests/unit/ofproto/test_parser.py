@@ -159,6 +159,26 @@ class Test_Parser(unittest.TestCase):
             eq_(self._msg_to_jsondict(msg2), json_dict)
             eq_(wire_msg, msg2.buf)
 
+            # check if "len" "length" fields can be omitted
+
+            def _remove(d, names):
+                f = lambda x: _remove(x, names)
+                if isinstance(d, list):
+                    return map(f, d)
+                if isinstance(d, dict):
+                    d2 = {}
+                    for k, v in d.iteritems():
+                        if k in names:
+                            continue
+                        d2[k] = f(v)
+                    return d2
+                return d
+
+            json_dict3 = _remove(json_dict, ['len', 'length'])
+            msg3 = self._jsondict_to_msg(dp, json_dict3)
+            msg3.serialize()
+            eq_(wire_msg, msg3.buf)
+
 
 def _add_tests():
     import os
