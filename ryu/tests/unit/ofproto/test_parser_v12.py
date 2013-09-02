@@ -4704,7 +4704,7 @@ class TestOFPFlowStats(unittest.TestCase):
 
         # parse
         res = OFPFlowStats.parser(buf, 0)
-        eq_(length, res._length)
+        eq_(length, res.length)
         eq_(table_id, res.table_id)
         eq_(duration_sec, res.duration_sec)
         eq_(duration_nsec, res.duration_nsec)
@@ -5827,7 +5827,7 @@ class TestOFPGroupStats(unittest.TestCase):
         res = OFPGroupStats.parser(buf, 0)
 
         # 32
-        eq_(length, res._length)
+        eq_(length, res.length)
         eq_(group_id, res.group_id)
         eq_(ref_count, res.ref_count)
         eq_(packet_count, res.packet_count)
