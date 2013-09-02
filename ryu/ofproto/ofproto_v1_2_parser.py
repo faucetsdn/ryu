@@ -144,9 +144,10 @@ class OFPErrorMsg(MsgBase):
 
 
 class OFPErrorExperimenterMsg(MsgBase):
-    def __init__(self, datapath, exp_type=None, experimenter=None, data=None):
+    def __init__(self, datapath, type_=None, exp_type=None, experimenter=None,
+                 data=None):
         super(OFPErrorExperimenterMsg, self).__init__(datapath)
-        self._type = None
+        self.type = ofproto_v1_2.OFPET_EXPERIMENTER
         self.exp_type = exp_type
         self.experimenter = experimenter
         self.data = data
@@ -156,7 +157,7 @@ class OFPErrorExperimenterMsg(MsgBase):
         cls.cls_msg_type = msg_type
         msg = super(OFPErrorExperimenterMsg, cls).parser(
             datapath, version, msg_type, msg_len, xid, buf)
-        msg._type, msg.exp_type, msg.experimenter = struct.unpack_from(
+        msg.type, msg.exp_type, msg.experimenter = struct.unpack_from(
             ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR, msg.buf,
             ofproto_v1_2.OFP_HEADER_SIZE)
         msg.data = msg.buf[ofproto_v1_2.OFP_ERROR_EXPERIMENTER_SIZE:]
