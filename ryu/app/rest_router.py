@@ -1657,9 +1657,11 @@ class OfCtl_v1_0(OfCtl):
         # Decrement TTL value is not supported at OpenFlow V1.0
         actions = []
         if src_mac:
-            actions.append(ofp_parser.OFPActionSetDlSrc(mac_lib.haddr_to_bin(src_mac)))
+            actions.append(ofp_parser.OFPActionSetDlSrc(
+                           mac_lib.haddr_to_bin(src_mac)))
         if dst_mac:
-            actions.append(ofp_parser.OFPActionSetDlDst(mac_lib.haddr_to_bin(dst_mac)))
+            actions.append(ofp_parser.OFPActionSetDlDst(
+                           mac_lib.haddr_to_bin(dst_mac)))
         if outport is not None:
             actions.append(ofp_parser.OFPActionOutput(outport))
 
