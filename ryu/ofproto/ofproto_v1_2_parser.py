@@ -3454,6 +3454,11 @@ class OFPMatch(StringifyMixin):
         return length + pad_len
 
     def serialize_old(self, buf, offset):
+        if hasattr(self, '_serialized'):
+            raise Exception('serializing an OFPMatch composed with '
+                            'old API multiple times is not supported')
+        self._serialized = True
+
         if self._wc.ft_test(ofproto_v1_2.OFPXMT_OFB_IN_PORT):
             self.append_field(ofproto_v1_2.OXM_OF_IN_PORT,
                               self._flow.in_port)
