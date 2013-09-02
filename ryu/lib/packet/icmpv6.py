@@ -214,8 +214,192 @@ class nd_neighbor(stringify.StringifyMixin):
         return hdr
 
 
+@icmpv6.register_icmpv6_type(ND_ROUTER_SOLICIT)
+class nd_router_solicit(stringify.StringifyMixin):
+    """ICMPv6 sub encoder/decoder class for Router Solicitation messages.
+    (RFC 4861)
+
+    This is used with ryu.lib.packet.icmpv6.icmpv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    res            This field is unused.  It MUST be initialized to zero.
+    type\_         "Type" field of the first option.  None if no options. \
+                   NOTE: This implementation doesn't support two or more \
+                   options.
+    length         "Length" field of the first option.  None if no options.
+    data           An object to describe the first option. \
+                   None if no options. \
+                   Either ryu.lib.packet.icmpv6.nd_option_la object \
+                   or a bytearray.
+    ============== ====================
+    """
+
+    _PACK_STR = '!I'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+    _ND_OPTION_TYPES = {}
+
+    # ND option type
+    ND_OPTION_SLA = 1  # Source Link-Layer Address
+
+    @staticmethod
+    def register_nd_option_type(*args):
+        def _register_nd_option_type(cls):
+            for type_ in args:
+                nd_router_solicit._ND_OPTION_TYPES[type_] = cls
+            return cls
+        return _register_nd_option_type
+
+    def __init__(self, res, type_=None, length=None, data=None):
+        self.res = res
+        self.type_ = type_
+        self.length = length
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf, offset):
+        res = struct.unpack_from(cls._PACK_STR, buf, offset)
+        msg = cls(res)
+        offset += cls._MIN_LEN
+        if len(buf) > offset:
+            (msg.type_, msg.length) = struct.unpack_from('!BB', buf, offset)
+            cls_ = cls._ND_OPTION_TYPES.get(msg.type_, None)
+            offset += 2
+            if cls_:
+                msg.data = cls_.parser(buf, offset)
+            else:
+                msg.data = buf[offset:]
+
+        return msg
+
+    def serialize(self):
+        hdr = bytearray(struct.pack(nd_router_solicit._PACK_STR, self.res))
+
+        if self.type_ is not None:
+            hdr += bytearray(struct.pack('!BB', self.type_, self.length))
+            if self.type_ in nd_router_solicit._ND_OPTION_TYPES:
+                hdr += self.data.serialize()
+            elif self.data is not None:
+                hdr += bytearray(self.data)
+
+        return hdr
+
+
+@icmpv6.register_icmpv6_type(ND_ROUTER_ADVERT)
+class nd_router_advert(stringify.StringifyMixin):
+    """ICMPv6 sub encoder/decoder class for Router Advertisement messages.
+    (RFC 4861)
+
+    This is used with ryu.lib.packet.icmpv6.icmpv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    ch_l           Cur Hop Limit.
+    res            M,O Flags for Router Advertisement.
+    rou_l          Router Lifetime.
+    rea_t          Reachable Time.
+    ret_t          Retrans Timer.
+    type\_         List of option type. Each index refers to an option. \
+                   None if no options. \
+                   NOTE: This implementation support one or more \
+                   options.
+    length         List of option length. Each index refers to an option. \
+                   None if no options. \
+    data           List of option data. Each index refers to an option. \
+                   None if no options. \
+                   ryu.lib.packet.icmpv6.nd_option_la object, \
+                   ryu.lib.packet.icmpv6.nd_option_pi object \
+                   or a bytearray.
+    ============== ====================
+    """
+
+    _PACK_STR = '!BBHII'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+    _ND_OPTION_TYPES = {}
+
+    # ND option type
+    ND_OPTION_SLA = 1  # Source Link-Layer Address
+    ND_OPTION_PI = 3   # Prefix Information
+    ND_OPTION_MTU = 5  # MTU
+
+    @staticmethod
+    def register_nd_option_type(*args):
+        def _register_nd_option_type(cls):
+            for type_ in args:
+                nd_router_advert._ND_OPTION_TYPES[type_] = cls
+            return cls
+        return _register_nd_option_type
+
+    def __init__(self, ch_l, res, rou_l, rea_t, ret_t, type_=None, length=None,
+                 data=None):
+        self.ch_l = ch_l
+        self.res = res << 6
+        self.rou_l = rou_l
+        self.rea_t = rea_t
+        self.ret_t = ret_t
+        self.type_ = type_
+        self.length = length
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (ch_l, res, rou_l, rea_t, ret_t) = struct.unpack_from(cls._PACK_STR,
+                                                              buf, offset)
+        msg = cls(ch_l, res >> 6, rou_l, rea_t, ret_t)
+        offset += cls._MIN_LEN
+        msg.type_ = list()
+        msg.length = list()
+        msg.data = list()
+        while len(buf) > offset:
+            (type_, length) = struct.unpack_from('!BB', buf, offset)
+            msg.type_.append(type_)
+            msg.length.append(length)
+            cls_ = cls._ND_OPTION_TYPES.get(type_, None)
+            offset += 2
+            if cls_:
+                msg.data.append(cls_.parser(buf[:offset+cls_._MIN_LEN],
+                                            offset))
+                offset += cls_._MIN_LEN
+            else:
+                msg.data.append(buf[offset:])
+                offset = len(buf)
+
+        return msg
+
+    def serialize(self):
+        hdr = bytearray(struct.pack(nd_router_advert._PACK_STR, self.ch_l,
+                                    self.res, self.rou_l, self.rea_t,
+                                    self.ret_t))
+        if self.type_ is not None:
+            for i in range(len(self.type_)):
+                hdr += bytearray(struct.pack('!BB', self.type_[i],
+                                             self.length[i]))
+                if self.type_[i] in nd_router_advert._ND_OPTION_TYPES:
+                    hdr += self.data[i].serialize()
+                elif self.data[i] is not None:
+                    hdr += bytearray(self.data[i])
+
+        return hdr
+
+
 @nd_neighbor.register_nd_option_type(nd_neighbor.ND_OPTION_SLA,
                                      nd_neighbor.ND_OPTION_TLA)
+@nd_router_solicit.register_nd_option_type(nd_router_solicit.ND_OPTION_SLA)
+@nd_router_advert.register_nd_option_type(nd_router_advert.ND_OPTION_SLA)
 class nd_option_la(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Source/Target Link-Layer Address Option. (RFC 4861)
@@ -266,6 +450,63 @@ class nd_option_la(stringify.StringifyMixin):
 
         if self.data is not None:
             hdr += bytearray(self.data)
+
+        return hdr
+
+
+@nd_router_advert.register_nd_option_type(nd_router_advert.ND_OPTION_PI)
+class nd_option_pi(stringify.StringifyMixin):
+    """ICMPv6 sub encoder/decoder class for Neighbor discovery
+    Prefix Information Option. (RFC 4861)
+
+    This is used with ryu.lib.packet.icmpv6.nd_neighbor.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the correspondig args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    pl             Prefix Length.
+    res1           L,A,R* Flags for Prefix Information.
+    val_l          Valid Lifetime.
+    pre_l          Preferred Lifetime.
+    res2           This field is unused. It MUST be initialized to zero.
+    prefix         An IP address or a prefix of an IP address.
+    ============== ====================
+
+    *R flag is defined in (RFC 3775)
+    """
+
+    _PACK_STR = '!BBIII16s'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, pl, res1, val_l, pre_l, res2, prefix):
+        self.pl = pl
+        self.res1 = res1 << 5
+        self.val_l = val_l
+        self.pre_l = pre_l
+        self.res2 = res2
+        self.prefix = prefix
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (pl, res1, val_l, pre_l, res2, prefix) = struct.unpack_from(cls.
+                                                                    _PACK_STR,
+                                                                    buf,
+                                                                    offset)
+        msg = cls(pl, res1 >> 5, val_l, pre_l, res2,
+                  addrconv.ipv6.bin_to_text(prefix))
+
+        return msg
+
+    def serialize(self):
+        hdr = bytearray(struct.pack(self._PACK_STR, self.pl, self.res1,
+                                    self.val_l, self.pre_l, self.res2,
+                                    addrconv.ipv6.text_to_bin(self.prefix)))
 
         return hdr
 

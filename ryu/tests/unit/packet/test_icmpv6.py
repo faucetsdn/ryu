@@ -347,10 +347,11 @@ class Test_icmpv6_router_solict(unittest.TestCase):
     res = 0
     nd_type = 1
     nd_length = 1
-    nd_data = None
-    nd_hw_src = '\x12\x2d\xa5\x6d\xbc\x0f'
+    nd_hw_src = '12:2d:a5:6d:bc:0f'
     data = '\x00\x00\x00\x00\x01\x01\x12\x2d\xa5\x6d\xbc\x0f'
     buf = '\x85\x00\x97\xd9'
+    src_ipv6 = '3ffe:507:0:1:200:86ff:fe05:80da'
+    dst_ipv6 = '3ffe:501:0:1001::2'
 
     def setUp(self):
         pass
@@ -359,7 +360,11 @@ class Test_icmpv6_router_solict(unittest.TestCase):
         pass
 
     def test_init(self):
-        pass
+        rs = icmpv6.nd_router_solicit(self.res)
+        eq_(rs.res, self.res)
+        eq_(rs.type_, None)
+        eq_(rs.length, None)
+        eq_(rs.data, None)
 
     def _test_parser(self, data=None):
         buf = self.buf + str(data or '')
@@ -368,7 +373,15 @@ class Test_icmpv6_router_solict(unittest.TestCase):
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
         eq_(msg.csum, self.csum)
-        eq_(msg.data, data)
+        if data is not None:
+            eq_(msg.data.res[0], self.res)
+        eq_(n, None)
+        if data:
+            rs = msg.data
+            eq_(rs.type_, self.nd_type)
+            eq_(rs.length, self.nd_length)
+            eq_(rs.data.hw_src, self.nd_hw_src)
+            eq_(rs.data.data, None)
 
     def test_parser_without_data(self):
         self._test_parser()
@@ -376,38 +389,75 @@ class Test_icmpv6_router_solict(unittest.TestCase):
     def test_parser_with_data(self):
         self._test_parser(self.data)
 
-    def _test_serialize(self, nd_data=None):
-        nd_data = str(nd_data or '')
-        buf = self.buf + nd_data
-        src_ipv6 = 'fe80::102d:a5ff:fe6d:bc0f'
-        dst_ipv6 = 'ff02::2'
-        prev = ipv6(6, 0, 0, len(buf), 58, 255, src_ipv6, dst_ipv6)
-        nd_csum = icmpv6_csum(prev, buf)
+    def test_serialize_without_data(self):
+        rs = icmpv6.nd_router_solicit(self.res)
+        prev = ipv6(6, 0, 0, 8, 64, 255, self.src_ipv6, self.dst_ipv6)
+        rs_csum = icmpv6_csum(prev, self.buf)
 
-        icmp = icmpv6.icmpv6(self.type_, self.code, 0, nd_data)
+        icmp = icmpv6.icmpv6(self.type_, self.code, 0, rs)
         buf = buffer(icmp.serialize(bytearray(), prev))
+
         (type_, code, csum) = struct.unpack_from(icmp._PACK_STR, buf, 0)
-        data = buf[icmp._MIN_LEN:]
+        res = struct.unpack_from(rs._PACK_STR, buf, icmp._MIN_LEN)
+        data = buf[(icmp._MIN_LEN + rs._MIN_LEN):]
 
         eq_(type_, self.type_)
         eq_(code, self.code)
-        eq_(csum, nd_csum)
-        eq_(data, nd_data)
-
-    def test_serialize_without_data(self):
-        self._test_serialize()
+        eq_(csum, rs_csum)
+        eq_(res[0], self.res)
+        eq_(data, '')
 
     def test_serialize_with_data(self):
-        self._test_serialize(self.data)
+        nd_opt = icmpv6.nd_option_la(self.nd_hw_src)
+        rs = icmpv6.nd_router_solicit(self.res, self.nd_type, self.nd_length,
+                                      nd_opt)
+        prev = ipv6(6, 0, 0, 16, 64, 255, self.src_ipv6, self.dst_ipv6)
+        rs_csum = icmpv6_csum(prev, self.buf + self.data)
+
+        icmp = icmpv6.icmpv6(self.type_, self.code, 0, rs)
+        buf = buffer(icmp.serialize(bytearray(), prev))
+
+        (type_, code, csum) = struct.unpack_from(icmp._PACK_STR, buf, 0)
+        res = struct.unpack_from(rs._PACK_STR, buf, icmp._MIN_LEN)
+        (nd_type, nd_length, nd_hw_src) = struct.unpack_from(
+            '!BB6s', buf, icmp._MIN_LEN + rs._MIN_LEN)
+        data = buf[(icmp._MIN_LEN + rs._MIN_LEN + 8):]
+
+        eq_(type_, self.type_)
+        eq_(code, self.code)
+        eq_(csum, rs_csum)
+        eq_(res[0], self.res)
+        eq_(nd_type, self.nd_type)
+        eq_(nd_length, self.nd_length)
+        eq_(nd_hw_src, addrconv.mac.text_to_bin(self.nd_hw_src))
 
     def test_to_string(self):
-        ic = icmpv6.icmpv6(self.type_, self.code, self.csum, self.data)
+        nd_opt = icmpv6.nd_option_la(self.nd_hw_src)
+        rs = icmpv6.nd_router_solicit(
+            self.res, self.nd_type, self.nd_length, nd_opt)
+        ic = icmpv6.icmpv6(self.type_, self.code, self.csum, rs)
 
-        icmp_values = {'type_': self.type_,
-                       'code': self.code,
-                       'csum': self.csum,
-                       'data': self.data}
-        _ic_str = ','.join(['%s=%s' % (k, repr(icmp_values[k]))
+        nd_opt_values = {'hw_src': self.nd_hw_src,
+                         'data': None}
+        _nd_opt_str = ','.join(['%s=%s' % (k, repr(nd_opt_values[k]))
+                                for k, v in inspect.getmembers(nd_opt)
+                                if k in nd_opt_values])
+        nd_opt_str = '%s(%s)' % (icmpv6.nd_option_la.__name__, _nd_opt_str)
+
+        rs_values = {'res': repr(rs.res),
+                     'type_': repr(self.nd_type),
+                     'length': repr(self.nd_length),
+                     'data': nd_opt_str}
+        _rs_str = ','.join(['%s=%s' % (k, rs_values[k])
+                            for k, v in inspect.getmembers(rs)
+                            if k in rs_values])
+        rs_str = '%s(%s)' % (icmpv6.nd_router_solicit.__name__, _rs_str)
+
+        icmp_values = {'type_': repr(self.type_),
+                       'code': repr(self.code),
+                       'csum': repr(self.csum),
+                       'data': rs_str}
+        _ic_str = ','.join(['%s=%s' % (k, icmp_values[k])
                             for k, v in inspect.getmembers(ic)
                             if k in icmp_values])
         ic_str = '%s(%s)' % (icmpv6.icmpv6.__name__, _ic_str)
