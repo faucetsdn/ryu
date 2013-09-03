@@ -31,14 +31,12 @@ from ryu.lib import mac
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import ofctl_v1_0
 from ryu.lib import ofctl_v1_2
+from ryu.lib.packet import packet
 from ryu.ofproto import ether
 from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
-
-
-LOG = logging.getLogger('ryu.app.firewall')
 
 
 #=============================
@@ -60,6 +58,18 @@ LOG = logging.getLogger('ryu.app.firewall')
 #
 # set disable the firewall switches
 # PUT /firewall/module/disable/{switch-id}
+#
+#
+## about Firewall logs
+#
+# get log status of all firewall switches
+# GET /firewall/log/status
+#
+# set log enable the firewall switches
+# PUT /firewall/log/enable/{switch-id}
+#
+# set log disable the firewall switches
+# PUT /firewall/log/disable/{switch-id}
 #
 #
 ## about Firewall rules
@@ -131,6 +141,7 @@ REST_SWITCHID = 'switch_id'
 REST_VLANID = 'vlan_id'
 REST_RULE_ID = 'rule_id'
 REST_STATUS = 'status'
+REST_LOG_STATUS = 'log_status'
 REST_STATUS_ENABLE = 'enable'
 REST_STATUS_DISABLE = 'disable'
 REST_COOKIE = 'cookie'
@@ -154,10 +165,13 @@ REST_TP_DST = 'tp_dst'
 REST_ACTION = 'actions'
 REST_ACTION_ALLOW = 'ALLOW'
 REST_ACTION_DENY = 'DENY'
+REST_ACTION_PACKETIN = 'PACKETIN'
 
 
 STATUS_FLOW_PRIORITY = ofproto_v1_2_parser.UINT16_MAX
 ARP_FLOW_PRIORITY = ofproto_v1_2_parser.UINT16_MAX - 1
+LOG_FLOW_PRIORITY = 0
+ACL_FLOW_PRIORITY_MIN = LOG_FLOW_PRIORITY + 1
 ACL_FLOW_PRIORITY_MAX = ofproto_v1_2_parser.UINT16_MAX - 2
 
 VLANID_NONE = 0
@@ -176,6 +190,10 @@ class RestFirewallAPI(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(RestFirewallAPI, self).__init__(*args, **kwargs)
+
+        # logger configure
+        FirewallController.set_logger(self.logger)
+
         self.dpset = kwargs['dpset']
         wsgi = kwargs['wsgi']
         self.waiters = {}
@@ -189,6 +207,7 @@ class RestFirewallAPI(app_manager.RyuApp):
         requirements = {'switchid': SWITCHID_PATTERN,
                         'vlanid': VLANID_PATTERN}
 
+        # for firewall status
         uri = path + '/module/status'
         mapper.connect('firewall', uri,
                        controller=FirewallController, action='get_status',
@@ -203,6 +222,24 @@ class RestFirewallAPI(app_manager.RyuApp):
         uri = path + '/module/disable/{switchid}'
         mapper.connect('firewall', uri,
                        controller=FirewallController, action='set_disable',
+                       conditions=dict(method=['PUT']),
+                       requirements=requirements)
+
+        # for firewall logs
+        uri = path + '/log/status'
+        mapper.connect('firewall', uri,
+                       controller=FirewallController, action='get_log_status',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/log/enable/{switchid}'
+        mapper.connect('firewall', uri,
+                       controller=FirewallController, action='set_log_enable',
+                       conditions=dict(method=['PUT']),
+                       requirements=requirements)
+
+        uri = path + '/log/disable/{switchid}'
+        mapper.connect('firewall', uri,
+                       controller=FirewallController, action='set_log_disable',
                        conditions=dict(method=['PUT']),
                        requirements=requirements)
 
@@ -273,6 +310,10 @@ class RestFirewallAPI(app_manager.RyuApp):
     def stats_reply_handler_v1_2(self, ev):
         self.stats_reply_handler(ev)
 
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def packet_in_handler(self, ev):
+        FirewallController.packet_in_handler(ev.msg)
+
 
 class FirewallOfsList(dict):
     def __init__(self):
@@ -303,34 +344,46 @@ class FirewallOfsList(dict):
 class FirewallController(ControllerBase):
 
     _OFS_LIST = FirewallOfsList()
+    _LOGGER = None
 
     def __init__(self, req, link, data, **config):
         super(FirewallController, self).__init__(req, link, data, **config)
         self.dpset = data['dpset']
         self.waiters = data['waiters']
 
+    @classmethod
+    def set_logger(cls, logger):
+        cls._LOGGER = logger
+        cls._LOGGER.propagate = False
+        hdlr = logging.StreamHandler()
+        fmt_str = '[FW][%(levelname)s] %(message)s'
+        hdlr.setFormatter(logging.Formatter(fmt_str))
+        cls._LOGGER.addHandler(hdlr)
+
     @staticmethod
     def regist_ofs(dp):
+        dpid_str = dpid_lib.dpid_to_str(dp.id)
         try:
             f_ofs = Firewall(dp)
         except OFPUnknownVersion, message:
-            mes = 'dpid=%s : %s' % (dpid_lib.dpid_to_str(dp.id), message)
-            LOG.info(mes)
+            FirewallController._LOGGER.info('dpid=%s: %s',
+                                            dpid_str, message)
             return
 
         FirewallController._OFS_LIST.setdefault(dp.id, f_ofs)
 
         f_ofs.set_disable_flow()
         f_ofs.set_arp_flow()
-        LOG.info('dpid=%s : Join as firewall switch.' %
-                 dpid_lib.dpid_to_str(dp.id))
+        f_ofs.set_log_enable()
+        FirewallController._LOGGER.info('dpid=%s: Join as firewall.',
+                                        dpid_str)
 
     @staticmethod
     def unregist_ofs(dp):
         if dp.id in FirewallController._OFS_LIST:
             del FirewallController._OFS_LIST[dp.id]
-            LOG.info('dpid=%s : Leave firewall switch.' %
-                     dpid_lib.dpid_to_str(dp.id))
+            FirewallController._LOGGER.info('dpid=%s: Leave firewall.',
+                                            dpid_lib.dpid_to_str(dp.id))
 
     # GET /firewall/module/status
     def get_status(self, req, **_kwargs):
@@ -372,6 +425,34 @@ class FirewallController(ControllerBase):
         msgs = {}
         for f_ofs in dps.values():
             msg = f_ofs.set_disable_flow()
+            msgs.update(msg)
+
+        body = json.dumps(msgs)
+        return Response(content_type='application/json', body=body)
+
+    # GET /firewall/log/status
+    def get_log_status(self, dummy, **_kwargs):
+        return self._access_module(REST_ALL, 'get_log_status',
+                                   waiters=self.waiters)
+
+    # PUT /firewall/log/enable/{switchid}
+    def set_log_enable(self, dummy, switchid, **_kwargs):
+        return self._access_module(switchid, 'set_log_enable')
+
+    # PUT /firewall/log/disable/{switchid}
+    def set_log_disable(self, dummy, switchid, **_kwargs):
+        return self._access_module(switchid, 'set_log_disable')
+
+    def _access_module(self, switchid, func, waiters=None):
+        try:
+            dps = self._OFS_LIST.get_ofs(switchid)
+        except ValueError, message:
+            return Response(status=400, body=str(message))
+
+        msgs = {}
+        for f_ofs in dps.values():
+            function = getattr(f_ofs, func)
+            msg = function(waiters) if waiters else function()
             msgs.update(msg)
 
         body = json.dumps(msgs)
@@ -420,7 +501,7 @@ class FirewallController(ControllerBase):
         try:
             rule = eval(req.body)
         except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
+            FirewallController._LOGGER.debug('invalid syntax %s', req.body)
             return Response(status=400)
 
         try:
@@ -444,7 +525,7 @@ class FirewallController(ControllerBase):
         try:
             ruleid = eval(req.body)
         except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
+            FirewallController._LOGGER.debug('invalid syntax %s', req.body)
             return Response(status=400)
 
         try:
@@ -474,6 +555,13 @@ class FirewallController(ControllerBase):
                                                                 VLANID_MAX)
                 raise ValueError(msg)
         return vlan_id
+
+    @staticmethod
+    def packet_in_handler(msg):
+        pkt = packet.Packet(msg.data)
+        dpid_str = dpid_lib.dpid_to_str(msg.datapath.id)
+        FirewallController._LOGGER.info('dpid=%s: Blocked packet = %s',
+                                        dpid_str, pkt)
 
 
 class Firewall(object):
@@ -568,6 +656,49 @@ class Firewall(object):
                                 dpid_lib.dpid_to_str(self.dp.id))
         return {switch_id: msg}
 
+    def get_log_status(self, waiters):
+        msgs = self.ofctl.get_flow_stats(self.dp, waiters)
+
+        status = REST_STATUS_DISABLE
+        if str(self.dp.id) in msgs:
+            flow_stats = msgs[str(self.dp.id)]
+            for flow_stat in flow_stats:
+                if flow_stat['priority'] == LOG_FLOW_PRIORITY:
+                    if flow_stat['actions']:
+                        status = REST_STATUS_ENABLE
+
+        msg = {REST_LOG_STATUS: status}
+        switch_id = '%s: %s' % (REST_SWITCHID,
+                                dpid_lib.dpid_to_str(self.dp.id))
+        return {switch_id: msg}
+
+    def set_log_disable(self):
+        return self._set_log_status(False)
+
+    def set_log_enable(self):
+        return self._set_log_status(True)
+
+    def _set_log_status(self, is_enable):
+        if is_enable:
+            actions = Action.to_openflow(self.dp,
+                                         {REST_ACTION: REST_ACTION_PACKETIN})
+            details = 'Log collection started.'
+        else:
+            actions = []
+            details = 'Log collection stopped.'
+
+        flow = self._to_of_flow(cookie=0, priority=LOG_FLOW_PRIORITY,
+                                match={}, actions=actions)
+
+        cmd = self.dp.ofproto.OFPFC_ADD
+        self.ofctl.mod_flow_entry(self.dp, flow, cmd)
+
+        msg = {'result': 'success',
+               'details': details}
+        switch_id = '%s: %s' % (REST_SWITCHID,
+                                dpid_lib.dpid_to_str(self.dp.id))
+        return {switch_id: msg}
+
     def set_arp_flow(self):
         cookie = 0
         priority = ARP_FLOW_PRIORITY
@@ -591,11 +722,13 @@ class Firewall(object):
         return {switch_id: msgs}
 
     def _set_rule(self, cookie, rest, vlan_id):
-        priority = int(rest.get(REST_PRIORITY, 0))
+        priority = int(rest.get(REST_PRIORITY, ACL_FLOW_PRIORITY_MIN))
 
-        if priority < 0 or ACL_FLOW_PRIORITY_MAX < priority:
-            raise ValueError('Invalid priority value. Set [0-%d]'
-                             % ACL_FLOW_PRIORITY_MAX)
+        if (priority < ACL_FLOW_PRIORITY_MIN
+                or ACL_FLOW_PRIORITY_MAX < priority):
+            raise ValueError('Invalid priority value. Set [%d-%d]'
+                             % (ACL_FLOW_PRIORITY_MIN, ACL_FLOW_PRIORITY_MAX))
+
         if vlan_id:
             rest[REST_DL_VLAN] = vlan_id
 
@@ -627,8 +760,10 @@ class Firewall(object):
         if str(self.dp.id) in msgs:
             flow_stats = msgs[str(self.dp.id)]
             for flow_stat in flow_stats:
-                if (flow_stat[REST_PRIORITY] != STATUS_FLOW_PRIORITY
-                        and flow_stat[REST_PRIORITY] != ARP_FLOW_PRIORITY):
+                priority = flow_stat[REST_PRIORITY]
+                if (priority != STATUS_FLOW_PRIORITY
+                        and priority != ARP_FLOW_PRIORITY
+                        and priority != LOG_FLOW_PRIORITY):
                     vid = flow_stat[REST_MATCH].get(REST_DL_VLAN, VLANID_NONE)
                     if vlan_id == REST_ALL or vlan_id == vid:
                         rule = self._to_rest_rule(flow_stat)
@@ -669,7 +804,8 @@ class Firewall(object):
                 dl_vlan = flow_stat[REST_MATCH].get(REST_DL_VLAN, VLANID_NONE)
 
                 if (priority != STATUS_FLOW_PRIORITY
-                        and priority != ARP_FLOW_PRIORITY):
+                        and priority != ARP_FLOW_PRIORITY
+                        and priority != LOG_FLOW_PRIORITY):
                     if ((rule_id == REST_ALL or rule_id == ruleid) and
                             (vlan_id == dl_vlan or vlan_id == REST_ALL)):
                         match = Match.to_del_openflow(flow_stat[REST_MATCH])
@@ -837,6 +973,10 @@ class Action(object):
                        'port': out_port}]
         elif value == REST_ACTION_DENY:
             action = []
+        elif value == REST_ACTION_PACKETIN:
+            out_port = dp.ofproto.OFPP_CONTROLLER
+            action = [{'type': 'OUTPUT',
+                       'port': out_port}]
         else:
             raise ValueError('Invalid action type.')
 
