@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+
+from ryu.cmd.manager import main
+main()
