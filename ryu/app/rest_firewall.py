@@ -629,7 +629,7 @@ class Firewall(object):
             for flow_stat in flow_stats:
                 if (flow_stat[REST_PRIORITY] != STATUS_FLOW_PRIORITY
                         and flow_stat[REST_PRIORITY] != ARP_FLOW_PRIORITY):
-                    vid = flow_stat[REST_MATCH][REST_DL_VLAN]
+                    vid = flow_stat[REST_MATCH].get(REST_DL_VLAN, VLANID_NONE)
                     if vlan_id == REST_ALL or vlan_id == vid:
                         rule = self._to_rest_rule(flow_stat)
                         rules.setdefault(vid, {})
@@ -666,7 +666,7 @@ class Firewall(object):
                 cookie = flow_stat[REST_COOKIE]
                 ruleid = Firewall._cookie_to_ruleid(cookie)
                 priority = flow_stat[REST_PRIORITY]
-                dl_vlan = flow_stat[REST_MATCH][REST_DL_VLAN]
+                dl_vlan = flow_stat[REST_MATCH].get(REST_DL_VLAN, VLANID_NONE)
 
                 if (priority != STATUS_FLOW_PRIORITY
                         and priority != ARP_FLOW_PRIORITY):
