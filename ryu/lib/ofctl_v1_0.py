@@ -33,7 +33,12 @@ def to_actions(dp, acts):
         action_type = a.get('type')
         if action_type == 'OUTPUT':
             out_port = int(a.get('port', ofproto_v1_0.OFPP_NONE))
-            actions.append(dp.ofproto_parser.OFPActionOutput(out_port))
+            if out_port == dp.ofproto.OFPP_CONTROLLER:
+                miss_send_len = ofproto_v1_0.OFP_DEFAULT_MISS_SEND_LEN
+                actions.append(dp.ofproto_parser.OFPActionOutput(
+                    out_port, max_len=miss_send_len))
+            else:
+                actions.append(dp.ofproto_parser.OFPActionOutput(out_port))
         elif action_type == 'SET_VLAN_VID':
             vlan_vid = int(a.get('vlan_vid', 0xffff))
             actions.append(dp.ofproto_parser.OFPActionVlanVid(vlan_vid))
