@@ -8,7 +8,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDAw", 
+               "name": "Flow Table 0x00", 
                "properties": [], 
                "table_id": 0
             }
@@ -20,7 +20,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDAx", 
+               "name": "Flow Table 0x01", 
                "properties": [], 
                "table_id": 1
             }
@@ -32,7 +32,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDAy", 
+               "name": "Flow Table 0x02", 
                "properties": [], 
                "table_id": 2
             }
@@ -44,7 +44,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDAz", 
+               "name": "Flow Table 0x03", 
                "properties": [], 
                "table_id": 3
             }
@@ -56,7 +56,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDA0", 
+               "name": "Flow Table 0x04", 
                "properties": [], 
                "table_id": 4
             }
@@ -68,7 +68,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDA1", 
+               "name": "Flow Table 0x05", 
                "properties": [], 
                "table_id": 5
             }
@@ -80,7 +80,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDA2", 
+               "name": "Flow Table 0x06", 
                "properties": [], 
                "table_id": 6
             }
@@ -92,7 +92,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDA3", 
+               "name": "Flow Table 0x07", 
                "properties": [], 
                "table_id": 7
             }
@@ -104,7 +104,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDA4", 
+               "name": "Flow Table 0x08", 
                "properties": [], 
                "table_id": 8
             }
@@ -116,7 +116,7 @@
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
-               "name": "RmxvdyBUYWJsZSAweDA5", 
+               "name": "Flow Table 0x09", 
                "properties": [], 
                "table_id": 9
             }
