@@ -4597,6 +4597,15 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
 
 
 class OFPTableFeaturesStats(StringifyMixin):
+
+    _TYPE = {
+        'utf-8': [
+            # OF spec is unclear about the encoding of name.
+            # we assumes UTF-8.
+            'name',
+        ]
+    }
+
     def __init__(self, table_id=None, name=None, metadata_match=None,
                  metadata_write=None, config=None, max_entries=None,
                  properties=None, length=None):
