@@ -338,7 +338,7 @@ x() ->
             reason = add,
             desc = #ofp_port{
                      port_no = 7,hw_addr = <<"\362\v\244\320?p">>,
-                     name = <<"Port7">>,
+                     name = <<"\xe7\xa7\x81\xe3\x81\xae\xe3\x83\x9d\xe3\x83\xbc\xe3\x83\x88">>,  % "my port" in japanese, utf-8
                      config = [],
                      state = [live],
                      curr = ['100mb_fd',copper,autoneg],
@@ -1394,7 +1394,7 @@ x() ->
             flags = [more],
             body =
                 [#ofp_table_features{
-                     table_id = 0,name = <<"Flow Table 0x00">>,
+                     table_id = 0,name = <<"\xe7\xa7\x81\xe3\x81\xae\xe3\x83\x86\xe3\x83\xbc\xe3\x83\x96\xe3\x83\xab">>,  % "my table" in japanese, utf-8
                      metadata_match = <<"\377\377\377\377\377\377\377\377">>,
                      metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
                      properties =

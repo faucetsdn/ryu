@@ -279,7 +279,7 @@ x() ->
     flags = [],
     stats =
         [#ofp_table_stats{
-             table_id = 0,name = <<"Flow Table 0x00">>,
+             table_id = 0,name = <<"\xe7\xa7\x81\xe3\x81\xae\xe3\x83\x86\xe3\x83\xbc\xe3\x83\x96\xe3\x83\xab">>,  % "my table" in japanese, utf-8
              match =
                  [in_port,metadata,eth_dst,eth_src,eth_type,vlan_vid,
                   vlan_pcp,ip_dscp,ip_ecn,ip_proto,ipv4_src,ipv4_dst,tcp_src,
@@ -8511,7 +8511,7 @@ x() ->
             reason = add,
             desc = #ofp_port{
                      port_no = 7,hw_addr = <<"\362\v\244\320?p">>,
-                     name = <<"Port7">>,
+                     name = <<"\xe7\xa7\x81\xe3\x81\xae\xe3\x83\x9d\xe3\x83\xbc\xe3\x83\x88">>,  % "my port" in japanese, utf-8
                      config = [],
                      state = [live],
                      curr = ['100mb_fd',copper,autoneg],
