@@ -60,8 +60,19 @@ class AsciiStringType(TypeDescr):
         return v.encode('ascii')
 
 
+class Utf8StringType(TypeDescr):
+    @staticmethod
+    def encode(v):
+        return unicode(v, 'utf-8')
+
+    @staticmethod
+    def decode(v):
+        return v.encode('utf-8')
+
+
 _types = {
     'ascii': AsciiStringType,
+    'utf-8': Utf8StringType,
 }
 
 
