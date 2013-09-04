@@ -404,7 +404,9 @@ class nd_option_la(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Source/Target Link-Layer Address Option. (RFC 4861)
 
-    This is used with ryu.lib.packet.icmpv6.nd_neighbor.
+    This is used with ryu.lib.packet.icmpv6.nd_neighbor,
+    ryu.lib.packet.icmpv6.nd_router_solicit or
+    ryu.lib.packet.icmpv6.nd_router_advert.
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -459,7 +461,7 @@ class nd_option_pi(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Prefix Information Option. (RFC 4861)
 
-    This is used with ryu.lib.packet.icmpv6.nd_neighbor.
+    This is used with ryu.lib.packet.icmpv6.nd_router_advert.
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
