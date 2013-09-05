@@ -107,6 +107,10 @@ class Packet(object):
         self.protocol_idx += 1
         return p
 
+    def __div__(self, trailer):
+        self.add_protocol(trailer)
+        return self
+
     def __iter__(self):
         return self
 
@@ -131,3 +135,13 @@ class Packet(object):
     def __str__(self):
         return ', '.join(repr(protocol) for protocol in self.protocols)
     __repr__ = __str__  # note: str(list) uses __repr__ for elements
+
+
+# XXX: Hack for preventing recursive import
+def _PacketBase__div__(self, trailer):
+    pkt = Packet()
+    pkt.add_protocol(self)
+    pkt.add_protocol(trailer)
+    return pkt
+
+packet_base.PacketBase.__div__ = _PacketBase__div__

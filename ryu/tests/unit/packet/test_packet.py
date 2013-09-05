@@ -41,6 +41,8 @@ class TestPacket(unittest.TestCase):
     dst_ip = '192.168.128.10'
     src_ip = '192.168.122.20'
     dst_ip_bin = addrconv.ipv4.text_to_bin(dst_ip)
+    src_port = 50001
+    dst_port = 50002
     src_ip_bin = addrconv.ipv4.text_to_bin(src_ip)
     payload = '\x06\x06\x47\x50\x00\x00\x00\x00' \
         + '\xcd\xc5\x00\x00\x00\x00\x00\x00' \
@@ -712,3 +714,13 @@ class TestPacket(unittest.TestCase):
 
         eq_(pkt_str, str(pkt))
         eq_(pkt_str, repr(pkt))
+
+    def test_div_api(self):
+        e = ethernet.ethernet(self.dst_mac, self.src_mac, ether.ETH_TYPE_IP)
+        i = ipv4.ipv4()
+        u = udp.udp(self.src_port, self.dst_port)
+        pkt = e/i/u
+        ok_(isinstance(pkt, packet.Packet))
+        ok_(isinstance(pkt.protocols[0], ethernet.ethernet))
+        ok_(isinstance(pkt.protocols[1], ipv4.ipv4))
+        ok_(isinstance(pkt.protocols[2], udp.udp))
