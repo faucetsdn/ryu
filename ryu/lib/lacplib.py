@@ -21,6 +21,9 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ether
+from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_3
 from ryu.lib import addrconv
 from ryu.lib.dpid import dpid_to_str
 from ryu.lib.packet import packet
@@ -61,6 +64,11 @@ class LacpLib(app_manager.RyuApp):
         super(LacpLib, self).__init__()
         self.name = 'lacplib'
         self.bonds = []
+        self._add_flow = {
+            ofproto_v1_0.OFP_VERSION: self._add_flow_v1_0,
+            ofproto_v1_2.OFP_VERSION: self._add_flow_v1_2,
+            ofproto_v1_3.OFP_VERSION: self._add_flow_v1_2,
+        }
         self._set_logger()
 
     def add(self, dpid, ports):
@@ -109,10 +117,16 @@ class LacpLib(app_manager.RyuApp):
         send a event that LACP exchange timeout has occurred."""
         msg = evt.msg
         datapath = msg.datapath
+        ofproto = datapath.ofproto
         dpid = datapath.id
         match = msg.match
-        port = match.in_port
-        if ether.ETH_TYPE_SLOW != match.dl_type:
+        if ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            port = match.in_port
+            dl_type = match.dl_type
+        else:
+            port = match['in_port']
+            dl_type = match['eth_type']
+        if ether.ETH_TYPE_SLOW != dl_type:
             return
         self.logger.info(
             "SW=%s PORT=%d LACP exchange timeout has occurred.",
@@ -129,9 +143,12 @@ class LacpLib(app_manager.RyuApp):
         """packet-in process when the received packet is LACP."""
         datapath = msg.datapath
         dpid = datapath.id
-        port = msg.in_port
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
+        if ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            port = msg.in_port
+        else:
+            port = msg.match['in_port']
 
         self.logger.info("SW=%s PORT=%d LACP received.",
                          dpid_to_str(dpid), port)
@@ -163,8 +180,9 @@ class LacpLib(app_manager.RyuApp):
                 "SW=%s PORT=%d the timeout time has changed.",
                 dpid_to_str(dpid), port)
             self._set_slave_timeout(dpid, port, idle_timeout)
-            self._set_flow_entry_packet_in(src, port, idle_timeout,
-                                           msg)
+            func = self._add_flow.get(ofproto.OFP_VERSION)
+            assert func
+            func(src, port, idle_timeout, datapath)
 
         # create a response packet.
         res_pkt = self._create_response(datapath, port, req_lacp)
@@ -268,26 +286,39 @@ class LacpLib(app_manager.RyuApp):
     #-------------------------------------------------------------------
     # PRIVATE METHODS ( RELATED TO OPEN FLOW PROTOCOL )
     #-------------------------------------------------------------------
-    def _set_flow_entry_packet_in(self, src, port, timeout, msg):
+    def _add_flow_v1_0(self, src, port, timeout, datapath):
         """enter a flow entry for the packet from the slave i/f
-        with idle_timeout."""
-        datapath = msg.datapath
+        with idle_timeout. for OpenFlow ver1.0."""
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        wildcards = ofproto.OFPFW_ALL
-        wildcards &= ~ofproto.OFPFW_IN_PORT
-        wildcards &= ~ofproto.OFPFW_DL_SRC
-        wildcards &= ~ofproto.OFPFW_DL_TYPE
-        match = parser.OFPMatch(wildcards=wildcards, in_port=port,
-                                dl_src=addrconv.mac.text_to_bin(src),
-                                dl_type=ether.ETH_TYPE_SLOW)
+        match = parser.OFPMatch(
+            in_port=port, dl_src=addrconv.mac.text_to_bin(src),
+            dl_type=ether.ETH_TYPE_SLOW)
         actions = [parser.OFPActionOutput(
-            ofproto.OFPP_CONTROLLER, ofproto.OFP_MSG_SIZE_MAX)]
+            ofproto.OFPP_CONTROLLER, 65535)]
         mod = parser.OFPFlowMod(
             datapath=datapath, match=match, cookie=0,
             command=ofproto.OFPFC_ADD, idle_timeout=timeout,
             flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
+        datapath.send_msg(mod)
+
+    def _add_flow_v1_2(self, src, port, timeout, datapath):
+        """enter a flow entry for the packet from the slave i/f
+        with idle_timeout. for OpenFlow ver1.2 and ver1.3."""
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        match = parser.OFPMatch(
+            in_port=port, eth_src=src, eth_type=ether.ETH_TYPE_SLOW)
+        actions = [parser.OFPActionOutput(
+            ofproto.OFPP_CONTROLLER, ofproto.OFPCML_MAX)]
+        inst = [parser.OFPInstructionActions(
+            ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(
+            datapath=datapath, command=ofproto.OFPFC_ADD,
+            idle_timeout=timeout, flags=ofproto.OFPFF_SEND_FLOW_REM,
+            match=match, instructions=inst)
         datapath.send_msg(mod)
 
     #-------------------------------------------------------------------
