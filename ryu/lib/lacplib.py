@@ -63,7 +63,7 @@ class LacpLib(app_manager.RyuApp):
         """initialization."""
         super(LacpLib, self).__init__()
         self.name = 'lacplib'
-        self.bonds = []
+        self._bonds = []
         self._add_flow = {
             ofproto_v1_0.OFP_VERSION: self._add_flow_v1_0,
             ofproto_v1_2.OFP_VERSION: self._add_flow_v1_2,
@@ -93,7 +93,7 @@ class LacpLib(app_manager.RyuApp):
             ifs[port] = {'enabled': False, 'timeout': 0}
         bond = {}
         bond[dpid] = ifs
-        self.bonds.append(bond)
+        self._bonds.append(bond)
 
     #-------------------------------------------------------------------
     # PUBLIC METHODS ( EVENT HANDLERS )
@@ -276,7 +276,7 @@ class LacpLib(app_manager.RyuApp):
     def _get_slave(self, dpid, port):
         """get slave i/f at some port of some datapath."""
         result = None
-        for bond in self.bonds:
+        for bond in self._bonds:
             if dpid in bond:
                 if port in bond[dpid]:
                     result = bond[dpid][port]
