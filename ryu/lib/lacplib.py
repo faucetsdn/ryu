@@ -78,7 +78,7 @@ class LacpLib(app_manager.RyuApp):
         ========= =====================================================
         Attribute Description
         ========= =====================================================
-        dpid      an integer value that means datapath id.
+        dpid      datapath id.
 
         ports     a list of integer values that means the ports face
                   with the slave i/fs.
@@ -113,8 +113,8 @@ class LacpLib(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
     def flow_removed_handler(self, evt):
         """FlowRemoved event handler. when the removed flow entry was
-        for LACP, set the status of the slave i/f to enabled, and
-        send a event that LACP exchange timeout has occurred."""
+        for LACP, set the status of the slave i/f to disabled, and
+        send a event."""
         msg = evt.msg
         datapath = msg.datapath
         ofproto = datapath.ofproto
@@ -155,7 +155,7 @@ class LacpLib(app_manager.RyuApp):
         self.logger.debug(str(req_lacp))
 
         # when LACP arrived at disabled port, update the status of
-        # the slave i/f and reset all flow entries except for LACP.
+        # the slave i/f to enabled, and send a event.
         if not self._get_slave_enabled(dpid, port):
             self.logger.info(
                 "SW=%s PORT=%d the slave i/f has just been up.",
