@@ -43,13 +43,8 @@ class SimpleSwitch(app_manager.RyuApp):
     def add_flow(self, datapath, in_port, dst, actions):
         ofproto = datapath.ofproto
 
-        wildcards = ofproto_v1_0.OFPFW_ALL
-        wildcards &= ~ofproto_v1_0.OFPFW_IN_PORT
-        wildcards &= ~ofproto_v1_0.OFPFW_DL_DST
-
         match = datapath.ofproto_parser.OFPMatch(
-            wildcards, in_port, 0, dst,
-            0, 0, 0, 0, 0, 0, 0, 0, 0)
+            in_port=in_port, dl_dst=dst)
 
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, match=match, cookie=0,
