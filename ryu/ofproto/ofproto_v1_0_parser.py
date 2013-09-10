@@ -110,7 +110,7 @@ class OFPMatch(StringifyMixin):
     def __init__(self, wildcards=None, in_port=None, dl_src=None, dl_dst=None,
                  dl_vlan=None, dl_vlan_pcp=None, dl_type=None, nw_tos=None,
                  nw_proto=None, nw_src=None, nw_dst=None,
-                 tp_src=None, tp_dst=None):
+                 tp_src=None, tp_dst=None, nw_src_mask=32, nw_dst_mask=32):
         super(OFPMatch, self).__init__()
         wc = ofproto_v1_0.OFPFW_ALL
         if in_port is None:
@@ -170,14 +170,15 @@ class OFPMatch(StringifyMixin):
         if nw_src is None:
             self.nw_src = 0
         else:
-            # mask is not supported
-            wc &= ~ofproto_v1_0.OFPFW_NW_SRC_MASK
+            wc &= (32 - nw_src_mask) << ofproto_v1_0.OFPFW_NW_SRC_SHIFT \
+                | ~ofproto_v1_0.OFPFW_NW_SRC_MASK
             self.nw_src = nw_src
 
         if nw_dst is None:
             self.nw_dst = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_NW_DST_MASK
+            wc &= (32 - nw_dst_mask) << ofproto_v1_0.OFPFW_NW_DST_SHIFT \
+                | ~ofproto_v1_0.OFPFW_NW_DST_MASK
             self.nw_dst = nw_dst
 
         if tp_src is None:
