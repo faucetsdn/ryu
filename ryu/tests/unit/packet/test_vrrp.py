@@ -47,7 +47,7 @@ class Test_vrrpv2(unittest.TestCase):
     auth_type = vrrp.VRRP_AUTH_NO_AUTH
     max_adver_int = 100
     checksum = 0
-    ip_address = '192.168.0.1'
+    ip_address = addrconv.ipv4.text_to_bin('192.168.0.1')
     auth_data = (0, 0)
     vrrpv2 = vrrp.vrrpv2.create(type_, vrid, priority, max_adver_int,
                                 [ip_address])
@@ -55,7 +55,7 @@ class Test_vrrpv2(unittest.TestCase):
                       vrrp.vrrp_to_version_type(vrrp.VRRP_VERSION_V2, type_),
                       vrid, priority, count_ip,
                       auth_type, max_adver_int, checksum,
-                      addrconv.ipv4.text_to_bin(ip_address),
+                      ip_address,
                       auth_data[0], auth_data[1])
 
     def setUp(self):
@@ -192,7 +192,6 @@ class Test_vrrpv2(unittest.TestCase):
                          'count_ip': self.count_ip,
                          'max_adver_int': self.max_adver_int,
                          'checksum': self.vrrpv2.checksum,
-                         'ip_addresses': [self.ip_address],
                          'auth_type': self.auth_type,
                          'auth_data': self.auth_data,
                          'identification': self.vrrpv2.identification}
@@ -215,14 +214,14 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
     count_ip = 1
     max_adver_int = 111
     checksum = 0
-    ip_address = '192.168.0.1'
+    ip_address = addrconv.ipv4.text_to_bin('192.168.0.1')
     vrrpv3 = vrrp.vrrpv3.create(type_, vrid, priority, max_adver_int,
                                 [ip_address])
     buf = struct.pack(vrrp.vrrpv3._PACK_STR + '4s',
                       vrrp.vrrp_to_version_type(vrrp.VRRP_VERSION_V3, type_),
                       vrid, priority, count_ip,
                       max_adver_int, checksum,
-                      addrconv.ipv4.text_to_bin(ip_address))
+                      ip_address)
 
     def setUp(self):
         pass
@@ -357,7 +356,6 @@ class Test_vrrpv3_ipv4(unittest.TestCase):
                          'count_ip': self.count_ip,
                          'max_adver_int': self.max_adver_int,
                          'checksum': self.vrrpv3.checksum,
-                         'ip_addresses': [self.ip_address],
                          'auth_type': None,
                          'auth_data': None,
                          'identification': self.vrrpv3.identification}
@@ -401,7 +399,7 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
         eq_(self.priority, self.vrrpv3.priority)
         eq_(self.count_ip, self.vrrpv3.count_ip)
         eq_(1, len(self.vrrpv3.ip_addresses))
-        eq_(self.ip_address, self.vrrpv3.ip_addresses[0])
+        eq_(self.ip_address, addrconv.ipv6.bin_to_text(self.vrrpv3.ip_addresses[0]))
 
     def test_parser(self):
         vrrpv3, _cls, _ = self.vrrpv3.parser(self.buf)
@@ -415,10 +413,10 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
         eq_(self.checksum, vrrpv3.checksum)
         eq_(1, len(vrrpv3.ip_addresses))
         eq_(str, type(vrrpv3.ip_addresses[0]))
-        eq_(self.ip_address, vrrpv3.ip_addresses[0])
+        eq_(self.ip_address, addrconv.ipv6.bin_to_text(vrrpv3.ip_addresses[0]))
 
     def test_serialize(self):
-        src_ip = '2001:db8:2000::1'
+        src_ip = '2001:db8:2000::10'
         dst_ip = vrrp.VRRP_IPV6_DST_ADDRESS
         prev = ipv6.ipv6(6, 0, 0, 0, inet.IPPROTO_VRRP,
                          vrrp.VRRP_IPV6_HOP_LIMIT, src_ip, dst_ip)
@@ -427,7 +425,7 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
         vrid = 5
         priority = 10
         max_adver_int = 30
-        ip_address = '2001:db8:2000::2'
+        ip_address = '2001:db8:2000::20'
         ip_addresses = [ip_address]
 
         vrrp_ = vrrp.vrrpv3.create(
@@ -480,7 +478,6 @@ class Test_vrrpv3_ipv6(unittest.TestCase):
                          'count_ip': self.count_ip,
                          'max_adver_int': self.max_adver_int,
                          'checksum': self.vrrpv3.checksum,
-                         'ip_addresses': [self.ip_address],
                          'auth_type': None,
                          'auth_data': None,
                          'identification': self.vrrpv3.identification}

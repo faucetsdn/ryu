@@ -54,8 +54,7 @@ class Test_ipv6(unittest.TestCase):
                        'payload_length': self.payload_length,
                        'nxt': self.nxt,
                        'hop_limit': self.hop_limit,
-                       'src': self.src,
-                       'dst': self.dst}
+                      }
         _ipv6_str = ','.join(['%s=%s' % (k, repr(ipv6_values[k]))
                               for k, v in inspect.getmembers(self.ip)
                               if k in ipv6_values])

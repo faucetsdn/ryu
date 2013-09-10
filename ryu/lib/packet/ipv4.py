@@ -108,8 +108,8 @@ class ipv4(packet_base.PacketBase):
             option = None
         msg = cls(version, header_length, tos, total_length, identification,
                   flags, offset, ttl, proto, csum,
-                  addrconv.ipv4.bin_to_text(src),
-                  addrconv.ipv4.bin_to_text(dst), option)
+                  src,
+                  dst, option)
 
         return msg, ipv4.get_packet_type(proto), buf[length:total_length]
 
@@ -123,8 +123,8 @@ class ipv4(packet_base.PacketBase):
         struct.pack_into(ipv4._PACK_STR, hdr, 0, version, self.tos,
                          self.total_length, self.identification, flags,
                          self.ttl, self.proto, 0,
-                         addrconv.ipv4.text_to_bin(self.src),
-                         addrconv.ipv4.text_to_bin(self.dst))
+                         self.src,
+                         self.dst)
 
         if self.option:
             assert (length - ipv4._MIN_LEN) >= len(self.option)
@@ -133,6 +133,9 @@ class ipv4(packet_base.PacketBase):
         self.csum = packet_utils.checksum(hdr)
         struct.pack_into('!H', hdr, 10, self.csum)
         return hdr
+
+addrconv.ipv4_type( ipv4, 'src')
+addrconv.ipv4_type( ipv4, 'dst')
 
 ipv4.register_packet_type(icmp.icmp, inet.IPPROTO_ICMP)
 ipv4.register_packet_type(igmp.igmp, inet.IPPROTO_IGMP)

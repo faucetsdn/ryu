@@ -41,17 +41,17 @@ class Test_arp(unittest.TestCase):
     hlen = 6
     plen = 4
     opcode = 1
-    src_mac = '00:07:0d:af:f4:54'
-    src_ip = '24.166.172.1'
-    dst_mac = '00:00:00:00:00:00'
-    dst_ip = '24.166.173.159'
+    src_mac = addrconv.mac.text_to_bin('00:07:0d:af:f4:54')
+    src_ip = addrconv.ipv4.text_to_bin('24.166.172.1')
+    dst_mac = addrconv.mac.text_to_bin('00:00:00:00:00:00')
+    dst_ip = addrconv.ipv4.text_to_bin('24.166.173.159')
 
     fmt = arp._PACK_STR
     buf = pack(fmt, hwtype, proto, hlen, plen, opcode,
-               addrconv.mac.text_to_bin(src_mac),
-               addrconv.ipv4.text_to_bin(src_ip),
-               addrconv.mac.text_to_bin(dst_mac),
-               addrconv.ipv4.text_to_bin(dst_ip))
+               src_mac,
+               src_ip,
+               dst_mac,
+               dst_ip)
 
     a = arp(hwtype, proto, hlen, plen, opcode, src_mac, src_ip, dst_mac,
             dst_ip)
@@ -108,10 +108,10 @@ class Test_arp(unittest.TestCase):
         eq_(res[2], self.hlen)
         eq_(res[3], self.plen)
         eq_(res[4], self.opcode)
-        eq_(res[5], addrconv.mac.text_to_bin(self.src_mac))
-        eq_(res[6], addrconv.ipv4.text_to_bin(self.src_ip))
-        eq_(res[7], addrconv.mac.text_to_bin(self.dst_mac))
-        eq_(res[8], addrconv.ipv4.text_to_bin(self.dst_ip))
+        eq_(res[5], self.src_mac)
+        eq_(res[6], self.src_ip)
+        eq_(res[7], self.dst_mac)
+        eq_(res[8], self.dst_ip)
 
     def _build_arp(self, vlan_enabled):
         if vlan_enabled is True:

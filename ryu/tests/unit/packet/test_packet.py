@@ -101,8 +101,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_eth.dst)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_eth.src)
         eq_(ether.ETH_TYPE_ARP, p_eth.ethertype)
 
         # arp
@@ -112,14 +112,14 @@ class TestPacket(unittest.TestCase):
         eq_(6, p_arp.hlen)
         eq_(4, p_arp.plen)
         eq_(2, p_arp.opcode)
-        eq_(self.src_mac, p_arp.src_mac)
-        eq_(self.src_ip, p_arp.src_ip)
-        eq_(self.dst_mac, p_arp.dst_mac)
-        eq_(self.dst_ip, p_arp.dst_ip)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_arp.src_mac)
+        eq_(addrconv.ipv4.text_to_bin(self.src_ip), p_arp.src_ip)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_arp.dst_mac)
+        eq_(addrconv.ipv4.text_to_bin(self.dst_ip), p_arp.dst_ip)
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {#'dst': self.dst_mac,
+                      #'src': self.src_mac,
                       'ethertype': ether.ETH_TYPE_ARP}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -131,10 +131,11 @@ class TestPacket(unittest.TestCase):
                       'hlen': 6,
                       'plen': 4,
                       'opcode': 2,
-                      'src_mac': self.src_mac,
-                      'dst_mac': self.dst_mac,
-                      'src_ip': self.src_ip,
-                      'dst_ip': self.dst_ip}
+                      #'src_mac': self.src_mac,
+                      #'dst_mac': self.dst_mac,
+                      #'src_ip': self.src_ip,
+                      #'dst_ip': self.dst_ip
+                      }
         _arp_str = ','.join(['%s=%s' % (k, repr(arp_values[k]))
                              for k, v in inspect.getmembers(p_arp)
                              if k in arp_values])
@@ -197,8 +198,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_eth.dst)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_eth.src)
         eq_(ether.ETH_TYPE_8021Q, p_eth.ethertype)
 
         # vlan
@@ -215,14 +216,14 @@ class TestPacket(unittest.TestCase):
         eq_(6, p_arp.hlen)
         eq_(4, p_arp.plen)
         eq_(2, p_arp.opcode)
-        eq_(self.src_mac, p_arp.src_mac)
-        eq_(self.src_ip, p_arp.src_ip)
-        eq_(self.dst_mac, p_arp.dst_mac)
-        eq_(self.dst_ip, p_arp.dst_ip)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_arp.src_mac)
+        eq_(addrconv.ipv4.text_to_bin(self.src_ip), p_arp.src_ip)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_arp.dst_mac)
+        eq_(addrconv.ipv4.text_to_bin(self.dst_ip), p_arp.dst_ip)
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {#'dst': self.dst_mac,
+                      #'src': self.src_mac,
                       'ethertype': ether.ETH_TYPE_8021Q}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -243,10 +244,11 @@ class TestPacket(unittest.TestCase):
                       'hlen': 6,
                       'plen': 4,
                       'opcode': 2,
-                      'src_mac': self.src_mac,
-                      'dst_mac': self.dst_mac,
-                      'src_ip': self.src_ip,
-                      'dst_ip': self.dst_ip}
+                      #'src_mac': self.src_mac,
+                      #'dst_mac': self.dst_mac,
+                      #'src_ip': self.src_ip,
+                      #'dst_ip': self.dst_ip
+                      }
         _arp_str = ','.join(['%s=%s' % (k, repr(arp_values[k]))
                              for k, v in inspect.getmembers(p_arp)
                              if k in arp_values])
@@ -315,8 +317,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_eth.dst)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_eth.src)
         eq_(ether.ETH_TYPE_IP, p_eth.ethertype)
 
         # ipv4
@@ -330,8 +332,8 @@ class TestPacket(unittest.TestCase):
         eq_(1, p_ipv4.flags)
         eq_(64, p_ipv4.ttl)
         eq_(inet.IPPROTO_UDP, p_ipv4.proto)
-        eq_(self.src_ip, p_ipv4.src)
-        eq_(self.dst_ip, p_ipv4.dst)
+        eq_(addrconv.ipv4.text_to_bin(self.src_ip), p_ipv4.src)
+        eq_(addrconv.ipv4.text_to_bin(self.dst_ip), p_ipv4.dst)
         t = bytearray(ip_buf)
         struct.pack_into('!H', t, 10, p_ipv4.csum)
         eq_(packet_utils.checksum(t), 0)
@@ -354,8 +356,8 @@ class TestPacket(unittest.TestCase):
         eq_(self.payload, protocols['payload'].tostring())
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {#'dst': self.dst_mac,
+                      #'src': self.src_mac,
                       'ethertype': ether.ETH_TYPE_IP}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -372,8 +374,8 @@ class TestPacket(unittest.TestCase):
                        'ttl': 64,
                        'proto': inet.IPPROTO_UDP,
                        'csum': p_ipv4.csum,
-                       'src': self.src_ip,
-                       'dst': self.dst_ip,
+                       #'src': self.src_ip,
+                       #'dst': self.dst_ip,
                        'option': None}
         _ipv4_str = ','.join(['%s=%s' % (k, repr(ipv4_values[k]))
                               for k, v in inspect.getmembers(p_ipv4)
@@ -460,8 +462,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_eth.dst)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_eth.src)
         eq_(ether.ETH_TYPE_IP, p_eth.ethertype)
 
         # ipv4
@@ -475,8 +477,8 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv4.flags)
         eq_(64, p_ipv4.ttl)
         eq_(inet.IPPROTO_TCP, p_ipv4.proto)
-        eq_(self.src_ip, p_ipv4.src)
-        eq_(self.dst_ip, p_ipv4.dst)
+        eq_(addrconv.ipv4.text_to_bin(self.src_ip), p_ipv4.src)
+        eq_(addrconv.ipv4.text_to_bin(self.dst_ip), p_ipv4.dst)
         t = bytearray(ip_buf)
         struct.pack_into('!H', t, 10, p_ipv4.csum)
         eq_(packet_utils.checksum(t), 0)
@@ -504,8 +506,8 @@ class TestPacket(unittest.TestCase):
         eq_(self.payload, protocols['payload'].tostring())
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {#'dst': self.dst_mac,
+                      #'src': self.src_mac,
                       'ethertype': ether.ETH_TYPE_IP}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -522,8 +524,8 @@ class TestPacket(unittest.TestCase):
                        'ttl': 64,
                        'proto': inet.IPPROTO_TCP,
                        'csum': p_ipv4.csum,
-                       'src': self.src_ip,
-                       'dst': self.dst_ip,
+                       #'src': self.src_ip,
+                       #'dst': self.dst_ip,
                        'option': None}
         _ipv4_str = ','.join(['%s=%s' % (k, repr(ipv4_values[k]))
                               for k, v in inspect.getmembers(p_ipv4)
@@ -620,8 +622,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_eth.dst)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_eth.src)
         eq_(ether.ETH_TYPE_IEEE802_3, p_eth.ethertype)
 
         # llc
@@ -640,11 +642,11 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_bpdu.flags)
         eq_(32768, p_bpdu.root_priority)
         eq_(0, p_bpdu.root_system_id_extension)
-        eq_(self.src_mac, p_bpdu.root_mac_address)
+        eq_(addrconv.mac.text_to_bin(self.src_mac), p_bpdu.root_mac_address)
         eq_(0, p_bpdu.root_path_cost)
         eq_(32768, p_bpdu.bridge_priority)
         eq_(0, p_bpdu.bridge_system_id_extension)
-        eq_(self.dst_mac, p_bpdu.bridge_mac_address)
+        eq_(addrconv.mac.text_to_bin(self.dst_mac), p_bpdu.bridge_mac_address)
         eq_(128, p_bpdu.port_priority)
         eq_(4, p_bpdu.port_number)
         eq_(1, p_bpdu.message_age)
@@ -653,8 +655,8 @@ class TestPacket(unittest.TestCase):
         eq_(15, p_bpdu.forward_delay)
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {#'dst': self.dst_mac,
+                      #'src': self.src_mac,
                       'ethertype': ether.ETH_TYPE_IEEE802_3}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -683,11 +685,11 @@ class TestPacket(unittest.TestCase):
                        'flags': 0,
                        'root_priority': long(32768),
                        'root_system_id_extension': long(0),
-                       'root_mac_address': self.src_mac,
+                       #'root_mac_address': self.src_mac,
                        'root_path_cost': 0,
                        'bridge_priority': long(32768),
                        'bridge_system_id_extension': long(0),
-                       'bridge_mac_address': self.dst_mac,
+                       #'bridge_mac_address': self.dst_mac,
                        'port_priority': 128,
                        'port_number': 4,
                        'message_age': float(1),
