@@ -130,8 +130,6 @@ from ryu.ofproto import ofproto_v1_2_parser
 #    "rule_id" : "<int>" or "all"
 #
 
-OK = 0
-NG = -1
 
 SWITCHID_PATTERN = dpid_lib.DPID_PATTERN + r'|all'
 VLANID_PATTERN = r'[0-9]{1,4}|all'
