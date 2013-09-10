@@ -387,48 +387,16 @@ class FirewallController(ControllerBase):
 
     # GET /firewall/module/status
     def get_status(self, req, **_kwargs):
-        try:
-            dps = self._OFS_LIST.get_ofs(REST_ALL)
-        except ValueError, message:
-            return Response(status=400, body=str(message))
-
-        msgs = {}
-        for f_ofs in dps.values():
-            status = f_ofs.get_status(self.waiters)
-            msgs.update(status)
-
-        body = json.dumps(msgs)
-        return Response(content_type='application/json', body=body)
+        return self._access_module(REST_ALL, 'get_status',
+                                   waiters=self.waiters)
 
     # POST /firewall/module/enable/{switchid}
     def set_enable(self, req, switchid, **_kwargs):
-        try:
-            dps = self._OFS_LIST.get_ofs(switchid)
-        except ValueError, message:
-            return Response(status=400, body=str(message))
-
-        msgs = {}
-        for f_ofs in dps.values():
-            msg = f_ofs.set_enable_flow()
-            msgs.update(msg)
-
-        body = json.dumps(msgs)
-        return Response(content_type='application/json', body=body)
+        return self._access_module(switchid, 'set_enable_flow')
 
     # POST /firewall/module/disable/{switchid}
     def set_disable(self, req, switchid, **_kwargs):
-        try:
-            dps = self._OFS_LIST.get_ofs(switchid)
-        except ValueError, message:
-            return Response(status=400, body=str(message))
-
-        msgs = {}
-        for f_ofs in dps.values():
-            msg = f_ofs.set_disable_flow()
-            msgs.update(msg)
-
-        body = json.dumps(msgs)
-        return Response(content_type='application/json', body=body)
+        return self._access_module(switchid, 'set_disable_flow')
 
     # GET /firewall/log/status
     def get_log_status(self, dummy, **_kwargs):
