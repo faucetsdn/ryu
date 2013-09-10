@@ -185,7 +185,7 @@ class AppManager(object):
             assert not key in self.contexts
             self.contexts[key] = context
             # hack for dpset
-            if context.__class__.__base__ == RyuApp:
+            if issubclass(context.__class__, RyuApp):
                 register_app(context)
         return self.contexts
 
