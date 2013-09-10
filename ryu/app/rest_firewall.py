@@ -802,7 +802,8 @@ class Firewall(object):
                 vid = match.get(REST_DL_VLAN, VLANID_NONE)
                 rule_id = Firewall._cookie_to_ruleid(cookie)
                 delete_ids.setdefault(vid, '')
-                delete_ids[vid] += '%d,' % rule_id
+                delete_ids[vid] += (('%d' if delete_ids[vid] == ''
+                                     else ',%d') % rule_id)
 
             msg = []
             for vid, rule_ids in delete_ids.items():
