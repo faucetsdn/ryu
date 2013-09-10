@@ -452,7 +452,7 @@ class FirewallController(ControllerBase):
         msgs = {}
         for f_ofs in dps.values():
             function = getattr(f_ofs, func)
-            msg = function(waiters) if waiters else function()
+            msg = function() if waiters is None else function(waiters)
             msgs.update(msg)
 
         body = json.dumps(msgs)
