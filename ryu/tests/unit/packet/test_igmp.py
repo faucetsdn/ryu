@@ -41,11 +41,11 @@ class Test_igmp(unittest.TestCase):
         self.msgtype = IGMP_TYPE_QUERY
         self.maxresp = 100
         self.csum = 0
-        self.address = '225.0.0.1'
+        self.address = addrconv.ipv4.text_to_bin('225.0.0.1')
 
         self.buf = pack(igmp._PACK_STR, self.msgtype, self.maxresp,
                         self.csum,
-                        addrconv.ipv4.text_to_bin(self.address))
+                        self.address)
 
         self.g = igmp(self.msgtype, self.maxresp, self.csum,
                       self.address)
@@ -86,7 +86,7 @@ class Test_igmp(unittest.TestCase):
         eq_(res[0], self.msgtype)
         eq_(res[1], self.maxresp)
         eq_(res[2], checksum(self.buf))
-        eq_(res[3], addrconv.ipv4.text_to_bin(self.address))
+        eq_(res[3], self.address)
 
     def _build_igmp(self):
         dl_dst = '11:22:33:44:55:66'
@@ -132,7 +132,7 @@ class Test_igmp(unittest.TestCase):
         igmp_values = {'msgtype': repr(self.msgtype),
                        'maxresp': repr(self.maxresp),
                        'csum': repr(self.csum),
-                       'address': repr(self.address)}
+                      }
         _g_str = ','.join(['%s=%s' % (k, igmp_values[k])
                            for k, v in inspect.getmembers(self.g)
                            if k in igmp_values])

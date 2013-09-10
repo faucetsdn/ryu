@@ -84,13 +84,13 @@ def checksum_ip(ipvx, length, payload):
     """
     if ipvx.version == 4:
         header = struct.pack(_IPV4_PSEUDO_HEADER_PACK_STR,
-                             addrconv.ipv4.text_to_bin(ipvx.src),
-                             addrconv.ipv4.text_to_bin(ipvx.dst),
+                             ipvx.src,
+                             ipvx.dst,
                              ipvx.proto, length)
     elif ipvx.version == 6:
         header = struct.pack(_IPV6_PSEUDO_HEADER_PACK_STR,
-                             addrconv.ipv6.text_to_bin(ipvx.src),
-                             addrconv.ipv6.text_to_bin(ipvx.dst),
+                             ipvx.src,
+                             ipvx.dst,
                              length, ipvx.nxt)
     else:
         raise ValueError('Unknown IP version %d' % ipvx.version)

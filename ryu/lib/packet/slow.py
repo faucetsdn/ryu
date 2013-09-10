@@ -561,14 +561,14 @@ class lacp(packet_base.PacketBase):
         assert 0 == terminator_length
         return cls(version,
                    actor_system_priority,
-                   addrconv.mac.bin_to_text(actor_system),
+                   actor_system,
                    actor_key, actor_port_priority,
                    actor_port, actor_state_activity,
                    actor_state_timeout, actor_state_aggregation,
                    actor_state_synchronization, actor_state_collecting,
                    actor_state_distributing, actor_state_defaulted,
                    actor_state_expired, partner_system_priority,
-                   addrconv.mac.bin_to_text(partner_system),
+                   partner_system,
                    partner_key, partner_port_priority,
                    partner_port, partner_state_activity,
                    partner_state_timeout, partner_state_aggregation,
@@ -583,14 +583,14 @@ class lacp(packet_base.PacketBase):
         actor = struct.pack(self._ACTPRT_INFO_PACK_STR,
                             self.actor_tag, self.actor_length,
                             self.actor_system_priority,
-                            addrconv.mac.text_to_bin(self.actor_system),
+                            self.actor_system,
                             self.actor_key,
                             self.actor_port_priority, self.actor_port,
                             self.actor_state)
         partner = struct.pack(self._ACTPRT_INFO_PACK_STR,
                               self.partner_tag, self.partner_length,
                               self.partner_system_priority,
-                              addrconv.mac.text_to_bin(self.partner_system),
+                              self.partner_system,
                               self.partner_key,
                               self.partner_port_priority,
                               self.partner_port, self.partner_state)
@@ -602,3 +602,7 @@ class lacp(packet_base.PacketBase):
                                  self.terminator_tag,
                                  self.terminator_length)
         return header + actor + partner + collector + terminator
+
+
+addrconv.mac_type( slow, 'actor_system')
+addrconv.mac_type( slow, 'partner_system')

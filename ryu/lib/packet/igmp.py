@@ -103,17 +103,19 @@ class igmp(packet_base.PacketBase):
         (msgtype, maxresp, csum, address
          ) = struct.unpack_from(cls._PACK_STR, buf)
         return (cls(msgtype, maxresp, csum,
-                    addrconv.ipv4.bin_to_text(address)),
+                    address),
                 None,
                 buf[cls._MIN_LEN:])
 
     def serialize(self, payload, prev):
         hdr = bytearray(struct.pack(self._PACK_STR, self.msgtype,
                         self.maxresp, self.csum,
-                        addrconv.ipv4.text_to_bin(self.address)))
+                        self.address))
 
         if self.csum == 0:
             self.csum = packet_utils.checksum(hdr)
             struct.pack_into('!H', hdr, 2, self.csum)
 
         return hdr
+
+addrconv.ipv4_type(igmp, 'address')

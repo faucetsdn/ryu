@@ -49,8 +49,8 @@ class Test_ipv4(unittest.TestCase):
     ttl = 64
     proto = inet.IPPROTO_TCP
     csum = 0xadc6
-    src = '131.151.32.21'
-    dst = '131.151.32.129'
+    src = addrconv.ipv4.text_to_bin('131.151.32.21')
+    dst = addrconv.ipv4.text_to_bin('131.151.32.129')
     length = header_length * 4
     option = '\x86\x28\x00\x00\x00\x01\x01\x22' \
         + '\x00\x01\xae\x00\x00\x00\x00\x00' \
@@ -60,8 +60,8 @@ class Test_ipv4(unittest.TestCase):
 
     buf = pack(ipv4._PACK_STR, ver_hlen, tos, total_length, identification,
                flg_off, ttl, proto, csum,
-               addrconv.ipv4.text_to_bin(src),
-               addrconv.ipv4.text_to_bin(dst)) \
+               src,
+               dst) \
         + option
 
     ip = ipv4(version, header_length, tos, total_length, identification,
@@ -118,8 +118,8 @@ class Test_ipv4(unittest.TestCase):
         eq_(res[4], self.flg_off)
         eq_(res[5], self.ttl)
         eq_(res[6], self.proto)
-        eq_(res[8], addrconv.ipv4.text_to_bin(self.src))
-        eq_(res[9], addrconv.ipv4.text_to_bin(self.dst))
+        eq_(res[8], self.src)
+        eq_(res[9], self.dst)
         eq_(option, self.option)
 
         # checksum

@@ -348,13 +348,13 @@ class ConfigurationBPDUs(bpdu):
                          for i in range(0, 6)]
         mac_addr_list.reverse()
         mac_address_bin = binascii.a2b_hex(''.join(mac_addr_list))
-        mac_address = addrconv.mac.bin_to_text(mac_address_bin)
+        mac_address = mac_address_bin
 
         return priority, system_id_extension, mac_address
 
     @staticmethod
     def encode_bridge_id(priority, system_id_extension, mac_address):
-        mac_addr = int(binascii.hexlify(addrconv.mac.text_to_bin(mac_address)),
+        mac_addr = int(binascii.hexlify(mac_address),
                        16)
         return ((priority + system_id_extension) << 48) + mac_addr
 
@@ -375,6 +375,9 @@ class ConfigurationBPDUs(bpdu):
     @staticmethod
     def _encode_timer(timer):
         return timer * 0x100
+
+addrconv.mac_type(ConfigurationBPDUs, 'root_mac_address')
+addrconv.mac_type(ConfigurationBPDUs, 'bridge_mac_address')
 
 
 @bpdu.register_bpdu_type

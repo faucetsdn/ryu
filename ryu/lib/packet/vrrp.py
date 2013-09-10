@@ -161,12 +161,10 @@ VRRP_V2_MAX_ADVER_INT_MAX = 0xff
 
 def is_ipv6(ip_address):
     assert type(ip_address) == str
-    try:
-        addrconv.ipv4.text_to_bin(ip_address)
-    except:
-        addrconv.ipv6.text_to_bin(ip_address)  # sanity
-        return True
-    return False
+    if len(ip_address) != 16:
+        return False
+
+    return True
 
 
 class vrrp(packet_base.PacketBase):
@@ -451,8 +449,7 @@ class vrrpv2(vrrp):
         ip_addresses_pack_str = cls._ip_addresses_pack_str(count_ip)
         ip_addresses_bin = struct.unpack_from(ip_addresses_pack_str, buf,
                                               offset)
-        ip_addresses = map(lambda x: addrconv.ipv4.bin_to_text(x),
-                           ip_addresses_bin)
+        ip_addresses = ip_addresses_bin
 
         offset += struct.calcsize(ip_addresses_pack_str)
         auth_data = struct.unpack_from(cls._AUTH_DATA_PACK_STR, buf, offset)
@@ -487,8 +484,7 @@ class vrrpv2(vrrp):
                          vrrp_.checksum)
         offset += vrrpv2._MIN_LEN
         struct.pack_into(ip_addresses_pack_str, buf, offset,
-                         *map(lambda x: addrconv.ipv4.text_to_bin(x),
-                              vrrp_.ip_addresses))
+                         *vrrp_.ip_addresses)
         offset += ip_addresses_len
         struct.pack_into(vrrpv2._AUTH_DATA_PACK_STR, buf, offset,
                          *vrrp_.auth_data)
@@ -508,6 +504,20 @@ class vrrpv2(vrrp):
                 VRRP_V2_MAX_ADVER_INT_MIN <= self.max_adver_int and
                 self.max_adver_int <= VRRP_V2_MAX_ADVER_INT_MAX and
                 self.count_ip == len(self.ip_addresses))
+
+
+def _ip_addresses_getter(self):
+    return self._ip_addresses
+
+def _ip_addresses_setter(self, value):
+    def translate_ipv4(ip):
+        if len(ip) > 4:
+            return addrconv.ipv4.text_to_bin(ip)
+        else:
+            return ip
+
+    self._ip_addresses = map( translate_ipv4, value)
+vrrpv2.ip_addresses = property( _ip_addresses_getter, _ip_addresses_setter )
 
 
 # max_adver_int is in centi seconds: 1 second = 100 centiseconds
@@ -568,17 +578,15 @@ class vrrpv3(vrrp):
         # Unfortunately it isn't available. Guess it by vrrp packet length.
         if address_len == cls._IPV4_ADDRESS_LEN:
             pack_str = '!' + cls._IPV4_ADDRESS_PACK_STR_RAW * count_ip
-            conv = addrconv.ipv4.bin_to_text
         elif address_len == cls._IPV6_ADDRESS_LEN:
             pack_str = '!' + cls._IPV6_ADDRESS_PACK_STR_RAW * count_ip
-            conv = addrconv.ipv6.bin_to_text
         else:
             raise ValueError(
                 'unknown address version address_len %d count_ip %d' % (
                     address_len, count_ip))
 
         ip_addresses_bin = struct.unpack_from(pack_str, buf, offset)
-        ip_addresses = map(lambda x: conv(x), ip_addresses_bin)
+        ip_addresses = ip_addresses_bin
         msg = cls(version, type_, vrid, priority,
                   count_ip, max_adver_int, checksum, ip_addresses)
         return msg, None, buf[len(msg):]
@@ -587,11 +595,9 @@ class vrrpv3(vrrp):
     def serialize_static(vrrp_, prev):
         if isinstance(prev, ipv4.ipv4):
             assert type(vrrp_.ip_addresses[0]) == str
-            conv = addrconv.ipv4.text_to_bin
             ip_address_pack_raw = vrrpv3._IPV4_ADDRESS_PACK_STR_RAW
         elif isinstance(prev, ipv6.ipv6):
             assert type(vrrp_.ip_addresses[0]) == str
-            conv = addrconv.ipv6.text_to_bin
             ip_address_pack_raw = vrrpv3._IPV6_ADDRESS_PACK_STR_RAW
         else:
             raise ValueError('Unkown network layer %s' % type(prev))
@@ -611,8 +617,7 @@ class vrrpv3(vrrp):
                          vrrp_to_version_type(vrrp_.version, vrrp_.type),
                          vrrp_.vrid, vrrp_.priority,
                          vrrp_.count_ip, vrrp_.max_adver_int, vrrp_.checksum)
-        struct.pack_into(ip_addresses_pack_str, buf, vrrpv3._MIN_LEN,
-                         *map(lambda x: conv(x), vrrp_.ip_addresses))
+        struct.pack_into(ip_addresses_pack_str, buf, vrrpv3._MIN_LEN, *vrrp_.ip_addresses)
 
         if checksum:
             vrrp_.checksum = packet_utils.checksum_ip(prev, len(buf), buf)
@@ -629,6 +634,28 @@ class vrrpv3(vrrp):
                 VRRP_V3_MAX_ADVER_INT_MIN <= self.max_adver_int and
                 self.max_adver_int <= VRRP_V3_MAX_ADVER_INT_MAX and
                 self.count_ip == len(self.ip_addresses))
+
+def _ip_addresses_getter(self):
+    return self._ip_addresses
+
+def _ip_addresses_setter(self, value):
+    def translate_ipv(ip):
+        if len(ip) == 4:
+            return ip
+        elif len(ip) == 16:
+            try:
+                return addrconv.ipv6.text_to_bin(ip)
+            except:
+                return ip
+        else:
+            try:
+                return addrconv.ipv4.text_to_bin(ip)
+            except:
+                return addrconv.ipv6.text_to_bin(ip)
+
+    self._ip_addresses = map( translate_ipv, value)
+
+vrrpv3.ip_addresses = property( _ip_addresses_getter, _ip_addresses_setter )
 
 
 ipv4.ipv4.register_packet_type(vrrp, inet.IPPROTO_VRRP)

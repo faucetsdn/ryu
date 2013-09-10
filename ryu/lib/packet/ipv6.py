@@ -78,8 +78,8 @@ class ipv6(packet_base.PacketBase):
         flow_label = v_tc_flow & 0xfffff
         hop_limit = hlim
         msg = cls(version, traffic_class, flow_label, payload_length,
-                  nxt, hop_limit, addrconv.ipv6.bin_to_text(src),
-                  addrconv.ipv6.bin_to_text(dst))
+                  nxt, hop_limit, src,
+                  dst)
         return (msg, ipv6.get_packet_type(nxt),
                 buf[cls._MIN_LEN:cls._MIN_LEN+payload_length])
 
@@ -89,9 +89,12 @@ class ipv6(packet_base.PacketBase):
                      self.flow_label << 12)
         struct.pack_into(ipv6._PACK_STR, hdr, 0, v_tc_flow,
                          self.payload_length, self.nxt, self.hop_limit,
-                         addrconv.ipv6.text_to_bin(self.src),
-                         addrconv.ipv6.text_to_bin(self.dst))
+                         self.src,
+                         self.dst)
         return hdr
+
+addrconv.ipv6_type(ipv6, 'src')
+addrconv.ipv6_type(ipv6, 'dst')
 
 ipv6.register_packet_type(icmpv6.icmpv6, inet.IPPROTO_ICMPV6)
 ipv6.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)

@@ -27,7 +27,6 @@ ARP_REPLY = 2
 ARP_REV_REQUEST = 3
 ARP_REV_REPLY = 4
 
-
 class arp(packet_base.PacketBase):
     """ARP (RFC 826) header encoder/decoder class.
 
@@ -77,19 +76,26 @@ class arp(packet_base.PacketBase):
         (hwtype, proto, hlen, plen, opcode, src_mac, src_ip,
          dst_mac, dst_ip) = struct.unpack_from(cls._PACK_STR, buf)
         return cls(hwtype, proto, hlen, plen, opcode,
-                   addrconv.mac.bin_to_text(src_mac),
-                   addrconv.ipv4.bin_to_text(src_ip),
-                   addrconv.mac.bin_to_text(dst_mac),
-                   addrconv.ipv4.bin_to_text(dst_ip)), None, buf[arp._MIN_LEN:]
+                   src_mac,
+                   src_ip,
+                   dst_mac,
+                   dst_ip), None, buf[arp._MIN_LEN:]
 
     def serialize(self, payload, prev):
         return struct.pack(arp._PACK_STR, self.hwtype, self.proto,
                            self.hlen, self.plen, self.opcode,
-                           addrconv.mac.text_to_bin(self.src_mac),
-                           addrconv.ipv4.text_to_bin(self.src_ip),
-                           addrconv.mac.text_to_bin(self.dst_mac),
-                           addrconv.ipv4.text_to_bin(self.dst_ip))
+                           self.src_mac,
+                           self.src_ip,
+                           self.dst_mac,
+                           self.dst_ip)
 
+# Mac address
+addrconv.mac_type(arp,"src_mac")
+addrconv.mac_type(arp,"dst_mac")
+
+# IP address
+addrconv.ipv4_type(arp,"src_ip")
+addrconv.ipv4_type(arp,"dst_ip")
 
 def arp_ip(opcode, src_mac, src_ip, dst_mac, dst_ip):
     """A convenient wrapper for IPv4 ARP for Ethernet.

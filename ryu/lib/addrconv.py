@@ -38,3 +38,30 @@ class mac_mydialect(netaddr.mac_unix):
     word_fmt = '%.2x'
 mac = AddressConverter(netaddr.EUI, netaddr.strategy.eui48, version=48,
                        dialect=mac_mydialect)
+
+# Added by Omid ~
+def dynamic_type(cls, name, _type, length):
+    attrib = "_" + name
+
+    def getter(self):
+        return getattr(self, attrib)
+
+    def setter(self, value):
+        if len(value) == length:
+            setattr(self, attrib, value)
+        else:
+            try:
+                setattr(self, attrib, _type.text_to_bin(value))
+            except:
+                setattr(self, attrib, value)
+
+    setattr(cls, name, property(getter, setter))
+
+def ipv4_type(cls, name):
+    return dynamic_type(cls, name, ipv4, 4)
+
+def ipv6_type(cls, name):
+    return dynamic_type(cls, name, ipv6, 16)
+
+def mac_type(cls, name):
+    return dynamic_type(cls, name, mac, 6)

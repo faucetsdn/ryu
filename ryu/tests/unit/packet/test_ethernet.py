@@ -58,16 +58,16 @@ class Test_ethernet(unittest.TestCase):
                 return p
 
     def test_init(self):
-        eq_(self.dst, self.e.dst)
-        eq_(self.src, self.e.src)
+        eq_(addrconv.mac.text_to_bin(self.dst), self.e.dst)
+        eq_(addrconv.mac.text_to_bin(self.src), self.e.src)
         eq_(self.ethertype, self.e.ethertype)
 
     def test_parser(self):
         res, ptype, _ = self.e.parser(self.buf)
         LOG.debug((res, ptype))
 
-        eq_(res.dst, self.dst)
-        eq_(res.src, self.src)
+        eq_(res.dst, addrconv.mac.text_to_bin(self.dst))
+        eq_(res.src, addrconv.mac.text_to_bin(self.src))
         eq_(res.ethertype, self.ethertype)
         eq_(ptype, arp)
 
