@@ -47,8 +47,12 @@ def chop_py_suffix(p):
 
 
 def _likely_same(a, b):
-    if os.path.samefile(a, b):
-        return True
+    try:
+        if os.path.samefile(a, b):
+            return True
+    except OSError:
+        # m.__file__ is not always accessible.  eg. egg
+        return False
     if chop_py_suffix(a) == chop_py_suffix(b):
         return True
     return False
@@ -57,6 +61,8 @@ def _likely_same(a, b):
 def _find_loaded_module(modpath):
     # copy() to avoid RuntimeError: dictionary changed size during iteration
     for k, m in sys.modules.copy().iteritems():
+        if k == '__main__':
+            continue
         if not hasattr(m, '__file__'):
             continue
         if _likely_same(m.__file__, modpath):
