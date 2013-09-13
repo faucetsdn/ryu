@@ -57,7 +57,12 @@ x() ->
                          [#ofp_action_set_field{
                              field = #ofp_field{name = vlan_vid,
                                                 value = <<1,2>> }},
-                          #ofp_action_output{port = 6,max_len = no_buffer}]}]},
+                          #ofp_action_output{port = 6,max_len = no_buffer}]},
+                 #ofp_instruction_apply_actions{
+                     actions =
+                         [#ofp_action_set_field{
+                             field = #ofp_field{name = eth_src,
+                                                value = <<1,2,3,4,5,6>> }}]}]},
         #ofp_flow_mod{
             cookie = <<0,0,0,0,0,0,0,0>>,
             cookie_mask = <<0,0,0,0,0,0,0,0>>,
