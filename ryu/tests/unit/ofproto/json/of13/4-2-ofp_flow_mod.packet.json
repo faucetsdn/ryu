@@ -34,6 +34,25 @@
                "len": 40, 
                "type": 3
             }
+         }, 
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "OFPActionSetField": {
+                        "field": {
+                           "OXMTlv": {
+                              "field": "eth_src", 
+                              "mask": null, 
+                              "value": "01:02:03:04:05:06"
+                           }
+                        }
+                     }
+                  }
+               ], 
+               "len": 24, 
+               "type": 4
+            }
          }
       ], 
       "match": {
