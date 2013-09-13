@@ -2940,7 +2940,7 @@ class OFPActionSetField(OFPAction):
         len_ = ofproto_v1_3.oxm_serialize(n, value, mask, buf, offset + 4)
         self.len = utils.round_up(4 + len_, 8)
         msg_pack_into('!HH', buf, offset, self.type, self.len)
-        pad_len = self.len - len_
+        pad_len = self.len - (4 + len_)
         ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset + 4 + len_)
 
     # XXX old api compat
