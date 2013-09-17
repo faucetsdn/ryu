@@ -111,6 +111,27 @@ class Test_ipv6(unittest.TestCase):
             addrconv.ipv6.text_to_bin(self.dst))
         self.buf += self.dst_opts.serialize()
 
+    def setUp_with_fragment(self):
+        self.fragment_offset = 50
+        self.fragment_more = 1
+        self.fragment_id = 123
+        self.fragment = ipv6.fragment(
+            self.fragment_offset, self.fragment_more, self.fragment_id)
+        self.ext_hdrs = [self.fragment]
+        self.payload_length += len(self.fragment)
+        self.ip = ipv6.ipv6(
+            self.version, self.traffic_class, self.flow_label,
+            self.payload_length, self.nxt, self.hop_limit, self.src,
+            self.dst, self.ext_hdrs)
+        self.fragment.nxt = self.nxt
+        self.nxt = self.fragment.TYPE
+        self.buf = struct.pack(
+            ipv6.ipv6._PACK_STR, self.v_tc_flow,
+            self.payload_length, self.nxt, self.hop_limit,
+            addrconv.ipv6.text_to_bin(self.src),
+            addrconv.ipv6.text_to_bin(self.dst))
+        self.buf += self.fragment.serialize()
+
     def tearDown(self):
         pass
 
@@ -131,6 +152,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_init_with_dst_opts(self):
         self.setUp_with_dst_opts()
+        self.test_init()
+
+    def test_init_with_fragment(self):
+        self.setUp_with_fragment()
         self.test_init()
 
     def test_parser(self):
@@ -156,6 +181,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_parser_with_dst_opts(self):
         self.setUp_with_dst_opts()
+        self.test_parser()
+
+    def test_parser_with_fragment(self):
+        self.setUp_with_fragment()
         self.test_parser()
 
     def test_serialize(self):
@@ -192,6 +221,16 @@ class Test_ipv6(unittest.TestCase):
         dst_opts = ipv6.dst_opts.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
         eq_(repr(self.dst_opts), repr(dst_opts))
 
+    def test_serialize_with_fragment(self):
+        self.setUp_with_fragment()
+        self.test_serialize()
+
+        data = bytearray()
+        prev = None
+        buf = self.ip.serialize(data, prev)
+        fragment = ipv6.fragment.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
+        eq_(repr(self.fragment), repr(fragment))
+
     def test_to_string(self):
         ipv6_values = {'version': self.version,
                        'traffic_class': self.traffic_class,
@@ -218,6 +257,10 @@ class Test_ipv6(unittest.TestCase):
         self.setUp_with_dst_opts()
         self.test_to_string()
 
+    def test_to_string_with_fragment(self):
+        self.setUp_with_fragment()
+        self.test_to_string()
+
     def test_len(self):
         eq_(len(self.ip), 40)
 
@@ -228,6 +271,10 @@ class Test_ipv6(unittest.TestCase):
     def test_len_with_dst_opts(self):
         self.setUp_with_dst_opts()
         eq_(len(self.ip), 40 + len(self.dst_opts))
+
+    def test_len_with_fragment(self):
+        self.setUp_with_fragment()
+        eq_(len(self.ip), 40 + len(self.fragment))
 
 
 class Test_hop_opts(unittest.TestCase):
@@ -444,3 +491,45 @@ class Test_option_padN(Test_option):
         res = struct.unpack_from(self.form, buf)
         eq_(self.type_, res[0])
         eq_(self.len_, res[1])
+
+
+class Test_fragment(unittest.TestCase):
+
+    def setUp(self):
+        self.nxt = 44
+        self.offset = 50
+        self.more = 1
+        self.id_ = 123
+        self.fragment = ipv6.fragment(self.offset, self.more, self.id_)
+        self.fragment.set_nxt(self.nxt)
+
+        self.off_m = (self.offset << 3 | self.more)
+        self.form = '!BxHI'
+        self.buf = struct.pack(self.form, self.nxt, self.off_m, self.id_)
+
+    def test_init(self):
+        eq_(self.nxt, self.fragment.nxt)
+        eq_(self.offset, self.fragment.offset)
+        eq_(self.more, self.fragment.more)
+        eq_(self.id_, self.fragment.id_)
+
+    def test_parser(self):
+        _res = ipv6.fragment.parser(self.buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(self.nxt, res.nxt)
+        eq_(self.offset, res.offset)
+        eq_(self.more, res.more)
+        eq_(self.id_, res.id_)
+
+    def test_serialize(self):
+        buf = self.fragment.serialize()
+        res = struct.unpack_from(self.form, str(buf))
+        eq_(self.nxt, res[0])
+        eq_(self.off_m, res[1])
+        eq_(self.id_, res[2])
+
+    def test_len(self):
+        eq_(8, len(self.fragment))

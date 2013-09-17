@@ -324,3 +324,55 @@ class option(stringify.StringifyMixin):
 
     def __len__(self):
         return self._MIN_LEN + self.len_
+
+
+@ipv6.register_header_type(inet.IPPROTO_FRAGMENT)
+class fragment(header):
+    """IPv6 (RFC 2460) fragment header encoder/decoder class.
+
+    This is used with ryu.lib.packet.ipv6.ipv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|L|
+
+    ============== =======================================
+    Attribute      Description
+    ============== =======================================
+    offset         offset, in 8-octet units, relative to
+                   the start of the fragmentable part of
+                   the original packet.
+    more           1 means more fragments follow;
+                   0 means last fragment.
+    id\_           packet identification value.
+    ============== =======================================
+    """
+    TYPE = inet.IPPROTO_FRAGMENT
+
+    _PACK_STR = '!BxHI'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, offset, more, id_):
+        super(fragment, self).__init__()
+        self.offset = offset
+        self.more = more
+        self.id_ = id_
+
+    @classmethod
+    def parser(cls, buf):
+        (nxt, off_m, id_) = struct.unpack_from(cls._PACK_STR, buf)
+        offset = off_m >> 3
+        more = off_m & 0x1
+        ret = cls(offset, more, id_)
+        ret.set_nxt(nxt)
+        return ret
+
+    def serialize(self):
+        off_m = (self.offset << 3 | self.more)
+        buf = struct.pack(self._PACK_STR, self.nxt, off_m, self.id_)
+        return buf
+
+    def __len__(self):
+        return self._MIN_LEN
