@@ -4645,6 +4645,13 @@ class OFPTableFeaturesStats(StringifyMixin):
 @_set_stats_type(ofproto_v1_3.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
+    """
+    Table features statistics request message
+
+    The controller uses this message to query table features.
+
+    This message is currently unimplemented.
+    """
     def __init__(self, datapath, flags, length, table_id, name,
                  metadata_match, metadata_write, config, max_entries,
                  properties, type_=None):
@@ -4666,6 +4673,22 @@ class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
 @_set_stats_type(ofproto_v1_3.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
 class OFPTableFeaturesStatsReply(OFPMultipartReply):
+    """
+    Table features statistics reply message
+
+    The switch responds with this message to a table features statistics
+    request.
+
+    This implmentation is still incomplete.
+    Namely, this implementation does not parse ``properties`` list and
+    always reports it empty.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPTableFeaturesStats`` instance
+    ================ ======================================================
+    """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPTableFeaturesStatsReply, self).__init__(datapath, **kwargs)
 

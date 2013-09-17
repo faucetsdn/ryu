@@ -230,6 +230,13 @@ Multipart Messages
 
     .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of13/4-52-ofp_meter_features_reply.packet.json
 
+.. autoclass:: OFPTableFeaturesStatsRequest
+.. autoclass:: OFPTableFeaturesStatsReply
+
+    JSON Example:
+
+    .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of13/4-56-ofp_table_features_reply.packet.json
+
 Queue Configuration Messages
 ----------------------------
 
