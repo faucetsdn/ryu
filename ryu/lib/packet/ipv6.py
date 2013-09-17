@@ -170,6 +170,51 @@ class header(stringify.StringifyMixin):
 # TODO: implement a class for routing header
 
 
+class opt_header(header):
+    """an abstract class for Hop-by-Hop Options header and destination
+    header."""
+
+    _PACK_STR = '!BB'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+    _FIX_SIZE = 8
+
+    @abc.abstractmethod
+    def __init__(self, size, data):
+        super(opt_header, self).__init__()
+        assert not (size % 8)
+        self.size = size
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf):
+        (nxt, len_) = struct.unpack_from(cls._PACK_STR, buf)
+        data_len = cls._FIX_SIZE + int(len_)
+        data = []
+        size = cls._MIN_LEN
+        while size < data_len:
+            (type_, ) = struct.unpack_from('!B', buf[size:])
+            if type_ == 0:
+                opt = option(type_, -1, None)
+                size += 1
+            else:
+                opt = option.parser(buf[size:])
+                size += len(opt)
+            data.append(opt)
+        ret = cls(len_, data)
+        ret.set_nxt(nxt)
+        return ret
+
+    def serialize(self):
+        buf = struct.pack(self._PACK_STR, self.nxt, self.size)
+        buf = bytearray(buf)
+        for opt in self.data:
+            buf.extend(opt.serialize())
+        return buf
+
+    def __len__(self):
+        return self._FIX_SIZE + self.size
+
+
 class option(stringify.StringifyMixin):
     """IPv6 (RFC 2460) Options header encoder/decoder class.
 
