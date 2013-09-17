@@ -168,3 +168,62 @@ class header(stringify.StringifyMixin):
         pass
 
 # TODO: implement a class for routing header
+
+
+class option(stringify.StringifyMixin):
+    """IPv6 (RFC 2460) Options header encoder/decoder class.
+
+    This is used with ryu.lib.packet.ipv6.hop_opts or
+                      ryu.lib.packet.ipv6.dst_opts.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|L|
+
+    ============== =======================================
+    Attribute      Description
+    ============== =======================================
+    type\_         option type.
+    len\_          the length of data. -1 if type\_ is 0.
+    data           an option value. None if len\_ is 0 or -1.
+    ============== =======================================
+    """
+
+    _PACK_STR = '!BB'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, type_, len_, data):
+        self.type_ = type_
+        self.len_ = len_
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf):
+        (type_, ) = struct.unpack_from('!B', buf)
+        if not type_:
+            cls_ = cls(type_, -1, None)
+        else:
+            data = None
+            (type_, len_) = struct.unpack_from(cls._PACK_STR, buf)
+            if len_:
+                form = "%ds" % len_
+                (data, ) = struct.unpack_from(form, buf, cls._MIN_LEN)
+            cls_ = cls(type_, len_, data)
+        return cls_
+
+    def serialize(self):
+        data = None
+        if not self.type_:
+            data = struct.pack('!B', self.type_)
+        elif not self.len_:
+            data = struct.pack(self._PACK_STR, self.type_, self.len_)
+        else:
+            form = "%ds" % self.len_
+            data = struct.pack(self._PACK_STR + form, self.type_,
+                               self.len_, self.data)
+        return data
+
+    def __len__(self):
+        return self._MIN_LEN + self.len_

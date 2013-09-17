@@ -120,3 +120,75 @@ class Test_ipv6(unittest.TestCase):
 
     def test_len(self):
         eq_(len(self.ip), 40)
+
+
+class Test_option(unittest.TestCase):
+
+    def setUp(self):
+        self.type_ = 5
+        self.data = '\x00\x00'
+        self.len_ = len(self.data)
+        self.opt = ipv6.option(self.type_, self.len_, self.data)
+        self.form = '!BB%ds' % self.len_
+        self.buf = struct.pack(self.form, self.type_, self.len_, self.data)
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        eq_(self.type_, self.opt.type_)
+        eq_(self.len_, self.opt.len_)
+        eq_(self.data, self.opt.data)
+
+    def test_parser(self):
+        _res = ipv6.option.parser(self.buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(self.type_, res.type_)
+        eq_(self.len_, res.len_)
+        eq_(self.data, res.data)
+
+    def test_serialize(self):
+        buf = self.opt.serialize()
+        res = struct.unpack_from(self.form, buf)
+        eq_(self.type_, res[0])
+        eq_(self.len_, res[1])
+        eq_(self.data, res[2])
+
+    def test_len(self):
+        eq_(len(self.opt), 2 + self.len_)
+
+
+class Test_option_pad1(Test_option):
+
+    def setUp(self):
+        self.type_ = 0
+        self.len_ = -1
+        self.data = None
+        self.opt = ipv6.option(self.type_, self.len_, self.data)
+        self.form = '!B'
+        self.buf = struct.pack(self.form, self.type_)
+
+    def test_serialize(self):
+        buf = self.opt.serialize()
+        res = struct.unpack_from(self.form, buf)
+        eq_(self.type_, res[0])
+
+
+class Test_option_padN(Test_option):
+
+    def setUp(self):
+        self.type_ = 1
+        self.len_ = 0
+        self.data = None
+        self.opt = ipv6.option(self.type_, self.len_, self.data)
+        self.form = '!BB'
+        self.buf = struct.pack(self.form, self.type_, self.len_)
+
+    def test_serialize(self):
+        buf = self.opt.serialize()
+        res = struct.unpack_from(self.form, buf)
+        eq_(self.type_, res[0])
+        eq_(self.len_, res[1])
