@@ -77,6 +77,33 @@ _types = {
 
 
 class StringifyMixin(object):
+
+    _TYPE = {}
+    """_TYPE class attribute is used to annotate types of attributes.
+
+    This type information is used to find an appropriate conversion for
+    a JSON style dictionary.
+
+    Currently the following types are implemented.
+
+    ===== ==========
+    Type  Descrption
+    ===== ==========
+    ascii US-ASCII
+    utf-8 UTF-8
+    ===== ==========
+
+    Example::
+        _TYPE = {
+            'ascii': [
+                'hw_addr',
+            ],
+            'utf-8': [
+                'name',
+            ]
+        }
+    """
+
     _class_prefixes = []
 
     def stringify_attrs(self):
@@ -149,7 +176,31 @@ class StringifyMixin(object):
         return _encode
 
     def to_jsondict(self, encode_string=base64.b64encode):
-        """returns an object to feed json.dumps()
+        """
+        This method returns a JSON style dict to describe this object.
+
+        The returned dict is compatible with json.dumps() and json.loads().
+
+        Suppose ClassName object inherits StringifyMixin.
+        For an object like the following::
+
+            ClassName(Param1=100, Param2=200)
+
+        this method would produce::
+
+            { "ClassName": {"Param1": 100, "Param2": 200} }
+
+        This method takes the following arguments.
+
+        =============  =====================================================
+        Argument       Description
+        =============  =====================================================
+        encode_string  (Optional) specify how to encode attributes which has
+                       python 'str' type.
+                       The default is base64.
+                       This argument is used only for attributes which don't
+                       have explicit type annotations in _TYPE class attribute.
+        =============  =====================================================
         """
         dict_ = {}
         encode = lambda k, x: self._encode_value(k, x, encode_string)
@@ -217,7 +268,24 @@ class StringifyMixin(object):
     @classmethod
     def from_jsondict(cls, dict_, decode_string=base64.b64decode,
                       **additional_args):
-        """create an instance from a result of json.loads()
+        """Create an instance from a JSON style dict.
+
+        Instantiate this class with parameters specified by the dict.
+
+        This method takes the following arguments.
+
+        =============== =====================================================
+        Argument        Descrpition
+        =============== =====================================================
+        dict\_          A dictionary which describes the parameters.
+                        For example, {"Param1": 100, "Param2": 200}
+        decode_string   (Optional) specify how to decode strings.
+                        The default is base64.
+                        This argument is used only for attributes which don't
+                        have explicit type annotations in _TYPE class
+                        attribute.
+        additional_args (Optional) Additional kwargs for constructor.
+        =============== =====================================================
         """
         decode = lambda k, x: cls._decode_value(k, x, decode_string)
         kwargs = cls._restore_args(_mapdict_kv(decode, dict_))

@@ -68,6 +68,30 @@ def create_list_of_base_attributes(f):
 
 
 def ofp_msg_from_jsondict(dp, jsondict):
+    """
+    This function instanticates an appropriate OpenFlow message class
+    from the given JSON style dictionary.
+    The objects created by following two code fragments are equivalent.
+
+    Code A::
+
+        jsonstr = '{ "OFPSetConfig": { "flags": 0, "miss_send_len": 128 } }'
+        jsondict = json.loads(jsonstr)
+        o = ofp_msg_from_jsondict(dp, jsondict)
+
+    Code B::
+
+        o = dp.ofproto_parser.OFPSetConfig(flags=0, miss_send_len=128)
+
+    This function takes the following arguments.
+
+    ======== =======================================
+    Argument Description
+    ======== =======================================
+    dp       An instance of ryu.controller.Datapath.
+    jsondict A JSON style dict.
+    ======== =======================================
+    """
     parser = dp.ofproto_parser
     assert len(jsondict) == 1
     for k, v in jsondict.iteritems():
@@ -87,6 +111,23 @@ class StringifyMixin(stringify.StringifyMixin):
 
 
 class MsgBase(StringifyMixin):
+    """
+    This is a base class for OpenFlow message classes.
+
+    An instance of this class has at least the following attributes.
+
+    ========= ==============================
+    Attribute Description
+    ========= ==============================
+    datapath  A ryu.controller.controller.Datapath instance for this message
+    version   OpenFlow protocol version
+    msg_type  Type of OpenFlow message
+    msg_len   Length of the message
+    xid       Transaction id
+    buf       Raw data
+    ========= ==============================
+    """
+
     @create_list_of_base_attributes
     def __init__(self, datapath):
         super(MsgBase, self).__init__()
