@@ -154,6 +154,43 @@ class Test_ipv6(unittest.TestCase):
             addrconv.ipv6.text_to_bin(self.dst))
         self.buf += self.auth.serialize()
 
+    def setUp_with_multi_headers(self):
+        self.opt1_type = 5
+        self.opt1_len = 2
+        self.opt1_data = '\x00\x00'
+        self.opt2_type = 1
+        self.opt2_len = 0
+        self.opt2_data = None
+        self.options = [
+            ipv6.option(self.opt1_type, self.opt1_len, self.opt1_data),
+            ipv6.option(self.opt2_type, self.opt2_len, self.opt2_data),
+        ]
+        self.hop_opts_size = 0
+        self.hop_opts = ipv6.hop_opts(self.hop_opts_size, self.options)
+        self.auth_size = 4
+        self.auth_spi = 256
+        self.auth_seq = 1
+        self.auth_data = '\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
+        self.auth = ipv6.auth(
+            self.auth_size, self.auth_spi, self.auth_seq, self.auth_data)
+        self.ext_hdrs = [self.hop_opts, self.auth]
+        self.payload_length += len(self.hop_opts) + len(self.auth)
+        self.ip = ipv6.ipv6(
+            self.version, self.traffic_class, self.flow_label,
+            self.payload_length, self.nxt, self.hop_limit, self.src,
+            self.dst, self.ext_hdrs)
+        self.hop_opts.nxt = self.nxt
+        self.nxt = self.hop_opts.TYPE
+        self.auth.nxt = self.hop_opts.nxt
+        self.hop_opts.nxt = self.auth.TYPE
+        self.buf = struct.pack(
+            ipv6.ipv6._PACK_STR, self.v_tc_flow,
+            self.payload_length, self.nxt, self.hop_limit,
+            addrconv.ipv6.text_to_bin(self.src),
+            addrconv.ipv6.text_to_bin(self.dst))
+        self.buf += self.hop_opts.serialize()
+        self.buf += self.auth.serialize()
+
     def tearDown(self):
         pass
 
@@ -182,6 +219,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_init_with_auth(self):
         self.setUp_with_auth()
+        self.test_init()
+
+    def test_init_with_multi_headers(self):
+        self.setUp_with_multi_headers()
         self.test_init()
 
     def test_parser(self):
@@ -215,6 +256,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_parser_with_auth(self):
         self.setUp_with_auth()
+        self.test_parser()
+
+    def test_parser_with_multi_headers(self):
+        self.setUp_with_multi_headers()
         self.test_parser()
 
     def test_serialize(self):
@@ -271,6 +316,20 @@ class Test_ipv6(unittest.TestCase):
         auth = ipv6.auth.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
         eq_(repr(self.auth), repr(auth))
 
+    def test_serialize_with_multi_headers(self):
+        self.setUp_with_multi_headers()
+        self.test_serialize()
+
+        data = bytearray()
+        prev = None
+        buf = self.ip.serialize(data, prev)
+        offset = ipv6.ipv6._MIN_LEN
+        hop_opts = ipv6.hop_opts.parser(str(buf[offset:]))
+        offset += len(hop_opts)
+        auth = ipv6.auth.parser(str(buf[offset:]))
+        eq_(repr(self.hop_opts), repr(hop_opts))
+        eq_(repr(self.auth), repr(auth))
+
     def test_to_string(self):
         ipv6_values = {'version': self.version,
                        'traffic_class': self.traffic_class,
@@ -305,6 +364,10 @@ class Test_ipv6(unittest.TestCase):
         self.setUp_with_auth()
         self.test_to_string()
 
+    def test_to_string_with_multi_headers(self):
+        self.setUp_with_multi_headers()
+        self.test_to_string()
+
     def test_len(self):
         eq_(len(self.ip), 40)
 
@@ -323,6 +386,10 @@ class Test_ipv6(unittest.TestCase):
     def test_len_with_auth(self):
         self.setUp_with_auth()
         eq_(len(self.ip), 40 + len(self.auth))
+
+    def test_len_with_multi_headers(self):
+        self.setUp_with_multi_headers()
+        eq_(len(self.ip), 40 + len(self.hop_opts) + len(self.auth))
 
 
 class Test_hop_opts(unittest.TestCase):
