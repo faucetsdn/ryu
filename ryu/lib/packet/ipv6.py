@@ -376,3 +376,62 @@ class fragment(header):
 
     def __len__(self):
         return self._MIN_LEN
+
+
+@ipv6.register_header_type(inet.IPPROTO_AH)
+class auth(header):
+    """IP Authentication header (RFC 2402) encoder/decoder class.
+
+    This is used with ryu.lib.packet.ipv6.ipv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|L|
+
+    ============== =======================================
+    Attribute      Description
+    ============== =======================================
+    size           the length of the Authentication Header
+                   in 64-bit words, subtracting 1.
+    spi            security parameters index.
+    seq            sequence number.
+    data           authentication data.
+    ============== =======================================
+    """
+    TYPE = inet.IPPROTO_AH
+
+    _PACK_STR = '!BB2xII'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, size, spi, seq, data):
+        super(auth, self).__init__()
+        self.size = size
+        self.spi = spi
+        self.seq = seq
+        self.data = data
+
+    @classmethod
+    def _get_size(cls, size):
+        return (int(size) - 1) * 8
+
+    @classmethod
+    def parser(cls, buf):
+        (nxt, size, spi, seq) = struct.unpack_from(cls._PACK_STR, buf)
+        form = "%ds" % (cls._get_size(size) - cls._MIN_LEN)
+        (data, ) = struct.unpack_from(form, buf, cls._MIN_LEN)
+        ret = cls(size, spi, seq, data)
+        ret.set_nxt(nxt)
+        return ret
+
+    def serialize(self):
+        buf = struct.pack(self._PACK_STR, self.nxt, self.size, self.spi,
+                          self.seq)
+        buf = bytearray(buf)
+        form = "%ds" % (auth._get_size(self.size) - self._MIN_LEN)
+        buf.extend(struct.pack(form, self.data))
+        return buf
+
+    def __len__(self):
+        return auth._get_size(self.size)

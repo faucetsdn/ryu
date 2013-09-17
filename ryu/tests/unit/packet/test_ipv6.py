@@ -132,6 +132,28 @@ class Test_ipv6(unittest.TestCase):
             addrconv.ipv6.text_to_bin(self.dst))
         self.buf += self.fragment.serialize()
 
+    def setUp_with_auth(self):
+        self.auth_size = 4
+        self.auth_spi = 256
+        self.auth_seq = 1
+        self.auth_data = '\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
+        self.auth = ipv6.auth(
+            self.auth_size, self.auth_spi, self.auth_seq, self.auth_data)
+        self.ext_hdrs = [self.auth]
+        self.payload_length += len(self.auth)
+        self.ip = ipv6.ipv6(
+            self.version, self.traffic_class, self.flow_label,
+            self.payload_length, self.nxt, self.hop_limit, self.src,
+            self.dst, self.ext_hdrs)
+        self.auth.nxt = self.nxt
+        self.nxt = self.auth.TYPE
+        self.buf = struct.pack(
+            ipv6.ipv6._PACK_STR, self.v_tc_flow,
+            self.payload_length, self.nxt, self.hop_limit,
+            addrconv.ipv6.text_to_bin(self.src),
+            addrconv.ipv6.text_to_bin(self.dst))
+        self.buf += self.auth.serialize()
+
     def tearDown(self):
         pass
 
@@ -156,6 +178,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_init_with_fragment(self):
         self.setUp_with_fragment()
+        self.test_init()
+
+    def test_init_with_auth(self):
+        self.setUp_with_auth()
         self.test_init()
 
     def test_parser(self):
@@ -185,6 +211,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_parser_with_fragment(self):
         self.setUp_with_fragment()
+        self.test_parser()
+
+    def test_parser_with_auth(self):
+        self.setUp_with_auth()
         self.test_parser()
 
     def test_serialize(self):
@@ -231,6 +261,16 @@ class Test_ipv6(unittest.TestCase):
         fragment = ipv6.fragment.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
         eq_(repr(self.fragment), repr(fragment))
 
+    def test_serialize_with_auth(self):
+        self.setUp_with_auth()
+        self.test_serialize()
+
+        data = bytearray()
+        prev = None
+        buf = self.ip.serialize(data, prev)
+        auth = ipv6.auth.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
+        eq_(repr(self.auth), repr(auth))
+
     def test_to_string(self):
         ipv6_values = {'version': self.version,
                        'traffic_class': self.traffic_class,
@@ -261,6 +301,10 @@ class Test_ipv6(unittest.TestCase):
         self.setUp_with_fragment()
         self.test_to_string()
 
+    def test_to_string_with_auth(self):
+        self.setUp_with_auth()
+        self.test_to_string()
+
     def test_len(self):
         eq_(len(self.ip), 40)
 
@@ -275,6 +319,10 @@ class Test_ipv6(unittest.TestCase):
     def test_len_with_fragment(self):
         self.setUp_with_fragment()
         eq_(len(self.ip), 40 + len(self.fragment))
+
+    def test_len_with_auth(self):
+        self.setUp_with_auth()
+        eq_(len(self.ip), 40 + len(self.auth))
 
 
 class Test_hop_opts(unittest.TestCase):
@@ -533,3 +581,49 @@ class Test_fragment(unittest.TestCase):
 
     def test_len(self):
         eq_(8, len(self.fragment))
+
+
+class Test_auth(unittest.TestCase):
+
+    def setUp(self):
+        self.nxt = 0
+        self.size = 4
+        self.spi = 256
+        self.seq = 1
+        self.data = '\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8'
+        self.auth = ipv6.auth(self.size, self.spi, self.seq, self.data)
+        self.auth.set_nxt(self.nxt)
+        self.form = '!BB2xII12s'
+        self.buf = struct.pack(self.form, self.nxt, self.size, self.spi,
+                               self.seq, self.data)
+
+    def test_init(self):
+        eq_(self.nxt, self.auth.nxt)
+        eq_(self.size, self.auth.size)
+        eq_(self.spi, self.auth.spi)
+        eq_(self.seq, self.auth.seq)
+        eq_(self.data, self.auth.data)
+
+    def test_parser(self):
+        _res = ipv6.auth.parser(self.buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(self.nxt, res.nxt)
+        eq_(self.size, res.size)
+        eq_(self.spi, res.spi)
+        eq_(self.seq, res.seq)
+        eq_(self.data, res.data)
+
+    def test_serialize(self):
+        buf = self.auth.serialize()
+        res = struct.unpack_from(self.form, str(buf))
+        eq_(self.nxt, res[0])
+        eq_(self.size, res[1])
+        eq_(self.spi, res[2])
+        eq_(self.seq, res[3])
+        eq_(self.data, res[4])
+
+    def test_len(self):
+        eq_((4 - 1) * 8, len(self.auth))
