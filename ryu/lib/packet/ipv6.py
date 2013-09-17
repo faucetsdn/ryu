@@ -241,6 +241,32 @@ class hop_opts(opt_header):
         super(hop_opts, self).__init__(size, data)
 
 
+@ipv6.register_header_type(inet.IPPROTO_DSTOPTS)
+class dst_opts(opt_header):
+    """IPv6 (RFC 2460) destination header encoder/decoder class.
+
+    This is used with ryu.lib.packet.ipv6.ipv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|L|
+
+    ============== =======================================
+    Attribute      Description
+    ============== =======================================
+    size           the length of the destination header,
+                   not include the first 8 octet.
+    data           IPv6 options.
+    ============== =======================================
+    """
+    TYPE = inet.IPPROTO_DSTOPTS
+
+    def __init__(self, size, data):
+        super(dst_opts, self).__init__(size, data)
+
+
 class option(stringify.StringifyMixin):
     """IPv6 (RFC 2460) Options header encoder/decoder class.
 
