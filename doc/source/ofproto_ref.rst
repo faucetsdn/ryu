@@ -1,3 +1,5 @@
+.. _ofproto_ref:
+
 *******************************
 OpenFlow protocol API Reference
 *******************************
