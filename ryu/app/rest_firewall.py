@@ -142,6 +142,9 @@ REST_STATUS = 'status'
 REST_LOG_STATUS = 'log_status'
 REST_STATUS_ENABLE = 'enable'
 REST_STATUS_DISABLE = 'disable'
+REST_COMMAND_RESULT = 'command_result'
+REST_ACL = 'access_control_list'
+REST_RULES = 'rules'
 REST_COOKIE = 'cookie'
 REST_PRIORITY = 'priority'
 REST_MATCH = 'match'
@@ -415,11 +418,11 @@ class FirewallController(ControllerBase):
         except ValueError, message:
             return Response(status=400, body=str(message))
 
-        msgs = {}
+        msgs = []
         for f_ofs in dps.values():
             function = getattr(f_ofs, func)
             msg = function() if waiters is None else function(waiters)
-            msgs.update(msg)
+            msgs.append(msg)
 
         body = json.dumps(msgs)
         return Response(content_type='application/json', body=body)
@@ -455,10 +458,10 @@ class FirewallController(ControllerBase):
         except ValueError, message:
             return Response(status=400, body=str(message))
 
-        msgs = {}
+        msgs = []
         for f_ofs in dps.values():
             rules = f_ofs.get_rules(self.waiters, vid)
-            msgs.update(rules)
+            msgs.append(rules)
 
         body = json.dumps(msgs)
         return Response(content_type='application/json', body=body)
@@ -476,11 +479,11 @@ class FirewallController(ControllerBase):
         except ValueError, message:
             return Response(status=400, body=str(message))
 
-        msgs = {}
+        msgs = []
         for f_ofs in dps.values():
             try:
                 msg = f_ofs.set_rule(rule, vid)
-                msgs.update(msg)
+                msgs.append(msg)
             except ValueError, message:
                 return Response(status=400, body=str(message))
 
@@ -500,11 +503,11 @@ class FirewallController(ControllerBase):
         except ValueError, message:
             return Response(status=400, body=str(message))
 
-        msgs = {}
+        msgs = []
         for f_ofs in dps.values():
             try:
                 msg = f_ofs.delete_rule(ruleid, self.waiters, vid)
-                msgs.update(msg)
+                msgs.append(msg)
             except ValueError, message:
                 return Response(status=400, body=str(message))
 
@@ -573,6 +576,16 @@ class Firewall(object):
     def _cookie_to_ruleid(cookie):
         return cookie & ofproto_v1_2_parser.UINT32_MAX
 
+    # REST command template
+    def rest_command(func):
+        def _rest_command(*args, **kwargs):
+            key, value = func(*args, **kwargs)
+            switch_id = dpid_lib.dpid_to_str(args[0].dp.id)
+            return {REST_SWITCHID: switch_id,
+                    key: value}
+        return _rest_command
+
+    @rest_command
     def get_status(self, waiters):
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
 
@@ -583,11 +596,9 @@ class Firewall(object):
                 if flow_stat['priority'] == STATUS_FLOW_PRIORITY:
                     status = REST_STATUS_DISABLE
 
-        msg = {REST_STATUS: status}
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        return REST_STATUS, status
 
+    @rest_command
     def set_disable_flow(self):
         cookie = 0
         priority = STATUS_FLOW_PRIORITY
@@ -601,10 +612,9 @@ class Firewall(object):
 
         msg = {'result': 'success',
                'details': 'firewall stopped.'}
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        return REST_COMMAND_RESULT, msg
 
+    @rest_command
     def set_enable_flow(self):
         cookie = 0
         priority = STATUS_FLOW_PRIORITY
@@ -618,10 +628,9 @@ class Firewall(object):
 
         msg = {'result': 'success',
                'details': 'firewall running.'}
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        return REST_COMMAND_RESULT, msg
 
+    @rest_command
     def get_log_status(self, waiters):
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
 
@@ -633,14 +642,13 @@ class Firewall(object):
                     if flow_stat['actions']:
                         status = REST_STATUS_ENABLE
 
-        msg = {REST_LOG_STATUS: status}
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        return REST_LOG_STATUS, status
 
+    @rest_command
     def set_log_disable(self):
         return self._set_log_status(False)
 
+    @rest_command
     def set_log_enable(self):
         return self._set_log_status(True)
 
@@ -661,9 +669,7 @@ class Firewall(object):
 
         msg = {'result': 'success',
                'details': details}
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        return REST_COMMAND_RESULT, msg
 
     def set_arp_flow(self):
         cookie = 0
@@ -677,15 +683,14 @@ class Firewall(object):
         cmd = self.dp.ofproto.OFPFC_ADD
         self.ofctl.mod_flow_entry(self.dp, flow, cmd)
 
+    @rest_command
     def set_rule(self, rest, vlan_id):
         msgs = []
         cookie_list = self._get_cookie(vlan_id)
         for cookie, vid in cookie_list:
             msg = self._set_rule(cookie, rest, vid)
             msgs.append(msg)
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msgs}
+        return REST_COMMAND_RESULT, msgs
 
     def _set_rule(self, cookie, rest, vlan_id):
         priority = int(rest.get(REST_PRIORITY, ACL_FLOW_PRIORITY_MIN))
@@ -713,12 +718,11 @@ class Firewall(object):
         msg = {'result': 'success',
                'details': 'Rule added. : rule_id=%d' % rule_id}
 
-        if vlan_id == VLANID_NONE:
-            return msg
-        else:
-            vlan_id = '%s: %d' % (REST_VLANID, vlan_id)
-            return {vlan_id: msg}
+        if vlan_id != VLANID_NONE:
+            msg.setdefault(REST_VLANID, vlan_id)
+        return msg
 
+    @rest_command
     def get_rules(self, waiters, vlan_id):
         rules = {}
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
@@ -733,21 +737,20 @@ class Firewall(object):
                     vid = flow_stat[REST_MATCH].get(REST_DL_VLAN, VLANID_NONE)
                     if vlan_id == REST_ALL or vlan_id == vid:
                         rule = self._to_rest_rule(flow_stat)
-                        rules.setdefault(vid, {})
-                        rules[vid].update(rule)
+                        rules.setdefault(vid, [])
+                        rules[vid].append(rule)
 
         get_data = []
         for vid, rule in rules.items():
             if vid == VLANID_NONE:
-                get_data.append(rule)
+                vid_data = {REST_RULES: rule}
             else:
-                vid = '%s: %d' % (REST_VLANID, vid)
-                get_data.append({vid: rule})
+                vid_data = {REST_VLANID: vid, REST_RULES: rule}
+            get_data.append(vid_data)
 
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: get_data}
+        return REST_ACL, get_data
 
+    @rest_command
     def delete_rule(self, rest, waiters, vlan_id):
         try:
             if rest[REST_RULE_ID] == REST_ALL:
@@ -807,15 +810,11 @@ class Firewall(object):
             for vid, rule_ids in delete_ids.items():
                 del_msg = {'result': 'success',
                            'details': 'Rule deleted. : ruleID=%s' % rule_ids}
-                if vid == VLANID_NONE:
-                    msg.append(del_msg)
-                else:
-                    vid = '%s: %d' % (REST_VLANID, vid)
-                    msg.append({vid: del_msg})
+                if vid != VLANID_NONE:
+                    del_msg.setdefault(REST_VLANID, vid)
+                msg.append(del_msg)
 
-        switch_id = '%s: %s' % (REST_SWITCHID,
-                                dpid_lib.dpid_to_str(self.dp.id))
-        return {switch_id: msg}
+        return REST_COMMAND_RESULT, msg
 
     def _to_of_flow(self, cookie, priority, match, actions):
         flow = {'cookie': cookie,
@@ -829,12 +828,11 @@ class Firewall(object):
 
     def _to_rest_rule(self, flow):
         ruleid = Firewall._cookie_to_ruleid(flow[REST_COOKIE])
-        rule_id = '%s: %d' % (REST_RULE_ID, ruleid)
-
-        rule = {REST_PRIORITY: flow[REST_PRIORITY]}
+        rule = {REST_RULE_ID: ruleid}
+        rule.update({REST_PRIORITY: flow[REST_PRIORITY]})
         rule.update(Match.to_rest(flow))
         rule.update(Action.to_rest(flow))
-        return {rule_id: rule}
+        return rule
 
 
 class Match(object):
