@@ -22,7 +22,6 @@ from . import lldp
 from . import slow
 from . import llc
 from ryu.ofproto import ether
-from ryu.ofproto.ofproto_parser import msg_pack_into
 
 
 class vlan(packet_base.PacketBase):
