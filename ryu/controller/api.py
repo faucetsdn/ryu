@@ -24,10 +24,10 @@ from ryu.lib.packet import tcp
 from ryu.lib.packet import icmp
 from ryu.lib import mac
 
-
 traceroute_source = {}
 flow_sem = eventlet.semaphore.Semaphore()
 monitored_flows = {}
+monitored_ports = {'interval': 15}
 
 
 class OFWireRpcSession(object):
@@ -87,8 +87,8 @@ class OFWireRpcSession(object):
             elif k == 'contexts':
                 contexts = v
         if ofmsg is None or (contexts and interval == 0):
-            m = req.session.create_response(msg[1], None,
-                                            [{'error': 'invalid'}])
+            m = self.session.create_response(msg[1], None,
+                                             [{'error': 'invalid'}])
             self.send_queue.put(m)
             return
 
@@ -98,7 +98,6 @@ class OFWireRpcSession(object):
         else:
             error = 0
             result = {'xid': ofmsg.xid}
-            print "got"
             if contexts:
                 flow_sem.acquire()
                 key = str(ofmsg.match.to_jsondict())
@@ -114,9 +113,7 @@ class OFWireRpcSession(object):
 
                 elif ofmsg.command in (dp.ofproto.OFPFC_DELETE,
                                        dp.ofproto.OFPFC_DELETE_STRICT):
-                    print "delete command"
                     if key in monitored_flows:
-                        print "delete flow"
                         del monitored_flows[key]
                 flow_sem.release()
 
@@ -132,6 +129,28 @@ class OFWireRpcSession(object):
             }
         print traceroute_source
 
+    def monitor_port(self, msg):
+        param_dict = msg[3][0]
+        name = None
+        contexts = None
+        for k, v in param_dict.items():
+            if k == 'physical_port_no':
+                name = v
+            elif k == 'contexts':
+                contexts = v
+            elif k == 'interval':
+                monitored_ports['interval'] = v
+
+        if not contexts or not name:
+            m = self.session.create_response(msg[1], None,
+                                             [{'error': 'invalid'}])
+            self.send_queue.put(m)
+            return
+
+        monitored_ports[name] = contexts
+        r = self.session.create_response(msg[1], 0, [])
+        self.send_queue.put(r)
+
     def serve(self):
         while True:
             ret = self.socket.recv(4096)
@@ -142,6 +161,8 @@ class OFWireRpcSession(object):
                 if m[0] == RpcMessage.REQUEST:
                     if m[2] == 'ofp':
                         self.ofp_handle_request(m)
+                    elif m[2] == 'monitor_port':
+                        self.monitor_port(m)
                 elif m[0] == RpcMessage.RESPONSE:
                     pass
                 elif m[0] == RpcMessage.NOTIFY:
@@ -164,6 +185,18 @@ class RPCApi(app_manager.RyuApp):
         self.sessions = []
         self.dp_joined = False
         self.pool.spawn_n(self.serve)
+        self.pool.spawn_n(self._port_status_loop)
+
+    def _port_status_loop(self):
+        while True:
+            for k, dp in self.dpset.get_all():
+                try:
+                    port = dp.ofproto.OFPP_ANY
+                    ofmsg = dp.ofproto_parser.OFPPortStatsRequest(dp, port)
+                    dp.send_msg(ofmsg)
+                except:
+                    pass
+            eventlet.sleep(monitored_ports['interval'])
 
     def _wait_for_dp_joined(self):
         while not self.dp_joined:
@@ -254,6 +287,7 @@ class RPCApi(app_manager.RyuApp):
     def flow_reply_handler(self, ev):
         msg = ev.msg
         self._ofp_reply(msg)
+        dp = msg.datapath
         if msg.type == ofproto_v1_2.OFPST_FLOW:
             for body in msg.body:
                 key = str(body.match.to_jsondict())
@@ -267,6 +301,15 @@ class RPCApi(app_manager.RyuApp):
                              'packet_count': body.packet_count}
                     stats.update(contexts)
                     stats['timestamp'] = time.strftime("%Y-%m-%dT%H:%M:%S")
+                    print stats
+        elif msg.type == ofproto_v1_2.OFPST_PORT:
+            for body in msg.body:
+                port_name = dp.ports[body.port_no].name
+                if port_name in monitored_ports:
+                    stats = {'timestamp': time.strftime("%Y-%m-%dT%H:%M:%S"),
+                             'physical_port_no': port_name}
+                    stats.update(body.to_jsondict()['OFPPortStats'])
+                    stats.update(monitored_ports[port_name])
                     print stats
 
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn)
