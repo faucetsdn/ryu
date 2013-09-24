@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
+
 from oslo.config import cfg
 import webob.dec
 
@@ -30,6 +32,18 @@ CONF.register_cli_opts([
 
 HEX_PATTERN = r'0x[0-9a-z]+'
 DIGIT_PATTERN = r'[1-9][0-9]*'
+
+
+def route(name, path, methods=None, requirements=None):
+    def _route(controller_method):
+        controller_method.routing_info = {
+            'name': name,
+            'path': path,
+            'methods': methods,
+            'requirements': requirements,
+        }
+        return controller_method
+    return _route
 
 
 class ControllerBase(object):
@@ -78,6 +92,25 @@ class WSGIApplication(object):
 
         controller = match['controller'](req, link, data, **self.config)
         return controller(req)
+
+    def register(self, controller):
+        methods = inspect.getmembers(controller,
+                                     lambda v: inspect.ismethod(v) and
+                                     hasattr(v, 'routing_info'))
+        for method_name, method in methods:
+            routing_info = getattr(method, 'routing_info')
+            name = routing_info['name']
+            path = routing_info['path']
+            conditions = {}
+            if routing_info.get('methods'):
+                conditions['method'] = routing_info['methods']
+            requirements = routing_info.get('requirements') or {}
+            self.mapper.connect(name,
+                                path,
+                                controller=controller,
+                                requirements=requirements,
+                                action=method_name,
+                                conditions=conditions)
 
 
 class WSGIServer(hub.WSGIServer):
