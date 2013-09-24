@@ -36,6 +36,7 @@ class Test_addrconv(unittest.TestCase):
         eq_(conv.bin_to_text(bin_value), text_value)
 
     def test_ipv4(self):
+        self._test_conv(addrconv.ipv4, '0.0.0.0', '\x00\x00\x00\x00')
         self._test_conv(addrconv.ipv4, '127.0.0.1', '\x7f\x00\x00\x01')
         self._test_conv(addrconv.ipv4, '255.255.0.0', '\xff\xff\x00\x00')
 
