@@ -84,3 +84,13 @@ Protocol Header classes
 .. autoclass:: ryu.lib.packet.igmp.igmp
    :members:
 
+.. autoclass:: ryu.lib.packet.bgp.BGPMessage
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPOpen
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPUpdate
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPKeepAlive
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPNotification
+   :members:
