@@ -8,6 +8,15 @@ Packet class
 .. automodule:: ryu.lib.packet.packet
    :members:
 
+Stream Parser class
+===================
+
+.. automodule:: ryu.lib.packet.stream_parser
+   :members:
+
+.. autoclass:: ryu.lib.packet.bgp.StreamParser
+   :members:
+
 Protocol Header classes
 =======================
 
