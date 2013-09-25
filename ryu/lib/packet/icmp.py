@@ -260,7 +260,7 @@ class TimeExceeded(stringify.StringifyMixin):
 
     @classmethod
     def parser(cls, buf, offset):
-        data_len = struct.unpack_from(cls._PACK_STR, buf, offset)
+        (data_len, ) = struct.unpack_from(cls._PACK_STR, buf, offset)
         msg = cls(data_len)
         offset += cls._MIN_LEN
 
