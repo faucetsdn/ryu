@@ -34,25 +34,28 @@ class Test_bgp(unittest.TestCase):
     def test_open1(self):
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.1')
         binmsg = msg.serialize()
-        msg2 = bgp.BGPMessage.parser(binmsg)
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 29)
+        eq_(rest, '')
 
     def test_open2(self):
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.2',
                           opt_param=[bgp.BGPOptParam(type_=1, value='hooge'),
                                      bgp.BGPOptParam(type_=2, value='fuga')])
         binmsg = msg.serialize()
-        msg2 = bgp.BGPMessage.parser(binmsg)
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         ok_(len(msg) > 29)
+        eq_(rest, '')
 
     def test_update1(self):
         msg = bgp.BGPUpdate()
         binmsg = msg.serialize()
-        msg2 = bgp.BGPMessage.parser(binmsg)
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 23)
+        eq_(rest, '')
 
     def test_update2(self):
         withdrawn_routes = [bgp.BGPWithdrawnRoute(length=0,
@@ -76,21 +79,38 @@ class Test_bgp(unittest.TestCase):
                             path_attributes=path_attributes,
                             nlri=nlri)
         binmsg = msg.serialize()
-        msg2 = bgp.BGPMessage.parser(binmsg)
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         ok_(len(msg) > 23)
+        eq_(rest, '')
 
     def test_keepalive(self):
         msg = bgp.BGPKeepAlive()
         binmsg = msg.serialize()
-        msg2 = bgp.BGPMessage.parser(binmsg)
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 19)
+        eq_(rest, '')
 
     def test_notification(self):
         data = "hoge"
         msg = bgp.BGPNotification(error_code=1, error_subcode=2, data=data)
         binmsg = msg.serialize()
-        msg2 = bgp.BGPMessage.parser(binmsg)
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 21 + len(data))
+        eq_(rest, '')
+
+    def test_stream_parser(self):
+        msgs = [
+            bgp.BGPNotification(error_code=1, error_subcode=2, data="foo"),
+            bgp.BGPNotification(error_code=3, error_subcode=4, data="bar"),
+            bgp.BGPNotification(error_code=5, error_subcode=6, data="baz"),
+        ]
+        binmsgs = ''.join([bytes(msg.serialize()) for msg in msgs])
+        sp = bgp.StreamParser()
+        results = []
+        for b in binmsgs:
+            for m in sp.parse(b):
+                results.append(m)
+        eq_(str(results), str(msgs))

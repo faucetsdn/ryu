@@ -19,7 +19,6 @@ RFC 4271 BGP-4
 """
 
 # todo
-# - streaming parser
 # - notify data
 # - notify subcode constants
 # - RFC 1997 BGP Communities Attribute
@@ -35,6 +34,7 @@ import struct
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
 from ryu.lib.packet import packet_base
+from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
 
 
@@ -225,11 +225,20 @@ class BGPMessage(packet_base.PacketBase):
 
     @classmethod
     def parser(cls, buf):
+        if len(buf) < cls._HDR_LEN:
+            raise stream_parser.StreamParser.TooSmallException(
+                '%d < %d' % (len(buf), cls._HDR_LEN))
         (marker, len_, type_) = struct.unpack_from(cls._HDR_PACK_STR,
                                                    buffer(buf))
+        msglen = len_
+        if len(buf) < msglen:
+            raise stream_parser.StreamParser.TooSmallException(
+                '%d < %d' % (len(buf), msglen))
+        binmsg = buf[cls._HDR_LEN:msglen]
+        rest = buf[msglen:]
         subcls = cls._TYPES[type_]
-        kwargs = subcls.parser(buf[cls._HDR_LEN:])
-        return subcls(marker=marker, len_=len_, type_=type_, **kwargs)
+        kwargs = subcls.parser(binmsg)
+        return subcls(marker=marker, len_=len_, type_=type_, **kwargs), rest
 
     def serialize(self):
         # fixup
@@ -517,3 +526,14 @@ class BGPNotification(BGPMessage):
                                     self.error_subcode))
         msg += self.data
         return msg
+
+
+class StreamParser(stream_parser.StreamParser):
+    """Streaming parser for BGP-4 messages.
+
+    This is a subclass of ryu.lib.packet.stream_parser.StreamParser.
+    Its parse method returns a list of BGPMessage subclass instances.
+    """
+
+    def try_parse(self, data):
+        return BGPMessage.parser(data)
