@@ -15,9 +15,7 @@
 
 import abc
 import struct
-import socket
 from . import packet_base
-from . import packet_utils
 from . import icmpv6
 from . import tcp
 from ryu.ofproto import inet
