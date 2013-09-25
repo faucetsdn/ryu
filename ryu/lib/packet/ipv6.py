@@ -68,7 +68,7 @@ class ipv6(packet_base.PacketBase):
         return _register_header_type
 
     def __init__(self, version, traffic_class, flow_label, payload_length,
-                 nxt, hop_limit, src, dst, ext_hdrs=[]):
+                 nxt, hop_limit, src, dst, ext_hdrs=None):
         super(ipv6, self).__init__()
         self.version = version
         self.traffic_class = traffic_class
@@ -78,10 +78,10 @@ class ipv6(packet_base.PacketBase):
         self.hop_limit = hop_limit
         self.src = src
         self.dst = dst
-        if ext_hdrs:
-            assert isinstance(ext_hdrs, list)
-            for ext_hdr in ext_hdrs:
-                assert isinstance(ext_hdr, header)
+        ext_hdrs = ext_hdrs or []
+        assert isinstance(ext_hdrs, list)
+        for ext_hdr in ext_hdrs:
+            assert isinstance(ext_hdr, header)
         self.ext_hdrs = ext_hdrs
 
     @classmethod
