@@ -97,6 +97,15 @@ class Packet(object):
         assert issubclass(protocol, packet_base.PacketBase)
         return [p for p in self.protocols if isinstance(p, protocol)]
 
+    def get_protocol(self, protocol):
+        """Returns the firstly found protocol that matches to the
+        specified protocol.
+        """
+        result = self.get_protocols(protocol)
+        if len(result) > 0:
+            return result[0]
+        return None
+
     def next(self):
         try:
             p = self.protocols[self.protocol_idx]
