@@ -66,16 +66,17 @@ class Test_ipv6(unittest.TestCase):
             ipv6.option(self.opt1_type, self.opt1_len, self.opt1_data),
             ipv6.option(self.opt2_type, self.opt2_len, self.opt2_data),
         ]
+        self.hop_opts_nxt = 6
         self.hop_opts_size = 0
-        self.hop_opts = ipv6.hop_opts(self.hop_opts_size, self.options)
+        self.hop_opts = ipv6.hop_opts(
+            self.hop_opts_nxt, self.hop_opts_size, self.options)
         self.ext_hdrs = [self.hop_opts]
         self.payload_length += len(self.hop_opts)
+        self.nxt = ipv6.hop_opts.TYPE
         self.ip = ipv6.ipv6(
             self.version, self.traffic_class, self.flow_label,
             self.payload_length, self.nxt, self.hop_limit, self.src,
             self.dst, self.ext_hdrs)
-        self.hop_opts.nxt = self.nxt
-        self.nxt = self.hop_opts.TYPE
         self.buf = struct.pack(
             ipv6.ipv6._PACK_STR, self.v_tc_flow,
             self.payload_length, self.nxt, self.hop_limit,
@@ -94,16 +95,17 @@ class Test_ipv6(unittest.TestCase):
             ipv6.option(self.opt1_type, self.opt1_len, self.opt1_data),
             ipv6.option(self.opt2_type, self.opt2_len, self.opt2_data),
         ]
+        self.dst_opts_nxt = 6
         self.dst_opts_size = 0
-        self.dst_opts = ipv6.dst_opts(self.dst_opts_size, self.options)
+        self.dst_opts = ipv6.dst_opts(
+            self.dst_opts_nxt, self.dst_opts_size, self.options)
         self.ext_hdrs = [self.dst_opts]
         self.payload_length += len(self.dst_opts)
+        self.nxt = ipv6.dst_opts.TYPE
         self.ip = ipv6.ipv6(
             self.version, self.traffic_class, self.flow_label,
             self.payload_length, self.nxt, self.hop_limit, self.src,
             self.dst, self.ext_hdrs)
-        self.dst_opts.nxt = self.nxt
-        self.nxt = self.dst_opts.TYPE
         self.buf = struct.pack(
             ipv6.ipv6._PACK_STR, self.v_tc_flow,
             self.payload_length, self.nxt, self.hop_limit,
@@ -112,19 +114,20 @@ class Test_ipv6(unittest.TestCase):
         self.buf += self.dst_opts.serialize()
 
     def setUp_with_fragment(self):
+        self.fragment_nxt = 6
         self.fragment_offset = 50
         self.fragment_more = 1
         self.fragment_id = 123
         self.fragment = ipv6.fragment(
-            self.fragment_offset, self.fragment_more, self.fragment_id)
+            self.fragment_nxt, self.fragment_offset, self.fragment_more,
+            self.fragment_id)
         self.ext_hdrs = [self.fragment]
         self.payload_length += len(self.fragment)
+        self.nxt = ipv6.fragment.TYPE
         self.ip = ipv6.ipv6(
             self.version, self.traffic_class, self.flow_label,
             self.payload_length, self.nxt, self.hop_limit, self.src,
             self.dst, self.ext_hdrs)
-        self.fragment.nxt = self.nxt
-        self.nxt = self.fragment.TYPE
         self.buf = struct.pack(
             ipv6.ipv6._PACK_STR, self.v_tc_flow,
             self.payload_length, self.nxt, self.hop_limit,
@@ -133,20 +136,21 @@ class Test_ipv6(unittest.TestCase):
         self.buf += self.fragment.serialize()
 
     def setUp_with_auth(self):
+        self.auth_nxt = 6
         self.auth_size = 4
         self.auth_spi = 256
         self.auth_seq = 1
         self.auth_data = '\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
         self.auth = ipv6.auth(
-            self.auth_size, self.auth_spi, self.auth_seq, self.auth_data)
+            self.auth_nxt, self.auth_size, self.auth_spi, self.auth_seq,
+            self.auth_data)
         self.ext_hdrs = [self.auth]
         self.payload_length += len(self.auth)
+        self.nxt = ipv6.auth.TYPE
         self.ip = ipv6.ipv6(
             self.version, self.traffic_class, self.flow_label,
             self.payload_length, self.nxt, self.hop_limit, self.src,
             self.dst, self.ext_hdrs)
-        self.auth.nxt = self.nxt
-        self.nxt = self.auth.TYPE
         self.buf = struct.pack(
             ipv6.ipv6._PACK_STR, self.v_tc_flow,
             self.payload_length, self.nxt, self.hop_limit,
@@ -165,24 +169,25 @@ class Test_ipv6(unittest.TestCase):
             ipv6.option(self.opt1_type, self.opt1_len, self.opt1_data),
             ipv6.option(self.opt2_type, self.opt2_len, self.opt2_data),
         ]
+        self.hop_opts_nxt = ipv6.auth.TYPE
         self.hop_opts_size = 0
-        self.hop_opts = ipv6.hop_opts(self.hop_opts_size, self.options)
+        self.hop_opts = ipv6.hop_opts(
+            self.hop_opts_nxt, self.hop_opts_size, self.options)
+        self.auth_nxt = 6
         self.auth_size = 4
         self.auth_spi = 256
         self.auth_seq = 1
         self.auth_data = '\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
         self.auth = ipv6.auth(
-            self.auth_size, self.auth_spi, self.auth_seq, self.auth_data)
+            self.auth_nxt, self.auth_size, self.auth_spi, self.auth_seq,
+            self.auth_data)
         self.ext_hdrs = [self.hop_opts, self.auth]
         self.payload_length += len(self.hop_opts) + len(self.auth)
+        self.nxt = ipv6.hop_opts.TYPE
         self.ip = ipv6.ipv6(
             self.version, self.traffic_class, self.flow_label,
             self.payload_length, self.nxt, self.hop_limit, self.src,
             self.dst, self.ext_hdrs)
-        self.hop_opts.nxt = self.nxt
-        self.nxt = self.hop_opts.TYPE
-        self.auth.nxt = self.hop_opts.nxt
-        self.hop_opts.nxt = self.auth.TYPE
         self.buf = struct.pack(
             ipv6.ipv6._PACK_STR, self.v_tc_flow,
             self.payload_length, self.nxt, self.hop_limit,
@@ -403,8 +408,7 @@ class Test_hop_opts(unittest.TestCase):
             ipv6.option(0xc2, 4, '\x00\x01\x00\x00'),
             ipv6.option(1, 0, None),
         ]
-        self.hop = ipv6.hop_opts(self.size, self.data)
-        self.hop.set_nxt(self.nxt)
+        self.hop = ipv6.hop_opts(self.nxt, self.size, self.data)
         self.form = '!BB'
         self.buf = struct.pack(self.form, self.nxt, self.size) \
             + self.data[0].serialize() \
@@ -475,8 +479,7 @@ class Test_dst_opts(unittest.TestCase):
             ipv6.option(0xc2, 4, '\x00\x01\x00\x00'),
             ipv6.option(1, 0, None),
         ]
-        self.dst = ipv6.dst_opts(self.size, self.data)
-        self.dst.set_nxt(self.nxt)
+        self.dst = ipv6.dst_opts(self.nxt, self.size, self.data)
         self.form = '!BB'
         self.buf = struct.pack(self.form, self.nxt, self.size) \
             + self.data[0].serialize() \
@@ -615,8 +618,8 @@ class Test_fragment(unittest.TestCase):
         self.offset = 50
         self.more = 1
         self.id_ = 123
-        self.fragment = ipv6.fragment(self.offset, self.more, self.id_)
-        self.fragment.set_nxt(self.nxt)
+        self.fragment = ipv6.fragment(
+            self.nxt, self.offset, self.more, self.id_)
 
         self.off_m = (self.offset << 3 | self.more)
         self.form = '!BxHI'
@@ -658,8 +661,8 @@ class Test_auth(unittest.TestCase):
         self.spi = 256
         self.seq = 1
         self.data = '\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8'
-        self.auth = ipv6.auth(self.size, self.spi, self.seq, self.data)
-        self.auth.set_nxt(self.nxt)
+        self.auth = ipv6.auth(
+            self.nxt, self.size, self.spi, self.seq, self.data)
         self.form = '!BB2xII12s'
         self.buf = struct.pack(self.form, self.nxt, self.size, self.spi,
                                self.seq, self.data)

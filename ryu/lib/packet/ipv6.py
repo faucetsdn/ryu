@@ -80,16 +80,8 @@ class ipv6(packet_base.PacketBase):
         self.dst = dst
         if ext_hdrs:
             assert isinstance(ext_hdrs, list)
-            last_hdr = None
             for ext_hdr in ext_hdrs:
                 assert isinstance(ext_hdr, header)
-                if last_hdr:
-                    ext_hdr.set_nxt(last_hdr.nxt)
-                    last_hdr.nxt = ext_hdr.TYPE
-                else:
-                    ext_hdr.set_nxt(self.nxt)
-                    self.nxt = ext_hdr.TYPE
-                last_hdr = ext_hdr
         self.ext_hdrs = ext_hdrs
 
     @classmethod
@@ -111,10 +103,8 @@ class ipv6(packet_base.PacketBase):
             ext_hdrs.append(hdr)
             offset += len(hdr)
             last = hdr.nxt
-        # call ipv6.__init__() using 'nxt' of the last extension
-        # header that points the next protocol.
         msg = cls(version, traffic_class, flow_label, payload_length,
-                  last, hop_limit, addrconv.ipv6.bin_to_text(src),
+                  nxt, hop_limit, addrconv.ipv6.bin_to_text(src),
                   addrconv.ipv6.bin_to_text(dst), ext_hdrs)
         return (msg, ipv6.get_packet_type(last),
                 buf[offset:offset+payload_length])
@@ -148,10 +138,7 @@ class header(stringify.StringifyMixin):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
-        self.nxt = None
-
-    def set_nxt(self, nxt):
+    def __init__(self, nxt):
         self.nxt = nxt
 
     @classmethod
@@ -179,8 +166,8 @@ class opt_header(header):
     _FIX_SIZE = 8
 
     @abc.abstractmethod
-    def __init__(self, size, data):
-        super(opt_header, self).__init__()
+    def __init__(self, nxt, size, data):
+        super(opt_header, self).__init__(nxt)
         assert not (size % 8)
         self.size = size
         self.data = data
@@ -200,9 +187,7 @@ class opt_header(header):
                 opt = option.parser(buf[size:])
                 size += len(opt)
             data.append(opt)
-        ret = cls(len_, data)
-        ret.set_nxt(nxt)
-        return ret
+        return cls(nxt, len_, data)
 
     def serialize(self):
         buf = struct.pack(self._PACK_STR, self.nxt, self.size)
@@ -230,6 +215,7 @@ class hop_opts(opt_header):
     ============== =======================================
     Attribute      Description
     ============== =======================================
+    nxt            Next Header
     size           the length of the Hop-by-Hop Options header,
                    not include the first 8 octet.
     data           IPv6 options.
@@ -237,8 +223,8 @@ class hop_opts(opt_header):
     """
     TYPE = inet.IPPROTO_HOPOPTS
 
-    def __init__(self, size, data):
-        super(hop_opts, self).__init__(size, data)
+    def __init__(self, nxt, size, data):
+        super(hop_opts, self).__init__(nxt, size, data)
 
 
 @ipv6.register_header_type(inet.IPPROTO_DSTOPTS)
@@ -256,6 +242,7 @@ class dst_opts(opt_header):
     ============== =======================================
     Attribute      Description
     ============== =======================================
+    nxt            Next Header
     size           the length of the destination header,
                    not include the first 8 octet.
     data           IPv6 options.
@@ -263,8 +250,8 @@ class dst_opts(opt_header):
     """
     TYPE = inet.IPPROTO_DSTOPTS
 
-    def __init__(self, size, data):
-        super(dst_opts, self).__init__(size, data)
+    def __init__(self, nxt, size, data):
+        super(dst_opts, self).__init__(nxt, size, data)
 
 
 class option(stringify.StringifyMixin):
@@ -341,6 +328,7 @@ class fragment(header):
     ============== =======================================
     Attribute      Description
     ============== =======================================
+    nxt            Next Header
     offset         offset, in 8-octet units, relative to
                    the start of the fragmentable part of
                    the original packet.
@@ -354,8 +342,8 @@ class fragment(header):
     _PACK_STR = '!BxHI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, offset, more, id_):
-        super(fragment, self).__init__()
+    def __init__(self, nxt, offset, more, id_):
+        super(fragment, self).__init__(nxt)
         self.offset = offset
         self.more = more
         self.id_ = id_
@@ -365,9 +353,7 @@ class fragment(header):
         (nxt, off_m, id_) = struct.unpack_from(cls._PACK_STR, buf)
         offset = off_m >> 3
         more = off_m & 0x1
-        ret = cls(offset, more, id_)
-        ret.set_nxt(nxt)
-        return ret
+        return cls(nxt, offset, more, id_)
 
     def serialize(self):
         off_m = (self.offset << 3 | self.more)
@@ -393,6 +379,7 @@ class auth(header):
     ============== =======================================
     Attribute      Description
     ============== =======================================
+    nxt            Next Header
     size           the length of the Authentication Header
                    in 64-bit words, subtracting 1.
     spi            security parameters index.
@@ -405,8 +392,8 @@ class auth(header):
     _PACK_STR = '!BB2xII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, size, spi, seq, data):
-        super(auth, self).__init__()
+    def __init__(self, nxt, size, spi, seq, data):
+        super(auth, self).__init__(nxt)
         self.size = size
         self.spi = spi
         self.seq = seq
@@ -421,9 +408,7 @@ class auth(header):
         (nxt, size, spi, seq) = struct.unpack_from(cls._PACK_STR, buf)
         form = "%ds" % (cls._get_size(size) - cls._MIN_LEN)
         (data, ) = struct.unpack_from(form, buf, cls._MIN_LEN)
-        ret = cls(size, spi, seq, data)
-        ret.set_nxt(nxt)
-        return ret
+        return cls(nxt, size, spi, seq, data)
 
     def serialize(self):
         buf = struct.pack(self._PACK_STR, self.nxt, self.size, self.spi,
