@@ -25,7 +25,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.exception import RyuException
-from ryu.lib import hub
+from ryu.lib import addrconv, hub
 from ryu.lib.mac import DONTCARE_STR
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
 from ryu.lib.port_no import port_no_to_str
@@ -537,7 +537,8 @@ class Switches(app_manager.RyuApp):
                 # TODO:XXX need other versions
                 if ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
                     rule = nx_match.ClsRule()
-                    rule.set_dl_dst(lldp.LLDP_MAC_NEAREST_BRIDGE)
+                    rule.set_dl_dst(addrconv.mac.text_to_bin(
+                                    lldp.LLDP_MAC_NEAREST_BRIDGE))
                     rule.set_dl_type(ETH_TYPE_LLDP)
                     actions = [ofproto_parser.OFPActionOutput(
                         ofproto.OFPP_CONTROLLER, self.LLDP_PACKET_LEN)]
