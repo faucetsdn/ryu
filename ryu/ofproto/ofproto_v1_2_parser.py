@@ -1983,8 +1983,10 @@ class OFPFlowStatsRequest(OFPStatsRequest):
                                                  cookie, cookie_mask, match)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, table_id, out_port, out_group,
-                 cookie, cookie_mask, match, flags=0):
+    def __init__(self, datapath, table_id=ofproto_v1_2.OFPTT_ALL,
+                 out_port=ofproto_v1_2.OFPP_ANY,
+                 out_group=ofproto_v1_2.OFPG_ANY,
+                 cookie=0, cookie_mask=0, match=None, flags=0):
         super(OFPFlowStatsRequest, self).__init__(datapath,
                                                   ofproto_v1_2.OFPST_FLOW,
                                                   flags)
@@ -1993,6 +1995,8 @@ class OFPFlowStatsRequest(OFPStatsRequest):
         self.out_group = out_group
         self.cookie = cookie
         self.cookie_mask = cookie_mask
+        if match is None:
+            match = OFPMatch()
         self.match = match
 
     def _serialize_stats_body(self):
