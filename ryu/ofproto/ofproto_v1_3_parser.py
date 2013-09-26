@@ -3583,8 +3583,12 @@ class OFPFlowStatsRequest(OFPFlowStatsRequestBase):
                                                  match)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, table_id, out_port, out_group,
-                 cookie, cookie_mask, match, type_=None):
+    def __init__(self, datapath, flags=0, table_id=ofproto_v1_3.OFPTT_ALL,
+                 out_port=ofproto_v1_3.OFPP_ANY,
+                 out_group=ofproto_v1_3.OFPG_ANY,
+                 cookie=0, cookie_mask=0, match=None, type_=None):
+        if match is None:
+            match = OFPMatch()
         super(OFPFlowStatsRequest, self).__init__(datapath, flags, table_id,
                                                   out_port, out_group,
                                                   cookie, cookie_mask, match)
