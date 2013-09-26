@@ -199,7 +199,8 @@ class RunTest(tester.TestFlowBase):
 
         port_no = max(ports) + 1
         self._verify = dp.ofproto.OFPT_ERROR
-        m = dp.ofproto_parser.OFPPortMod(dp, port_no, '\xff' * 6, 0, 0, 0)
+        m = dp.ofproto_parser.OFPPortMod(
+            dp, port_no, 'ff:ff:ff:ff:ff:ff', 0, 0, 0)
         dp.send_msg(m)
 
     # Test for reply value
