@@ -475,7 +475,6 @@ class TestOfprot12(unittest.TestCase):
     def test_struct_ofp_packet_in(self):
         eq_(OFP_PACKET_IN_PACK_STR, '!IHBB')
         eq_(OFP_PACKET_IN_SIZE, 24)
-        eq_(OFP_PACKET_IN_DATA_OFFSET, 18)
 
     def test_enum_ofp_packet_in_reason(self):
         eq_(OFPR_NO_MATCH, 0)

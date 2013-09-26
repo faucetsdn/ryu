@@ -545,7 +545,6 @@ OFPCR_ROLE_SLAVE = 3  # Read-only access.
 # struct ofp_packet_in
 OFP_PACKET_IN_PACK_STR = '!IHBB'  # the last 2x is for ofp_packet_in::data
 OFP_PACKET_IN_SIZE = 24
-OFP_PACKET_IN_DATA_OFFSET = 18
 assert (calcsize(OFP_PACKET_IN_PACK_STR) + OFP_MATCH_SIZE + OFP_HEADER_SIZE ==
         OFP_PACKET_IN_SIZE)
 
