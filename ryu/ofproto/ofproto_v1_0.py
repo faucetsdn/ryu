@@ -164,9 +164,14 @@ assert calcsize(OFP_PORT_MOD_PACK_STR) + OFP_HEADER_SIZE == OFP_PORT_MOD_SIZE
 OFPR_NO_MATCH = 0       # No matching flow.
 OFPR_ACTION = 1         # Action explicitly output to controller.
 
-OFP_PACKET_IN_PACK_STR = '!IHHBx2x'  # the last 2x is for ofp_packet_in::data
-OFP_PACKET_IN_SIZE = 20
-OFP_PACKET_IN_DATA_OFFSET = 18
+# OF1.0 spec says OFP_ASSERT(sizeof(struct ofp_packet_in) == 20).
+# It's quite bogus as it assumes a specific class of C implementations.
+# (well, if it was C.  it's unclear from the spec itself.)
+# We just use the real size of the structure as this is not C.  This
+# agrees with on-wire messages OpenFlow Reference Release and Open vSwitch
+# produce.
+OFP_PACKET_IN_PACK_STR = '!IHHBx'
+OFP_PACKET_IN_SIZE = 18
 assert calcsize(OFP_PACKET_IN_PACK_STR) + OFP_HEADER_SIZE == OFP_PACKET_IN_SIZE
 
 # enum ofp_action_type

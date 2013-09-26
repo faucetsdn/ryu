@@ -1730,7 +1730,7 @@ class OFPPacketIn(MsgBase):
          msg.reason) = struct.unpack_from(
             ofproto_v1_0.OFP_PACKET_IN_PACK_STR,
             msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto_v1_0.OFP_PACKET_IN_DATA_OFFSET:]
+        msg.data = msg.buf[ofproto_v1_0.OFP_PACKET_IN_SIZE:]
         if msg.total_len < len(msg.data):
             # discard padding for 8-byte alignment of OFP packet
             msg.data = msg.data[:msg.total_len]
