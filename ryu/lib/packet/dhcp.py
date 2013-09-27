@@ -58,6 +58,7 @@ import socket
 import struct
 
 from . import packet_base
+from ryu.lib import addrconv
 from ryu.lib import stringify
 
 
@@ -135,14 +136,15 @@ class dhcp(packet_base.PacketBase):
     """
     _HLEN_UNPACK_STR = '!BBB'
     _HLEN_UNPACK_LEN = struct.calcsize(_HLEN_UNPACK_STR)
-    _DHCP_UNPACK_STR = '!BIHHIIII%ds%ds64s128s'
-    _DHCP_PACK_STR = '!BBBBIHHIIII16s64s128s'
+    _DHCP_UNPACK_STR = '!BIHH4s4s4s4s%ds%ds64s128s'
+    _DHCP_PACK_STR = '!BBBBIHH4s4s4s4s16s64s128s'
     _DHCP_CHADDR_LEN = 16
     _HARDWARE_TYPE_ETHERNET = 1
 
     def __init__(self, op, chaddr, options, htype=_HARDWARE_TYPE_ETHERNET,
-                 hlen=0, hops=0, xid=None, secs=0, flags=0, ciaddr=0, yiaddr=0,
-                 siaddr=0, giaddr=0, sname='', boot_file=''):
+                 hlen=0, hops=0, xid=None, secs=0, flags=0,
+                 ciaddr='0.0.0.0', yiaddr='0.0.0.0', siaddr='0.0.0.0',
+                 giaddr='0.0.0.0', sname='', boot_file=''):
         super(dhcp, self).__init__()
         self.op = op
         self.htype = htype
@@ -180,8 +182,12 @@ class dhcp(packet_base.PacketBase):
         if len(buf) > min_len:
             parse_opt = options.parser(buf[min_len:])
             length += parse_opt.options_len
-        return (cls(op, chaddr, parse_opt, htype, hlen, hops, xid, secs, flags,
-                    ciaddr, yiaddr, siaddr, giaddr, sname, boot_file),
+        return (cls(op, addrconv.mac.bin_to_text(chaddr), parse_opt,
+                    htype, hlen, hops, xid, secs, flags,
+                    addrconv.ipv4.bin_to_text(ciaddr),
+                    addrconv.ipv4.bin_to_text(yiaddr),
+                    addrconv.ipv4.bin_to_text(siaddr),
+                    addrconv.ipv4.bin_to_text(giaddr), sname, boot_file),
                 None, buf[length:])
 
     def serialize(self, payload, prev):
@@ -190,8 +196,12 @@ class dhcp(packet_base.PacketBase):
                               self.options.options_len)
         return struct.pack(pack_str, self.op, self.htype, self.hlen,
                            self.hops, self.xid, self.secs, self.flags,
-                           self.ciaddr, self.yiaddr, self.siaddr, self.giaddr,
-                           self.chaddr, self.sname, self.boot_file, seri_opt)
+                           addrconv.ipv4.text_to_bin(self.ciaddr),
+                           addrconv.ipv4.text_to_bin(self.yiaddr),
+                           addrconv.ipv4.text_to_bin(self.siaddr),
+                           addrconv.ipv4.text_to_bin(self.giaddr),
+                           addrconv.mac.text_to_bin(self.chaddr),
+                           self.sname, self.boot_file, seri_opt)
 
 
 class options(stringify.StringifyMixin):
@@ -217,9 +227,9 @@ class options(stringify.StringifyMixin):
                    99, 130, 83 and 99.
     ============== ====================
     """
-    _MAGIC_COOKIE_UNPACK_STR = '!I'
+    _MAGIC_COOKIE_UNPACK_STR = '!4s'
     # same magic cookie as is defined in RFC 1497
-    _MAGIC_COOKIE = socket.inet_aton("99.130.83.99")
+    _MAGIC_COOKIE = '99.130.83.99'
     _OPT_TAG_LEN_BYTE = 2
 
     def __init__(self, option_list=None, options_len=0,
@@ -244,10 +254,11 @@ class options(stringify.StringifyMixin):
                 break
             opt_parse_list.append(opt)
             offset += opt.length + cls._OPT_TAG_LEN_BYTE
-        return cls(opt_parse_list, len(buf), magic_cookie)
+        return cls(opt_parse_list, len(buf),
+                   addrconv.ipv4.bin_to_text(magic_cookie))
 
     def serialize(self):
-        seri_opt = self.magic_cookie
+        seri_opt = addrconv.ipv4.text_to_bin(self.magic_cookie)
         for opt in self.option_list:
             seri_opt += opt.serialize()
         seri_opt += binascii.a2b_hex('%x' % DHCP_END_OPT)
