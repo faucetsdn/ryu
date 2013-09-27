@@ -16,13 +16,9 @@
 
 import inspect
 import logging
-import socket
 import struct
 import unittest
-from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
-from ryu.lib import ip
-from ryu.lib import mac
+from nose.tools import eq_
 from ryu.lib import addrconv
 from ryu.lib.packet import dhcp
 

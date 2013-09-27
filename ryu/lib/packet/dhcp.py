@@ -54,7 +54,6 @@ DHCP packet format
 """
 import binascii
 import random
-import socket
 import struct
 
 from . import packet_base
