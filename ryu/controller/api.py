@@ -304,13 +304,16 @@ class RPCApi(app_manager.RyuApp):
                     print stats
         elif msg.type == ofproto_v1_2.OFPST_PORT:
             for body in msg.body:
-                port_name = dp.ports[body.port_no].name
-                if port_name in monitored_ports:
-                    stats = {'timestamp': time.strftime("%Y-%m-%dT%H:%M:%S"),
-                             'physical_port_no': port_name}
-                    stats.update(body.to_jsondict()['OFPPortStats'])
-                    stats.update(monitored_ports[port_name])
-                    print stats
+                try:
+                    port_name = dp.ports[body.port_no].name
+                    if port_name in monitored_ports:
+                        stats = {'timestamp': time.strftime("%Y-%m-%dT%H:%M:%S"),
+                                 'physical_port_no': port_name}
+                        stats.update(body.to_jsondict()['OFPPortStats'])
+                        stats.update(monitored_ports[port_name])
+                        print stats
+                except:
+                    pass
 
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn)
     def packet_in_handler(self, ev):
