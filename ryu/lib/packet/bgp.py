@@ -62,13 +62,13 @@ BGP_ATTR_FLAG_TRANSITIVE = 1 << 6
 BGP_ATTR_FLAG_PARTIAL = 1 << 5
 BGP_ATTR_FLAG_EXTENDED_LENGTH = 1 << 4
 
-BGP_ATTR_TYPE_ORIGIN = 1
-BGP_ATTR_TYPE_AS_PATH = 2
-BGP_ATTR_TYPE_NEXT_HOP = 3
-BGP_ATTR_TYPE_MULTI_EXIT_DISC = 4
-BGP_ATTR_TYPE_LOCAL_PREF = 5
-BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6
-BGP_ATTR_TYPE_AGGREGATOR = 7
+BGP_ATTR_TYPE_ORIGIN = 1  # 0,1,2 (1 byte)
+BGP_ATTR_TYPE_AS_PATH = 2  # a list of AS_SET/AS_SEQUENCE  eg. {1 2 3} 4 5
+BGP_ATTR_TYPE_NEXT_HOP = 3  # an IPv4 address
+BGP_ATTR_TYPE_MULTI_EXIT_DISC = 4  # uint32 metric
+BGP_ATTR_TYPE_LOCAL_PREF = 5  # uint32
+BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
+BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
 BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
 BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
 
@@ -142,16 +142,40 @@ class BGPWithdrawnRoute(_IPAddrPrefix):
     pass
 
 
-class BGPPathAttribute(StringifyMixin):
+class _PathAttribute(StringifyMixin):
     _PACK_STR = '!BB'  # flags, type
     _PACK_STR_LEN = '!B'  # length
     _PACK_STR_EXT_LEN = '!H'  # length w/ BGP_ATTR_FLAG_EXTENDED_LENGTH
+    _TYPES = {}
+    _REV_TYPES = None
+    _ATTR_FLAGS = None
 
-    def __init__(self, flags, type_, value, length=None):
+    def __init__(self, value=None, flags=0, type_=None, length=None):
+        if type_ is None:
+            if self._REV_TYPES is None:
+                self._REV_TYPES = dict((v, k) for k, v in
+                                       self._TYPES.iteritems())
+            type_ = self._REV_TYPES[self.__class__]
         self.flags = flags
         self.type = type_
         self.length = length
-        self.value = value
+        if not value is None:
+            self.value = value
+
+    @classmethod
+    def register_type(cls, type_):
+        def _register_type(subcls):
+            cls._TYPES[type_] = subcls
+            cls._REV_TYPES = None
+            return subcls
+        return _register_type
+
+    @classmethod
+    def _lookup_type(cls, type_):
+        try:
+            return cls._TYPES[type_]
+        except KeyError:
+            return BGPPathAttributeUnknown
 
     @classmethod
     def parser(cls, buf):
@@ -165,11 +189,25 @@ class BGPPathAttribute(StringifyMixin):
         rest = rest[struct.calcsize(len_pack_str):]
         value = bytes(rest[:length])
         rest = rest[length:]
-        return cls(flags=flags, type_=type_, length=length, value=value), rest
+        subcls = cls._lookup_type(type_)
+        return subcls(flags=flags, type_=type_, length=length,
+                      **subcls.parse_value(value)), rest
+
+    @classmethod
+    def parse_value(cls, buf):
+        (value,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        return {
+            'value': value
+        }
 
     def serialize(self):
         # fixup
-        self.length = len(self.value)
+        if not self._ATTR_FLAGS is None:
+            self.flags = self.flags \
+                & ~(BGP_ATTR_FLAG_OPTIONAL|BGP_ATTR_FLAG_TRANSITIVE) \
+                | self._ATTR_FLAGS
+        value = self.serialize_value()
+        self.length = len(value)
         if self.length > 255:
             self.flags |= BGP_ATTR_FLAG_EXTENDED_LENGTH
             len_pack_str = self._PACK_STR_EXT_LEN
@@ -180,7 +218,151 @@ class BGPPathAttribute(StringifyMixin):
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf, 0, self.flags, self.type)
         msg_pack_into(len_pack_str, buf, len(buf), self.length)
-        return buf + bytes(self.value)
+        return buf + value
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.value)
+        return buf
+
+
+class BGPPathAttributeUnknown(_PathAttribute):
+    @classmethod
+    def parse_value(cls, buf):
+        return {
+            'value': buf
+        }
+
+    def serialize_value(self):
+        return self.value
+
+
+class _PathAttributeUint32(_PathAttribute):
+    _VALUE_PACK_STR = '!I'
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_ORIGIN)
+class BGPPathAttributeOrigin(_PathAttribute):
+    _VALUE_PACK_STR = '!B'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_AS_PATH)
+class BGPPathAttributeAsPath(_PathAttribute):
+    _AS_SET = 1
+    _AS_SEQUENCE = 2
+    _SEG_HDR_PACK_STR = '!BB'
+    _AS_PACK_STR = '!H'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+
+    @classmethod
+    def parse_value(cls, buf):
+        result = []
+        while buf:
+            (type_, num_as) = struct.unpack_from(cls._SEG_HDR_PACK_STR,
+                                                 buffer(buf))
+            buf = buf[struct.calcsize(cls._SEG_HDR_PACK_STR):]
+            l = []
+            for i in xrange(0, num_as):
+                (as_number,) = struct.unpack_from(cls._AS_PACK_STR,
+                                                  buffer(buf))
+                buf = buf[struct.calcsize(cls._AS_PACK_STR):]
+                l.append(as_number)
+            if type_ == cls._AS_SET:
+                result.append(set(l))
+            elif type_ == cls._AS_SEQUENCE:
+                result.append(l)
+            else:
+                assert(0)  # protocol error
+        return {
+            'value': result
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        offset = 0
+        for e in self.value:
+            if isinstance(e, set):
+                type_ = self._AS_SET
+            elif isinstance(e, list):
+                type_ = self._AS_SEQUENCE
+            l = list(e)
+            num_as = len(l)
+            msg_pack_into(self._SEG_HDR_PACK_STR, buf, offset, type_, num_as)
+            offset += struct.calcsize(self._SEG_HDR_PACK_STR)
+            for i in l:
+                msg_pack_into(self._AS_PACK_STR, buf, offset, i)
+                offset += struct.calcsize(self._AS_PACK_STR)
+        return buf
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_NEXT_HOP)
+class BGPPathAttributeNextHop(_PathAttribute):
+    _VALUE_PACK_STR = '!4s'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+
+    @classmethod
+    def parse_value(cls, buf):
+        (ip_addr,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        return {
+            'value': addrconv.ipv4.bin_to_text(ip_addr),
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0,
+                      addrconv.ipv4.text_to_bin(self.value))
+        return buf
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
+class BGPPathAttributeMultiExitDisc(_PathAttributeUint32):
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_LOCAL_PREF)
+class BGPPathAttributeLocalPref(_PathAttributeUint32):
+    _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_ATOMIC_AGGREGATE)
+class BGPPathAttributeAtomicAggregate(_PathAttribute):
+    _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+
+    @classmethod
+    def parse_value(cls, buf):
+        return {}
+
+    def serialize_value(self):
+        return ''
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_AGGREGATOR)
+class BGPPathAttributeAggregator(_PathAttribute):
+    _VALUE_PACK_STR = '!H4s'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
+
+    def __init__(self, as_number, ip_addr, flags=0, type_=None, length=None):
+        super(BGPPathAttributeAggregator, self).__init__(flags=flags,
+                                                         type_=type_,
+                                                         length=length)
+        self.as_number = as_number
+        self.ip_addr = ip_addr
+
+    @classmethod
+    def parse_value(cls, buf):
+        (as_number, ip_addr) = struct.unpack_from(cls._VALUE_PACK_STR,
+                                                  buffer(buf))
+        return {
+            'as_number': as_number,
+            'ip_addr': addrconv.ipv4.bin_to_text(ip_addr),
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.as_number,
+                      addrconv.ipv4.text_to_bin(self.ip_addr))
+        return buf
 
 
 class BGPNLRI(_IPAddrPrefix):
@@ -401,7 +583,7 @@ class BGPUpdate(BGPMessage):
             withdrawn_routes.append(r)
         path_attributes = []
         while binpathattrs:
-            pa, binpathattrs = BGPPathAttribute.parser(binpathattrs)
+            pa, binpathattrs = _PathAttribute.parser(binpathattrs)
             path_attributes.append(pa)
         offset += 2 + total_path_attribute_len
         nlri = []

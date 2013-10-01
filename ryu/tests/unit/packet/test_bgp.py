@@ -68,9 +68,18 @@ class Test_bgp(unittest.TestCase):
                                                   ip_addr='192.0.2.13'),
                             bgp.BGPWithdrawnRoute(length=32,
                                                   ip_addr='192.0.2.13')]
-        path_attributes = [bgp.BGPPathAttribute(flags=0, type_=1, value='foo'),
-                           bgp.BGPPathAttribute(flags=0, type_=2,
-                                                value=300*'bar')]
+        path_attributes = [
+            bgp.BGPPathAttributeOrigin(value=1),
+            bgp.BGPPathAttributeAsPath(value=[[1000], set([1001, 1002]),
+                                              [1003, 1004]]),
+            bgp.BGPPathAttributeNextHop(value='192.0.2.199'),
+            bgp.BGPPathAttributeMultiExitDisc(value=2000000000),
+            bgp.BGPPathAttributeLocalPref(value=1000000000),
+            bgp.BGPPathAttributeAtomicAggregate(),
+            bgp.BGPPathAttributeAggregator(as_number=40000,
+                                           ip_addr='192.0.2.99'),
+            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300*'bar')
+        ]
         nlri = [
             bgp.BGPNLRI(length=24, ip_addr='203.0.113.1'),
             bgp.BGPNLRI(length=16, ip_addr='203.0.113.0')
