@@ -71,6 +71,10 @@ BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
 BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
 BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
 BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
+BGP_ATTR_TYPE_AS4_PATH = 17  # RFC 4893
+BGP_ATTR_TYPE_AS4_AGGREGATOR = 18  # RFC 4893
+
+AS_TRANS = 23456  # RFC 4893
 
 
 def pad(bin, len_):
@@ -247,12 +251,11 @@ class BGPPathAttributeOrigin(_PathAttribute):
     _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
 
 
-@_PathAttribute.register_type(BGP_ATTR_TYPE_AS_PATH)
-class BGPPathAttributeAsPath(_PathAttribute):
+class _BGPPathAttributeAsPathCommon(_PathAttribute):
     _AS_SET = 1
     _AS_SEQUENCE = 2
     _SEG_HDR_PACK_STR = '!BB'
-    _AS_PACK_STR = '!H'
+    _AS_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
 
     @classmethod
@@ -296,6 +299,24 @@ class BGPPathAttributeAsPath(_PathAttribute):
         return buf
 
 
+@_PathAttribute.register_type(BGP_ATTR_TYPE_AS_PATH)
+class BGPPathAttributeAsPath(_BGPPathAttributeAsPathCommon):
+    # XXX currently this implementation assumes 16 bit AS numbers.
+    # depends on negotiated capability, AS numbers can be 32 bit.
+    # while wireshark seems to attempt auto-detect, it seems that
+    # there's no way to detect it reliably.  for example, the
+    # following byte sequence can be interpreted in two ways.
+    #   01 02 99 88 77 66 02 01 55 44
+    #   AS_SET num=2 9988 7766 AS_SEQUENCE num=1 5544
+    #   AS_SET num=2 99887766 02015544
+    _AS_PACK_STR = '!H'
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_PATH)
+class BGPPathAttributeAs4Path(_BGPPathAttributeAsPathCommon):
+    _AS_PACK_STR = '!I'
+
+
 @_PathAttribute.register_type(BGP_ATTR_TYPE_NEXT_HOP)
 class BGPPathAttributeNextHop(_PathAttribute):
     _VALUE_PACK_STR = '!4s'
@@ -337,15 +358,14 @@ class BGPPathAttributeAtomicAggregate(_PathAttribute):
         return ''
 
 
-@_PathAttribute.register_type(BGP_ATTR_TYPE_AGGREGATOR)
-class BGPPathAttributeAggregator(_PathAttribute):
-    _VALUE_PACK_STR = '!H4s'
+class _BGPPathAttributeAggregatorCommon(_PathAttribute):
+    _VALUE_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
 
     def __init__(self, as_number, ip_addr, flags=0, type_=None, length=None):
-        super(BGPPathAttributeAggregator, self).__init__(flags=flags,
-                                                         type_=type_,
-                                                         length=length)
+        super(_BGPPathAttributeAggregatorCommon, self).__init__(flags=flags,
+                                                                type_=type_,
+                                                                length=length)
         self.as_number = as_number
         self.ip_addr = ip_addr
 
@@ -363,6 +383,17 @@ class BGPPathAttributeAggregator(_PathAttribute):
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.as_number,
                       addrconv.ipv4.text_to_bin(self.ip_addr))
         return buf
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_AGGREGATOR)
+class BGPPathAttributeAggregator(_BGPPathAttributeAggregatorCommon):
+    # XXX currently this implementation assumes 16 bit AS numbers.
+    _VALUE_PACK_STR = '!H4s'
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_AGGREGATOR)
+class BGPPathAttributeAs4Aggregator(_BGPPathAttributeAggregatorCommon):
+    _VALUE_PACK_STR = '!I4s'
 
 
 class BGPNLRI(_IPAddrPrefix):

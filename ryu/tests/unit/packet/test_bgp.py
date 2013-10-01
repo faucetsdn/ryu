@@ -78,6 +78,10 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeAtomicAggregate(),
             bgp.BGPPathAttributeAggregator(as_number=40000,
                                            ip_addr='192.0.2.99'),
+            bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
+                                               [1003, 1000004]]),
+            bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
+                                              ip_addr='192.0.2.99'),
             bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300*'bar')
         ]
         nlri = [
