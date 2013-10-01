@@ -127,3 +127,22 @@ class Test_bgp(unittest.TestCase):
             for m in sp.parse(b):
                 results.append(m)
         eq_(str(results), str(msgs))
+
+    def test_parser(self):
+        files = [
+            'bgp4-open',
+# commented out because
+# 1. we don't support 32 bit AS numbers in AS_PATH
+# 2. quagga always uses EXTENDED for AS_PATH
+#           'bgp4-update',
+            'bgp4-keepalive',
+        ]
+        dir = '../packet_data/bgp4/'
+
+        for f in files:
+            print 'testing', f
+            binmsg = open(dir + f).read()
+            msg, rest = bgp.BGPMessage.parser(binmsg)
+            binmsg2 = msg.serialize()
+            eq_(binmsg, binmsg2)
+            eq_(rest, '')
