@@ -93,7 +93,7 @@ class WSGIApplication(object):
         controller = match['controller'](req, link, data, **self.config)
         return controller(req)
 
-    def register(self, controller):
+    def register(self, controller, data=None):
         methods = inspect.getmembers(controller,
                                      lambda v: inspect.ismethod(v) and
                                      hasattr(v, 'routing_info'))
@@ -111,6 +111,8 @@ class WSGIApplication(object):
                                 requirements=requirements,
                                 action=method_name,
                                 conditions=conditions)
+        if data:
+            self.registory[controller.__name__] = data
 
 
 class WSGIServer(hub.WSGIServer):

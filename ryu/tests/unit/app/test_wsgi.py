@@ -28,6 +28,10 @@ LOG = logging.getLogger('test_wsgi')
 
 class _TestController(ControllerBase):
 
+    def __init__(self, req, link, data, **config):
+        super(_TestController, self).__init__(req, link, data, **config)
+        eq_(data['test_param'], 'foo')
+
     @route('test', '/test/{dpid}',
            methods=['GET'], requirements={'dpid': dpidlib.DPID_PATTERN})
     def test_get_dpid(self, req, dpid, **_kwargs):
@@ -44,8 +48,11 @@ class Test_wsgi(unittest.TestCase):
     """
 
     def setUp(self):
+        controller_data = {
+            'test_param': 'foo'
+        }
         self.wsgi_app = WSGIApplication()
-        self.wsgi_app.register(_TestController)
+        self.wsgi_app.register(_TestController, controller_data)
 
     def tearDown(self):
         pass
