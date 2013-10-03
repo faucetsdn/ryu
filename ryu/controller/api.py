@@ -70,6 +70,12 @@ class OFWireRpcSession(object):
                 dp = v
                 break
 
+        if dp is None:
+            m = self.session.create_response(msg[1], None,
+                                             [{'error': 'no datapath'}])
+            self.send_queue.put(m)
+            return
+
         ofmsg = None
         # default interval
         interval = 60
@@ -327,6 +333,11 @@ class RPCApi(app_manager.RyuApp):
     @handler.set_ev_cls(dpset.EventDP)
     def handler_datapath(self, ev):
         print "join"
+        for s in self.sessions:
+            params = {'datapath_id': ev.dp.id}
+            m = s.session.create_notification('state', params)
+            s.send_queue.put(m)
+        
         if ev.enter:
             print "dp joined"
             dp = ev.dp
