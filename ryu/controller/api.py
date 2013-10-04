@@ -177,8 +177,8 @@ class OFWireRpcSession(object):
             rready, _, _ = select.select([self.socket], [], [], 5)
 
             for idx in range(len(self.pending)):
-                print "found pending", msg
                 msg = self.pending.pop(0)
+                print "found pending", msg
                 self._handle_rpc_message(msg)
 
             if len(rready) > 0:
