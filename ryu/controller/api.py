@@ -332,14 +332,12 @@ class RPCApi(app_manager.RyuApp):
 
     @handler.set_ev_cls(dpset.EventDP)
     def handler_datapath(self, ev):
-        print "join"
-        for s in self.sessions:
-            params = {'datapath_id': ev.dp.id}
-            m = s.session.create_notification('state', params)
-            s.send_queue.put(m)
+        if ev.enter:
+            print 'dp connected (id: %x)' % ev.dp.id
+        else:
+            print 'dp disconnected (id: %x)' % ev.dp.id
         
         if ev.enter:
-            print "dp joined"
             dp = ev.dp
             m = dp.ofproto_parser.OFPSetConfig(dp, 1 << 2, miss_send_len=1600)
             dp.send_msg(m)
