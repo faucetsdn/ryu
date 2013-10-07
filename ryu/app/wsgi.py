@@ -74,10 +74,27 @@ class WSGIApplication(object):
         self.mapper = Mapper()
         self.registory = {}
         super(WSGIApplication, self).__init__()
+        # XXX: Switch how to call the API of Routes for every version
+        match_argspec = inspect.getargspec(self.mapper.match)
+        if 'environ' in match_argspec.args:
+            # New API
+            self._match = self._match_with_environ
+        else:
+            # Old API
+            self._match = self._match_with_path_info
+
+    def _match_with_environ(self, req):
+        match = self.mapper.match(environ=req.environ)
+        return match
+
+    def _match_with_path_info(self, req):
+        self.mapper.environ = req.environ
+        match = self.mapper.match(req.path_info)
+        return match
 
     @webob.dec.wsgify
     def __call__(self, req):
-        match = self.mapper.match(environ=req.environ)
+        match = self._match(req)
 
         if not match:
             return webob.exc.HTTPNotFound()
