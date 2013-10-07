@@ -22,15 +22,9 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_0
-from ryu.lib.mac import haddr_to_str
-
-
-# TODO: we should split the handler into two parts, protocol
-# independent and dependant parts.
-
-# TODO: can we use dpkt python library?
-
-# TODO: we need to move the followings to something like db
+from ryu.lib.mac import haddr_to_bin
+from ryu.lib.packet import packet
+from ryu.lib.packet import ethernet
 
 
 class SimpleSwitch(app_manager.RyuApp):
@@ -44,7 +38,7 @@ class SimpleSwitch(app_manager.RyuApp):
         ofproto = datapath.ofproto
 
         match = datapath.ofproto_parser.OFPMatch(
-            in_port=in_port, dl_dst=dst)
+            in_port=in_port, dl_dst=haddr_to_bin(dst))
 
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, match=match, cookie=0,
@@ -59,14 +53,16 @@ class SimpleSwitch(app_manager.RyuApp):
         datapath = msg.datapath
         ofproto = datapath.ofproto
 
-        dst, src, _eth_type = struct.unpack_from('!6s6sH', buffer(msg.data), 0)
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocol(ethernet.ethernet)
+
+        dst = eth.dst
+        src = eth.src
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
-        self.logger.info("packet in %s %s %s %s",
-                         dpid, haddr_to_str(src), haddr_to_str(dst),
-                         msg.in_port)
+        self.logger.info("packet in %s %s %s %s", dpid, src, dst, msg.in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = msg.in_port
