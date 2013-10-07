@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import sys
 from setuptools.command import easy_install
 from ryu import version
@@ -60,3 +61,13 @@ def setup_hook(config):
 
     packaging.override_get_script_args = my_get_script_args
     easy_install.get_script_args = my_get_script_args
+
+    # another hack to allow setup from tarball.
+    orig_get_version = packaging.get_version
+
+    def my_get_version(package_name, pre_version=None):
+        if package_name == 'ryu':
+            return str(version)
+        return orig_get_version(package_name, pre_version)
+
+    packaging.get_version = my_get_version
