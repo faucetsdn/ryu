@@ -811,6 +811,57 @@ class BGPNotification(BGPMessage):
         return msg
 
 
+@BGPMessage.register_type(BGP_MSG_ROUTE_REFRESH)
+class BGPRouteRefresh(BGPMessage):
+    """BGP-4 ROUTE REFRESH Message (RFC 2918) encoder/decoder class.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte
+    order.
+    __init__ takes the correspondig args in this order.
+
+    ========================== ===============================================
+    Attribute                  Description
+    ========================== ===============================================
+    marker                     Marker field.  Ignored when encoding.
+    len                        Length field.  Ignored when encoding.
+    type                       Type field.  The default is
+                               BGP_MSG_ROUTE_REFRESH.
+    afi                        Address Family Identifier
+    safi                       Subsequent Address Family Identifier
+    ========================== ===============================================
+    """
+
+    _PACK_STR = '!HBB'
+    _MIN_LEN = BGPMessage._HDR_LEN + struct.calcsize(_PACK_STR)
+
+    def __init__(self,
+                 afi, safi, reserved=0,
+                 type_=BGP_MSG_ROUTE_REFRESH, len_=None, marker=None):
+        super(BGPRouteRefresh, self).__init__(marker=marker, len_=len_,
+                                              type_=type_)
+        self.afi = afi
+        self.safi = safi
+        self.reserved = reserved
+
+    @classmethod
+    def parser(cls, buf):
+        (afi, reserved, safi,) = struct.unpack_from(cls._PACK_STR,
+                                                    buffer(buf))
+        return {
+            "afi": afi,
+            "reserved": reserved,
+            "safi": safi,
+        }
+
+    def serialize_tail(self):
+        # fixup
+        self.reserved = 0
+
+        return bytearray(struct.pack(self._PACK_STR, self.afi,
+                                     self.reserved, self.safi))
+
+
 class StreamParser(stream_parser.StreamParser):
     """Streaming parser for BGP-4 messages.
 

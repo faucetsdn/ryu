@@ -19,6 +19,8 @@ from nose.tools import eq_
 from nose.tools import ok_
 
 from ryu.lib.packet import bgp
+from ryu.lib.packet import afi
+from ryu.lib.packet import safi
 
 
 class Test_bgp(unittest.TestCase):
@@ -113,6 +115,14 @@ class Test_bgp(unittest.TestCase):
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 21 + len(data))
+        eq_(rest, '')
+
+    def test_route_refresh(self):
+        msg = bgp.BGPRouteRefresh(afi=afi.IP, safi=safi.MPLS_VPN)
+        binmsg = msg.serialize()
+        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        eq_(str(msg), str(msg2))
+        eq_(len(msg), 23)
         eq_(rest, '')
 
     def test_stream_parser(self):
