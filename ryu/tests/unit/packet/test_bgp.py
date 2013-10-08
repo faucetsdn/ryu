@@ -40,9 +40,10 @@ class Test_bgp(unittest.TestCase):
         eq_(rest, '')
 
     def test_open2(self):
+        opt_param = [bgp.BGPOptParamCapability(cap_code=200, cap_value='hoge'),
+                     bgp.BGPOptParamUnknown(type_=99, value='fuga')]
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.2',
-                          opt_param=[bgp.BGPOptParam(type_=1, value='hooge'),
-                                     bgp.BGPOptParam(type_=2, value='fuga')])
+                          opt_param=opt_param)
         binmsg = msg.serialize()
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
