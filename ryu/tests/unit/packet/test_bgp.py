@@ -45,6 +45,8 @@ class Test_bgp(unittest.TestCase):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
                                                       cap_value='hoge'),
                      bgp.BGPOptParamCapabilityRouteRefresh(),
+                     bgp.BGPOptParamCapabilityFourOctetAsNumber(
+                         as_number=1234567),
                      bgp.BGPOptParamUnknown(type_=99, value='fuga')]
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.2',
                           opt_param=opt_param)

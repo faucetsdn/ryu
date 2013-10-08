@@ -277,6 +277,25 @@ class BGPOptParamCapabilityRouteRefresh(_OptParamCapability):
         return bytearray()
 
 
+@_OptParamCapability.register_type(BGP_CAP_FOUR_OCTET_AS_NUMBER)
+class BGPOptParamCapabilityFourOctetAsNumber(_OptParamCapability):
+    _CAP_PACK_STR = '!I'
+
+    def __init__(self, as_number, **kwargs):
+        super(BGPOptParamCapabilityFourOctetAsNumber, self).__init__(**kwargs)
+        self.as_number = as_number
+
+    @classmethod
+    def parse_cap_value(cls, buf):
+        (as_number, ) = struct.unpack_from(cls._CAP_PACK_STR, buffer(buf))
+        return {'as_number': as_number}
+
+    def serialize_cap_value(self):
+        buf = bytearray()
+        msg_pack_into(self._CAP_PACK_STR, buf, 0, self.as_number)
+        return buf
+
+
 class BGPWithdrawnRoute(_IPAddrPrefix):
     pass
 
