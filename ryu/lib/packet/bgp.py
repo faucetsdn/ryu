@@ -192,7 +192,7 @@ class _OptParam(StringifyMixin, _TypeDisp, _Value):
         value = bytes(rest[:length])
         rest = rest[length:]
         subcls = cls._lookup_type(type_)
-        kwargs = subcls.parse_value(value)
+        kwargs, subcls = subcls.parse_value(value)
         return subcls(type_=type_, length=length, **kwargs), rest
 
     def serialize(self):
@@ -211,22 +211,27 @@ class BGPOptParamUnknown(_OptParam):
     def parse_value(cls, buf):
         return {
             'value': buf
-        }
+        }, cls
 
     def serialize_value(self):
         return self.value
 
 
 @_OptParam.register_type(BGP_OPT_CAPABILITY)
-class BGPOptParamCapability(_OptParam):
+class _OptParamCapability(_OptParam, _TypeDisp):
     _CAP_HDR_PACK_STR = '!BB'
 
-    def __init__(self, cap_code, cap_value, cap_length=None,
+    def __init__(self, cap_code=None, cap_value=None, cap_length=None,
                  type_=None, length=None):
-        super(BGPOptParamCapability, self).__init__(type_=type_, length=length)
+        super(_OptParamCapability, self).__init__(type_=BGP_OPT_CAPABILITY,
+                                                  length=length)
+        if cap_code is None:
+            cap_code = self._rev_lookup_type(self.__class__)
         self.cap_code = cap_code
-        self.cap_length = cap_length
-        self.cap_value = cap_value
+        if not cap_value is None:
+            self.cap_value = cap_value
+        if not cap_length is None:
+            self.cap_length = cap_length
 
     @classmethod
     def parse_value(cls, buf):
@@ -236,19 +241,40 @@ class BGPOptParamCapability(_OptParam):
         kwargs = {
             'cap_code': code,
             'cap_length': length,
-            'cap_value': value,
         }
-        return kwargs
+        subcls = cls._lookup_type(code)
+        kwargs.update(subcls.parse_cap_value(value))
+        return kwargs, subcls
 
     def serialize_value(self):
         # fixup
-        cap_value = self.cap_value
+        cap_value = self.serialize_cap_value()
         self.cap_length = len(cap_value)
 
         buf = bytearray()
         msg_pack_into(self._CAP_HDR_PACK_STR, buf, 0, self.cap_code,
                       self.cap_length)
         return buf + cap_value
+
+
+@_OptParamCapability.register_unknown_type()
+class BGPOptParamCapabilityUnknown(_OptParamCapability):
+    @classmethod
+    def parse_cap_value(cls, buf):
+        return {'cap_value': buf}
+
+    def serialize_cap_value(self):
+        return self.cap_value
+
+
+@_OptParamCapability.register_type(BGP_CAP_ROUTE_REFRESH)
+class BGPOptParamCapabilityRouteRefresh(_OptParamCapability):
+    @classmethod
+    def parse_cap_value(cls, buf):
+        return {}
+
+    def serialize_cap_value(self):
+        return bytearray()
 
 
 class BGPWithdrawnRoute(_IPAddrPrefix):
