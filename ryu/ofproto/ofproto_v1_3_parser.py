@@ -2526,7 +2526,7 @@ class OFPInstructionMeter(StringifyMixin):
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, len_, table_id) = struct.unpack_from(
+        (type_, len_, meter_id) = struct.unpack_from(
             ofproto_v1_3.OFP_INSTRUCTION_METER_PACK_STR,
             buf, offset)
         return cls(meter_id)
