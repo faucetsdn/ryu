@@ -131,10 +131,10 @@ class Test_bgp(unittest.TestCase):
     def test_parser(self):
         files = [
             'bgp4-open',
-# commented out because
-# 1. we don't support 32 bit AS numbers in AS_PATH
-# 2. quagga always uses EXTENDED for AS_PATH
-#           'bgp4-update',
+            # commented out because
+            # 1. we don't support 32 bit AS numbers in AS_PATH
+            # 2. quagga always uses EXTENDED for AS_PATH
+            # 'bgp4-update',
             'bgp4-keepalive',
         ]
         dir = '../packet_data/bgp4/'
