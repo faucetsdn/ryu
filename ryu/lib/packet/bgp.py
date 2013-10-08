@@ -208,7 +208,7 @@ class _PathAttribute(StringifyMixin):
         # fixup
         if not self._ATTR_FLAGS is None:
             self.flags = self.flags \
-                & ~(BGP_ATTR_FLAG_OPTIONAL|BGP_ATTR_FLAG_TRANSITIVE) \
+                & ~(BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE) \
                 | self._ATTR_FLAGS
         value = self.serialize_value()
         self.length = len(value)
