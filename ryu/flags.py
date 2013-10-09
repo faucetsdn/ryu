@@ -48,5 +48,6 @@ CONF.register_cli_opts([
     cfg.StrOpt('neutron-controller-addr', default=None,
                help='openflow method:address:port to set controller of'
                'ovs bridge',
-               deprecated_name='quantum-controller-addr')
+               deprecated_name='quantum-controller-addr'),
+    cfg.StrOpt('stats-file', default='/tmp/stats.log')
 ])

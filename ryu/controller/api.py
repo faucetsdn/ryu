@@ -1,6 +1,8 @@
 import eventlet
 import select
 import time
+import logging
+from oslo.config import cfg
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.controller import dpset
@@ -30,6 +32,12 @@ flow_sem = eventlet.semaphore.Semaphore()
 monitored_flows = {}
 monitored_ports = {'interval': 15}
 
+CONF = cfg.CONF
+log = logging.FileHandler(CONF.stats_file, mode='w')
+log.setLevel(logging.INFO)
+
+STATS = logging.getLogger('apgw')
+STATS.addHandler(log)
 
 class OFWireRpcSession(object):
     def __init__(self, socket, dpset):
@@ -312,7 +320,7 @@ class RPCApi(app_manager.RyuApp):
                              'packet_count': body.packet_count}
                     stats.update(contexts)
                     stats['timestamp'] = time.strftime("%Y-%m-%dT%H:%M:%S")
-                    print stats
+                    STATS.info(stats)
         elif msg.type == ofproto_v1_2.OFPST_PORT:
             for body in msg.body:
                 try:
@@ -322,7 +330,7 @@ class RPCApi(app_manager.RyuApp):
                                  'physical_port_no': port_name}
                         stats.update(body.to_jsondict()['OFPPortStats'])
                         stats.update(monitored_ports[port_name])
-                        print stats
+                        STATS.info(stats)
                 except:
                     pass
 
