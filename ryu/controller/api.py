@@ -164,13 +164,13 @@ class OFWireRpcSession(object):
                 self.ofp_handle_request(m)
             elif m[2] == 'monitor_port':
                 self.monitor_port(m)
-            elif m[0] == RpcMessage.RESPONSE:
-                pass
-            elif m[0] == RpcMessage.NOTIFY:
-                if m[1] == 'traceroute':
-                    self._tr_handle_notify(m)
-                else:
-                    print "invalid type", m[0]
+        elif m[0] == RpcMessage.RESPONSE:
+            pass
+        elif m[0] == RpcMessage.NOTIFY:
+            if m[1] == 'traceroute':
+                self._tr_handle_notify(m)
+        else:
+            print "invalid type", m[0]
         
     def serve(self):
         while True:
