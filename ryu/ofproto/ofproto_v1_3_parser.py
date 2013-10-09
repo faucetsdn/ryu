@@ -2702,6 +2702,12 @@ class OFPActionDecMplsTtl(OFPAction):
     def __init__(self, type_=None, len_=None):
         super(OFPActionDecMplsTtl, self).__init__()
 
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
 
 @OFPAction.register_action_type(ofproto_v1_3.OFPAT_SET_NW_TTL,
                                 ofproto_v1_3.OFP_ACTION_NW_TTL_SIZE)
@@ -2745,7 +2751,8 @@ class OFPActionDecNwTtl(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
@@ -2763,7 +2770,8 @@ class OFPActionCopyTtlOut(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
@@ -2781,7 +2789,8 @@ class OFPActionCopyTtlIn(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
@@ -2856,7 +2865,8 @@ class OFPActionPopVlan(OFPAction):
 
     @classmethod
     def parser(cls, buf, offset):
-        msg_pack_into(ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
