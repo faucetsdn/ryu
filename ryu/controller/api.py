@@ -270,7 +270,7 @@ class RPCApi(app_manager.RyuApp):
         data = msg.data[ip_offset:ip_offset +
                         (o_ip.header_length * 4 + 8)]
         ic = icmp.icmp(icmp.ICMP_TIME_EXCEEDED, 0, 0,
-                       icmp.TimeExceeded(data))
+                       icmp.TimeExceeded(data_len=len(data), data=data))
 
         proto_list = [eth, vlan_p, ip, ic]
 
