@@ -265,9 +265,8 @@ class RPCApi(app_manager.RyuApp):
         in_port = traceroute_source[o_vlan.vid]['port']
 
         ip = ipv4.ipv4(src=src_ip, dst=o_ip.src, proto=1)
-        ip_offset = o_eth.length
-        # vlan header
-        ip_offset += 4
+        ip_offset = 14 + 4
+        # ether + vlan headers
         data = msg.data[ip_offset:ip_offset +
                         (o_ip.header_length * 4 + 8)]
         ic = icmp.icmp(icmp.ICMP_TIME_EXCEEDED, 0, 0,
