@@ -25,6 +25,8 @@ PYTHONPATH=. ./bin/ryu-manager --verbose \
              ./ryu/services/vrrp/dumper.py
 """
 
+import time
+
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.lib import hub
@@ -73,10 +75,12 @@ class VRRPManager(app_manager.RyuApp):
             self.reply_to_request(ev, rep)
             return
 
+        statistics = VRRPStatistics(name, config.resource_id,
+                                    config.resource_name, config.statistics_interval)
         monitor = vrrp_monitor.VRRPInterfaceMonitor.factory(
-            interface, config, name, *self._args, **self._kwargs)
+            interface, config, name, statistics, *self._args, **self._kwargs)
         router = vrrp_router.VRRPRouter.factory(
-            name, monitor.name, interface, config, *self._args, **self._kwargs)
+            name, monitor.name, interface, config, statistics, *self._args, **self._kwargs)
 
         # Event piping
         #  vrrp_router -> vrrp_manager
@@ -154,3 +158,40 @@ class VRRPManager(app_manager.RyuApp):
 
         vrrp_list = vrrp_event.EventVRRPListReply(instance_list)
         self.reply_to_request(ev, vrrp_list)
+
+
+class VRRPStatistics(object):
+    def __init__(self, name, resource_id, resource_name, statistics_interval):
+        self.name = name
+        self.resource_id = resource_id
+        self.resource_name = resource_name
+        self.statistics_interval = statistics_interval
+        self.tx_vrrp_packets = 0
+        self.rx_vrrp_packets = 0
+        self.rx_vrrp_zero_prio_packets = 0
+        self.tx_vrrp_zero_prio_packets = 0
+        self.rx_vrrp_invalid_packets = 0
+        self.rx_vrrp_bad_auth = 0
+        self.idle_to_master_transitions = 0
+        self.idle_to_backup_transitions = 0
+        self.backup_to_master_transitions = 0
+        self.master_to_backup_transitions = 0
+
+    def get_stats(self):
+        ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+        stats_dict = dict(
+            timestamp=ts,
+            resource_id=self.resource_id,
+            resource_name=self.resource_name,
+            tx_vrrp_packets=self.tx_vrrp_packets,
+            rx_vrrp_packets=self.rx_vrrp_packets,
+            rx_vrrp_zero_prio_packets=self.rx_vrrp_zero_prio_packets,
+            tx_vrrp_zero_prio_packets=self.tx_vrrp_zero_prio_packets,
+            rx_vrrp_invalid_packets=self.rx_vrrp_invalid_packets,
+            rx_vrrp_bad_auth=self.rx_vrrp_bad_auth,
+            idle_to_master_transitions=self.idle_to_master_transitions,
+            idle_to_backup_transitions=self.idle_to_backup_transitions,
+            backup_to_master_transitions=self.backup_to_master_transitions,
+            master_to_backup_transitions=self.master_to_backup_transitions
+        )
+        return stats_dict
