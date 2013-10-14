@@ -49,5 +49,5 @@ CONF.register_cli_opts([
                help='openflow method:address:port to set controller of'
                'ovs bridge',
                deprecated_name='quantum-controller-addr'),
-    cfg.StrOpt('stats-file', default='/tmp/stats.log')
+    cfg.StrOpt('stats-file', default='/tmp/ofwire-stats.log')
 ])
