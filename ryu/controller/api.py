@@ -316,7 +316,10 @@ class RPCApi(app_manager.RyuApp):
                 flow_sem.release()
                 if contexts:
                     stats = {'byte_count': body.byte_count,
-                             'packet_count': body.packet_count}
+                             'packet_count': body.packet_count,
+                             'match': body.match.to_jsondict(),
+                             #'inst': body.instructions,
+                             'table_id': body.table_id}
                     stats.update(contexts)
                     stats['timestamp'] = time.strftime("%Y-%m-%dT%H:%M:%S")
                     STATS.info(stats)
