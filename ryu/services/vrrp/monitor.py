@@ -177,9 +177,12 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
 
         # TODO: Optional check rfc5798 7.1
         # may_vrrp.ip_addresses equals to self.config.ip_addresses
+        if self.statistics and may_vrrp.priority == 0:
+            self.statistics.rx_vrrp_zero_prio_packets += 1
 
         vrrp_received = vrrp_event.EventVRRPReceived(self.interface, packet_)
         self.send_event(self.router_name, vrrp_received)
+        return True
 
     @handler.set_ev_handler(vrrp_event.EventVRRPTransmitRequest)
     def vrrp_transmit_request_handler(self, ev):
@@ -203,7 +206,16 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
                 self._initialize()
         elif ev.new_state in [vrrp_event.VRRP_STATE_BACKUP,
                               vrrp_event.VRRP_STATE_MASTER]:
-            pass
+            if self.statistics:
+                if ev.old_state == vrrp_event.VRRP_STATE_INITIALIZE:
+                    if ev.new_state == vrrp_event.VRRP_STATE_MASTER:
+                        self.statistics.idle_to_master_transitions += 1
+                    else:
+                        self.statistics.idle_to_backup_transitions += 1
+                elif ev.old_state == vrrp_event.VRRP_STATE_MASTER:
+                    self.statistics.master_to_backup_transitions += 1
+                else:
+                    self.statistics.backup_to_master_transitions += 1
         else:
             raise RuntimeError('unknown vrrp state %s' % ev.new_state)
 
@@ -343,9 +355,12 @@ class VRRPInterfaceMonitorNetworkDevice(VRRPInterfaceMonitor):
                     break
 
                 self.logger.debug('recv buf')
+                valid = self._send_vrrp_packet_received(buf)
                 if self.statistics:
-                    self.statistics.rx_vrrp_packets += len(buf)
-                self._send_vrrp_packet_received(buf)
+                    if valid == True:
+                        self.statistics.rx_vrrp_packets += 1
+                    else:
+                        self.statistics.rx_vrrp_invalid_packets += 1
         finally:
             self._join_vrrp_group(False)
             self._join_multicast_membership(False)
@@ -354,7 +369,7 @@ class VRRPInterfaceMonitorNetworkDevice(VRRPInterfaceMonitor):
     def vrrp_transmit_request_handler(self, ev):
         self.logger.debug('send')
         if self.statistics:
-            self.statistics.tx_vrrp_packets += len(ev.data)
+            self.statistics.tx_vrrp_packets += 1
         self.packet_socket.sendto(ev.data, (self.interface.device_name, 0))
 
     def _initialize(self):

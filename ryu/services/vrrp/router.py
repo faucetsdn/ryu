@@ -213,6 +213,8 @@ class VRRPRouter(app_manager.RyuApp):
                                  vrrp.VRRP_PRIORITY_RELEASE_RESPONSIBILITY,
                                  vrrp_.max_adver_int, vrrp_.ip_addresses)
 
+        if self.statistics and self.vrrp.priority == 0:
+            self.statistics.tx_vrrp_zero_prio_packets += 1
         # create packet frame each time to generate new ip identity
         interface = self.interface
         packet_ = vrrp_.create_packet(interface.primary_ip_address,
