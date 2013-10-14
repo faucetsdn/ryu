@@ -25,6 +25,7 @@ PYTHONPATH=. ./bin/ryu-manager --verbose \
              ./ryu/services/vrrp/dumper.py
 """
 
+import datetime
 import time
 
 from ryu.base import app_manager
@@ -177,7 +178,9 @@ class VRRPStatistics(object):
         self.master_to_backup_transitions = 0
 
     def get_stats(self):
-        ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+        timestamp = time.time()
+        ts = datetime.datetime.utcfromtimestamp(
+            timestamp).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         stats_dict = dict(
             timestamp=ts,
             tx_vrrp_packets=self.tx_vrrp_packets,
