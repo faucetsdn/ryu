@@ -75,8 +75,8 @@ class VRRPManager(app_manager.RyuApp):
             self.reply_to_request(ev, rep)
             return
 
-        statistics = VRRPStatistics(name, config.resource_id,
-                                    config.resource_name, config.statistics_interval)
+        statistics = VRRPStatistics(name, config.statistics_interval,
+                                    config.contexts)
         monitor = vrrp_monitor.VRRPInterfaceMonitor.factory(
             interface, config, name, statistics, *self._args, **self._kwargs)
         router = vrrp_router.VRRPRouter.factory(
@@ -161,11 +161,10 @@ class VRRPManager(app_manager.RyuApp):
 
 
 class VRRPStatistics(object):
-    def __init__(self, name, resource_id, resource_name, statistics_interval):
+    def __init__(self, name, statistics_interval, contexts):
         self.name = name
-        self.resource_id = resource_id
-        self.resource_name = resource_name
         self.statistics_interval = statistics_interval
+        self.contexts = contexts
         self.tx_vrrp_packets = 0
         self.rx_vrrp_packets = 0
         self.rx_vrrp_zero_prio_packets = 0
@@ -181,8 +180,6 @@ class VRRPStatistics(object):
         ts = time.strftime("%Y-%m-%dT%H:%M:%S")
         stats_dict = dict(
             timestamp=ts,
-            resource_id=self.resource_id,
-            resource_name=self.resource_name,
             tx_vrrp_packets=self.tx_vrrp_packets,
             rx_vrrp_packets=self.rx_vrrp_packets,
             rx_vrrp_zero_prio_packets=self.rx_vrrp_zero_prio_packets,
@@ -194,4 +191,5 @@ class VRRPStatistics(object):
             backup_to_master_transitions=self.backup_to_master_transitions,
             master_to_backup_transitions=self.master_to_backup_transitions
         )
+        stats_dict.update(self.contexts)
         return stats_dict
