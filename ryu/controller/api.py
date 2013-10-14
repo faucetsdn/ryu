@@ -1,5 +1,6 @@
 import eventlet
 import select
+import datetime
 import time
 import logging
 from oslo.config import cfg
@@ -304,6 +305,10 @@ class RPCApi(app_manager.RyuApp):
                         handler.MAIN_DISPATCHER)
     def flow_reply_handler(self, ev):
         msg = ev.msg
+        timestamp = time.time()
+        cur_time = datetime.datetime.utcfromtimestamp(
+            timestamp).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
         self._ofp_reply(msg)
         dp = msg.datapath
         if msg.type == ofproto_v1_2.OFPST_FLOW:
@@ -321,14 +326,14 @@ class RPCApi(app_manager.RyuApp):
                              #'inst': body.instructions,
                              'table_id': body.table_id}
                     stats.update(contexts)
-                    stats['timestamp'] = time.strftime("%Y-%m-%dT%H:%M:%S")
+                    stats['timestamp'] = cur_time
                     STATS.info(stats)
         elif msg.type == ofproto_v1_2.OFPST_PORT:
             for body in msg.body:
                 try:
                     port_name = dp.ports[body.port_no].name
                     if port_name in monitored_ports:
-                        stats = {'timestamp': time.strftime("%Y-%m-%dT%H:%M:%S"),
+                        stats = {'timestamp': cur_time,
                                  'physical_port_no': port_name}
                         stats.update(body.to_jsondict()['OFPPortStats'])
                         stats.update(monitored_ports[port_name])
