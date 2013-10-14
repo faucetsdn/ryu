@@ -694,6 +694,7 @@ class MFTPSRC(MFField):
     def put(self, buf, offset, rule):
         return self.putm(buf, offset, rule.flow.tp_src, rule.wc.tp_src_mask)
 
+
 @_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_OF_TCP_DST, ofproto_v1_0.NXM_OF_TCP_DST_W,
                    ofproto_v1_0.NXM_OF_UDP_DST, ofproto_v1_0.NXM_OF_UDP_DST_W])
@@ -704,6 +705,7 @@ class MFTPDST(MFField):
 
     def put(self, buf, offset, rule):
         return self.putm(buf, offset, rule.flow.tp_dst, rule.wc.tp_dst_mask)
+
 
 @_register_make
 @_set_nxm_headers([ofproto_v1_0.NXM_OF_ARP_SPA, ofproto_v1_0.NXM_OF_ARP_SPA_W])
