@@ -1,0 +1,7 @@
+{
+   "OFPGroupStatsRequest": {
+      "flags": 0, 
+      "group_id": 4294967292, 
+      "type": 6
+   }
+}
