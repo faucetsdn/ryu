@@ -3,6 +3,7 @@ import select
 import datetime
 import time
 import logging
+import json
 from oslo.config import cfg
 from ryu.base import app_manager
 from ryu.controller import handler
@@ -327,7 +328,7 @@ class RPCApi(app_manager.RyuApp):
                              'table_id': body.table_id}
                     stats.update(contexts)
                     stats['timestamp'] = cur_time
-                    STATS.info(stats)
+                    STATS.info(json.dumps(stats))
         elif msg.type == ofproto_v1_2.OFPST_PORT:
             for body in msg.body:
                 try:
@@ -337,7 +338,7 @@ class RPCApi(app_manager.RyuApp):
                                  'physical_port_no': port_name}
                         stats.update(body.to_jsondict()['OFPPortStats'])
                         stats.update(monitored_ports[port_name])
-                        STATS.info(stats)
+                        STATS.info(json.dumps(stats))
                 except:
                     pass
 
