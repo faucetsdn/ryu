@@ -2314,7 +2314,17 @@ x() ->
                                    arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
                                    icmpv6_type,icmpv6_code,ipv6_nd_target,
                                    ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-                                   mpls_bos,pbb_isid]}]}]}
-
+                                   mpls_bos,pbb_isid]}]}]},
+        #ofp_group_stats_request{flags = [],group_id = all},
+        #ofp_group_stats_reply{
+            flags = [],
+            body = 
+                [#ofp_group_stats{
+                     group_id = 1,ref_count = 2,packet_count = 123,
+                     byte_count = 12345,duration_sec = 9,
+                     duration_nsec = 609036000,
+                     bucket_stats = 
+                         [#ofp_bucket_counter{
+                              packet_count = 234,byte_count = 2345}]}]}
     ],
     lists:foldl(fun x:do/2, {4, 0}, List).
