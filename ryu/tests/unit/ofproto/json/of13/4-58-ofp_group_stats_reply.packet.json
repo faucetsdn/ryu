@@ -3,6 +3,14 @@
       "body": [
          {
             "OFPGroupStats": {
+               "bucket_stats": [
+                   {
+                       "OFPBucketCounter": {
+                           "byte_count": 2345,
+                           "packet_count": 234
+                       }
+                   }
+               ],
                "byte_count": 12345, 
                "duration_nsec": 609036000, 
                "duration_sec": 9, 

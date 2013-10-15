@@ -3982,16 +3982,48 @@ class OFPQueueStatsReply(OFPMultipartReply):
         super(OFPQueueStatsReply, self).__init__(datapath, **kwargs)
 
 
-class OFPGroupStats(ofproto_parser.namedtuple('OFPGroupStats', (
-        'length', 'group_id', 'ref_count', 'packet_count',
-        'byte_count', 'duration_sec', 'duration_nsec'))):
+class OFPBucketCounter(StringifyMixin):
+    def __init__(self, packet_count, byte_count):
+        super(OFPBucketCounter, self).__init__()
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+
+    @classmethod
+    def parser(cls, buf, offset):
+        packet_count, byte_count = struct.unpack_from(
+            ofproto_v1_3.OFP_BUCKET_COUNTER_PACK_STR, buf, offset)
+        return cls(packet_count, byte_count)
+
+
+class OFPGroupStats(StringifyMixin):
+    def __init__(self, length=None, group_id=None, ref_count=None,
+                 packet_count=None, byte_count=None, duration_sec=None,
+                 duration_nsec=None, bucket_stats=None):
+        super(OFPGroupStats, self).__init__()
+        self.length = length
+        self.group_id = group_id
+        self.ref_count = ref_count
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.bucket_stats = bucket_stats
+
     @classmethod
     def parser(cls, buf, offset):
         group = struct.unpack_from(ofproto_v1_3.OFP_GROUP_STATS_PACK_STR,
                                    buf, offset)
-        stats = cls(*group)
-        stats.length = ofproto_v1_3.OFP_GROUP_STATS_SIZE
-        return stats
+        group_stats = cls(*group)
+
+        group_stats.bucket_stats = []
+        total_len = group_stats.length + offset
+        offset += ofproto_v1_3.OFP_GROUP_STATS_SIZE
+        while total_len > offset:
+            b = OFPBucketCounter.parser(buf, offset)
+            group_stats.bucket_stats.append(b)
+            offset += ofproto_v1_3.OFP_BUCKET_COUNTER_SIZE
+
+        return group_stats
 
 
 @_set_stats_type(ofproto_v1_3.OFPMP_GROUP, OFPGroupStats)
