@@ -24,6 +24,9 @@ CONF_KEY_PORT_PREEMPT_MODE = "preempt_mode"
 CONF_KEY_PORT_PREEMPT_DELAY = "preempt_delay"
 CONF_KEY_STATISTICS_LOG_ENABLED = "statistics_log_enabled"
 CONF_KEY_STATISTICS_INTERVAL = "statistics_interval"
+CONF_KEY_VRID = 'vrid'
+CONF_KEY_VRRP_VERSION = 'version'
+CONF_KEY_IP_ADDR = 'ip_addr'
 
 CONF = cfg.CONF
 
@@ -35,10 +38,14 @@ CONF.register_cli_opts([
 
 
 class VRRPParam(object):
-    def __init__(self, version, vrid, ip_address):
+    def __init__(self, version, vrid, ip_address, admin_state=None, advertisement_interval=1, preempt_mode=True, preempt_delay=0):
         self.version = version
         self.vrid = vrid
         self.ip_address = ip_address
+        self.admin_state = admin_state
+        self.advertisement_interval = advertisement_interval
+        self.preempt_mode = preempt_mode
+        self.preempt_delay = preempt_delay
 
     def setPort(self, ifname, ip_address, priority, vlan_id=None):
         self.port = {
@@ -48,8 +55,17 @@ class VRRPParam(object):
             CONF_KEY_PORT_VLAN_ID: vlan_id
         }
 
-    def toArray(self):
-        return [self.version, self.vrid, self.ip_address, self.port]
+    def toDict(self):
+        param_dict = {CONF_KEY_VRRP_VERSION: self.version,
+                CONF_KEY_VRID: self.vrid,
+                CONF_KEY_IP_ADDR: self.ip_address,
+                CONF_KEY_ADMIN_STATE: self.admin_state,
+                CONF_KEY_ADVERTISEMENT_INTERVAL: self.advertisement_interval,
+                CONF_KEY_PORT_PREEMPT_MODE: self.preempt_mode,
+                CONF_KEY_PORT_PREEMPT_DELAY: self.preempt_delay
+                }
+        param_dict.update(self.port)
+        return param_dict
 
 
 class RpcVRRPManager(app_manager.RyuApp):
@@ -97,26 +113,24 @@ class RpcVRRPManager(app_manager.RyuApp):
 
     def _config(self, endpoint, msgid, params):
         self.logger.debug('handle vrrp_config request')
-        vrrp_params = params[0]
-        print vrrp_params
-        port = vrrp_params[3]
+        param_dict = params[0]
 
         interface = vrrp_event.VRRPInterfaceNetworkDevice(
             mac.DONTCARE,
-            netaddr.IPAddress(port[CONF_KEY_PORT_IP_ADDR]).value,
-            port[CONF_KEY_PORT_VLAN_ID],
-            port[CONF_KEY_PORT_IFNAME])
+            netaddr.IPAddress(param_dict[CONF_KEY_PORT_IP_ADDR]).value,
+            param_dict[CONF_KEY_PORT_VLAN_ID],
+            param_dict[CONF_KEY_PORT_IFNAME])
 
         config = vrrp_event.VRRPConfig(
-            version=vrrp_params[0], vrid=vrrp_params[1],
-            admin_state=port[CONF_KEY_ADMIN_STATE],
-            priority=port["priority"], 
-            ip_addresses=[netaddr.IPAddress(vrrp_params[2]).value],
-            advertisement_interval=port[CONF_KEY_ADVERTISEMENT_INTERVAL],
-            preempt_mode=port[CONF_KEY_PORT_PREEMPT_MODE],
-            preempt_delay=port[CONF_KEY_PORT_PREEMPT_DELAY],
-            statistics_interval=port.get(CONF_KEY_STATISTICS_INTERVAL),
-            contexts = port.get('contexts')
+            version=param_dict[CONF_KEY_VRRP_VERSION], vrid=param_dict[CONF_KEY_VRID],
+            admin_state=param_dict[CONF_KEY_ADMIN_STATE],
+            priority=param_dict[CONF_KEY_PRIORITY],
+            ip_addresses=[netaddr.IPAddress(param_dict[CONF_KEY_IP_ADDR]).value],
+            advertisement_interval=param_dict[CONF_KEY_ADVERTISEMENT_INTERVAL],
+            preempt_mode=param_dict[CONF_KEY_PORT_PREEMPT_MODE],
+            preempt_delay=param_dict[CONF_KEY_PORT_PREEMPT_DELAY],
+            statistics_interval=param_dict.get(CONF_KEY_STATISTICS_INTERVAL),
+            contexts = param_dict.get('contexts')
             )
         config_result = vrrp_api.vrrp_config(self, interface, config)
 
@@ -140,12 +154,12 @@ class RpcVRRPManager(app_manager.RyuApp):
 
     def _config_change(self, endpoint, msgid, params):
         self.logger.debug('handle vrrp_config_change request')
-        vrid = params[0]
+        config_values = params[0]
+        vrid = config_values[CONF_KEY_VRID]
         self.logger.info("VRID : %s", vrid)
         instance_name = self._lookup(vrid)
 
         if instance_name:
-            config_values = params[1]
             priority = config_values[CONF_KEY_PRIORITY] if CONF_KEY_PRIORITY in config_values else None
             adv_int = config_values[
                 CONF_KEY_ADVERTISEMENT_INTERVAL] if CONF_KEY_ADVERTISEMENT_INTERVAL in config_values else None
