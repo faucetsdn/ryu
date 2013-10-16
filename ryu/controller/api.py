@@ -332,7 +332,11 @@ class RPCApi(app_manager.RyuApp):
         elif msg.type == ofproto_v1_2.OFPST_PORT:
             for body in msg.body:
                 try:
-                    port_name = dp.ports[body.port_no].name
+                    ports = self.dpset.get_ports(dp.id)
+                    try:
+                        port_name = ports[body.port_no].name
+                    except:
+                        continue
                     if port_name in monitored_ports:
                         stats = {'timestamp': cur_time,
                                  'physical_port_no': port_name}
