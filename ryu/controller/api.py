@@ -360,7 +360,7 @@ class RPCApi(app_manager.RyuApp):
         if ev.enter:
             print 'dp connected (id: %x)' % ev.dp.id
         else:
-            print 'dp disconnected (id: %x)' % ev.dp.id
+            print 'dp disconnected'
         
         if ev.enter:
             dp = ev.dp
