@@ -364,6 +364,15 @@ class RPCApi(app_manager.RyuApp):
             dp.send_msg(m)
             self.dp_joined = True
 
+        if ev.enter:
+            params = {'secure_channel_state': 'Up'}
+        else:
+            params = {'secure_channel_state': 'Down'}
+            
+        for s in self.sessions:
+            m = s.session.create_notification('state', [params])
+            s.send_queue.put(m)
+
     def handle_port_status(self, msg):
         reason = msg.reason
         datapath = msg.datapath
