@@ -109,6 +109,8 @@ class OFWireRpcSession(object):
             self.send_queue.put(m)
             return
 
+        dp.set_xid(ofmsg)
+        ofmsg.serialize()
         if ofmsg.msg_type in (dp.ofproto.OFPT_STATS_REQUEST,
                               dp.ofproto.OFPT_BARRIER_REQUEST):
             self.waiters[dp.id] = (ofmsg.xid, msg[1])
