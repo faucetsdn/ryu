@@ -123,7 +123,7 @@ class RpcVRRPManager(app_manager.RyuApp):
 
         config = vrrp_event.VRRPConfig(
             version=param_dict[CONF_KEY_VRRP_VERSION], vrid=param_dict[CONF_KEY_VRID],
-            admin_state=param_dict[CONF_KEY_ADMIN_STATE],
+            admin_state=param_dict.get(CONF_KEY_ADMIN_STATE),
             priority=param_dict[CONF_KEY_PRIORITY],
             ip_addresses=[netaddr.IPAddress(param_dict[CONF_KEY_IP_ADDR]).value],
             advertisement_interval=param_dict[CONF_KEY_ADVERTISEMENT_INTERVAL],
