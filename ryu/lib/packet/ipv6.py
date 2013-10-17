@@ -112,7 +112,7 @@ class ipv6(packet_base.PacketBase):
     def serialize(self, payload, prev):
         hdr = bytearray(40)
         v_tc_flow = (self.version << 28 | self.traffic_class << 20 |
-                     self.flow_label << 12)
+                     self.flow_label)
         struct.pack_into(ipv6._PACK_STR, hdr, 0, v_tc_flow,
                          self.payload_length, self.nxt, self.hop_limit,
                          addrconv.ipv6.text_to_bin(self.src),
