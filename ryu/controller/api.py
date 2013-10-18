@@ -41,6 +41,16 @@ log.setLevel(logging.INFO)
 STATS = logging.getLogger('apgw')
 STATS.addHandler(log)
 
+def format_key(match_json):
+    del match_json['OFPMatch']['length']
+    for t in match_json['OFPMatch']['oxm_fields']:
+        tlv = t['OXMTlv']
+        if tlv['field'] in ['ipv4_dst', 'ipv4_src']:
+            if tlv['mask'] == '255.255.255.255':
+                tlv['mask'] = None
+    return str(match_json)
+
+
 class OFWireRpcSession(object):
     def __init__(self, socket, dpset):
         self.socket = socket
@@ -119,7 +129,7 @@ class OFWireRpcSession(object):
             result = {'xid': ofmsg.xid}
             if contexts:
                 flow_sem.acquire()
-                key = str(ofmsg.match.to_jsondict())
+                key = format_key(ofmsg.match.to_jsondict())
                 if ofmsg.command is dp.ofproto.OFPFC_ADD:
                     if key in monitored_flows:
                         error = None
@@ -298,6 +308,14 @@ class RPCApi(app_manager.RyuApp):
                 r = sess.session.create_response(msgid, None, results)
                 sess.send_queue.put(r)
 
+    def compare_key(self, k1, k2):
+        k1 = eval(k1)
+        k2 = eval(k2)
+        l1 = k1['OFPMatch']['oxm_fields']
+        l2 = k2['OFPMatch']['oxm_fields']
+
+        return sorted(l1) == sorted(l2)
+
     @handler.set_ev_cls(ofp_event.EventOFPBarrierReply,
                         handler.MAIN_DISPATCHER)
     def barrier_reply_handler(self, ev):
@@ -316,11 +334,12 @@ class RPCApi(app_manager.RyuApp):
         dp = msg.datapath
         if msg.type == ofproto_v1_2.OFPST_FLOW:
             for body in msg.body:
-                key = str(body.match.to_jsondict())
+                key = format_key(body.match.to_jsondict())
                 contexts = None
                 flow_sem.acquire()
-                if key in monitored_flows:
-                    contexts = monitored_flows[key]
+                for k in monitored_flows.keys():
+                    if self.compare_key(k, key):
+                        contexts = monitored_flows[k]
                 flow_sem.release()
                 if contexts:
                     stats = {'byte_count': body.byte_count,
