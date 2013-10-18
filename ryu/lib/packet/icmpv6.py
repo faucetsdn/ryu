@@ -373,13 +373,14 @@ class nd_router_advert(stringify.StringifyMixin):
             msg.length.append(length)
             cls_ = cls._ND_OPTION_TYPES.get(type_, None)
             offset += 2
+            byte_len = length * 8 - 2
             if cls_:
                 msg.data.append(cls_.parser(buf[:offset+cls_._MIN_LEN],
                                             offset))
                 offset += cls_._MIN_LEN
             else:
-                msg.data.append(buf[offset:])
-                offset = len(buf)
+                msg.data.append(buf[offset:offset + byte_len])
+                offset += byte_len
 
         return msg
 
