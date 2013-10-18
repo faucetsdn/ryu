@@ -75,8 +75,11 @@ class icmpv6(packet_base.PacketBase):
                    (0 means automatically-calculate when encoding)
     data           Payload.
 
-                   ryu.lib.packet.icmpv6.echo object, or \
-                   ryu.lib.packet.icmpv6.nd_neighbor object, or a bytearray.
+                   ryu.lib.packet.icmpv6.echo object, \
+                   ryu.lib.packet.icmpv6.nd_neighbor object, \
+                   ryu.lib.packet.icmpv6.nd_router_solicit object, \
+                   ryu.lib.packet.icmpv6.nd_router_advert object, \
+                   or a bytearray.
     ============== ====================
     """
     _PACK_STR = '!BBH'
