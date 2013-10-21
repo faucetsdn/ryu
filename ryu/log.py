@@ -14,12 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
 from oslo.config import cfg
 import inspect
 import logging
+import logging.config
 import logging.handlers
 import os
 import sys
+import ConfigParser
 
 
 CONF = cfg.CONF
@@ -32,7 +35,9 @@ CONF.register_cli_opts([
     cfg.StrOpt('log-dir', default=None, help='log file directory'),
     cfg.StrOpt('log-file', default=None, help='log file name'),
     cfg.StrOpt('log-file-mode', default='0644',
-               help='default log file permission')
+               help='default log file permission'),
+    cfg.StrOpt('log-config-file', default=None,
+               help='Path to a logging config file to use')
 ])
 
 
@@ -62,6 +67,17 @@ def init_log():
     global _EARLY_LOG_HANDLER
 
     log = logging.getLogger()
+
+    if CONF.log_config_file:
+        try:
+            logging.config.fileConfig(CONF.log_config_file,
+                                      disable_existing_loggers=True)
+        except ConfigParser.Error as e:
+            print('Failed to parse %s: %s' % (CONF.log_config_file, e),
+                  file=sys.stderr)
+            sys.exit(2)
+        return
+
     if CONF.use_stderr:
         log.addHandler(logging.StreamHandler(sys.stderr))
     if _EARLY_LOG_HANDLER is not None:
