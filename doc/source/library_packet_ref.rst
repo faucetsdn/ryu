@@ -103,3 +103,5 @@ Protocol Header classes
    :members:
 .. autoclass:: ryu.lib.packet.bgp.BGPNotification
    :members:
+.. automodule:: ryu.lib.packet.sctp
+   :members:
