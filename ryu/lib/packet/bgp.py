@@ -26,7 +26,6 @@ RFC 4271 BGP-4
 # - RFC 4360 BGP Extended Communities Attribute
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
 # - RFC 4486 Subcodes for BGP Cease Notification Message
-# - RFC 4760 Multiprotocol Extensions for BGP-4
 
 import abc
 import struct
@@ -57,7 +56,7 @@ _MARKER = 16 * '\xff'
 
 BGP_OPT_CAPABILITY = 2  # RFC 5492
 
-BGP_CAP_MULTI_PROTOCOL = 1  # RFC 4760
+BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
 BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
 BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
 
@@ -324,6 +323,36 @@ class BGPOptParamCapabilityFourOctetAsNumber(_OptParamCapability):
     def serialize_cap_value(self):
         buf = bytearray()
         msg_pack_into(self._CAP_PACK_STR, buf, 0, self.as_number)
+        return buf
+
+
+@_OptParamCapability.register_type(BGP_CAP_MULTIPROTOCOL)
+class BGPOptParamCapabilityMultiprotocol(_OptParamCapability):
+    _CAP_PACK_STR = '!HBB'  # afi, reserved, safi
+
+    def __init__(self, afi, safi, reserved=0, **kwargs):
+        super(BGPOptParamCapabilityMultiprotocol, self).__init__(**kwargs)
+        self.afi = afi
+        self.reserved = reserved
+        self.safi = safi
+
+    @classmethod
+    def parse_cap_value(cls, buf):
+        (afi, reserved, safi,) = struct.unpack_from(cls._CAP_PACK_STR,
+                                                    buffer(buf))
+        return {
+            'afi': afi,
+            'reserved': reserved,
+            'safi': safi,
+        }
+
+    def serialize_cap_value(self):
+        # fixup
+        self.reserved = 0
+
+        buf = bytearray()
+        msg_pack_into(self._CAP_PACK_STR, buf, 0,
+                      self.afi, self.reserved, self.safi)
         return buf
 
 
