@@ -22,7 +22,6 @@ RFC 4271 BGP-4
 # - notify data
 # - notify subcode constants
 # - RFC 1997 BGP Communities Attribute
-# - RFC 2918 Route Refresh Capability for BGP-4
 # - RFC 3107 Carrying Label Information in BGP-4
 # - RFC 4360 BGP Extended Communities Attribute
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
