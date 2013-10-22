@@ -79,11 +79,11 @@ class Test_sctp(unittest.TestCase):
         self.p_ipv6 = sctp.param_ipv6(20, 'fe80::647e:1aff:fec4:8284')
         self.p_cookie_preserve = sctp.param_cookie_preserve(8, 5000)
         self.p_ecn = sctp.param_ecn(4, None)
-        self.p_host_addr = sctp.param_host_addr(16, 'test host\x00\x00\x00')
+        self.p_host_addr = sctp.param_host_addr(14, 'test host\x00')
         self.p_support_type = sctp.param_supported_addr(
-            16,
+            14,
             [sctp.PTYPE_IPV4, sctp.PTYPE_IPV6, sctp.PTYPE_COOKIE_PRESERVE,
-             sctp.PTYPE_ECN, sctp.PTYPE_HOST_ADDR, sctp.PTYPE_SUPPORTED_ADDR])
+             sctp.PTYPE_ECN, sctp.PTYPE_HOST_ADDR])
 
         self.init = sctp.chunk_init(
             self.flags, self.length, self.init_tag, self.a_rwnd,
@@ -105,10 +105,10 @@ class Test_sctp(unittest.TestCase):
             '\x64\x7e\x1a\xff\xfe\xc4\x82\x84' + \
             '\x00\x09\x00\x08\x00\x00\x13\x88' + \
             '\x80\x00\x00\x04' + \
-            '\x00\x0b\x00\x10' + \
+            '\x00\x0b\x00\x0e' + \
             '\x74\x65\x73\x74\x20\x68\x6f\x73\x74\x00\x00\x00' + \
-            '\x00\x0c\x00\x10\x00\x05\x00\x06\x00\x09\x80\x00' + \
-            '\x00\x0b\x00\x0c'
+            '\x00\x0c\x00\x0e\x00\x05\x00\x06\x00\x09\x80\x00' + \
+            '\x00\x0b\x00\x00'
 
     def setUp_with_init_ack(self):
         self.flags = 0
@@ -120,13 +120,13 @@ class Test_sctp(unittest.TestCase):
         self.i_tsn = 123456
 
         self.p_state_cookie = sctp.param_state_cookie(
-            8, '\x01\x02\x03\x04')
+            7, '\x01\x02\x03')
         self.p_ipv4 = sctp.param_ipv4(8, '192.168.1.1')
         self.p_ipv6 = sctp.param_ipv6(20, 'fe80::647e:1aff:fec4:8284')
         self.p_unrecognized_param = sctp.param_unrecognized_param(
             8, '\xff\xff\x00\x04')
         self.p_ecn = sctp.param_ecn(4, None)
-        self.p_host_addr = sctp.param_host_addr(16, 'test host\x00\x00\x00')
+        self.p_host_addr = sctp.param_host_addr(14, 'test host\x00')
 
         self.init_ack = sctp.chunk_init_ack(
             self.flags, self.length, self.init_tag, self.a_rwnd,
@@ -142,14 +142,14 @@ class Test_sctp(unittest.TestCase):
 
         self.buf += '\x02\x00\x00\x54\x00\x01\xe2\x40\x00\x00\x26\x94' + \
             '\x00\x03\x00\x03\x00\x01\xe2\x40' + \
-            '\x00\x07\x00\x08\x01\x02\x03\x04' + \
+            '\x00\x07\x00\x07\x01\x02\x03\x00' + \
             '\x00\x05\x00\x08\xc0\xa8\x01\x01' + \
             '\x00\x06\x00\x14' + \
             '\xfe\x80\x00\x00\x00\x00\x00\x00' + \
             '\x64\x7e\x1a\xff\xfe\xc4\x82\x84' + \
             '\x00\x08\x00\x08\xff\xff\x00\x04' + \
             '\x80\x00\x00\x04' + \
-            '\x00\x0b\x00\x10' + \
+            '\x00\x0b\x00\x0e' + \
             '\x74\x65\x73\x74\x20\x68\x6f\x73\x74\x00\x00\x00'
 
     def setUp_with_sack(self):
@@ -231,7 +231,7 @@ class Test_sctp(unittest.TestCase):
         self.c_stale_cookie = sctp.cause_stale_cookie(8, '\x00\x00\x13\x88')
         self.c_out_of_resource = sctp.cause_out_of_resource(4)
         self.c_unresolvable_addr = sctp.cause_unresolvable_addr(
-            20, sctp.param_host_addr(16, 'test host\x00\x00\x00'))
+            20, sctp.param_host_addr(14, 'test host\x00'))
         self.c_unrecognized_chunk = sctp.cause_unrecognized_chunk(
             8, '\xff\x00\x00\x04')
         self.c_invalid_param = sctp.cause_invalid_param(4)
@@ -242,7 +242,7 @@ class Test_sctp(unittest.TestCase):
         self.c_restart_with_new_addr = sctp.cause_restart_with_new_addr(
             12, sctp.param_ipv4(8, '192.168.1.1'))
         self.c_user_initiated_abort = sctp.cause_user_initiated_abort(
-            20, 'Key Interrupt.\x00\x00')
+            19, 'Key Interrupt.\x00')
         self.c_protocol_violation = sctp.cause_protocol_violation(
             20, 'Unknown reason.\x00')
 
@@ -270,7 +270,7 @@ class Test_sctp(unittest.TestCase):
             '\x00\x03\x00\x08\x00\x00\x13\x88' + \
             '\x00\x04\x00\x04' + \
             '\x00\x05\x00\x14' + \
-            '\x00\x0b\x00\x10' + \
+            '\x00\x0b\x00\x0e' + \
             '\x74\x65\x73\x74\x20\x68\x6f\x73\x74\x00\x00\x00' + \
             '\x00\x06\x00\x08\xff\x00\x00\x04' + \
             '\x00\x07\x00\x04' + \
@@ -279,7 +279,7 @@ class Test_sctp(unittest.TestCase):
             '\x00\x0a\x00\x04' + \
             '\x00\x0b\x00\x0c' + \
             '\x00\x05\x00\x08\xc0\xa8\x01\x01' + \
-            '\x00\x0c\x00\x14' + \
+            '\x00\x0c\x00\x13' + \
             '\x4b\x65\x79\x20\x49\x6e\x74\x65' + \
             '\x72\x72\x75\x70\x74\x2e\x00\x00' + \
             '\x00\x0d\x00\x14' + \
@@ -745,16 +745,16 @@ class Test_sctp(unittest.TestCase):
         buf = buf[4:]
         res5 = struct.unpack_from(sctp.param_host_addr._PACK_STR, buf)
         eq_(sctp.param_host_addr.param_type(), res5[0])
-        eq_(16, res5[1])
-        eq_('test host\x00\x00\x00',
+        eq_(14, res5[1])
+        eq_('test host\x00',
             buf[sctp.param_host_addr._MIN_LEN:
-                sctp.param_host_addr._MIN_LEN + 12])
+                sctp.param_host_addr._MIN_LEN + 10])
 
         buf = buf[16:]
         res6 = struct.unpack_from(sctp.param_supported_addr._PACK_STR, buf)
         res6 = list(res6)
         eq_(sctp.param_supported_addr.param_type(), res6[0])
-        eq_(16, res6[1])
+        eq_(14, res6[1])
         buf = buf[sctp.param_supported_addr._MIN_LEN:]
         offset = 0
         tmplist = []
@@ -768,7 +768,6 @@ class Test_sctp(unittest.TestCase):
         eq_(sctp.PTYPE_COOKIE_PRESERVE, res6[4])
         eq_(sctp.PTYPE_ECN, res6[5])
         eq_(sctp.PTYPE_HOST_ADDR, res6[6])
-        eq_(sctp.PTYPE_SUPPORTED_ADDR, res6[7])
 
     def test_serialize_with_init_ack(self):
         self.setUp_with_init_ack()
@@ -786,10 +785,10 @@ class Test_sctp(unittest.TestCase):
         buf = buf[sctp.chunk_init_ack._MIN_LEN:]
         res1 = struct.unpack_from(sctp.param_state_cookie._PACK_STR, buf)
         eq_(sctp.param_state_cookie.param_type(), res1[0])
-        eq_(8, res1[1])
-        eq_('\x01\x02\x03\x04',
+        eq_(7, res1[1])
+        eq_('\x01\x02\x03',
             buf[sctp.param_state_cookie._MIN_LEN:
-                sctp.param_state_cookie._MIN_LEN + 4])
+                sctp.param_state_cookie._MIN_LEN + 3])
 
         buf = buf[8:]
         res2 = struct.unpack_from(sctp.param_ipv4._PACK_STR, buf)
@@ -822,10 +821,10 @@ class Test_sctp(unittest.TestCase):
         buf = buf[4:]
         res6 = struct.unpack_from(sctp.param_host_addr._PACK_STR, buf)
         eq_(sctp.param_host_addr.param_type(), res6[0])
-        eq_(16, res6[1])
-        eq_('test host\x00\x00\x00',
+        eq_(14, res6[1])
+        eq_('test host\x00',
             buf[sctp.param_host_addr._MIN_LEN:
-                sctp.param_host_addr._MIN_LEN + 12])
+                sctp.param_host_addr._MIN_LEN + 10])
 
     def test_serialize_with_sack(self):
         self.setUp_with_sack()
@@ -935,7 +934,7 @@ class Test_sctp(unittest.TestCase):
             sctp.cause_unresolvable_addr._PACK_STR, buf)
         eq_(sctp.cause_unresolvable_addr.cause_code(), res5[0])
         eq_(20, res5[1])
-        eq_('\x00\x0b\x00\x10\x74\x65\x73\x74' +
+        eq_('\x00\x0b\x00\x0e\x74\x65\x73\x74' +
             '\x20\x68\x6f\x73\x74\x00\x00\x00',
             buf[sctp.cause_unresolvable_addr._MIN_LEN:
                 sctp.cause_unresolvable_addr._MIN_LEN + 16])
@@ -990,10 +989,10 @@ class Test_sctp(unittest.TestCase):
         res12 = struct.unpack_from(
             sctp.cause_user_initiated_abort._PACK_STR, buf)
         eq_(sctp.cause_user_initiated_abort.cause_code(), res12[0])
-        eq_(20, res12[1])
-        eq_('Key Interrupt.\x00\x00',
+        eq_(19, res12[1])
+        eq_('Key Interrupt.\x00',
             buf[sctp.cause_user_initiated_abort._MIN_LEN:
-                sctp.cause_user_initiated_abort._MIN_LEN + 16])
+                sctp.cause_user_initiated_abort._MIN_LEN + 15])
 
         buf = buf[20:]
         res13 = struct.unpack_from(
