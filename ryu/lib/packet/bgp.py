@@ -79,6 +79,11 @@ BGP_ATTR_TYPE_AS4_AGGREGATOR = 18  # RFC 4893
 
 AS_TRANS = 23456  # RFC 4893
 
+# Well known commmunities  (RFC 1997)
+BGP_COMMUNITY_NO_EXPORT = 0xffffff01
+BGP_COMMUNITY_NO_ADVERTISE = 0xffffff02
+BGP_COMMUNITY_NO_EXPORT_SUBCONFED = 0xffffff03
+
 
 def pad(bin, len_):
     assert len(bin) <= len_
