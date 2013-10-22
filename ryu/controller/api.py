@@ -145,7 +145,8 @@ class OFWireRpcSession(object):
                 try:
                     ofmsg = ofproto_parser.ofp_msg_from_jsondict(dp, v)
                 except:
-                    pass
+                    log.warning(_({"event": "invalid ofmsg format",
+                                   "ofmsg": v}))
             elif k == 'interval':
                 interval = int(v)
             elif k == 'contexts':
