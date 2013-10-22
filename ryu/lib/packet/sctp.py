@@ -226,7 +226,7 @@ class chunk(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     @classmethod
-    @abc.abstractproperty
+    @abc.abstractmethod
     def chunk_type(cls):
         pass
 
@@ -1121,7 +1121,7 @@ class cause(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     @classmethod
-    @abc.abstractproperty
+    @abc.abstractmethod
     def cause_code(cls):
         pass
 
@@ -1692,7 +1692,7 @@ class param(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     @classmethod
-    @abc.abstractproperty
+    @abc.abstractmethod
     def param_type(cls):
         pass
 
