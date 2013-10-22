@@ -96,6 +96,8 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                             next_hop='abcd',
                                             nlri=mp_nlri),
+            bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
+                                              withdrawn_routes=mp_nlri),
             bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300*'bar')
         ]
         nlri = [

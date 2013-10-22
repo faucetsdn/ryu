@@ -607,6 +607,44 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         return buf
 
 
+@_PathAttribute.register_type(BGP_ATTR_TYPE_MP_UNREACH_NLRI)
+class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
+    _VALUE_PACK_STR = '!HB'  # afi, safi
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+
+    def __init__(self, afi, safi, withdrawn_routes,
+                 flags=0, type_=None, length=None):
+        super(BGPPathAttributeMpUnreachNLRI, self).__init__(flags=flags,
+                                                            type_=type_,
+                                                            length=length)
+        self.afi = afi
+        self.safi = safi
+        self.withdrawn_routes = withdrawn_routes
+
+    @classmethod
+    def parse_value(cls, buf):
+        (afi, safi,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        binnlri = buf[struct.calcsize(cls._VALUE_PACK_STR):]
+        nlri = []
+        while binnlri:
+            n, binnlri = _BinAddrPrefix.parser(binnlri)
+            nlri.append(n)
+        return {
+            'afi': afi,
+            'safi': safi,
+            'withdrawn_routes': nlri,
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi, self.safi)
+        binnlri = bytearray()
+        for n in self.withdrawn_routes:
+            binnlri += n.serialize()
+        buf += binnlri
+        return buf
+
+
 class BGPNLRI(_IPAddrPrefix):
     pass
 
