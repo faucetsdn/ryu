@@ -20,8 +20,14 @@ import struct
 import unittest
 
 from nose.tools import eq_
+from nose.tools import ok_
 from ryu.lib import addrconv
+from ryu.lib.packet import packet
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import ipv4
 from ryu.lib.packet import sctp
+from ryu.ofproto import ether
+from ryu.ofproto import inet
 
 
 LOG = logging.getLogger(__name__)
@@ -1227,6 +1233,89 @@ class Test_sctp(unittest.TestCase):
         eq_(self.d2_payload_data,
             buf[sctp.chunk_data._MIN_LEN:
                 sctp.chunk_data._MIN_LEN + 10])
+
+    def test_build_sctp(self):
+        eth = ethernet.ethernet('00:aa:aa:aa:aa:aa', '00:bb:bb:bb:bb:bb',
+                                ether.ETH_TYPE_IP)
+        ip4 = ipv4.ipv4(4, 5, 16, 0, 0, 2, 0, 64, inet.IPPROTO_SCTP, 0,
+                        '192.168.1.1', '10.144.1.1')
+        pkt = eth/ip4/self.sc
+
+        eth = pkt.get_protocol(ethernet.ethernet)
+        ok_(eth)
+        eq_(eth.ethertype, ether.ETH_TYPE_IP)
+
+        ip4 = pkt.get_protocol(ipv4.ipv4)
+        ok_(ip4)
+        eq_(ip4.proto, inet.IPPROTO_SCTP)
+
+        sc = pkt.get_protocol(sctp.sctp)
+        ok_(sc)
+        eq_(sc, self.sc)
+
+    def test_build_sctp_with_data(self):
+        self.setUp_with_data()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_init(self):
+        self.setUp_with_init()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_init_ack(self):
+        self.setUp_with_init_ack()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_sack(self):
+        self.setUp_with_sack()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_heartbeat(self):
+        self.setUp_with_heartbeat()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_heartbeat_ack(self):
+        self.setUp_with_heartbeat_ack()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_abort(self):
+        self.setUp_with_abort()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_shutdown(self):
+        self.setUp_with_shutdown()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_shutdown_ack(self):
+        self.setUp_with_shutdown_ack()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_error(self):
+        self.setUp_with_error()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_cookie_echo(self):
+        self.setUp_with_cookie_echo()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_cookie_ack(self):
+        self.setUp_with_cookie_ack()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_ecn_echo(self):
+        self.setUp_with_ecn_echo()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_cwr(self):
+        self.setUp_with_cwr()
+        self.test_build_sctp()
+
+    def test_build_sctp_with_shutdown_complete(self):
+        self.setUp_with_shutdown_complete()
+        self.test_build_sctp()
+
+    def tset_build_sctp_with_multi_chunks(self):
+        self.setUp_with_multi_chunks()
+        self.test_build_sctp()
 
     def test_to_string(self):
         sctp_values = {'src_port': self.src_port,
