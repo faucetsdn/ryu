@@ -66,15 +66,19 @@ class Test_bgp(unittest.TestCase):
 
     def test_update2(self):
         withdrawn_routes = [bgp.BGPWithdrawnRoute(length=0,
-                                                  ip_addr='192.0.2.13'),
+                                                  addr='192.0.2.13'),
                             bgp.BGPWithdrawnRoute(length=1,
-                                                  ip_addr='192.0.2.13'),
+                                                  addr='192.0.2.13'),
                             bgp.BGPWithdrawnRoute(length=3,
-                                                  ip_addr='192.0.2.13'),
+                                                  addr='192.0.2.13'),
                             bgp.BGPWithdrawnRoute(length=7,
-                                                  ip_addr='192.0.2.13'),
+                                                  addr='192.0.2.13'),
                             bgp.BGPWithdrawnRoute(length=32,
-                                                  ip_addr='192.0.2.13')]
+                                                  addr='192.0.2.13')]
+        mp_nlri = [
+            bgp._BinAddrPrefix(32, 'efgh\0\0'),
+            bgp._BinAddrPrefix(16, 'ij\0\0\0\0'),
+        ]
         path_attributes = [
             bgp.BGPPathAttributeOrigin(value=1),
             bgp.BGPPathAttributeAsPath(value=[[1000], set([1001, 1002]),
@@ -84,16 +88,19 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeLocalPref(value=1000000000),
             bgp.BGPPathAttributeAtomicAggregate(),
             bgp.BGPPathAttributeAggregator(as_number=40000,
-                                           ip_addr='192.0.2.99'),
+                                           addr='192.0.2.99'),
             bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
-                                              ip_addr='192.0.2.99'),
+                                              addr='192.0.2.99'),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
+                                            next_hop='abcd',
+                                            nlri=mp_nlri),
             bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300*'bar')
         ]
         nlri = [
-            bgp.BGPNLRI(length=24, ip_addr='203.0.113.1'),
-            bgp.BGPNLRI(length=16, ip_addr='203.0.113.0')
+            bgp.BGPNLRI(length=24, addr='203.0.113.1'),
+            bgp.BGPNLRI(length=16, addr='203.0.113.0')
         ]
         msg = bgp.BGPUpdate(withdrawn_routes=withdrawn_routes,
                             path_attributes=path_attributes,

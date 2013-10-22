@@ -28,6 +28,7 @@ RFC 4271 BGP-4
 # - RFC 4486 Subcodes for BGP Cease Notification Message
 # - RFC 4760 Multiprotocol Extensions for BGP-4
 
+import abc
 import struct
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
@@ -85,39 +86,70 @@ def pad(bin, len_):
     return bin + (len_ - len(bin)) * '\0'
 
 
-class _IPAddrPrefix(StringifyMixin):
+class _AddrPrefix(StringifyMixin):
+    __metaclass__ = abc.ABCMeta
     _PACK_STR = '!B'  # length
 
-    def __init__(self, length, ip_addr):
+    def __init__(self, length, addr):
         self.length = length
-        self.ip_addr = ip_addr
+        self.addr = addr
+
+    @staticmethod
+    @abc.abstractmethod
+    def _to_bin(addr):
+        return addr
+
+    @staticmethod
+    @abc.abstractmethod
+    def _to_text(addr):
+        return addr
 
     @classmethod
     def parser(cls, buf):
         (length, ) = struct.unpack_from(cls._PACK_STR, buffer(buf))
         rest = buf[struct.calcsize(cls._PACK_STR):]
         byte_length = (length + 7) / 8
-        ip_addr = addrconv.ipv4.bin_to_text(pad(rest[:byte_length], 4))
+        addr = cls._to_text(rest[:byte_length])
         rest = rest[byte_length:]
-        return cls(length=length, ip_addr=ip_addr), rest
+        return cls(length=length, addr=addr), rest
 
     def serialize(self):
         # fixup
         byte_length = (self.length + 7) / 8
-        bin_ip_addr = addrconv.ipv4.text_to_bin(self.ip_addr)
+        bin_addr = self._to_bin(self.addr)
         if (self.length % 8) == 0:
-            bin_ip_addr = bin_ip_addr[:byte_length]
+            bin_addr = bin_addr[:byte_length]
         else:
             # clear trailing bits in the last octet.
             # rfc doesn't require this.
             mask = 0xff00 >> (self.length % 8)
-            last_byte = chr(ord(bin_ip_addr[byte_length - 1]) & mask)
-            bin_ip_addr = bin_ip_addr[:byte_length - 1] + last_byte
-        self.ip_addr = addrconv.ipv4.bin_to_text(pad(bin_ip_addr, 4))
+            last_byte = chr(ord(bin_addr[byte_length - 1]) & mask)
+            bin_addr = bin_addr[:byte_length - 1] + last_byte
+        self.addr = self._to_text(bin_addr)
 
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf, 0, self.length)
-        return buf + bytes(bin_ip_addr)
+        return buf + bytes(bin_addr)
+
+
+class _BinAddrPrefix(_AddrPrefix):
+    @staticmethod
+    def _to_bin(addr):
+        return addr
+
+    @staticmethod
+    def _to_text(addr):
+        return addr
+
+
+class _IPAddrPrefix(_AddrPrefix):
+    @staticmethod
+    def _to_bin(addr):
+        return addrconv.ipv4.text_to_bin(addr)
+
+    @staticmethod
+    def _to_text(addr):
+        return addrconv.ipv4.bin_to_text(pad(addr, 4))
 
 
 class _Value(object):
@@ -484,26 +516,26 @@ class _BGPPathAttributeAggregatorCommon(_PathAttribute):
     _VALUE_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
 
-    def __init__(self, as_number, ip_addr, flags=0, type_=None, length=None):
+    def __init__(self, as_number, addr, flags=0, type_=None, length=None):
         super(_BGPPathAttributeAggregatorCommon, self).__init__(flags=flags,
                                                                 type_=type_,
                                                                 length=length)
         self.as_number = as_number
-        self.ip_addr = ip_addr
+        self.addr = addr
 
     @classmethod
     def parse_value(cls, buf):
-        (as_number, ip_addr) = struct.unpack_from(cls._VALUE_PACK_STR,
-                                                  buffer(buf))
+        (as_number, addr) = struct.unpack_from(cls._VALUE_PACK_STR,
+                                               buffer(buf))
         return {
             'as_number': as_number,
-            'ip_addr': addrconv.ipv4.bin_to_text(ip_addr),
+            'addr': addrconv.ipv4.bin_to_text(addr),
         }
 
     def serialize_value(self):
         buf = bytearray()
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.as_number,
-                      addrconv.ipv4.text_to_bin(self.ip_addr))
+                      addrconv.ipv4.text_to_bin(self.addr))
         return buf
 
 
@@ -516,6 +548,63 @@ class BGPPathAttributeAggregator(_BGPPathAttributeAggregatorCommon):
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_AGGREGATOR)
 class BGPPathAttributeAs4Aggregator(_BGPPathAttributeAggregatorCommon):
     _VALUE_PACK_STR = '!I4s'
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_MP_REACH_NLRI)
+class BGPPathAttributeMpReachNLRI(_PathAttribute):
+    _VALUE_PACK_STR = '!HBB'  # afi, safi, next hop len
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+
+    def __init__(self, afi, safi, next_hop, nlri,
+                 next_hop_len=0, reserved='\0',
+                 flags=0, type_=None, length=None):
+        super(BGPPathAttributeMpReachNLRI, self).__init__(flags=flags,
+                                                          type_=type_,
+                                                          length=length)
+        self.afi = afi
+        self.safi = safi
+        self.next_hop_len = next_hop_len
+        self.next_hop = next_hop
+        self.reserved = reserved
+        self.nlri = nlri
+
+    @classmethod
+    def parse_value(cls, buf):
+        (afi, safi, next_hop_len,) = struct.unpack_from(cls._VALUE_PACK_STR,
+                                                        buffer(buf))
+        rest = buf[struct.calcsize(cls._VALUE_PACK_STR):]
+        next_hop_bin = rest[:next_hop_len]
+        rest = rest[next_hop_len:]
+        reserved = rest[:1]
+        binnlri = rest[1:]
+        nlri = []
+        while binnlri:
+            n, binnlri = _BinAddrPrefix.parser(binnlri)
+            nlri.append(n)
+        return {
+            'afi': afi,
+            'safi': safi,
+            'next_hop_len': next_hop_len,
+            'next_hop': next_hop_bin,
+            'reserved': reserved,
+            'nlri': nlri,
+        }
+
+    def serialize_value(self):
+        # fixup
+        self.next_hop_len = len(self.next_hop)
+        self.reserved = '\0'
+
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi,
+                      self.safi, self.next_hop_len)
+        buf += self.next_hop
+        buf += self.reserved
+        binnlri = bytearray()
+        for n in self.nlri:
+            binnlri += n.serialize()
+        buf += binnlri
+        return buf
 
 
 class BGPNLRI(_IPAddrPrefix):
