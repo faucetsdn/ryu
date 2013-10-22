@@ -4,6 +4,7 @@ import datetime
 import time
 import logging
 import json
+import platform
 import msgpack
 from oslo.config import cfg
 from ryu.base import app_manager
@@ -41,7 +42,14 @@ STATS.addHandler(logging.FileHandler(CONF.stats_file, mode='w'))
 STATS.setLevel(logging.INFO)
 
 
-log = logging.getLogger()
+log = logging.getLogger('sys')
+log.setLevel(logging.DEBUG)
+if platform.system() == 'Darwin':
+    address = '/var/run/syslog'
+else:
+    address = '/dev/log'
+syslog = logging.handlers.SysLogHandler(address=address)
+log.addHandler(syslog)
 
 def format_key(match_json):
     del match_json['OFPMatch']['length']
