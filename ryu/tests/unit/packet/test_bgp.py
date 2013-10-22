@@ -81,6 +81,10 @@ class Test_bgp(unittest.TestCase):
             bgp._BinAddrPrefix(32, 'efgh\0\0'),
             bgp._BinAddrPrefix(16, 'ij\0\0\0\0'),
         ]
+        communities = [
+            bgp.BGP_COMMUNITY_NO_EXPORT,
+            bgp.BGP_COMMUNITY_NO_ADVERTISE,
+        ]
         path_attributes = [
             bgp.BGPPathAttributeOrigin(value=1),
             bgp.BGPPathAttributeAsPath(value=[[1000], set([1001, 1002]),
@@ -91,6 +95,7 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeAtomicAggregate(),
             bgp.BGPPathAttributeAggregator(as_number=40000,
                                            addr='192.0.2.99'),
+            bgp.BGPPathAttributeCommunities(communities=communities),
             bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,

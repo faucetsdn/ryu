@@ -21,7 +21,6 @@ RFC 4271 BGP-4
 # todo
 # - notify data
 # - notify subcode constants
-# - RFC 1997 BGP Communities Attribute
 # - RFC 3107 Carrying Label Information in BGP-4
 # - RFC 4360 BGP Extended Communities Attribute
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
@@ -72,6 +71,7 @@ BGP_ATTR_TYPE_MULTI_EXIT_DISC = 4  # uint32 metric
 BGP_ATTR_TYPE_LOCAL_PREF = 5  # uint32
 BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
 BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
+BGP_ATTR_TYPE_COMMUNITIES = 8  # RFC 1997
 BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
 BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
 BGP_ATTR_TYPE_AS4_PATH = 17  # RFC 4893
@@ -582,6 +582,40 @@ class BGPPathAttributeAggregator(_BGPPathAttributeAggregatorCommon):
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_AGGREGATOR)
 class BGPPathAttributeAs4Aggregator(_BGPPathAttributeAggregatorCommon):
     _VALUE_PACK_STR = '!I4s'
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_COMMUNITIES)
+class BGPPathAttributeCommunities(_PathAttribute):
+    _VALUE_PACK_STR = '!I'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
+
+    def __init__(self, communities,
+                 flags=0, type_=None, length=None):
+        super(BGPPathAttributeCommunities, self).__init__(flags=flags,
+                                                          type_=type_,
+                                                          length=length)
+        self.communities = communities
+
+    @classmethod
+    def parse_value(cls, buf):
+        rest = buf
+        communities = []
+        elem_size = struct.calcsize(cls._VALUE_PACK_STR)
+        while len(rest) >= elem_size:
+            (comm, ) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(rest))
+            communities.append(comm)
+            rest = rest[elem_size:]
+        return {
+            'communities': communities,
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        for comm in self.communities:
+            bincomm = bytearray()
+            msg_pack_into(self._VALUE_PACK_STR, bincomm, 0, comm)
+            buf += bincomm
+        return buf
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_MP_REACH_NLRI)
