@@ -35,11 +35,9 @@ monitored_flows = {}
 monitored_ports = {'interval': 15}
 
 CONF = cfg.CONF
-log = logging.FileHandler(CONF.stats_file, mode='w')
-log.setLevel(logging.INFO)
-
 STATS = logging.getLogger('apgw')
-STATS.addHandler(log)
+STATS.addHandler(logging.FileHandler(CONF.stats_file, mode='w'))
+STATS.setLevel(logging.INFO)
 
 def format_key(match_json):
     del match_json['OFPMatch']['length']
