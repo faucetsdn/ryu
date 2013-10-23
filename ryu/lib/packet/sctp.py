@@ -1977,6 +1977,7 @@ class param_supported_addr(param):
 
 @chunk_init.register_param_type
 @chunk_init_ack.register_param_type
+@cause_unresolvable_addr.register_param_type
 @cause_restart_with_new_addr.register_param_type
 class param_ipv4(param):
     """Stream Control Transmission Protocol (SCTP)
@@ -2024,6 +2025,7 @@ class param_ipv4(param):
 
 @chunk_init.register_param_type
 @chunk_init_ack.register_param_type
+@cause_unresolvable_addr.register_param_type
 @cause_restart_with_new_addr.register_param_type
 class param_ipv6(param):
     """Stream Control Transmission Protocol (SCTP)
