@@ -3017,6 +3017,60 @@ class OFPActionSetField(OFPAction):
         yield (self.key, self.value)
 
 
+@OFPAction.register_action_type(ofproto_v1_3.OFPAT_PUSH_PBB,
+                                ofproto_v1_3.OFP_ACTION_PUSH_SIZE)
+class OFPActionPushPbb(OFPAction):
+    """
+    Push PBB action
+
+    This action pushes a new PBB header to the packet.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    ethertype        Ether type
+    ================ ======================================================
+    """
+    def __init__(self, ethertype, type_=None, len_=None):
+        super(OFPActionPushPbb, self).__init__()
+        self.ethertype = ethertype
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, ethertype) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_PUSH_PACK_STR, buf, offset)
+        return cls(ethertype)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto_v1_3.OFP_ACTION_PUSH_PACK_STR, buf, offset,
+                      self.type, self.len, self.ethertype)
+
+
+@OFPAction.register_action_type(ofproto_v1_3.OFPAT_POP_PBB,
+                                ofproto_v1_3.OFP_ACTION_HEADER_SIZE)
+class OFPActionPopPbb(OFPAction):
+    """
+    Pop PBB action
+
+    This action pops the outermost PBB service instance header from
+    the packet.
+    """
+    def __init__(self, type_=None, len_=None):
+        super(OFPActionPopPbb, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto_v1_3.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
 @OFPAction.register_action_type(
     ofproto_v1_3.OFPAT_EXPERIMENTER,
     ofproto_v1_3.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
