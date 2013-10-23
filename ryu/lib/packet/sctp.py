@@ -1383,9 +1383,6 @@ class cause_unresolvable_addr(cause_with_value):
     def cause_code(cls):
         return CCODE_UNRESOLVABLE_ADDR
 
-    def __init__(self, length, value):
-        super(cause_unresolvable_addr, self).__init__(length, value)
-
     @classmethod
     def parser(cls, buf):
         (_, length) = struct.unpack_from(cls._PACK_STR, buf)
@@ -1458,9 +1455,6 @@ class cause_invalid_param(cause):
     @classmethod
     def cause_code(cls):
         return CCODE_INVALID_PARAM
-
-    def __init__(self, length):
-        super(cause_invalid_param, self).__init__(length)
 
     @classmethod
     def parser(cls, buf):
@@ -1556,9 +1550,6 @@ class cause_cookie_while_shutdown(cause):
     @classmethod
     def cause_code(cls):
         return CCODE_COOKIE_WHILE_SHUTDOWN
-
-    def __init__(self, length):
-        super(cause_cookie_while_shutdown, self).__init__(length)
 
     @classmethod
     def parser(cls, buf):
