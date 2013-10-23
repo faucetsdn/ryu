@@ -1125,7 +1125,7 @@ class cause(stringify.StringifyMixin):
     def cause_code(cls):
         pass
 
-    def __init__(self, length):
+    def __init__(self, length=0):
         self.length = length
 
     @classmethod
@@ -1149,7 +1149,7 @@ class cause_with_value(cause):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, length, value):
+    def __init__(self, value, length=0):
         super(cause_with_value, self).__init__(length)
         self.value = value
 
@@ -1160,13 +1160,16 @@ class cause_with_value(cause):
         if (cls._MIN_LEN < length):
             fmt = '%ds' % (length - cls._MIN_LEN)
             (value, ) = struct.unpack_from(fmt, buf, cls._MIN_LEN)
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.cause_code(), self.length))
         if self.value:
             buf.extend(self.value)
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
@@ -1206,9 +1209,11 @@ class cause_invalid_stream_id(cause_with_value):
     @classmethod
     def parser(cls, buf):
         (_, length, value) = struct.unpack_from(cls._PACK_STR, buf)
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.cause_code(), self.length, self.value)
         return buf
@@ -1232,9 +1237,9 @@ class cause_missing_param(cause):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
-    num            Number of missing params.
     types          a list of missing params.
+    num            Number of missing params.
+    length         length of this cause containing this header.
     ============== =====================================================
     """
 
@@ -1245,14 +1250,16 @@ class cause_missing_param(cause):
     def cause_code(cls):
         return CCODE_MISSING_PARAM
 
-    def __init__(self, length, num, types=None):
+    def __init__(self, types=None, num=0, length=0):
         super(cause_missing_param, self).__init__(length)
-        self.num = num
         types = types or []
         assert isinstance(types, list)
         for one in types:
             assert isinstance(one, int)
         self.types = types
+        if 0 == num:
+            num = len(self.types)
+        self.num = num
 
     @classmethod
     def parser(cls, buf):
@@ -1263,13 +1270,16 @@ class cause_missing_param(cause):
             offset = cls._MIN_LEN + (struct.calcsize('!H') * count)
             (one, ) = struct.unpack_from('!H', buf, offset)
             types.append(one)
-        return cls(length, num, types)
+        return cls(types, num, length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.cause_code(), self.length, self.num))
         for one in self.types:
             buf.extend(struct.pack('!H', one))
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
@@ -1336,6 +1346,8 @@ class cause_out_of_resource(cause):
         return cls(length)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.cause_code(), self.length)
         return buf
@@ -1389,13 +1401,15 @@ class cause_unresolvable_addr(cause_with_value):
         (ptype, ) = struct.unpack_from('!H', buf, cls._MIN_LEN)
         cls_ = cls._RECOGNIZED_PARAMS.get(ptype)
         value = cls_.parser(buf[cls._MIN_LEN:])
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.cause_code(), self.length))
-        if self.value:
-            buf.extend(self.value.serialize())
+        buf.extend(self.value.serialize())
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
@@ -1462,6 +1476,8 @@ class cause_invalid_param(cause):
         return cls(length)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.cause_code(), self.length)
         return buf
@@ -1557,6 +1573,8 @@ class cause_cookie_while_shutdown(cause):
         return cls(length)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.cause_code(), self.length)
         return buf
@@ -1600,10 +1618,10 @@ class cause_restart_with_new_addr(cause_with_value):
     def cause_code(cls):
         return CCODE_RESTART_WITH_NEW_ADDR
 
-    def __init__(self, length, value):
+    def __init__(self, value, length=0):
         if not isinstance(value, list):
             value = [value]
-        super(cause_restart_with_new_addr, self).__init__(length, value)
+        super(cause_restart_with_new_addr, self).__init__(value, length)
 
     @classmethod
     def parser(cls, buf):
@@ -1618,13 +1636,16 @@ class cause_restart_with_new_addr(cause_with_value):
             ins = cls_.parser(buf[offset:])
             value.append(ins)
             offset += len(ins)
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.cause_code(), self.length))
         for one in self.value:
             buf.extend(one.serialize())
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
@@ -1703,7 +1724,7 @@ class param(stringify.StringifyMixin):
     def param_type(cls):
         pass
 
-    def __init__(self, length, value):
+    def __init__(self, value, length=0):
         self.length = length
         self.value = value
 
@@ -1714,13 +1735,16 @@ class param(stringify.StringifyMixin):
         if (cls._MIN_LEN < length):
             fmt = '%ds' % (length - cls._MIN_LEN)
             (value, ) = struct.unpack_from(fmt, buf, cls._MIN_LEN)
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.param_type(), self.length))
         if self.value:
             buf.extend(self.value)
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
@@ -1845,9 +1869,11 @@ class param_cookie_preserve(param):
     @classmethod
     def parser(cls, buf):
         (_, length, value) = struct.unpack_from(cls._PACK_STR, buf)
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.param_type(), self.length, self.value)
         return buf
@@ -1880,9 +1906,9 @@ class param_ecn(param):
     def param_type(cls):
         return PTYPE_ECN
 
-    def __init__(self, length, value):
-        super(param_ecn, self).__init__(length, value)
-        assert 4 == length
+    def __init__(self, value=None, length=0):
+        super(param_ecn, self).__init__(value, length)
+        assert 4 == length or 0 == length
         assert None is value
 
 
@@ -1944,14 +1970,12 @@ class param_supported_addr(param):
     def param_type(cls):
         return PTYPE_SUPPORTED_ADDR
 
-    def __init__(self, length, value):
-        super(param_supported_addr, self).__init__(length, value)
+    def __init__(self, value, length=0):
         if not isinstance(value, list):
             value = [value]
         for one in value:
             assert isinstance(one, int)
-        self.length = length
-        self.value = value
+        super(param_supported_addr, self).__init__(value, length)
 
     @classmethod
     def parser(cls, buf):
@@ -1962,13 +1986,16 @@ class param_supported_addr(param):
             (one, ) = struct.unpack_from(cls._VALUE_STR, buf, offset)
             value.append(one)
             offset += cls._VALUE_LEN
-        return cls(length, value)
+        return cls(value, length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.param_type(), self.length))
         for one in self.value:
             buf.extend(struct.pack(param_supported_addr._VALUE_STR, one))
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
@@ -2013,13 +2040,16 @@ class param_ipv4(param):
         if (cls._MIN_LEN < length):
             fmt = '%ds' % (length - cls._MIN_LEN)
             (value, ) = struct.unpack_from(fmt, buf, cls._MIN_LEN)
-        return cls(length, addrconv.ipv4.bin_to_text(value))
+        return cls(addrconv.ipv4.bin_to_text(value), length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.param_type(), self.length))
         if self.value:
             buf.extend(addrconv.ipv4.text_to_bin(self.value))
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -2061,11 +2091,14 @@ class param_ipv6(param):
         if (cls._MIN_LEN < length):
             fmt = '%ds' % (length - cls._MIN_LEN)
             (value, ) = struct.unpack_from(fmt, buf, cls._MIN_LEN)
-        return cls(length, addrconv.ipv6.bin_to_text(value))
+        return cls(addrconv.ipv6.bin_to_text(value), length)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.param_type(), self.length))
         if self.value:
             buf.extend(addrconv.ipv6.text_to_bin(self.value))
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
