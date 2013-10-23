@@ -1139,8 +1139,9 @@ class cause(stringify.StringifyMixin):
 
     def __len__(self):
         length = self.length
-        if length % 4:
-            length += 4 - length % 4
+        mod = length % 4
+        if mod:
+            length += 4 - mod
         return length
 
 
@@ -1166,9 +1167,9 @@ class cause_with_value(cause):
             self._PACK_STR, self.cause_code(), self.length))
         if self.value:
             buf.extend(self.value)
-        if len(buf) % 4:
-            padsize = 4 - len(buf) % 4
-            buf.extend(bytearray(padsize))
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
 
@@ -1269,9 +1270,9 @@ class cause_missing_param(cause):
             self._PACK_STR, self.cause_code(), self.length, self.num))
         for one in self.types:
             buf.extend(struct.pack('!H', one))
-        if len(buf) % 4:
-            padsize = 4 - len(buf) % 4
-            buf.extend(bytearray(padsize))
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
 
@@ -1398,9 +1399,9 @@ class cause_unresolvable_addr(cause_with_value):
             self._PACK_STR, self.cause_code(), self.length))
         if self.value:
             buf.extend(self.value.serialize())
-        if len(buf) % 4:
-            padsize = 4 - len(buf) % 4
-            buf.extend(bytearray(padsize))
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
 
@@ -1633,9 +1634,9 @@ class cause_restart_with_new_addr(cause_with_value):
             self._PACK_STR, self.cause_code(), self.length))
         for one in self.value:
             buf.extend(one.serialize())
-        if len(buf) % 4:
-            padsize = 4 - len(buf) % 4
-            buf.extend(bytearray(padsize))
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
 
@@ -1729,15 +1730,16 @@ class param(stringify.StringifyMixin):
             self._PACK_STR, self.param_type(), self.length))
         if self.value:
             buf.extend(self.value)
-        if len(buf) % 4:
-            padsize = 4 - len(buf) % 4
-            buf.extend(bytearray(padsize))
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
     def __len__(self):
         length = self.length
-        if length % 4:
-            length += 4 - length % 4
+        mod = length % 4
+        if mod:
+            length += 4 - mod
         return length
 
 
@@ -1976,9 +1978,9 @@ class param_supported_addr(param):
             self._PACK_STR, self.param_type(), self.length))
         for one in self.value:
             buf.extend(struct.pack(param_supported_addr._VALUE_STR, one))
-        if len(buf) % 4:
-            padsize = 4 - len(buf) % 4
-            buf.extend(bytearray(padsize))
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
 
