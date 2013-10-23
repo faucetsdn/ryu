@@ -2587,7 +2587,8 @@ class OFPActionOutput(OFPAction):
     max_len          Max length to send to controller
     ================ ======================================================
     """
-    def __init__(self, port, max_len=0, type_=None, len_=None):
+    def __init__(self, port, max_len=ofproto_v1_3.OFPCML_MAX,
+                 type_=None, len_=None):
         super(OFPActionOutput, self).__init__()
         self.port = port
         self.max_len = max_len

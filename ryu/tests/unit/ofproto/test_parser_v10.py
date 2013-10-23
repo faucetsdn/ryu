@@ -3238,7 +3238,7 @@ class TestNXTFlowMod(unittest.TestCase):
         eq_(ofproto_v1_0.OFPAT_OUTPUT, res[15])
         eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[16])
         eq_(self.port['val'], res[17])
-        eq_(0, res[18])
+        eq_(0xffe5, res[18])
 
 
 class TestNXTRoleRequest(unittest.TestCase):
@@ -4751,7 +4751,7 @@ class TestOFPPacketOut(unittest.TestCase):
     """
 
     port = 0x2ae0
-    actions = [OFPActionOutput(port)]
+    actions = [OFPActionOutput(port, max_len=0)]
 
     def setUp(self):
         pass
@@ -4888,7 +4888,7 @@ class TestOFPFlowMod(unittest.TestCase):
                      tp_dst['val'])
 
     port = 0x2ae0
-    actions = [OFPActionOutput(port)]
+    actions = [OFPActionOutput(port, max_len=1000)]
 
     def setUp(self):
         pass
@@ -4988,7 +4988,7 @@ class TestOFPFlowMod(unittest.TestCase):
         eq_(ofproto_v1_0.OFPAT_OUTPUT, res[25])
         eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[26])
         eq_(self.port, res[27])
-        eq_(0, res[28])
+        eq_(1000, res[28])
 
 
 class TestOFPBarrierRequest(unittest.TestCase):

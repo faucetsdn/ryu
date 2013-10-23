@@ -253,7 +253,10 @@ class OFPAction(OFPActionHeader):
 @OFPAction.register_action_type(ofproto_v1_0.OFPAT_OUTPUT,
                                 ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE)
 class OFPActionOutput(OFPAction):
-    def __init__(self, port, max_len=0):
+    # NOTE: The reason of this magic number (0xffe5)
+    #       is because there is no good constant in of1.0.
+    #       The same value as OFPCML_MAX of of1.2 and of1.3 is used.
+    def __init__(self, port, max_len=0xffe5):
         super(OFPActionOutput, self).__init__()
         self.port = port
         self.max_len = max_len
