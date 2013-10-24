@@ -1194,8 +1194,9 @@ class cause_invalid_stream_id(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          stream id.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1239,7 +1240,9 @@ class cause_missing_param(cause):
     ============== =====================================================
     types          a list of missing params.
     num            Number of missing params.
+                   (0 means automatically-calculate when encoding)
     length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1304,8 +1307,9 @@ class cause_stale_cookie(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          Measure of Staleness.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1333,6 +1337,7 @@ class cause_out_of_resource(cause):
     Attribute      Description
     ============== =====================================================
     length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1371,7 +1376,6 @@ class cause_unresolvable_addr(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          Unresolvable Address. one of follows:
 
                    ryu.lib.packet.sctp.param_host_addr,
@@ -1379,6 +1383,8 @@ class cause_unresolvable_addr(cause_with_value):
                    ryu.lib.packet.sctp.param_ipv4, or
 
                    ryu.lib.packet.sctp.param_ipv6.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1434,8 +1440,9 @@ class cause_unrecognized_chunk(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          Unrecognized Chunk.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1463,6 +1470,7 @@ class cause_invalid_param(cause):
     Attribute      Description
     ============== =====================================================
     length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1501,8 +1509,9 @@ class cause_unrecognized_param(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          Unrecognized Parameter.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1529,9 +1538,10 @@ class cause_no_userdata(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          the TSN of the DATA chunk received with no user data
                    field.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1560,6 +1570,7 @@ class cause_cookie_while_shutdown(cause):
     Attribute      Description
     ============== =====================================================
     length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1599,8 +1610,9 @@ class cause_restart_with_new_addr(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          New Address TLVs.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1670,8 +1682,9 @@ class cause_user_initiated_abort(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          Upper Layer Abort Reason.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1698,8 +1711,9 @@ class cause_protocol_violation(cause_with_value):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this cause containing this header.
     value          Additional Information.
+    length         length of this cause containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1776,8 +1790,9 @@ class param_heartbeat(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          the sender-specific heartbeat information.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1802,8 +1817,9 @@ class param_state_cookie(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          the state cookie. see Section 5.1.3 in RFC 4960.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1828,8 +1844,9 @@ class param_unrecognized_param(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          the unrecognized parameter in the INIT chunk.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1854,8 +1871,9 @@ class param_cookie_preserve(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          Suggested Cookie Life-Span Increment (msec).
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1897,8 +1915,9 @@ class param_ecn(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          set to None.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1932,8 +1951,9 @@ class param_host_addr(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          a host name that ends with null terminator.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1958,8 +1978,9 @@ class param_supported_addr(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          a list of parameter types. odd cases pad with 0x0000.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -2022,8 +2043,9 @@ class param_ipv4(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          IPv4 address of the sending endpoint.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -2073,8 +2095,9 @@ class param_ipv6(param):
     ============== =====================================================
     Attribute      Description
     ============== =====================================================
-    length         length of this param containing this header.
     value          IPv6 address of the sending endpoint.
+    length         length of this param containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
