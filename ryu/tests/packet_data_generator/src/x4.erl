@@ -56,7 +56,7 @@ x() ->
                      actions =
                          [#ofp_action_set_field{
                              field = #ofp_field{name = vlan_vid,
-                                                value = <<1,2>> }},
+                                                value = <<258:13>> }},
                           #ofp_action_output{port = 6,max_len = no_buffer}]},
                  #ofp_instruction_apply_actions{
                      actions =
