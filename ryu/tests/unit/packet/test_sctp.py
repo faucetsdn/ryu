@@ -60,8 +60,8 @@ class Test_sctp(unittest.TestCase):
         self.payload_data = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a'
 
         self.data = sctp.chunk_data(
-            self.unordered, self.begin, self.end, self.length, self.tsn,
-            self.sid, self.seq, self.payload_id, self.payload_data)
+            unordered=self.unordered, begin=self.begin, end=self.end,
+            tsn=self.tsn, sid=self.sid, payload_data=self.payload_data)
 
         self.chunks = [self.data]
 
@@ -89,12 +89,13 @@ class Test_sctp(unittest.TestCase):
         self.p_support_type = sctp.param_supported_addr(
             [sctp.PTYPE_IPV4, sctp.PTYPE_IPV6, sctp.PTYPE_COOKIE_PRESERVE,
              sctp.PTYPE_ECN, sctp.PTYPE_HOST_ADDR])
+        self.params = [
+            self.p_ipv4, self.p_ipv6, self.p_cookie_preserve,
+            self.p_ecn, self.p_host_addr, self.p_support_type]
 
         self.init = sctp.chunk_init(
-            self.flags, self.length, self.init_tag, self.a_rwnd,
-            self.os, self.mis, self.i_tsn,
-            [self.p_ipv4, self.p_ipv6, self.p_cookie_preserve,
-             self.p_ecn, self.p_host_addr, self.p_support_type])
+            init_tag=self.init_tag, a_rwnd=self.a_rwnd, os=self.os,
+            mis=self.mis, i_tsn=self.i_tsn, params=self.params)
 
         self.chunks = [self.init]
 
@@ -131,12 +132,13 @@ class Test_sctp(unittest.TestCase):
             '\xff\xff\x00\x04')
         self.p_ecn = sctp.param_ecn()
         self.p_host_addr = sctp.param_host_addr('test host\x00')
+        self.params = [
+            self.p_state_cookie, self.p_ipv4, self.p_ipv6,
+            self.p_unrecognized_param, self.p_ecn, self.p_host_addr]
 
         self.init_ack = sctp.chunk_init_ack(
-            self.flags, self.length, self.init_tag, self.a_rwnd,
-            self.os, self.mis, self.i_tsn,
-            [self.p_state_cookie, self.p_ipv4, self.p_ipv6,
-             self.p_unrecognized_param, self.p_ecn, self.p_host_addr])
+            init_tag=self.init_tag, a_rwnd=self.a_rwnd, os=self.os,
+            mis=self.mis, i_tsn=self.i_tsn, params=self.params)
 
         self.chunks = [self.init_ack]
 
@@ -167,8 +169,9 @@ class Test_sctp(unittest.TestCase):
         self.duptsns = [123458, 123466, 123476, 123507, 123518]
 
         self.sack = sctp.chunk_sack(
-            self.flags, self.length, self.tsn_ack, self.a_rwnd,
-            self.gapack_num, self.duptsn_num, self.gapacks, self.duptsns)
+            tsn_ack=self.tsn_ack, a_rwnd=self.a_rwnd,
+            gapack_num=self.gapack_num, duptsn_num=self.duptsn_num,
+            gapacks=self.gapacks, duptsns=self.duptsns)
 
         self.chunks = [self.sack]
 
@@ -189,8 +192,7 @@ class Test_sctp(unittest.TestCase):
 
         self.p_heartbeat = sctp.param_heartbeat('\x01\x02\x03\x04')
 
-        self.heartbeat = sctp.chunk_heartbeat(
-            self.flags, self.length, self.p_heartbeat)
+        self.heartbeat = sctp.chunk_heartbeat(info=self.p_heartbeat)
 
         self.chunks = [self.heartbeat]
 
@@ -209,8 +211,7 @@ class Test_sctp(unittest.TestCase):
         self.p_heartbeat = sctp.param_heartbeat(
             '\xff\xee\xdd\xcc\xbb\xaa\x99\x88')
 
-        self.heartbeat_ack = sctp.chunk_heartbeat_ack(
-            self.flags, self.length, self.p_heartbeat)
+        self.heartbeat_ack = sctp.chunk_heartbeat_ack(info=self.p_heartbeat)
 
         self.chunks = [self.heartbeat_ack]
 
@@ -258,7 +259,7 @@ class Test_sctp(unittest.TestCase):
             self.c_restart_with_new_addr, self.c_user_initiated_abort,
             self.c_protocol_violation]
 
-        self.abort = sctp.chunk_abort(self.tflag, self.length, self.causes)
+        self.abort = sctp.chunk_abort(causes=self.causes)
 
         self.chunks = [self.abort]
 
@@ -294,8 +295,7 @@ class Test_sctp(unittest.TestCase):
         self.length = 8
         self.tsn_ack = 123456
 
-        self.shutdown = sctp.chunk_shutdown(
-            self.flags, self.length, self.tsn_ack)
+        self.shutdown = sctp.chunk_shutdown(tsn_ack=self.tsn_ack)
 
         self.chunks = [self.shutdown]
 
@@ -309,8 +309,7 @@ class Test_sctp(unittest.TestCase):
         self.flags = 0
         self.length = 4
 
-        self.shutdown_ack = sctp.chunk_shutdown_ack(
-            self.flags, self.length)
+        self.shutdown_ack = sctp.chunk_shutdown_ack()
 
         self.chunks = [self.shutdown_ack]
 
@@ -356,7 +355,7 @@ class Test_sctp(unittest.TestCase):
             self.c_restart_with_new_addr, self.c_user_initiated_abort,
             self.c_protocol_violation]
 
-        self.error = sctp.chunk_error(self.flags, self.length, self.causes)
+        self.error = sctp.chunk_error(causes=self.causes)
 
         self.chunks = [self.error]
 
@@ -392,8 +391,7 @@ class Test_sctp(unittest.TestCase):
         self.length = 8
         self.cookie = '\x12\x34\x56\x78'
 
-        self.cookie_echo = sctp.chunk_cookie_echo(
-            self.flags, self.length, self.cookie)
+        self.cookie_echo = sctp.chunk_cookie_echo(cookie=self.cookie)
 
         self.chunks = [self.cookie_echo]
 
@@ -407,8 +405,7 @@ class Test_sctp(unittest.TestCase):
         self.flags = 0
         self.length = 4
 
-        self.cookie_ack = sctp.chunk_cookie_ack(
-            self.flags, self.length)
+        self.cookie_ack = sctp.chunk_cookie_ack()
 
         self.chunks = [self.cookie_ack]
 
@@ -423,8 +420,7 @@ class Test_sctp(unittest.TestCase):
         self.length = 8
         self.low_tsn = 123456
 
-        self.ecn_echo = sctp.chunk_ecn_echo(
-            self.flags, self.length, self.low_tsn)
+        self.ecn_echo = sctp.chunk_ecn_echo(low_tsn=self.low_tsn)
 
         self.chunks = [self.ecn_echo]
 
@@ -439,8 +435,7 @@ class Test_sctp(unittest.TestCase):
         self.length = 8
         self.low_tsn = 123456
 
-        self.cwr = sctp.chunk_cwr(
-            self.flags, self.length, self.low_tsn)
+        self.cwr = sctp.chunk_cwr(low_tsn=self.low_tsn)
 
         self.chunks = [self.cwr]
 
@@ -454,8 +449,7 @@ class Test_sctp(unittest.TestCase):
         self.tflag = 0
         self.length = 4
 
-        self.shutdown_complete = sctp.chunk_shutdown_complete(
-            self.tflag, self.length)
+        self.shutdown_complete = sctp.chunk_shutdown_complete()
 
         self.chunks = [self.shutdown_complete]
 
@@ -476,9 +470,7 @@ class Test_sctp(unittest.TestCase):
         self.s_duptsns = None
 
         self.sack = sctp.chunk_sack(
-            self.s_flags, self.s_length, self.s_tsn_ack, self.s_a_rwnd,
-            self.s_gapack_num, self.s_duptsn_num, self.s_gapacks,
-            self.s_duptsns)
+            tsn_ack=self.s_tsn_ack, a_rwnd=self.s_a_rwnd)
 
         self.d1_unordered = 0
         self.d1_begin = 1
@@ -491,9 +483,8 @@ class Test_sctp(unittest.TestCase):
         self.d1_payload_data = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a'
 
         self.data1 = sctp.chunk_data(
-            self.d1_unordered, self.d1_begin, self.d1_end,
-            self.d1_length, self.d1_tsn, self.d1_sid, self.d1_seq,
-            self.d1_payload_id, self.d1_payload_data)
+            begin=self.d1_begin, tsn=self.d1_tsn, sid=self.d1_sid,
+            payload_data=self.d1_payload_data)
 
         self.d2_unordered = 0
         self.d2_begin = 0
@@ -506,9 +497,8 @@ class Test_sctp(unittest.TestCase):
         self.d2_payload_data = '\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a'
 
         self.data2 = sctp.chunk_data(
-            self.d2_unordered, self.d2_begin, self.d2_end,
-            self.d2_length, self.d2_tsn, self.d2_sid, self.d2_seq,
-            self.d2_payload_id, self.d2_payload_data)
+            end=self.d2_end, tsn=self.d2_tsn, sid=self.d2_sid,
+            seq=self.d2_seq, payload_data=self.d2_payload_data)
 
         self.chunks = [self.sack, self.data1, self.data2]
 

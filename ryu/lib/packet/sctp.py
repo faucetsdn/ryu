@@ -81,6 +81,7 @@ class sctp(packet_base.PacketBase):
     dst_port       Destination Port
     vtag           Verification Tag
     csum           Checksum
+                   (0 means automatically-calculate when encoding)
     chunks         a list of derived classes of ryu.lib.packet.sctp.chunk.
     ============== =====================================================
     """
@@ -97,7 +98,7 @@ class sctp(packet_base.PacketBase):
             return cls
         return _register_chunk_type(args[0])
 
-    def __init__(self, src_port, dst_port, vtag, csum, chunks=None):
+    def __init__(self, src_port=0, dst_port=0, vtag=0, csum=0, chunks=None):
         super(sctp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port
@@ -250,8 +251,8 @@ class chunk_init_base(chunk):
     _PACK_STR = '!BBHIIHHI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, flags, length, init_tag, a_rwnd, os, mis, i_tsn,
-                 params=None):
+    def __init__(self, flags=0, length=0, init_tag=0, a_rwnd=0, os=0,
+                 mis=0, i_tsn=0, params=None):
         super(chunk_init_base, self).__init__(self.chunk_type(), length)
         self.flags = flags
         self.init_tag = init_tag
@@ -289,6 +290,9 @@ class chunk_init_base(chunk):
             self.i_tsn))
         for one in self.params:
             buf.extend(one.serialize())
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -296,11 +300,12 @@ class chunk_heartbeat_base(chunk):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, flags, length, info):
+    def __init__(self, flags=0, length=0, info=None):
         super(chunk_heartbeat_base, self).__init__(
             self.chunk_type(), length)
         self.flags = flags
-        assert isinstance(info, param)
+        if info is not None:
+            assert isinstance(info, param)
         self.info = info
 
     @classmethod
@@ -316,7 +321,11 @@ class chunk_heartbeat_base(chunk):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.chunk_type(), self.flags,
             self.length))
-        buf.extend(self.info.serialize())
+        if self.info is not None:
+            buf.extend(self.info.serialize())
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -324,7 +333,7 @@ class chunk_ack_base(chunk):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, flags, length):
+    def __init__(self, flags=0, length=0):
         super(chunk_ack_base, self).__init__(self.chunk_type(), length)
         self.flags = flags
 
@@ -334,6 +343,8 @@ class chunk_ack_base(chunk):
         return cls(flags, length)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.chunk_type(), self.flags,
             self.length)
@@ -346,7 +357,7 @@ class chunk_ecn_base(chunk):
     _PACK_STR = '!BBHI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, flags, length, low_tsn):
+    def __init__(self, flags=0, length=0, low_tsn=0):
         super(chunk_ecn_base, self).__init__(self.chunk_type(), length)
         self.flags = flags
         self.low_tsn = low_tsn
@@ -357,6 +368,8 @@ class chunk_ecn_base(chunk):
         return cls(flags, length, low_tsn)
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.chunk_type(), self.flags, self.length,
             self.low_tsn)
@@ -383,6 +396,7 @@ class chunk_data(chunk):
     begin          if set to '1', this chunk is the first fragment.
     end            if set to '1', this chunk is the last fragment.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     tsn            Transmission Sequence Number.
     sid            stream id.
     seq            the sequence number.
@@ -399,11 +413,12 @@ class chunk_data(chunk):
     def chunk_type(cls):
         return TYPE_DATA
 
-    def __init__(self, unordered, begin, end, length, tsn, sid, seq,
-                 payload_id, payload_data):
+    def __init__(self, unordered=0, begin=0, end=0, length=0, tsn=0,
+                 sid=0, seq=0, payload_id=0, payload_data=None):
         assert (1 == unordered | 1)
         assert (1 == begin | 1)
         assert (1 == end | 1)
+        assert (payload_data is not None)
         super(chunk_data, self).__init__(self.chunk_type(), length)
         self.unordered = unordered
         self.begin = begin
@@ -435,6 +450,9 @@ class chunk_data(chunk):
             self._PACK_STR, self.chunk_type(), flags, self.length,
             self.tsn, self.sid, self.seq, self.payload_id))
         buf.extend(self.payload_data)
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -456,6 +474,7 @@ class chunk_init(chunk_init_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     init_tag       the tag that be used as Verification Tag.
     a_rwnd         Advertised Receiver Window Credit.
     os             number of outbound streams.
@@ -505,6 +524,7 @@ class chunk_init_ack(chunk_init_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     init_tag       the tag that be used as Verification Tag.
     a_rwnd         Advertised Receiver Window Credit.
     os             number of outbound streams.
@@ -554,6 +574,7 @@ class chunk_sack(chunk):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     tsn_ack        TSN of the last DATA chunk received in sequence
                    before a gap.
     a_rwnd         Advertised Receiver Window Credit.
@@ -577,8 +598,8 @@ class chunk_sack(chunk):
     def chunk_type(cls):
         return TYPE_SACK
 
-    def __init__(self, flags, length, tsn_ack, a_rwnd, gapack_num,
-                 duptsn_num, gapacks=None, duptsns=None):
+    def __init__(self, flags=0, length=0, tsn_ack=0, a_rwnd=0,
+                 gapack_num=0, duptsn_num=0, gapacks=None, duptsns=None):
         super(chunk_sack, self).__init__(self.chunk_type(), length)
         self.flags = flags
         self.tsn_ack = tsn_ack
@@ -623,6 +644,9 @@ class chunk_sack(chunk):
             buf.extend(struct.pack(chunk_sack._GAPACK_STR, one[0], one[1]))
         for one in self.duptsns:
             buf.extend(struct.pack(chunk_sack._DUPTSN_STR, one))
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -645,6 +669,7 @@ class chunk_heartbeat(chunk_heartbeat_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     info           ryu.lib.packet.sctp.param_heartbeat.
     ============== =====================================================
     """
@@ -687,6 +712,7 @@ class chunk_heartbeat_ack(chunk_heartbeat_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     info           ryu.lib.packet.sctp.param_heartbeat.
     ============== =====================================================
     """
@@ -729,6 +755,7 @@ class chunk_abort(chunk):
     tflag          '0' means the Verification tag is normal. '1' means
                    the Verification tag is copy of the sender.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     causes         a list of derived classes of ryu.lib.packet.sctp.causes.
     ============== =====================================================
     """
@@ -748,7 +775,7 @@ class chunk_abort(chunk):
     def chunk_type(cls):
         return TYPE_ABORT
 
-    def __init__(self, tflag, length, causes=None):
+    def __init__(self, tflag=0, length=0, causes=None):
         super(chunk_abort, self).__init__(self.chunk_type(), length)
         assert (1 == tflag | 1)
         self.tflag = tflag
@@ -780,6 +807,9 @@ class chunk_abort(chunk):
             self._PACK_STR, self.chunk_type(), flags, self.length))
         for one in self.causes:
             buf.extend(one.serialize())
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -802,6 +832,7 @@ class chunk_shutdown(chunk):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     tsn_ack        TSN of the last DATA chunk received in sequence
                    before a gap.
     ============== =====================================================
@@ -814,7 +845,7 @@ class chunk_shutdown(chunk):
     def chunk_type(cls):
         return TYPE_SHUTDOWN
 
-    def __init__(self, flags, length, tsn_ack):
+    def __init__(self, flags=0, length=0, tsn_ack=0):
         super(chunk_shutdown, self).__init__(self.chunk_type(), length)
         self.flags = flags
         self.tsn_ack = tsn_ack
@@ -827,6 +858,8 @@ class chunk_shutdown(chunk):
         return msg
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.chunk_type(), self.flags,
             self.length, self.tsn_ack)
@@ -852,6 +885,7 @@ class chunk_shutdown_ack(chunk_ack_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -878,6 +912,7 @@ class chunk_error(chunk):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     causes         a list of derived classes of ryu.lib.packet.sctp.causes.
     ============== =====================================================
     """
@@ -897,7 +932,7 @@ class chunk_error(chunk):
     def chunk_type(cls):
         return TYPE_ERROR
 
-    def __init__(self, flags, length, causes=None):
+    def __init__(self, flags=0, length=0, causes=None):
         super(chunk_error, self).__init__(self.chunk_type(), length)
         self.flags = flags
         causes = causes or []
@@ -926,6 +961,9 @@ class chunk_error(chunk):
             self._PACK_STR, self.chunk_type(), self.flags, self.length))
         for one in self.causes:
             buf.extend(one.serialize())
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
         return str(buf)
 
 
@@ -947,6 +985,7 @@ class chunk_cookie_echo(chunk):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     cookie         cookie data.
     ============== =====================================================
     """
@@ -958,7 +997,7 @@ class chunk_cookie_echo(chunk):
     def chunk_type(cls):
         return TYPE_COOKIE_ECHO
 
-    def __init__(self, flags, length, cookie):
+    def __init__(self, flags=0, length=0, cookie=None):
         super(chunk_cookie_echo, self).__init__(self.chunk_type(), length)
         self.flags = flags
         self.cookie = cookie
@@ -966,15 +1005,25 @@ class chunk_cookie_echo(chunk):
     @classmethod
     def parser(cls, buf):
         (_, flags, length) = struct.unpack_from(cls._PACK_STR, buf)
-        fmt = '%ds' % (length - cls._MIN_LEN)
-        (cookie, ) = struct.unpack_from(fmt, buf, cls._MIN_LEN)
+        _len = length - cls._MIN_LEN
+        cookie = None
+        if _len:
+            fmt = '%ds' % _len
+            (cookie, ) = struct.unpack_from(fmt, buf, cls._MIN_LEN)
         return cls(flags, length, cookie)
 
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.chunk_type(), self.flags,
             self.length))
-        buf.extend(self.cookie)
+        if self.cookie is not None:
+            buf.extend(self.cookie)
+        if 0 == self.length:
+            self.length = len(buf)
+            struct.pack_into('!H', buf, 2, self.length)
+        mod = len(buf) % 4
+        if mod:
+            buf.extend(bytearray(4 - mod))
         return str(buf)
 
 
@@ -997,6 +1046,7 @@ class chunk_cookie_ack(chunk_ack_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1023,6 +1073,7 @@ class chunk_ecn_echo(chunk_ecn_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     low_tsn        the lowest TSN.
     ============== =====================================================
     """
@@ -1050,6 +1101,7 @@ class chunk_cwr(chunk_ecn_base):
     ============== =====================================================
     flags          set to '0'. this field will be ignored.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     low_tsn        the lowest TSN.
     ============== =====================================================
     """
@@ -1079,6 +1131,7 @@ class chunk_shutdown_complete(chunk):
     tflag          '0' means the Verification tag is normal. '1' means
                    the Verification tag is copy of the sender.
     length         length of this chunk containing this header.
+                   (0 means automatically-calculate when encoding)
     ============== =====================================================
     """
 
@@ -1089,7 +1142,7 @@ class chunk_shutdown_complete(chunk):
     def chunk_type(cls):
         return TYPE_SHUTDOWN_COMPLETE
 
-    def __init__(self, tflag, length):
+    def __init__(self, tflag=0, length=0):
         assert (1 == tflag | 1)
         super(chunk_shutdown_complete, self).__init__(
             self.chunk_type(), length)
@@ -1103,6 +1156,8 @@ class chunk_shutdown_complete(chunk):
         return msg
 
     def serialize(self):
+        if 0 == self.length:
+            self.length = self._MIN_LEN
         buf = struct.pack(
             self._PACK_STR, self.chunk_type(),
             self.tflag, self.length)
@@ -1152,7 +1207,7 @@ class cause_with_value(cause):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, value, length=0):
+    def __init__(self, value=None, length=0):
         super(cause_with_value, self).__init__(length)
         self.value = value
 
@@ -1168,7 +1223,7 @@ class cause_with_value(cause):
     def serialize(self):
         buf = bytearray(struct.pack(
             self._PACK_STR, self.cause_code(), self.length))
-        if self.value:
+        if self.value is not None:
             buf.extend(self.value)
         if 0 == self.length:
             self.length = len(buf)
@@ -1209,6 +1264,9 @@ class cause_invalid_stream_id(cause_with_value):
     @classmethod
     def cause_code(cls):
         return CCODE_INVALID_STREAM_ID
+
+    def __init__(self, value=0, length=0):
+        super(cause_invalid_stream_id, self).__init__(value, length)
 
     @classmethod
     def parser(cls, buf):
@@ -1612,7 +1670,7 @@ class cause_restart_with_new_addr(cause_with_value):
     def cause_code(cls):
         return CCODE_RESTART_WITH_NEW_ADDR
 
-    def __init__(self, value, length=0):
+    def __init__(self, value=None, length=0):
         if not isinstance(value, list):
             value = [value]
         super(cause_restart_with_new_addr, self).__init__(value, length)
@@ -1720,7 +1778,7 @@ class param(stringify.StringifyMixin):
     def param_type(cls):
         pass
 
-    def __init__(self, value, length=0):
+    def __init__(self, value=None, length=0):
         self.length = length
         self.value = value
 
@@ -1866,6 +1924,9 @@ class param_cookie_preserve(param):
     def param_type(cls):
         return PTYPE_COOKIE_PRESERVE
 
+    def __init__(self, value=0, length=0):
+        super(param_cookie_preserve, self).__init__(value, length)
+
     @classmethod
     def parser(cls, buf):
         (_, length, value) = struct.unpack_from(cls._PACK_STR, buf)
@@ -1973,7 +2034,7 @@ class param_supported_addr(param):
     def param_type(cls):
         return PTYPE_SUPPORTED_ADDR
 
-    def __init__(self, value, length=0):
+    def __init__(self, value=None, length=0):
         if not isinstance(value, list):
             value = [value]
         for one in value:
@@ -2037,6 +2098,9 @@ class param_ipv4(param):
     def param_type(cls):
         return PTYPE_IPV4
 
+    def __init__(self, value='127.0.0.1', length=0):
+        super(param_ipv4, self).__init__(value, length)
+
     @classmethod
     def parser(cls, buf):
         (_, length) = struct.unpack_from(cls._PACK_STR, buf)
@@ -2088,6 +2152,9 @@ class param_ipv6(param):
     @classmethod
     def param_type(cls):
         return PTYPE_IPV6
+
+    def __init__(self, value='::1', length=0):
+        super(param_ipv6, self).__init__(value, length)
 
     @classmethod
     def parser(cls, buf):
