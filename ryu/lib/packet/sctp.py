@@ -1133,9 +1133,12 @@ class cause(stringify.StringifyMixin):
     def parser(cls, buf):
         pass
 
-    @abc.abstractmethod
     def serialize(self):
-        pass
+        if 0 == self.length:
+            self.length = self._MIN_LEN
+        buf = struct.pack(
+            self._PACK_STR, self.cause_code(), self.length)
+        return buf
 
     def __len__(self):
         length = self.length
@@ -1350,13 +1353,6 @@ class cause_out_of_resource(cause):
         (_, length) = struct.unpack_from(cls._PACK_STR, buf)
         return cls(length)
 
-    def serialize(self):
-        if 0 == self.length:
-            self.length = self._MIN_LEN
-        buf = struct.pack(
-            self._PACK_STR, self.cause_code(), self.length)
-        return buf
-
 
 @chunk_abort.register_cause_code
 @chunk_error.register_cause_code
@@ -1483,13 +1479,6 @@ class cause_invalid_param(cause):
         (_, length) = struct.unpack_from(cls._PACK_STR, buf)
         return cls(length)
 
-    def serialize(self):
-        if 0 == self.length:
-            self.length = self._MIN_LEN
-        buf = struct.pack(
-            self._PACK_STR, self.cause_code(), self.length)
-        return buf
-
 
 @chunk_abort.register_cause_code
 @chunk_error.register_cause_code
@@ -1582,13 +1571,6 @@ class cause_cookie_while_shutdown(cause):
     def parser(cls, buf):
         (_, length) = struct.unpack_from(cls._PACK_STR, buf)
         return cls(length)
-
-    def serialize(self):
-        if 0 == self.length:
-            self.length = self._MIN_LEN
-        buf = struct.pack(
-            self._PACK_STR, self.cause_code(), self.length)
-        return buf
 
 
 @chunk_abort.register_cause_code
