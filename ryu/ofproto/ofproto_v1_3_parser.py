@@ -3374,8 +3374,6 @@ def _set_stats_type(stats_type, stats_body_cls):
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
 class OFPMultipartRequest(MsgBase):
     def __init__(self, datapath, flags):
-        assert flags == 0      # none yet defined
-
         super(OFPMultipartRequest, self).__init__(datapath)
         self.type = self.__class__.cls_stats_type
         self.flags = flags
