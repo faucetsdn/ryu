@@ -723,7 +723,7 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
     order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ========================== ===============================================
     Attribute                  Description
@@ -785,7 +785,7 @@ class BGPOpen(BGPMessage):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
     order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ========================== ===============================================
     Attribute                  Description
@@ -867,7 +867,7 @@ class BGPUpdate(BGPMessage):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
     order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ========================== ===============================================
     Attribute                  Description
@@ -971,7 +971,7 @@ class BGPKeepAlive(BGPMessage):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
     order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ========================== ===============================================
     Attribute                  Description
@@ -1003,7 +1003,7 @@ class BGPNotification(BGPMessage):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
     order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ========================== ===============================================
     Attribute                  Description
@@ -1057,7 +1057,7 @@ class BGPRouteRefresh(BGPMessage):
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
     order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ========================== ===============================================
     Attribute                  Description

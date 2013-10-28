@@ -62,7 +62,7 @@ class icmpv6(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|p{35em}|
 
@@ -140,7 +140,7 @@ class nd_neighbor(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|p{35em}|
 
@@ -226,7 +226,7 @@ class nd_router_solicit(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|p{35em}|
 
@@ -304,7 +304,7 @@ class nd_router_advert(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|p{35em}|
 
@@ -414,7 +414,7 @@ class nd_option_la(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|p{35em}|
 
@@ -469,7 +469,7 @@ class nd_option_pi(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|p{35em}|
 
@@ -527,7 +527,7 @@ class echo(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ============== ====================
     Attribute      Description

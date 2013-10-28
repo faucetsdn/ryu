@@ -38,7 +38,7 @@ class icmp(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -125,7 +125,7 @@ class echo(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -177,7 +177,7 @@ class dest_unreach(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     [RFC1191] reserves bits for the "Next-Hop MTU" field.
     [RFC4884] introduced 8-bit data length attribute.
@@ -237,7 +237,7 @@ class TimeExceeded(stringify.StringifyMixin):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     [RFC4884] introduced 8-bit data length attribute.
 

@@ -35,7 +35,7 @@ class arp(packet_base.PacketBase):
     Most of them are same to the on-wire counterparts but in host byte order.
     IPv4 addresses are represented as a string like '192.0.2.1'.
     MAC addresses are represented as a string like '08:60:6e:7f:74:e7'.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ============== ==================== =====================
     Attribute      Description          Example

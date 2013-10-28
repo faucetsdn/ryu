@@ -29,7 +29,7 @@ class vlan(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ============== ====================
     Attribute      Description

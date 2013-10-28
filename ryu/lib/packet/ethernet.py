@@ -26,7 +26,7 @@ class ethernet(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     MAC addresses are represented as a string like '08:60:6e:7f:74:e7'.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     ============== ==================== =====================
     Attribute      Description          Example

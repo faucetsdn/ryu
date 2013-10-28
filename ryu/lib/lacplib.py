@@ -73,7 +73,7 @@ class LacpLib(app_manager.RyuApp):
 
     def add(self, dpid, ports):
         """add a setting of a bonding i/f.
-        'add' method takes the correspondig args in this order.
+        'add' method takes the corresponding args in this order.
 
         ========= =====================================================
         Attribute Description
