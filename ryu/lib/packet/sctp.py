@@ -70,7 +70,7 @@ class sctp(packet_base.PacketBase):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -372,7 +372,7 @@ class chunk_data(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -447,7 +447,7 @@ class chunk_init(chunk_init_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -496,7 +496,7 @@ class chunk_init_ack(chunk_init_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -545,7 +545,7 @@ class chunk_sack(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -636,7 +636,7 @@ class chunk_heartbeat(chunk_heartbeat_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -678,7 +678,7 @@ class chunk_heartbeat_ack(chunk_heartbeat_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -719,7 +719,7 @@ class chunk_abort(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -793,7 +793,7 @@ class chunk_shutdown(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -843,7 +843,7 @@ class chunk_shutdown_ack(chunk_ack_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -869,7 +869,7 @@ class chunk_error(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -938,7 +938,7 @@ class chunk_cookie_echo(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -988,7 +988,7 @@ class chunk_cookie_ack(chunk_ack_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1014,7 +1014,7 @@ class chunk_ecn_echo(chunk_ecn_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1041,7 +1041,7 @@ class chunk_cwr(chunk_ecn_base):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1069,7 +1069,7 @@ class chunk_shutdown_complete(chunk):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1187,7 +1187,7 @@ class cause_invalid_stream_id(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1231,7 +1231,7 @@ class cause_missing_param(cause):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1300,7 +1300,7 @@ class cause_stale_cookie(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1329,7 +1329,7 @@ class cause_out_of_resource(cause):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1369,7 +1369,7 @@ class cause_unresolvable_addr(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1433,7 +1433,7 @@ class cause_unrecognized_chunk(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1462,7 +1462,7 @@ class cause_invalid_param(cause):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1502,7 +1502,7 @@ class cause_unrecognized_param(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1531,7 +1531,7 @@ class cause_no_userdata(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1562,7 +1562,7 @@ class cause_cookie_while_shutdown(cause):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1603,7 +1603,7 @@ class cause_restart_with_new_addr(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1675,7 +1675,7 @@ class cause_user_initiated_abort(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1704,7 +1704,7 @@ class cause_protocol_violation(cause_with_value):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1783,7 +1783,7 @@ class param_heartbeat(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1810,7 +1810,7 @@ class param_state_cookie(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1837,7 +1837,7 @@ class param_unrecognized_param(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1864,7 +1864,7 @@ class param_cookie_preserve(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1908,7 +1908,7 @@ class param_ecn(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1944,7 +1944,7 @@ class param_host_addr(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -1971,7 +1971,7 @@ class param_supported_addr(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -2036,7 +2036,7 @@ class param_ipv4(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
@@ -2088,7 +2088,7 @@ class param_ipv6(param):
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
-    __init__ takes the correspondig args in this order.
+    __init__ takes the corresponding args in this order.
 
     .. tabularcolumns:: |l|L|
 
