@@ -485,931 +485,926 @@ x() ->
                                                curr_speed = 5000,max_speed = 5000}]},
 
 
-% skip this for now because ryu's OFPTableFeaturesStatsRequest doesn't
-% have serializer or parser.
-        skip,
-%       #ofp_table_features_request{
-%           flags = [more],
-%           body =
-%               [#ofp_table_features{
-%                    table_id = 0,name = <<"Flow Table 0x00">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,
-%                                  18,19,20,21,22,23,24,25,26,27,28,29,30,31,
-%                                  32,33,34,35,36,37,38,39,40,41,42,43,44,45,
-%                                  46,47,48,49,50,51,52,53,54,55,56,57,58,59,
-%                                  60,61,62,63,64,65,66,67,68,69,70,71,72,73,
-%                                  74,75,76,77,78,79,80,81,82,83,84,85,86,87,
-%                                  88,89,90,91,92,93,94,95,96,97,98,99,100,
-%                                  101,102,103,104,105,106,107,108,109,110,
-%                                  111,112,113,114,115,116,117,118,119,120,
-%                                  121,122,123,124,125,126,127,128,129,130,
-%                                  131,132,133,134,135,136,137,138,139,140,
-%                                  141,142,143,144,145,146,147,148,149,150,
-%                                  151,152,153,154,155,156,157,158,159,160,
-%                                  161,162,163,164,165,166,167,168,169,170,
-%                                  171,172,173,174,175,176,177,178,179,180,
-%                                  181,182,183,184,185,186,187,188,189,190,
-%                                  191,192,193,194,195,196,197,198,199,200,
-%                                  201,202,203,204,205,206,207,208,209,210,
-%                                  211,212,213,214,215,216,217,218,219,220,
-%                                  221,222,223,224,225,226,227,228,229,230,
-%                                  231,232,233,234,235,236,237,238,239,240,
-%                                  241,242,243,244,245,246,247,248,249,250,
-%                                  251,252,253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 1,name = <<"Flow Table 0x01">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
-%                                  19,20,21,22,23,24,25,26,27,28,29,30,31,32,
-%                                  33,34,35,36,37,38,39,40,41,42,43,44,45,46,
-%                                  47,48,49,50,51,52,53,54,55,56,57,58,59,60,
-%                                  61,62,63,64,65,66,67,68,69,70,71,72,73,74,
-%                                  75,76,77,78,79,80,81,82,83,84,85,86,87,88,
-%                                  89,90,91,92,93,94,95,96,97,98,99,100,101,
-%                                  102,103,104,105,106,107,108,109,110,111,
-%                                  112,113,114,115,116,117,118,119,120,121,
-%                                  122,123,124,125,126,127,128,129,130,131,
-%                                  132,133,134,135,136,137,138,139,140,141,
-%                                  142,143,144,145,146,147,148,149,150,151,
-%                                  152,153,154,155,156,157,158,159,160,161,
-%                                  162,163,164,165,166,167,168,169,170,171,
-%                                  172,173,174,175,176,177,178,179,180,181,
-%                                  182,183,184,185,186,187,188,189,190,191,
-%                                  192,193,194,195,196,197,198,199,200,201,
-%                                  202,203,204,205,206,207,208,209,210,211,
-%                                  212,213,214,215,216,217,218,219,220,221,
-%                                  222,223,224,225,226,227,228,229,230,231,
-%                                  232,233,234,235,236,237,238,239,240,241,
-%                                  242,243,244,245,246,247,248,249,250,251,
-%                                  252,253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 2,name = <<"Flow Table 0x02">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
-%                                  19,20,21,22,23,24,25,26,27,28,29,30,31,32,
-%                                  33,34,35,36,37,38,39,40,41,42,43,44,45,46,
-%                                  47,48,49,50,51,52,53,54,55,56,57,58,59,60,
-%                                  61,62,63,64,65,66,67,68,69,70,71,72,73,74,
-%                                  75,76,77,78,79,80,81,82,83,84,85,86,87,88,
-%                                  89,90,91,92,93,94,95,96,97,98,99,100,101,
-%                                  102,103,104,105,106,107,108,109,110,111,
-%                                  112,113,114,115,116,117,118,119,120,121,
-%                                  122,123,124,125,126,127,128,129,130,131,
-%                                  132,133,134,135,136,137,138,139,140,141,
-%                                  142,143,144,145,146,147,148,149,150,151,
-%                                  152,153,154,155,156,157,158,159,160,161,
-%                                  162,163,164,165,166,167,168,169,170,171,
-%                                  172,173,174,175,176,177,178,179,180,181,
-%                                  182,183,184,185,186,187,188,189,190,191,
-%                                  192,193,194,195,196,197,198,199,200,201,
-%                                  202,203,204,205,206,207,208,209,210,211,
-%                                  212,213,214,215,216,217,218,219,220,221,
-%                                  222,223,224,225,226,227,228,229,230,231,
-%                                  232,233,234,235,236,237,238,239,240,241,
-%                                  242,243,244,245,246,247,248,249,250,251,
-%                                  252,253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 3,name = <<"Flow Table 0x03">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,
-%                                  20,21,22,23,24,25,26,27,28,29,30,31,32,33,
-%                                  34,35,36,37,38,39,40,41,42,43,44,45,46,47,
-%                                  48,49,50,51,52,53,54,55,56,57,58,59,60,61,
-%                                  62,63,64,65,66,67,68,69,70,71,72,73,74,75,
-%                                  76,77,78,79,80,81,82,83,84,85,86,87,88,89,
-%                                  90,91,92,93,94,95,96,97,98,99,100,101,102,
-%                                  103,104,105,106,107,108,109,110,111,112,
-%                                  113,114,115,116,117,118,119,120,121,122,
-%                                  123,124,125,126,127,128,129,130,131,132,
-%                                  133,134,135,136,137,138,139,140,141,142,
-%                                  143,144,145,146,147,148,149,150,151,152,
-%                                  153,154,155,156,157,158,159,160,161,162,
-%                                  163,164,165,166,167,168,169,170,171,172,
-%                                  173,174,175,176,177,178,179,180,181,182,
-%                                  183,184,185,186,187,188,189,190,191,192,
-%                                  193,194,195,196,197,198,199,200,201,202,
-%                                  203,204,205,206,207,208,209,210,211,212,
-%                                  213,214,215,216,217,218,219,220,221,222,
-%                                  223,224,225,226,227,228,229,230,231,232,
-%                                  233,234,235,236,237,238,239,240,241,242,
-%                                  243,244,245,246,247,248,249,250,251,252,
-%                                  253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 4,name = <<"Flow Table 0x04">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-%                                  21,22,23,24,25,26,27,28,29,30,31,32,33,34,
-%                                  35,36,37,38,39,40,41,42,43,44,45,46,47,48,
-%                                  49,50,51,52,53,54,55,56,57,58,59,60,61,62,
-%                                  63,64,65,66,67,68,69,70,71,72,73,74,75,76,
-%                                  77,78,79,80,81,82,83,84,85,86,87,88,89,90,
-%                                  91,92,93,94,95,96,97,98,99,100,101,102,103,
-%                                  104,105,106,107,108,109,110,111,112,113,
-%                                  114,115,116,117,118,119,120,121,122,123,
-%                                  124,125,126,127,128,129,130,131,132,133,
-%                                  134,135,136,137,138,139,140,141,142,143,
-%                                  144,145,146,147,148,149,150,151,152,153,
-%                                  154,155,156,157,158,159,160,161,162,163,
-%                                  164,165,166,167,168,169,170,171,172,173,
-%                                  174,175,176,177,178,179,180,181,182,183,
-%                                  184,185,186,187,188,189,190,191,192,193,
-%                                  194,195,196,197,198,199,200,201,202,203,
-%                                  204,205,206,207,208,209,210,211,212,213,
-%                                  214,215,216,217,218,219,220,221,222,223,
-%                                  224,225,226,227,228,229,230,231,232,233,
-%                                  234,235,236,237,238,239,240,241,242,243,
-%                                  244,245,246,247,248,249,250,251,252,253,
-%                                  254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 5,name = <<"Flow Table 0x05">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-%                                  21,22,23,24,25,26,27,28,29,30,31,32,33,34,
-%                                  35,36,37,38,39,40,41,42,43,44,45,46,47,48,
-%                                  49,50,51,52,53,54,55,56,57,58,59,60,61,62,
-%                                  63,64,65,66,67,68,69,70,71,72,73,74,75,76,
-%                                  77,78,79,80,81,82,83,84,85,86,87,88,89,90,
-%                                  91,92,93,94,95,96,97,98,99,100,101,102,103,
-%                                  104,105,106,107,108,109,110,111,112,113,
-%                                  114,115,116,117,118,119,120,121,122,123,
-%                                  124,125,126,127,128,129,130,131,132,133,
-%                                  134,135,136,137,138,139,140,141,142,143,
-%                                  144,145,146,147,148,149,150,151,152,153,
-%                                  154,155,156,157,158,159,160,161,162,163,
-%                                  164,165,166,167,168,169,170,171,172,173,
-%                                  174,175,176,177,178,179,180,181,182,183,
-%                                  184,185,186,187,188,189,190,191,192,193,
-%                                  194,195,196,197,198,199,200,201,202,203,
-%                                  204,205,206,207,208,209,210,211,212,213,
-%                                  214,215,216,217,218,219,220,221,222,223,
-%                                  224,225,226,227,228,229,230,231,232,233,
-%                                  234,235,236,237,238,239,240,241,242,243,
-%                                  244,245,246,247,248,249,250,251,252,253,
-%                                  254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 6,name = <<"Flow Table 0x06">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
-%                                  22,23,24,25,26,27,28,29,30,31,32,33,34,35,
-%                                  36,37,38,39,40,41,42,43,44,45,46,47,48,49,
-%                                  50,51,52,53,54,55,56,57,58,59,60,61,62,63,
-%                                  64,65,66,67,68,69,70,71,72,73,74,75,76,77,
-%                                  78,79,80,81,82,83,84,85,86,87,88,89,90,91,
-%                                  92,93,94,95,96,97,98,99,100,101,102,103,
-%                                  104,105,106,107,108,109,110,111,112,113,
-%                                  114,115,116,117,118,119,120,121,122,123,
-%                                  124,125,126,127,128,129,130,131,132,133,
-%                                  134,135,136,137,138,139,140,141,142,143,
-%                                  144,145,146,147,148,149,150,151,152,153,
-%                                  154,155,156,157,158,159,160,161,162,163,
-%                                  164,165,166,167,168,169,170,171,172,173,
-%                                  174,175,176,177,178,179,180,181,182,183,
-%                                  184,185,186,187,188,189,190,191,192,193,
-%                                  194,195,196,197,198,199,200,201,202,203,
-%                                  204,205,206,207,208,209,210,211,212,213,
-%                                  214,215,216,217,218,219,220,221,222,223,
-%                                  224,225,226,227,228,229,230,231,232,233,
-%                                  234,235,236,237,238,239,240,241,242,243,
-%                                  244,245,246,247,248,249,250,251,252,253,
-%                                  254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 7,name = <<"Flow Table 0x07">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,
-%                                  23,24,25,26,27,28,29,30,31,32,33,34,35,36,
-%                                  37,38,39,40,41,42,43,44,45,46,47,48,49,50,
-%                                  51,52,53,54,55,56,57,58,59,60,61,62,63,64,
-%                                  65,66,67,68,69,70,71,72,73,74,75,76,77,78,
-%                                  79,80,81,82,83,84,85,86,87,88,89,90,91,92,
-%                                  93,94,95,96,97,98,99,100,101,102,103,104,
-%                                  105,106,107,108,109,110,111,112,113,114,
-%                                  115,116,117,118,119,120,121,122,123,124,
-%                                  125,126,127,128,129,130,131,132,133,134,
-%                                  135,136,137,138,139,140,141,142,143,144,
-%                                  145,146,147,148,149,150,151,152,153,154,
-%                                  155,156,157,158,159,160,161,162,163,164,
-%                                  165,166,167,168,169,170,171,172,173,174,
-%                                  175,176,177,178,179,180,181,182,183,184,
-%                                  185,186,187,188,189,190,191,192,193,194,
-%                                  195,196,197,198,199,200,201,202,203,204,
-%                                  205,206,207,208,209,210,211,212,213,214,
-%                                  215,216,217,218,219,220,221,222,223,224,
-%                                  225,226,227,228,229,230,231,232,233,234,
-%                                  235,236,237,238,239,240,241,242,243,244,
-%                                  245,246,247,248,249,250,251,252,253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 8,name = <<"Flow Table 0x08">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [9,10,11,12,13,14,15,16,17,18,19,20,21,22,
-%                                  23,24,25,26,27,28,29,30,31,32,33,34,35,36,
-%                                  37,38,39,40,41,42,43,44,45,46,47,48,49,50,
-%                                  51,52,53,54,55,56,57,58,59,60,61,62,63,64,
-%                                  65,66,67,68,69,70,71,72,73,74,75,76,77,78,
-%                                  79,80,81,82,83,84,85,86,87,88,89,90,91,92,
-%                                  93,94,95,96,97,98,99,100,101,102,103,104,
-%                                  105,106,107,108,109,110,111,112,113,114,
-%                                  115,116,117,118,119,120,121,122,123,124,
-%                                  125,126,127,128,129,130,131,132,133,134,
-%                                  135,136,137,138,139,140,141,142,143,144,
-%                                  145,146,147,148,149,150,151,152,153,154,
-%                                  155,156,157,158,159,160,161,162,163,164,
-%                                  165,166,167,168,169,170,171,172,173,174,
-%                                  175,176,177,178,179,180,181,182,183,184,
-%                                  185,186,187,188,189,190,191,192,193,194,
-%                                  195,196,197,198,199,200,201,202,203,204,
-%                                  205,206,207,208,209,210,211,212,213,214,
-%                                  215,216,217,218,219,220,221,222,223,224,
-%                                  225,226,227,228,229,230,231,232,233,234,
-%                                  235,236,237,238,239,240,241,242,243,244,
-%                                  245,246,247,248,249,250,251,252,253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]},
-%                #ofp_table_features{
-%                    table_id = 9,name = <<"Flow Table 0x09">>,
-%                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
-%                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
-%                    properties =
-%                        [#ofp_table_feature_prop_instructions{
-%                             instruction_ids =
-%                                 [goto_table,write_metadata,write_actions,
-%                                  apply_actions,clear_actions,meter]},
-%                         #ofp_table_feature_prop_next_tables{
-%                             next_table_ids =
-%                                 [10,11,12,13,14,15,16,17,18,19,20,21,22,23,
-%                                  24,25,26,27,28,29,30,31,32,33,34,35,36,37,
-%                                  38,39,40,41,42,43,44,45,46,47,48,49,50,51,
-%                                  52,53,54,55,56,57,58,59,60,61,62,63,64,65,
-%                                  66,67,68,69,70,71,72,73,74,75,76,77,78,79,
-%                                  80,81,82,83,84,85,86,87,88,89,90,91,92,93,
-%                                  94,95,96,97,98,99,100,101,102,103,104,105,
-%                                  106,107,108,109,110,111,112,113,114,115,
-%                                  116,117,118,119,120,121,122,123,124,125,
-%                                  126,127,128,129,130,131,132,133,134,135,
-%                                  136,137,138,139,140,141,142,143,144,145,
-%                                  146,147,148,149,150,151,152,153,154,155,
-%                                  156,157,158,159,160,161,162,163,164,165,
-%                                  166,167,168,169,170,171,172,173,174,175,
-%                                  176,177,178,179,180,181,182,183,184,185,
-%                                  186,187,188,189,190,191,192,193,194,195,
-%                                  196,197,198,199,200,201,202,203,204,205,
-%                                  206,207,208,209,210,211,212,213,214,215,
-%                                  216,217,218,219,220,221,222,223,224,225,
-%                                  226,227,228,229,230,231,232,233,234,235,
-%                                  236,237,238,239,240,241,242,243,244,245,
-%                                  246,247,248,249,250,251,252,253,254]},
-%                         #ofp_table_feature_prop_write_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_apply_actions{
-%                             action_ids =
-%                                 [output,group,set_queue,set_mpls_ttl,
-%                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
-%                                  copy_ttl_out,copy_ttl_in,push_vlan,
-%                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
-%                                  pop_pbb,set_field]},
-%                         #ofp_table_feature_prop_match{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_wildcards{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_write_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]},
-%                         #ofp_table_feature_prop_apply_setfield{
-%                             oxm_ids =
-%                                 [in_port,metadata,eth_dst,eth_src,eth_type,
-%                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
-%                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
-%                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
-%                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
-%                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
-%                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
-%                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-%                                  mpls_bos,pbb_isid]}]}]},
-
-% ryu's OFPTableFeaturesStats is incomplete. (doesn't parse properties at all)
+       #ofp_table_features_request{
+           flags = [more],
+           body =
+               [#ofp_table_features{
+                    table_id = 0,name = <<"Flow Table 0x00">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,
+                                  18,19,20,21,22,23,24,25,26,27,28,29,30,31,
+                                  32,33,34,35,36,37,38,39,40,41,42,43,44,45,
+                                  46,47,48,49,50,51,52,53,54,55,56,57,58,59,
+                                  60,61,62,63,64,65,66,67,68,69,70,71,72,73,
+                                  74,75,76,77,78,79,80,81,82,83,84,85,86,87,
+                                  88,89,90,91,92,93,94,95,96,97,98,99,100,
+                                  101,102,103,104,105,106,107,108,109,110,
+                                  111,112,113,114,115,116,117,118,119,120,
+                                  121,122,123,124,125,126,127,128,129,130,
+                                  131,132,133,134,135,136,137,138,139,140,
+                                  141,142,143,144,145,146,147,148,149,150,
+                                  151,152,153,154,155,156,157,158,159,160,
+                                  161,162,163,164,165,166,167,168,169,170,
+                                  171,172,173,174,175,176,177,178,179,180,
+                                  181,182,183,184,185,186,187,188,189,190,
+                                  191,192,193,194,195,196,197,198,199,200,
+                                  201,202,203,204,205,206,207,208,209,210,
+                                  211,212,213,214,215,216,217,218,219,220,
+                                  221,222,223,224,225,226,227,228,229,230,
+                                  231,232,233,234,235,236,237,238,239,240,
+                                  241,242,243,244,245,246,247,248,249,250,
+                                  251,252,253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 1,name = <<"Flow Table 0x01">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
+                                  19,20,21,22,23,24,25,26,27,28,29,30,31,32,
+                                  33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+                                  47,48,49,50,51,52,53,54,55,56,57,58,59,60,
+                                  61,62,63,64,65,66,67,68,69,70,71,72,73,74,
+                                  75,76,77,78,79,80,81,82,83,84,85,86,87,88,
+                                  89,90,91,92,93,94,95,96,97,98,99,100,101,
+                                  102,103,104,105,106,107,108,109,110,111,
+                                  112,113,114,115,116,117,118,119,120,121,
+                                  122,123,124,125,126,127,128,129,130,131,
+                                  132,133,134,135,136,137,138,139,140,141,
+                                  142,143,144,145,146,147,148,149,150,151,
+                                  152,153,154,155,156,157,158,159,160,161,
+                                  162,163,164,165,166,167,168,169,170,171,
+                                  172,173,174,175,176,177,178,179,180,181,
+                                  182,183,184,185,186,187,188,189,190,191,
+                                  192,193,194,195,196,197,198,199,200,201,
+                                  202,203,204,205,206,207,208,209,210,211,
+                                  212,213,214,215,216,217,218,219,220,221,
+                                  222,223,224,225,226,227,228,229,230,231,
+                                  232,233,234,235,236,237,238,239,240,241,
+                                  242,243,244,245,246,247,248,249,250,251,
+                                  252,253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 2,name = <<"Flow Table 0x02">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
+                                  19,20,21,22,23,24,25,26,27,28,29,30,31,32,
+                                  33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+                                  47,48,49,50,51,52,53,54,55,56,57,58,59,60,
+                                  61,62,63,64,65,66,67,68,69,70,71,72,73,74,
+                                  75,76,77,78,79,80,81,82,83,84,85,86,87,88,
+                                  89,90,91,92,93,94,95,96,97,98,99,100,101,
+                                  102,103,104,105,106,107,108,109,110,111,
+                                  112,113,114,115,116,117,118,119,120,121,
+                                  122,123,124,125,126,127,128,129,130,131,
+                                  132,133,134,135,136,137,138,139,140,141,
+                                  142,143,144,145,146,147,148,149,150,151,
+                                  152,153,154,155,156,157,158,159,160,161,
+                                  162,163,164,165,166,167,168,169,170,171,
+                                  172,173,174,175,176,177,178,179,180,181,
+                                  182,183,184,185,186,187,188,189,190,191,
+                                  192,193,194,195,196,197,198,199,200,201,
+                                  202,203,204,205,206,207,208,209,210,211,
+                                  212,213,214,215,216,217,218,219,220,221,
+                                  222,223,224,225,226,227,228,229,230,231,
+                                  232,233,234,235,236,237,238,239,240,241,
+                                  242,243,244,245,246,247,248,249,250,251,
+                                  252,253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 3,name = <<"Flow Table 0x03">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,
+                                  20,21,22,23,24,25,26,27,28,29,30,31,32,33,
+                                  34,35,36,37,38,39,40,41,42,43,44,45,46,47,
+                                  48,49,50,51,52,53,54,55,56,57,58,59,60,61,
+                                  62,63,64,65,66,67,68,69,70,71,72,73,74,75,
+                                  76,77,78,79,80,81,82,83,84,85,86,87,88,89,
+                                  90,91,92,93,94,95,96,97,98,99,100,101,102,
+                                  103,104,105,106,107,108,109,110,111,112,
+                                  113,114,115,116,117,118,119,120,121,122,
+                                  123,124,125,126,127,128,129,130,131,132,
+                                  133,134,135,136,137,138,139,140,141,142,
+                                  143,144,145,146,147,148,149,150,151,152,
+                                  153,154,155,156,157,158,159,160,161,162,
+                                  163,164,165,166,167,168,169,170,171,172,
+                                  173,174,175,176,177,178,179,180,181,182,
+                                  183,184,185,186,187,188,189,190,191,192,
+                                  193,194,195,196,197,198,199,200,201,202,
+                                  203,204,205,206,207,208,209,210,211,212,
+                                  213,214,215,216,217,218,219,220,221,222,
+                                  223,224,225,226,227,228,229,230,231,232,
+                                  233,234,235,236,237,238,239,240,241,242,
+                                  243,244,245,246,247,248,249,250,251,252,
+                                  253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 4,name = <<"Flow Table 0x04">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+                                  21,22,23,24,25,26,27,28,29,30,31,32,33,34,
+                                  35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+                                  49,50,51,52,53,54,55,56,57,58,59,60,61,62,
+                                  63,64,65,66,67,68,69,70,71,72,73,74,75,76,
+                                  77,78,79,80,81,82,83,84,85,86,87,88,89,90,
+                                  91,92,93,94,95,96,97,98,99,100,101,102,103,
+                                  104,105,106,107,108,109,110,111,112,113,
+                                  114,115,116,117,118,119,120,121,122,123,
+                                  124,125,126,127,128,129,130,131,132,133,
+                                  134,135,136,137,138,139,140,141,142,143,
+                                  144,145,146,147,148,149,150,151,152,153,
+                                  154,155,156,157,158,159,160,161,162,163,
+                                  164,165,166,167,168,169,170,171,172,173,
+                                  174,175,176,177,178,179,180,181,182,183,
+                                  184,185,186,187,188,189,190,191,192,193,
+                                  194,195,196,197,198,199,200,201,202,203,
+                                  204,205,206,207,208,209,210,211,212,213,
+                                  214,215,216,217,218,219,220,221,222,223,
+                                  224,225,226,227,228,229,230,231,232,233,
+                                  234,235,236,237,238,239,240,241,242,243,
+                                  244,245,246,247,248,249,250,251,252,253,
+                                  254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 5,name = <<"Flow Table 0x05">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+                                  21,22,23,24,25,26,27,28,29,30,31,32,33,34,
+                                  35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+                                  49,50,51,52,53,54,55,56,57,58,59,60,61,62,
+                                  63,64,65,66,67,68,69,70,71,72,73,74,75,76,
+                                  77,78,79,80,81,82,83,84,85,86,87,88,89,90,
+                                  91,92,93,94,95,96,97,98,99,100,101,102,103,
+                                  104,105,106,107,108,109,110,111,112,113,
+                                  114,115,116,117,118,119,120,121,122,123,
+                                  124,125,126,127,128,129,130,131,132,133,
+                                  134,135,136,137,138,139,140,141,142,143,
+                                  144,145,146,147,148,149,150,151,152,153,
+                                  154,155,156,157,158,159,160,161,162,163,
+                                  164,165,166,167,168,169,170,171,172,173,
+                                  174,175,176,177,178,179,180,181,182,183,
+                                  184,185,186,187,188,189,190,191,192,193,
+                                  194,195,196,197,198,199,200,201,202,203,
+                                  204,205,206,207,208,209,210,211,212,213,
+                                  214,215,216,217,218,219,220,221,222,223,
+                                  224,225,226,227,228,229,230,231,232,233,
+                                  234,235,236,237,238,239,240,241,242,243,
+                                  244,245,246,247,248,249,250,251,252,253,
+                                  254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 6,name = <<"Flow Table 0x06">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+                                  22,23,24,25,26,27,28,29,30,31,32,33,34,35,
+                                  36,37,38,39,40,41,42,43,44,45,46,47,48,49,
+                                  50,51,52,53,54,55,56,57,58,59,60,61,62,63,
+                                  64,65,66,67,68,69,70,71,72,73,74,75,76,77,
+                                  78,79,80,81,82,83,84,85,86,87,88,89,90,91,
+                                  92,93,94,95,96,97,98,99,100,101,102,103,
+                                  104,105,106,107,108,109,110,111,112,113,
+                                  114,115,116,117,118,119,120,121,122,123,
+                                  124,125,126,127,128,129,130,131,132,133,
+                                  134,135,136,137,138,139,140,141,142,143,
+                                  144,145,146,147,148,149,150,151,152,153,
+                                  154,155,156,157,158,159,160,161,162,163,
+                                  164,165,166,167,168,169,170,171,172,173,
+                                  174,175,176,177,178,179,180,181,182,183,
+                                  184,185,186,187,188,189,190,191,192,193,
+                                  194,195,196,197,198,199,200,201,202,203,
+                                  204,205,206,207,208,209,210,211,212,213,
+                                  214,215,216,217,218,219,220,221,222,223,
+                                  224,225,226,227,228,229,230,231,232,233,
+                                  234,235,236,237,238,239,240,241,242,243,
+                                  244,245,246,247,248,249,250,251,252,253,
+                                  254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 7,name = <<"Flow Table 0x07">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,
+                                  23,24,25,26,27,28,29,30,31,32,33,34,35,36,
+                                  37,38,39,40,41,42,43,44,45,46,47,48,49,50,
+                                  51,52,53,54,55,56,57,58,59,60,61,62,63,64,
+                                  65,66,67,68,69,70,71,72,73,74,75,76,77,78,
+                                  79,80,81,82,83,84,85,86,87,88,89,90,91,92,
+                                  93,94,95,96,97,98,99,100,101,102,103,104,
+                                  105,106,107,108,109,110,111,112,113,114,
+                                  115,116,117,118,119,120,121,122,123,124,
+                                  125,126,127,128,129,130,131,132,133,134,
+                                  135,136,137,138,139,140,141,142,143,144,
+                                  145,146,147,148,149,150,151,152,153,154,
+                                  155,156,157,158,159,160,161,162,163,164,
+                                  165,166,167,168,169,170,171,172,173,174,
+                                  175,176,177,178,179,180,181,182,183,184,
+                                  185,186,187,188,189,190,191,192,193,194,
+                                  195,196,197,198,199,200,201,202,203,204,
+                                  205,206,207,208,209,210,211,212,213,214,
+                                  215,216,217,218,219,220,221,222,223,224,
+                                  225,226,227,228,229,230,231,232,233,234,
+                                  235,236,237,238,239,240,241,242,243,244,
+                                  245,246,247,248,249,250,251,252,253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 8,name = <<"Flow Table 0x08">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [9,10,11,12,13,14,15,16,17,18,19,20,21,22,
+                                  23,24,25,26,27,28,29,30,31,32,33,34,35,36,
+                                  37,38,39,40,41,42,43,44,45,46,47,48,49,50,
+                                  51,52,53,54,55,56,57,58,59,60,61,62,63,64,
+                                  65,66,67,68,69,70,71,72,73,74,75,76,77,78,
+                                  79,80,81,82,83,84,85,86,87,88,89,90,91,92,
+                                  93,94,95,96,97,98,99,100,101,102,103,104,
+                                  105,106,107,108,109,110,111,112,113,114,
+                                  115,116,117,118,119,120,121,122,123,124,
+                                  125,126,127,128,129,130,131,132,133,134,
+                                  135,136,137,138,139,140,141,142,143,144,
+                                  145,146,147,148,149,150,151,152,153,154,
+                                  155,156,157,158,159,160,161,162,163,164,
+                                  165,166,167,168,169,170,171,172,173,174,
+                                  175,176,177,178,179,180,181,182,183,184,
+                                  185,186,187,188,189,190,191,192,193,194,
+                                  195,196,197,198,199,200,201,202,203,204,
+                                  205,206,207,208,209,210,211,212,213,214,
+                                  215,216,217,218,219,220,221,222,223,224,
+                                  225,226,227,228,229,230,231,232,233,234,
+                                  235,236,237,238,239,240,241,242,243,244,
+                                  245,246,247,248,249,250,251,252,253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]},
+                #ofp_table_features{
+                    table_id = 9,name = <<"Flow Table 0x09">>,
+                    metadata_match = <<"\377\377\377\377\377\377\377\377">>,
+                    metadata_write = <<"\377\377\377\377\377\377\377\377">>,max_entries = 16777216,
+                    properties =
+                        [#ofp_table_feature_prop_instructions{
+                             instruction_ids =
+                                 [goto_table,write_metadata,write_actions,
+                                  apply_actions,clear_actions,meter]},
+                         #ofp_table_feature_prop_next_tables{
+                             next_table_ids =
+                                 [10,11,12,13,14,15,16,17,18,19,20,21,22,23,
+                                  24,25,26,27,28,29,30,31,32,33,34,35,36,37,
+                                  38,39,40,41,42,43,44,45,46,47,48,49,50,51,
+                                  52,53,54,55,56,57,58,59,60,61,62,63,64,65,
+                                  66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+                                  80,81,82,83,84,85,86,87,88,89,90,91,92,93,
+                                  94,95,96,97,98,99,100,101,102,103,104,105,
+                                  106,107,108,109,110,111,112,113,114,115,
+                                  116,117,118,119,120,121,122,123,124,125,
+                                  126,127,128,129,130,131,132,133,134,135,
+                                  136,137,138,139,140,141,142,143,144,145,
+                                  146,147,148,149,150,151,152,153,154,155,
+                                  156,157,158,159,160,161,162,163,164,165,
+                                  166,167,168,169,170,171,172,173,174,175,
+                                  176,177,178,179,180,181,182,183,184,185,
+                                  186,187,188,189,190,191,192,193,194,195,
+                                  196,197,198,199,200,201,202,203,204,205,
+                                  206,207,208,209,210,211,212,213,214,215,
+                                  216,217,218,219,220,221,222,223,224,225,
+                                  226,227,228,229,230,231,232,233,234,235,
+                                  236,237,238,239,240,241,242,243,244,245,
+                                  246,247,248,249,250,251,252,253,254]},
+                         #ofp_table_feature_prop_write_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_apply_actions{
+                             action_ids =
+                                 [output,group,set_queue,set_mpls_ttl,
+                                  dec_mpls_ttl,set_nw_ttl,dec_nw_ttl,
+                                  copy_ttl_out,copy_ttl_in,push_vlan,
+                                  pop_vlan,push_mpls,pop_mpls,push_pbb,
+                                  pop_pbb,set_field]},
+                         #ofp_table_feature_prop_match{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_wildcards{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_write_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]},
+                         #ofp_table_feature_prop_apply_setfield{
+                             oxm_ids =
+                                 [in_port,metadata,eth_dst,eth_src,eth_type,
+                                  vlan_vid,vlan_pcp,ip_dscp,ip_ecn,ip_proto,
+                                  ipv4_src,ipv4_dst,tcp_src,tcp_dst,udp_src,
+                                  udp_dst,sctp_src,sctp_dst,icmpv4_type,
+                                  icmpv4_code,arp_op,arp_spa,arp_tpa,arp_sha,
+                                  arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
+                                  icmpv6_type,icmpv6_code,ipv6_nd_target,
+                                  ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
+                                  mpls_bos,pbb_isid]}]}]},
         #ofp_table_features_reply{
             flags = [more],
             body =
