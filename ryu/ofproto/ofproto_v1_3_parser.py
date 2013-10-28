@@ -4733,12 +4733,307 @@ class OFPTableFeaturesStats(StringifyMixin):
          ) = struct.unpack_from(ofproto_v1_3.OFP_TABLE_FEATURES_PACK_STR,
                                 buf, offset)
         table_features.name = name.rstrip('\0')
-        offset += ofproto_v1_3.OFP_TABLE_FEATURES_SIZE
 
-        # TODO: parse ofp_table_feature_prop_header
-        table_features.properties = []
+        props = []
+        rest = buf[offset + ofproto_v1_3.OFP_TABLE_FEATURES_SIZE:
+                   offset + table_features.length]
+        while rest:
+            p, rest = OFPTableFeatureProp.parse(rest)
+            props.append(p)
+        table_features.properties = props
 
         return table_features
+
+    def serialize(self):
+        # fixup
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+        self.length = ofproto_v1_3.OFP_TABLE_FEATURES_SIZE + len(bin_props)
+
+        buf = bytearray()
+        msg_pack_into(ofproto_v1_3.OFP_TABLE_FEATURES_PACK_STR, buf, 0,
+                      self.length, self.table_id, self.name,
+                      self.metadata_match, self.metadata_write,
+                      self.config, self.max_entries)
+        return buf + bin_props
+
+
+class OFPTableFeatureProp(StringifyMixin):
+    _PACK_STR = '!HH'  # type, length
+    _TYPES = {}  # OFPTFPT_ -> class
+
+    def __init__(self, type_, length=None):
+        self.type = type_
+        self.length = length
+
+    @classmethod
+    def register_type(cls, type_):
+        def _register_type(subcls):
+            cls._TYPES[type_] = subcls
+            return subcls
+        return _register_type
+
+    @classmethod
+    def parse(cls, buf):
+        (type_, length,) = struct.unpack_from(cls._PACK_STR, buffer(buf), 0)
+        bin_prop = buf[struct.calcsize(cls._PACK_STR):length]
+        rest = buf[utils.round_up(length, 8):]
+        try:
+            subcls = cls._TYPES[type_]
+        except KeyError:
+            subcls = OFPTableFeaturePropUnknown
+        kwargs = subcls._parse_prop(bin_prop)
+        kwargs['type_'] = type_
+        kwargs['length'] = length
+        return subcls(**kwargs), rest
+
+    def serialize(self):
+        # fixup
+        bin_prop = self._serialize_prop()
+        self.length = struct.calcsize(self._PACK_STR) + len(bin_prop)
+
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length)
+        pad_len = utils.round_up(self.length, 8) - self.length
+        return buf + bin_prop + pad_len * '\0'
+
+
+class OFPTableFeaturePropUnknown(OFPTableFeatureProp):
+    def __init__(self, type_, length=None, data=None):
+        super(OFPTableFeaturePropUnknown, self).__init__(type_, length)
+        self.data = data
+
+    @classmethod
+    def _parse_prop(cls, buf):
+        return {'data': buf}
+
+    def _serialize_prop(self):
+        return self.data
+
+
+# Implementation note: While OpenFlow 1.3.2 shares the same ofp_instruction
+# for flow_mod and table_features, we have separate classes.  We named this
+# class to match with OpenFlow 1.4's name.  (ofp_instruction_id)
+class OFPInstructionId(StringifyMixin):
+    _PACK_STR = '!HH'  # type, len
+
+    def __init__(self, type_, len_=None):
+        self.type = type_
+        self.len = len_
+        # XXX experimenter
+
+    @classmethod
+    def parse(cls, buf):
+        (type_, len_,) = struct.unpack_from(cls._PACK_STR, buffer(buf), 0)
+        rest = buf[len_:]
+        return cls(type_=type_, len_=len_), rest
+
+    def serialize(self):
+        # fixup
+        self.len = struct.calcsize(self._PACK_STR)
+
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.len)
+        return buf
+
+
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_INSTRUCTIONS)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_INSTRUCTIONS_MISS)
+class OFPTableFeaturePropInstructions(OFPTableFeatureProp):
+    def __init__(self, type_, instruction_ids=[], length=None):
+        super(OFPTableFeaturePropInstructions, self).__init__(type_, length)
+        self.instruction_ids = instruction_ids
+
+    @classmethod
+    def _parse_prop(cls, buf):
+        rest = buf
+        ids = []
+        while rest:
+            i, rest = OFPInstructionId.parse(rest)
+            ids.append(i)
+        return {
+            'instruction_ids': ids,
+        }
+
+    def _serialize_prop(self):
+        bin_ids = bytearray()
+        for i in self.instruction_ids:
+            bin_ids += i.serialize()
+        return bin_ids
+
+
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_NEXT_TABLES)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_NEXT_TABLES_MISS)
+class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
+    _TABLE_ID_PACK_STR = '!B'
+
+    def __init__(self, type_, table_ids=[], length=None):
+        super(OFPTableFeaturePropNextTables, self).__init__(type_, length)
+        self.table_ids = table_ids
+
+    @classmethod
+    def _parse_prop(cls, buf):
+        rest = buf
+        ids = []
+        while rest:
+            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR, buffer(rest), 0)
+            rest = rest[struct.calcsize(cls._TABLE_ID_PACK_STR):]
+            ids.append(i)
+        return {
+            'table_ids': ids,
+        }
+
+    def _serialize_prop(self):
+        bin_ids = bytearray()
+        for i in self.table_ids:
+            bin_id = bytearray()
+            msg_pack_into(self._TABLE_ID_PACK_STR, bin_id, 0, i)
+            bin_ids += bin_id
+        return bin_ids
+
+
+# Implementation note: While OpenFlow 1.3.2 shares the same ofp_action_header
+# for flow_mod and table_features, we have separate classes.  We named this
+# class to match with OpenFlow 1.4's name.  (ofp_action_id)
+class OFPActionId(StringifyMixin):
+    # XXX
+    # ofp_action_header should have trailing pad bytes.
+    # however, i guess it's a specification bug as:
+    #  - the spec explicitly says non-experimenter actions are 4 bytes
+    #  - linc/of_protocol doesn't use them
+    #  - OpenFlow 1.4 changed to use a separate structure
+    _PACK_STR = '!HH'  # type, len
+
+    def __init__(self, type_, len_=None):
+        self.type = type_
+        self.len = len_
+        # XXX experimenter
+
+    @classmethod
+    def parse(cls, buf):
+        (type_, len_,) = struct.unpack_from(cls._PACK_STR, buffer(buf), 0)
+        rest = buf[len_:]
+        return cls(type_=type_, len_=len_), rest
+
+    def serialize(self):
+        # fixup
+        self.len = struct.calcsize(self._PACK_STR)
+
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.len)
+        return buf
+
+
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_WRITE_ACTIONS)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_WRITE_ACTIONS_MISS)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_APPLY_ACTIONS)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_APPLY_ACTIONS_MISS)
+class OFPTableFeaturePropActions(OFPTableFeatureProp):
+    def __init__(self, type_, action_ids=[], length=None):
+        super(OFPTableFeaturePropActions, self).__init__(type_, length)
+        self.action_ids = action_ids
+
+    @classmethod
+    def _parse_prop(cls, buf):
+        rest = buf
+        ids = []
+        while rest:
+            i, rest = OFPActionId.parse(rest)
+            ids.append(i)
+        return {
+            'action_ids': ids,
+        }
+
+    def _serialize_prop(self):
+        bin_ids = bytearray()
+        for i in self.action_ids:
+            bin_ids += i.serialize()
+        return bin_ids
+
+
+# Implementation note: OFPOxmId is specific to this implementation.
+# It does not have a corresponding structure in the specification.
+# (the specification uses plain uint32_t for them.)
+#
+# i have taken a look at some of software switch implementations
+# but they all look broken or incomplete.  according to the spec,
+# oxm_hasmask should be 1 if a switch supports masking for the type.
+# the right value for oxm_length is not clear from the spec.
+#   ofsoftswitch13
+#     oxm_hasmask  always 0
+#     oxm_length   same as ofp_match etc (as without mask)
+#   linc/of_protocol
+#     oxm_hasmask  always 0
+#     oxm_length   always 0
+#   ovs:
+#     table-feature is not implemented
+class OFPOxmId(StringifyMixin):
+    _PACK_STR = '!I'  # oxm header
+
+    _TYPE = {
+        'ascii': [
+            'type',
+        ],
+    }
+
+    def __init__(self, type_, hasmask=False, length=None):
+        self.type = type_
+        self.hasmask = hasmask
+        self.length = length
+        # XXX experimenter
+
+    @classmethod
+    def parse(cls, buf):
+        (oxm,) = struct.unpack_from(cls._PACK_STR, buffer(buf), 0)
+        (type_, _v) = ofproto_v1_3.oxm_to_user(oxm >> 9, None, None)
+        hasmask = ofproto_v1_3.oxm_tlv_header_extract_hasmask(oxm)
+        length = oxm & 0xff  # XXX see the comment on OFPOxmId
+        rest = buf[4:]  # XXX see the comment on OFPOxmId
+        return cls(type_=type_, hasmask=hasmask, length=length), rest
+
+    def serialize(self):
+        # fixup
+        self.length = 0  # XXX see the comment on OFPOxmId
+
+        (n, _v, _m) = ofproto_v1_3.oxm_from_user(self.type, None)
+        oxm = (n << 9) | (self.hasmask << 8) | self.length
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, oxm)
+        return buf
+
+
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_MATCH)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_WILDCARDS)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_WRITE_SETFIELD)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_WRITE_SETFIELD_MISS)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_APPLY_SETFIELD)
+@OFPTableFeatureProp.register_type(ofproto_v1_3.OFPTFPT_APPLY_SETFIELD_MISS)
+class OFPTableFeaturePropOxm(OFPTableFeatureProp):
+    def __init__(self, type_, oxm_ids=[], length=None):
+        super(OFPTableFeaturePropOxm, self).__init__(type_, length)
+        self.oxm_ids = oxm_ids
+
+    @classmethod
+    def _parse_prop(cls, buf):
+        rest = buf
+        ids = []
+        while rest:
+            i, rest = OFPOxmId.parse(rest)
+            ids.append(i)
+        return {
+            'oxm_ids': ids,
+        }
+
+    def _serialize_prop(self):
+        bin_ids = bytearray()
+        for i in self.oxm_ids:
+            bin_ids += i.serialize()
+        return bin_ids
+
+
+# XXX ofproto_v1_3.OFPTFPT_EXPERIMENTER
+# XXX ofproto_v1_3.OFPTFPT_EXPERIMENTER_MISS
 
 
 @_set_stats_type(ofproto_v1_3.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
@@ -4751,21 +5046,17 @@ class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
 
     This message is currently unimplemented.
     """
-    def __init__(self, datapath, flags, length, table_id, name,
-                 metadata_match, metadata_write, config, max_entries,
-                 properties, type_=None):
+    def __init__(self, datapath, flags,
+                 body=[],
+                 properties=[], type_=None):
         super(OFPTableFeaturesStatsRequest, self).__init__(datapath, flags)
-        self.length = length
-        self.table_id = table_id
-        self.name = name
-        self.metadata_match = metadata_match
-        self.metadata_write = metadata_write
-        self.config = config
-        self.max_entries = max_entries
+        self.body = body
 
     def _serialize_stats_body(self):
-        # TODO
-        pass
+        bin_body = bytearray()
+        for p in self.body:
+            bin_body += p.serialize()
+        self.buf += bin_body
 
 
 @OFPMultipartReply.register_stats_type()
