@@ -72,7 +72,7 @@ class sctp(packet_base.PacketBase):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -374,7 +374,7 @@ class chunk_data(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -449,7 +449,7 @@ class chunk_init(chunk_init_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -498,7 +498,7 @@ class chunk_init_ack(chunk_init_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -547,7 +547,7 @@ class chunk_sack(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -638,7 +638,7 @@ class chunk_heartbeat(chunk_heartbeat_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -680,7 +680,7 @@ class chunk_heartbeat_ack(chunk_heartbeat_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -721,7 +721,7 @@ class chunk_abort(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -795,7 +795,7 @@ class chunk_shutdown(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -845,7 +845,7 @@ class chunk_shutdown_ack(chunk_ack_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -871,7 +871,7 @@ class chunk_error(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -940,7 +940,7 @@ class chunk_cookie_echo(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -990,7 +990,7 @@ class chunk_cookie_ack(chunk_ack_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1016,7 +1016,7 @@ class chunk_ecn_echo(chunk_ecn_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1043,7 +1043,7 @@ class chunk_cwr(chunk_ecn_base):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1071,7 +1071,7 @@ class chunk_shutdown_complete(chunk):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1189,7 +1189,7 @@ class cause_invalid_stream_id(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1233,7 +1233,7 @@ class cause_missing_param(cause):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1302,7 +1302,7 @@ class cause_stale_cookie(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1331,7 +1331,7 @@ class cause_out_of_resource(cause):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1371,7 +1371,7 @@ class cause_unresolvable_addr(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1435,7 +1435,7 @@ class cause_unrecognized_chunk(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1464,7 +1464,7 @@ class cause_invalid_param(cause):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1504,7 +1504,7 @@ class cause_unrecognized_param(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1533,7 +1533,7 @@ class cause_no_userdata(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1564,7 +1564,7 @@ class cause_cookie_while_shutdown(cause):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1605,7 +1605,7 @@ class cause_restart_with_new_addr(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1677,7 +1677,7 @@ class cause_user_initiated_abort(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1706,7 +1706,7 @@ class cause_protocol_violation(cause_with_value):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1785,7 +1785,7 @@ class param_heartbeat(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1812,7 +1812,7 @@ class param_state_cookie(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1839,7 +1839,7 @@ class param_unrecognized_param(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1866,7 +1866,7 @@ class param_cookie_preserve(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1910,7 +1910,7 @@ class param_ecn(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1946,7 +1946,7 @@ class param_host_addr(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -1973,7 +1973,7 @@ class param_supported_addr(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -2038,7 +2038,7 @@ class param_ipv4(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
@@ -2090,7 +2090,7 @@ class param_ipv6(param):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the correspondig args in this order.
 
-    .. tabularcolumns:: |l|p{30em}|l|
+    .. tabularcolumns:: |l|L|
 
     ============== =====================================================
     Attribute      Description
