@@ -148,7 +148,8 @@ def from_user(name_to_field, name, user_value):
     else:
         value = user_value
         mask = None
-    value = t.from_user(value)
+    if not value is None:
+        value = t.from_user(value)
     if not mask is None:
         mask = t.from_user(mask)
     return num, value, mask
@@ -162,7 +163,10 @@ def to_user(num_to_field, n, v, m):
     except KeyError:
         t = UnknownType
         name = 'field_%d' % n
-    value = t.to_user(v)
+    if not v is None:
+        value = t.to_user(v)
+    else:
+        value = None
     if m is None:
         user_value = value
     else:
