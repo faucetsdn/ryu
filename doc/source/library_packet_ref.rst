@@ -29,6 +29,9 @@ Protocol Header classes
 .. automodule:: ryu.lib.packet.vlan
    :members:
 
+.. automodule:: ryu.lib.packet.pbb
+   :members:
+
 .. automodule:: ryu.lib.packet.mpls
    :members:
 

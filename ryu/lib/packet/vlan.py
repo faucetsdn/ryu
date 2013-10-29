@@ -22,6 +22,7 @@ from . import ipv6
 from . import lldp
 from . import slow
 from . import llc
+from . import pbb
 from ryu.ofproto import ether
 
 
@@ -98,7 +99,9 @@ class svlan(_vlan):
     Attribute      Description
     ============== ====================
     pcp            Priority Code Point
-    cfi            Canonical Format Indicator
+    cfi            Canonical Format Indicator.
+                   In a case to be used as B-TAG,
+                   this field means DEI(Drop Eligible Indication).
     vid            VLAN Identifier
     ethertype      EtherType
     ============== ====================
@@ -120,3 +123,4 @@ vlan.register_packet_type(slow.slow, ether.ETH_TYPE_SLOW)
 vlan.register_packet_type(llc.llc, ether.ETH_TYPE_IEEE802_3)
 
 svlan.register_packet_type(vlan, ether.ETH_TYPE_8021Q)
+svlan.register_packet_type(pbb.itag, ether.ETH_TYPE_8021AH)
