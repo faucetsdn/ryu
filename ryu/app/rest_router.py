@@ -1628,12 +1628,12 @@ class OfCtl_v1_0(OfCtl):
             v = (32 - src_mask) << ofp.OFPFW_NW_SRC_SHIFT | \
                 ~ofp.OFPFW_NW_SRC_MASK
             wildcards &= v
-            nw_src = ipv4_text_to_int(nw_src),
+            nw_src = ipv4_text_to_int(nw_src)
         if nw_dst:
             v = (32 - dst_mask) << ofp.OFPFW_NW_DST_SHIFT | \
                 ~ofp.OFPFW_NW_DST_MASK
             wildcards &= v
-            nw_dst = ipv4_text_to_int(nw_dst),
+            nw_dst = ipv4_text_to_int(nw_dst)
         if nw_proto:
             wildcards &= ~ofp.OFPFW_NW_PROTO
 
