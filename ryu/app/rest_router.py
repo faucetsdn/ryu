@@ -1764,13 +1764,9 @@ class OfCtl_v1_2(OfCtl):
         if dec_ttl:
             actions.append(ofp_parser.OFPActionDecNwTtl())
         if src_mac:
-            set_src = ofp_parser.OFPMatchField.make(ofp.OXM_OF_ETH_SRC,
-                                                    src_mac)
-            actions.append(ofp_parser.OFPActionSetField(set_src))
+            actions.append(ofp_parser.OFPActionSetField(eth_src=src_mac))
         if dst_mac:
-            set_dst = ofp_parser.OFPMatchField.make(ofp.OXM_OF_ETH_DST,
-                                                    dst_mac)
-            actions.append(ofp_parser.OFPActionSetField(set_dst))
+            actions.append(ofp_parser.OFPActionSetField(eth_dst=dst_mac))
         if outport is not None:
             actions.append(ofp_parser.OFPActionOutput(outport, 0))
 
