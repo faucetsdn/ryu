@@ -760,7 +760,6 @@ class chunk_abort(chunk):
     ============== =====================================================
     """
 
-    # TODO: coding and testing
     _class_prefixes = ['cause_']
     _RECOGNIZED_CAUSES = {}
 
@@ -917,7 +916,6 @@ class chunk_error(chunk):
     ============== =====================================================
     """
 
-    # TODO: coding and testing
     _class_prefixes = ['cause_']
     _RECOGNIZED_CAUSES = {}
 
