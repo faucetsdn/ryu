@@ -26,6 +26,7 @@ from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
 from ryu.lib.packet.ipv4 import ipv4
 from ryu.lib.packet.vlan import vlan
+from ryu.lib.packet.vlan import svlan
 
 
 LOG = logging.getLogger('test_vlan')
@@ -136,3 +137,120 @@ class Test_vlan(unittest.TestCase):
     def test_malformed_vlan(self):
         m_short_buf = self.buf[1:vlan._MIN_LEN]
         vlan.parser(m_short_buf)
+
+
+class Test_svlan(unittest.TestCase):
+
+    pcp = 0
+    cfi = 0
+    vid = 32
+    tci = pcp << 15 | cfi << 12 | vid
+    ethertype = ether.ETH_TYPE_8021Q
+
+    buf = pack(svlan._PACK_STR, tci, ethertype)
+
+    sv = svlan(pcp, cfi, vid, ethertype)
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def find_protocol(self, pkt, name):
+        for p in pkt.protocols:
+            if p.protocol_name == name:
+                return p
+
+    def test_init(self):
+        eq_(self.pcp, self.sv.pcp)
+        eq_(self.cfi, self.sv.cfi)
+        eq_(self.vid, self.sv.vid)
+        eq_(self.ethertype, self.sv.ethertype)
+
+    def test_parser(self):
+        res, ptype, _ = self.sv.parser(self.buf)
+
+        eq_(res.pcp, self.pcp)
+        eq_(res.cfi, self.cfi)
+        eq_(res.vid, self.vid)
+        eq_(res.ethertype, self.ethertype)
+        eq_(ptype, vlan)
+
+    def test_serialize(self):
+        data = bytearray()
+        prev = None
+        buf = self.sv.serialize(data, prev)
+
+        fmt = svlan._PACK_STR
+        res = struct.unpack(fmt, buf)
+
+        eq_(res[0], self.tci)
+        eq_(res[1], self.ethertype)
+
+    def _build_svlan(self):
+        src_mac = '00:07:0d:af:f4:54'
+        dst_mac = '00:00:00:00:00:00'
+        ethertype = ether.ETH_TYPE_8021AD
+        e = ethernet(dst_mac, src_mac, ethertype)
+
+        pcp = 0
+        cfi = 0
+        vid = 32
+        tci = pcp << 15 | cfi << 12 | vid
+        ethertype = ether.ETH_TYPE_IP
+        v = vlan(pcp, cfi, vid, ethertype)
+
+        version = 4
+        header_length = 20
+        tos = 0
+        total_length = 24
+        identification = 0x8a5d
+        flags = 0
+        offset = 1480
+        ttl = 64
+        proto = inet.IPPROTO_ICMP
+        csum = 0xa7f2
+        src = '131.151.32.21'
+        dst = '131.151.32.129'
+        option = 'TEST'
+        ip = ipv4(version, header_length, tos, total_length, identification,
+                  flags, offset, ttl, proto, csum, src, dst, option)
+
+        p = Packet()
+
+        p.add_protocol(e)
+        p.add_protocol(self.sv)
+        p.add_protocol(v)
+        p.add_protocol(ip)
+        p.serialize()
+
+        return p
+
+    def test_build_svlan(self):
+        p = self._build_svlan()
+
+        e = self.find_protocol(p, "ethernet")
+        ok_(e)
+        eq_(e.ethertype, ether.ETH_TYPE_8021AD)
+
+        sv = self.find_protocol(p, "svlan")
+        ok_(sv)
+        eq_(sv.ethertype, ether.ETH_TYPE_8021Q)
+
+        v = self.find_protocol(p, "vlan")
+        ok_(v)
+        eq_(v.ethertype, ether.ETH_TYPE_IP)
+
+        ip = self.find_protocol(p, "ipv4")
+        ok_(ip)
+
+        eq_(sv.pcp, self.pcp)
+        eq_(sv.cfi, self.cfi)
+        eq_(sv.vid, self.vid)
+        eq_(sv.ethertype, self.ethertype)
+
+    @raises(Exception)
+    def test_malformed_svlan(self):
+        m_short_buf = self.buf[1:svlan._MIN_LEN]
+        svlan.parser(m_short_buf)

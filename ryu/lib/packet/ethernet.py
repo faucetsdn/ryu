@@ -76,4 +76,5 @@ class ethernet(packet_base.PacketBase):
 # copy vlan _TYPES
 ethernet._TYPES = vlan.vlan._TYPES
 ethernet.register_packet_type(vlan.vlan, ether.ETH_TYPE_8021Q)
+ethernet.register_packet_type(vlan.svlan, ether.ETH_TYPE_8021AD)
 ethernet.register_packet_type(mpls.mpls, ether.ETH_TYPE_MPLS)
