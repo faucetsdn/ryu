@@ -1319,8 +1319,6 @@ class cause_missing_param(cause):
         for one in types:
             assert isinstance(one, int)
         self.types = types
-        if 0 == num:
-            num = len(self.types)
         self.num = num
 
     @classmethod
@@ -1339,6 +1337,9 @@ class cause_missing_param(cause):
             self._PACK_STR, self.cause_code(), self.length, self.num))
         for one in self.types:
             buf.extend(struct.pack('!H', one))
+        if 0 == self.num:
+            self.num = len(self.types)
+            struct.pack_into('!I', buf, 4, self.num)
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
