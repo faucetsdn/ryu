@@ -94,7 +94,13 @@ def round_up(x, y):
 
 
 def hex_array(data):
-    return ' '.join(hex(ord(chr)) for chr in data)
+    """Convert string into array of hexes to be printed."""
+    return ' '.join(hex(ord(char)) for char in data)
+
+
+def bytearray_to_hex(data):
+    """Convert bytearray into array of hexes to be printed."""
+    return ' '.join(hex(byte) for byte in data)
 
 
 # the following functions are taken from OpenStack

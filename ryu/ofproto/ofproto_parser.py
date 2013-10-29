@@ -21,6 +21,7 @@ import sys
 import functools
 
 from ryu import exception
+from ryu import utils
 from ryu.lib import stringify
 
 from . import ofproto_common
@@ -51,7 +52,15 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
     if msg_parser is None:
         raise exception.OFPUnknownVersion(version=version)
 
-    return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
+    try:
+        return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
+    except struct.error:
+        LOG.exception(
+            'Encounter an error during parsing OpenFlow packet from switch.'
+            'This implies switch sending a malfold OpenFlow packet.'
+            'version 0x%02x msg_type %d msg_len %d xid %d buf %s',
+            version, msg_type, msg_len, xid, utils.bytearray_to_hex(buf))
+        raise
 
 
 def create_list_of_base_attributes(f):
