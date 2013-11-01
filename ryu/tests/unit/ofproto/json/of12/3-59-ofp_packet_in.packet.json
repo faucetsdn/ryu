@@ -1,0 +1,262 @@
+{
+   "OFPPacketIn": {
+      "buffer_id": 4026531840, 
+      "data": "", 
+      "match": {
+         "OFPMatch": {
+            "length": 294, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "in_port", 
+                     "mask": null, 
+                     "value": 84281096
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "in_phy_port", 
+                     "mask": null, 
+                     "value": 16909060
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "metadata", 
+                     "mask": null, 
+                     "value": 283686952306183
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_type", 
+                     "mask": null, 
+                     "value": 2054
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "ff:ff:ff:ff:ff:ff"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_src", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "vlan_vid", 
+                     "mask": null, 
+                     "value": 999
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ip_dscp", 
+                     "mask": null, 
+                     "value": 9
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ip_ecn", 
+                     "mask": null, 
+                     "value": 3
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ip_proto", 
+                     "mask": null, 
+                     "value": 99
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv4_src", 
+                     "mask": null, 
+                     "value": "1.2.3.4"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv4_dst", 
+                     "mask": null, 
+                     "value": "1.2.3.4"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tcp_src", 
+                     "mask": null, 
+                     "value": 8080
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tcp_dst", 
+                     "mask": null, 
+                     "value": 18080
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "udp_src", 
+                     "mask": null, 
+                     "value": 28080
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "udp_dst", 
+                     "mask": null, 
+                     "value": 55936
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "sctp_src", 
+                     "mask": null, 
+                     "value": 48080
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "sctp_dst", 
+                     "mask": null, 
+                     "value": 59328
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "icmpv4_type", 
+                     "mask": null, 
+                     "value": 100
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "icmpv4_code", 
+                     "mask": null, 
+                     "value": 101
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_op", 
+                     "mask": null, 
+                     "value": 1
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_spa", 
+                     "mask": null, 
+                     "value": "10.0.0.1"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_tpa", 
+                     "mask": null, 
+                     "value": "10.0.0.3"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_sha", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_tha", 
+                     "mask": null, 
+                     "value": "00:00:00:00:00:00"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv6_src", 
+                     "mask": null, 
+                     "value": "fe80::f00b:a4ff:fe48:28a5"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv6_dst", 
+                     "mask": null, 
+                     "value": "fe80::f00b:a4ff:fe05:b7dc"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv6_flabel", 
+                     "mask": null, 
+                     "value": 541473
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "icmpv6_type", 
+                     "mask": null, 
+                     "value": 200
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "icmpv6_code", 
+                     "mask": null, 
+                     "value": 201
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv6_nd_target", 
+                     "mask": null, 
+                     "value": "fe80::a60:6eff:fe7f:74e7"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv6_nd_sll", 
+                     "mask": null, 
+                     "value": "00:00:00:00:02:9a"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv6_nd_tll", 
+                     "mask": null, 
+                     "value": "00:00:00:00:02:2b"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "mpls_label", 
+                     "mask": null, 
+                     "value": 624485
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "mpls_tc", 
+                     "mask": null, 
+                     "value": 5
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "reason": 0, 
+      "table_id": 200, 
+      "total_len": 0
+   }
+}
