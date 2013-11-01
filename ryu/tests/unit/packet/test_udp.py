@@ -94,3 +94,13 @@ class Test_udp(unittest.TestCase):
     def test_malformed_udp(self):
         m_short_buf = self.buf[1:udp._MIN_LEN]
         udp.parser(m_short_buf)
+
+    def test_default_args(self):
+        prev = ipv4(proto=inet.IPPROTO_UDP)
+        u = udp()
+        buf = u.serialize(bytearray(), prev)
+        res = struct.unpack(udp._PACK_STR, buf)
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], udp._MIN_LEN)
