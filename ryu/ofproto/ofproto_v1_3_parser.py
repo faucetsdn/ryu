@@ -3446,7 +3446,7 @@ class OFPMultipartReply(MsgBase):
         while offset < msg_len:
             b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
             body.append(b)
-            offset += b.length
+            offset += b.length if hasattr(b, 'length') else b.len
 
         if stats_type_cls.cls_body_single_struct:
             msg.body = body[0]
@@ -4325,9 +4325,10 @@ class OFPMeterBandStats(StringifyMixin):
 class OFPMeterStats(StringifyMixin):
     def __init__(self, meter_id=None, flow_count=None, packet_in_count=None,
                  byte_in_count=None, duration_sec=None, duration_nsec=None,
-                 band_stats=None, length=None):
+                 band_stats=None, len_=None):
         super(OFPMeterStats, self).__init__()
         self.meter_id = meter_id
+        self.len = 0
         self.flow_count = flow_count
         self.packet_in_count = packet_in_count
         self.byte_in_count = byte_in_count
@@ -4339,7 +4340,7 @@ class OFPMeterStats(StringifyMixin):
     def parser(cls, buf, offset):
         meter_stats = cls()
 
-        (meter_stats.meter_id, meter_stats.length,
+        (meter_stats.meter_id, meter_stats.len,
          meter_stats.flow_count, meter_stats.packet_in_count,
          meter_stats.byte_in_count, meter_stats.duration_sec,
          meter_stats.duration_nsec) = struct.unpack_from(
@@ -4348,7 +4349,7 @@ class OFPMeterStats(StringifyMixin):
 
         meter_stats.band_stats = []
         length = ofproto_v1_3.OFP_METER_STATS_SIZE
-        while length < meter_stats.length:
+        while length < meter_stats.len:
             band_stats = OFPMeterBandStats.parser(buf, offset)
             meter_stats.band_stats.append(band_stats)
             offset += ofproto_v1_3.OFP_METER_BAND_STATS_SIZE
