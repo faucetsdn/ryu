@@ -139,6 +139,13 @@ class sctp(packet_base.PacketBase):
             struct.pack_into('!I', buf, 8, self.csum)
         return str(buf)
 
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.chunks is not None:
+            for one in self.chunks:
+                length += len(one)
+        return length
+
     def _checksum(self, data):
         # from RFC 3309
         crc_c = [
