@@ -33,7 +33,8 @@ class tcp(packet_base.PacketBase):
     dst_port       Destination Port
     seq            Sequence Number
     ack            Acknowledgement Number
-    offset         Data Offset
+    offset         Data Offset \
+                   (0 means automatically-calculate when encoding)
     bits           Control Bits
     window_size    Window
     csum           Checksum \
@@ -47,8 +48,8 @@ class tcp(packet_base.PacketBase):
     _PACK_STR = '!HHIIBBHHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, src_port, dst_port, seq, ack, offset,
-                 bits, window_size, csum, urgent, option=None):
+    def __init__(self, src_port=0, dst_port=0, seq=0, ack=0, offset=0,
+                 bits=0, window_size=0, csum=0, urgent=0, option=None):
         super(tcp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port
@@ -81,20 +82,30 @@ class tcp(packet_base.PacketBase):
         return msg, None, buf[length:]
 
     def serialize(self, payload, prev):
-        length = len(self)
-        h = bytearray(length)
         offset = self.offset << 4
-        struct.pack_into(tcp._PACK_STR, h, 0, self.src_port, self.dst_port,
-                         self.seq, self.ack, offset, self.bits,
-                         self.window_size, self.csum, self.urgent)
+        h = bytearray(struct.pack(
+            tcp._PACK_STR, self.src_port, self.dst_port, self.seq,
+            self.ack, offset, self.bits, self.window_size, self.csum,
+            self.urgent))
 
         if self.option:
-            assert (length - tcp._MIN_LEN) >= len(self.option)
-            h[tcp._MIN_LEN:tcp._MIN_LEN + len(self.option)] = self.option
+            h.extend(self.option)
+            mod = len(self.option) % 4
+            if mod:
+                h.extend(bytearray(4 - mod))
+            if self.offset:
+                offset = self.offset << 2
+                if len(h) < offset:
+                    h.extend(bytearray(offset - len(h)))
+
+        if 0 == self.offset:
+            self.offset = len(h) >> 2
+            offset = self.offset << 4
+            struct.pack_into('!B', h, 12, offset)
 
         if self.csum == 0:
-            total_length = length + len(payload)
+            total_length = len(h) + len(payload)
             self.csum = packet_utils.checksum_ip(prev, total_length,
                                                  h + payload)
             struct.pack_into('!H', h, 16, self.csum)
-        return h
+        return str(h)

@@ -138,3 +138,48 @@ class Test_tcp(unittest.TestCase):
     def test_malformed_tcp(self):
         m_short_buf = self.buf[1:tcp._MIN_LEN]
         tcp.parser(m_short_buf)
+
+    def test_default_args(self):
+        prev = ipv4(proto=inet.IPPROTO_TCP)
+        t = tcp()
+        buf = t.serialize(bytearray(), prev)
+        res = struct.unpack(tcp._PACK_STR, buf)
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 5 << 4)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[8], 0)
+
+        # with option, without offset
+        t = tcp(option='\x01\x02\x03')
+        buf = t.serialize(bytearray(), prev)
+        res = struct.unpack(tcp._PACK_STR + '4s', buf)
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 6 << 4)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[8], 0)
+        eq_(res[9], '\x01\x02\x03\x00')
+
+        # with option, with long offset
+        t = tcp(offset=7, option='\x01\x02\x03')
+        buf = t.serialize(bytearray(), prev)
+        res = struct.unpack(tcp._PACK_STR + '8s', buf)
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 7 << 4)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[8], 0)
+        eq_(res[9], '\x01\x02\x03\x00\x00\x00\x00\x00')
