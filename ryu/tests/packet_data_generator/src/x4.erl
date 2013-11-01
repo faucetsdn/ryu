@@ -21,6 +21,189 @@
 -include_lib("of_protocol/include/ofp_v4.hrl").
 
 x() ->
+    AllFields = [
+         #ofp_field{
+             class = openflow_basic,name = in_port,
+             has_mask = false,
+             value = <<5,6,7,8>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = in_phy_port,
+             has_mask = false,
+             value = <<1,2,3,4>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = metadata,
+             has_mask = false,
+             value = <<0,1,2,3,4,5,6,7>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = eth_type,
+             has_mask = false,
+             value = <<8,6>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = eth_dst,
+             has_mask = false,value = <<"\377\377\377\377\377\377">>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = eth_src,
+             has_mask = false,value = <<"\362\v\244}\370\352">>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = vlan_vid,
+             has_mask = false,value = <<999:13>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ip_dscp,
+             has_mask = false,value = <<9:6>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ip_ecn,
+             has_mask = false,value = <<3:2>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ip_proto,
+             has_mask = false,value = <<99>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv4_src,
+             has_mask = false,value = <<1,2,3,4>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv4_dst,
+             has_mask = false,value = <<1,2,3,4>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = tcp_src,
+             has_mask = false,value = <<8080:16>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = tcp_dst,
+             has_mask = false,value = <<18080:16>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = udp_src,
+             has_mask = false,value = <<28080:16>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = udp_dst,
+             has_mask = false,value = <<318080:16>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = sctp_src,
+             has_mask = false,value = <<48080:16>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = sctp_dst,
+             has_mask = false,value = <<518080:16>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = icmpv4_type,
+             has_mask = false,value = <<100>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = icmpv4_code,
+             has_mask = false,value = <<101>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = arp_op,
+             has_mask = false,
+             value = <<0,1>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = arp_spa,
+             has_mask = false,
+             value = <<10,0,0,1>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = arp_tpa,
+             has_mask = false,
+             value = <<10,0,0,3>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = arp_sha,
+             has_mask = false,value = <<"\362\v\244}\370\352">>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = arp_tha,
+             has_mask = false,
+             value = <<0,0,0,0,0,0>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_src,
+             has_mask = false,
+             % fe80::f00b:a4ff:fe48:28a5
+             value = <<16#fe80000000000000f00ba4fffe4828a5:128>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_dst,
+             has_mask = false,
+             % fe80::f00b:a4ff:fe05:b7dc
+             value = <<16#fe80000000000000f00ba4fffe05b7dc:128>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_flabel,
+             has_mask = false,
+             value = <<16#84321:20>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = icmpv6_type,
+             has_mask = false,
+             value = <<200>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = icmpv6_code,
+             has_mask = false,
+             value = <<201>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_nd_target,
+             has_mask = false,
+             % fe80::a60:6eff:fe7f:74e7
+             value = <<16#fe800000000000000a606efffe7f74e7:128>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_nd_sll,
+             has_mask = false,
+             value = <<666:48>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_nd_tll,
+             has_mask = false,
+             value = <<555:48>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = mpls_label,
+             has_mask = false,
+             value = <<16#98765:20>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = mpls_tc,
+             has_mask = false,
+             value = <<5:3>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = mpls_bos,
+             has_mask = false,
+             value = <<1:1>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = pbb_isid,
+             has_mask = false,
+             value = <<16#abcdef:24>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = tunnel_id,
+             has_mask = false,
+             value = <<9,9,9,9,9,9,9,9>>,
+             mask = undefined},
+         #ofp_field{
+             class = openflow_basic,name = ipv6_exthdr,
+             has_mask = false,
+             value = <<500:9>>,
+             mask = undefined}
+    ],
     List = [
         #ofp_desc_reply{flags = [], mfr_desc = <<"mfr">>,
                               hw_desc = <<"hw">>, sw_desc = <<"sw">>,
@@ -2335,6 +2518,19 @@ x() ->
                      duration_nsec = 609036000,
                      bucket_stats = 
                          [#ofp_bucket_counter{
-                              packet_count = 234,byte_count = 2345}]}]}
+                              packet_count = 234,byte_count = 2345}]}]},
+        #ofp_packet_in{
+            buffer_id = 16#f0000000,reason = no_match,table_id = 200,
+            cookie = <<0,1,2,3,0,0,0,0>>,
+            match = #ofp_match{fields = AllFields},
+            data = <<>>},
+        #ofp_flow_mod{
+            cookie = <<0,0,0,0,0,0,0,0>>,
+            cookie_mask = <<0,0,0,0,0,0,0,0>>,
+            table_id = 1,command = add,idle_timeout = 0,
+            hard_timeout = 0,priority = 123,buffer_id = 65535,
+            out_port = any,out_group = any,flags = [],
+            match = #ofp_match{fields = AllFields},
+            instructions = []}
     ],
     lists:foldl(fun x:do/2, {4, 0}, List).
