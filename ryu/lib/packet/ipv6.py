@@ -68,8 +68,9 @@ class ipv6(packet_base.PacketBase):
             return cls
         return _register_header_type
 
-    def __init__(self, version, traffic_class, flow_label, payload_length,
-                 nxt, hop_limit, src, dst, ext_hdrs=None):
+    def __init__(self, version=6, traffic_class=0, flow_label=0,
+                 payload_length=0, nxt=inet.IPPROTO_NONE, hop_limit=0,
+                 src='::', dst='::', ext_hdrs=None):
         super(ipv6, self).__init__()
         self.version = version
         self.traffic_class = traffic_class
@@ -121,6 +122,12 @@ class ipv6(packet_base.PacketBase):
         if self.ext_hdrs:
             for ext_hdr in self.ext_hdrs:
                 hdr.extend(ext_hdr.serialize())
+        if 0 == self.payload_length:
+            payload_length = len(payload)
+            for ext_hdr in self.ext_hdrs:
+                payload_length += len(ext_hdr)
+            self.payload_length = payload_length
+            struct.pack_into('!H', hdr, 4, self.payload_length)
         return hdr
 
     def __len__(self):
@@ -194,6 +201,9 @@ class opt_header(header):
     def serialize(self):
         buf = struct.pack(self._PACK_STR, self.nxt, self.size)
         buf = bytearray(buf)
+        if self.data is None:
+            self.data = [option(type_=1, len_=6,
+                                data='\x00\x00\x00\x00\x00\x00')]
         for opt in self.data:
             buf.extend(opt.serialize())
         return buf
@@ -225,7 +235,7 @@ class hop_opts(opt_header):
     """
     TYPE = inet.IPPROTO_HOPOPTS
 
-    def __init__(self, nxt, size, data):
+    def __init__(self, nxt=inet.IPPROTO_NONE, size=0, data=None):
         super(hop_opts, self).__init__(nxt, size, data)
 
 
@@ -252,7 +262,7 @@ class dst_opts(opt_header):
     """
     TYPE = inet.IPPROTO_DSTOPTS
 
-    def __init__(self, nxt, size, data):
+    def __init__(self, nxt=inet.IPPROTO_NONE, size=0, data=None):
         super(dst_opts, self).__init__(nxt, size, data)
 
 
@@ -280,7 +290,7 @@ class option(stringify.StringifyMixin):
     _PACK_STR = '!BB'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, type_, len_, data):
+    def __init__(self, type_=0, len_=-1, data=None):
         self.type_ = type_
         self.len_ = len_
         self.data = data
@@ -344,7 +354,7 @@ class fragment(header):
     _PACK_STR = '!BxHI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, nxt, offset, more, id_):
+    def __init__(self, nxt=inet.IPPROTO_NONE, offset=0, more=0, id_=0):
         super(fragment, self).__init__(nxt)
         self.offset = offset
         self.more = more
@@ -394,8 +404,10 @@ class auth(header):
     _PACK_STR = '!BB2xII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, nxt, size, spi, seq, data):
+    def __init__(self, nxt=inet.IPPROTO_NONE, size=3, spi=0, seq=0,
+                 data='\x00\x00\x00\x00'):
         super(auth, self).__init__(nxt)
+        assert data is not None
         self.size = size
         self.spi = spi
         self.seq = seq
