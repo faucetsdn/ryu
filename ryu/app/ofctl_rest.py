@@ -82,6 +82,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             desc = ofctl_v1_0.get_desc_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            desc = ofctl_v1_3.get_desc_stats(dp, self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -96,7 +98,7 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             flows = ofctl_v1_0.get_flow_stats(dp, self.waiters)
-        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             flows = ofctl_v1_3.get_flow_stats(dp, self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
@@ -112,6 +114,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ports = ofctl_v1_0.get_port_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ports = ofctl_v1_3.get_port_stats(dp, self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -142,7 +146,7 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.mod_flow_entry(dp, flow, cmd)
-        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_flow_entry(dp, flow, cmd)
         else:
             LOG.debug('Unsupported OF protocol')
@@ -157,6 +161,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.delete_flow_entry(dp)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ofctl_v1_3.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
