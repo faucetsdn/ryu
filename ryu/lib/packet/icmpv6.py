@@ -181,7 +181,7 @@ class nd_neighbor(stringify.StringifyMixin):
         return _register_nd_option_type
 
     def __init__(self, res, dst, type_=None, length=None, data=None):
-        self.res = res << 29
+        self.res = res
         self.dst = dst
         self.type_ = type_
         self.length = length
@@ -204,9 +204,10 @@ class nd_neighbor(stringify.StringifyMixin):
         return msg
 
     def serialize(self):
-        hdr = bytearray(struct.pack(nd_neighbor._PACK_STR, self.res,
-                                    addrconv.ipv6.text_to_bin(self.dst)))
-
+        res = self.res << 29
+        hdr = bytearray(struct.pack(
+            nd_neighbor._PACK_STR, res,
+            addrconv.ipv6.text_to_bin(self.dst)))
         if self.type_ is not None:
             hdr += bytearray(struct.pack('!BB', self.type_, self.length))
             if self.type_ in nd_neighbor._ND_OPTION_TYPES:
@@ -350,7 +351,7 @@ class nd_router_advert(stringify.StringifyMixin):
     def __init__(self, ch_l, res, rou_l, rea_t, ret_t, type_=None, length=None,
                  data=None):
         self.ch_l = ch_l
-        self.res = res << 6
+        self.res = res
         self.rou_l = rou_l
         self.rea_t = rea_t
         self.ret_t = ret_t
@@ -385,9 +386,10 @@ class nd_router_advert(stringify.StringifyMixin):
         return msg
 
     def serialize(self):
-        hdr = bytearray(struct.pack(nd_router_advert._PACK_STR, self.ch_l,
-                                    self.res, self.rou_l, self.rea_t,
-                                    self.ret_t))
+        res = self.res << 6
+        hdr = bytearray(struct.pack(
+            nd_router_advert._PACK_STR, self.ch_l, res, self.rou_l,
+            self.rea_t, self.ret_t))
         if self.type_ is not None:
             for i in range(len(self.type_)):
                 hdr += bytearray(struct.pack('!BB', self.type_[i],
@@ -492,7 +494,7 @@ class nd_option_pi(stringify.StringifyMixin):
 
     def __init__(self, pl, res1, val_l, pre_l, res2, prefix):
         self.pl = pl
-        self.res1 = res1 << 5
+        self.res1 = res1
         self.val_l = val_l
         self.pre_l = pre_l
         self.res2 = res2
@@ -510,7 +512,8 @@ class nd_option_pi(stringify.StringifyMixin):
         return msg
 
     def serialize(self):
-        hdr = bytearray(struct.pack(self._PACK_STR, self.pl, self.res1,
+        res1 = self.res1 << 5
+        hdr = bytearray(struct.pack(self._PACK_STR, self.pl, res1,
                                     self.val_l, self.pre_l, self.res2,
                                     addrconv.ipv6.text_to_bin(self.prefix)))
 

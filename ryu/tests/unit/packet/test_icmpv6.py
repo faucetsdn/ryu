@@ -214,7 +214,7 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
 
     def test_init(self):
         nd = icmpv6.nd_neighbor(self.res, self.dst)
-        eq_(nd.res >> 29, self.res)
+        eq_(nd.res, self.res)
         eq_(nd.dst, self.dst)
         eq_(nd.type_, None)
         eq_(nd.length, None)
@@ -227,7 +227,7 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
         eq_(msg.csum, self.csum)
-        eq_(msg.data.res >> 29, self.res)
+        eq_(msg.data.res, self.res)
         eq_(addrconv.ipv6.text_to_bin(msg.data.dst),
             addrconv.ipv6.text_to_bin(self.dst))
         eq_(n, None)
