@@ -77,7 +77,7 @@ class icmp(packet_base.PacketBase):
             return cls
         return _register_icmp_type
 
-    def __init__(self, type_, code, csum, data=None):
+    def __init__(self, type_=ICMP_ECHO_REQUEST, code=0, csum=0, data=None):
         super(icmp, self).__init__()
         self.type = type_
         self.code = code
@@ -108,6 +108,9 @@ class icmp(packet_base.PacketBase):
                 hdr += self.data.serialize()
             else:
                 hdr += self.data
+        else:
+            self.data = echo()
+            hdr += self.data.serialize()
 
         if self.csum == 0:
             self.csum = packet_utils.checksum(hdr)
@@ -144,7 +147,7 @@ class echo(stringify.StringifyMixin):
     _PACK_STR = '!HH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, id_, seq, data=None):
+    def __init__(self, id_=0, seq=0, data=None):
         super(echo, self).__init__()
         self.id = id_
         self.seq = seq

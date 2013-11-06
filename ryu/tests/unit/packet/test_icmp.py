@@ -217,6 +217,24 @@ class Test_icmp(unittest.TestCase):
         self.setUp_with_TimeExceeded()
         self.test_to_string()
 
+    def test_default_args(self):
+        ic = icmp.icmp()
+        buf = ic.serialize(bytearray(), None)
+        res = struct.unpack(icmp.icmp._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], 8)
+        eq_(res[1], 0)
+        eq_(buf[4:], '\x00\x00\x00\x00')
+
+        # with data
+        ic = icmp.icmp(type_=icmp.ICMP_DEST_UNREACH, data=icmp.dest_unreach())
+        buf = ic.serialize(bytearray(), None)
+        res = struct.unpack(icmp.icmp._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], 3)
+        eq_(res[1], 0)
+        eq_(buf[4:], '\x00\x00\x00\x00')
+
 
 class Test_echo(unittest.TestCase):
 
@@ -256,6 +274,14 @@ class Test_echo(unittest.TestCase):
         eq_(self.seq, res[1])
         eq_(self.data, buf[struct.calcsize('!HH'):])
 
+    def test_default_args(self):
+        ec = icmp.echo()
+        buf = ec.serialize()
+        res = struct.unpack(icmp.echo._PACK_STR, str(buf))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+
 
 class Test_dest_unreach(unittest.TestCase):
 
@@ -290,6 +316,14 @@ class Test_dest_unreach(unittest.TestCase):
         eq_(self.mtu, res[1])
         eq_(self.data, buf[struct.calcsize('!xBH'):])
 
+    def test_default_args(self):
+        du = icmp.dest_unreach()
+        buf = du.serialize()
+        res = struct.unpack(icmp.dest_unreach._PACK_STR, str(buf))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+
 
 class Test_TimeExceeded(unittest.TestCase):
 
@@ -319,3 +353,10 @@ class Test_TimeExceeded(unittest.TestCase):
         res = struct.unpack_from('!xBxx', str(buf))
         eq_(self.data_len, res[0])
         eq_(self.data, buf[struct.calcsize('!xBxx'):])
+
+    def test_default_args(self):
+        te = icmp.TimeExceeded()
+        buf = te.serialize()
+        res = struct.unpack(icmp.TimeExceeded._PACK_STR, str(buf))
+
+        eq_(res[0], 0)
