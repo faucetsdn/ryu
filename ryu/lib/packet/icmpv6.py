@@ -170,10 +170,9 @@ class nd_neighbor(stringify.StringifyMixin):
     @staticmethod
     def register_nd_option_type(*args):
         def _register_nd_option_type(cls):
-            for type_ in args:
-                nd_neighbor._ND_OPTION_TYPES[type_] = cls
+            nd_neighbor._ND_OPTION_TYPES[cls.option_type()] = cls
             return cls
-        return _register_nd_option_type
+        return _register_nd_option_type(args[0])
 
     def __init__(self, res, dst, option=None):
         self.res = res
@@ -237,10 +236,9 @@ class nd_router_solicit(stringify.StringifyMixin):
     @staticmethod
     def register_nd_option_type(*args):
         def _register_nd_option_type(cls):
-            for type_ in args:
-                nd_router_solicit._ND_OPTION_TYPES[type_] = cls
+            nd_router_solicit._ND_OPTION_TYPES[cls.option_type()] = cls
             return cls
-        return _register_nd_option_type
+        return _register_nd_option_type(args[0])
 
     def __init__(self, res, option=None):
         self.res = res
@@ -306,10 +304,9 @@ class nd_router_advert(stringify.StringifyMixin):
     @staticmethod
     def register_nd_option_type(*args):
         def _register_nd_option_type(cls):
-            for type_ in args:
-                nd_router_advert._ND_OPTION_TYPES[type_] = cls
+            nd_router_advert._ND_OPTION_TYPES[cls.option_type()] = cls
             return cls
-        return _register_nd_option_type
+        return _register_nd_option_type(args[0])
 
     def __init__(self, ch_l, res, rou_l, rea_t, ret_t, options=None):
         self.ch_l = ch_l
@@ -356,9 +353,14 @@ class nd_option(stringify.StringifyMixin):
 
     __metaclass__ = abc.ABCMeta
 
+    @classmethod
     @abc.abstractmethod
-    def __init__(self, type_, length):
-        self.type_ = type_
+    def option_type(cls):
+        pass
+
+    @abc.abstractmethod
+    def __init__(self, _type, length):
+        self._type = _type
         self.length = length
 
     @classmethod
@@ -371,12 +373,45 @@ class nd_option(stringify.StringifyMixin):
         pass
 
 
-@nd_neighbor.register_nd_option_type(ND_OPTION_SLA, ND_OPTION_TLA)
-@nd_router_solicit.register_nd_option_type(ND_OPTION_SLA)
-@nd_router_advert.register_nd_option_type(ND_OPTION_SLA)
 class nd_option_la(nd_option):
+
+    _PACK_STR = '!BB6s'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    @abc.abstractmethod
+    def __init__(self, length, hw_src, data):
+        super(nd_option_la, self).__init__(self.option_type(), length)
+        self.hw_src = hw_src
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (_, length, hw_src) = struct.unpack_from(cls._PACK_STR, buf, offset)
+        msg = cls(length, addrconv.mac.bin_to_text(hw_src))
+        offset += cls._MIN_LEN
+        if len(buf) > offset:
+            msg.data = buf[offset:]
+
+        return msg
+
+    def serialize(self):
+        buf = bytearray(struct.pack(
+            self._PACK_STR, self.option_type(), self.length,
+            addrconv.mac.text_to_bin(self.hw_src)))
+        if self.data is not None:
+            buf.extend(self.data)
+        mod = len(buf) % 8
+        if mod:
+            buf.extend(bytearray(8 - mod))
+        return str(buf)
+
+
+@nd_neighbor.register_nd_option_type
+@nd_router_solicit.register_nd_option_type
+@nd_router_advert.register_nd_option_type
+class nd_option_sla(nd_option_la):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
-    Source/Target Link-Layer Address Option. (RFC 4861)
+    Source Link-Layer Address Option. (RFC 4861)
 
     This is used with ryu.lib.packet.icmpv6.nd_neighbor,
     ryu.lib.packet.icmpv6.nd_router_solicit or
@@ -391,7 +426,6 @@ class nd_option_la(nd_option):
     ============== ====================
     Attribute      Description
     ============== ====================
-    type\_         type of the option.
     length         length of the option.
     hw_src         Link-Layer Address. \
                    NOTE: If the address is longer than 6 octets this contains \
@@ -405,38 +439,52 @@ class nd_option_la(nd_option):
     ============== ====================
     """
 
-    _PACK_STR = '!BB6s'
-    _MIN_LEN = struct.calcsize(_PACK_STR)
+    @classmethod
+    def option_type(cls):
+        return ND_OPTION_SLA
 
-    def __init__(self, type_, length, hw_src, data=None):
-        super(nd_option_la, self).__init__(type_, length)
-        self.hw_src = hw_src
-        self.data = data
+    def __init__(self, length, hw_src, data=None):
+        super(nd_option_sla, self).__init__(length, hw_src, data)
+
+
+@nd_neighbor.register_nd_option_type
+class nd_option_tla(nd_option_la):
+    """ICMPv6 sub encoder/decoder class for Neighbor discovery
+    Target Link-Layer Address Option. (RFC 4861)
+
+    This is used with ryu.lib.packet.icmpv6.nd_neighbor.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    length         length of the option.
+    hw_src         Link-Layer Address. \
+                   NOTE: If the address is longer than 6 octets this contains \
+                   the first 6 octets in the address. \
+                   This implementation assumes the address has at least \
+                   6 octets.
+    data           A bytearray which contains the rest of Link-Layer Address \
+                   and padding.  When encoding a packet, it's user's \
+                   responsibility to provide necessary padding for 8-octets \
+                   alignment required by the protocol.
+    ============== ====================
+    """
 
     @classmethod
-    def parser(cls, buf, offset):
-        (type_, length, hw_src
-         ) = struct.unpack_from(cls._PACK_STR, buf, offset)
-        msg = cls(type_, length, addrconv.mac.bin_to_text(hw_src))
-        offset += cls._MIN_LEN
-        if len(buf) > offset:
-            msg.data = buf[offset:]
+    def option_type(cls):
+        return ND_OPTION_TLA
 
-        return msg
-
-    def serialize(self):
-        buf = bytearray(struct.pack(
-            self._PACK_STR, self.type_, self.length,
-            addrconv.mac.text_to_bin(self.hw_src)))
-        if self.data is not None:
-            buf.extend(self.data)
-        mod = len(buf) % 8
-        if mod:
-            buf.extend(bytearray(8 - mod))
-        return str(buf)
+    def __init__(self, length, hw_src, data=None):
+        super(nd_option_tla, self).__init__(length, hw_src, data)
 
 
-@nd_router_advert.register_nd_option_type(ND_OPTION_PI)
+@nd_router_advert.register_nd_option_type
 class nd_option_pi(nd_option):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Prefix Information Option. (RFC 4861)
@@ -452,7 +500,6 @@ class nd_option_pi(nd_option):
     ============== ====================
     Attribute      Description
     ============== ====================
-    type\_         type of the option.
     length         length of the option.
     pl             Prefix Length.
     res1           L,A,R\* Flags for Prefix Information.
@@ -465,11 +512,15 @@ class nd_option_pi(nd_option):
     \*R flag is defined in (RFC 3775)
     """
 
-    _PACK_STR = '!BBIII16s'
+    _PACK_STR = '!BBBBIII16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, type_, length, pl, res1, val_l, pre_l, res2, prefix):
-        super(nd_option_pi, self).__init__(self, type_, length)
+    @classmethod
+    def option_type(cls):
+        return ND_OPTION_PI
+
+    def __init__(self, length, pl, res1, val_l, pre_l, res2, prefix):
+        super(nd_option_pi, self).__init__(self.option_type(), length)
         self.pl = pl
         self.res1 = res1
         self.val_l = val_l
@@ -479,9 +530,9 @@ class nd_option_pi(nd_option):
 
     @classmethod
     def parser(cls, buf, offset):
-        (type_, length, pl, res1, val_l, pre_l, res2, prefix
+        (_, length, pl, res1, val_l, pre_l, res2, prefix
          ) = struct.unpack_from(cls._PACK_STR, buf, offset)
-        msg = cls(type_, length, pl, res1 >> 5, val_l, pre_l, res2,
+        msg = cls(length, pl, res1 >> 5, val_l, pre_l, res2,
                   addrconv.ipv6.bin_to_text(prefix))
 
         return msg
@@ -489,7 +540,7 @@ class nd_option_pi(nd_option):
     def serialize(self):
         res1 = self.res1 << 5
         hdr = bytearray(struct.pack(
-            self._PACK_STR, self.type_, self.length, self.pl,
+            self._PACK_STR, self.option_type(), self.length, self.pl,
             res1, self.val_l, self.pre_l, self.res2,
             addrconv.ipv6.text_to_bin(self.prefix)))
 
