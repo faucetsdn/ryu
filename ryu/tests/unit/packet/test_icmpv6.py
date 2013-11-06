@@ -190,7 +190,7 @@ class Test_icmpv6_echo_reply(Test_icmpv6_echo_request):
         self.buf = '\x81\x00\xa4\x72\x76\x20\x00\x00'
 
 
-class Test_icmpv6_neighbor_solict(unittest.TestCase):
+class Test_icmpv6_neighbor_solicit(unittest.TestCase):
     type_ = 135
     code = 0
     csum = 0x952d
@@ -324,7 +324,7 @@ class Test_icmpv6_neighbor_solict(unittest.TestCase):
         eq_(repr(ic), ic_str)
 
 
-class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solict):
+class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solicit):
     def setUp(self):
         self.type_ = 136
         self.csum = 0xb8ba
@@ -340,7 +340,7 @@ class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solict):
             + '\x02\x60\x97\xff\xfe\x07\x69\xea'
 
 
-class Test_icmpv6_router_solict(unittest.TestCase):
+class Test_icmpv6_router_solicit(unittest.TestCase):
     type_ = 133
     code = 0
     csum = 0x97d9
