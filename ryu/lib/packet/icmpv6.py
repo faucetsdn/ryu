@@ -138,6 +138,12 @@ class icmpv6(packet_base.PacketBase):
 
         return hdr
 
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.data is not None:
+            length += len(self.data)
+        return length
+
 
 @icmpv6.register_icmpv6_type(ND_NEIGHBOR_SOLICIT, ND_NEIGHBOR_ADVERT)
 class nd_neighbor(stringify.StringifyMixin):
@@ -206,6 +212,12 @@ class nd_neighbor(stringify.StringifyMixin):
                 hdr.extend(self.option)
         return str(hdr)
 
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.option is not None:
+            length += len(self.option)
+        return length
+
 
 @icmpv6.register_icmpv6_type(ND_ROUTER_SOLICIT)
 class nd_router_solicit(stringify.StringifyMixin):
@@ -268,6 +280,12 @@ class nd_router_solicit(stringify.StringifyMixin):
             else:
                 hdr.extend(self.option)
         return str(hdr)
+
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.option is not None:
+            length += len(self.option)
+        return length
 
 
 @icmpv6.register_icmpv6_type(ND_ROUTER_ADVERT)
@@ -348,6 +366,12 @@ class nd_router_advert(stringify.StringifyMixin):
                 hdr.extend(option)
         return str(hdr)
 
+    def __len__(self):
+        length = self._MIN_LEN
+        for option in self.options:
+            length += len(option)
+        return length
+
 
 class nd_option(stringify.StringifyMixin):
 
@@ -371,6 +395,9 @@ class nd_option(stringify.StringifyMixin):
     @abc.abstractmethod
     def serialize(self):
         pass
+
+    def __len__(self):
+        return self._MIN_LEN
 
 
 class nd_option_la(nd_option):
@@ -404,6 +431,12 @@ class nd_option_la(nd_option):
         if mod:
             buf.extend(bytearray(8 - mod))
         return str(buf)
+
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.data is not None:
+            length += len(self.data)
+        return length
 
 
 @nd_neighbor.register_nd_option_type
@@ -594,3 +627,9 @@ class echo(stringify.StringifyMixin):
             hdr += bytearray(self.data)
 
         return hdr
+
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.data is not None:
+            length += len(self.data)
+        return length
