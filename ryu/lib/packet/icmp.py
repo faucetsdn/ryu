@@ -115,6 +115,9 @@ class icmp(packet_base.PacketBase):
 
         return hdr
 
+    def __len__(self):
+        return self._MIN_LEN + len(self.data)
+
 
 @icmp.register_icmp_type(ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST)
 class echo(stringify.StringifyMixin):
@@ -166,6 +169,12 @@ class echo(stringify.StringifyMixin):
             hdr += self.data
 
         return hdr
+
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.data is not None:
+            length += len(self.data)
+        return length
 
 
 @icmp.register_icmp_type(ICMP_DEST_UNREACH)
@@ -227,6 +236,12 @@ class dest_unreach(stringify.StringifyMixin):
 
         return hdr
 
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.data is not None:
+            length += len(self.data)
+        return length
+
 
 @icmp.register_icmp_type(ICMP_TIME_EXCEEDED)
 class TimeExceeded(stringify.StringifyMixin):
@@ -276,3 +291,9 @@ class TimeExceeded(stringify.StringifyMixin):
             hdr += self.data
 
         return hdr
+
+    def __len__(self):
+        length = self._MIN_LEN
+        if self.data is not None:
+            length += len(self.data)
+        return length
