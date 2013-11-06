@@ -56,6 +56,13 @@ ICMPV6_NI_REPLY = 140     # node information reply
 
 ICMPV6_MAXTYPE = 201
 
+# ND_OPTIONS from RFC 4861
+ND_OPTION_SLA = 1  # Source Link-Layer Address
+ND_OPTION_TLA = 2  # Target Link-Layer Address
+ND_OPTION_PI = 3   # Prefix Information
+ND_OPTION_RH = 4   # Redirected Header
+ND_OPTION_MTU = 5  # MTU
+
 
 class icmpv6(packet_base.PacketBase):
     """ICMPv6 (RFC 2463) header encoder/decoder class.
@@ -165,13 +172,6 @@ class nd_neighbor(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _ND_OPTION_TYPES = {}
 
-    # ND option type
-    ND_OPTION_SLA = 1  # Source Link-Layer Address
-    ND_OPTION_TLA = 2  # Target Link-Layer Address
-    ND_OPTION_PI = 3   # Prefix Information
-    ND_OPTION_RH = 4   # Redirected Header
-    ND_OPTION_MTU = 5  # MTU
-
     @staticmethod
     def register_nd_option_type(*args):
         def _register_nd_option_type(cls):
@@ -249,9 +249,6 @@ class nd_router_solicit(stringify.StringifyMixin):
     _PACK_STR = '!I'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _ND_OPTION_TYPES = {}
-
-    # ND option type
-    ND_OPTION_SLA = 1  # Source Link-Layer Address
 
     @staticmethod
     def register_nd_option_type(*args):
@@ -335,11 +332,6 @@ class nd_router_advert(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _ND_OPTION_TYPES = {}
 
-    # ND option type
-    ND_OPTION_SLA = 1  # Source Link-Layer Address
-    ND_OPTION_PI = 3   # Prefix Information
-    ND_OPTION_MTU = 5  # MTU
-
     @staticmethod
     def register_nd_option_type(*args):
         def _register_nd_option_type(cls):
@@ -402,10 +394,9 @@ class nd_router_advert(stringify.StringifyMixin):
         return hdr
 
 
-@nd_neighbor.register_nd_option_type(nd_neighbor.ND_OPTION_SLA,
-                                     nd_neighbor.ND_OPTION_TLA)
-@nd_router_solicit.register_nd_option_type(nd_router_solicit.ND_OPTION_SLA)
-@nd_router_advert.register_nd_option_type(nd_router_advert.ND_OPTION_SLA)
+@nd_neighbor.register_nd_option_type(ND_OPTION_SLA, ND_OPTION_TLA)
+@nd_router_solicit.register_nd_option_type(ND_OPTION_SLA)
+@nd_router_advert.register_nd_option_type(ND_OPTION_SLA)
 class nd_option_la(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Source/Target Link-Layer Address Option. (RFC 4861)
@@ -462,7 +453,7 @@ class nd_option_la(stringify.StringifyMixin):
         return hdr
 
 
-@nd_router_advert.register_nd_option_type(nd_router_advert.ND_OPTION_PI)
+@nd_router_advert.register_nd_option_type(ND_OPTION_PI)
 class nd_option_pi(stringify.StringifyMixin):
     """ICMPv6 sub encoder/decoder class for Neighbor discovery
     Prefix Information Option. (RFC 4861)
