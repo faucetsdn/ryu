@@ -89,6 +89,17 @@ class Test_icmpv6_header(unittest.TestCase):
         m_short_buf = self.buf[1:self.icmp._MIN_LEN]
         self.icmp.parser(m_short_buf)
 
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6()
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
 
 class Test_icmpv6_echo_request(unittest.TestCase):
     type_ = 128
@@ -182,12 +193,46 @@ class Test_icmpv6_echo_request(unittest.TestCase):
         eq_(str(ic), ic_str)
         eq_(repr(ic), ic_str)
 
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ICMPV6_ECHO_REQUEST, data=icmpv6.echo())
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ICMPV6_ECHO_REQUEST)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.echo._PACK_STR, str(buf[4:]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+
 
 class Test_icmpv6_echo_reply(Test_icmpv6_echo_request):
     def setUp(self):
         self.type_ = 129
         self.csum = 0xa472
         self.buf = '\x81\x00\xa4\x72\x76\x20\x00\x00'
+
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ICMPV6_ECHO_REPLY, data=icmpv6.echo())
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ICMPV6_ECHO_REPLY)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.echo._PACK_STR, str(buf[4:]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
 
 
 class Test_icmpv6_neighbor_solicit(unittest.TestCase):
@@ -317,6 +362,48 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
         eq_(str(ic), ic_str)
         eq_(repr(ic), ic_str)
 
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_NEIGHBOR_SOLICIT, data=icmpv6.nd_neighbor())
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_NEIGHBOR_SOLICIT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_neighbor._PACK_STR, str(buf[4:]))
+
+        eq_(res[0], 0)
+        eq_(res[1], addrconv.ipv6.text_to_bin('::'))
+
+        # with nd_option_sla
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_NEIGHBOR_SOLICIT,
+            data=icmpv6.nd_neighbor(
+                option=icmpv6.nd_option_sla()))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_NEIGHBOR_SOLICIT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_neighbor._PACK_STR, str(buf[4:24]))
+
+        eq_(res[0], 0)
+        eq_(res[1], addrconv.ipv6.text_to_bin('::'))
+
+        res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[24:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_SLA)
+        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
 
 class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solicit):
     def setUp(self):
@@ -389,6 +476,48 @@ class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solicit):
 
         eq_(str(ic), ic_str)
         eq_(repr(ic), ic_str)
+
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_NEIGHBOR_ADVERT, data=icmpv6.nd_neighbor())
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_NEIGHBOR_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_neighbor._PACK_STR, str(buf[4:]))
+
+        eq_(res[0], 0)
+        eq_(res[1], addrconv.ipv6.text_to_bin('::'))
+
+        # with nd_option_tla
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_NEIGHBOR_ADVERT,
+            data=icmpv6.nd_neighbor(
+                option=icmpv6.nd_option_tla()))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_NEIGHBOR_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_neighbor._PACK_STR, str(buf[4:24]))
+
+        eq_(res[0], 0)
+        eq_(res[1], addrconv.ipv6.text_to_bin('::'))
+
+        res = struct.unpack(icmpv6.nd_option_tla._PACK_STR, str(buf[24:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_TLA)
+        eq_(res[1], len(icmpv6.nd_option_tla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
 
 class Test_icmpv6_router_solicit(unittest.TestCase):
@@ -509,3 +638,295 @@ class Test_icmpv6_router_solicit(unittest.TestCase):
 
         eq_(str(ic), ic_str)
         eq_(repr(ic), ic_str)
+
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_SOLICIT, data=icmpv6.nd_router_solicit())
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_SOLICIT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_solicit._PACK_STR, str(buf[4:]))
+
+        eq_(res[0], 0)
+
+        # with nd_option_sla
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_SOLICIT,
+            data=icmpv6.nd_router_solicit(
+                option=icmpv6.nd_option_sla()))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_SOLICIT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_solicit._PACK_STR, str(buf[4:8]))
+
+        eq_(res[0], 0)
+
+        res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[8:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_SLA)
+        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+
+class Test_icmpv6_router_advert(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_default_args(self):
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_ADVERT, data=icmpv6.nd_router_advert())
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_advert._PACK_STR, str(buf[4:]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+
+        # with nd_option_sla
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_ADVERT,
+            data=icmpv6.nd_router_advert(
+                options=[icmpv6.nd_option_sla()]))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_advert._PACK_STR, str(buf[4:16]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+
+        res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[16:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_SLA)
+        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+        # with nd_option_pi
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_ADVERT,
+            data=icmpv6.nd_router_advert(
+                options=[icmpv6.nd_option_pi()]))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_advert._PACK_STR, str(buf[4:16]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+
+        res = struct.unpack(icmpv6.nd_option_pi._PACK_STR, str(buf[16:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_PI)
+        eq_(res[1], 4)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[7], addrconv.ipv6.text_to_bin('::'))
+
+        # with nd_option_sla and nd_option_pi
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_ADVERT,
+            data=icmpv6.nd_router_advert(
+                options=[icmpv6.nd_option_sla(), icmpv6.nd_option_pi()]))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_advert._PACK_STR, str(buf[4:16]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+
+        res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[16:24]))
+
+        eq_(res[0], icmpv6.ND_OPTION_SLA)
+        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+        res = struct.unpack(icmpv6.nd_option_pi._PACK_STR, str(buf[24:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_PI)
+        eq_(res[1], len(icmpv6.nd_option_pi()) / 8)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[7], addrconv.ipv6.text_to_bin('::'))
+
+
+class Test_icmpv6_nd_option_la(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_default_args(self):
+        la = icmpv6.nd_option_sla()
+        buf = la.serialize()
+        res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf))
+
+        eq_(res[0], icmpv6.ND_OPTION_SLA)
+        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+        # with nd_neighbor
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_NEIGHBOR_ADVERT,
+            data=icmpv6.nd_neighbor(
+                option=icmpv6.nd_option_tla()))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_NEIGHBOR_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_neighbor._PACK_STR, str(buf[4:24]))
+
+        eq_(res[0], 0)
+        eq_(res[1], addrconv.ipv6.text_to_bin('::'))
+
+        res = struct.unpack(icmpv6.nd_option_tla._PACK_STR, str(buf[24:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_TLA)
+        eq_(res[1], len(icmpv6.nd_option_tla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+        # with nd_router_solicit
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_SOLICIT,
+            data=icmpv6.nd_router_solicit(
+                option=icmpv6.nd_option_sla()))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_SOLICIT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_solicit._PACK_STR, str(buf[4:8]))
+
+        eq_(res[0], 0)
+
+        res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[8:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_SLA)
+        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+
+class Test_icmpv6_nd_option_pi(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_default_args(self):
+        pi = icmpv6.nd_option_pi()
+        buf = pi.serialize()
+        res = struct.unpack(icmpv6.nd_option_pi._PACK_STR, str(buf))
+
+        eq_(res[0], icmpv6.ND_OPTION_PI)
+        eq_(res[1], len(icmpv6.nd_option_pi()) / 8)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[7], addrconv.ipv6.text_to_bin('::'))
+
+        # with nd_router_advert
+        prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
+        ic = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_ADVERT,
+            data=icmpv6.nd_router_advert(
+                options=[icmpv6.nd_option_pi()]))
+        prev.serialize(ic, None)
+        buf = ic.serialize(bytearray(), prev)
+        res = struct.unpack(icmpv6.icmpv6._PACK_STR, str(buf[:4]))
+
+        eq_(res[0], icmpv6.ND_ROUTER_ADVERT)
+        eq_(res[1], 0)
+        eq_(res[2], icmpv6_csum(prev, buf))
+
+        res = struct.unpack(icmpv6.nd_router_advert._PACK_STR, str(buf[4:16]))
+
+        eq_(res[0], 0)
+        eq_(res[1], 0)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+
+        res = struct.unpack(icmpv6.nd_option_pi._PACK_STR, str(buf[16:]))
+
+        eq_(res[0], icmpv6.ND_OPTION_PI)
+        eq_(res[1], 4)
+        eq_(res[2], 0)
+        eq_(res[3], 0)
+        eq_(res[4], 0)
+        eq_(res[5], 0)
+        eq_(res[6], 0)
+        eq_(res[7], addrconv.ipv6.text_to_bin('::'))

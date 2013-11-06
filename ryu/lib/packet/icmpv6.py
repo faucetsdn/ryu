@@ -102,7 +102,7 @@ class icmpv6(packet_base.PacketBase):
             return cls
         return _register_icmpv6_type
 
-    def __init__(self, type_, code, csum, data=None):
+    def __init__(self, type_=0, code=0, csum=0, data=None):
         super(icmpv6, self).__init__()
         self.type_ = type_
         self.code = code
@@ -180,7 +180,7 @@ class nd_neighbor(stringify.StringifyMixin):
             return cls
         return _register_nd_option_type(args[0])
 
-    def __init__(self, res, dst, option=None):
+    def __init__(self, res=0, dst='::', option=None):
         self.res = res
         self.dst = dst
         self.option = option
@@ -252,7 +252,7 @@ class nd_router_solicit(stringify.StringifyMixin):
             return cls
         return _register_nd_option_type(args[0])
 
-    def __init__(self, res, option=None):
+    def __init__(self, res=0, option=None):
         self.res = res
         self.option = option
 
@@ -326,7 +326,7 @@ class nd_router_advert(stringify.StringifyMixin):
             return cls
         return _register_nd_option_type(args[0])
 
-    def __init__(self, ch_l, res, rou_l, rea_t, ret_t, options=None):
+    def __init__(self, ch_l=0, res=0, rou_l=0, rea_t=0, ret_t=0, options=None):
         self.ch_l = ch_l
         self.res = res
         self.rou_l = rou_l
@@ -430,6 +430,9 @@ class nd_option_la(nd_option):
         mod = len(buf) % 8
         if mod:
             buf.extend(bytearray(8 - mod))
+        if 0 == self.length:
+            self.length = len(buf) / 8
+            struct.pack_into('!B', buf, 1, self.length)
         return str(buf)
 
     def __len__(self):
@@ -459,7 +462,8 @@ class nd_option_sla(nd_option_la):
     ============== ====================
     Attribute      Description
     ============== ====================
-    length         length of the option.
+    length         length of the option. \
+                   (0 means automatically-calculate when encoding)
     hw_src         Link-Layer Address. \
                    NOTE: If the address is longer than 6 octets this contains \
                    the first 6 octets in the address. \
@@ -476,7 +480,7 @@ class nd_option_sla(nd_option_la):
     def option_type(cls):
         return ND_OPTION_SLA
 
-    def __init__(self, length, hw_src, data=None):
+    def __init__(self, length=0, hw_src='00:00:00:00:00:00', data=None):
         super(nd_option_sla, self).__init__(length, hw_src, data)
 
 
@@ -496,7 +500,8 @@ class nd_option_tla(nd_option_la):
     ============== ====================
     Attribute      Description
     ============== ====================
-    length         length of the option.
+    length         length of the option. \
+                   (0 means automatically-calculate when encoding)
     hw_src         Link-Layer Address. \
                    NOTE: If the address is longer than 6 octets this contains \
                    the first 6 octets in the address. \
@@ -513,7 +518,7 @@ class nd_option_tla(nd_option_la):
     def option_type(cls):
         return ND_OPTION_TLA
 
-    def __init__(self, length, hw_src, data=None):
+    def __init__(self, length=0, hw_src='00:00:00:00:00:00', data=None):
         super(nd_option_tla, self).__init__(length, hw_src, data)
 
 
@@ -533,7 +538,8 @@ class nd_option_pi(nd_option):
     ============== ====================
     Attribute      Description
     ============== ====================
-    length         length of the option.
+    length         length of the option. \
+                   (0 means automatically-calculate when encoding)
     pl             Prefix Length.
     res1           L,A,R\* Flags for Prefix Information.
     val_l          Valid Lifetime.
@@ -552,7 +558,8 @@ class nd_option_pi(nd_option):
     def option_type(cls):
         return ND_OPTION_PI
 
-    def __init__(self, length, pl, res1, val_l, pre_l, res2, prefix):
+    def __init__(self, length=0, pl=0, res1=0, val_l=0, pre_l=0, res2=0,
+                 prefix='::'):
         super(nd_option_pi, self).__init__(self.option_type(), length)
         self.pl = pl
         self.res1 = res1
@@ -576,8 +583,10 @@ class nd_option_pi(nd_option):
             self._PACK_STR, self.option_type(), self.length, self.pl,
             res1, self.val_l, self.pre_l, self.res2,
             addrconv.ipv6.text_to_bin(self.prefix)))
-
-        return hdr
+        if 0 == self.length:
+            self.length = len(hdr) / 8
+            struct.pack_into('!B', hdr, 1, self.length)
+        return str(hdr)
 
 
 @icmpv6.register_icmpv6_type(ICMPV6_ECHO_REPLY, ICMPV6_ECHO_REQUEST)
@@ -604,7 +613,7 @@ class echo(stringify.StringifyMixin):
     _PACK_STR = '!HH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, id_, seq, data=None):
+    def __init__(self, id_=0, seq=0, data=None):
         self.id = id_
         self.seq = seq
         self.data = data
