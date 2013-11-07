@@ -300,7 +300,8 @@ class LacpLib(app_manager.RyuApp):
         mod = parser.OFPFlowMod(
             datapath=datapath, match=match, cookie=0,
             command=ofproto.OFPFC_ADD, idle_timeout=timeout,
-            flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
+            priority=65535, flags=ofproto.OFPFF_SEND_FLOW_REM,
+            actions=actions)
         datapath.send_msg(mod)
 
     def _add_flow_v1_2(self, src, port, timeout, datapath):
@@ -317,8 +318,9 @@ class LacpLib(app_manager.RyuApp):
             ofproto.OFPIT_APPLY_ACTIONS, actions)]
         mod = parser.OFPFlowMod(
             datapath=datapath, command=ofproto.OFPFC_ADD,
-            idle_timeout=timeout, flags=ofproto.OFPFF_SEND_FLOW_REM,
-            match=match, instructions=inst)
+            idle_timeout=timeout, priority=65535,
+            flags=ofproto.OFPFF_SEND_FLOW_REM, match=match,
+            instructions=inst)
         datapath.send_msg(mod)
 
     #-------------------------------------------------------------------
