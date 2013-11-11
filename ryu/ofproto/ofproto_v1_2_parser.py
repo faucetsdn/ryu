@@ -162,7 +162,7 @@ class OFPErrorExperimenterMsg(MsgBase):
         msg.type, msg.exp_type, msg.experimenter = struct.unpack_from(
             ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR, msg.buf,
             ofproto_v1_2.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto_v1_2.OFP_ERROR_EXPERIMENTER_SIZE:]
+        msg.data = msg.buf[ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_SIZE:]
         return msg
 
 

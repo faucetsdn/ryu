@@ -639,7 +639,7 @@ class TestOfprot12(unittest.TestCase):
 
     def test_struct_ofp_error_experimenter_msg(self):
         eq_(OFP_ERROR_EXPERIMENTER_MSG_PACK_STR, '!HHI')
-        eq_(OFP_ERROR_EXPERIMENTER_SIZE, 16)
+        eq_(OFP_ERROR_EXPERIMENTER_MSG_SIZE, 16)
 
     def test_struct_ofp_experimenter_header(self):
         eq_(OFP_EXPERIMENTER_HEADER_PACK_STR, '!II')
