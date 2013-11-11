@@ -165,6 +165,13 @@ class OFPErrorExperimenterMsg(MsgBase):
         msg.data = msg.buf[ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_SIZE:]
         return msg
 
+    def _serialize_body(self):
+        assert self.data is not None
+        msg_pack_into(ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_HEADER_SIZE,
+                      self.type, self.exp_type, self.experimenter)
+        self.buf += self.data
+
 
 @_register_parser
 @_set_msg_type(ofproto_v1_2.OFPT_ECHO_REQUEST)
