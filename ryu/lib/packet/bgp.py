@@ -22,7 +22,6 @@ RFC 4271 BGP-4
 # - notify data
 # - notify subcode constants
 # - RFC 3107 Carrying Label Information in BGP-4
-# - RFC 4360 BGP Extended Communities Attribute
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
 # - RFC 4486 Subcodes for BGP Cease Notification Message
 
@@ -74,6 +73,7 @@ BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
 BGP_ATTR_TYPE_COMMUNITIES = 8  # RFC 1997
 BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
 BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
+BGP_ATTR_TYPE_EXTENDED_COMMUNITIES = 16  # RFC 4360
 BGP_ATTR_TYPE_AS4_PATH = 17  # RFC 4893
 BGP_ATTR_TYPE_AS4_AGGREGATOR = 18  # RFC 4893
 
@@ -83,6 +83,10 @@ AS_TRANS = 23456  # RFC 4893
 BGP_COMMUNITY_NO_EXPORT = 0xffffff01
 BGP_COMMUNITY_NO_ADVERTISE = 0xffffff02
 BGP_COMMUNITY_NO_EXPORT_SUBCONFED = 0xffffff03
+
+# RFC 4360
+BGP_EXTENDED_COMMUNITY_ROUTE_TARGET = 0x02
+BGP_EXTENDED_COMMUNITY_ROUTE_ORIGIN = 0x03
 
 
 def pad(bin, len_):
@@ -158,17 +162,30 @@ class _IPAddrPrefix(_AddrPrefix):
 
 class _Value(object):
     _VALUE_PACK_STR = None
+    _VALUE_FIELDS = ['value']
+
+    @staticmethod
+    def do_init(cls, self, kwargs, **extra_kwargs):
+        ourfields = {}
+        for f in cls._VALUE_FIELDS:
+            v = kwargs[f]
+            del kwargs[f]
+            ourfields[f] = v
+        kwargs.update(extra_kwargs)
+        super(cls, self).__init__(**kwargs)
+        self.__dict__.update(ourfields)
 
     @classmethod
     def parse_value(cls, buf):
-        (value,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
-        return {
-            'value': value
-        }
+        values = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        return dict(zip(cls._VALUE_FIELDS, values))
 
     def serialize_value(self):
+        args = []
+        for f in self._VALUE_FIELDS:
+            args.append(getattr(self, f))
         buf = bytearray()
-        msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.value)
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, *args)
         return buf
 
 
@@ -616,6 +633,166 @@ class BGPPathAttributeCommunities(_PathAttribute):
             msg_pack_into(self._VALUE_PACK_STR, bincomm, 0, comm)
             buf += bincomm
         return buf
+
+
+# Extended Communities
+# RFC 4360
+# RFC 5668
+# IANA registry:
+# https://www.iana.org/assignments/bgp-extended-communities/
+# bgp-extended-communities.xml
+#
+# type
+# high  low
+# 00    sub-type    Two-Octet AS Specific Extended Community (transitive)
+# 40    sub-type    Two-Octet AS Specific Extended Community
+#                   payload:
+#                     2 byte Global Administrator (AS number)
+#                     4 byte Local Administrator (defined by sub-type)
+# 01    sub-type    IPv4 Address Specific Extended Community (transitive)
+# 41    sub-type    IPv4 Address Specific Extended Community
+#                   payload:
+#                     4 byte Global Administrator (IPv4 address)
+#                     2 byte Local Administrator (defined by sub-type)
+# 03    sub-type    Opaque Extended Community (transitive)
+# 43    sub-type    Opaque Extended Community
+#                   payload:
+#                     6 byte opaque value (defined by sub-type)
+#
+# 00    02          Route Target Community (two-octet AS specific)
+# 01    02          Route Target Community (IPv4 address specific)
+# 02    02          Route Target Community (four-octet AS specific, RFC 5668)
+# 00    03          Route Origin Community (two-octet AS specific)
+# 01    03          Route Origin Community (IPv4 address specific)
+# 02    03          Route Origin Community (four-octet AS specific, RFC 5668)
+@_PathAttribute.register_type(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
+class BGPPathAttributeExtendedCommunities(_PathAttribute):
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
+
+    def __init__(self, communities,
+                 flags=0, type_=None, length=None):
+        super(BGPPathAttributeExtendedCommunities,
+              self).__init__(flags=flags,
+                             type_=type_,
+                             length=length)
+        self.communities = communities
+
+    @classmethod
+    def parse_value(cls, buf):
+        rest = buf
+        communities = []
+        while rest:
+            comm, rest = _ExtendedCommunity.parse(rest)
+            communities.append(comm)
+        return {
+            'communities': communities,
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        for comm in self.communities:
+            buf += comm.serialize()
+        return buf
+
+
+class _ExtendedCommunity(StringifyMixin, _TypeDisp, _Value):
+    _PACK_STR = '!B7s'  # type high (+ type low) + value
+    IANA_AUTHORITY = 0x80
+    TRANSITIVE = 0x40
+    _TYPE_HIGH_MASK = ~TRANSITIVE
+
+    TWO_OCTET_AS_SPECIFIC = 0x00
+    IPV4_ADDRESS_SPECIFIC = 0x01
+    FOUR_OCTET_AS_SPECIFIC = 0x02
+    OPAQUE = 0x03
+
+    def __init__(self, type_):
+        self.type = type_
+
+    @classmethod
+    def parse(cls, buf):
+        (type_high, payload) = struct.unpack_from(cls._PACK_STR, buffer(buf))
+        rest = buf[struct.calcsize(cls._PACK_STR):]
+        type_ = type_high & cls._TYPE_HIGH_MASK
+        subcls = cls._lookup_type(type_)
+        return subcls(type_=type_high,
+                      **subcls.parse_value(payload)), rest
+
+    def serialize(self):
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type,
+                      bytes(self.serialize_value()))
+        return buf
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.TWO_OCTET_AS_SPECIFIC)
+class BGPTwoOctetAsSpecificExtendedCommunity(_ExtendedCommunity):
+    _VALUE_PACK_STR = '!BHI'  # sub type, as number, local adm
+    _VALUE_FIELDS = ['subtype', 'as_number', 'local_administrator']
+
+    def __init__(self, type_=_ExtendedCommunity.TWO_OCTET_AS_SPECIFIC,
+                 **kwargs):
+        self.do_init(BGPTwoOctetAsSpecificExtendedCommunity, self, kwargs,
+                     type_=type_)
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.IPV4_ADDRESS_SPECIFIC)
+class BGPIPv4AddressSpecificExtendedCommunity(_ExtendedCommunity):
+    _VALUE_PACK_STR = '!B4sH'  # sub type, IPv4 address, local adm
+    _VALUE_FIELDS = ['subtype', 'ipv4_address', 'local_administrator']
+
+    def __init__(self, type_=_ExtendedCommunity.IPV4_ADDRESS_SPECIFIC,
+                 **kwargs):
+        self.do_init(BGPIPv4AddressSpecificExtendedCommunity, self, kwargs,
+                     type_=type_)
+
+    @classmethod
+    def parse_value(cls, buf):
+        d_ = super(BGPIPv4AddressSpecificExtendedCommunity,
+                   cls).parse_value(buf)
+        d_['ipv4_address'] = addrconv.ipv4.bin_to_text(d_['ipv4_address'])
+        return d_
+
+    def serialize_value(self):
+        args = []
+        for f in self._VALUE_FIELDS:
+            v = getattr(self, f)
+            if f == 'ipv4_address':
+                v = bytes(addrconv.ipv4.text_to_bin(v))
+            args.append(v)
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, *args)
+        return buf
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.FOUR_OCTET_AS_SPECIFIC)
+class BGPFourOctetAsSpecificExtendedCommunity(_ExtendedCommunity):
+    _VALUE_PACK_STR = '!BIH'  # sub type, as number, local adm
+    _VALUE_FIELDS = ['subtype', 'as_number', 'local_administrator']
+
+    def __init__(self, type_=_ExtendedCommunity.FOUR_OCTET_AS_SPECIFIC,
+                 **kwargs):
+        self.do_init(BGPFourOctetAsSpecificExtendedCommunity, self, kwargs,
+                     type_=type_)
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.OPAQUE)
+class BGPOpaqueExtendedCommunity(_ExtendedCommunity):
+    _VALUE_PACK_STR = '!7s'  # opaque value
+    _VALUE_FIELDS = ['opaque']
+
+    def __init__(self, type_=_ExtendedCommunity.OPAQUE,
+                 **kwargs):
+        self.do_init(BGPOpaqueExtendedCommunity, self, kwargs,
+                     type_=type_)
+
+
+@_ExtendedCommunity.register_unknown_type()
+class BGPUnknownExtendedCommunity(_ExtendedCommunity):
+    _VALUE_PACK_STR = '!7s'  # opaque value
+
+    def __init__(self, **kwargs):
+        self.do_init(BGPUnknownExtendedCommunity, self, kwargs)
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_MP_REACH_NLRI)
