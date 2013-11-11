@@ -563,15 +563,11 @@ x() ->
                              has_mask = false,
                              value = <<"\362\v\244}\370\352">>,
                              mask = undefined}]}},
-
-% ryu doesn't have the implementation
-%       #ofp_error_msg_experimenter{
-%           exp_type = 60000,
-%           experimenter = 999999,
-%           data = <<"jikken data">>
-%       }
-        skip,
-
+        #ofp_error_msg_experimenter{
+            exp_type = 60000,
+            experimenter = 999999,
+            data = <<"jikken data">>
+        },
         #ofp_get_async_request{},
         #ofp_get_async_reply{
             packet_in_mask = {[no_match, invalid_ttl], [no_match]},
