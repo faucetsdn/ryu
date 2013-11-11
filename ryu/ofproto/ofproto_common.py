@@ -25,3 +25,8 @@ assert calcsize(OFP_HEADER_PACK_STR) == OFP_HEADER_SIZE
 # 6633 is (still) the defacto standard.
 OFP_TCP_PORT = 6633
 OFP_SSL_PORT = 6633
+
+# Vendor/Experimenter IDs
+NX_EXPERIMENTER_ID = 0x00002300  # Nicira
+BSN_EXPERIMENTER_ID = 0x005c16c7  # Big Switch Networks
+ONF_EXPERIMENTER_ID = 0x4f4e4600  # OpenFlow Extensions for 1.3.X Pack 1
