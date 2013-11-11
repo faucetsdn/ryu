@@ -40,8 +40,6 @@ implemented = {
         ofproto_v1_0.OFPT_FLOW_MOD: (False, True),
     },
     3: {
-        ofproto_v1_2.OFPT_ERROR: (True, False),  # OFPET_EXPERIMENTER lacks
-                                                 # serializer
         ofproto_v1_2.OFPT_EXPERIMENTER: (True, False),
         ofproto_v1_2.OFPT_FEATURES_REQUEST: (False, True),
         ofproto_v1_2.OFPT_FEATURES_REPLY: (True, False),
