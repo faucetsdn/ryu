@@ -87,3 +87,12 @@ class Test_ethernet(unittest.TestCase):
     def test_malformed_ethernet(self):
         m_short_buf = self.buf[1:ethernet._MIN_LEN]
         ethernet.parser(m_short_buf)
+
+    def test_default_args(self):
+        e = ethernet()
+        buf = e.serialize(bytearray(), None)
+        res = struct.unpack(e._PACK_STR, str(buf))
+
+        eq_(res[0], addrconv.mac.text_to_bin('ff:ff:ff:ff:ff:ff'))
+        eq_(res[1], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+        eq_(res[2], ether.ETH_TYPE_IP)

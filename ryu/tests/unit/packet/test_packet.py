@@ -564,8 +564,7 @@ class TestPacket(unittest.TestCase):
 
     def test_ipv4_sctp(self):
         # build packet
-        e = ethernet.ethernet(self.dst_mac, self.src_mac,
-                              ether.ETH_TYPE_IP)
+        e = ethernet.ethernet()
         ip = ipv4.ipv4(proto=inet.IPPROTO_SCTP)
         s = sctp.sctp(chunks=[sctp.chunk_data(payload_data=self.payload)])
 
@@ -575,8 +574,8 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv4.text_to_bin('0.0.0.0')
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac_bin \
-            + self.src_mac_bin \
+        e_buf = '\xff\xff\xff\xff\xff\xff' \
+            + '\x00\x00\x00\x00\x00\x00' \
             + '\x08\x00'
 
         # ipv4 !BBHHHBBHII
@@ -616,8 +615,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_('ff:ff:ff:ff:ff:ff', p_eth.dst)
+        eq_('00:00:00:00:00:00', p_eth.src)
         eq_(ether.ETH_TYPE_IP, p_eth.ethertype)
 
         # ipv4
@@ -656,8 +655,8 @@ class TestPacket(unittest.TestCase):
         eq_(len(s_buf), len(p_sctp))
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
+                      'src': '00:00:00:00:00:00',
                       'ethertype': ether.ETH_TYPE_IP}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -721,8 +720,7 @@ class TestPacket(unittest.TestCase):
 
     def test_ipv4_icmp(self):
         # buid packet
-        e = ethernet.ethernet(self.dst_mac, self.src_mac,
-                              ether.ETH_TYPE_IP)
+        e = ethernet.ethernet()
         ip = ipv4.ipv4(proto=inet.IPPROTO_ICMP)
         ic = icmp.icmp()
 
@@ -732,8 +730,8 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv4.text_to_bin('0.0.0.0')
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac_bin \
-            + self.src_mac_bin \
+        e_buf = '\xff\xff\xff\xff\xff\xff' \
+            + '\x00\x00\x00\x00\x00\x00' \
             + '\x08\x00'
 
         # ipv4 !BBHHHBBHII
@@ -766,8 +764,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_('ff:ff:ff:ff:ff:ff', p_eth.dst)
+        eq_('00:00:00:00:00:00', p_eth.src)
         eq_(ether.ETH_TYPE_IP, p_eth.ethertype)
 
         # ipv4
@@ -799,8 +797,8 @@ class TestPacket(unittest.TestCase):
         eq_(packet_utils.checksum(t), 0)
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
+                      'src': '00:00:00:00:00:00',
                       'ethertype': ether.ETH_TYPE_IP}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, _ in inspect.getmembers(p_eth)
@@ -856,8 +854,7 @@ class TestPacket(unittest.TestCase):
 
     def test_ipv6_udp(self):
         # build packet
-        e = ethernet.ethernet(self.dst_mac, self.src_mac,
-                              ether.ETH_TYPE_IPV6)
+        e = ethernet.ethernet(ethertype=ether.ETH_TYPE_IPV6)
         ip = ipv6.ipv6(nxt=inet.IPPROTO_UDP)
         u = udp.udp()
 
@@ -867,8 +864,8 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac_bin \
-            + self.src_mac_bin \
+        e_buf = '\xff\xff\xff\xff\xff\xff' \
+            + '\x00\x00\x00\x00\x00\x00' \
             + '\x86\xdd'
 
         # ipv6 !IHBB16s16s'
@@ -897,8 +894,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_('ff:ff:ff:ff:ff:ff', p_eth.dst)
+        eq_('00:00:00:00:00:00', p_eth.src)
         eq_(ether.ETH_TYPE_IPV6, p_eth.ethertype)
 
         # ipv6
@@ -930,8 +927,8 @@ class TestPacket(unittest.TestCase):
         eq_(self.payload, protocols['payload'].tostring())
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
+                      'src': '00:00:00:00:00:00',
                       'ethertype': ether.ETH_TYPE_IPV6}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -978,8 +975,7 @@ class TestPacket(unittest.TestCase):
 
     def test_ipv6_tcp(self):
         # build packet
-        e = ethernet.ethernet(self.dst_mac, self.src_mac,
-                              ether.ETH_TYPE_IPV6)
+        e = ethernet.ethernet(ethertype=ether.ETH_TYPE_IPV6)
         ip = ipv6.ipv6(nxt=inet.IPPROTO_TCP)
         t = tcp.tcp(option='\x01\x02')
 
@@ -989,8 +985,8 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac_bin \
-            + self.src_mac_bin \
+        e_buf = '\xff\xff\xff\xff\xff\xff' \
+            + '\x00\x00\x00\x00\x00\x00' \
             + '\x86\xdd'
 
         # ipv6 !IHBB16s16s'
@@ -1025,8 +1021,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_('ff:ff:ff:ff:ff:ff', p_eth.dst)
+        eq_('00:00:00:00:00:00', p_eth.src)
         eq_(ether.ETH_TYPE_IPV6, p_eth.ethertype)
 
         # ipv6
@@ -1063,8 +1059,8 @@ class TestPacket(unittest.TestCase):
         eq_(self.payload, protocols['payload'].tostring())
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
+                      'src': '00:00:00:00:00:00',
                       'ethertype': ether.ETH_TYPE_IPV6}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -1117,8 +1113,7 @@ class TestPacket(unittest.TestCase):
 
     def test_ipv6_sctp(self):
         # build packet
-        e = ethernet.ethernet(self.dst_mac, self.src_mac,
-                              ether.ETH_TYPE_IPV6)
+        e = ethernet.ethernet(ethertype=ether.ETH_TYPE_IPV6)
         ip = ipv6.ipv6(nxt=inet.IPPROTO_SCTP)
         s = sctp.sctp(chunks=[sctp.chunk_data(payload_data=self.payload)])
 
@@ -1128,8 +1123,8 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac_bin \
-            + self.src_mac_bin \
+        e_buf = '\xff\xff\xff\xff\xff\xff' \
+            + '\x00\x00\x00\x00\x00\x00' \
             + '\x86\xdd'
 
         # ipv6 !IHBB16s16s'
@@ -1166,8 +1161,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_('ff:ff:ff:ff:ff:ff', p_eth.dst)
+        eq_('00:00:00:00:00:00', p_eth.src)
         eq_(ether.ETH_TYPE_IPV6, p_eth.ethertype)
 
         # ipv6
@@ -1200,8 +1195,8 @@ class TestPacket(unittest.TestCase):
         eq_(len(s_buf), len(p_sctp))
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
+                      'src': '00:00:00:00:00:00',
                       'ethertype': ether.ETH_TYPE_IPV6}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, v in inspect.getmembers(p_eth)
@@ -1261,8 +1256,7 @@ class TestPacket(unittest.TestCase):
 
     def test_ipv6_icmpv6(self):
         # build packet
-        e = ethernet.ethernet(self.dst_mac, self.src_mac,
-                              ether.ETH_TYPE_IPV6)
+        e = ethernet.ethernet(ethertype=ether.ETH_TYPE_IPV6)
         ip = ipv6.ipv6(nxt=inet.IPPROTO_ICMPV6)
         ic = icmpv6.icmpv6()
 
@@ -1272,8 +1266,8 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac_bin \
-            + self.src_mac_bin \
+        e_buf = '\xff\xff\xff\xff\xff\xff' \
+            + '\x00\x00\x00\x00\x00\x00' \
             + '\x86\xdd'
 
         # ipv6 !IHBB16s16s'
@@ -1301,8 +1295,8 @@ class TestPacket(unittest.TestCase):
 
         # ethernet
         ok_(p_eth)
-        eq_(self.dst_mac, p_eth.dst)
-        eq_(self.src_mac, p_eth.src)
+        eq_('ff:ff:ff:ff:ff:ff', p_eth.dst)
+        eq_('00:00:00:00:00:00', p_eth.src)
         eq_(ether.ETH_TYPE_IPV6, p_eth.ethertype)
 
         # ipv6
@@ -1328,8 +1322,8 @@ class TestPacket(unittest.TestCase):
         eq_(packet_utils.checksum(t), 0)
 
         # to string
-        eth_values = {'dst': self.dst_mac,
-                      'src': self.src_mac,
+        eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
+                      'src': '00:00:00:00:00:00',
                       'ethertype': ether.ETH_TYPE_IPV6}
         _eth_str = ','.join(['%s=%s' % (k, repr(eth_values[k]))
                              for k, _ in inspect.getmembers(p_eth)
