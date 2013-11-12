@@ -2527,6 +2527,16 @@ x() ->
             hard_timeout = 0,priority = 123,buffer_id = 65535,
             out_port = any,out_group = any,flags = [],
             match = #ofp_match{fields = AllFields},
-            instructions = []}
+            instructions = []},
+        #ofp_experimenter_request{
+            experimenter = 16#deadbeaf,
+            exp_type = 16#cafe8888,
+            data = <<"hogehoge">>
+        },
+        #ofp_experimenter_reply{
+            experimenter = 16#deadbeaf,
+            exp_type = 16#cafe7777,
+            data = <<"testdata99999999">>
+        }
     ],
     lists:foldl(fun x:do/2, {4, 0}, List).
