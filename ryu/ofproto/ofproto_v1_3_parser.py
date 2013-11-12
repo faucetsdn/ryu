@@ -5179,7 +5179,80 @@ class OFPPortDescStatsReply(OFPMultipartReply):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
-# TODO: OFPMP_EXPERIMENTER
+# XXX should this allow different interpretations for request and reply?
+class OFPExperimenterMultipart(ofproto_parser.namedtuple(
+                               'OFPExperimenterMultipart',
+                               ('experimenter', 'exp_type', 'data'))):
+    """
+    The body of OFPExperimenterStatsRequest/OFPExperimenterStatsReply
+    multipart messages.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    experimenter     Experimenter ID
+    exp_type         Experimenter defined
+    data             Experimenter defined additional data
+    ================ ======================================================
+    """
+
+    @classmethod
+    def parser(cls, buf, offset):
+        args = struct.unpack_from(
+            ofproto_v1_3.OFP_EXPERIMENTER_MULTIPART_HEADER_PACK_STR, buf,
+            offset)
+        args = list(args)
+        args.append(buf[offset +
+                        ofproto_v1_3.OFP_EXPERIMENTER_MULTIPART_HEADER_SIZE:])
+        stats = cls(*args)
+        stats.length = ofproto_v1_3.OFP_METER_FEATURES_SIZE
+        return stats
+
+    def serialize(self):
+        buf = bytearray()
+        msg_pack_into(ofproto_v1_3.OFP_EXPERIMENTER_MULTIPART_HEADER_PACK_STR,
+                      buf, 0,
+                      self.experimenter, self.exp_type)
+        return buf + self.data
+
+
+@_set_stats_type(ofproto_v1_3.OFPMP_EXPERIMENTER, OFPExperimenterMultipart)
+@_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
+class OFPExperimenterStatsRequest(OFPMultipartRequest):
+    """
+    Experimenter multipart request message
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    body             An ``OFPExperimenterMultipart`` instance
+    ================ ======================================================
+    """
+    def __init__(self, datapath, flags, body, type_=None):
+        super(OFPExperimenterStatsRequest, self).__init__(datapath, flags)
+        self.body = body
+
+    def _serialize_stats_body(self):
+        bin_body = self.body.serialize()
+        self.buf += bin_body
+
+
+@OFPMultipartReply.register_stats_type(body_single_struct=True)
+@_set_stats_type(ofproto_v1_3.OFPMP_EXPERIMENTER, OFPExperimenterMultipart)
+@_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REPLY)
+class OFPExperimenterStatsReply(OFPMultipartReply):
+    """
+    Experimenter multipart reply message
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             An ``OFPExperimenterMultipart`` instance
+    ================ ======================================================
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPExperimenterStatsReply, self).__init__(datapath, **kwargs)
 
 
 @_set_msg_type(ofproto_v1_3.OFPT_BARRIER_REQUEST)
