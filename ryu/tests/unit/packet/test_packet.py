@@ -872,7 +872,7 @@ class TestPacket(unittest.TestCase):
         ip_buf = '\x60\x00\x00\x00' \
             + '\x00\x00' \
             + '\x11' \
-            + '\x00' \
+            + '\xff' \
             + '\x00\x00' \
             + ipaddr \
             + ipaddr
@@ -905,7 +905,7 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv6.flow_label)
         eq_(len(u_buf) + len(self.payload), p_ipv6.payload_length)
         eq_(inet.IPPROTO_UDP, p_ipv6.nxt)
-        eq_(0, p_ipv6.hop_limit)
+        eq_(255, p_ipv6.hop_limit)
         eq_('::', p_ipv6.src)
         eq_('::', p_ipv6.dst)
 
@@ -940,7 +940,7 @@ class TestPacket(unittest.TestCase):
                        'flow_label': 0,
                        'payload_length': len(u_buf) + len(self.payload),
                        'nxt': inet.IPPROTO_UDP,
-                       'hop_limit': 0,
+                       'hop_limit': 255,
                        'src': '::',
                        'dst': '::',
                        'ext_hdrs': []}
@@ -976,7 +976,7 @@ class TestPacket(unittest.TestCase):
     def test_ipv6_tcp(self):
         # build packet
         e = ethernet.ethernet(ethertype=ether.ETH_TYPE_IPV6)
-        ip = ipv6.ipv6(nxt=inet.IPPROTO_TCP)
+        ip = ipv6.ipv6()
         t = tcp.tcp(option='\x01\x02')
 
         p = e/ip/t/self.payload
@@ -993,7 +993,7 @@ class TestPacket(unittest.TestCase):
         ip_buf = '\x60\x00\x00\x00' \
             + '\x00\x00' \
             + '\x06' \
-            + '\x00' \
+            + '\xff' \
             + '\x00\x00' \
             + ipaddr \
             + ipaddr
@@ -1032,7 +1032,7 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv6.flow_label)
         eq_(len(t_buf) + len(self.payload), p_ipv6.payload_length)
         eq_(inet.IPPROTO_TCP, p_ipv6.nxt)
-        eq_(0, p_ipv6.hop_limit)
+        eq_(255, p_ipv6.hop_limit)
         eq_('::', p_ipv6.src)
         eq_('::', p_ipv6.dst)
 
@@ -1072,7 +1072,7 @@ class TestPacket(unittest.TestCase):
                        'flow_label': 0,
                        'payload_length': len(t_buf) + len(self.payload),
                        'nxt': inet.IPPROTO_TCP,
-                       'hop_limit': 0,
+                       'hop_limit': 255,
                        'src': '::',
                        'dst': '::',
                        'ext_hdrs': []}
@@ -1131,7 +1131,7 @@ class TestPacket(unittest.TestCase):
         ip_buf = '\x60\x00\x00\x00' \
             + '\x00\x00' \
             + '\x84' \
-            + '\x00' \
+            + '\xff' \
             + '\x00\x00' \
             + ipaddr \
             + ipaddr
@@ -1172,7 +1172,7 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv6.flow_label)
         eq_(len(s_buf), p_ipv6.payload_length)
         eq_(inet.IPPROTO_SCTP, p_ipv6.nxt)
-        eq_(0, p_ipv6.hop_limit)
+        eq_(255, p_ipv6.hop_limit)
         eq_('::', p_ipv6.src)
         eq_('::', p_ipv6.dst)
 
@@ -1208,7 +1208,7 @@ class TestPacket(unittest.TestCase):
                        'flow_label': 0,
                        'payload_length': len(s_buf),
                        'nxt': inet.IPPROTO_SCTP,
-                       'hop_limit': 0,
+                       'hop_limit': 255,
                        'src': '::',
                        'dst': '::',
                        'ext_hdrs': []}
@@ -1274,7 +1274,7 @@ class TestPacket(unittest.TestCase):
         ip_buf = '\x60\x00\x00\x00' \
             + '\x00\x00' \
             + '\x3a' \
-            + '\x00' \
+            + '\xff' \
             + '\x00\x00' \
             + ipaddr \
             + ipaddr
@@ -1306,7 +1306,7 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv6.flow_label)
         eq_(len(ic_buf), p_ipv6.payload_length)
         eq_(inet.IPPROTO_ICMPV6, p_ipv6.nxt)
-        eq_(0, p_ipv6.hop_limit)
+        eq_(255, p_ipv6.hop_limit)
         eq_('::', p_ipv6.src)
         eq_('::', p_ipv6.dst)
 
@@ -1335,7 +1335,7 @@ class TestPacket(unittest.TestCase):
                        'flow_label': 0,
                        'payload_length': len(ic_buf),
                        'nxt': inet.IPPROTO_ICMPV6,
-                       'hop_limit': 0,
+                       'hop_limit': 255,
                        'src': '::',
                        'dst': '::',
                        'ext_hdrs': []}

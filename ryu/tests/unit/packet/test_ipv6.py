@@ -403,8 +403,8 @@ class Test_ipv6(unittest.TestCase):
 
         eq_(res[0], 6 << 28)
         eq_(res[1], 0)
-        eq_(res[2], 59)
-        eq_(res[3], 0)
+        eq_(res[2], 6)
+        eq_(res[3], 255)
         eq_(res[4], addrconv.ipv6.text_to_bin('::'))
         eq_(res[5], addrconv.ipv6.text_to_bin('::'))
 
@@ -420,7 +420,7 @@ class Test_ipv6(unittest.TestCase):
         eq_(res[0], 6 << 28)
         eq_(res[1], 8)
         eq_(res[2], 0)
-        eq_(res[3], 0)
+        eq_(res[3], 255)
         eq_(res[4], addrconv.ipv6.text_to_bin('::'))
         eq_(res[5], addrconv.ipv6.text_to_bin('::'))
         eq_(res[6], '\x3a\x00\x05\x02\x00\x00\x01\x00')
@@ -501,7 +501,7 @@ class Test_hop_opts(unittest.TestCase):
         buf = hdr.serialize()
         res = struct.unpack('!BB', str(buf[:2]))
 
-        eq_(res[0], 59)
+        eq_(res[0], 6)
         eq_(res[1], 0)
         opt = ipv6.option(type_=1, len_=6, data='\x00\x00\x00\x00\x00\x00')
         eq_(str(buf[2:]), opt.serialize())
@@ -582,7 +582,7 @@ class Test_dst_opts(unittest.TestCase):
         buf = hdr.serialize()
         res = struct.unpack('!BB', str(buf[:2]))
 
-        eq_(res[0], 59)
+        eq_(res[0], 6)
         eq_(res[1], 0)
         opt = ipv6.option(type_=1, len_=6, data='\x00\x00\x00\x00\x00\x00')
         eq_(str(buf[2:]), opt.serialize())
@@ -713,7 +713,7 @@ class Test_fragment(unittest.TestCase):
         buf = hdr.serialize()
         res = struct.unpack_from(ipv6.fragment._PACK_STR, buf)
 
-        eq_(res[0], 59)
+        eq_(res[0], 6)
         eq_(res[1], 0)
         eq_(res[2], 0)
 
@@ -770,7 +770,7 @@ class Test_auth(unittest.TestCase):
         res = struct.unpack_from(ipv6.auth._PACK_STR, str(buf))
         LOG.info(res)
 
-        eq_(res[0], 59)
+        eq_(res[0], 6)
         eq_(res[1], 3)
         eq_(res[2], 0)
         eq_(res[3], 0)

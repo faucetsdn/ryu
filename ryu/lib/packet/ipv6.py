@@ -69,7 +69,7 @@ class ipv6(packet_base.PacketBase):
         return _register_header_type
 
     def __init__(self, version=6, traffic_class=0, flow_label=0,
-                 payload_length=0, nxt=inet.IPPROTO_NONE, hop_limit=0,
+                 payload_length=0, nxt=inet.IPPROTO_TCP, hop_limit=255,
                  src='::', dst='::', ext_hdrs=None):
         super(ipv6, self).__init__()
         self.version = version
@@ -235,7 +235,7 @@ class hop_opts(opt_header):
     """
     TYPE = inet.IPPROTO_HOPOPTS
 
-    def __init__(self, nxt=inet.IPPROTO_NONE, size=0, data=None):
+    def __init__(self, nxt=inet.IPPROTO_TCP, size=0, data=None):
         super(hop_opts, self).__init__(nxt, size, data)
 
 
@@ -262,7 +262,7 @@ class dst_opts(opt_header):
     """
     TYPE = inet.IPPROTO_DSTOPTS
 
-    def __init__(self, nxt=inet.IPPROTO_NONE, size=0, data=None):
+    def __init__(self, nxt=inet.IPPROTO_TCP, size=0, data=None):
         super(dst_opts, self).__init__(nxt, size, data)
 
 
@@ -354,7 +354,7 @@ class fragment(header):
     _PACK_STR = '!BxHI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, nxt=inet.IPPROTO_NONE, offset=0, more=0, id_=0):
+    def __init__(self, nxt=inet.IPPROTO_TCP, offset=0, more=0, id_=0):
         super(fragment, self).__init__(nxt)
         self.offset = offset
         self.more = more
@@ -404,7 +404,7 @@ class auth(header):
     _PACK_STR = '!BB2xII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, nxt=inet.IPPROTO_NONE, size=3, spi=0, seq=0,
+    def __init__(self, nxt=inet.IPPROTO_TCP, size=3, spi=0, seq=0,
                  data='\x00\x00\x00\x00'):
         super(auth, self).__init__(nxt)
         assert data is not None
