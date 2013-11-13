@@ -292,10 +292,10 @@ assert (calcsize(OFP_SWITCH_FEATURES_PACK_STR) + OFP_HEADER_SIZE ==
 OFPC_FLOW_STATS = 1 << 0    # Flow statistics.
 OFPC_TABLE_STATS = 1 << 1    # Table statistics.
 OFPC_PORT_STATS = 1 << 2    # Port statistics.
-OFPC_GROUP_STATS = 1 << 3    # 802.1d spanning tree.
+OFPC_GROUP_STATS = 1 << 3    # Group statistics.
 OFPC_IP_REASM = 1 << 5        # Can reassemble IP fragments.
 OFPC_QUEUE_STATS = 1 << 6    # Queue statistics.
-OFPC_PORT_BLOCKED = 1 << 8    # Match IP addresses in ARP pkts.
+OFPC_PORT_BLOCKED = 1 << 8    # Switch will block looping ports.
 
 # struct ofp_switch_config
 OFP_SWITCH_CONFIG_PACK_STR = '!HH'
