@@ -95,7 +95,7 @@ class DPSet(app_manager.RyuApp):
         self.dps = {}   # datapath_id => class Datapath
         self.port_state = {}  # datapath_id => ports
 
-    def register(self, dp):
+    def _register(self, dp):
         assert dp.id is not None
         assert dp.id not in self.dps
 
@@ -111,7 +111,7 @@ class DPSet(app_manager.RyuApp):
             ev.ports.append(port)
         self.send_event_to_observers(ev)
 
-    def unregister(self, dp):
+    def _unregister(self, dp):
         # Now datapath is already dead, so port status change event doesn't
         # interfere us.
         ev = EventDP(dp, False)
@@ -154,10 +154,10 @@ class DPSet(app_manager.RyuApp):
         assert datapath is not None
         if ev.state == handler.MAIN_DISPATCHER:
             LOG.debug('DPSET: register datapath %s', datapath)
-            self.register(datapath)
+            self._register(datapath)
         elif ev.state == handler.DEAD_DISPATCHER:
             LOG.debug('DPSET: unregister datapath %s', datapath)
-            self.unregister(datapath)
+            self._unregister(datapath)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, handler.CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
