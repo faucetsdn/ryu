@@ -96,18 +96,37 @@ class DPSet(app_manager.RyuApp):
         self.port_state = {}  # datapath_id => ports
 
     def _register(self, dp):
+        LOG.debug('DPSET: register datapath %s', dp)
         assert dp.id is not None
-        assert dp.id not in self.dps
 
+        # while dpid should be unique, we need to handle duplicates here
+        # because it's entirely possible for a switch to reconnect us
+        # before we notice the drop of the previous connection.
+        # in that case,
+        # - forget the older connection as it likely will disappear soon
+        # - do not send EventDP leave/enter events
+        # - keep the PortState for the dpid
+        if dp.id in self.dps:
+            self.logger.warning('DPSET: Multiple connections from %s',
+                                dpid_to_str(dp.id))
+            self.logger.debug('DPSET: Forgetting datapath %s', self.dps[dp.id])
+            self.logger.debug('DPSET: New datapath %s', dp)
         self.dps[dp.id] = dp
-        self.port_state[dp.id] = PortState()
-        ev = EventDP(dp, True)
-        for port in dp.ports.values():
-            self._port_added(dp, port)
-            ev.ports.append(port)
-        self.send_event_to_observers(ev)
+        if not dp.id in self.port_state:
+            self.port_state[dp.id] = PortState()
+            ev = EventDP(dp, True)
+            for port in dp.ports.values():
+                self._port_added(dp, port)
+                ev.ports.append(port)
+            self.send_event_to_observers(ev)
 
     def _unregister(self, dp):
+        # see the comment in _register().
+        if not dp in self.dps.values():
+            return
+        LOG.debug('DPSET: unregister datapath %s', dp)
+        assert self.dps[dp.id] == dp
+
         # Now datapath is already dead, so port status change event doesn't
         # interfere us.
         ev = EventDP(dp, False)
@@ -117,9 +136,8 @@ class DPSet(app_manager.RyuApp):
 
         self.send_event_to_observers(ev)
 
-        if dp.id in self.dps:
-            del self.dps[dp.id]
-            del self.port_state[dp.id]
+        del self.dps[dp.id]
+        del self.port_state[dp.id]
 
     def get(self, dp_id):
         """
@@ -153,10 +171,8 @@ class DPSet(app_manager.RyuApp):
         datapath = ev.datapath
         assert datapath is not None
         if ev.state == handler.MAIN_DISPATCHER:
-            LOG.debug('DPSET: register datapath %s', datapath)
             self._register(datapath)
         elif ev.state == handler.DEAD_DISPATCHER:
-            LOG.debug('DPSET: unregister datapath %s', datapath)
             self._unregister(datapath)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, handler.CONFIG_DISPATCHER)
