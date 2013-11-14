@@ -83,6 +83,11 @@ class PortState(dict):
 
 # this depends on controller::Datapath and dispatchers in handler
 class DPSet(app_manager.RyuApp):
+    """
+    DPSet application manages a set of switches (datapaths)
+    connected to this controller.
+    """
+
     def __init__(self):
         super(DPSet, self).__init__()
         self.name = 'dpset'
@@ -117,9 +122,23 @@ class DPSet(app_manager.RyuApp):
             del self.port_state[dp.id]
 
     def get(self, dp_id):
+        """
+        This method returns the ryu.controller.controller.Datapath
+        instance for the given Datapath ID.
+        Raises KeyError if no such a datapath connected to this controller.
+        """
         return self.dps.get(dp_id)
 
     def get_all(self):
+        """
+        This method returns a list of tuples which represents
+        instances for switches connected to this controller.
+        The tuple consists of a Datapath Id and an instance of
+        ryu.controller.controller.Datapath.
+        A return value looks like the following:
+
+            [ (dpid_A, Datapath_A), (dpid_B, Datapath_B), ... ]
+        """
         return self.dps.items()
 
     def _port_added(self, datapath, port):
@@ -177,6 +196,12 @@ class DPSet(app_manager.RyuApp):
             self.send_event_to_observers(EventPortModify(datapath, port))
 
     def get_port(self, dpid, port_no):
+        """
+        This method returns the ryu.controller.dpset.PortState
+        instance for the given Datapath ID and the port number.
+        Raises ryu_exc.PortNotFound if no such a datapath connected to
+        this controller or no such a port exists.
+        """
         try:
             return self.port_state[dpid][port_no]
         except KeyError:
@@ -184,4 +209,9 @@ class DPSet(app_manager.RyuApp):
                                        network_id=None)
 
     def get_ports(self, dpid):
+        """
+        This method returns a list of ryu.controller.dpset.PortState
+        instances for the given Datapath ID.
+        Raises KeyError if no such a datapath connected to this controller.
+        """
         return self.port_state[dpid].values()
