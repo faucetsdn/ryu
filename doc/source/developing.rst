@@ -9,3 +9,4 @@ Writing Your Ryu Application
    ryu_app_api.rst
    library.rst
    ofproto_ref.rst
+   api_ref.rst
