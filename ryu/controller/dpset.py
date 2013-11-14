@@ -18,7 +18,6 @@ import logging
 
 from ryu.base import app_manager
 from ryu.controller import event
-from ryu.controller import dp_type
 from ryu.controller import handler
 from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
@@ -88,20 +87,12 @@ class DPSet(app_manager.RyuApp):
         super(DPSet, self).__init__()
         self.name = 'dpset'
 
-        # dp registration and type setting can be occur in any order
-        # Sometimes the sw_type is set before dp connection
-        self.dp_types = {}
-
         self.dps = {}   # datapath_id => class Datapath
         self.port_state = {}  # datapath_id => ports
 
     def _register(self, dp):
         assert dp.id is not None
         assert dp.id not in self.dps
-
-        dp_type_ = self.dp_types.pop(dp.id, None)
-        if dp_type_ is not None:
-            dp.dp_type = dp_type_
 
         self.dps[dp.id] = dp
         self.port_state[dp.id] = PortState()
@@ -124,16 +115,6 @@ class DPSet(app_manager.RyuApp):
         if dp.id in self.dps:
             del self.dps[dp.id]
             del self.port_state[dp.id]
-            assert dp.id not in self.dp_types
-            self.dp_types[dp.id] = getattr(dp, 'dp_type', dp_type.UNKNOWN)
-
-    def set_type(self, dp_id, dp_type_=dp_type.UNKNOWN):
-        if dp_id in self.dps:
-            dp = self.dps[dp_id]
-            dp.dp_type = dp_type_
-        else:
-            assert dp_id not in self.dp_types
-            self.dp_types[dp_id] = dp_type_
 
     def get(self, dp_id):
         return self.dps.get(dp_id)
