@@ -61,8 +61,7 @@ def main():
 
     log.init_log()
 
-    # always enable ofp for now.
-    app_lists = CONF.app_lists + CONF.app + ['ryu.controller.ofp_handler']
+    app_lists = CONF.app_lists + CONF.app
 
     app_mgr = AppManager()
     app_mgr.load_apps(app_lists)
@@ -71,9 +70,11 @@ def main():
 
     services = []
 
-    ctlr = controller.OpenFlowController()
-    thr = hub.spawn(ctlr)
-    services.append(thr)
+    # TODO: do the following in app_manager's instantiate_apps()
+    ofpapp = controller.start_service(app_mgr)
+    if ofpapp:
+        thr = hub.spawn(ofpapp)
+        services.append(thr)
 
     webapp = wsgi.start_service(app_mgr)
     if webapp:

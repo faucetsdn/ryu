@@ -16,8 +16,7 @@
 
 import inspect
 import logging
-
-from ryu.controller import ofp_event
+import sys
 
 LOG = logging.getLogger('ryu.controller.handler')
 
@@ -63,3 +62,24 @@ def register_instance(i):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
         if _is_ev_cls(m):
             i.register_handler(m.ev_cls, m)
+
+
+def get_dependent_services(cls):
+    services = []
+    for _k, m in inspect.getmembers(cls, inspect.ismethod):
+        if _is_ev_cls(m):
+            service = getattr(sys.modules[m.ev_cls.__module__],
+                              '_SERVICE_NAME', None)
+            if service:
+                # avoid cls that registers the own events (like ofp_handler)
+                if cls.__module__ != service:
+                    services.append(service)
+
+    services = list(set(services))
+    return services
+
+
+def register_service(service):
+    frm = inspect.stack()[1]
+    m = inspect.getmodule(frm[0])
+    m._SERVICE_NAME = service

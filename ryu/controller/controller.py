@@ -321,3 +321,9 @@ def datapath_connection_factory(socket, address):
                 dpid_str = dpid_to_str(datapath.id)
             LOG.error("Error in the datapath %s from %s", dpid_str, address)
             raise
+
+
+def start_service(app_mgr):
+    for app in app_mgr.applications:
+        if app.endswith('ofp_handler'):
+            return OpenFlowController()

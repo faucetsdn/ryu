@@ -17,9 +17,10 @@
 import inspect
 import itertools
 import logging
+import sys
 
 from ryu import utils
-from ryu.controller.handler import register_instance
+from ryu.controller.handler import register_instance, get_dependent_services
 from ryu.controller.controller import Datapath
 from ryu.controller.event import EventRequestBase, EventReplyBase
 from ryu.lib import hub
@@ -158,15 +159,13 @@ class AppManager(object):
         return None
 
     def load_apps(self, app_lists):
-        for app_cls_name in itertools.chain.from_iterable([app_list.split(',')
-                                                           for app_list
-                                                           in app_lists]):
-            LOG.info('loading app %s', app_cls_name)
+        app_lists = [app for app
+                     in itertools.chain.from_iterable(app.split(',')
+                                                      for app in app_lists)]
+        while len(app_lists) > 0:
+            app_cls_name = app_lists.pop(0)
 
-            # for now, only single instance of a given module
-            # Do we need to support multiple instances?
-            # Yes, maybe for slicing.
-            assert app_cls_name not in self.applications_cls
+            LOG.info('loading app %s', app_cls_name)
 
             cls = self.load_app(app_cls_name)
             if cls is None:
@@ -174,9 +173,17 @@ class AppManager(object):
 
             self.applications_cls[app_cls_name] = cls
 
+            services = []
             for key, context_cls in cls.context_iteritems():
                 cls = self.contexts_cls.setdefault(key, context_cls)
                 assert cls == context_cls
+
+                if issubclass(context_cls, RyuApp):
+                    services.extend(get_dependent_services(context_cls))
+
+            services.extend(get_dependent_services(cls))
+            if services:
+                app_lists.extend(services)
 
     def create_contexts(self):
         for key, cls in self.contexts_cls.items():

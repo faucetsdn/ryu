@@ -16,6 +16,7 @@
 
 import inspect
 
+from ryu.controller import handler
 from ryu import ofproto
 from ryu import utils
 from . import event
@@ -75,3 +76,6 @@ class EventOFPStateChange(event.EventBase):
     def __init__(self, dp):
         super(EventOFPStateChange, self).__init__()
         self.datapath = dp
+
+
+handler.register_service('ryu.controller.ofp_handler')
