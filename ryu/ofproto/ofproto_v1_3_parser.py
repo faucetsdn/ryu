@@ -370,6 +370,13 @@ class OFPExperimenter(MsgBase):
 
         return msg
 
+    def _serialize_body(self):
+        assert self.data is not None
+        msg_pack_into(ofproto_v1_3.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto_v1_3.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        self.buf += self.data
+
 
 @_set_msg_type(ofproto_v1_3.OFPT_FEATURES_REQUEST)
 class OFPFeaturesRequest(MsgBase):
