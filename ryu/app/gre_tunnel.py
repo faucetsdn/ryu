@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This module updates flow table for OpenStack integration.
+# Despite of the name, this module isn't GRE specific and
+# should work for VXLAN etc as well.
+
 import collections
 
 from ryu import exception as ryu_exc
