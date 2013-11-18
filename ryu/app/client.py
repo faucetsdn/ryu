@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This is a client library for Ryu REST API.  (ryu.app.rest_quantum etc)
+# This module is *not* used by ryu-manager.
+# Imported and used by OpenStack Ryu plug-in and agent.
+
 import httplib
 import json
 import urlparse
