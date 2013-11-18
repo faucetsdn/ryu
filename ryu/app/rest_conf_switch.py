@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This module provides a set of REST API for switch configuration.
+#   - Per-switch Key-Value store
+#
+# Used by OpenStack Ryu agent.
+
 import httplib
 import json
 import logging
