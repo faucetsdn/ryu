@@ -40,7 +40,6 @@ implemented = {
         ofproto_v1_0.OFPT_FLOW_MOD: (False, True),
     },
     3: {
-        ofproto_v1_2.OFPT_EXPERIMENTER: (True, False),
         ofproto_v1_2.OFPT_FEATURES_REQUEST: (False, True),
         ofproto_v1_2.OFPT_FEATURES_REPLY: (True, False),
         ofproto_v1_2.OFPT_GET_CONFIG_REQUEST: (False, True),
@@ -64,7 +63,6 @@ implemented = {
     },
     4: {
         ofproto_v1_3.OFPT_HELLO: (True, False),
-        ofproto_v1_3.OFPT_EXPERIMENTER: (True, False),
         ofproto_v1_3.OFPT_FEATURES_REQUEST: (False, True),
         ofproto_v1_3.OFPT_FEATURES_REPLY: (True, False),
         ofproto_v1_3.OFPT_GET_CONFIG_REQUEST: (False, True),
