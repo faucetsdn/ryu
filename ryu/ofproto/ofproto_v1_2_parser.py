@@ -296,6 +296,13 @@ class OFPExperimenter(MsgBase):
 
         return msg
 
+    def _serialize_body(self):
+        assert self.data is not None
+        msg_pack_into(ofproto_v1_2.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto_v1_2.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        self.buf += self.data
+
 
 class OFPPort(ofproto_parser.namedtuple('OFPPort', (
         'port_no', 'hw_addr', 'name', 'config', 'state', 'curr',
