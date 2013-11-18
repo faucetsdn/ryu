@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This module provides a set of REST API dedicated to OpenStack Ryu plug-in.
+#   - Interface (uuid in ovsdb) registration
+#   - Maintain interface association to a network
+#
+# Used by OpenStack Ryu plug-in.
+
 import json
 from webob import Response
 
