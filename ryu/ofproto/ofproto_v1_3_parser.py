@@ -5087,8 +5087,6 @@ class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
     Table features statistics request message
 
     The controller uses this message to query table features.
-
-    This message is currently unimplemented.
     """
     def __init__(self, datapath, flags,
                  body=[],
