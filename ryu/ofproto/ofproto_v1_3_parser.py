@@ -5001,6 +5001,9 @@ class OFPTableFeaturePropActions(OFPTableFeatureProp):
 # but they all look broken or incomplete.  according to the spec,
 # oxm_hasmask should be 1 if a switch supports masking for the type.
 # the right value for oxm_length is not clear from the spec.
+# update: OpenFlow 1.3.3 "clarified" that oxm_length here is the payload
+# length.  it's still unclear if it should be doubled for hasmask or not,
+# though.
 #   ofsoftswitch13
 #     oxm_hasmask  always 0
 #     oxm_length   same as ofp_match etc (as without mask)
