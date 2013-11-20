@@ -146,9 +146,20 @@
                            }
                         }
                      }
+                  }, 
+                  {
+                     "OFPActionSetField": {
+                        "field": {
+                           "OXMTlv": {
+                              "field": "pbb_uca", 
+                              "mask": null, 
+                              "value": 1
+                           }
+                        }
+                     }
                   }
                ], 
-               "len": 24, 
+               "len": 40, 
                "type": 4
             }
          }

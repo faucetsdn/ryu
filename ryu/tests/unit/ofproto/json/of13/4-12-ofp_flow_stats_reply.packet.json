@@ -132,6 +132,161 @@
                      "OFPInstructionActions": {
                         "actions": [
                            {
+                              "OFPActionSetField": {
+                                 "field": {
+                                    "OXMTlv": {
+                                       "field": "vlan_vid", 
+                                       "mask": null, 
+                                       "value": 258
+                                    }
+                                 }
+                              }
+                           }, 
+                           {
+                              "OFPActionCopyTtlOut": {
+                                 "len": 8, 
+                                 "type": 11
+                              }
+                           }, 
+                           {
+                              "OFPActionCopyTtlIn": {
+                                 "len": 8, 
+                                 "type": 12
+                              }
+                           }, 
+                           {
+                              "OFPActionCopyTtlIn": {
+                                 "len": 8, 
+                                 "type": 12
+                              }
+                           }, 
+                           {
+                              "OFPActionPopPbb": {
+                                 "len": 8, 
+                                 "type": 27
+                              }
+                           }, 
+                           {
+                              "OFPActionPushPbb": {
+                                 "ethertype": 4660, 
+                                 "len": 8, 
+                                 "type": 26
+                              }
+                           }, 
+                           {
+                              "OFPActionPopMpls": {
+                                 "ethertype": 39030, 
+                                 "len": 8, 
+                                 "type": 20
+                              }
+                           }, 
+                           {
+                              "OFPActionPushMpls": {
+                                 "ethertype": 34887, 
+                                 "len": 8, 
+                                 "type": 19
+                              }
+                           }, 
+                           {
+                              "OFPActionPopVlan": {
+                                 "len": 8, 
+                                 "type": 18
+                              }
+                           }, 
+                           {
+                              "OFPActionPushVlan": {
+                                 "ethertype": 33024, 
+                                 "len": 8, 
+                                 "type": 17
+                              }
+                           }, 
+                           {
+                              "OFPActionDecMplsTtl": {
+                                 "len": 8, 
+                                 "type": 16
+                              }
+                           }, 
+                           {
+                              "OFPActionSetMplsTtl": {
+                                 "len": 8, 
+                                 "mpls_ttl": 10, 
+                                 "type": 15
+                              }
+                           }, 
+                           {
+                              "OFPActionDecNwTtl": {
+                                 "len": 8, 
+                                 "type": 24
+                              }
+                           }, 
+                           {
+                              "OFPActionSetNwTtl": {
+                                 "len": 8, 
+                                 "nw_ttl": 10, 
+                                 "type": 23
+                              }
+                           }, 
+                           {
+                              "OFPActionSetQueue": {
+                                 "len": 8, 
+                                 "queue_id": 3, 
+                                 "type": 21
+                              }
+                           }, 
+                           {
+                              "OFPActionGroup": {
+                                 "group_id": 99, 
+                                 "len": 8, 
+                                 "type": 22
+                              }
+                           }, 
+                           {
+                              "OFPActionOutput": {
+                                 "len": 16, 
+                                 "max_len": 65535, 
+                                 "port": 6, 
+                                 "type": 0
+                              }
+                           }
+                        ], 
+                        "len": 160, 
+                        "type": 3
+                     }
+                  }, 
+                  {
+                     "OFPInstructionActions": {
+                        "actions": [
+                           {
+                              "OFPActionSetField": {
+                                 "field": {
+                                    "OXMTlv": {
+                                       "field": "eth_src", 
+                                       "mask": null, 
+                                       "value": "01:02:03:04:05:06"
+                                    }
+                                 }
+                              }
+                           }, 
+                           {
+                              "OFPActionSetField": {
+                                 "field": {
+                                    "OXMTlv": {
+                                       "field": "pbb_uca", 
+                                       "mask": null, 
+                                       "value": 1
+                                    }
+                                 }
+                              }
+                           }
+                        ], 
+                        "len": 40, 
+                        "type": 4
+                     }
+                  }, 
+                  {
+                     "OFPInstructionActions": {
+                        "actions": [
+                           {
                               "OFPActionOutput": {
                                  "len": 16, 
                                  "max_len": 65535, 
@@ -145,7 +300,7 @@
                      }
                   }
                ], 
-               "length": 80, 
+               "length": 280, 
                "match": {
                   "OFPMatch": {
                      "length": 4, 

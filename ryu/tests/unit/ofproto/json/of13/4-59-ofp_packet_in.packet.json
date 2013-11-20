@@ -5,7 +5,7 @@
       "data": "", 
       "match": {
          "OFPMatch": {
-            "length": 324, 
+            "length": 335, 
             "oxm_fields": [
                {
                   "OXMTlv": {
@@ -278,6 +278,13 @@
                      "field": "ipv6_exthdr", 
                      "mask": null, 
                      "value": 500
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "pbb_uca", 
+                     "mask": null, 
+                     "value": 1
                   }
                }
             ], 
