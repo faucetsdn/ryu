@@ -164,14 +164,15 @@ class Datapath(object):
                 msg = ofproto_parser.msg(self,
                                          version, msg_type, msg_len, xid, buf)
                 #LOG.debug('queue msg %s cls %s', msg, msg.__class__)
-                ev = ofp_event.ofp_msg_to_ev(msg)
-                self.ofp_brick.send_event_to_observers(ev, self.state)
+                if msg:
+                    ev = ofp_event.ofp_msg_to_ev(msg)
+                    self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                handlers = [handler for handler in
-                            self.ofp_brick.get_handlers(ev) if self.state in
-                            handler.dispatchers]
-                for handler in handlers:
-                    handler(ev)
+                    handlers = [handler for handler in
+                                self.ofp_brick.get_handlers(ev) if
+                                self.state in handler.dispatchers]
+                    for handler in handlers:
+                        handler(ev)
 
                 buf = buf[required_len:]
                 required_len = ofproto_common.OFP_HEADER_SIZE

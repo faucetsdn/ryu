@@ -54,13 +54,13 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
 
     try:
         return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
-    except struct.error:
+    except:
         LOG.exception(
             'Encounter an error during parsing OpenFlow packet from switch.'
             'This implies switch sending a malfold OpenFlow packet.'
             'version 0x%02x msg_type %d msg_len %d xid %d buf %s',
             version, msg_type, msg_len, xid, utils.bytearray_to_hex(buf))
-        raise
+        return None
 
 
 def create_list_of_base_attributes(f):
