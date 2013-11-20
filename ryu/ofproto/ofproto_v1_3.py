@@ -798,11 +798,11 @@ OFPHFC_EPERM = 1        # Permissions error.
 # enum ofp_bad_request_code
 OFPBRC_BAD_VERSION = 0        # ofp_header.version not supported.
 OFPBRC_BAD_TYPE = 1        # ofp_header.type not supported.
-OFPBRC_BAD_MULTIPART = 2        # ofp_stats_msg.type not supported.
+OFPBRC_BAD_MULTIPART = 2        # ofp_multipart_request.type not supported.
 OFPBRC_BAD_EXPERIMENTER = 3    # Experimenter id not supported
                                # (in ofp_experimenter_header
-                               # or ofp_stats_request or
-                               # ofp_stats_reply).
+                               # or ofp_multipart_request or
+                               # ofp_multipart_reply).
 OFPBRC_BAD_EXP_TYPE = 4        # Experimenter type not supported.
 OFPBRC_EPERM = 5        # Permissions error.
 OFPBRC_BAD_LEN = 6        # Wrong request length for type.
