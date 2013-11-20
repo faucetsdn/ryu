@@ -1057,6 +1057,7 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('pbb_isid', 37, oxm_fields.Int3),
     oxm_fields.OpenFlowBasic('tunnel_id', 38, oxm_fields.Int8),
     oxm_fields.OpenFlowBasic('ipv6_exthdr', 39, oxm_fields.Int2),
+    oxm_fields.ONFExperimenter('pbb_uca', 2560, oxm_fields.Int1),
 ]
 
 oxm_fields.generate(__name__)

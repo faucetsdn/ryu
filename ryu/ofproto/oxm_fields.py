@@ -26,6 +26,7 @@
 
 import itertools
 import struct
+import ofproto_common
 from ofproto_parser import msg_pack_into
 
 from ryu.lib import addrconv
@@ -87,15 +88,35 @@ class UnknownType(TypeDescr):
 
 
 OFPXMC_OPENFLOW_BASIC = 0x8000
+OFPXMC_EXPERIMENTER = 0xffff
 
 
-class OpenFlowBasic(object):
+class _OxmClass(object):
+    def __init__(self, name, num, type_):
+        self.name = name
+        self.oxm_type = num | (self._class << 7)
+        self.type = type_
+
+
+class OpenFlowBasic(_OxmClass):
     _class = OFPXMC_OPENFLOW_BASIC
 
     def __init__(self, name, num, type_):
-        self.name = name
-        self.num = num | (self._class << 7)
-        self.type = type_
+        super(OpenFlowBasic, self).__init__(name, num, type_)
+        self.num = self.oxm_type
+
+
+class _Experimenter(_OxmClass):
+    _class = OFPXMC_EXPERIMENTER
+
+
+class ONFExperimenter(_Experimenter):
+    experimenter_id = ofproto_common.ONF_EXPERIMENTER_ID
+
+    def __init__(self, name, num, type_):
+        super(ONFExperimenter, self).__init__(name, 0, type_)
+        self.num = (ONFExperimenter, num)
+        self.exp_type = num
 
 
 def generate(modname):
@@ -110,6 +131,8 @@ def generate(modname):
 
     for i in mod.oxm_types:
         uk = string.upper(i.name)
+        if isinstance(i.num, tuple):
+            continue
         oxm_class = i.num >> 7
         if oxm_class != OFPXMC_OPENFLOW_BASIC:
             continue
@@ -123,9 +146,10 @@ def generate(modname):
     num_to_field = dict((f.num, f) for f in mod.oxm_types)
     add_attr('oxm_from_user', functools.partial(from_user, name_to_field))
     add_attr('oxm_to_user', functools.partial(to_user, num_to_field))
+    add_attr('_oxm_field_desc', functools.partial(_field_desc, num_to_field))
     add_attr('oxm_normalize_user', functools.partial(normalize_user, mod))
     add_attr('oxm_parse', functools.partial(parse, mod))
-    add_attr('oxm_serialize', serialize)
+    add_attr('oxm_serialize', functools.partial(serialize, mod))
     add_attr('oxm_to_jsondict', to_jsondict)
     add_attr('oxm_from_jsondict', from_jsondict)
 
@@ -174,6 +198,10 @@ def to_user(num_to_field, n, v, m):
     return name, user_value
 
 
+def _field_desc(num_to_field, n):
+    return num_to_field[n]
+
+
 def normalize_user(mod, k, uv):
     (n, v, m) = mod.oxm_from_user(k, uv)
     # apply mask
@@ -191,30 +219,63 @@ def parse(mod, buf, offset):
     hdr_len = struct.calcsize(hdr_pack_str)
     oxm_type = header >> 9  # class|field
     oxm_hasmask = mod.oxm_tlv_header_extract_hasmask(header)
-    value_len = mod.oxm_tlv_header_extract_length(header)
+    len = mod.oxm_tlv_header_extract_length(header)
+    oxm_class = oxm_type >> 7
+    if oxm_class == OFPXMC_EXPERIMENTER:
+        exp_hdr_pack_str = '!I'  # experimenter_id
+        (exp_id, ) = struct.unpack_from(exp_hdr_pack_str, buf,
+                                        offset + hdr_len)
+        exp_hdr_len = struct.calcsize(exp_hdr_pack_str)
+        if exp_id == ofproto_common.ONF_EXPERIMENTER_ID:
+            onf_exp_type_pack_str = '!H'
+            (exp_type, ) = struct.unpack_from(onf_exp_type_pack_str, buf,
+                                              offset + hdr_len + exp_hdr_len)
+            exp_hdr_len += struct.calcsize(onf_exp_type_pack_str)
+            num = (ONFExperimenter, exp_type)
+    else:
+        num = oxm_type
+        exp_hdr_len = 0
+    value_offset = offset + hdr_len + exp_hdr_len
+    value_len = len - exp_hdr_len
     value_pack_str = '!%ds' % value_len
     assert struct.calcsize(value_pack_str) == value_len
-    (value, ) = struct.unpack_from(value_pack_str, buf,
-                                   offset + hdr_len)
+    (value, ) = struct.unpack_from(value_pack_str, buf, value_offset)
     if oxm_hasmask:
         (mask, ) = struct.unpack_from(value_pack_str, buf,
-                                      offset + hdr_len + value_len)
+                                      value_offset + value_len)
     else:
         mask = None
     field_len = hdr_len + (header & 0xff)
-    return oxm_type, value, mask, field_len
+    return num, value, mask, field_len
 
 
-def serialize(n, value, mask, buf, offset):
+def serialize(mod, n, value, mask, buf, offset):
+    exp_hdr = bytearray()
+    if isinstance(n, tuple):
+        (cls, exp_type) = n
+        desc = mod._oxm_field_desc(n)
+        assert issubclass(cls, _Experimenter)
+        assert isinstance(desc, cls)
+        assert cls is ONFExperimenter
+        onf_exp_hdr_pack_str = '!IH'  # experimenter_id, exp_type
+        msg_pack_into(onf_exp_hdr_pack_str, exp_hdr, 0,
+                      cls.experimenter_id, exp_type)
+        assert len(exp_hdr) == struct.calcsize(onf_exp_hdr_pack_str)
+        n = desc.oxm_type
+        assert (n >> 7) == OFPXMC_EXPERIMENTER
+    exp_hdr_len = len(exp_hdr)
+    value_len = len(value)
     if mask:
-        assert len(value) == len(mask)
-        pack_str = "!I%ds%ds" % (len(value), len(mask))
+        assert value_len == len(mask)
+        pack_str = "!I%ds%ds%ds" % (exp_hdr_len, value_len, len(mask))
         msg_pack_into(pack_str, buf, offset,
-                      (n << 9) | (1 << 8) | (len(value) * 2), value, mask)
+                      (n << 9) | (1 << 8) | (exp_hdr_len + value_len * 2),
+                      bytes(exp_hdr), value, mask)
     else:
-        pack_str = "!I%ds" % (len(value),)
+        pack_str = "!I%ds%ds" % (exp_hdr_len, value_len,)
         msg_pack_into(pack_str, buf, offset,
-                      (n << 9) | (0 << 8) | len(value), value)
+                      (n << 9) | (0 << 8) | (exp_hdr_len + value_len),
+                      bytes(exp_hdr), value)
     return struct.calcsize(pack_str)
 
 
