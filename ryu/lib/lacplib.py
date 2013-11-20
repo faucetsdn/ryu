@@ -31,9 +31,6 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import slow
 
 
-LAG_EV_DISPATCHER = "lacplib"
-
-
 class EventPacketIn(event.EventBase):
     """a PacketIn event class using except LACP."""
     def __init__(self, msg):
