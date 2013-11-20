@@ -202,6 +202,11 @@ x() ->
              class = openflow_basic,name = ipv6_exthdr,
              has_mask = false,
              value = <<500:9>>,
+             mask = undefined},
+         #ofp_field{
+             class = {experimenter, onf},name = pbb_uca,
+             has_mask = false,
+             value = <<1:1>>,
              mask = undefined}
     ],
     List = [
@@ -260,7 +265,11 @@ x() ->
                      actions =
                          [#ofp_action_set_field{
                              field = #ofp_field{name = eth_src,
-                                                value = <<1,2,3,4,5,6>> }}]}]},
+                                                value = <<1,2,3,4,5,6>> }},
+                          #ofp_action_set_field{
+                             field = #ofp_field{class = {experimenter, onf},
+                                                name = pbb_uca,
+                                                value = <<1:1>> }}]}]},
         #ofp_flow_mod{
             cookie = <<0,0,0,0,0,0,0,0>>,
             cookie_mask = <<0,0,0,0,0,0,0,0>>,
@@ -410,6 +419,39 @@ x() ->
                      match = #ofp_match{fields = []},
                      instructions =
                          [#ofp_instruction_write_actions{
+                              actions =
+                                  [#ofp_action_set_field{
+                                      field = #ofp_field{name = vlan_vid,
+                                                         value = <<258:13>> }},
+                                   #ofp_action_copy_ttl_out{},
+                                   #ofp_action_copy_ttl_in{},
+                                   #ofp_action_copy_ttl_in{},
+                                   #ofp_action_pop_pbb{},
+                                   #ofp_action_push_pbb{ethertype = 16#1234},
+                                   #ofp_action_pop_mpls{ethertype= 16#9876},
+                                   #ofp_action_push_mpls{ethertype = 16#8847},
+                                   #ofp_action_pop_vlan{},
+                                   #ofp_action_push_vlan{ethertype = 16#8100},
+                                   #ofp_action_dec_mpls_ttl{},
+                                   #ofp_action_set_mpls_ttl{mpls_ttl = 10},
+                                   #ofp_action_dec_nw_ttl{},
+                                   #ofp_action_set_nw_ttl{nw_ttl = 10},
+                                   #ofp_action_set_queue{queue_id = 3},
+                                   #ofp_action_group{group_id = 99},
+                                   #ofp_action_output{port = 6,
+                                                      max_len = no_buffer}]},
+                          #ofp_instruction_apply_actions{
+                              actions =
+                                  [#ofp_action_set_field{
+                                      field = #ofp_field{name = eth_src,
+                                                         value = <<1,2,3,4,
+                                                                   5,6>> }},
+                                   #ofp_action_set_field{
+                                      field = #ofp_field{class = {experimenter,
+                                                                  onf},
+                                                         name = pbb_uca,
+                                                         value = <<1:1>> }}]},
+                          #ofp_instruction_write_actions{
                               actions =
                                   [#ofp_action_output{
                                        port = controller,
