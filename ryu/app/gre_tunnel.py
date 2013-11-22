@@ -400,6 +400,16 @@ class GRETunnel(app_manager.RyuApp):
             [dpset.EventDP, PortSet.EventTunnelKeyDel, PortSet.EventVMPort,
              PortSet.EventTunnelPort, ofp_event.EventOFPPacketIn])
 
+    def start(self):
+        super(GRETunnel, self).start()
+        self.port_set.start()
+
+    def stop(self):
+        app_mgr = app_manager.get_instance()
+        app_mgr.uninstantiate(self.port_set)
+        self.port_set = None
+        super(GRETunnel, self).stop()
+
     # TODO: track active vm/tunnel ports
 
     @handler.set_ev_handler(dpset.EventDP)
