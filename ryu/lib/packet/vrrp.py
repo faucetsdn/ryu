@@ -169,6 +169,18 @@ def is_ipv6(ip_address):
     return False
 
 
+def ip_text_to_bin(ip_text):
+    if is_ipv6(ip_text):
+        return addrconv.ipv6.text_to_bin(ip_text)
+    else:
+        return addrconv.ipv4.text_to_bin(ip_text)
+
+
+# This is used for master selection
+def ip_address_lt(ip1, ip2):
+    return ip_text_to_bin(ip1) < ip_text_to_bin(ip2)
+
+
 class vrrp(packet_base.PacketBase):
     """The base class for VRRPv2 (RFC 3768) and VRRPv3 (RFC 5798)
     header encoder/decoder classes.
