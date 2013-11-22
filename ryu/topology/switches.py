@@ -394,10 +394,11 @@ class LLDPPacket(object):
     @staticmethod
     def lldp_parse(data):
         pkt = packet.Packet(data)
-        eth_pkt = pkt.next()
+        i = iter(pkt)
+        eth_pkt = i.next()
         assert type(eth_pkt) == ethernet.ethernet
 
-        lldp_pkt = pkt.next()
+        lldp_pkt = i.next()
         if type(lldp_pkt) != lldp.lldp:
             raise LLDPPacket.LLDPUnknownFormat()
 
