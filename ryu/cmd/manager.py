@@ -63,7 +63,7 @@ def main():
 
     app_lists = CONF.app_lists + CONF.app
 
-    app_mgr = AppManager()
+    app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
     contexts = app_mgr.create_contexts()
     app_mgr.instantiate_apps(**contexts)
