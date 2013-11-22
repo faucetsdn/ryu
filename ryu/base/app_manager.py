@@ -227,13 +227,14 @@ class AppManager(object):
 
     def create_contexts(self):
         for key, cls in self.contexts_cls.items():
-            context = cls()
+            if issubclass(cls, RyuApp):
+                # hack for dpset
+                context = self._instantiate(None, cls)
+            else:
+                context = cls()
             LOG.info('creating context %s', key)
             assert not key in self.contexts
             self.contexts[key] = context
-            # hack for dpset
-            if issubclass(context.__class__, RyuApp):
-                register_app(context)
         return self.contexts
 
     def _update_bricks(self):
