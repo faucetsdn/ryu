@@ -63,28 +63,24 @@ Run Ryu with CA files::
     % ryu-manager --ctl-privkey ctl-privkey.pem \
                   --ctl-cert ctl-cert.pem \
                   --ca-certs /usr/local/var/lib/openvswitch/pki/switchca/cacert.pem \
-                  --verbose \
-                  ryu.app.simple_switch
+                  --verbose
 
 You can see something like::
 
-    loading app ryu.app.simple_switch
     loading app ryu.controller.ofp_handler
-    instantiating app ryu.app.simple_switch
     instantiating app ryu.controller.ofp_handler
-    BRICK SimpleSwitch
-      CONSUMES EventOFPPacketIn
-      CONSUMES EventOFPPortStatus
     BRICK ofp_event
-      PROVIDES EventOFPPacketIn TO {'SimpleSwitch': set(['main'])}
-      PROVIDES EventOFPPortStatus TO {'SimpleSwitch': set(['main'])}
       CONSUMES EventOFPSwitchFeatures
+      CONSUMES EventOFPErrorMsg
       CONSUMES EventOFPHello
       CONSUMES EventOFPEchoRequest
-      CONSUMES EventOFPErrorMsg
-      CONSUMES EventOFPPortDescStatsReply
-    connected socket:<eventlet.green.ssl.GreenSSLSocket object at 0x7f7ff37f5410> address:('127.0.0.1', 60805)
-    hello ev <ryu.controller.ofp_event.EventOFPHello object at 0x7f7ff37f1a50>
+    connected socket:<SSLSocket fileno=4 sock=127.0.0.1:6633 peer=127.0.0.1:61302> a
+    ddress:('127.0.0.1', 61302)
+    hello ev <ryu.controller.ofp_event.EventOFPHello object at 0x1047806d0>
     move onto config mode
-    switch features ev version: 0x1 msg_type 0x6 xid 0x83678173 OFPSwitchFeatures(actions=4095,capabilities=199,datapath_id=2551895560512,n_buffers=256,n_tables=254,ports={65534: OFPPhyPort(port_no=65534,hw_addr='02:52:28:d4:11:40',name='of13',config=0,state=0,curr=0,advertised=0,supported=0,peer=0)})
+    switch features ev version: 0x1 msg_type 0x6 xid 0xb0bb34e5 port OFPPhyPort(port
+    _no=65534, hw_addr='\x16\xdc\xa2\xe2}K', name='br0\x00\x00\x00\x00\x00\x00\x00\x
+    00\x00\x00\x00\x00\x00', config=0, state=0, curr=0, advertised=0, supported=0, p
+    eer=0)
     move onto main mode
+
