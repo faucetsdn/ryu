@@ -62,6 +62,9 @@ def main():
     log.init_log()
 
     app_lists = CONF.app_lists + CONF.app
+    # keep old behaivor, run ofp if no application is specified.
+    if not app_lists:
+        app_lists = ['ryu.controller.ofp_handler']
 
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
