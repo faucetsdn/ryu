@@ -325,6 +325,6 @@ def datapath_connection_factory(socket, address):
 
 
 def start_service(app_mgr):
-    for app in app_mgr.applications:
-        if app.endswith('ofp_handler'):
+    for app in app_mgr.applications.values():
+        if app.__class__.__name__.endswith('OFPHandler'):
             return OpenFlowController()
