@@ -69,9 +69,8 @@ def main():
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
     contexts = app_mgr.create_contexts()
-    app_mgr.instantiate_apps(**contexts)
-
     services = []
+    services.extend(app_mgr.instantiate_apps(**contexts))
 
     # TODO: do the following in app_manager's instantiate_apps()
     ofpapp = controller.start_service(app_mgr)

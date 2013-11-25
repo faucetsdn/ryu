@@ -61,8 +61,9 @@ class VRRPManager(app_manager.RyuApp):
         self.shutdown = hub.Queue()
 
     def start(self):
-        self.threads.append(hub.spawn(self._shutdown_loop))
+        t = hub.spawn(self._shutdown_loop)
         super(VRRPManager, self).start()
+        return t
 
     @handler.set_ev_cls(vrrp_event.EventVRRPConfigRequest)
     def config_request_handler(self, ev):

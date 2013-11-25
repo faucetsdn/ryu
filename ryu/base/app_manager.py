@@ -303,8 +303,12 @@ class AppManager(object):
         self._update_bricks()
         self.report_bricks()
 
+        threads = []
         for app in self.applications.values():
-            app.start()
+            t = app.start()
+            if t is not None:
+                threads.append(t)
+        return threads
 
     @staticmethod
     def _close(app):
