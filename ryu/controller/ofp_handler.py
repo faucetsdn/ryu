@@ -19,8 +19,10 @@ import logging
 
 import ryu.base.app_manager
 
+from ryu.lib import hub
 from ryu import utils
 from ryu.controller import ofp_event
+from ryu.controller.controller import OpenFlowController
 from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
@@ -44,6 +46,10 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(OFPHandler, self).__init__(*args, **kwargs)
         self.name = 'ofp_event'
+
+    def start(self):
+        super(OFPHandler, self).start()
+        return hub.spawn(OpenFlowController())
 
     def _hello_failed(self, datapath, error_desc):
         self.logger.error(error_desc)

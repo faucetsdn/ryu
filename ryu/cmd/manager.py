@@ -72,12 +72,6 @@ def main():
     services = []
     services.extend(app_mgr.instantiate_apps(**contexts))
 
-    # TODO: do the following in app_manager's instantiate_apps()
-    ofpapp = controller.start_service(app_mgr)
-    if ofpapp:
-        thr = hub.spawn(ofpapp)
-        services.append(thr)
-
     webapp = wsgi.start_service(app_mgr)
     if webapp:
         thr = hub.spawn(webapp)
