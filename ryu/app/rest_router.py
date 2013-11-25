@@ -46,6 +46,7 @@ from ryu.ofproto import ether
 from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_3
 
 
 #=============================
@@ -206,7 +207,8 @@ class CommandFailure(RyuException):
 class RestRouterAPI(app_manager.RyuApp):
 
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
-                    ofproto_v1_2.OFP_VERSION]
+                    ofproto_v1_2.OFP_VERSION,
+                    ofproto_v1_3.OFP_VERSION]
 
     _CONTEXTS = {'dpset': dpset.DPSet,
                  'wsgi': WSGIApplication}
@@ -276,7 +278,11 @@ class RestRouterAPI(app_manager.RyuApp):
         event, msgs = self.waiters[dp.id][msg.xid]
         msgs.append(msg)
 
-        if msg.flags & dp.ofproto.OFPSF_REPLY_MORE:
+        if ofproto_v1_3.OFP_VERSION == dp.ofproto.OFP_VERSION:
+            more = dp.ofproto.OFPMPF_REPLY_MORE
+        else:
+            more = dp.ofproto.OFPSF_REPLY_MORE
+        if msg.flags & more:
             return
         del self.waiters[dp.id][msg.xid]
         event.set()
@@ -286,7 +292,7 @@ class RestRouterAPI(app_manager.RyuApp):
     def stats_reply_handler_v1_0(self, ev):
         self._stats_reply_handler(ev)
 
-    # for OpenFlow version1.2
+    # for OpenFlow version1.2/1.3
     @set_ev_cls(ofp_event.EventOFPStatsReply, MAIN_DISPATCHER)
     def stats_reply_handler_v1_2(self, ev):
         self._stats_reply_handler(ev)
@@ -441,7 +447,7 @@ class Router(dict):
         ofctl = OfCtl.factory(dp, logger)
         cookie = COOKIE_DEFAULT_ID
 
-        # Set SW config: TTL error packet in (only OFPv1.2)
+        # Set SW config: TTL error packet in (for OFPv1.2/1.3)
         ofctl.set_sw_config_for_ttl()
 
         # Set flow: ARP handling (packet in)
@@ -925,9 +931,10 @@ class VlanRouter(object):
         return relate_list
 
     def packet_in_handler(self, msg, header_list):
-        # Check invalid TTL (only OpenFlow V1.2)
+        # Check invalid TTL (for OpenFlow V1.2/1.3)
         ofproto = self.dp.ofproto
-        if ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+        if ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION or \
+                ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             if msg.reason == ofproto.OFPR_INVALID_TTL:
                 self._packetin_invalid_ttl(msg, header_list)
                 return
@@ -1458,7 +1465,7 @@ class OfCtl(object):
         self.logger = logger
 
     def set_sw_config_for_ttl(self):
-        # OpenFlow v1_2 only.
+        # OpenFlow v1_2/1_3.
         pass
 
     def set_flow(self, cookie, priority, dl_type=0, dl_dst=0, dl_vlan=0,
@@ -1683,20 +1690,13 @@ class OfCtl_v1_0(OfCtl):
         self.logger.info('Delete flow [cookie=0x%x]', cookie, extra=self.sw_id)
 
 
-@OfCtl.register_of_version(ofproto_v1_2.OFP_VERSION)
-class OfCtl_v1_2(OfCtl):
+class OfCtl_after_v1_2(OfCtl):
 
     def __init__(self, dp, logger):
-        super(OfCtl_v1_2, self).__init__(dp, logger)
+        super(OfCtl_after_v1_2, self).__init__(dp, logger)
 
     def set_sw_config_for_ttl(self):
-        flags = self.dp.ofproto.OFPC_INVALID_TTL_TO_CONTROLLER
-        miss_send_len = UINT16_MAX
-        m = self.dp.ofproto_parser.OFPSetConfig(self.dp, flags,
-                                                miss_send_len)
-        self.dp.send_msg(m)
-        self.logger.info('Set SW config for TTL error packet in.',
-                         extra=self.sw_id)
+        pass
 
     def get_packetin_inport(self, msg):
         in_port = self.dp.ofproto.OFPP_ANY
@@ -1707,13 +1707,7 @@ class OfCtl_v1_2(OfCtl):
         return in_port
 
     def get_all_flow(self, waiters):
-        ofp = self.dp.ofproto
-        ofp_parser = self.dp.ofproto_parser
-
-        match = ofp_parser.OFPMatch()
-        stats = ofp_parser.OFPFlowStatsRequest(self.dp, 0, ofp.OFPP_ANY,
-                                               ofp.OFPG_ANY, 0, 0, match)
-        return self.send_stats_request(stats, waiters)
+        pass
 
     def set_flow(self, cookie, priority, dl_type=0, dl_dst=0, dl_vlan=0,
                  nw_src=0, src_mask=32, nw_dst=0, dst_mask=32,
@@ -1790,6 +1784,63 @@ class OfCtl_v1_2(OfCtl):
                                          ofp.OFPG_ANY, 0, match, inst)
         self.dp.send_msg(flow_mod)
         self.logger.info('Delete flow [cookie=0x%x]', cookie, extra=self.sw_id)
+
+
+@OfCtl.register_of_version(ofproto_v1_2.OFP_VERSION)
+class OfCtl_v1_2(OfCtl_after_v1_2):
+
+    def __init__(self, dp, logger):
+        super(OfCtl_v1_2, self).__init__(dp, logger)
+
+    def set_sw_config_for_ttl(self):
+        flags = self.dp.ofproto.OFPC_INVALID_TTL_TO_CONTROLLER
+        miss_send_len = UINT16_MAX
+        m = self.dp.ofproto_parser.OFPSetConfig(self.dp, flags,
+                                                miss_send_len)
+        self.dp.send_msg(m)
+        self.logger.info('Set SW config for TTL error packet in.',
+                         extra=self.sw_id)
+
+    def get_all_flow(self, waiters):
+        ofp = self.dp.ofproto
+        ofp_parser = self.dp.ofproto_parser
+
+        match = ofp_parser.OFPMatch()
+        stats = ofp_parser.OFPFlowStatsRequest(self.dp, 0, ofp.OFPP_ANY,
+                                               ofp.OFPG_ANY, 0, 0, match)
+        return self.send_stats_request(stats, waiters)
+
+
+@OfCtl.register_of_version(ofproto_v1_3.OFP_VERSION)
+class OfCtl_v1_3(OfCtl_after_v1_2):
+
+    def __init__(self, dp, logger):
+        super(OfCtl_v1_3, self).__init__(dp, logger)
+
+    def set_sw_config_for_ttl(self):
+        packet_in_mask = (self.dp.ofproto.OFPR_ACTION |
+                          self.dp.ofproto.OFPR_INVALID_TTL)
+        port_status_mask = (self.dp.ofproto.OFPPR_ADD |
+                            self.dp.ofproto.OFPPR_DELETE |
+                            self.dp.ofproto.OFPPR_MODIFY)
+        flow_removed_mask = (self.dp.ofproto.OFPRR_IDLE_TIMEOUT |
+                             self.dp.ofproto.OFPRR_HARD_TIMEOUT |
+                             self.dp.ofproto.OFPRR_DELETE)
+        m = self.dp.ofproto_parser.OFPSetAsync(
+            self.dp, [packet_in_mask, 0], [port_status_mask, 0],
+            [flow_removed_mask, 0])
+        self.dp.send_msg(m)
+        self.logger.info('Set SW config for TTL error packet in.',
+                         extra=self.sw_id)
+
+    def get_all_flow(self, waiters):
+        ofp = self.dp.ofproto
+        ofp_parser = self.dp.ofproto_parser
+
+        match = ofp_parser.OFPMatch()
+        stats = ofp_parser.OFPFlowStatsRequest(self.dp, 0, 0, ofp.OFPP_ANY,
+                                               ofp.OFPG_ANY, 0, 0, match)
+        return self.send_stats_request(stats, waiters)
 
 
 def ip_addr_aton(ip_str, err_msg=None):
