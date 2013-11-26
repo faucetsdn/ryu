@@ -17,7 +17,7 @@
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import vlan
 from ryu.ofproto import ether
-from ryu.topology import api as topo_api
+from ryu.topology import switches as topo_api
 
 
 def may_add_vlan(packet, vlan_id):
