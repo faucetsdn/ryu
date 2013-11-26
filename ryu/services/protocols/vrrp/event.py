@@ -18,6 +18,7 @@
 Events for VRRP
 """
 
+from ryu.controller import handler
 from ryu.controller import event
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import mac as mac_lib
@@ -267,3 +268,6 @@ class EventVRRPTransmitRequest(event.EventRequestBase):
     def __init__(self, data):
         super(EventVRRPTransmitRequest, self).__init__()
         self.data = data
+
+
+handler.register_service('ryu.services.protocols.vrrp.manager')
