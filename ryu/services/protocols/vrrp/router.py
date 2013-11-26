@@ -657,7 +657,9 @@ class VRRPRouterV3(VRRPRouter):
 
     def start(self):
         self.state_change(vrrp_event.VRRP_STATE_INITIALIZE)
-        if self.config.address_owner:
+        # Check role here and change accordingly
+        # Check config.admin_state
+        if self.config.address_owner or self.config.admin_state == 'master':
             self.send_advertisement()
 
             # This action should be done router on
