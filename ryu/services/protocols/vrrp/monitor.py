@@ -40,7 +40,7 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
         return _register
 
     @staticmethod
-    def factory(interface, config, router_name, *args, **kwargs):
+    def factory(interface, config, router_name, statistics, *args, **kwargs):
         cls = VRRPInterfaceMonitor._CONSTRUCTORS[interface.__class__]
         app_mgr = app_manager.AppManager.get_instance()
 
@@ -48,6 +48,7 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
         kwargs['router_name'] = router_name
         kwargs['vrrp_config'] = config
         kwargs['vrrp_interface'] = interface
+        kwargs['vrrp_statistics'] = statistics
         app = app_mgr.instantiate(cls, *args, **kwargs)
         return app
 
@@ -60,9 +61,10 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
         self.config = kwargs['vrrp_config']
         self.interface = kwargs['vrrp_interface']
         self.router_name = kwargs['router_name']
+        self.statistics = kwargs['vrrp_statistics']
         self.name = self.instance_name(self.interface, self.config.vrid)
 
-    def _send_vrrp_packet_received(self, packet_data):
+    def _parse_received_packet(self, packet_data):
         # OF doesn't support VRRP packet matching, so we have to parse
         # it ourselvs.
         packet_ = packet.Packet(packet_data)
@@ -120,9 +122,19 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
 
         # TODO: Optional check rfc5798 7.1
         # may_vrrp.ip_addresses equals to self.config.ip_addresses
+        if may_vrrp.priority == 0:
+            self.statistics.rx_vrrp_zero_prio_packets += 1
 
         vrrp_received = vrrp_event.EventVRRPReceived(self.interface, packet_)
         self.send_event(self.router_name, vrrp_received)
+        return True
+
+    def _send_vrrp_packet_received(self, packet_data):
+        valid = self._parse_received_packet(packet_data)
+        if valid is True:
+            self.statistics.rx_vrrp_packets += 1
+        else:
+            self.statistics.rx_vrrp_invalid_packets += 1
 
     @handler.set_ev_handler(vrrp_event.EventVRRPTransmitRequest)
     def vrrp_transmit_request_handler(self, ev):
@@ -146,6 +158,15 @@ class VRRPInterfaceMonitor(app_manager.RyuApp):
                 self._initialize()
         elif ev.new_state in [vrrp_event.VRRP_STATE_BACKUP,
                               vrrp_event.VRRP_STATE_MASTER]:
-            pass
+
+            if ev.old_state == vrrp_event.VRRP_STATE_INITIALIZE:
+                if ev.new_state == vrrp_event.VRRP_STATE_MASTER:
+                    self.statistics.idle_to_master_transitions += 1
+                else:
+                    self.statistics.idle_to_backup_transitions += 1
+            elif ev.old_state == vrrp_event.VRRP_STATE_MASTER:
+                self.statistics.master_to_backup_transitions += 1
+            else:
+                self.statistics.backup_to_master_transitions += 1
         else:
             raise RuntimeError('unknown vrrp state %s' % ev.new_state)

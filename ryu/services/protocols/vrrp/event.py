@@ -118,7 +118,8 @@ class VRRPConfig(object):
                  admin_state=None,
                  priority=vrrp.VRRP_PRIORITY_BACKUP_DEFAULT, ip_addresses=None,
                  advertisement_interval=vrrp.VRRP_MAX_ADVER_INT_DEFAULT_IN_SEC,
-                 preempt_mode=True, preempt_delay=0, accept_mode=False):
+                 preempt_mode=True, preempt_delay=0, accept_mode=False,
+                 statistics_interval=None, resource_id=None):
         # To allow version and priority default
         assert vrid is not None
         assert ip_addresses is not None
@@ -133,8 +134,9 @@ class VRRPConfig(object):
         self.preempt_mode = preempt_mode
         self.preempt_delay = preempt_delay
         self.accept_mode = accept_mode
-
         self.is_ipv6 = vrrp.is_ipv6(ip_addresses[0])
+        self.statistics_interval = statistics_interval
+        self.resource_id = resource_id
 
     @property
     def address_owner(self):

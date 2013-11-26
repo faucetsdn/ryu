@@ -148,7 +148,8 @@ class VRRPRouter(app_manager.RyuApp):
         return _register
 
     @staticmethod
-    def factory(name, monitor_name, interface, config, *args, **kwargs):
+    def factory(name, monitor_name, interface, config, statistics, *args,
+                **kwargs):
         cls = VRRPRouter._CONSTRUCTORS[config.version]
         app_mgr = app_manager.AppManager.get_instance()
         kwargs = kwargs.copy()
@@ -156,6 +157,7 @@ class VRRPRouter(app_manager.RyuApp):
         kwargs['monitor_name'] = monitor_name
         kwargs['vrrp_interface'] = interface
         kwargs['vrrp_config'] = config
+        kwargs['vrrp_statistics'] = statistics
         return app_mgr.instantiate(cls, *args, **kwargs)
 
     class _EventMasterDown(event.EventBase):
@@ -167,12 +169,16 @@ class VRRPRouter(app_manager.RyuApp):
     class _EventPreemptDelay(event.EventBase):
         pass
 
+    class _EventStatisticsOut(event.EventBase):
+        pass
+
     def __init__(self, *args, **kwargs):
         super(VRRPRouter, self).__init__(*args, **kwargs)
         self.name = kwargs['name']
         self.monitor_name = kwargs['monitor_name']
         self.interface = kwargs['vrrp_interface']
         self.config = kwargs['vrrp_config']
+        self.statistics = kwargs['vrrp_statistics']
         self.params = VRRPParams(self.config)
         self.state = None
         self.state_impl = None
@@ -184,6 +190,10 @@ class VRRPRouter(app_manager.RyuApp):
                                                     self._EventPreemptDelay)
         self.register_observer(self._EventMasterDown, self.name)
         self.register_observer(self._EventAdver, self.name)
+
+        self.stats_out_timer = TimerEventSender(self,
+                                                self._EventStatisticsOut)
+        self.register_observer(self._EventStatisticsOut, self.name)
 
     def send_advertisement(self, release=False):
         if self.vrrp is None:
@@ -200,12 +210,15 @@ class VRRPRouter(app_manager.RyuApp):
                                  vrrp.VRRP_PRIORITY_RELEASE_RESPONSIBILITY,
                                  vrrp_.max_adver_int, vrrp_.ip_addresses)
 
+        if self.vrrp.priority == 0:
+            self.statistics.tx_vrrp_zero_prio_packets += 1
         # create packet frame each time to generate new ip identity
         interface = self.interface
         packet_ = vrrp_.create_packet(interface.primary_ip_address,
                                       interface.vlan_id)
         packet_.serialize()
         vrrp_api.vrrp_transmit(self, self.monitor_name, packet_.data)
+        self.statistics.tx_vrrp_packets += 1
 
     def state_change(self, new_state):
         old_state = self.state
@@ -256,6 +269,11 @@ class VRRPRouter(app_manager.RyuApp):
 
         self.state_impl.vrrp_config_change_request(ev)
 
+    @handler.set_ev_handler(_EventStatisticsOut)
+    def statistics_handler(self, ev):
+        # sends stats to somewhere here
+        # print self.statistics.get_stats()
+        self.stats_out_timer.start(self.statistics.statistics_interval)
 
 # RFC defines that start timer, then change the state.
 # This causes the race between state change and event dispatching.
@@ -686,4 +704,5 @@ class VRRPRouterV3(VRRPRouter):
             self.state_change(vrrp_event.VRRP_STATE_BACKUP)
             self.master_down_timer.start(params.master_down_interval)
 
+        self.stats_out_timer.start(self.statistics.statistics_interval)
         super(VRRPRouterV3, self).start()
