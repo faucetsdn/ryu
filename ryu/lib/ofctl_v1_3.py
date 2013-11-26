@@ -43,9 +43,9 @@ def to_actions(dp, acts):
             actions.append((parser.OFPActionOutput(out_port,
                                                    max_len)))
         elif action_type == 'COPY_TTL_OUT':
-            pass
+            actions.append(parser.OFPActionCopyTtlOut())
         elif action_type == 'COPY_TTL_IN':
-            pass
+            actions.append(parser.OFPActionCopyTtlIn())
         elif action_type == 'SET_MPLS_TTL':
             mpls_ttl = int(a.get('mpls_ttl'))
             actions.append((parser.OFPActionSetMplsTtl(mpls_ttl)))
@@ -93,9 +93,10 @@ def to_actions(dp, acts):
             f = parser.OFPMatchField.make(field, value)
             actions.append(parser.OFPActionSetField(f))
         elif action_type == 'PUSH_PBB':
-            pass
+            ethertype = int(a.get('ethertype'))
+            actions.append(parser.OFPActionPushPbb(ethertype))
         elif action_type == 'POP_PBB':
-            pass
+            actions.append(parser.OFPActionPopPbb())
         elif action_type == 'GOTO_TABLE':
             table_id = int(a.get('table_id'))
             inst.append(parser.OFPInstructionGotoTable(table_id))
