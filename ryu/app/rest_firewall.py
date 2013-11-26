@@ -31,12 +31,15 @@ from ryu.lib import mac
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import ofctl_v1_0
 from ryu.lib import ofctl_v1_2
+from ryu.lib import ofctl_v1_3
 from ryu.lib.packet import packet
 from ryu.ofproto import ether
 from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
+from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3_parser
 
 
 #=============================
@@ -169,11 +172,11 @@ REST_ACTION_DENY = 'DENY'
 REST_ACTION_PACKETIN = 'PACKETIN'
 
 
-STATUS_FLOW_PRIORITY = ofproto_v1_2_parser.UINT16_MAX
-ARP_FLOW_PRIORITY = ofproto_v1_2_parser.UINT16_MAX - 1
+STATUS_FLOW_PRIORITY = ofproto_v1_3_parser.UINT16_MAX
+ARP_FLOW_PRIORITY = ofproto_v1_3_parser.UINT16_MAX - 1
 LOG_FLOW_PRIORITY = 0
 ACL_FLOW_PRIORITY_MIN = LOG_FLOW_PRIORITY + 1
-ACL_FLOW_PRIORITY_MAX = ofproto_v1_2_parser.UINT16_MAX - 2
+ACL_FLOW_PRIORITY_MAX = ofproto_v1_3_parser.UINT16_MAX - 2
 
 VLANID_NONE = 0
 VLANID_MIN = 2
@@ -184,7 +187,8 @@ COOKIE_SHIFT_VLANID = 32
 class RestFirewallAPI(app_manager.RyuApp):
 
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
-                    ofproto_v1_2.OFP_VERSION]
+                    ofproto_v1_2.OFP_VERSION,
+                    ofproto_v1_3.OFP_VERSION]
 
     _CONTEXTS = {'dpset': dpset.DPSet,
                  'wsgi': WSGIApplication}
@@ -289,7 +293,14 @@ class RestFirewallAPI(app_manager.RyuApp):
         lock, msgs = self.waiters[dp.id][msg.xid]
         msgs.append(msg)
 
-        if msg.flags & dp.ofproto.OFPSF_REPLY_MORE:
+        flags = 0
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
+                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            flags = dp.ofproto.OFPSF_REPLY_MORE
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            flags = dp.ofproto.OFPMPF_REPLY_MORE
+
+        if msg.flags & flags:
             return
         del self.waiters[dp.id][msg.xid]
         lock.set()
@@ -306,7 +317,7 @@ class RestFirewallAPI(app_manager.RyuApp):
     def stats_reply_handler_v1_0(self, ev):
         self.stats_reply_handler(ev)
 
-    # for OpenFlow version1.2
+    # for OpenFlow version1.2 or later
     @set_ev_cls(ofp_event.EventOFPStatsReply, MAIN_DISPATCHER)
     def stats_reply_handler_v1_2(self, ev):
         self.stats_reply_handler(ev)
@@ -536,7 +547,8 @@ class FirewallController(ControllerBase):
 class Firewall(object):
 
     _OFCTL = {ofproto_v1_0.OFP_VERSION: ofctl_v1_0,
-              ofproto_v1_2.OFP_VERSION: ofctl_v1_2}
+              ofproto_v1_2.OFP_VERSION: ofctl_v1_2,
+              ofproto_v1_3.OFP_VERSION: ofctl_v1_3}
 
     def __init__(self, dp):
         super(Firewall, self).__init__()
@@ -565,7 +577,7 @@ class Firewall(object):
         for vlan_id in vlan_ids:
             self.vlan_list.setdefault(vlan_id, 0)
             self.vlan_list[vlan_id] += 1
-            self.vlan_list[vlan_id] &= ofproto_v1_2_parser.UINT32_MAX
+            self.vlan_list[vlan_id] &= ofproto_v1_3_parser.UINT32_MAX
             cookie = (vlan_id << COOKIE_SHIFT_VLANID) + \
                 self.vlan_list[vlan_id]
             cookie_list.append([cookie, vlan_id])
@@ -574,7 +586,7 @@ class Firewall(object):
 
     @staticmethod
     def _cookie_to_ruleid(cookie):
-        return cookie & ofproto_v1_2_parser.UINT32_MAX
+        return cookie & ofproto_v1_3_parser.UINT32_MAX
 
     # REST command template
     def rest_command(func):
