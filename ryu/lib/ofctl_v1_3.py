@@ -107,6 +107,55 @@ def to_actions(dp, acts):
     return inst
 
 
+def actions_to_str(instructions):
+    actions = []
+
+    for instruction in instructions:
+        if not isinstance(instruction,
+                          ofproto_v1_3_parser.OFPInstructionActions):
+            continue
+        for a in instruction.actions:
+            action_type = a.cls_action_type
+
+            if action_type == ofproto_v1_3.OFPAT_OUTPUT:
+                buf = 'OUTPUT:' + str(a.port)
+            elif action_type == ofproto_v1_3.OFPAT_COPY_TTL_OUT:
+                buf = 'COPY_TTL_OUT'
+            elif action_type == ofproto_v1_3.OFPAT_COPY_TTL_IN:
+                buf = 'COPY_TTL_IN'
+            elif action_type == ofproto_v1_3.OFPAT_SET_MPLS_TTL:
+                buf = 'SET_MPLS_TTL:' + str(a.mpls_ttl)
+            elif action_type == ofproto_v1_3.OFPAT_DEC_MPLS_TTL:
+                buf = 'DEC_MPLS_TTL'
+            elif action_type == ofproto_v1_3.OFPAT_PUSH_VLAN:
+                buf = 'PUSH_VLAN:' + str(a.ethertype)
+            elif action_type == ofproto_v1_3.OFPAT_POP_VLAN:
+                buf = 'POP_VLAN'
+            elif action_type == ofproto_v1_3.OFPAT_PUSH_MPLS:
+                buf = 'PUSH_MPLS:' + str(a.ethertype)
+            elif action_type == ofproto_v1_3.OFPAT_POP_MPLS:
+                buf = 'POP_MPLS'
+            elif action_type == ofproto_v1_3.OFPAT_OFPAT_SET_QUEUE:
+                buf = 'SET_QUEUE:' + str(a.queue_id)
+            elif action_type == ofproto_v1_3.OFPAT_GROUP:
+                pass
+            elif action_type == ofproto_v1_3.OFPAT_SET_NW_TTL:
+                buf = 'SET_NW_TTL:' + str(a.nw_ttl)
+            elif action_type == ofproto_v1_3.OFPAT_DEC_NW_TTL:
+                buf = 'DEC_NW_TTL'
+            elif action_type == ofproto_v1_3.OFPAT_SET_FIELD:
+                buf = 'SET_FIELD: {%s:%s}' % (a.field, a.value)
+            elif action_type == ofproto_v1_3.OFPAT_PUSH_PBB:
+                buf = 'PUSH_PBB:' + str(a.ethertype)
+            elif action_type == ofproto_v1_3.OFPAT_POP_PBB:
+                buf = 'POP_PBB'
+            else:
+                buf = 'UNKNOWN'
+            actions.append(buf)
+
+    return actions
+
+
 def to_match(dp, attrs):
     match = dp.ofproto_parser.OFPMatch()
 
@@ -189,6 +238,48 @@ def to_match_ip(value):
     return ipv4, netmask
 
 
+def match_to_str(ofmatch):
+    keys = {ofproto_v1_3.OXM_OF_IN_PORT: 'in_port',
+            ofproto_v1_3.OXM_OF_ETH_SRC: 'dl_src',
+            ofproto_v1_3.OXM_OF_ETH_DST: 'dl_dst',
+            ofproto_v1_3.OXM_OF_ETH_TYPE: 'dl_type',
+            ofproto_v1_3.OXM_OF_VLAN_VID: 'dl_vlan',
+            ofproto_v1_3.OXM_OF_IPV4_SRC: 'nw_src',
+            ofproto_v1_3.OXM_OF_IPV4_DST: 'nw_dst',
+            ofproto_v1_3.OXM_OF_IPV4_SRC_W: 'nw_src',
+            ofproto_v1_3.OXM_OF_IPV4_DST_W: 'nw_dst',
+            ofproto_v1_3.OXM_OF_IP_PROTO: 'nw_proto',
+            ofproto_v1_3.OXM_OF_TCP_SRC: 'tp_src',
+            ofproto_v1_3.OXM_OF_TCP_DST: 'tp_dst',
+            ofproto_v1_3.OXM_OF_UDP_SRC: 'tp_src',
+            ofproto_v1_3.OXM_OF_UDP_DST: 'tp_dst'}
+
+    match = {}
+    for match_field in ofmatch.fields:
+        key = keys[match_field.header]
+        if key == 'dl_src' or key == 'dl_dst':
+            value = mac.haddr_to_str(match_field.value)
+        elif key == 'nw_src' or key == 'nw_dst':
+            value = match_ip_to_str(match_field.value, match_field.mask)
+        else:
+            value = match_field.value
+        match.setdefault(key, value)
+
+    return match
+
+
+def match_ip_to_str(value, mask):
+    ip = socket.inet_ntoa(struct.pack('!I', value))
+
+    if mask is not None and mask != 0:
+        binary_str = bin(mask)[2:].zfill(8)
+        netmask = '/%d' % len(binary_str.rstrip('0'))
+    else:
+        netmask = ''
+
+    return ip + netmask
+
+
 def send_stats_request(dp, stats, waiters, msgs):
     dp.set_xid(stats)
     waiters_per_dp = waiters.setdefault(dp.id, {})
@@ -237,22 +328,20 @@ def get_flow_stats(dp, waiters):
     flows = []
     for msg in msgs:
         for stats in msg.body:
-            actions = []
-            for action in stats.instructions:
-                actions.append(action.to_jsondict())
-            match = stats.match.to_jsondict()
+            actions = actions_to_str(stats.instructions)
+            match = match_to_str(stats.match)
 
             s = {'priority': stats.priority,
                  'cookie': stats.cookie,
                  'idle_timeout': stats.idle_timeout,
                  'hard_timeout': stats.hard_timeout,
+                 'actions': actions,
+                 'match': match,
                  'byte_count': stats.byte_count,
                  'duration_sec': stats.duration_sec,
                  'duration_nsec': stats.duration_nsec,
                  'packet_count': stats.packet_count,
-                 'table_id': stats.table_id,
-                 'match': match,
-                 'actions': actions}
+                 'table_id': stats.table_id}
             flows.append(s)
     flows = {str(dp.id): flows}
 
