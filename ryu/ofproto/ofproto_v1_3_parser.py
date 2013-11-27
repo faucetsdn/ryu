@@ -5087,10 +5087,17 @@ class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
     Table features statistics request message
 
     The controller uses this message to query table features.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPTableFeaturesStats`` instances.
+                     The default is [].
+    ================ ======================================================
     """
     def __init__(self, datapath, flags,
                  body=[],
-                 properties=[], type_=None):
+                 type_=None):
         super(OFPTableFeaturesStatsRequest, self).__init__(datapath, flags)
         self.body = body
 
