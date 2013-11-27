@@ -187,6 +187,9 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
                 except socket.timeout:
                     self.logger.debug('timeout')
                     continue
+                except:
+                    self.logger.error('recv failed')
+                    continue
                 if len(buf) == 0:
                     self.__is_active = False
                     break
@@ -200,7 +203,11 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
     @handler.set_ev_handler(vrrp_event.EventVRRPTransmitRequest)
     def vrrp_transmit_request_handler(self, ev):
         self.logger.debug('send')
-        self.packet_socket.sendto(ev.data, (self.interface.device_name, 0))
+        try:
+            self.packet_socket.sendto(ev.data,
+                                      (self.interface.device_name, 0))
+        except:
+            self.logger.error('send failed')
 
     def _initialize(self):
         # nothing
