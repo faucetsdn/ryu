@@ -14,12 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# tested on 64bit linux.
-# On other platform like 32bit Linux, the structure can be different
-# due to alignment difference.
-
 import contextlib
-import fcntl
 import socket
 import struct
 
@@ -36,9 +31,7 @@ from ryu.services.protocols.vrrp import utils
 
 
 # Those are not defined in socket module
-IFNAMSIZ = 16
 SS_MAXSIZE = 128
-SIOCGIFINDEX = 0x8933   # This is for Linux x64. May differ on other Linux
 MCAST_JOIN_GROUP = 42
 MCAST_LEAVE_GROUP = 45
 PACKET_ADD_MEMBERSHIP = 1
@@ -48,35 +41,10 @@ SOL_PACKET = 263
 
 
 def if_nametoindex(ifname):
-    # can the one defined in libc.so be used?
-    #
-    # IFNAMSIZE = 16
-    # struct ifreq {
-    #     char ifr_name[IFNAMSIZ]; /* Interface name */
-    #     union {
-    #         struct sockaddr ifr_addr;
-    #         struct sockaddr ifr_dstaddr;
-    #         struct sockaddr ifr_broadaddr;
-    #         struct sockaddr ifr_netmask;
-    #         struct sockaddr ifr_hwaddr;
-    #         short           ifr_flags;
-    #         int             ifr_ifindex;
-    #         int             ifr_metric;
-    #         int             ifr_mtu;
-    #         struct ifmap    ifr_map;
-    #         char            ifr_slave[IFNAMSIZ];
-    #         char            ifr_newname[IFNAMSIZ];
-    #         char           *ifr_data;
-    #     };
-    # };
-    PACK_STR = '16sI12x'
-
-    # get ip address of the given interface
-    with contextlib.closing(socket.socket(socket.AF_INET,
-                                          socket.SOCK_DGRAM, 0)) as udp_socket:
-        ifreq = struct.pack(PACK_STR, ifname, 0)
-        res = fcntl.ioctl(udp_socket, SIOCGIFINDEX, ifreq)
-        return struct.unpack(PACK_STR, res)[1]
+    filename = '/sys/class/net/' + ifname + '/ifindex'
+    with contextlib.closing(open(filename)) as f:
+        for line in f:
+            return int(line)
 
 
 @monitor.VRRPInterfaceMonitor.register(vrrp_event.VRRPInterfaceNetworkDevice)
@@ -132,6 +100,8 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
         self.__is_active = False
         super(VRRPInterfaceMonitorNetworkDevice, self).stop()
 
+    # we assume that the structures in the following two functions for
+    # multicast are aligned in the same way on all the archtectures.
     def _join_multicast_membership(self, join_leave):
         config = self.config
         if config.is_ipv6:
@@ -142,6 +112,12 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
             add_drop = PACKET_ADD_MEMBERSHIP
         else:
             add_drop = PACKET_DROP_MEMBERSHIP
+        # struct packet_mreq {
+        #     int mr_ifindex;
+        #     unsigned short mr_type;
+        #     unsigned short mr_alen;
+        #     unsigned char  mr_mr_address[8];
+        # };
         packet_mreq = struct.pack('IHH8s', self.ifindex,
                                   PACKET_MR_MULTICAST, 6,
                                   addrconv.mac.text_to_bin(mac_address))
