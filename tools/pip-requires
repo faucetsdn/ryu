@@ -4,3 +4,4 @@ webob>=1.0.8
 paramiko
 netaddr
 oslo.config
+msgpack-python>=0.4.0
