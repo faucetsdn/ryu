@@ -22,6 +22,7 @@ from ryu.lib import mac
 from ryu import utils
 from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
 from . import ofproto_parser
+from . import ofproto_common
 from . import ofproto_v1_3
 
 import logging
@@ -5229,9 +5230,18 @@ class OFPExperimenterMultipart(ofproto_parser.namedtuple(
         return buf + self.data
 
 
+class OFPExperimenterStatsRequestBase(OFPMultipartRequest):
+    def __init__(self, datapath, flags,
+                 experimenter, exp_type,
+                 type_=None):
+        super(OFPExperimenterStatsRequestBase, self).__init__(datapath, flags)
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+
+
 @_set_stats_type(ofproto_v1_3.OFPMP_EXPERIMENTER, OFPExperimenterMultipart)
 @_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
-class OFPExperimenterStatsRequest(OFPMultipartRequest):
+class OFPExperimenterStatsRequest(OFPExperimenterStatsRequestBase):
     """
     Experimenter multipart request message
 
@@ -5247,15 +5257,82 @@ class OFPExperimenterStatsRequest(OFPMultipartRequest):
     def __init__(self, datapath, flags,
                  experimenter, exp_type, data,
                  type_=None):
-        super(OFPExperimenterStatsRequest, self).__init__(datapath, flags)
-        self.experimenter = experimenter
-        self.exp_type = exp_type
+        super(OFPExperimenterStatsRequest, self).__init__(datapath, flags,
+                                                          experimenter,
+                                                          exp_type, type_)
         self.data = data
 
     def _serialize_stats_body(self):
         body = OFPExperimenterMultipart(experimenter=self.experimenter,
                                         exp_type=self.exp_type,
                                         data=self.data)
+        self.buf += body.serialize()
+
+
+# NOTE: we use OFPMatch while on-wire does not ofp_match.
+# (OF1.4 version uses ofp_match.)
+class ONFFlowMonitorRequest(StringifyMixin):
+    def __init__(self, id_, flags,
+                 match=OFPMatch(),
+                 out_port=ofproto_v1_3.OFPP_ANY,
+                 table_id=ofproto_v1_3.OFPTT_ALL,
+                 match_len=None):
+        self.id = id_
+        self.flags = flags
+        self.match_len = match_len
+        self.out_port = out_port
+        self.table_id = table_id
+        self.match = match
+
+    def serialize(self):
+        # fixup
+        match = self.match
+        bin_match = bytearray()
+        ofp_match_len = match.serialize(bin_match, 0)
+        assert len(bin_match) == ofp_match_len
+        match_len = match.length
+        match_hdr_len = ofproto_v1_3.OFP_MATCH_SIZE - 4  # exclude pad[4]
+        # strip ofp_match header and trailing padding
+        bin_match = bytes(bin_match)[match_hdr_len:match_len]
+        self.match_len = len(bin_match)
+
+        buf = bytearray()
+        msg_pack_into(ofproto_v1_3.ONF_FLOW_MONITOR_REQUEST_PACK_STR,
+                      buf, 0,
+                      self.id, self.flags, self.match_len,
+                      self.out_port, self.table_id)
+        buf += bin_match
+        pad_len = utils.round_up(self.match_len, 8) - self.match_len
+        buf += pad_len * '\0'
+        return buf
+
+
+@_set_stats_type(ofproto_v1_3.OFPMP_EXPERIMENTER, OFPExperimenterMultipart)
+@_set_msg_type(ofproto_v1_3.OFPT_MULTIPART_REQUEST)
+class ONFFlowMonitorStatsRequest(OFPExperimenterStatsRequestBase):
+    """
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    body             List of ONFFlowMonitorRequest instances
+    ================ ======================================================
+    """
+    def __init__(self, datapath, flags, body=[],
+                 type_=None, experimenter=None, exp_type=None):
+        super(ONFFlowMonitorStatsRequest,
+              self).__init__(datapath, flags,
+                             experimenter=ofproto_common.ONF_EXPERIMENTER_ID,
+                             exp_type=ofproto_v1_3.ONFMP_FLOW_MONITOR)
+        self.body = body
+
+    def _serialize_stats_body(self):
+        data = bytearray()
+        for i in self.body:
+            data += i.serialize()
+        body = OFPExperimenterMultipart(experimenter=self.experimenter,
+                                        exp_type=self.exp_type,
+                                        data=data)
         self.buf += body.serialize()
 
 
