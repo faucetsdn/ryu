@@ -768,6 +768,88 @@ OFPPR_ADD = 0    # The port was added.
 OFPPR_DELETE = 1    # The port was removed.
 OFPPR_MODIFY = 2    # Some attribute of the port has changed.
 
+# OFPMP_EXPERIMENTER
+# struct onf_experimenter_multipart_msg
+# (experimenter == ONF_EXPERIMENTER_ID)
+ONFMP_FLOW_MONITOR = 1870
+
+# EXT-187 seems to have a lot of flaws.
+# XXX the spec mentions ONFST_FLOW_MONITOR in some places.
+# we assume it's same as ONFMP_FLOW_MONITOR.
+# XXX the spec uses OFPP_NONE.  we assume it means OFPP_ANY.
+# XXX onf_flow_update_full.length is commented to be 24.
+# but it needs to tell the actual length of instructions.
+# we assume it's variable.
+# XXX the spec seems confused between instructions and actions
+# for onf_flow_update_full/ONFFMF_ACTIONS.  we assume they all
+# are instructions.
+# XXX the spec does not define payload structures for any of
+# ONFT_FLOW_MONITOR_CANCEL, ONFT_FLOW_MONITOR_PAUSED, or
+# ONFT_FLOW_MONITOR_RESUMED.  we assume they are same as NX.
+# according to NX spec (OVS nicira-ext.h and ofp-msg.h):
+#    NXT_FLOW_MONITOR_CANCEL: a single u32 'id'.
+#    NXT_FLOW_MONITOR_PAUSED/RESUMED: empty payload
+# (OF1.4 uses something different; OFPFMC_DELETE for CANCEL and
+# OFPFME_ for PAUSED/RESUMED.)
+# XXX onf_flow_monitor_request and onf_flow_update_full use
+# match_len + oxm_fields instead of ofp_match.  this pointless
+# diverge from OF1.4 looks like a botch when updating from OF1.0.
+# XXX the spec mentions "the current implementation of Open vSwitch"
+# but, as of writing this, it doesn't have this extension implemented
+# at all.  we assume that it is about OF1.0 NX.
+# XXX the spec mentions nx13_flow_monitor_request but i couldn't find
+# it in OVS nicira-ext.h.
+
+# onf_flow_monitor_request
+# ONFMP_FLOW_MONITOR request's body is zero or more instances of this.
+# id, flags, match_len, out_put, table_id, zeros[3]
+ONF_FLOW_MONITOR_REQUEST_PACK_STR = '!IHHIB3x'
+ONF_FLOW_MONITOR_REQUEST_SIZE = 16
+assert (calcsize(ONF_FLOW_MONITOR_REQUEST_PACK_STR) ==
+        ONF_FLOW_MONITOR_REQUEST_SIZE)
+
+# onf_flow_monitor_request.flags
+ONFFMF_INITIAL = 1 << 0
+ONFFMF_ADD = 1 << 1
+ONFFMF_DELETE = 1 << 2
+ONFFMF_MODIFY = 1 << 3
+ONFFMF_ACTIONS = 1 << 4
+ONFFMF_OWN = 1 << 5
+
+# onf_flow_update_header
+# ONFMP_FLOW_MONITOR request's body is an array of this
+# length, event
+ONF_FLOW_UPDATE_HEADER_PACK_STR = '!HH'
+ONF_FLOW_UPDATE_HEADER_SIZE = 4
+assert (calcsize(ONF_FLOW_UPDATE_HEADER_PACK_STR) ==
+        ONF_FLOW_UPDATE_HEADER_SIZE)
+
+# onf_flow_update_full, excluding onf_flow_update_header
+# reason, priority, idle_timeout, hard_timeout, match_len, table_id,
+# pad, cookie
+ONF_FLOW_UPDATE_FULL_PACK_STR = '!HHHHHBxQ'
+ONF_FLOW_UPDATE_FULL_SIZE = 24 - ONF_FLOW_UPDATE_HEADER_SIZE
+assert (calcsize(ONF_FLOW_UPDATE_FULL_PACK_STR) ==
+        ONF_FLOW_UPDATE_FULL_SIZE)
+
+# onf_flow_update_abbrev, excluding onf_flow_update_header
+# xid
+ONF_FLOW_UPDATE_ABBREV_PACK_STR = '!I'
+ONF_FLOW_UPDATE_ABBREV_SIZE = 8 - ONF_FLOW_UPDATE_HEADER_SIZE
+assert (calcsize(ONF_FLOW_UPDATE_ABBREV_PACK_STR) ==
+        ONF_FLOW_UPDATE_ABBREV_SIZE)
+
+# enum onf_flow_udpate_event
+ONFFME_ADDED = 0  # some variations in the spec; ONFMFE_ADD, ONFFME_ADD
+ONFFME_DELETED = 1
+ONFFME_MODIFIED = 2
+ONFFME_ABBREV = 3
+
+# enum onf_flow_monitor_msg_type
+ONFT_FLOW_MONITOR_CANCEL = 1870  # controller -> switch
+ONFT_FLOW_MONITOR_PAUSED = 1871  # switch -> controller
+ONFT_FLOW_MONITOR_RESUMED = 1872  # switch -> controller
+
 # struct ofp_error_msg
 OFP_ERROR_MSG_PACK_STR = '!HH'
 OFP_ERROR_MSG_SIZE = 12
