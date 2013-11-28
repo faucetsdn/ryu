@@ -304,3 +304,11 @@ class Client(object):
             raise EOFError("EOF")
         self._process_input_notification()
         self._process_input_request()
+
+    def peek_notification(self):
+        while True:
+            rlist, _wlist = self._endpoint.selectable()
+            rlist, _wlist, _xlist = select.select(rlist, [], [], 0)
+            if not rlist:
+                break
+            self.receive_notification()
