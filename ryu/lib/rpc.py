@@ -115,7 +115,7 @@ class EndPoint(object):
         self._notifications = deque()
         self._responses = {}
         self._incoming = 0  # number of incoming messages in our queues
-        self.closed_by_peer = False
+        self._closed_by_peer = False
 
     def selectable(self):
         rlist = [self._sock]
@@ -143,7 +143,7 @@ class EndPoint(object):
         select.select(rlist, wlist, rlist + wlist)
 
     def serve(self):
-        while not self.closed_by_peer:
+        while not self._closed_by_peer:
             self.block()
             self.process()
 
@@ -185,7 +185,7 @@ class EndPoint(object):
             if not packet:
                 if packet is not None:
                     # socket closed by peer
-                    self.closed_by_peer = True
+                    self._closed_by_peer = True
                 break
             self._encoder.get_and_dispatch_messages(packet, self._table)
         return self._incoming > 0
