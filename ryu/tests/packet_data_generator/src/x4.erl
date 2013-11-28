@@ -2579,6 +2579,25 @@ x() ->
             experimenter = 16#deadbeaf,
             exp_type = 16#cafe7777,
             data = <<"testdata99999999">>
+        },
+        #onf_flow_monitor_request{
+            flags = [],
+            body = [
+                #onf_flow_monitor{
+                    id = 100000000,
+                    flags = [initial, add, delete, modify],
+                    out_port = 22,
+                    table_id = 33,
+                    fields = []
+                },
+                #onf_flow_monitor{
+                    id = 999,
+                    flags = [initial, actions, own],
+                    out_port = any,
+                    table_id = all,
+                    fields = AllFields
+                }
+            ]
         }
     ],
     lists:foldl(fun x:do/2, {4, 0}, List).
