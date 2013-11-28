@@ -215,6 +215,8 @@ latex_documents = [
 man_pages = [
     ('index', 'ryu', u'ryu Documentation',
      [u'ryu development team'], 1),
+    ('man/rpc_cli', 'rpc-cli', u'a simple msgpack-rpc client',
+     [u'ryu development team'], 1),
     ('man/ryu_manager', 'ryu-manager', u'ryu manager',
      [u'ryu development team'], 1),
 ]
