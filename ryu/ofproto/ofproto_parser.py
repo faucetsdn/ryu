@@ -110,7 +110,7 @@ def ofp_msg_from_jsondict(dp, jsondict):
 
 
 class StringifyMixin(stringify.StringifyMixin):
-    _class_prefixes = ["OFP", "MT"]
+    _class_prefixes = ["OFP", "ONF", "MT"]
 
     @classmethod
     def cls_from_jsondict_key(cls, k):
