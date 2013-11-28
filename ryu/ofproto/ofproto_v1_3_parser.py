@@ -5194,13 +5194,11 @@ class OFPPortDescStatsReply(OFPMultipartReply):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
-# XXX should this allow different interpretations for request and reply?
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
     """
-    The body of OFPExperimenterStatsRequest/OFPExperimenterStatsReply
-    multipart messages.
+    The body of OFPExperimenterStatsReply multipart messages.
 
     ================ ======================================================
     Attribute        Description
@@ -5241,16 +5239,24 @@ class OFPExperimenterStatsRequest(OFPMultipartRequest):
     Attribute        Description
     ================ ======================================================
     flags            Zero or ``OFPMPF_REQ_MORE``
-    body             An ``OFPExperimenterMultipart`` instance
+    experimenter     Experimenter ID
+    exp_type         Experimenter defined
+    data             Experimenter defined additional data
     ================ ======================================================
     """
-    def __init__(self, datapath, flags, body, type_=None):
+    def __init__(self, datapath, flags,
+                 experimenter, exp_type, data,
+                 type_=None):
         super(OFPExperimenterStatsRequest, self).__init__(datapath, flags)
-        self.body = body
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
 
     def _serialize_stats_body(self):
-        bin_body = self.body.serialize()
-        self.buf += bin_body
+        body = OFPExperimenterMultipart(experimenter=self.experimenter,
+                                        exp_type=self.exp_type,
+                                        data=self.data)
+        self.buf += body.serialize()
 
 
 @OFPMultipartReply.register_stats_type(body_single_struct=True)
