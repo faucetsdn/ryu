@@ -145,3 +145,12 @@ class Test_igmp(unittest.TestCase):
     def test_malformed_igmp(self):
         m_short_buf = self.buf[1:igmp._MIN_LEN]
         igmp.parser(m_short_buf)
+
+    def test_default_args(self):
+        ig = igmp()
+        buf = ig.serialize(bytearray(), None)
+        res = unpack_from(igmp._PACK_STR, str(buf))
+
+        eq_(res[0], 0x11)
+        eq_(res[1], 0)
+        eq_(res[3], addrconv.ipv4.text_to_bin('0.0.0.0'))

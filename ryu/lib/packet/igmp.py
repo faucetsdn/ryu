@@ -90,7 +90,8 @@ class igmp(packet_base.PacketBase):
     _PACK_STR = '!BBH4s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, msgtype, maxresp, csum, address):
+    def __init__(self, msgtype=IGMP_TYPE_QUERY, maxresp=0, csum=0,
+                 address='0.0.0.0'):
         super(igmp, self).__init__()
         self.msgtype = msgtype
         self.maxresp = maxresp
