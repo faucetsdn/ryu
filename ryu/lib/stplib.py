@@ -14,6 +14,7 @@
 # limitations under the License.
 
 
+import datetime
 import logging
 
 from ryu.base import app_manager
@@ -686,11 +687,10 @@ class Port(object):
         self.designated_priority = None
         self.designated_times = None
         # BPDU handling threads
-        self.send_bpdu_thread = PortThread(self._transmit_config_bpdu)
+        self.send_bpdu_thread = PortThread(self._transmit_bpdu)
         self.wait_bpdu_thread = PortThread(self._wait_bpdu_timer)
-        self.send_tc_thread = PortThread(self._transmit_tc_bpdu)
-        self.send_tcn_thread = PortThread(self._transmit_tcn_bpdu)
         self.send_tc_flg = None
+        self.send_tc_timer = None
         self.send_tcn_flg = None
         self.wait_timer_event = None
         # State machine thread
@@ -709,8 +709,6 @@ class Port(object):
         self.state_machine.stop()
         self.send_bpdu_thread.stop()
         self.wait_bpdu_thread.stop()
-        self.send_tc_thread.stop()
-        self.send_tcn_thread.stop()
         if self.state_event is not None:
             self.state_event.set()
             self.state_event = None
@@ -817,10 +815,9 @@ class Port(object):
         if (new_state is PORT_STATE_DISABLE
                 or new_state is PORT_STATE_BLOCK):
             self.send_tc_flg = False
+            self.send_tc_timer = None
             self.send_tcn_flg = False
             self.send_bpdu_thread.stop()
-            self.send_tc_thread.stop()
-            self.send_tcn_thread.stop()
         elif new_state is PORT_STATE_LISTEN:
             self.send_bpdu_thread.start()
 
@@ -901,6 +898,8 @@ class Port(object):
         if self.wait_timer_event is not None:
             self.wait_timer_event.set()
             self.wait_timer_event = None
+            self.logger.debug('[port=%d] Wait BPDU timer is updated.',
+                              self.ofport.port_no, extra=self.dpid_str)
         hub.sleep(0)  # For thread switching.
 
     def _wait_bpdu_timer(self):
@@ -931,31 +930,42 @@ class Port(object):
         if time_exceed:  # Bridge.recalculate_spanning_tree
             hub.spawn(self.wait_bpdu_timeout)
 
-    def _transmit_config_bpdu(self):
-        """ Send config BPDU packet if port role is DESIGNATED_PORT. """
+    def _transmit_bpdu(self):
         while True:
+            # Send config BPDU packet if port role is DESIGNATED_PORT.
             if self.role == DESIGNATED_PORT:
-                flags = 0b00000000
-                log_msg = '[port=%d] Send Config BPDU.'
-                if self.send_tc_flg:
+                now = datetime.datetime.today()
+                if self.send_tc_timer and self.send_tc_timer < now:
+                    self.send_tc_timer = None
+                    self.send_tc_flg = False
+
+                if not self.send_tc_flg:
+                    flags = 0b00000000
+                    log_msg = '[port=%d] Send Config BPDU.'
+                else:
                     flags = 0b00000001
                     log_msg = '[port=%d] Send TopologyChange BPDU.'
                 bpdu_data = self._generate_config_bpdu(flags)
                 self.ofctl.send_packet_out(self.ofport.port_no, bpdu_data)
                 self.logger.debug(log_msg, self.ofport.port_no,
                                   extra=self.dpid_str)
+
+            # Send Topology Change Notification BPDU until receive Ack.
+            if self.send_tcn_flg:
+                bpdu_data = self._generate_tcn_bpdu()
+                self.ofctl.send_packet_out(self.ofport.port_no, bpdu_data)
+                self.logger.debug('[port=%d] Send TopologyChangeNotify BPDU.',
+                                  self.ofport.port_no, extra=self.dpid_str)
+
             hub.sleep(self.port_times.hello_time)
 
     def transmit_tc_bpdu(self):
-        self.send_tc_thread.start()
-
-    def _transmit_tc_bpdu(self):
         """ Set send_tc_flg to send Topology Change BPDU. """
-        timer = self.port_times.max_age + self.port_times.forward_delay
-
-        self.send_tc_flg = True
-        hub.sleep(timer)
-        self.send_tc_flg = False
+        if not self.send_tc_flg:
+            timer = datetime.timedelta(seconds=self.port_times.max_age
+                                       + self.port_times.forward_delay)
+            self.send_tc_timer = datetime.datetime.today() + timer
+            self.send_tc_flg = True
 
     def transmit_ack_bpdu(self):
         """ Send Topology Change Ack BPDU. """
@@ -964,18 +974,7 @@ class Port(object):
         self.ofctl.send_packet_out(self.ofport.port_no, bpdu_data)
 
     def transmit_tcn_bpdu(self):
-        self.send_tcn_thread.start()
-
-    def _transmit_tcn_bpdu(self):
-        """ Send Topology Change Notification BPDU until receive Ack. """
         self.send_tcn_flg = True
-        local_hello_time = bpdu.DEFAULT_HELLO_TIME
-        while self.send_tcn_flg:
-            bpdu_data = self._generate_tcn_bpdu()
-            self.ofctl.send_packet_out(self.ofport.port_no, bpdu_data)
-            self.logger.debug('[port=%d] Send TopologyChangeNotify BPDU.',
-                              self.ofport.port_no, extra=self.dpid_str)
-            hub.sleep(local_hello_time)
 
     def _generate_config_bpdu(self, flags):
         src_mac = self.ofport.hw_addr
