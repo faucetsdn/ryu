@@ -31,12 +31,19 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import llc
 from ryu.lib.packet import packet
 from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_3
 
 
 STP_EV_DISPATCHER = "stplib"
 
 
 MAX_PORT_NO = 0xfff
+
+# for OpenFlow 1.2/1.3
+BPDU_PKT_IN_PRIORITY = 0xffff
+NO_PKT_IN_PRIORITY = 0xfffe
+
 
 # Result of compared config BPDU priority.
 SUPERIOR = -1
@@ -84,17 +91,42 @@ NON_DESIGNATED_PORT = 2  # The port which blocked.
 #  LISTEN : Not learning or relaying frames.
 #  LEARN  : Learning but not relaying frames.
 #  FORWARD: Learning and relaying frames.
-PORT_STATE_DISABLE = (ofproto_v1_0.OFPPC_NO_RECV_STP
-                      | ofproto_v1_0.OFPPC_NO_RECV
-                      | ofproto_v1_0.OFPPC_NO_FLOOD
-                      | ofproto_v1_0.OFPPC_NO_FWD)
-PORT_STATE_BLOCK = (ofproto_v1_0.OFPPC_NO_RECV
-                    | ofproto_v1_0.OFPPC_NO_FLOOD
-                    | ofproto_v1_0.OFPPC_NO_FWD)
-PORT_STATE_LISTEN = (ofproto_v1_0.OFPPC_NO_RECV
-                     | ofproto_v1_0.OFPPC_NO_FLOOD)
-PORT_STATE_LEARN = ofproto_v1_0.OFPPC_NO_FLOOD
-PORT_STATE_FORWARD = 0
+PORT_STATE_DISABLE = 0
+PORT_STATE_BLOCK = 1
+PORT_STATE_LISTEN = 2
+PORT_STATE_LEARN = 3
+PORT_STATE_FORWARD = 4
+
+# for OpenFlow 1.0
+PORT_CONFIG_V1_0 = {PORT_STATE_DISABLE: (ofproto_v1_0.OFPPC_NO_RECV_STP
+                                         | ofproto_v1_0.OFPPC_NO_RECV
+                                         | ofproto_v1_0.OFPPC_NO_FLOOD
+                                         | ofproto_v1_0.OFPPC_NO_FWD),
+                    PORT_STATE_BLOCK: (ofproto_v1_0.OFPPC_NO_RECV
+                                       | ofproto_v1_0.OFPPC_NO_FLOOD
+                                       | ofproto_v1_0.OFPPC_NO_FWD),
+                    PORT_STATE_LISTEN: (ofproto_v1_0.OFPPC_NO_RECV
+                                        | ofproto_v1_0.OFPPC_NO_FLOOD),
+                    PORT_STATE_LEARN: ofproto_v1_0.OFPPC_NO_FLOOD,
+                    PORT_STATE_FORWARD: 0}
+
+# for OpenFlow 1.2
+PORT_CONFIG_V1_2 = {PORT_STATE_DISABLE: (ofproto_v1_2.OFPPC_NO_RECV
+                                         | ofproto_v1_2.OFPPC_NO_FWD),
+                    PORT_STATE_BLOCK: (ofproto_v1_2.OFPPC_NO_FWD
+                                       | ofproto_v1_2.OFPPC_NO_PACKET_IN),
+                    PORT_STATE_LISTEN: ofproto_v1_2.OFPPC_NO_PACKET_IN,
+                    PORT_STATE_LEARN: ofproto_v1_2.OFPPC_NO_PACKET_IN,
+                    PORT_STATE_FORWARD: 0}
+
+# for OpenFlow 1.3
+PORT_CONFIG_V1_3 = {PORT_STATE_DISABLE: (ofproto_v1_3.OFPPC_NO_RECV
+                                         | ofproto_v1_3.OFPPC_NO_FWD),
+                    PORT_STATE_BLOCK: (ofproto_v1_3.OFPPC_NO_FWD
+                                       | ofproto_v1_3.OFPPC_NO_PACKET_IN),
+                    PORT_STATE_LISTEN: ofproto_v1_3.OFPPC_NO_PACKET_IN,
+                    PORT_STATE_LEARN: ofproto_v1_3.OFPPC_NO_PACKET_IN,
+                    PORT_STATE_FORWARD: 0}
 
 """ Port state machine
 
@@ -128,16 +160,9 @@ class EventTopologyChange(event.EventBase):
 class EventPortStateChange(event.EventBase):
     def __init__(self, dp, port):
         super(EventPortStateChange, self).__init__()
-
-        of_state = {PORT_STATE_DISABLE: ofproto_v1_0.OFPPS_LINK_DOWN,
-                    PORT_STATE_BLOCK: ofproto_v1_0.OFPPS_STP_BLOCK,
-                    PORT_STATE_LISTEN: ofproto_v1_0.OFPPS_STP_LISTEN,
-                    PORT_STATE_LEARN: ofproto_v1_0.OFPPS_STP_LEARN,
-                    PORT_STATE_FORWARD: ofproto_v1_0.OFPPS_STP_FORWARD}
-
         self.dp = dp
         self.port_no = port.ofport.port_no
-        self.port_state = of_state[port.state]
+        self.port_state = port.state
 
 
 # Event for receive packet in message except BPDU packet.
@@ -150,7 +175,9 @@ class EventPacketIn(event.EventBase):
 class Stp(app_manager.RyuApp):
     """ STP(spanning tree) library. """
 
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
+                    ofproto_v1_2.OFP_VERSION,
+                    ofproto_v1_3.OFP_VERSION]
 
     def __init__(self):
         super(Stp, self).__init__()
@@ -381,6 +408,11 @@ class Bridge(object):
         for ofport in dp.ports.values():
             self.port_add(ofport)
 
+        # Install BPDU PacketIn flow. (OpenFlow 1.2/1.3)
+        if dp.ofproto == ofproto_v1_2 or dp.ofproto == ofproto_v1_3:
+            ofctl = OfCtl_v1_2later(self.dp)
+            ofctl.add_bpdu_pkt_in_flow()
+
     @property
     def is_root_bridge(self):
         return bool(self.bridge_id.value == self.root_priority.root_id.value)
@@ -420,12 +452,24 @@ class Bridge(object):
             self.recalculate_spanning_tree()
 
     def packet_in_handler(self, msg):
-        if not msg.in_port in self.ports:
+        dp = msg.datapath
+        if dp.ofproto == ofproto_v1_0:
+            in_port_no = msg.in_port
+        else:
+            assert dp.ofproto == ofproto_v1_2 or dp.ofproto == ofproto_v1_3
+            in_port_no = None
+            for match_field in msg.match.fields:
+                if match_field.header == dp.ofproto.OXM_OF_IN_PORT:
+                    in_port_no = match_field.value
+                    break
+        if not in_port_no in self.ports:
+            return
+
+        in_port = self.ports[in_port_no]
+        if in_port.state == PORT_STATE_DISABLE:
             return
 
         pkt = packet.Packet(msg.data)
-        in_port = self.ports[msg.in_port]
-
         if bpdu.ConfigurationBPDUs in pkt:
             """ Receive Configuration BPDU.
                  - If receive superior BPDU:
@@ -443,7 +487,7 @@ class Bridge(object):
 
             if rcv_info is SUPERIOR:
                 self.logger.info('[port=%d] Receive superior BPDU.',
-                                 msg.in_port, extra=self.dpid_str)
+                                 in_port_no, extra=self.dpid_str)
                 self.recalculate_spanning_tree(init=False)
 
             elif rcv_tc:
@@ -643,14 +687,6 @@ class Port(object):
                       'path_cost': bpdu.PORT_PATH_COST_10MB,
                       'enable': True}
 
-    _PATH_COST = {ofproto_v1_0.OFPPF_10MB_HD: bpdu.PORT_PATH_COST_10MB,
-                  ofproto_v1_0.OFPPF_10MB_FD: bpdu.PORT_PATH_COST_10MB,
-                  ofproto_v1_0.OFPPF_100MB_HD: bpdu.PORT_PATH_COST_100MB,
-                  ofproto_v1_0.OFPPF_100MB_FD: bpdu.PORT_PATH_COST_100MB,
-                  ofproto_v1_0.OFPPF_1GB_HD: bpdu.PORT_PATH_COST_1GB,
-                  ofproto_v1_0.OFPPF_1GB_FD: bpdu.PORT_PATH_COST_1GB,
-                  ofproto_v1_0.OFPPF_10GB_FD: bpdu.PORT_PATH_COST_10GB}
-
     def __init__(self, dp, logger, config, send_ev_func, timeout_func,
                  topology_change_func, bridge_id, bridge_times, ofport):
         super(Port, self).__init__()
@@ -662,20 +698,28 @@ class Port(object):
         self.send_event = send_ev_func
         self.wait_bpdu_timeout = timeout_func
         self.topology_change_notify = topology_change_func
-        self.ofctl = OfCtl_v1_0(dp)
+        self.ofctl = (OfCtl_v1_0(dp) if dp.ofproto == ofproto_v1_0
+                      else OfCtl_v1_2later(dp))
 
         # Bridge data
         self.bridge_id = bridge_id
         # Root bridge data
         self.port_priority = None
         self.port_times = None
-        # ofproto_v1_0_parser.OFPPhyPort data
+        # ofproto_v1_X_parser.OFPPhyPort data
         self.ofport = ofport
         # Port data
         values = self._DEFAULT_VALUE
-        for rate in sorted(self._PATH_COST.keys(), reverse=True):
+        path_costs = {dp.ofproto.OFPPF_10MB_HD: bpdu.PORT_PATH_COST_10MB,
+                      dp.ofproto.OFPPF_10MB_FD: bpdu.PORT_PATH_COST_10MB,
+                      dp.ofproto.OFPPF_100MB_HD: bpdu.PORT_PATH_COST_100MB,
+                      dp.ofproto.OFPPF_100MB_FD: bpdu.PORT_PATH_COST_100MB,
+                      dp.ofproto.OFPPF_1GB_HD: bpdu.PORT_PATH_COST_1GB,
+                      dp.ofproto.OFPPF_1GB_FD: bpdu.PORT_PATH_COST_1GB,
+                      dp.ofproto.OFPPF_10GB_FD: bpdu.PORT_PATH_COST_10GB}
+        for rate in sorted(path_costs.keys(), reverse=True):
             if ofport.curr & rate:
-                values['path_cost'] = self._PATH_COST[rate]
+                values['path_cost'] = path_costs[rate]
                 break
         for key, value in values.items():
             values[key] = value
@@ -1091,9 +1135,62 @@ class OfCtl_v1_0(object):
                                 in_port=self.dp.ofproto.OFPP_CONTROLLER,
                                 actions=actions, data=data)
 
-    def set_port_status(self, port, config):
+    def set_port_status(self, port, state):
         ofproto_parser = self.dp.ofproto_parser
         mask = 0b1111111
         msg = ofproto_parser.OFPPortMod(self.dp, port.port_no, port.hw_addr,
-                                        config, mask, port.advertised)
+                                        PORT_CONFIG_V1_0[state], mask,
+                                        port.advertised)
         self.dp.send_msg(msg)
+
+
+class OfCtl_v1_2later(OfCtl_v1_0):
+    def __init__(self, dp):
+        super(OfCtl_v1_2later, self).__init__(dp)
+
+    def set_port_status(self, port, state):
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        config = {ofproto_v1_2: PORT_CONFIG_V1_2,
+                  ofproto_v1_3: PORT_CONFIG_V1_3}
+
+        mask = 0b1111111
+        msg = parser.OFPPortMod(self.dp, port.port_no, port.hw_addr,
+                                config[ofp][state], mask, port.advertised)
+        self.dp.send_msg(msg)
+
+        if config[ofp][state] & ofp.OFPPC_NO_PACKET_IN:
+            self.add_no_pkt_in_flow(port.port_no)
+        else:
+            self.del_no_pkt_in_flow(port.port_no)
+
+    def add_bpdu_pkt_in_flow(self):
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+
+        match = parser.OFPMatch(eth_dst=bpdu.BRIDGE_GROUP_ADDRESS)
+        actions = [parser.OFPActionOutput(ofp.OFPP_CONTROLLER,
+                                          ofp.OFPCML_NO_BUFFER)]
+        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
+                                             actions)]
+        mod = parser.OFPFlowMod(self.dp, priority=BPDU_PKT_IN_PRIORITY,
+                                match=match, instructions=inst)
+        self.dp.send_msg(mod)
+
+    def add_no_pkt_in_flow(self, in_port):
+        parser = self.dp.ofproto_parser
+
+        match = parser.OFPMatch(in_port=in_port)
+        mod = parser.OFPFlowMod(self.dp, priority=NO_PKT_IN_PRIORITY,
+                                match=match)
+        self.dp.send_msg(mod)
+
+    def del_no_pkt_in_flow(self, in_port):
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+
+        match = parser.OFPMatch(in_port=in_port)
+        mod = parser.OFPFlowMod(self.dp, command=ofp.OFPFC_DELETE_STRICT,
+                                out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY,
+                                priority=NO_PKT_IN_PRIORITY, match=match)
+        self.dp.send_msg(mod)

@@ -123,10 +123,10 @@ class SimpleSwitchStp(app_manager.RyuApp):
     @set_ev_cls(stplib.EventPortStateChange, stplib.STP_EV_DISPATCHER)
     def _port_state_change_handler(self, ev):
         dpid_str = dpid_lib.dpid_to_str(ev.dp.id)
-        of_state = {ofproto_v1_0.OFPPS_LINK_DOWN: 'DISABLE',
-                    ofproto_v1_0.OFPPS_STP_BLOCK: 'BLOCK',
-                    ofproto_v1_0.OFPPS_STP_LISTEN: 'LISTEN',
-                    ofproto_v1_0.OFPPS_STP_LEARN: 'LEARN',
-                    ofproto_v1_0.OFPPS_STP_FORWARD: 'FORWARD'}
+        of_state = {stplib.PORT_STATE_DISABLE: 'DISABLE',
+                    stplib.PORT_STATE_BLOCK: 'BLOCK',
+                    stplib.PORT_STATE_LISTEN: 'LISTEN',
+                    stplib.PORT_STATE_LEARN: 'LEARN',
+                    stplib.PORT_STATE_FORWARD: 'FORWARD'}
         self.logger.debug("[dpid=%s][port=%d] state=%s",
                           dpid_str, ev.port_no, of_state[ev.port_state])
