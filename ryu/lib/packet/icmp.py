@@ -300,3 +300,6 @@ class TimeExceeded(stringify.StringifyMixin):
         if self.data is not None:
             length += len(self.data)
         return length
+
+
+icmp.set_classes(icmp._ICMP_TYPES)
