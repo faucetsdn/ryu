@@ -173,6 +173,7 @@ class opt_header(header):
     _PACK_STR = '!BB'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _FIX_SIZE = 8
+    _class_prefixes = ['option']
 
     @abc.abstractmethod
     def __init__(self, nxt, size, data):
@@ -434,3 +435,6 @@ class auth(header):
 
     def __len__(self):
         return auth._get_size(self.size)
+
+
+ipv6.set_classes(ipv6._IPV6_EXT_HEADER_TYPE)
