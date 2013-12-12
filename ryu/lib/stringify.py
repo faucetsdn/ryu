@@ -298,6 +298,11 @@ class StringifyMixin(object):
             print "KWARG", kwargs
             raise
 
+    @classmethod
+    def set_classes(cls, registered_dict):
+        cls._class_prefixes.extend([v.__name__ for v in
+                                    registered_dict.values()])
+
 
 def obj_python_attrs(msg_):
     """iterate object attributes for stringify purposes
