@@ -180,9 +180,9 @@ class bpdu(packet_base.PacketBase):
         assert hasattr(self, 'VERSION_ID')
         assert hasattr(self, 'BPDU_TYPE')
 
-        self.protocol_id = PROTOCOL_IDENTIFIER
-        self.version_id = self.VERSION_ID
-        self.bpdu_type = self.BPDU_TYPE
+        self._protocol_id = PROTOCOL_IDENTIFIER
+        self._version_id = self.VERSION_ID
+        self._bpdu_type = self.BPDU_TYPE
 
         if hasattr(self, 'check_parameters'):
             self.check_parameters()
@@ -205,8 +205,8 @@ class bpdu(packet_base.PacketBase):
             return buf, None, None
 
     def serialize(self, payload, prev):
-        return struct.pack(bpdu._PACK_STR, self.protocol_id,
-                           self.version_id, self.bpdu_type)
+        return struct.pack(bpdu._PACK_STR, self._protocol_id,
+                           self._version_id, self._bpdu_type)
 
 
 @bpdu.register_bpdu_type
@@ -450,7 +450,7 @@ class RstBPDUs(ConfigurationBPDUs):
                  message_age=0, max_age=DEFAULT_MAX_AGE,
                  hello_time=DEFAULT_HELLO_TIME,
                  forward_delay=DEFAULT_FORWARD_DELAY):
-        self.version_1_length = VERSION_1_LENGTH
+        self._version_1_length = VERSION_1_LENGTH
 
         super(RstBPDUs, self).__init__(flags, root_priority,
                                        root_system_id_extension,
@@ -482,5 +482,5 @@ class RstBPDUs(ConfigurationBPDUs):
 
     def serialize(self, payload, prev):
         base = super(RstBPDUs, self).serialize(payload, prev)
-        sub = struct.pack(RstBPDUs._PACK_STR, self.version_1_length)
+        sub = struct.pack(RstBPDUs._PACK_STR, self._version_1_length)
         return base + sub

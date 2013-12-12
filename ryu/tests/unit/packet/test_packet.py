@@ -1441,9 +1441,9 @@ class TestPacket(unittest.TestCase):
 
         # bpdu
         ok_(p_bpdu)
-        eq_(bpdu.PROTOCOL_IDENTIFIER, p_bpdu.protocol_id)
-        eq_(bpdu.PROTOCOLVERSION_ID_BPDU, p_bpdu.version_id)
-        eq_(bpdu.TYPE_CONFIG_BPDU, p_bpdu.bpdu_type)
+        eq_(bpdu.PROTOCOL_IDENTIFIER, p_bpdu._protocol_id)
+        eq_(bpdu.PROTOCOLVERSION_ID_BPDU, p_bpdu._version_id)
+        eq_(bpdu.TYPE_CONFIG_BPDU, p_bpdu._bpdu_type)
         eq_(0, p_bpdu.flags)
         eq_(32768, p_bpdu.root_priority)
         eq_(0, p_bpdu.root_system_id_extension)
@@ -1484,10 +1484,7 @@ class TestPacket(unittest.TestCase):
                              if k in llc_values])
         llc_str = '%s(%s)' % (llc.llc.__name__, _llc_str)
 
-        bpdu_values = {'protocol_id': bpdu.PROTOCOL_IDENTIFIER,
-                       'version_id': bpdu.PROTOCOLVERSION_ID_BPDU,
-                       'bpdu_type': bpdu.TYPE_CONFIG_BPDU,
-                       'flags': 0,
+        bpdu_values = {'flags': 0,
                        'root_priority': long(32768),
                        'root_system_id_extension': long(0),
                        'root_mac_address': self.src_mac,
