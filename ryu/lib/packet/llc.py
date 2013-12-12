@@ -318,3 +318,4 @@ class ControlFormatU(stringify.StringifyMixin):
 
 
 llc.register_packet_type(bpdu.bpdu, SAP_BPDU)
+llc.set_classes(llc._CTR_TYPES)
