@@ -257,6 +257,7 @@ class chunk_init_base(chunk):
     __metaclass__ = abc.ABCMeta
     _PACK_STR = '!BBHIIHHI'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _class_prefixes = ['param_']
 
     def __init__(self, flags=0, length=0, init_tag=0, a_rwnd=0, os=0,
                  mis=0, i_tsn=0, params=None):
@@ -306,6 +307,7 @@ class chunk_init_base(chunk):
 class chunk_heartbeat_base(chunk):
 
     __metaclass__ = abc.ABCMeta
+    _class_prefixes = ['param_']
 
     def __init__(self, flags=0, length=0, info=None):
         super(chunk_heartbeat_base, self).__init__(
@@ -1448,6 +1450,7 @@ class cause_unresolvable_addr(cause_with_value):
     ============== =====================================================
     """
 
+    _class_prefixes = ['param_']
     _RECOGNIZED_PARAMS = {}
 
     @staticmethod
@@ -1662,6 +1665,7 @@ class cause_restart_with_new_addr(cause_with_value):
     ============== =====================================================
     """
 
+    _class_prefixes = ['param_']
     _RECOGNIZED_PARAMS = {}
 
     @staticmethod
