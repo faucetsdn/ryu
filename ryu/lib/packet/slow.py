@@ -428,13 +428,13 @@ class lacp(packet_base.PacketBase):
         #------------------------------
         # Header
         #------------------------------
-        self.subtype = SLOW_SUBTYPE_LACP
+        self._subtype = SLOW_SUBTYPE_LACP
         self.version = version
         #------------------------------
         # Actor Information
         #------------------------------
-        self.actor_tag = self.LACP_TLV_TYPE_ACTOR
-        self.actor_length = self._ACTPRT_INFO_PACK_LEN
+        self._actor_tag = self.LACP_TLV_TYPE_ACTOR
+        self._actor_length = self._ACTPRT_INFO_PACK_LEN
         self.actor_system_priority = actor_system_priority
         self.actor_system = actor_system
         self.actor_key = actor_key
@@ -448,7 +448,7 @@ class lacp(packet_base.PacketBase):
         self.actor_state_distributing = actor_state_distributing
         self.actor_state_defaulted = actor_state_defaulted
         self.actor_state_expired = actor_state_expired
-        self.actor_state = (
+        self._actor_state = (
             (self.actor_state_activity << 0) |
             (self.actor_state_timeout << 1) |
             (self.actor_state_aggregation << 2) |
@@ -460,8 +460,8 @@ class lacp(packet_base.PacketBase):
         #------------------------------
         # Partner Information
         #------------------------------
-        self.partner_tag = self.LACP_TLV_TYPE_PARTNER
-        self.partner_length = self._ACTPRT_INFO_PACK_LEN
+        self._partner_tag = self.LACP_TLV_TYPE_PARTNER
+        self._partner_length = self._ACTPRT_INFO_PACK_LEN
         self.partner_system_priority = partner_system_priority
         self.partner_system = partner_system
         self.partner_key = partner_key
@@ -476,7 +476,7 @@ class lacp(packet_base.PacketBase):
         self.partner_state_distributing = partner_state_distributing
         self.partner_state_defaulted = partner_state_defaulted
         self.partner_state_expired = partner_state_expired
-        self.partner_state = (
+        self._partner_state = (
             (self.partner_state_activity << 0) |
             (self.partner_state_timeout << 1) |
             (self.partner_state_aggregation << 2) |
@@ -488,14 +488,14 @@ class lacp(packet_base.PacketBase):
         #------------------------------
         # Collector Information
         #------------------------------
-        self.collector_tag = self.LACP_TLV_TYPE_COLLECTOR
-        self.collector_length = self._COL_INFO_PACK_LEN
+        self._collector_tag = self.LACP_TLV_TYPE_COLLECTOR
+        self._collector_length = self._COL_INFO_PACK_LEN
         self.collector_max_delay = collector_max_delay
         #------------------------------
         # Terminator
         #------------------------------
-        self.terminator_tag = self.LACP_TLV_TYPE_TERMINATOR
-        self.terminator_length = 0
+        self._terminator_tag = self.LACP_TLV_TYPE_TERMINATOR
+        self._terminator_length = 0
 
     @classmethod
     def parser(cls, buf):
@@ -578,27 +578,27 @@ class lacp(packet_base.PacketBase):
                    collector_max_delay), None, buf[lacp._ALL_PACK_LEN:]
 
     def serialize(self, payload, prev):
-        header = struct.pack(self._HLEN_PACK_STR, self.subtype,
+        header = struct.pack(self._HLEN_PACK_STR, self._subtype,
                              self.version)
         actor = struct.pack(self._ACTPRT_INFO_PACK_STR,
-                            self.actor_tag, self.actor_length,
+                            self._actor_tag, self._actor_length,
                             self.actor_system_priority,
                             addrconv.mac.text_to_bin(self.actor_system),
                             self.actor_key,
                             self.actor_port_priority, self.actor_port,
-                            self.actor_state)
+                            self._actor_state)
         partner = struct.pack(self._ACTPRT_INFO_PACK_STR,
-                              self.partner_tag, self.partner_length,
+                              self._partner_tag, self._partner_length,
                               self.partner_system_priority,
                               addrconv.mac.text_to_bin(self.partner_system),
                               self.partner_key,
                               self.partner_port_priority,
-                              self.partner_port, self.partner_state)
+                              self.partner_port, self._partner_state)
         collector = struct.pack(self._COL_INFO_PACK_STR,
-                                self.collector_tag,
-                                self.collector_length,
+                                self._collector_tag,
+                                self._collector_length,
                                 self.collector_max_delay)
         terminator = struct.pack(self._TRM_PACK_STR,
-                                 self.terminator_tag,
-                                 self.terminator_length)
+                                 self._terminator_tag,
+                                 self._terminator_length)
         return header + actor + partner + collector + terminator
