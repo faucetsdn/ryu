@@ -528,7 +528,7 @@ class Test_hop_opts(unittest.TestCase):
 
         eq_(res[0], 6)
         eq_(res[1], 0)
-        opt = ipv6.option(type_=1, len_=6, data='\x00\x00\x00\x00\x00\x00')
+        opt = ipv6.option(type_=1, len_=4, data='\x00\x00\x00\x00')
         eq_(str(buf[2:]), opt.serialize())
 
 
@@ -609,7 +609,7 @@ class Test_dst_opts(unittest.TestCase):
 
         eq_(res[0], 6)
         eq_(res[1], 0)
-        opt = ipv6.option(type_=1, len_=6, data='\x00\x00\x00\x00\x00\x00')
+        opt = ipv6.option(type_=1, len_=4, data='\x00\x00\x00\x00')
         eq_(str(buf[2:]), opt.serialize())
 
 

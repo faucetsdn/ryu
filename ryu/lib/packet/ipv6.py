@@ -203,8 +203,8 @@ class opt_header(header):
         buf = struct.pack(self._PACK_STR, self.nxt, self.size)
         buf = bytearray(buf)
         if self.data is None:
-            self.data = [option(type_=1, len_=6,
-                                data='\x00\x00\x00\x00\x00\x00')]
+            self.data = [option(type_=1, len_=4,
+                                data='\x00\x00\x00\x00')]
         for opt in self.data:
             buf.extend(opt.serialize())
         return buf
