@@ -482,3 +482,6 @@ class OrganizationallySpecific(LLDPBasicTLV):
 
     def serialize(self):
         return struct.pack('!H3sB', self.typelen, self.oui, self.subtype)
+
+
+lldp.set_classes(lldp._tlv_parsers)
