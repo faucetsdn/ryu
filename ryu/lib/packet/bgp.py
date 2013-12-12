@@ -668,6 +668,7 @@ class BGPPathAttributeCommunities(_PathAttribute):
 @_PathAttribute.register_type(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
 class BGPPathAttributeExtendedCommunities(_PathAttribute):
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
+    _class_prefixes = ['BGP']
 
     def __init__(self, communities,
                  flags=0, type_=None, length=None):
@@ -799,6 +800,7 @@ class BGPUnknownExtendedCommunity(_ExtendedCommunity):
 class BGPPathAttributeMpReachNLRI(_PathAttribute):
     _VALUE_PACK_STR = '!HBB'  # afi, safi, next hop len
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+    _class_prefixes = ['_BinAddrPrefix']
 
     def __init__(self, afi, safi, next_hop, nlri,
                  next_hop_len=0, reserved='\0',
@@ -856,6 +858,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
 class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
     _VALUE_PACK_STR = '!HB'  # afi, safi
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+    _class_prefixes = ['_BinAddrPrefix']
 
     def __init__(self, afi, safi, withdrawn_routes,
                  flags=0, type_=None, length=None):
@@ -913,6 +916,7 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
 
     _HDR_PACK_STR = '!16sHB'  # marker, len, type
     _HDR_LEN = struct.calcsize(_HDR_PACK_STR)
+    _class_prefixes = ['BGP']
 
     def __init__(self, type_, len_=None, marker=None):
         if marker is None:
