@@ -138,6 +138,11 @@ class Test_vlan(unittest.TestCase):
         m_short_buf = self.buf[1:vlan._MIN_LEN]
         vlan.parser(m_short_buf)
 
+    def test_json(self):
+        jsondict = self.v.to_jsondict()
+        v = vlan.from_jsondict(jsondict['vlan'])
+        eq_(str(self.v), str(v))
+
 
 class Test_svlan(unittest.TestCase):
 
@@ -254,3 +259,8 @@ class Test_svlan(unittest.TestCase):
     def test_malformed_svlan(self):
         m_short_buf = self.buf[1:svlan._MIN_LEN]
         svlan.parser(m_short_buf)
+
+    def test_json(self):
+        jsondict = self.sv.to_jsondict()
+        sv = svlan.from_jsondict(jsondict['svlan'])
+        eq_(str(self.sv), str(sv))

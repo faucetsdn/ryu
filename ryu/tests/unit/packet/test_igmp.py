@@ -154,3 +154,8 @@ class Test_igmp(unittest.TestCase):
         eq_(res[0], 0x11)
         eq_(res[1], 0)
         eq_(res[3], addrconv.ipv4.text_to_bin('0.0.0.0'))
+
+    def test_json(self):
+        jsondict = self.g.to_jsondict()
+        g = igmp.from_jsondict(jsondict['igmp'])
+        eq_(str(self.g), str(g))

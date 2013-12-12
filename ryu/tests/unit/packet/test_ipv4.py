@@ -130,3 +130,8 @@ class Test_ipv4(unittest.TestCase):
     def test_malformed_ipv4(self):
         m_short_buf = self.buf[1:ipv4._MIN_LEN]
         ipv4.parser(m_short_buf)
+
+    def test_json(self):
+        jsondict = self.ip.to_jsondict()
+        ip = ipv4.from_jsondict(jsondict['ipv4'])
+        eq_(str(self.ip), str(ip))

@@ -52,3 +52,8 @@ class Test_mpls(unittest.TestCase):
 
         eq_(str(self.mp), mpls_str)
         eq_(repr(self.mp), mpls_str)
+
+    def test_json(self):
+        jsondict = self.mp.to_jsondict()
+        mp = mpls.mpls.from_jsondict(jsondict['mpls'])
+        eq_(str(self.mp), str(mp))

@@ -196,3 +196,8 @@ class Test_dhcp_offer(unittest.TestCase):
 
         eq_(str(self.dh), dh_str)
         eq_(repr(self.dh), dh_str)
+
+    def test_json(self):
+        jsondict = self.dh.to_jsondict()
+        dh = dhcp.dhcp.from_jsondict(jsondict['dhcp'])
+        eq_(str(self.dh), str(dh))

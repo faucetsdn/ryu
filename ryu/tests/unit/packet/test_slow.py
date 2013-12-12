@@ -1095,3 +1095,8 @@ class Test_lacp(unittest.TestCase):
                  -1,
                  self.collector_max_delay)
         l.serialize()
+
+    def test_json(self):
+        jsondict = self.l.to_jsondict()
+        l = lacp.from_jsondict(jsondict['lacp'])
+        eq_(str(self.l), str(l))

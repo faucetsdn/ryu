@@ -165,3 +165,8 @@ class Test_itag(unittest.TestCase):
     def test_malformed_itag(self):
         m_short_buf = self.buf[1:pbb.itag._MIN_LEN]
         pbb.itag.parser(m_short_buf)
+
+    def test_json(self):
+        jsondict = self.it.to_jsondict()
+        it = pbb.itag.from_jsondict(jsondict['itag'])
+        eq_(str(self.it), str(it))

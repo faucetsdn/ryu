@@ -177,3 +177,8 @@ class Test_arp(unittest.TestCase):
     def test_malformed_arp(self):
         m_short_buf = self.buf[1:arp._MIN_LEN]
         arp.parser(m_short_buf)
+
+    def test_json(self):
+        jsondict = self.a.to_jsondict()
+        a = arp.from_jsondict(jsondict['arp'])
+        eq_(str(self.a), str(a))

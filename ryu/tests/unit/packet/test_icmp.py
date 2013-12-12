@@ -235,6 +235,23 @@ class Test_icmp(unittest.TestCase):
         eq_(res[1], 0)
         eq_(buf[4:], '\x00\x00\x00\x00')
 
+    def test_json(self):
+        jsondict = self.ic.to_jsondict()
+        ic = icmp.icmp.from_jsondict(jsondict['icmp'])
+        eq_(str(self.ic), str(ic))
+
+    def test_json_with_echo(self):
+        self.setUp_with_echo()
+        self.test_json()
+
+    def test_json_with_dest_unreach(self):
+        self.setUp_with_dest_unreach()
+        self.test_json()
+
+    def test_json_with_TimeExceeded(self):
+        self.setUp_with_TimeExceeded()
+        self.test_json()
+
 
 class Test_echo(unittest.TestCase):
 

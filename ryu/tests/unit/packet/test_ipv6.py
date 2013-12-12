@@ -425,6 +425,31 @@ class Test_ipv6(unittest.TestCase):
         eq_(res[5], addrconv.ipv6.text_to_bin('::'))
         eq_(res[6], '\x3a\x00\x05\x02\x00\x00\x01\x00')
 
+    def test_json(self):
+        jsondict = self.ip.to_jsondict()
+        ip = ipv6.ipv6.from_jsondict(jsondict['ipv6'])
+        eq_(str(self.ip), str(ip))
+
+    def test_json_with_hop_opts(self):
+        self.setUp_with_hop_opts()
+        self.test_json()
+
+    def test_json_with_dst_opts(self):
+        self.setUp_with_dst_opts()
+        self.test_json()
+
+    def test_json_with_fragment(self):
+        self.setUp_with_fragment()
+        self.test_json()
+
+    def test_json_with_auth(self):
+        self.setUp_with_auth()
+        self.test_json()
+
+    def test_json_with_multi_headers(self):
+        self.setUp_with_multi_headers()
+        self.test_json()
+
 
 class Test_hop_opts(unittest.TestCase):
 

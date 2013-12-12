@@ -96,3 +96,8 @@ class Test_ethernet(unittest.TestCase):
         eq_(res[0], addrconv.mac.text_to_bin('ff:ff:ff:ff:ff:ff'))
         eq_(res[1], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
         eq_(res[2], ether.ETH_TYPE_IP)
+
+    def test_json(self):
+        jsondict = self.e.to_jsondict()
+        e = ethernet.from_jsondict(jsondict['ethernet'])
+        eq_(str(self.e), str(e))

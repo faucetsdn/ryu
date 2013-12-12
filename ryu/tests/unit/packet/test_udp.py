@@ -104,3 +104,8 @@ class Test_udp(unittest.TestCase):
         eq_(res[0], 0)
         eq_(res[1], 0)
         eq_(res[2], udp._MIN_LEN)
+
+    def test_json(self):
+        jsondict = self.u.to_jsondict()
+        u = udp.from_jsondict(jsondict['udp'])
+        eq_(str(self.u), str(u))

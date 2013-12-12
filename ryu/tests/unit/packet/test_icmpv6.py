@@ -100,6 +100,11 @@ class Test_icmpv6_header(unittest.TestCase):
         eq_(res[1], 0)
         eq_(res[2], icmpv6_csum(prev, buf))
 
+    def test_json(self):
+        jsondict = self.icmp.to_jsondict()
+        icmp = icmpv6.icmpv6.from_jsondict(jsondict['icmpv6'])
+        eq_(str(self.icmp), str(icmp))
+
 
 class Test_icmpv6_echo_request(unittest.TestCase):
     type_ = 128
@@ -209,6 +214,13 @@ class Test_icmpv6_echo_request(unittest.TestCase):
 
         eq_(res[0], 0)
         eq_(res[1], 0)
+
+    def test_json(self):
+        ec = icmpv6.echo(self.id_, self.seq, self.data)
+        ic1 = icmpv6.icmpv6(self.type_, self.code, self.csum, ec)
+        jsondict = ic1.to_jsondict()
+        ic2 = icmpv6.icmpv6.from_jsondict(jsondict['icmpv6'])
+        eq_(str(ic1), str(ic2))
 
 
 class Test_icmpv6_echo_reply(Test_icmpv6_echo_request):
@@ -403,6 +415,14 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
         eq_(res[0], icmpv6.ND_OPTION_SLA)
         eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
+
+    def test_json(self):
+        nd_opt = icmpv6.nd_option_sla(self.nd_length, self.nd_hw_src)
+        nd = icmpv6.nd_neighbor(self.res, self.dst, nd_opt)
+        ic1 = icmpv6.icmpv6(self.type_, self.code, self.csum, nd)
+        jsondict = ic1.to_jsondict()
+        ic2 = icmpv6.icmpv6.from_jsondict(jsondict['icmpv6'])
+        eq_(str(ic1), str(ic2))
 
 
 class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solicit):
@@ -679,6 +699,14 @@ class Test_icmpv6_router_solicit(unittest.TestCase):
         eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
+    def test_json(self):
+        nd_opt = icmpv6.nd_option_sla(self.nd_length, self.nd_hw_src)
+        rs = icmpv6.nd_router_solicit(self.res, nd_opt)
+        ic1 = icmpv6.icmpv6(self.type_, self.code, self.csum, rs)
+        jsondict = ic1.to_jsondict()
+        ic2 = icmpv6.icmpv6.from_jsondict(jsondict['icmpv6'])
+        eq_(str(ic1), str(ic2))
+
 
 class Test_icmpv6_router_advert(unittest.TestCase):
 
@@ -807,6 +835,15 @@ class Test_icmpv6_router_advert(unittest.TestCase):
         eq_(res[5], 0)
         eq_(res[6], 0)
         eq_(res[7], addrconv.ipv6.text_to_bin('::'))
+
+    def test_json(self):
+        ic1 = icmpv6.icmpv6(
+            type_=icmpv6.ND_ROUTER_ADVERT,
+            data=icmpv6.nd_router_advert(
+                options=[icmpv6.nd_option_sla(), icmpv6.nd_option_pi()]))
+        jsondict = ic1.to_jsondict()
+        ic2 = icmpv6.icmpv6.from_jsondict(jsondict['icmpv6'])
+        eq_(str(ic1), str(ic2))
 
 
 class Test_icmpv6_nd_option_la(unittest.TestCase):

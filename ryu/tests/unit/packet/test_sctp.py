@@ -1382,3 +1382,72 @@ class Test_sctp(unittest.TestCase):
     def test_to_string_with_multi_chunks(self):
         self.setUp_with_multi_chunks()
         self.test_to_string()
+
+    def test_json(self):
+        jsondict = self.sc.to_jsondict()
+        sc = sctp.sctp.from_jsondict(jsondict['sctp'])
+        eq_(str(self.sc), str(sc))
+
+    def test_json_with_data(self):
+        self.setUp_with_data()
+        self.test_json()
+
+    def test_json_with_init(self):
+        self.setUp_with_init()
+        self.test_json()
+
+    def test_json_with_init_ack(self):
+        self.setUp_with_init_ack()
+        self.test_json()
+
+    def test_json_with_sack(self):
+        self.setUp_with_sack()
+        self.test_json()
+
+    def test_json_with_heartbeat(self):
+        self.setUp_with_heartbeat()
+        self.test_json()
+
+    def test_json_with_heartbeat_ack(self):
+        self.setUp_with_heartbeat_ack()
+        self.test_json()
+
+    def test_json_with_abort(self):
+        self.setUp_with_abort()
+        self.test_json()
+
+    def test_json_with_shutdown(self):
+        self.setUp_with_shutdown()
+        self.test_json()
+
+    def test_json_with_shutdown_ack(self):
+        self.setUp_with_shutdown_ack()
+        self.test_json()
+
+    def test_json_with_error(self):
+        self.setUp_with_error()
+        self.test_json()
+
+    def test_json_with_cookie_echo(self):
+        self.setUp_with_cookie_echo()
+        self.test_json()
+
+    def test_json_with_cookie_ack(self):
+        self.setUp_with_cookie_ack()
+        self.test_json()
+
+    def test_json_with_ecn_echo(self):
+        self.setUp_with_ecn_echo()
+        self.test_json()
+
+    def test_json_with_cwr(self):
+        self.setUp_with_cwr()
+        self.test_json()
+
+    def test_json_with_shutdown_complete(self):
+        self.setUp_with_shutdown_complete()
+        self.test_json()
+
+    def test_json_with_multi_chunks(self):
+        self.setUp_with_multi_chunks()
+        self.test_json()

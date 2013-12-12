@@ -183,3 +183,8 @@ class Test_tcp(unittest.TestCase):
         eq_(res[6], 0)
         eq_(res[8], 0)
         eq_(res[9], '\x01\x02\x03\x00\x00\x00\x00\x00')
+
+    def test_json(self):
+        jsondict = self.t.to_jsondict()
+        t = tcp.from_jsondict(jsondict['tcp'])
+        eq_(str(self.t), str(t))

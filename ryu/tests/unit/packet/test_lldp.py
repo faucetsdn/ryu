@@ -178,6 +178,19 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         eq_(str(lldp_pkt), lldp_str)
         eq_(repr(lldp_pkt), lldp_str)
 
+    def test_json(self):
+        chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
+                                    chassis_id='\x00\x04\x96\x1f\xa7\x26')
+        port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
+                              port_id='1/3')
+        ttl = lldp.TTL(ttl=120)
+        end = lldp.End()
+        tlvs = (chassis_id, port_id, ttl, end)
+        lldp1 = lldp.lldp(tlvs)
+        jsondict = lldp1.to_jsondict()
+        lldp2 = lldp.lldp.from_jsondict(jsondict['lldp'])
+        eq_(str(lldp1), str(lldp2))
+
 
 class TestLLDPOptionalTLV(unittest.TestCase):
     def setUp(self):
@@ -474,3 +487,33 @@ class TestLLDPOptionalTLV(unittest.TestCase):
 
         eq_(str(lldp_pkt), lldp_str)
         eq_(repr(lldp_pkt), lldp_str)
+
+    def test_json(self):
+        chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
+                                    chassis_id='\x00\x01\x30\xf9\xad\xa0')
+        port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
+                              port_id='1/1')
+        ttl = lldp.TTL(ttl=120)
+        port_desc = lldp.PortDescription(
+            port_description='Summit300-48-Port 1001\x00')
+        sys_name = lldp.SystemName(system_name='Summit300-48\x00')
+        sys_desc = lldp.SystemDescription(
+            system_description='Summit300-48 - Version 7.4e.1 (Build 5) '
+                               + 'by Release_Master 05/27/05 04:53:11\x00')
+        sys_cap = lldp.SystemCapabilities(
+            subtype=lldp.ChassisID.SUB_CHASSIS_COMPONENT,
+            system_cap=0x14,
+            enabled_cap=0x14)
+        man_addr = lldp.ManagementAddress(
+            addr_subtype=0x06, addr='\x00\x01\x30\xf9\xad\xa0',
+            intf_subtype=0x02, intf_num=1001,
+            oid='')
+        org_spec = lldp.OrganizationallySpecific(
+            oui='\x00\x12\x0f', subtype=0x02, info='\x07\x01\x00')
+        end = lldp.End()
+        tlvs = (chassis_id, port_id, ttl, port_desc, sys_name,
+                sys_desc, sys_cap, man_addr, org_spec, end)
+        lldp1 = lldp.lldp(tlvs)
+        jsondict = lldp1.to_jsondict()
+        lldp2 = lldp.lldp.from_jsondict(jsondict['lldp'])
+        eq_(str(lldp1), str(lldp2))
