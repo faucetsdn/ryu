@@ -139,6 +139,7 @@ class dhcp(packet_base.PacketBase):
     _DHCP_PACK_STR = '!BBBBIHH4s4s4s4s16s64s128s'
     _DHCP_CHADDR_LEN = 16
     _HARDWARE_TYPE_ETHERNET = 1
+    _class_prefixes = ['options']
 
     def __init__(self, op, chaddr, options, htype=_HARDWARE_TYPE_ETHERNET,
                  hlen=0, hops=0, xid=None, secs=0, flags=0,
@@ -230,6 +231,7 @@ class options(stringify.StringifyMixin):
     # same magic cookie as is defined in RFC 1497
     _MAGIC_COOKIE = '99.130.83.99'
     _OPT_TAG_LEN_BYTE = 2
+    _class_prefixes = ['option']
 
     def __init__(self, option_list=None, options_len=0,
                  magic_cookie=_MAGIC_COOKIE):
