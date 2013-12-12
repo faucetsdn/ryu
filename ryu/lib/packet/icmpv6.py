@@ -642,3 +642,9 @@ class echo(stringify.StringifyMixin):
         if self.data is not None:
             length += len(self.data)
         return length
+
+
+icmpv6.set_classes(icmpv6._ICMPV6_TYPES)
+nd_neighbor.set_classes(nd_neighbor._ND_OPTION_TYPES)
+nd_router_solicit.set_classes(nd_router_solicit._ND_OPTION_TYPES)
+nd_router_advert.set_classes(nd_router_advert._ND_OPTION_TYPES)
