@@ -22,6 +22,7 @@ from . import igmp
 from . import udp
 from . import tcp
 from . import sctp
+from . import ospf
 from ryu.ofproto import inet
 from ryu.lib import addrconv
 
@@ -140,3 +141,4 @@ ipv4.register_packet_type(igmp.igmp, inet.IPPROTO_IGMP)
 ipv4.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
 ipv4.register_packet_type(udp.udp, inet.IPPROTO_UDP)
 ipv4.register_packet_type(sctp.sctp, inet.IPPROTO_SCTP)
+ipv4.register_packet_type(ospf.ospf, inet.IPPROTO_OSPF)
