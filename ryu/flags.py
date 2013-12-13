@@ -50,3 +50,11 @@ CONF.register_cli_opts([
                'ovs bridge',
                deprecated_name='quantum-controller-addr')
 ])
+
+CONF.register_cli_opts([
+    # tests/switch/tester
+    cfg.StrOpt('target', default='0000000000000001', help='target sw dp-id'),
+    cfg.StrOpt('tester', default='0000000000000002', help='tester sw dp-id'),
+    cfg.StrOpt('dir', default='ryu/tests/switch/of13',
+               help='test files directory')
+], group='test-switch')
