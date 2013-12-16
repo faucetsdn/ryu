@@ -953,7 +953,8 @@ class Action(object):
         elif value == REST_ACTION_PACKETIN:
             out_port = dp.ofproto.OFPP_CONTROLLER
             action = [{'type': 'OUTPUT',
-                       'port': out_port}]
+                       'port': out_port,
+                       'max_len': 128}]
         else:
             raise ValueError('Invalid action type.')
 
