@@ -247,6 +247,11 @@ class ConfigurationBPDUs(bpdu):
     BPDU_TYPE = TYPE_CONFIG_BPDU
     _PACK_STR = '!BQIQHHHHH'
     PACK_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'root_mac_address', "bridge_mac_address"
+        ]
+    }
 
     _BRIDGE_PRIORITY_STEP = 4096
     _PORT_PRIORITY_STEP = 16

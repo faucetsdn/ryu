@@ -60,6 +60,11 @@ class ipv6(packet_base.PacketBase):
     _PACK_STR = '!IHBB16s16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _IPV6_EXT_HEADER_TYPE = {}
+    _TYPE = {
+        'ascii': [
+            'src', 'dst'
+        ]
+    }
 
     @staticmethod
     def register_header_type(type_):

@@ -172,6 +172,11 @@ class nd_neighbor(stringify.StringifyMixin):
     _PACK_STR = '!I16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     _ND_OPTION_TYPES = {}
+    _TYPE = {
+        'ascii': [
+            'dst'
+        ]
+    }
 
     @staticmethod
     def register_nd_option_type(*args):
@@ -404,6 +409,11 @@ class nd_option_la(nd_option):
 
     _PACK_STR = '!BB6s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'hw_src'
+        ]
+    }
 
     @abc.abstractmethod
     def __init__(self, length, hw_src, data):
@@ -553,6 +563,11 @@ class nd_option_pi(nd_option):
 
     _PACK_STR = '!BBBBIII16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'prefix'
+        ]
+    }
 
     @classmethod
     def option_type(cls):

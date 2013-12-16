@@ -70,6 +70,11 @@ class ipv4(packet_base.PacketBase):
 
     _PACK_STR = '!BBHHHBBH4s4s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'src', 'dst'
+        ]
+    }
 
     def __init__(self, version=4, header_length=5, tos=0,
                  total_length=0, identification=0, flags=0,

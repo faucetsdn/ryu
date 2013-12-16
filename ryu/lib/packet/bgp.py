@@ -151,6 +151,12 @@ class _BinAddrPrefix(_AddrPrefix):
 
 
 class _IPAddrPrefix(_AddrPrefix):
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
+
     @staticmethod
     def _to_bin(addr):
         return addrconv.ipv4.text_to_bin(addr)
@@ -526,6 +532,11 @@ class BGPPathAttributeAs4Path(_BGPPathAttributeAsPathCommon):
 class BGPPathAttributeNextHop(_PathAttribute):
     _VALUE_PACK_STR = '!4s'
     _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+    _TYPE = {
+        'ascii': [
+            'value'
+        ]
+    }
 
     @classmethod
     def parse_value(cls, buf):
@@ -566,6 +577,11 @@ class BGPPathAttributeAtomicAggregate(_PathAttribute):
 class _BGPPathAttributeAggregatorCommon(_PathAttribute):
     _VALUE_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
 
     def __init__(self, as_number, addr, flags=0, type_=None, length=None):
         super(_BGPPathAttributeAggregatorCommon, self).__init__(flags=flags,
@@ -741,6 +757,11 @@ class BGPTwoOctetAsSpecificExtendedCommunity(_ExtendedCommunity):
 class BGPIPv4AddressSpecificExtendedCommunity(_ExtendedCommunity):
     _VALUE_PACK_STR = '!B4sH'  # sub type, IPv4 address, local adm
     _VALUE_FIELDS = ['subtype', 'ipv4_address', 'local_administrator']
+    _TYPE = {
+        'ascii': [
+            'ipv4_address'
+        ]
+    }
 
     def __init__(self, type_=_ExtendedCommunity.IPV4_ADDRESS_SPECIFIC,
                  **kwargs):
@@ -990,6 +1011,11 @@ class BGPOpen(BGPMessage):
 
     _PACK_STR = '!BHH4sB'
     _MIN_LEN = BGPMessage._HDR_LEN + struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'bgp_identifier'
+        ]
+    }
 
     def __init__(self, my_as, bgp_identifier, type_=BGP_MSG_OPEN,
                  opt_param_len=0, opt_param=[],

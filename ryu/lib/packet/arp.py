@@ -54,6 +54,11 @@ class arp(packet_base.PacketBase):
 
     _PACK_STR = '!HHBBH6s4s6s4s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'src_mac', 'src_ip', 'dst_mac', 'dst_ip'
+        ]
+    }
 
     def __init__(self, hwtype=ARP_HW_TYPE_ETHERNET, proto=ether.ETH_TYPE_IP,
                  hlen=6, plen=4, opcode=ARP_REQUEST,

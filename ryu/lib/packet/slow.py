@@ -388,6 +388,12 @@ class lacp(packet_base.PacketBase):
 
     _MIN_LEN = _ALL_PACK_LEN
 
+    _TYPE = {
+        'ascii': [
+            'actor_system', 'partner_system'
+        ]
+    }
+
     def __init__(self, version=LACP_VERSION_NUMBER,
                  actor_system_priority=0,
                  actor_system='00:00:00:00:00:00',
