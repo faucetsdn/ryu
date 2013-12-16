@@ -39,7 +39,7 @@ def to_actions(dp, acts):
         action_type = a.get('type')
         if action_type == 'OUTPUT':
             out_port = int(a.get('port', ofproto_v1_3.OFPP_ANY))
-            max_len = int(a.get('max_len', 0))
+            max_len = int(a.get('max_len', ofproto_v1_3.OFPCML_MAX))
             actions.append((parser.OFPActionOutput(out_port,
                                                    max_len)))
         elif action_type == 'COPY_TTL_OUT':

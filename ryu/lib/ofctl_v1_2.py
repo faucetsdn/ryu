@@ -36,10 +36,9 @@ def to_actions(dp, acts):
         action_type = a.get('type')
         if action_type == 'OUTPUT':
             out_port = int(a.get('port', ofproto_v1_2.OFPP_ANY))
-            miss_send_len = (128 if out_port == dp.ofproto.OFPP_CONTROLLER
-                             else 0)
+            max_len = int(a.get('max_len', ofproto_v1_2.OFPCML_MAX))
             actions = [dp.ofproto_parser.OFPActionOutput(
-                       out_port, max_len=miss_send_len)]
+                       out_port, max_len=max_len)]
             inst_type = dp.ofproto.OFPIT_APPLY_ACTIONS
             inst = [dp.ofproto_parser.OFPInstructionActions(
                     inst_type, actions)]
