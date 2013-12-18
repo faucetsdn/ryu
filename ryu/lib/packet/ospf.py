@@ -498,7 +498,7 @@ class OSPFHello(OSPFMessage):
         binneighbors = buf[cls._PACK_LEN:len(buf)]
         while binneighbors:
             n = binneighbors[:4]
-            n = addrconv.ipv4.bin_to_text(n)
+            n = addrconv.ipv4.bin_to_text(buffer(n))
             binneighbors = binneighbors[4:]
             neighbors.append(n)
         return {
