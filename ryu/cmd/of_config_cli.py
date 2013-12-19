@@ -369,6 +369,49 @@ max-rate 100
 
         self._request(line, f)
 
+    def do_add_queue(self, line):
+        """add_queue <peer> <target> <logical-switch> <queue>
+        eg. add_queue sw1 running LogicalSwitch7 NameOfNewQueue
+        """
+
+        def f(p, args):
+            try:
+                target, lsw, queue = args
+            except:
+                print "argument error"
+                print args
+                return
+
+            # get switch id
+            o = p.get()
+            capable_switch_id = o.id
+
+            try:
+                capable_switch = ofc.OFCapableSwitchType(
+                    id=capable_switch_id,
+                    resources=ofc.OFCapableSwitchResourcesType(
+                        queue=[
+                            ofc.OFQueueType(resource_id=queue)
+                        ]
+                    ),
+                    logical_switches=ofc.OFCapableSwitchLogicalSwitchesType(
+                        switch=[ofc.OFLogicalSwitchType(
+                            id=lsw,
+                            resources=ofc.OFLogicalSwitchResourcesType(
+                                queue=[queue])
+                        )]
+                    )
+                )
+            except TypeError:
+                print "argument error"
+                return
+            try:
+                p.edit_config(target, capable_switch)
+            except Exception, e:
+                print e
+
+        self._request(line, f)
+
     def do_list_logical_switch(self, line):
         """list_logical_switch <peer>
         """
