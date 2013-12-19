@@ -171,6 +171,36 @@ class Cmd(cmd.Cmd):
 
         self._request(line, f)
 
+    def do_delete_config(self, line):
+        """delete_config <peer> <source>
+        eg. delete_config sw1 startup
+        """
+
+        def f(p, args):
+            try:
+                source = args[0]
+            except:
+                print "argument error"
+                return
+            print p.delete_config(source)
+
+        self._request(line, f)
+
+    def do_copy_config(self, line):
+        """copy_config <peer> <source> <target>
+        eg. copy_config sw1 running startup
+        """
+
+        def f(p, args):
+            try:
+                source, target = args
+            except:
+                print "argument error"
+                return
+            print p.copy_config(source, target)
+
+        self._request(line, f)
+
     def do_list_port(self, line):
         """list_port <peer>
         """
