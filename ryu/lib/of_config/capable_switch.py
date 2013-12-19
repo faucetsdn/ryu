@@ -21,6 +21,7 @@ import ncclient.xml_
 from ryu import exception as ryu_exc
 from ryu.lib import of_config
 from ryu.lib.of_config import constants as ofc_consts
+from ryu.lib.of_config import classes as ofc
 
 
 # TODO: When we re-organize ncclient, its NCClientError will be
@@ -93,18 +94,28 @@ class OFCapableSwitch(object):
     def _find_capable_switch_xml(self, tree):
         return ncclient.xml_.to_xml(self._find_capable_switch(tree))
 
-    def get(self, filter=None):
+    def raw_get(self, filter=None):
         reply = self.netconf.get(filter)
         return self._find_capable_switch_xml(reply.data_ele)
 
-    def get_config(self, source, filter=None):
+    def raw_get_config(self, source, filter=None):
         reply = self.netconf.get_config(source, filter)
         return self._find_capable_switch_xml(reply.data_ele)
 
-    def edit_config(self, target, config, default_operation=None,
-                    test_option=None, error_option=None):
+    def raw_edit_config(self, target, config, default_operation=None,
+                        test_option=None, error_option=None):
         self.netconf.edit_config(target, config,
                                  default_operation, test_option, error_option)
+
+    def get(self):
+        return ofc.OFCapableSwitchType.from_xml(self.raw_get())
+
+    def get_config(self, source):
+        return ofc.OFCapableSwitchType.from_xml(self.raw_get_config(source))
+
+    def edit_config(self, target, capable_switch, default_operation=None):
+        xml = ofc.NETCONF_Config(capable_switch=capable_switch).to_xml()
+        self.raw_edit_config(target, xml, default_operation)
 
     # TODO: more netconf operations
     # TODO: convinience(higher level) methods
