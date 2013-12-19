@@ -73,11 +73,6 @@ def validate(tree):
         print schema.error_log
 
 
-def _pythonify(name):
-    # XXX code duplication
-    return name.replace('-', '_')
-
-
 class Cmd(cmd.Cmd):
     def __init__(self, *args, **kwargs):
         self._in_onecmd = False
@@ -238,7 +233,7 @@ class Cmd(cmd.Cmd):
                 conf = p.configuration
                 for k in self._port_settings:
                     try:
-                        v = getattr(conf, _pythonify(k))
+                        v = getattr(conf, k)
                     except AttributeError:
                         continue
                     print k, v
@@ -271,7 +266,7 @@ class Cmd(cmd.Cmd):
                             ofc.OFPortType(
                                 resource_id=port,
                                 configuration=ofc.OFPortConfigurationType(
-                                    **{_pythonify(key): value}))
+                                    **{key: value}))
                         ]
                     )
                 )
@@ -322,7 +317,7 @@ class Cmd(cmd.Cmd):
                 conf = q.properties
                 for k in self._queue_settings:
                     try:
-                        v = getattr(conf, _pythonify(k))
+                        v = getattr(conf, k)
                     except AttributeError:
                         continue
                     print k, v
@@ -355,7 +350,7 @@ max-rate 100
                             ofc.OFQueueType(
                                 resource_id=queue,
                                 properties=ofc.OFQueuePropertiesType(
-                                    **{_pythonify(key): value})),
+                                    **{key: value})),
                         ]
                     )
                 )
@@ -471,7 +466,7 @@ max-rate 100
                 print l.id
                 for k in self._lsw_settings:
                     try:
-                        v = getattr(l, _pythonify(k))
+                        v = getattr(l, k)
                     except AttributeError:
                         continue
                     print k, v
@@ -501,7 +496,7 @@ lost-connection-behavior failStandaloneMode
                     logical_switches=ofc.OFCapableSwitchLogicalSwitchesType(
                         switch=[ofc.OFLogicalSwitchType(
                             id=lsw,
-                            **{_pythonify(key): value}
+                            **{key: value}
                         )]
                     )
                 )
