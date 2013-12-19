@@ -228,7 +228,7 @@ class OFConfigClient(app_manager.RyuApp):
             traceback.print_exc()
 
     def _do_get(self):
-        data_xml = self.switch.get()
+        data_xml = self.switch.raw_get()
 
         tree = lxml.etree.fromstring(data_xml)
         # print(lxml.etree.tostring(tree, pretty_print=True))
@@ -243,7 +243,7 @@ class OFConfigClient(app_manager.RyuApp):
 
     def _do_get_config(self, source):
         print('source = %s' % source)
-        config_xml = self.switch.get_config(source)
+        config_xml = self.switch.raw_get_config(source)
 
         tree = lxml.etree.fromstring(config_xml)
         # print(lxml.etree.tostring(tree, pretty_print=True))
@@ -252,7 +252,7 @@ class OFConfigClient(app_manager.RyuApp):
     def _do_edit_config(self, config):
         tree = lxml.etree.fromstring(config)
         self._validate(tree)
-        self.switch.edit_config(target='running', config=config)
+        self.switch.raw_edit_config(target='running', config=config)
 
     def _print_ports(self, tree, ns):
         for port in tree.findall('{%s}%s/{%s}%s' % (ns, ofc_consts.RESOURCES,
