@@ -117,5 +117,11 @@ class OFCapableSwitch(object):
         xml = ofc.NETCONF_Config(capable_switch=capable_switch).to_xml()
         self.raw_edit_config(target, xml, default_operation)
 
+    def delete_config(self, source):
+        self.netconf.delete_config(source)
+
+    def copy_config(self, source, target):
+        self.netconf.copy_config(source, target)
+
     # TODO: more netconf operations
     # TODO: convinience(higher level) methods
