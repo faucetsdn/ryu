@@ -60,11 +60,16 @@ class _Base(stringify.StringifyMixin):
             k = _pythonify(e.name)
             try:
                 v = kwargs.pop(k)
+                assert not e.name in kwargs
             except KeyError:
-                if e.is_list:
-                    v = []
-                else:
-                    v = None
+                k = e.name
+                try:
+                    v = kwargs.pop(k)
+                except KeyError:
+                    if e.is_list:
+                        v = []
+                    else:
+                        v = None
             setattr(self, k, v)
         if kwargs:
             raise TypeError('unknown kwargs %s' % kwargs)
@@ -128,6 +133,12 @@ class _Base(stringify.StringifyMixin):
             assert not k in kwargs
             kwargs[k] = v
         return cls(**kwargs)
+
+    def __getattribute__(self, k):
+        return stringify.StringifyMixin.__getattribute__(self, _pythonify(k))
+
+    def __setattr__(self, k, v):
+        stringify.StringifyMixin.__setattr__(self, _pythonify(k), v)
 
 
 class _Unimpl(_Base):
