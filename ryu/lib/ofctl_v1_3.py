@@ -118,6 +118,9 @@ def to_actions(dp, acts):
                              else ofproto_v1_3_parser.UINT64_MAX)
             inst.append(
                 parser.OFPInstructionWriteMetadata(metadata, metadata_mask))
+        elif action_type == 'METER':
+            meter_id = int(a.get('meter_id'))
+            inst.append(parser.OFPInstructionMeter(meter_id))
         else:
             LOG.debug('Unknown action type: %s' % action_type)
 
@@ -182,6 +185,11 @@ def actions_to_str(instructions):
                                                  instruction.metadata_mask)
                    if instruction.metadata_mask
                    else 'WRITE_METADATA:0x%x' % instruction.metadata)
+            actions.append(buf)
+
+        elif isinstance(instruction,
+                        ofproto_v1_3_parser.OFPInstructionMeter):
+            buf = 'METER:' + str(instruction.meter_id)
             actions.append(buf)
 
         else:
@@ -429,6 +437,48 @@ def get_port_stats(dp, waiters):
     return ports
 
 
+def get_meter_stats(dp, waiters):
+    stats = dp.ofproto_parser.OFPMeterStatsRequest(
+        dp, 0, dp.ofproto.OFPM_ALL)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    meters = []
+    for msg in msgs:
+        for stats in msg.body:
+            bands = []
+            for band in stats.band_stats:
+                b = {'packet_band_count': band.packet_band_count,
+                     'byte_band_count': band.byte_band_count}
+                bands.append(b)
+            s = {'meter_id': stats.meter_id,
+                 'len': stats.len,
+                 'flow_count': stats.flow_count,
+                 'packet_in_count': stats.packet_in_count,
+                 'byte_in_count': stats.byte_in_count,
+                 'band_stats': bands}
+            meters.append(s)
+    meters = {str(dp.id): meters}
+    return meters
+
+
+def get_meter_features(dp, waiters):
+    stats = dp.ofproto_parser.OFPMeterFeaturesStatsRequest(dp, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    features = []
+    for msg in msgs:
+        for feature in msg.body:
+            f = {'max_meter': msg.body.max_meter,
+                 'band_type': msg.body.band_type,
+                 'max_bands': msg.body.max_bands,
+                 'max_color': msg.body.max_color}
+            features.append(f)
+    features = {str(dp.id): features}
+    return features
+
+
 def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     cookie_mask = int(flow.get('cookie_mask', 0))
@@ -449,3 +499,43 @@ def mod_flow_entry(dp, flow, cmd):
         flags, match, inst)
 
     dp.send_msg(flow_mod)
+
+
+def mod_meter_entry(dp, flow, cmd):
+
+    flags_convert = {'KBPS': dp.ofproto.OFPMF_KBPS,
+                     'PKTPS': dp.ofproto.OFPMF_PKTPS,
+                     'BURST': dp.ofproto.OFPMF_BURST,
+                     'STATS': dp.ofproto.OFPMF_STATS}
+
+    flags = flags_convert.get(flow.get('flags'))
+    if not flags:
+        LOG.debug('Unknown flags: %s', flow.get('flags'))
+
+    meter_id = int(flow.get('meter_id', 0))
+
+    bands = []
+    for band in flow.get('bands', []):
+        band_type = band.get('type')
+        rate = int(band.get('rate', 0))
+        burst_size = int(band.get('burst_size', 0))
+        if band_type == 'DROP':
+            bands.append(
+                dp.ofproto_parser.OFPMeterBandDrop(rate, burst_size))
+        elif band_type == 'REMARK':
+            prec_level = int(band.get('prec_level', 0))
+            bands.append(
+                dp.ofproto_parser.OFPMeterBandDscpRemark(
+                    rate, burst_size, prec_level))
+        elif band_type == 'EXPERIMENTER':
+            experimenter = int(band.get('experimenter', 0))
+            bands.append(
+                dp.ofproto_parser.OFPMeterBandExperimenter(
+                    rate, burst_size, experimenter))
+        else:
+            LOG.debug('Unknown band type: %s', band_type)
+
+    meter_mod = dp.ofproto_parser.OFPMeterMod(
+        dp, cmd, flags, meter_id, bands)
+
+    dp.send_msg(meter_mod)

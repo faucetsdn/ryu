@@ -48,6 +48,12 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # get ports stats of the switch
 # GET /stats/port/<dpid>
 #
+# get meter features stats of the switch
+# GET /stats/meterfeatures/<dpid>
+#
+# get meters stats of the switch
+# GET /stats/meter/<dpid>
+#
 ## Update the switch stats
 #
 # add a flow entry
@@ -62,6 +68,14 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # delete all flow entries of the switch
 # DELETE /stats/flowentry/clear/<dpid>
 #
+# add a meter entry
+# POST /stats/meterentry/add
+#
+# modify a meter entry
+# POST /stats/meterentry/modify
+#
+# delete a meter entry
+# POST /stats/meterentry/delete
 
 
 class StatsController(ControllerBase):
@@ -123,6 +137,34 @@ class StatsController(ControllerBase):
         body = json.dumps(ports)
         return (Response(content_type='application/json', body=body))
 
+    def get_meter_features(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            meters = ofctl_v1_3.get_meter_features(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(meters)
+        return (Response(content_type='application/json', body=body))
+
+    def get_meter_stats(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            meters = ofctl_v1_3.get_meter_stats(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(meters)
+        return (Response(content_type='application/json', body=body))
+
     def mod_flow_entry(self, req, cmd, **_kwargs):
         try:
             flow = eval(req.body)
@@ -163,6 +205,35 @@ class StatsController(ControllerBase):
             ofctl_v1_0.delete_flow_entry(dp)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        return Response(status=200)
+
+    def mod_meter_entry(self, req, cmd, **_kwargs):
+        try:
+            flow = eval(req.body)
+        except SyntaxError:
+            LOG.debug('invalid syntax %s', req.body)
+            return Response(status=400)
+
+        dpid = flow.get('dpid')
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if cmd == 'add':
+            cmd = dp.ofproto.OFPMC_ADD
+        elif cmd == 'modify':
+            cmd = dp.ofproto.OFPMC_MODIFY
+        elif cmd == 'delete':
+            cmd = dp.ofproto.OFPMC_DELETE
+        else:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ofctl_v1_3.mod_meter_entry(dp, flow, cmd)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -210,6 +281,16 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_port_stats',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/meterfeatures/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_meter_features',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/meter/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_meter_stats',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/flowentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_flow_entry',
@@ -219,6 +300,11 @@ class RestStatsApi(app_manager.RyuApp):
         mapper.connect('stats', uri,
                        controller=StatsController, action='delete_flow_entry',
                        conditions=dict(method=['DELETE']))
+
+        uri = path + '/meterentry/{cmd}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='mod_meter_entry',
+                       conditions=dict(method=['POST']))
 
     def stats_reply_handler(self, ev):
         msg = ev.msg
