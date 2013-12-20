@@ -77,6 +77,8 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # delete a meter entry
 # POST /stats/meterentry/delete
 
+# TODO: support OFPMeterConfigStats
+
 
 class StatsController(ControllerBase):
     def __init__(self, req, link, data, **config):
@@ -338,4 +340,12 @@ class RestStatsApi(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def port_stats_reply_handler(self, ev):
+        self.stats_reply_handler(ev)
+
+    @set_ev_cls(ofp_event.EventOFPMeterStatsReply, MAIN_DISPATCHER)
+    def meter_stats_reply_handler(self, ev):
+        self.stats_reply_handler(ev)
+
+    @set_ev_cls(ofp_event.EventOFPMeterFeaturesStatsReply, MAIN_DISPATCHER)
+    def meter_features_stats_reply_handler(self, ev):
         self.stats_reply_handler(ev)

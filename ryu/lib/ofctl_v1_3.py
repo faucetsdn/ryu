@@ -470,10 +470,10 @@ def get_meter_features(dp, waiters):
     features = []
     for msg in msgs:
         for feature in msg.body:
-            f = {'max_meter': msg.body.max_meter,
-                 'band_type': msg.body.band_type,
-                 'max_bands': msg.body.max_bands,
-                 'max_color': msg.body.max_color}
+            f = {'max_meter': feature.max_meter,
+                 'band_types': feature.band_types,
+                 'max_band': feature.max_band,
+                 'max_color': feature.max_color}
             features.append(f)
     features = {str(dp.id): features}
     return features
