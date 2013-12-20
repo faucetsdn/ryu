@@ -51,6 +51,9 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # get meter features stats of the switch
 # GET /stats/meterfeatures/<dpid>
 #
+# get meter config stats of the switch
+# GET /stats/meterconfig/<dpid>
+#
 # get meters stats of the switch
 # GET /stats/meter/<dpid>
 #
@@ -76,8 +79,6 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # delete a meter entry
 # POST /stats/meterentry/delete
-
-# TODO: support OFPMeterConfigStats
 
 
 class StatsController(ControllerBase):
@@ -146,6 +147,20 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_features(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(meters)
+        return (Response(content_type='application/json', body=body))
+
+    def get_meter_config(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            meters = ofctl_v1_3.get_meter_config(dp, self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -288,6 +303,11 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_meter_features',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/meterconfig/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_meter_config',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/meter/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_meter_stats',
@@ -348,4 +368,8 @@ class RestStatsApi(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPMeterFeaturesStatsReply, MAIN_DISPATCHER)
     def meter_features_stats_reply_handler(self, ev):
+        self.stats_reply_handler(ev)
+
+    @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply, MAIN_DISPATCHER)
+    def meter_config_stats_reply_handler(self, ev):
         self.stats_reply_handler(ev)

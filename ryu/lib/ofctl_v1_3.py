@@ -479,6 +479,42 @@ def get_meter_features(dp, waiters):
     return features
 
 
+def get_meter_config(dp, waiters):
+    flags = {dp.ofproto.OFPMF_KBPS: 'KBPS',
+             dp.ofproto.OFPMF_PKTPS: 'PKTPS',
+             dp.ofproto.OFPMF_BURST: 'BURST',
+             dp.ofproto.OFPMF_STATS: 'STATS'}
+
+    band_type = {dp.ofproto.OFPMBT_DROP: 'DROP',
+                 dp.ofproto.OFPMBT_DSCP_REMARK: 'REMARK',
+                 dp.ofproto.OFPMBT_EXPERIMENTER: 'EXPERIMENTER'}
+
+    stats = dp.ofproto_parser.OFPMeterConfigStatsRequest(
+        dp, 0, dp.ofproto.OFPM_ALL)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    configs = []
+    for msg in msgs:
+        for config in msg.body:
+            bands = []
+            for band in config.bands:
+                b = {'type': band_type.get(band.type, ''),
+                     'rate': band.rate,
+                     'burst_size': band.burst_size}
+                if band.type == dp.ofproto.OFPMBT_DSCP_REMARK:
+                    b['prec_level'] = band.prec_level
+                elif band.type == dp.ofproto.OFPMBT_EXPERIMENTER:
+                    b['experimenter'] = band.experimenter
+                bands.append(b)
+            c = {'flags': flags.get(config.flags, 0),
+                 'meter_id': config.meter_id,
+                 'bands': bands}
+            configs.append(c)
+    configs = {str(dp.id): configs}
+    return configs
+
+
 def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     cookie_mask = int(flow.get('cookie_mask', 0))
