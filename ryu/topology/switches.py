@@ -426,6 +426,7 @@ class LLDPPacket(object):
 
 
 class Switches(app_manager.RyuApp):
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_3.OFP_VERSION]
     _EVENTS = [event.EventSwitchEnter, event.EventSwitchLeave,
                event.EventPortAdd, event.EventPortDelete,
                event.EventPortModify,
@@ -546,6 +547,22 @@ class Switches(app_manager.RyuApp):
                     dp.send_flow_mod(
                         rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
                         idle_timeout=0, hard_timeout=0, actions=actions)
+                elif ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+                    match = ofproto_parser.OFPMatch(
+                        eth_type=ETH_TYPE_LLDP,
+                        eth_dst=lldp.LLDP_MAC_NEAREST_BRIDGE)
+                    # OFPCML_NO_BUFFER is set so that the LLDP is not
+                    # buffered on switch
+                    parser = ofproto_parser
+                    actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+                                                      ofproto.OFPCML_NO_BUFFER
+                                                      )]
+                    inst = [parser.OFPInstructionActions(
+                            ofproto.OFPIT_APPLY_ACTIONS, actions)]
+                    mod = parser.OFPFlowMod(datapath=dp, match=match,
+                                            idle_timeout=0, hard_timeout=0,
+                                            instructions=inst)
+                    dp.send_msg(mod)
                 else:
                     LOG.error('cannot install flow. unsupported version. %x',
                               dp.ofproto.OFP_VERSION)
@@ -659,7 +676,13 @@ class Switches(app_manager.RyuApp):
             return
 
         dst_dpid = msg.datapath.id
-        dst_port_no = msg.in_port
+        if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            dst_port_no = msg.in_port
+        elif msg.datapath.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            dst_port_no = msg.match['in_port']
+        else:
+            LOG.error('cannot accept LLDP. unsupported version. %x',
+                      msg.datapath.ofproto.OFP_VERSION)
 
         src = self._get_port(src_dpid, src_port_no)
         if not src or src.dpid == dst_dpid:
@@ -718,6 +741,13 @@ class Switches(app_manager.RyuApp):
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
             dp.send_packet_out(actions=actions, data=port_data.lldp_data)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
+            out = dp.ofproto_parser.OFPPacketOut(
+                datapath=dp, in_port=ofproto_v1_3.OFPP_CONTROLLER,
+                buffer_id=ofproto_v1_3.OFP_NO_BUFFER, actions=actions,
+                data=port_data.lldp_data)
+            dp.send_msg(out)
         else:
             LOG.error('cannot send lldp packet. unsupported version. %x',
                       dp.ofproto.OFP_VERSION)
