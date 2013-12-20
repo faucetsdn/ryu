@@ -29,6 +29,17 @@ LOG = logging.getLogger('ryu.lib.ofctl_v1_3')
 DEFAULT_TIMEOUT = 1.0
 
 
+def str_to_int(src):
+    if isinstance(src, str):
+        if src.startswith("0x") or src.startswith("0X"):
+            dst = int(src, 16)
+        else:
+            dst = int(src)
+    else:
+        dst = src
+    return dst
+
+
 def to_actions(dp, acts):
     inst = []
     actions = []
@@ -100,6 +111,13 @@ def to_actions(dp, acts):
         elif action_type == 'GOTO_TABLE':
             table_id = int(a.get('table_id'))
             inst.append(parser.OFPInstructionGotoTable(table_id))
+        elif action_type == 'WRITE_METADATA':
+            metadata = str_to_int(a.get('metadata'))
+            metadata_mask = (str_to_int(a['metadata_mask'])
+                             if 'metadata_mask' in a
+                             else ofproto_v1_3_parser.UINT64_MAX)
+            inst.append(
+                parser.OFPInstructionWriteMetadata(metadata, metadata_mask))
         else:
             LOG.debug('Unknown action type: %s' % action_type)
 
@@ -112,47 +130,62 @@ def actions_to_str(instructions):
     actions = []
 
     for instruction in instructions:
-        if not isinstance(instruction,
-                          ofproto_v1_3_parser.OFPInstructionActions):
-            continue
-        for a in instruction.actions:
-            action_type = a.cls_action_type
+        if isinstance(instruction,
+                      ofproto_v1_3_parser.OFPInstructionActions):
+            for a in instruction.actions:
+                action_type = a.cls_action_type
 
-            if action_type == ofproto_v1_3.OFPAT_OUTPUT:
-                buf = 'OUTPUT:' + str(a.port)
-            elif action_type == ofproto_v1_3.OFPAT_COPY_TTL_OUT:
-                buf = 'COPY_TTL_OUT'
-            elif action_type == ofproto_v1_3.OFPAT_COPY_TTL_IN:
-                buf = 'COPY_TTL_IN'
-            elif action_type == ofproto_v1_3.OFPAT_SET_MPLS_TTL:
-                buf = 'SET_MPLS_TTL:' + str(a.mpls_ttl)
-            elif action_type == ofproto_v1_3.OFPAT_DEC_MPLS_TTL:
-                buf = 'DEC_MPLS_TTL'
-            elif action_type == ofproto_v1_3.OFPAT_PUSH_VLAN:
-                buf = 'PUSH_VLAN:' + str(a.ethertype)
-            elif action_type == ofproto_v1_3.OFPAT_POP_VLAN:
-                buf = 'POP_VLAN'
-            elif action_type == ofproto_v1_3.OFPAT_PUSH_MPLS:
-                buf = 'PUSH_MPLS:' + str(a.ethertype)
-            elif action_type == ofproto_v1_3.OFPAT_POP_MPLS:
-                buf = 'POP_MPLS'
-            elif action_type == ofproto_v1_3.OFPAT_OFPAT_SET_QUEUE:
-                buf = 'SET_QUEUE:' + str(a.queue_id)
-            elif action_type == ofproto_v1_3.OFPAT_GROUP:
-                pass
-            elif action_type == ofproto_v1_3.OFPAT_SET_NW_TTL:
-                buf = 'SET_NW_TTL:' + str(a.nw_ttl)
-            elif action_type == ofproto_v1_3.OFPAT_DEC_NW_TTL:
-                buf = 'DEC_NW_TTL'
-            elif action_type == ofproto_v1_3.OFPAT_SET_FIELD:
-                buf = 'SET_FIELD: {%s:%s}' % (a.field, a.value)
-            elif action_type == ofproto_v1_3.OFPAT_PUSH_PBB:
-                buf = 'PUSH_PBB:' + str(a.ethertype)
-            elif action_type == ofproto_v1_3.OFPAT_POP_PBB:
-                buf = 'POP_PBB'
-            else:
-                buf = 'UNKNOWN'
+                if action_type == ofproto_v1_3.OFPAT_OUTPUT:
+                    buf = 'OUTPUT:' + str(a.port)
+                elif action_type == ofproto_v1_3.OFPAT_COPY_TTL_OUT:
+                    buf = 'COPY_TTL_OUT'
+                elif action_type == ofproto_v1_3.OFPAT_COPY_TTL_IN:
+                    buf = 'COPY_TTL_IN'
+                elif action_type == ofproto_v1_3.OFPAT_SET_MPLS_TTL:
+                    buf = 'SET_MPLS_TTL:' + str(a.mpls_ttl)
+                elif action_type == ofproto_v1_3.OFPAT_DEC_MPLS_TTL:
+                    buf = 'DEC_MPLS_TTL'
+                elif action_type == ofproto_v1_3.OFPAT_PUSH_VLAN:
+                    buf = 'PUSH_VLAN:' + str(a.ethertype)
+                elif action_type == ofproto_v1_3.OFPAT_POP_VLAN:
+                    buf = 'POP_VLAN'
+                elif action_type == ofproto_v1_3.OFPAT_PUSH_MPLS:
+                    buf = 'PUSH_MPLS:' + str(a.ethertype)
+                elif action_type == ofproto_v1_3.OFPAT_POP_MPLS:
+                    buf = 'POP_MPLS'
+                elif action_type == ofproto_v1_3.OFPAT_OFPAT_SET_QUEUE:
+                    buf = 'SET_QUEUE:' + str(a.queue_id)
+                elif action_type == ofproto_v1_3.OFPAT_GROUP:
+                    pass
+                elif action_type == ofproto_v1_3.OFPAT_SET_NW_TTL:
+                    buf = 'SET_NW_TTL:' + str(a.nw_ttl)
+                elif action_type == ofproto_v1_3.OFPAT_DEC_NW_TTL:
+                    buf = 'DEC_NW_TTL'
+                elif action_type == ofproto_v1_3.OFPAT_SET_FIELD:
+                    buf = 'SET_FIELD: {%s:%s}' % (a.field, a.value)
+                elif action_type == ofproto_v1_3.OFPAT_PUSH_PBB:
+                    buf = 'PUSH_PBB:' + str(a.ethertype)
+                elif action_type == ofproto_v1_3.OFPAT_POP_PBB:
+                    buf = 'POP_PBB'
+                else:
+                    buf = 'UNKNOWN'
+                actions.append(buf)
+
+        elif isinstance(instruction,
+                        ofproto_v1_3_parser.OFPInstructionGotoTable):
+            buf = 'GOTO_TABLE:' + str(instruction.table_id)
             actions.append(buf)
+
+        elif isinstance(instruction,
+                        ofproto_v1_3_parser.OFPInstructionWriteMetadata):
+            buf = ('WRITE_METADATA:0x%x/0x%x' % (instruction.metadata,
+                                                 instruction.metadata_mask)
+                   if instruction.metadata_mask
+                   else 'WRITE_METADATA:0x%x' % instruction.metadata)
+            actions.append(buf)
+
+        else:
+            continue
 
     return actions
 
@@ -170,7 +203,8 @@ def to_match(dp, attrs):
                'nw_proto': int,
                'tp_src': int,
                'tp_dst': int,
-               'mpls_label': int}
+               'mpls_label': int,
+               'metadata': to_match_metadata}
 
     match_append = {'in_port': match.set_in_port,
                     'dl_src': match.set_dl_src,
@@ -182,7 +216,8 @@ def to_match(dp, attrs):
                     'nw_proto': match.set_ip_proto,
                     'tp_src': to_match_tpsrc,
                     'tp_dst': to_match_tpdst,
-                    'mpls_label': match.set_mpls_label}
+                    'mpls_label': match.set_mpls_label,
+                    'metadata': match.set_metadata_masked}
 
     for key, value in attrs.items():
         if key in convert:
@@ -196,6 +231,11 @@ def to_match(dp, attrs):
             elif key == 'tp_src' or key == 'tp_dst':
                 # tp_src/dst
                 match = match_append[key](value, match, attrs)
+            elif key == 'metadata':
+                # metadata
+                metadata = value[0]
+                metadata_mask = value[1]
+                match_append[key](metadata, metadata_mask)
             else:
                 # others
                 match_append[key](value)
@@ -239,6 +279,14 @@ def to_match_ip(value):
     return ipv4, netmask
 
 
+def to_match_metadata(value):
+    if '/' in value:
+        metadata = value.split('/')
+        return str_to_int(metadata[0]), str_to_int(metadata[1])
+    else:
+        return str_to_int(value), ofproto_v1_3_parser.UINT64_MAX
+
+
 def match_to_str(ofmatch):
     keys = {ofproto_v1_3.OXM_OF_IN_PORT: 'in_port',
             ofproto_v1_3.OXM_OF_ETH_SRC: 'dl_src',
@@ -253,7 +301,9 @@ def match_to_str(ofmatch):
             ofproto_v1_3.OXM_OF_TCP_SRC: 'tp_src',
             ofproto_v1_3.OXM_OF_TCP_DST: 'tp_dst',
             ofproto_v1_3.OXM_OF_UDP_SRC: 'tp_src',
-            ofproto_v1_3.OXM_OF_UDP_DST: 'tp_dst'}
+            ofproto_v1_3.OXM_OF_UDP_DST: 'tp_dst',
+            ofproto_v1_3.OXM_OF_METADATA: 'metadata',
+            ofproto_v1_3.OXM_OF_METADATA_W: 'metadata'}
 
     match = {}
     for match_field in ofmatch.fields:
@@ -262,6 +312,9 @@ def match_to_str(ofmatch):
             value = mac.haddr_to_str(match_field.value)
         elif key == 'nw_src' or key == 'nw_dst':
             value = match_ip_to_str(match_field.value, match_field.mask)
+        elif key == 'metadata':
+            value = ('%d/%d' % (match_field.value, match_field.mask)
+                     if match_field.mask else '%d' % match_field.value)
         else:
             value = match_field.value
         match.setdefault(key, value)
