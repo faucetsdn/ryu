@@ -1,183 +1,243 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-
 <title>Ryu SDN Framework</title>
-
-<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="author" content="NTT Software Innovation Center" />
-<meta name="description" content="Ryu" />
-<meta name="keywords" content="OpenFlow, Software Defined Network, OpenStack, Quantum" />
-<meta name="robots" content="index, follow, noarchive" />
-<meta name="googlebot" content="noarchive" />
-<link rel="shortcut icon" href="favicon.ico" />
-<link rel="stylesheet" href="images/UrbanArtist.css" type="text/css" />
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0">
+<link rel="shortcut icon" type="image/x-icon" href="css/images/favicon.ico">
+<link rel="stylesheet" href="css/style.css" type="text/css" media="all">
+<link href='http://fonts.googleapis.com/css?family=Coda' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Jura:400,500,600,300' rel='stylesheet' type='text/css'>
+<script src="js/jquery-1.8.0.min.js"></script>
+<script src="js/jquery.touchwipe.1.1.1.js"></script>
+<script src="js/jquery.carouFredSel-5.5.0-packed.js"></script>
+<!--[if lt IE 9]><script src="js/modernizr.custom.js"></script><![endif]-->
+<script src="js/functions.js"></script>
 </head>
-
 <body>
-
-<!-- wrap starts here -->
-<div id="wrap">
-
-	<!--header -->
-	<div id="header">			
-				
-		<h1 id="logo-text"><a href="index.html" title="">Build SDN agilely</a></h1>
-		<p id="intro">
-		  Ryu, a component-based software-defined networking framework
-		</p>	
-		
-		<div  id="nav">
-			<ul>
-				<li><a href="http://github.com/osrg/ryu">Download</a></li>
-				<li><a href="https://lists.sourceforge.net/lists/listinfo/ryu-devel">Mailing List</a></li>
-				<li><a href="http://ryu.readthedocs.org/en/latest/">Documentation</a></li>
-				<li><a href="https://github.com/osrg/ryu/wiki">Wiki</a></li>
-
-			</ul>		
-		</div>	
-						
-	<!--header ends-->					
-	</div>
-	
-	<!-- content-wrap starts -->
-	<div id="content-wrap">
-				
-		<div id="main">
-				
-			<a name="What"></a>
-			<h2><a href="index.html">What is Ryu?</a></h2>
-			
-				
-            <p><strong>Ryu</strong> is a component-based software defined networking framework.
-            
-Ryu provides software components with well defined
-API that make it easy for developers to create new network management
-and control applications. Ryu supports various protocols for managing network devices, such as <a href="http://www.openflow.org/">OpenFlow</a>, Netconf, OF-config, etc. About OpenFlow, Ryu supports fully 1.0, 1.2, 1.3 and Nicira Extensions.
-            </p>
-
-	    <p>
-	    <a href="http://www.osrg.net/">NTT laboratories OSRG group</a> started Ryu project and the members are
-	    actively involved in the development. Our aim is
-	    developing an Operating System for SDN that has high
-	    quality enough for use in large production environment.
-            </p>
-
-            <p>
+<!-- wrapper -->
+<div class="wrapper">
+  <!-- header -->
+  <header class="header">
+    <div class="shell">
+      <div class="header-top">
+        <!-- <h1 id="logo"><a href="#">Digy</a></h1> -->
+        <h1 id="logo"><a href="http://github.com/osrg/ryu" class="green-btn">Download</a></h1>
+        <nav id="navigation"> <a href="index.html" class="nav-btn">Home<span></span></a>
+          <ul>
+            <li class="active home"><a href="index.html">Home</a></li>
+            <li><a href="resources.html">Resources</a></li>
+            <li><a href="community.html">Community</a></li>
+            <li><a href="certification.html">Certification</a></li>
+            <!-- <li><a href="case.html">Case Studies</a></li> -->
+            <!-- <li><a href="about.html">About</a></li> -->
+          </ul>
+        </nav>
+        <div class="cl">&nbsp;</div>
+      </div>
+      <div class="slider">
+        <div id="bg"></div>
+        <div id="carousel">
+          <div>
+            <h5>component-based software defined networking framework</h5>
+            <h3>Build SDN Agilely</h3>
+            <!-- <p><strong>Ryu</strong> is a component-based software defined networking framework. Ryu provides software components with well defined -->
+<!-- API that make it easy for developers to create new network management -->
+<!-- and control applications.</p> -->
+            <!-- <a href="http://github.com/osrg/ryu" class="green-btn">Download</a> -->
+	    <!-- <img class="img-front" src="css/images/front-img.png" alt=""> <img class="img-mid" src="css/images/img-mid.png" alt=""> <img class="img-back" src="css/images/img-back.png" alt=""> -->
+	  </div>
+          <div>
+            <h5>No CLA mess</h5>
+            <h3>OpenStack integrated</h3>
+            <!-- <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget augue quis quam dignissim consectetur ac sit amet nisl. In hac habitasse platea. Eget augue quis quam dignissi lorem lipsum adispicing dolor sit amet.</p> -->
+            <a href="#" class="green-btn">FREE Quote</a>
+ <!-- <img class="img-front" src="css/images/front-img.png" alt=""> <img class="img-mid" src="css/images/img-mid.png" alt=""> <img class="img-back" src="css/images/img-back.png" alt=""> -->
+	  </div>
+          <div>
+            <h5>It all starts with a</h5>
+            <h3>Great Vision</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget augue quis quam dignissim consectetur ac sit amet nisl. In hac habitasse platea. Eget augue quis quam dignissi lorem lipsum adispicing dolor sit amet.</p>
+            <a href="#" class="green-btn">FREE Quote</a> <img class="img-front" src="css/images/front-img.png" alt=""> <img class="img-mid" src="css/images/img-mid.png" alt=""> <img class="img-back" src="css/images/img-back.png" alt=""> </div>
+          <div>
+            <h5>It all starts with a</h5>
+            <h3>Great Vision</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget augue quis quam dignissim consectetur ac sit amet nisl. In hac habitasse platea. Eget augue quis quam dignissi lorem lipsum adispicing dolor sit amet.</p>
+            <a href="#" class="green-btn">FREE Quote</a> <img class="img-front" src="css/images/front-img.png" alt=""> <img class="img-mid" src="css/images/img-mid.png" alt=""> <img class="img-back" src="css/images/img-back.png" alt=""> </div>
+        </div>
+        <!-- <div class="pagination"></div> -->
+        <!-- <a id="prev" href="#"></a> <a id="next" href="#"></a> -->
+      </div>
+    </div>
+  </header>
+  <!-- end of header -->
+  <!-- shell -->
+  <div class="shell">
+    <!-- main -->
+    <div class="main">
+      <!-- cols -->
+      <section class="cols">
+        <div class="col"> <img src="css/images/col-img1.png" alt="">
+          <div class="col-cnt">
+            <h2>Truely Open</h2>
+            <p>No CLA, board members, governance, or other mess.</p>
+            <a href="community.html" class="more">view more</a>
+	  </div>
+        </div>
+        <div class="col"> <img src="css/images/col-img2.png" alt="">
+          <div class="col-cnt">
+            <h2>OpenStack</h2>
+            <p><a href="http://www.openstack.org">OpenStack</a> supports Ryu. You can create tens of thousands of isolated
+virtual networks. </p>
+            <a href="https://github.com/osrg/ryu/wiki/OpenStack" class="more">view more</a>
+	  </div>
+        </div>
+        <div class="col"> <img src="css/images/col-img3.png" alt="">
+          <div class="col-cnt">
+            <h2>Well tested</h2>
+            <p>Not only <a href="https://travis-ci.org/osrg/ryu">unit tests</a>, but continuously tested with various OpenFlow switches.</p>
+            <a href="certification.html" class="more">view more</a> </div>
+        </div>
+        <div class="cl">&nbsp;</div>
+      </section>
+      <!-- end of cols -->
+      <section class="post">
+	<!-- <img src="css/images/post-img.png" alt=""> -->
+        <div class="post-cnt">
+          <h2>What's Ryu?</h2>
+          <p>
+	    <strong>Ryu</strong> is a component-based software defined
+	    networking framework. Ryu provides software components
+	    with well defined API that make it easy for developers to
+	    create new network management and control
+	    applications. Ryu supports various protocols for managing
+	    network devices, such
+	    as <a href="http://www.openflow.org/">OpenFlow</a>,
+	    Netconf, OF-config, etc. About OpenFlow, Ryu supports
+	    fully 1.0, 1.2, 1.3 and Nicira Extensions.
+          </p>
+          <p>
             All of the code is freely available under the Apache 2.0
-            license. Ryu is developed openly.
-            </p>
-				
-			<h2><a href="index.html">Three reasons for Ryu</a></h2>
-
-			<h3>Operators</h3>
-			<ol>
-			  <li><a href="http://www.openstack.org">OpenStack</a> supports Ryu. You can create tens of thousands of isolated
-virtual networks without using VLAN. You manage virtual networks,
-OpenStack notifies of Ryu and Ryu configures <a href="http://openvswitch.org">OpenvSwitches</a> properly.</li>
-
-<li>You can try Now. <a href="https://github.com/osrg/ryu/wiki/OpenStack">Ryu's pre-configured VM image file</a> enables you to easily set up multi-node OpenStack environment.</li>
-
-			  <li>We try Ryu with software OpenFlow Switch (OpenvSwitch) and bunch of hardware OpenFlow Switches.</li>
-
-			</ol>
-			
-			<h3>Developers</h3>
-			<ol>
-			  <li>You can write your Ryu application with Python, which you love, don't you? Ryu is fully implemented by Python. No language binding mess, easy to play with.</li>
-			  <li>Ryu fully supports OpenFlow v1.0 with Nicira Extensions and OpenFlow v1.2 and v1.3. It enables you to implement whatever tricks you like to use with your network, GRE, IPv6, etc.</li>
-			  <li>The development is truly open. We
-			  openly discuss everything on the mailing
-			  list. No CLA mess, just send a patch to the
-			  mailing list. We are ready to discuss the
-			  patch for merging.</li>
-			</ol>
-			
-			<h2><a href="index.html">Quick Start</a></h2>
-			<p>
-			Installing Ryu is very easy:
-			</p>
-			<p>
-			<code>
-			  % pip install ryu<br />
-			</code>
-			</p>
-
-			<p>
-			If you prefer to install Ryu from the source code:
-			</p>
-			<p>
-			<code>
-			  % git clone git://github.com/osrg/ryu.git <br />
-			  % cd ryu; python ./setup.py install <br />
-			</code>
-			</p>
-
-			<p>
-			Do you want to know how to write Ryu applications? Let's start with <a href="https://github.com/osrg/ryu/wiki/OpenFlow_Tutorial" >our tutorial</a>.
-			</p>
-
-		<!-- main ends -->	
-		</div>
-		
-		<!-- sidebar starts -->
-		<div id="sidebar">			
-		
-			<h3>About</h3>			
-			
-			<p>
-			  <a href="http://www.osrg.net">NTT laboratories OSRG members</a> have founded
-			  several OSS projects such as <a href="http://www.osrg.net/sheepdog/">Sheepdog</a>,
-			  <a href="http://www.osrg.net/nilfs/">NILFS</a>, <a href="http://stgt.sf.net/">tgt</a>, <a href="http://iscsitarget.sf.net">IET</a>, etc. We have been also heavily
-			  involved in OSS projects such Linux kernel.
-			</p>
-
-			<h3>Slides</h3>
-			<ul class="sidemenu">
-				<li><a href="slides/LinuxConJapan2013.pdf">LinuxCon Japan 2013</a></li>
-				<li><a href="slides/ONS2013-april-ryu-intro.pdf">Open Networking Summit 2013</a></li>
-				<li><a href="slides/OpenStackDesignSummit2012.pdf">OpenStack Design Summit 2012</a></li>
-				<li><a href="slides/LinuxConJapan2012.pdf">LinuxCon Japan 2012</a></li>					
-				<li><a href="slides/InteropTokyo2012-poster.pdf">InteropTokyo 2012 poster (Japanese)</a></li>
-			</ul>
-			
-			<h3>Ryu derivation</h3>
-			<p>
-
-			<strong>Ryu</strong> has two meanings in Japanese, <strong>flow</strong> and <strong>dragon</strong>. Also Japanese dragons are believed to be water gods. You know why we chose the name now. We found that Japanese <strong>Ryu</strong> <a href="http://upload.wikimedia.org/wikipedia/commons/4/40/Ryu.ogg">pronunciation</a> is too hard for non Japanese. Feel free to pronounce <strong>Ryu</strong> in the way you can pronounce.</p>
-
-                        <img src="images/LogoSet02.png" width="280px" alt="Ryu logo" />
-						
-		<!-- sidebar ends -->		
-		</div>
-		
-	<!-- content-wrap ends-->	
+            license.
+          </p>
+        </div>
+        <div class="cl">&nbsp;</div>
+      </section>
+      <section class="two">
+        <div class="col">
+	  <h2>Installation is a snap</h2>
+	    <p>Using <strong>pip</strong> command is the easiest option:
+	    </p>
+	    <p>
+	      <code>
+		% pip install ryu<br />
+	      </code>
+	    </p>
+	    <p>If you prefer to install from the source code:
+	    </p>
+	    <p>
+	      <code>
+		% git clone git://github.com/osrg/ryu.git <br />
+		% cd ryu; python ./setup.py install <br />
+	      </code>
+	    </p>
+	  <p>
+	Do you want to know how to write Ryu applications? Let's start with <a href="https://github.com/osrg/ryu/wiki/OpenFlow_Tutorial" >our tutorial</a>.
+	    </p>
 	</div>
-
-	<!-- footer starts here -->	
-	<div id="footer">
-	
-		<div id="footer-left">
-			<p>
-			&copy; Copyright Nippon Telegraph and Telephone Corporation. 2013 &nbsp;
-			
-			</p>	
-		</div>
-		
-		<div id="footer-right">
-			<p class="align-right">
-<a href="http://www.bluewebtemplates.com/" title="Website Templates">website templates</a> by <a href="http://www.styleshout.com/">styleshout</a>	
-			</p>
-		</div>
-		
-	</div>
-	<!-- footer ends here -->
-	
-<!-- wrap ends here -->
+	<img src="css/images/LogoSet02.png" alt="Ryu Logo" width="250px">
+        <div class="cl">&nbsp;</div>
+      </section>
+      <!-- <section class="content"> -->
+      <!--   <h2>WHO WE ARE</h2> -->
+      <!--   <p>Maecenas vel est sit amet massa dignissim <span>hendrerit</span> sit amet ac ante. Praesent dapibus neque vel enim adipiscing vel feugiat leo luctus. Nulla semper varius nulla, eu euismod turpis volutpat in. Nullam neque diam, facilisis vitae suscipit eu, gravida ut tortor. Duis faucibus lectus nec metus elementum ac <a href="#">adipiscing</a> lorem consectetur. Nulla dui ipsum, <em>iaculis a mollis vel</em>, sodales a ipsum. Nam tincidunt consequat lacus eget imperdiet. Nullam posuere convallis libero, vitae lobortis libero fermentum eu. Ut id venenatis lectus. <strong>Donec eget</strong> quam et dolor facilisis commodo nullam tempor aliquet vulputate phasellus ac libero sed justo luctus vehicula.<br> -->
+      <!--     <a href="#" class="more">meet the team</a></p> -->
+      <!-- </section> -->
+      <!-- <section class="partners"> -->
+      <!--   <div id="partners-slider"> -->
+      <!--     <div class="slider-holder2"> <img src="css/images/partners1.png" alt=""> <img src="css/images/partners2.png" alt=""> <img src="css/images/partners3.png" alt=""> <img src="css/images/partners4.png" alt=""> <img src="css/images/partners1.png" alt=""> <img src="css/images/partners2.png" alt=""> <img src="css/images/partners3.png" alt=""> <img src="css/images/partners4.png" alt=""> </div> -->
+      <!--   </div> -->
+      <!--   <div class="slider-arr"> <a class="prev-arr arr-btn" href="#"></a> <a class="next-arr arr-btn" href="#"></a> </div> -->
+      <!-- </section> -->
+      <!-- <div class="socials"> -->
+      <!--   <p>We are currently <strong>available</strong> for work. Please, contact us for a quote at <span><a href="#">contact [at] websitename [dot] com</a></span></p> -->
+      <!--   <ul> -->
+      <!--     <li><a href="#" class="facebook-ico">facebook-ico</a></li> -->
+      <!--     <li><a href="#" class="twitter-ico">twitter-ico</a></li> -->
+      <!--     <li><a href="#" class="skype-ico">skype-ico</a></li> -->
+      <!--     <li><a href="#" class="rss-ico">rss-ico</a></li> -->
+      <!--   </ul> -->
+      <!-- </div> -->
+    </div>
+    <!-- end of main -->
+  </div>
+  <!-- end of shell -->
+  <!-- footer -->
+  <div id="footer">
+    <!-- shell -->
+    <div class="shell">
+      <!-- footer-cols -->
+      <div class="footer-cols">
+        <div class="col">
+          <h2>Resources</h2>
+          <ul>
+            <li><a href="resources.html#documentation">Documentation</a></li>
+            <li><a href="resources.html#wiki">Wiki</a></li>
+            <li><a href="resources.html#books">Books</a></li>
+            <li><a href="resources.html#presentations">Presentations</a></li>
+            <!-- <li><a href="#">Donec a velit nisi, ac dignissim</a></li> -->
+          </ul>
+        </div>
+        <div class="col">
+          <h2>Community</h2>
+          <ul>
+            <li><a href="community.html#ml">Mailing list</a></li>
+            <li><a href="community.html#code">Code</a></li>
+            <!-- <li><a href="#">Nullam euismod quam vel</a></li> -->
+            <!-- <li><a href="#">Pellentesque sed nulla nec </a></li> -->
+            <!-- <li><a href="#">Donec a velit nisi, ac dignissim </a></li> -->
+          </ul>
+        </div>
+        <div class="col">
+          <h2>Certification</h2>
+          <ul>
+            <li><a href="certification.html#ofs">OpenFlow Switches</a></li>
+            <!-- <li><a href="#">Aenean bibendum lacus varius </a></li> -->
+            <!-- <li><a href="#">Nullam euismod quam vel</a></li> -->
+            <!-- <li><a href="#">Pellentesque sed nulla nec </a></li> -->
+            <!-- <li><a href="#">Donec a velit nisi, ac dignissim </a></li> -->
+          </ul>
+        </div>
+        <div class="col">
+          <h2>CONTACT us</h2>
+          <p>Email: <a href="mailto:ryu-devel@lists.sourceforge.net">ryu-devel@lists.sourceforge.net</a></p>
+          <!-- <p>Phone: 655-606-605</p> -->
+          <!-- <p>Address: East Pixel Bld. 99, </p> -->
+          <!-- <p>Template City, 9000</p> -->
+        </div>
+        <div class="cl">&nbsp;</div>
+      </div>
+      <!-- end of footer-cols -->
+      <div class="footer-bottom">
+        <div class="footer-nav">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="resources.html">Resources</a></li>
+            <li><a href="community.html">Community</a></li>
+            <li><a href="certification.html">Certification</a></li>
+            <!-- <li><a hrerf="#">Case Studies</a></li> -->
+            <!-- <li><a hrerf="#">Blog</a></li> -->
+            <!-- <li><a hrerf="#">Contacts</a></li> -->
+          </ul>
+        </div>
+        <p class="copy">Copyright &copy Nippon Telegraph and Telephone Corporation. 2013<span>|</span>Design by: <a target="_blank" href="http://chocotemplates.com">ChocoTemplates</a></p>
+        <div class="cl">&nbsp;</div>
+      </div>
+    </div>
+    <!-- end of shell -->
+  </div>
+  <!-- footer -->
 </div>
-
+<!-- end of wrapper -->
 </body>
 </html>
