@@ -357,6 +357,9 @@ OFPFC_MODIFY_STRICT = 2    # Modify entry strictly matching wildcards
 OFPFC_DELETE = 3    # Delete all matching flows.
 OFPFC_DELETE_STRICT = 4    # Strictly match wildcards and priority.
 
+# By default, choose a priority in the middle.
+OFP_DEFAULT_PRIORITY = 0x8000
+
 # enum ofp_flow_mod_flags
 OFPFF_SEND_FLOW_REM = 1 << 0    # Send flow removed message when flow
                                 # expires or is deleted.

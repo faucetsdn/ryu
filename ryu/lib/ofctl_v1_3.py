@@ -238,7 +238,7 @@ def to_match(dp, attrs):
                 match_append[key](ip, mask)
             elif key == 'tp_src' or key == 'tp_dst':
                 # tp_src/dst
-                match = match_append[key](value, match, attrs)
+                match_append[key](value, match, attrs)
             elif key == 'metadata':
                 # metadata
                 metadata = value[0]

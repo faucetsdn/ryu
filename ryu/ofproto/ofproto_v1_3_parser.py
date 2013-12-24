@@ -2359,7 +2359,8 @@ class OFPFlowMod(MsgBase):
     """
     def __init__(self, datapath, cookie=0, cookie_mask=0, table_id=0,
                  command=ofproto_v1_3.OFPFC_ADD,
-                 idle_timeout=0, hard_timeout=0, priority=0,
+                 idle_timeout=0, hard_timeout=0,
+                 priority=ofproto_v1_3.OFP_DEFAULT_PRIORITY,
                  buffer_id=ofproto_v1_3.OFP_NO_BUFFER,
                  out_port=0, out_group=0, flags=0,
                  match=None,
