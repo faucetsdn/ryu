@@ -188,6 +188,10 @@ def to_user(num_to_field, n, v, m):
         t = UnknownType
         name = 'field_%d' % n
     if not v is None:
+        if hasattr(t, 'size') and t.size != len(v):
+            raise Exception(
+                'Unexpected OXM payload length %d for %s (expected %d)'
+                % (len(v), name, t.size))
         value = t.to_user(v)
     else:
         value = None
