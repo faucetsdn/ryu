@@ -43,7 +43,7 @@
 	  <p>
 	  We continuously test Ryu with various OpenFlow switches. You can check out what kinds of actions and matches work (or not). The results of hardware switches will be available shortly.
 	  </p>
-          <p>Of course, the test suite is included in Ryu. So you can modify the existing test scenarios and add new scenarios. A test scenario is written in JSON without Python knowledge. An action test scenario is defining a packet to be sent, the actions, and an expected packet. For example, 'push_vlan' <a href="https://github.com/osrg/ryu/blob/master/ryu/tests/switch/of13/action/17_PUSH_VLAN.json">test scenerio</a> is installing 'vlan vid' match flow, sending an IP packet, check out if a switch properly pushed a vlan header to the packet. Ryu can generate and parse wire-format of many network protocols.
+          <p>Of course, the test suite is included in Ryu. So you can modify the existing test scenarios and add new scenarios. A test scenario is written in JSON without Python knowledge. An action test scenario is defining a packet to be sent, the actions, and an expected packet. For example, 'push_vlan' <a href="https://github.com/osrg/ryu/blob/master/ryu/tests/switch/of13/action/17_PUSH_VLAN.json">test scenerio</a> is installing 'vlan vid' match flow, sending an IP packet, check out if a switch properly pushed a vlan header to the packet. Ryu can generate and parse wire-format of <a href="https://github.com/osrg/ryu/tree/master/ryu/lib/packet">many network protocols</a>.
           </p>
 	  <p>
 	    <ul>
