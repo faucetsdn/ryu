@@ -41,23 +41,23 @@
         <div class="post-cnt">
 	  <h2>OpenFlow Switches</h2>
 	  <p>
-	  We continuously test Ryu with various OpenFlow switches. You can check out what kinds of actions and matches work (or not). The results of hardware switches will be available shortly.
+	  We continuously test Ryu with various OpenFlow v1.3 switches. You can check out what kinds of actions and matches work (or not). The results of hardware switches will be available shortly.
 	  </p>
           <p>Of course, the test suite is included in Ryu. So you can modify the existing test scenarios and add new scenarios. A test scenario is written in JSON without Python knowledge. An action test scenario is defining a packet to be sent, the actions, and an expected packet. For example, 'push_vlan' <a href="https://github.com/osrg/ryu/blob/master/ryu/tests/switch/of13/action/17_PUSH_VLAN.json">test scenerio</a> is installing 'vlan vid' match flow, sending an IP packet, check out if a switch properly pushed a vlan header to the packet. Ryu can generate and parse wire-format of <a href="https://github.com/osrg/ryu/tree/master/ryu/lib/packet">many network protocols</a>.
           </p>
 	  <p>
 	    <ul>
+              <li><a href="http://osrg.github.io/ryu-certification/switch/Centec_V350">Centec V350</a></li>
+	      <li><a href="http://osrg.github.io/ryu-certification/switch/ofsoftswitch13">CPqD</a></li>
+	      <li><a href="http://osrg.github.io/ryu-certification/switch/LINC">LINC</a></li>
+              <li><a href="http://osrg.github.io/ryu-certification/switch/Hewlett-Packard_HP2920">HP 2920</a></li>
+	      <li>NEC</li>
+	      <li>Netronome</li>
+	      <li><a href="http://osrg.github.io/ryu-certification/switch/NoviFlow_NoviKit200">NoviFlow NoviKit200</a></li>
 	      <li><a href="http://osrg.github.io/ryu-certification/switch/ovs">Open vSwitch</a></li>
 	      <li><a href="http://osrg.github.io/ryu-certification/switch/ovs_netdev">Open vSwitch (netdev)</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/LINC">LINC</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/ofsoftswitch13">CPqD</a></li>
               <li><a href="http://osrg.github.io/ryu-certification/switch/Pica8_P-3290">Pica8 P-3290</a></li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/Hewlett-Packard_HP2920"</a>HP 2920</li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/NoviFlow_NoviKit200">Noviflow</a></li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/Centec_V350">Centec V350</a></li>
-              <li>NEC</li>
-              <li>Riava</li>              
-              <li>Netronome</li>
+	      <li>Riava</li>
 	    </ul>
 	  </p>
 	</div>
