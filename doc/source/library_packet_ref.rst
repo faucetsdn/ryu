@@ -95,6 +95,12 @@ Protocol Header classes
 
 .. autoclass:: ryu.lib.packet.igmp.igmp
    :members:
+.. autoclass:: ryu.lib.packet.igmp.igmpv3_query
+   :members:
+.. autoclass:: ryu.lib.packet.igmp.igmpv3_report
+   :members:
+.. autoclass:: ryu.lib.packet.igmp.igmpv3_report_group
+   :members:
 
 .. autoclass:: ryu.lib.packet.bgp.BGPMessage
    :members:
