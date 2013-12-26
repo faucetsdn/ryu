@@ -417,11 +417,13 @@ class FirewallController(ControllerBase):
 
     # PUT /firewall/log/enable/{switchid}
     def set_log_enable(self, dummy, switchid, **_kwargs):
-        return self._access_module(switchid, 'set_log_enable')
+        return self._access_module(switchid, 'set_log_enable',
+                                   waiters=self.waiters)
 
     # PUT /firewall/log/disable/{switchid}
     def set_log_disable(self, dummy, switchid, **_kwargs):
-        return self._access_module(switchid, 'set_log_disable')
+        return self._access_module(switchid, 'set_log_disable',
+                                   waiters=self.waiters)
 
     def _access_module(self, switchid, func, waiters=None):
         try:
@@ -493,7 +495,7 @@ class FirewallController(ControllerBase):
         msgs = []
         for f_ofs in dps.values():
             try:
-                msg = f_ofs.set_rule(rule, vid)
+                msg = f_ofs.set_rule(rule, self.waiters, vid)
                 msgs.append(msg)
             except ValueError, message:
                 return Response(status=400, body=str(message))
@@ -657,14 +659,14 @@ class Firewall(object):
         return REST_LOG_STATUS, status
 
     @rest_command
-    def set_log_disable(self):
-        return self._set_log_status(False)
+    def set_log_disable(self, waiters=None):
+        return self._set_log_status(False, waiters)
 
     @rest_command
-    def set_log_enable(self):
-        return self._set_log_status(True)
+    def set_log_enable(self, waiters=None):
+        return self._set_log_status(True, waiters)
 
-    def _set_log_status(self, is_enable):
+    def _set_log_status(self, is_enable, waiters):
         if is_enable:
             actions = Action.to_openflow(self.dp,
                                          {REST_ACTION: REST_ACTION_PACKETIN})
@@ -673,11 +675,32 @@ class Firewall(object):
             actions = []
             details = 'Log collection stopped.'
 
-        flow = self._to_of_flow(cookie=0, priority=LOG_FLOW_PRIORITY,
-                                match={}, actions=actions)
-
         cmd = self.dp.ofproto.OFPFC_ADD
-        self.ofctl.mod_flow_entry(self.dp, flow, cmd)
+
+        if waiters:
+            msgs = self.ofctl.get_flow_stats(self.dp, waiters)
+
+            if str(self.dp.id) in msgs:
+                flow_stats = msgs[str(self.dp.id)]
+                for flow_stat in flow_stats:
+                    priority = flow_stat[REST_PRIORITY]
+                    if (priority == STATUS_FLOW_PRIORITY
+                            or priority == ARP_FLOW_PRIORITY):
+                        continue
+                    action = flow_stat[REST_ACTION]
+                    if action == ['OUTPUT:%d' % self.dp.ofproto.OFPP_NORMAL]:
+                        continue
+
+                    cookie = flow_stat[REST_COOKIE]
+                    match = Match.to_mod_openflow(flow_stat[REST_MATCH])
+                    flow = self._to_of_flow(cookie=cookie, priority=priority,
+                                            match=match, actions=actions)
+                    self.ofctl.mod_flow_entry(self.dp, flow, cmd)
+        else:
+            # Initialize.
+            flow = self._to_of_flow(cookie=0, priority=LOG_FLOW_PRIORITY,
+                                    match={}, actions=actions)
+            self.ofctl.mod_flow_entry(self.dp, flow, cmd)
 
         msg = {'result': 'success',
                'details': details}
@@ -696,15 +719,15 @@ class Firewall(object):
         self.ofctl.mod_flow_entry(self.dp, flow, cmd)
 
     @rest_command
-    def set_rule(self, rest, vlan_id):
+    def set_rule(self, rest, waiters, vlan_id):
         msgs = []
         cookie_list = self._get_cookie(vlan_id)
         for cookie, vid in cookie_list:
-            msg = self._set_rule(cookie, rest, vid)
+            msg = self._set_rule(cookie, rest, waiters, vid)
             msgs.append(msg)
         return REST_COMMAND_RESULT, msgs
 
-    def _set_rule(self, cookie, rest, vlan_id):
+    def _set_rule(self, cookie, rest, waiters, vlan_id):
         priority = int(rest.get(REST_PRIORITY, ACL_FLOW_PRIORITY_MIN))
 
         if (priority < ACL_FLOW_PRIORITY_MIN
@@ -716,6 +739,10 @@ class Firewall(object):
             rest[REST_DL_VLAN] = vlan_id
 
         match = Match.to_openflow(rest)
+        if rest.get(REST_ACTION) == REST_ACTION_DENY:
+            result = self.get_log_status(waiters)
+            if result[REST_LOG_STATUS] == REST_STATUS_ENABLE:
+                rest[REST_ACTION] = REST_ACTION_PACKETIN
         actions = Action.to_openflow(self.dp, rest)
         flow = self._to_of_flow(cookie=cookie, priority=priority,
                                 match=match, actions=actions)
@@ -789,7 +816,7 @@ class Firewall(object):
                         and priority != LOG_FLOW_PRIORITY):
                     if ((rule_id == REST_ALL or rule_id == ruleid) and
                             (vlan_id == dl_vlan or vlan_id == REST_ALL)):
-                        match = Match.to_del_openflow(flow_stat[REST_MATCH])
+                        match = Match.to_mod_openflow(flow_stat[REST_MATCH])
                         delete_list.append([cookie, priority, match])
                     else:
                         if dl_vlan not in vlan_list:
@@ -918,7 +945,7 @@ class Match(object):
         return match
 
     @staticmethod
-    def to_del_openflow(of_match):
+    def to_mod_openflow(of_match):
         mac_dontcare = mac.haddr_to_str(mac.DONTCARE)
         ip_dontcare = '0.0.0.0'
 
