@@ -34,6 +34,7 @@ ICMPV6_ECHO_REPLY = 129     # echo reply
 MLD_LISTENER_QUERY = 130     # multicast listener query
 MLD_LISTENER_REPOR = 131     # multicast listener report
 MLD_LISTENER_DONE = 132     # multicast listener done
+MLDV2_LISTENER_REPORT = 143     # multicast listern report (v2)
 
 # RFC2292 decls
 ICMPV6_MEMBERSHIP_QUERY = 130     # group membership query
@@ -64,6 +65,13 @@ ND_OPTION_PI = 3   # Prefix Information
 ND_OPTION_RH = 4   # Redirected Header
 ND_OPTION_MTU = 5  # MTU
 
+MODE_IS_INCLUDE = 1
+MODE_IS_EXCLUDE = 2
+CHANGE_TO_INCLUDE_MODE = 3
+CHANGE_TO_EXCLUDE_MODE = 4
+ALLOW_NEW_SOURCES = 5
+BLOCK_OLD_SOURCES = 6
+
 
 class icmpv6(packet_base.PacketBase):
     """ICMPv6 (RFC 2463) header encoder/decoder class.
@@ -87,6 +95,7 @@ class icmpv6(packet_base.PacketBase):
                    ryu.lib.packet.icmpv6.nd_neighbor object, \
                    ryu.lib.packet.icmpv6.nd_router_solicit object, \
                    ryu.lib.packet.icmpv6.nd_router_advert object, \
+                   ryu.lib.packet.icmpv6.mld object, \
                    or a bytearray.
     ============== ====================
     """
@@ -657,6 +666,280 @@ class echo(stringify.StringifyMixin):
         if self.data is not None:
             length += len(self.data)
         return length
+
+
+@icmpv6.register_icmpv6_type(
+    MLD_LISTENER_QUERY, MLD_LISTENER_REPOR, MLD_LISTENER_DONE)
+class mld(stringify.StringifyMixin):
+    """ICMPv6 sub encoder/decoder class for MLD Lister Query,
+    MLD Listener Report, and MLD Listener Done messages. (RFC 2710)
+
+    http://www.ietf.org/rfc/rfc2710.txt
+
+    This is used with ryu.lib.packet.icmpv6.icmpv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    ============== =========================================
+    Attribute      Description
+    ============== =========================================
+    maxresp        max response time in millisecond. it is
+                   meaningful only in Query Message.
+    address        a group address value.
+    ============== =========================================
+    """
+
+    _PACK_STR = '!H2x16s'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, maxresp=0, address='::'):
+        self.maxresp = maxresp
+        self.address = address
+
+    @classmethod
+    def parser(cls, buf, offset):
+        if cls._MIN_LEN < len(buf[offset:]):
+            msg = mldv2_query.parser(buf[offset:])
+        else:
+            (maxresp, address) = struct.unpack_from(
+                cls._PACK_STR, buf, offset)
+            msg = cls(maxresp, addrconv.ipv6.bin_to_text(address))
+
+        return msg
+
+    def serialize(self):
+        buf = struct.pack(mld._PACK_STR, self.maxresp,
+                          addrconv.ipv6.text_to_bin(self.address))
+        return buf
+
+    def __len__(self):
+        return self._MIN_LEN
+
+
+class mldv2_query(mld):
+    """
+    ICMPv6 sub encoder/decoder class for MLD v2 Lister Query messages.
+    (RFC 3810)
+
+    http://www.ietf.org/rfc/rfc3810.txt
+
+    This is used with ryu.lib.packet.icmpv6.icmpv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    ============== =========================================
+    Attribute      Description
+    ============== =========================================
+    maxresp        max response time in millisecond. it is
+                   meaningful only in Query Message.
+    address        a group address value.
+    s_flg          when set to 1, routers suppress the timer
+                   process.
+    qrv            robustness variable for a querier.
+    qqic           an interval time for a querier in unit of
+                   seconds.
+    num            a number of the multicast servers.
+    srcs           a list of IPv6 addresses of the multicast
+                   servers.
+    ============== =========================================
+    """
+
+    _PACK_STR = '!H2x16sBBH'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, maxresp=0, address='::', s_flg=0, qrv=2,
+                 qqic=0, num=0, srcs=None):
+        super(mldv2_query, self).__init__(maxresp, address)
+        self.s_flg = s_flg
+        self.qrv = qrv
+        self.qqic = qqic
+        self.num = num
+        srcs = srcs or []
+        assert isinstance(srcs, list)
+        for src in srcs:
+            assert isinstance(src, str)
+        self.srcs = srcs
+
+    @classmethod
+    def parser(cls, buf):
+        (maxresp, address, s_qrv, qqic, num
+         ) = struct.unpack_from(cls._PACK_STR, buf)
+        s_flg = (s_qrv >> 3) & 0b1
+        qrv = s_qrv & 0b111
+        offset = cls._MIN_LEN
+        srcs = []
+        while 0 < len(buf[offset:]) and num > len(srcs):
+            assert 16 <= len(buf[offset:])
+            (src, ) = struct.unpack_from('16s', buf, offset)
+            srcs.append(addrconv.ipv6.bin_to_text(src))
+            offset += 16
+        assert num == len(srcs)
+        return cls(maxresp, addrconv.ipv6.bin_to_text(address), s_flg,
+                   qrv, qqic, num, srcs)
+
+    def serialize(self):
+        s_qrv = self.s_flg << 3 | self.qrv
+        buf = bytearray(struct.pack(self._PACK_STR, self.maxresp,
+                        addrconv.ipv6.text_to_bin(self.address), s_qrv,
+                        self.qqic, self.num))
+        for src in self.srcs:
+            buf.extend(struct.pack('16s', addrconv.ipv6.text_to_bin(src)))
+        if 0 == self.num:
+            self.num = len(self.srcs)
+            struct.pack_into('!H', buf, 22, self.num)
+        return str(buf)
+
+    def __len__(self):
+        return self._MIN_LEN + len(self.srcs) * 16
+
+
+@icmpv6.register_icmpv6_type(MLDV2_LISTENER_REPORT)
+class mldv2_report(mld):
+    """
+    ICMPv6 sub encoder/decoder class for MLD v2 Lister Report messages.
+    (RFC 3810)
+
+    http://www.ietf.org/rfc/rfc3810.txt
+
+    This is used with ryu.lib.packet.icmpv6.icmpv6.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    ============== =========================================
+    Attribute      Description
+    ============== =========================================
+    record_num     a number of the group records.
+    records        a list of ryu.lib.packet.icmpv6.mldv2_report_group.
+                   None if no records.
+    ============== =========================================
+    """
+
+    _PACK_STR = '!2xH'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+    _class_prefixes = ['mldv2_report_group']
+
+    def __init__(self, record_num=0, records=None):
+        self.record_num = record_num
+        records = records or []
+        assert isinstance(records, list)
+        for record in records:
+            assert isinstance(record, mldv2_report_group)
+        self.records = records
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (record_num, ) = struct.unpack_from(cls._PACK_STR, buf, offset)
+        offset += cls._MIN_LEN
+        records = []
+        while 0 < len(buf[offset:]) and record_num > len(records):
+            record = mldv2_report_group.parser(buf[offset:])
+            records.append(record)
+            offset += len(record)
+        assert record_num == len(records)
+        return cls(record_num, records)
+
+    def serialize(self):
+        buf = bytearray(struct.pack(self._PACK_STR, self.record_num))
+        for record in self.records:
+            buf.extend(record.serialize())
+        if 0 == self.record_num:
+            self.record_num = len(self.records)
+            struct.pack_into('!H', buf, 2, self.record_num)
+        return str(buf)
+
+    def __len__(self):
+        records_len = 0
+        for record in self.records:
+            records_len += len(record)
+        return self._MIN_LEN + records_len
+
+
+class mldv2_report_group(stringify.StringifyMixin):
+    """
+    ICMPv6 sub encoder/decoder class for MLD v2 Lister Report Group
+    Record messages. (RFC 3810)
+
+    This is used with ryu.lib.packet.icmpv6.mldv2_report.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte
+    order.
+    __init__ takes the corresponding args in this order.
+
+    =============== ====================================================
+    Attribute       Description
+    =============== ====================================================
+    type\_          a group record type for v3.
+    aux_len         the length of the auxiliary data in 32-bit words.
+    num             a number of the multicast servers.
+    address         a group address value.
+    srcs            a list of IPv6 addresses of the multicast servers.
+    aux             the auxiliary data.
+    =============== ====================================================
+    """
+    _PACK_STR = '!BBH16s'
+    _MIN_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, type_=0, aux_len=0, num=0, address='::',
+                 srcs=None, aux=None):
+        self.type_ = type_
+        self.aux_len = aux_len
+        self.num = num
+        self.address = address
+        srcs = srcs or []
+        assert isinstance(srcs, list)
+        for src in srcs:
+            assert isinstance(src, str)
+        self.srcs = srcs
+        self.aux = aux
+
+    @classmethod
+    def parser(cls, buf):
+        (type_, aux_len, num, address
+         ) = struct.unpack_from(cls._PACK_STR, buf)
+        offset = cls._MIN_LEN
+        srcs = []
+        while 0 < len(buf[offset:]) and num > len(srcs):
+            assert 16 <= len(buf[offset:])
+            (src, ) = struct.unpack_from('16s', buf, offset)
+            srcs.append(addrconv.ipv6.bin_to_text(src))
+            offset += 16
+        assert num == len(srcs)
+        aux = None
+        if aux_len:
+            (aux, ) = struct.unpack_from('%ds' % (aux_len * 4), buf, offset)
+        msg = cls(type_, aux_len, num, addrconv.ipv6.bin_to_text(address),
+                  srcs, aux)
+        return msg
+
+    def serialize(self):
+        buf = bytearray(struct.pack(self._PACK_STR, self.type_,
+                        self.aux_len, self.num,
+                        addrconv.ipv6.text_to_bin(self.address)))
+        for src in self.srcs:
+            buf.extend(struct.pack('16s', addrconv.ipv6.text_to_bin(src)))
+        if 0 == self.num:
+            self.num = len(self.srcs)
+            struct.pack_into('!H', buf, 2, self.num)
+        if self.aux is not None:
+            mod = len(self.aux) % 4
+            if mod:
+                self.aux += bytearray(4 - mod)
+                self.aux = str(self.aux)
+            buf.extend(self.aux)
+            if 0 == self.aux_len:
+                self.aux_len = len(self.aux) / 4
+                struct.pack_into('!B', buf, 1, self.aux_len)
+        return str(buf)
+
+    def __len__(self):
+        return self._MIN_LEN + len(self.srcs) * 16 + self.aux_len * 4
 
 
 icmpv6.set_classes(icmpv6._ICMPV6_TYPES)
