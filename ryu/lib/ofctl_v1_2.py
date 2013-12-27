@@ -16,6 +16,7 @@
 import struct
 import socket
 import logging
+import netaddr
 
 from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_2
@@ -90,7 +91,9 @@ def to_match(dp, attrs):
                'tcp_src': int,
                'tcp_dst': int,
                'udp_src': int,
-               'udp_dst': int}
+               'udp_dst': int,
+               'ipv6_src': to_match_ipv6,
+               'ipv6_dst': to_match_ipv6}
 
     match_append = {'in_port': match.set_in_port,
                     'dl_src': match.set_dl_src,
@@ -112,14 +115,17 @@ def to_match(dp, attrs):
                     'tcp_src': to_match_tpsrc,
                     'tcp_dst': to_match_tpdst,
                     'udp_src': to_match_tpsrc,
-                    'udp_dst': to_match_tpdst}
+                    'udp_dst': to_match_tpdst,
+                    'ipv6_src': match.set_ipv6_src_masked,
+                    'ipv6_dst': match.set_ipv6_dst_masked}
 
     for key, value in attrs.items():
         if key in convert:
             value = convert[key](value)
         if key in match_append:
             if key == 'nw_src' or key == 'nw_dst' or \
-                    key == 'ipv4_src' or key == 'ipv4_dst':
+                    key == 'ipv4_src' or key == 'ipv4_dst' or \
+                    key == 'ipv6_src' or key == 'ipv6_dst':
                 # IP address
                 ip = value[0]
                 mask = value[1]
@@ -128,7 +134,7 @@ def to_match(dp, attrs):
                     key == 'tcp_src' or key == 'tcp_dst' or \
                     key == 'udp_src' or key == 'udp_dst':
                 # tp_src/dst
-                match = match_append[key](value, match, attrs)
+                match_append[key](value, match, attrs)
             else:
                 # others
                 match_append[key](value)
@@ -172,6 +178,11 @@ def to_match_ip(value):
     return ipv4, netmask
 
 
+def to_match_ipv6(value):
+    ip = netaddr.IPNetwork(value)
+    return ip.ip.words, ip.netmask.words
+
+
 def match_to_str(ofmatch):
     keys = {ofproto_v1_2.OXM_OF_IN_PORT: 'in_port',
             ofproto_v1_2.OXM_OF_ETH_SRC: 'dl_src',
@@ -186,7 +197,11 @@ def match_to_str(ofmatch):
             ofproto_v1_2.OXM_OF_TCP_SRC: 'tp_src',
             ofproto_v1_2.OXM_OF_TCP_DST: 'tp_dst',
             ofproto_v1_2.OXM_OF_UDP_SRC: 'tp_src',
-            ofproto_v1_2.OXM_OF_UDP_DST: 'tp_dst'}
+            ofproto_v1_2.OXM_OF_UDP_DST: 'tp_dst',
+            ofproto_v1_2.OXM_OF_IPV6_SRC: 'ipv6_src',
+            ofproto_v1_2.OXM_OF_IPV6_DST: 'ipv6_dst',
+            ofproto_v1_2.OXM_OF_IPV6_SRC_W: 'ipv6_src',
+            ofproto_v1_2.OXM_OF_IPV6_DST_W: 'ipv6_dst'}
 
     match = {}
     for match_field in ofmatch.fields:
@@ -195,6 +210,8 @@ def match_to_str(ofmatch):
             value = mac.haddr_to_str(match_field.value)
         elif key == 'nw_src' or key == 'nw_dst':
             value = match_ip_to_str(match_field.value, match_field.mask)
+        elif key == 'ipv6_src' or key == 'ipv6_dst':
+            value = match_ipv6_to_str(match_field.value, match_field.mask)
         else:
             value = match_field.value
         match.setdefault(key, value)
@@ -212,6 +229,29 @@ def match_ip_to_str(value, mask):
         netmask = ''
 
     return ip + netmask
+
+
+def match_ipv6_to_str(value, mask):
+    ip_list = []
+    for word in value:
+        ip_list.append('%04x' % word)
+    ip = netaddr.IPNetwork(':'.join(ip_list))
+
+    netmask = 128
+    if mask is not None:
+        mask_list = []
+        for word in mask:
+            mask_list.append('%04x' % word)
+        mask_v = netaddr.IPNetwork(':'.join(mask_list))
+        netmask = len(mask_v.ip.bits().replace(':', '').rstrip('0'))
+
+    if netmask == 128:
+        ip_str = str(ip.ip)
+    else:
+        ip.prefixlen = netmask
+        ip_str = str(ip)
+
+    return ip_str
 
 
 def send_stats_request(dp, stats, waiters, msgs):
@@ -263,7 +303,6 @@ def get_flow_stats(dp, waiters):
         for stats in msg.body:
             actions = actions_to_str(stats.instructions)
             match = match_to_str(stats.match)
-
             s = {'priority': stats.priority,
                  'cookie': stats.cookie,
                  'idle_timeout': stats.idle_timeout,
