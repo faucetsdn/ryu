@@ -212,7 +212,18 @@ def to_match(dp, attrs):
                'tp_src': int,
                'tp_dst': int,
                'mpls_label': int,
-               'metadata': to_match_metadata}
+               'metadata': to_match_metadata,
+               'eth_src': mac.haddr_to_bin,
+               'eth_dst': mac.haddr_to_bin,
+               'eth_type': int,
+               'vlan_vid': int,
+               'ipv4_src': to_match_ip,
+               'ipv4_dst': to_match_ip,
+               'ip_proto': int,
+               'tcp_src': int,
+               'tcp_dst': int,
+               'udp_src': int,
+               'udp_dst': int}
 
     match_append = {'in_port': match.set_in_port,
                     'dl_src': match.set_dl_src,
@@ -225,18 +236,32 @@ def to_match(dp, attrs):
                     'tp_src': to_match_tpsrc,
                     'tp_dst': to_match_tpdst,
                     'mpls_label': match.set_mpls_label,
-                    'metadata': match.set_metadata_masked}
+                    'metadata': match.set_metadata_masked,
+                    'eth_src': match.set_dl_src,
+                    'eth_dst': match.set_dl_dst,
+                    'eth_type': match.set_dl_type,
+                    'vlan_vid': match.set_vlan_vid,
+                    'ipv4_src': match.set_ipv4_src_masked,
+                    'ipv4_dst': match.set_ipv4_dst_masked,
+                    'ip_proto': match.set_ip_proto,
+                    'tcp_src': to_match_tpsrc,
+                    'tcp_dst': to_match_tpdst,
+                    'udp_src': to_match_tpsrc,
+                    'udp_dst': to_match_tpdst}
 
     for key, value in attrs.items():
         if key in convert:
             value = convert[key](value)
         if key in match_append:
-            if key == 'nw_src' or key == 'nw_dst':
+            if key == 'nw_src' or key == 'nw_dst' or \
+                    key == 'ipv4_src' or key == 'ipv4_dst':
                 # IP address
                 ip = value[0]
                 mask = value[1]
                 match_append[key](ip, mask)
-            elif key == 'tp_src' or key == 'tp_dst':
+            elif key == 'tp_src' or key == 'tp_dst' or \
+                    key == 'tcp_src' or key == 'tcp_dst' or \
+                    key == 'udp_src' or key == 'udp_dst':
                 # tp_src/dst
                 match_append[key](value, match, attrs)
             elif key == 'metadata':
@@ -255,7 +280,7 @@ def to_match_tpsrc(value, match, rest):
     match_append = {inet.IPPROTO_TCP: match.set_tcp_src,
                     inet.IPPROTO_UDP: match.set_udp_src}
 
-    nw_proto = rest.get('nw_proto', 0)
+    nw_proto = rest.get('nw_proto', rest.get('ip_proto', 0))
     if nw_proto in match_append:
         match_append[nw_proto](value)
 
@@ -266,7 +291,7 @@ def to_match_tpdst(value, match, rest):
     match_append = {inet.IPPROTO_TCP: match.set_tcp_dst,
                     inet.IPPROTO_UDP: match.set_udp_dst}
 
-    nw_proto = rest.get('nw_proto', 0)
+    nw_proto = rest.get('nw_proto', rest.get('ip_proto', 0))
     if nw_proto in match_append:
         match_append[nw_proto](value)
 
