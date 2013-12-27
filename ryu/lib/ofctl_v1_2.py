@@ -202,6 +202,23 @@ def send_stats_request(dp, stats, waiters, msgs):
         del waiters_per_dp[stats.xid]
 
 
+def get_desc_stats(dp, waiters):
+    stats = dp.ofproto_parser.OFPDescStatsRequest(dp)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    s = {}
+    for msg in msgs:
+        stats = msg.body
+        s = {'mfr_desc': stats.mfr_desc,
+             'hw_desc': stats.hw_desc,
+             'sw_desc': stats.sw_desc,
+             'serial_num': stats.serial_num,
+             'dp_desc': stats.dp_desc}
+    desc = {str(dp.id): s}
+    return desc
+
+
 def get_flow_stats(dp, waiters):
     table_id = 0
     out_port = dp.ofproto.OFPP_ANY
@@ -237,6 +254,33 @@ def get_flow_stats(dp, waiters):
     flows = {str(dp.id): flows}
 
     return flows
+
+
+def get_port_stats(dp, waiters):
+    stats = dp.ofproto_parser.OFPPortStatsRequest(
+        dp, dp.ofproto.OFPP_ANY, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    ports = []
+    for msg in msgs:
+        for stats in msg.body:
+            s = {'port_no': stats.port_no,
+                 'rx_packets': stats.rx_packets,
+                 'tx_packets': stats.tx_packets,
+                 'rx_bytes': stats.rx_bytes,
+                 'tx_bytes': stats.tx_bytes,
+                 'rx_dropped': stats.rx_dropped,
+                 'tx_dropped': stats.tx_dropped,
+                 'rx_errors': stats.rx_errors,
+                 'tx_errors': stats.tx_errors,
+                 'rx_frame_err': stats.rx_frame_err,
+                 'rx_over_err': stats.rx_over_err,
+                 'rx_crc_err': stats.rx_crc_err,
+                 'collisions': stats.collisions}
+            ports.append(s)
+    ports = {str(dp.id): ports}
+    return ports
 
 
 def mod_flow_entry(dp, flow, cmd):

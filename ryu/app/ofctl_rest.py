@@ -24,8 +24,10 @@ from ryu.controller import dpset
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib import ofctl_v1_0
+from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
 from ryu.app.wsgi import ControllerBase, WSGIApplication
 
@@ -99,6 +101,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             desc = ofctl_v1_0.get_desc_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            desc = ofctl_v1_2.get_desc_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             desc = ofctl_v1_3.get_desc_stats(dp, self.waiters)
         else:
@@ -115,6 +119,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             flows = ofctl_v1_0.get_flow_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            flows = ofctl_v1_2.get_flow_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             flows = ofctl_v1_3.get_flow_stats(dp, self.waiters)
         else:
@@ -131,6 +137,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ports = ofctl_v1_0.get_port_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            ports = ofctl_v1_2.get_port_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ports = ofctl_v1_3.get_port_stats(dp, self.waiters)
         else:
@@ -205,6 +213,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.mod_flow_entry(dp, flow, cmd)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            ofctl_v1_2.mod_flow_entry(dp, flow, cmd)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_flow_entry(dp, flow, cmd)
         else:
@@ -220,6 +230,8 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.delete_flow_entry(dp)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFPVERSION:
+            ofctl_v1_2.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
         else:
@@ -260,6 +272,7 @@ class StatsController(ControllerBase):
 
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
+                    ofproto_v1_2.OFP_VERSION,
                     ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
         'dpset': dpset.DPSet,
@@ -342,6 +355,8 @@ class RestStatsApi(app_manager.RyuApp):
         flags = 0
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             flags = dp.ofproto.OFPSF_REPLY_MORE
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            flags = dp.ofproto.OFPSF_REPLY_MORE
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             flags = dp.ofproto.OFPMPF_REPLY_MORE
 
@@ -349,6 +364,11 @@ class RestStatsApi(app_manager.RyuApp):
             return
         del self.waiters[dp.id][msg.xid]
         lock.set()
+
+    @set_ev_cls(ofp_event.EventOFPStatsReply, MAIN_DISPATCHER)
+    def any_stats_reply_handler(self, ev):
+        # for OpenFlow 1.2
+        self.stats_reply_handler(ev)
 
     @set_ev_cls(ofp_event.EventOFPDescStatsReply, MAIN_DISPATCHER)
     def desc_stats_reply_handler(self, ev):
