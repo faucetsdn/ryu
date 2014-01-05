@@ -546,7 +546,8 @@ class Switches(app_manager.RyuApp):
                         ofproto.OFPP_CONTROLLER, self.LLDP_PACKET_LEN)]
                     dp.send_flow_mod(
                         rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
-                        idle_timeout=0, hard_timeout=0, actions=actions)
+                        idle_timeout=0, hard_timeout=0, actions=actions,
+                        priority=0xFFFF)
                 elif ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
                     match = ofproto_parser.OFPMatch(
                         eth_type=ETH_TYPE_LLDP,
@@ -561,7 +562,8 @@ class Switches(app_manager.RyuApp):
                             ofproto.OFPIT_APPLY_ACTIONS, actions)]
                     mod = parser.OFPFlowMod(datapath=dp, match=match,
                                             idle_timeout=0, hard_timeout=0,
-                                            instructions=inst)
+                                            instructions=inst,
+                                            priority=0xFFFF)
                     dp.send_msg(mod)
                 else:
                     LOG.error('cannot install flow. unsupported version. %x',
