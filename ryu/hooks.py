@@ -40,10 +40,9 @@ def setup_hook(config):
     """Filter config parsed from a setup.cfg to inject our defaults."""
     metadata = config['metadata']
     if sys.platform == 'win32':
-        requires = metadata.get('requires_dist', list()).split('\n')
+        requires = metadata.get('requires_dist', '').split('\n')
         requires.append('pywin32')
         requires.append('wmi')
-        requires.remove('pyudev')
         metadata['requires_dist'] = "\n".join(requires)
     config['metadata'] = metadata
 
