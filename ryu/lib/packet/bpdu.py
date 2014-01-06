@@ -171,7 +171,8 @@ class bpdu(packet_base.PacketBase):
 
     @staticmethod
     def register_bpdu_type(sub_cls):
-        bpdu._BPDU_TYPES[sub_cls.BPDU_TYPE] = sub_cls
+        bpdu._BPDU_TYPES.setdefault(sub_cls.VERSION_ID, {})
+        bpdu._BPDU_TYPES[sub_cls.VERSION_ID][sub_cls.BPDU_TYPE] = sub_cls
         return sub_cls
 
     def __init__(self):
@@ -194,14 +195,13 @@ class bpdu(packet_base.PacketBase):
          bpdu_type) = struct.unpack_from(cls._PACK_STR, buf)
         assert protocol_id == PROTOCOL_IDENTIFIER
 
-        bpdu_cls = cls._BPDU_TYPES.get(bpdu_type, None)
-
-        if bpdu_cls:
-            assert version_id == bpdu_cls.VERSION_ID
+        if (version_id in cls._BPDU_TYPES
+                and bpdu_type in cls._BPDU_TYPES[version_id]):
+            bpdu_cls = cls._BPDU_TYPES[version_id][bpdu_type]
             assert len(buf[cls._PACK_LEN:]) >= bpdu_cls.PACK_LEN
             return bpdu_cls.parser(buf[cls._PACK_LEN:])
         else:
-            # Unknown bdpu type.
+            # Unknown bpdu version/type.
             return buf, None, None
 
     def serialize(self, payload, prev):
