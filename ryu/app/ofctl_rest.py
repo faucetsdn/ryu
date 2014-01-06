@@ -230,7 +230,7 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.delete_flow_entry(dp)
-        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFPVERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             ofctl_v1_2.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
