@@ -81,6 +81,10 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # delete a meter entry
 # POST /stats/meterentry/delete
+#
+#
+# send a experimeter message
+# POST /stats/experimenter/<dpid>
 
 
 class StatsController(ControllerBase):
@@ -269,6 +273,27 @@ class StatsController(ControllerBase):
 
         return Response(status=200)
 
+    def send_experimenter(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        try:
+            exp = eval(req.body)
+        except SyntaxError:
+            LOG.debug('invalid syntax %s', req.body)
+            return Response(status=400)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            ofctl_v1_2.send_experimenter(dp, exp)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ofctl_v1_3.send_experimenter(dp, exp)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        return Response(status=200)
+
 
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
@@ -339,6 +364,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/meterentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_meter_entry',
+                       conditions=dict(method=['POST']))
+
+        uri = path + '/experimenter/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='send_experimenter',
                        conditions=dict(method=['POST']))
 
     def stats_reply_handler(self, ev):

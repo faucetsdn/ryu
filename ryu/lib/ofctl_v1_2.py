@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import struct
 import socket
 import logging
@@ -367,3 +368,19 @@ def mod_flow_entry(dp, flow, cmd):
         flags, match, inst)
 
     dp.send_msg(flow_mod)
+
+
+def send_experimenter(dp, exp):
+    experimenter = exp.get('experimenter', 0)
+    exp_type = exp.get('exp_type', 0)
+    data_type = exp.get('data_type', 'ascii')
+    if data_type != 'ascii' and data_type != 'base64':
+        LOG.debug('Unknown data type: %s', data_type)
+    data = exp.get('data', '')
+    if data_type == 'base64':
+        data = base64.b64decode(data)
+
+    expmsg = dp.ofproto_parser.OFPExperimenter(
+        dp, experimenter, exp_type, data)
+
+    dp.send_msg(expmsg)
