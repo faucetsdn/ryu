@@ -870,7 +870,7 @@ class Firewall(object):
         rule = {REST_RULE_ID: ruleid}
         rule.update({REST_PRIORITY: flow[REST_PRIORITY]})
         rule.update(Match.to_rest(flow))
-        rule.update(Action.to_rest(flow))
+        rule.update(Action.to_rest(self.dp, flow))
         return rule
 
 
@@ -988,9 +988,10 @@ class Action(object):
         return action
 
     @staticmethod
-    def to_rest(openflow):
+    def to_rest(dp, openflow):
         if REST_ACTION in openflow:
-            if len(openflow[REST_ACTION]) > 0:
+            action_allow = 'OUTPUT:%d' % dp.ofproto.OFPP_NORMAL
+            if openflow[REST_ACTION] == [action_allow]:
                 action = {REST_ACTION: REST_ACTION_ALLOW}
             else:
                 action = {REST_ACTION: REST_ACTION_DENY}
