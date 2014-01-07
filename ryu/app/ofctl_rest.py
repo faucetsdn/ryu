@@ -256,6 +256,11 @@ class StatsController(ControllerBase):
         if dp is None:
             return Response(status=404)
 
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
+                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
         if cmd == 'add':
             cmd = dp.ofproto.OFPMC_ADD
         elif cmd == 'modify':
