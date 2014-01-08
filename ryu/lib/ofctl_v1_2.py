@@ -31,40 +31,175 @@ LOG = logging.getLogger('ryu.lib.ofctl_v1_2')
 DEFAULT_TIMEOUT = 1.0
 
 
+def str_to_int(src):
+    if isinstance(src, str):
+        if src.startswith("0x") or src.startswith("0X"):
+            dst = int(src, 16)
+        else:
+            dst = int(src)
+    else:
+        dst = src
+    return dst
+
+
+def to_action(dp, dic):
+    ofp = dp.ofproto
+    parser = dp.ofproto_parser
+
+    result = None
+    action_type = dic.get('type')
+    if action_type == 'OUTPUT':
+        out_port = int(dic.get('port', ofp.OFPP_ANY))
+        max_len = int(dic.get('max_len', ofp.OFPCML_MAX))
+        result = parser.OFPActionOutput(out_port, max_len)
+    elif action_type == 'COPY_TTL_OUT':
+        result = parser.OFPActionCopyTtlOut()
+    elif action_type == 'COPY_TTL_IN':
+        result = parser.OFPActionCopyTtlIn()
+    elif action_type == 'SET_MPLS_TTL':
+        mpls_ttl = int(dic.get('mpls_ttl'))
+        result = parser.OFPActionSetMplsTtl(mpls_ttl)
+    elif action_type == 'DEC_MPLS_TTL':
+        result = parser.OFPActionDecMplsTtl()
+    elif action_type == 'PUSH_VLAN':
+        ethertype = int(dic.get('ethertype'))
+        result = parser.OFPActionPushVlan(ethertype)
+    elif action_type == 'POP_VLAN':
+        result = parser.OFPActionPopVlan()
+    elif action_type == 'PUSH_MPLS':
+        ethertype = int(dic.get('ethertype'))
+        result = parser.OFPActionPushMpls(ethertype)
+    elif action_type == 'POP_MPLS':
+        ethertype = int(dic.get('ethertype'))
+        result = parser.OFPActionPopMpls(ethertype)
+    elif action_type == 'SET_QUEUE':
+        queue_id = int(dic.get('queue_id'))
+        result = parser.OFPActionSetQueue(queue_id)
+    elif action_type == 'GROUP':
+        group_id = int(dic.get('group_id'))
+        result = parser.OFPActionGroup(group_id)
+    elif action_type == 'SET_NW_TTL':
+        nw_ttl = int(dic.get('nw_ttl'))
+        result = parser.OFPActionSetNwTtl(nw_ttl)
+    elif action_type == 'DEC_NW_TTL':
+        result = parser.OFPActionDecNwTtl()
+    elif action_type == 'SET_FIELD':
+        field = dic.get('field')
+        value = dic.get('value')
+        if field == 'eth_dst':
+            field = ofp.OXM_OF_ETH_DST
+            value = mac.haddr_to_bin(str(value))
+        elif field == 'eth_src':
+            field = ofp.OXM_OF_ETH_SRC
+            value = mac.haddr_to_bin(str(value))
+        elif field == 'vlan_vid':
+            field = ofp.OXM_OF_VLAN_VID
+            value = int(value)
+        elif field == 'mpls_label':
+            field = ofp.OXM_OF_MPLS_LABEL
+            value = int(value)
+        else:
+            LOG.debug('Unknown field: %s' % field)
+            return None
+        f = parser.OFPMatchField.make(field, value)
+        result = parser.OFPActionSetField(f)
+    else:
+        LOG.debug('Unknown action type: %s' % action_type)
+
+    return result
+
+
 def to_actions(dp, acts):
     inst = []
+    actions = []
+    ofp = dp.ofproto
+    parser = dp.ofproto_parser
 
     for a in acts:
-        action_type = a.get('type')
-        if action_type == 'OUTPUT':
-            out_port = int(a.get('port', ofproto_v1_2.OFPP_ANY))
-            max_len = int(a.get('max_len', ofproto_v1_2.OFPCML_MAX))
-            actions = [dp.ofproto_parser.OFPActionOutput(
-                       out_port, max_len=max_len)]
-            inst_type = dp.ofproto.OFPIT_APPLY_ACTIONS
-            inst = [dp.ofproto_parser.OFPInstructionActions(
-                    inst_type, actions)]
+        action = to_action(dp, a)
+        if action is not None:
+            actions.append(action)
         else:
-            LOG.debug('Unknown action type')
+            action_type = a.get('type')
+            if action_type == 'GOTO_TABLE':
+                table_id = int(a.get('table_id'))
+                inst.append(parser.OFPInstructionGotoTable(table_id))
+            elif action_type == 'WRITE_METADATA':
+                metadata = str_to_int(a.get('metadata'))
+                metadata_mask = (str_to_int(a['metadata_mask'])
+                                 if 'metadata_mask' in a
+                                 else parser.UINT64_MAX)
+                inst.append(
+                    parser.OFPInstructionWriteMetadata(
+                        metadata, metadata_mask))
+            else:
+                LOG.debug('Unknown action type: %s' % action_type)
 
+    inst.append(parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
+                                             actions))
     return inst
+
+
+def action_to_str(act):
+    action_type = act.cls_action_type
+
+    if action_type == ofproto_v1_2.OFPAT_OUTPUT:
+        buf = 'OUTPUT:' + str(act.port)
+    elif action_type == ofproto_v1_2.OFPAT_COPY_TTL_OUT:
+        buf = 'COPY_TTL_OUT'
+    elif action_type == ofproto_v1_2.OFPAT_COPY_TTL_IN:
+        buf = 'COPY_TTL_IN'
+    elif action_type == ofproto_v1_2.OFPAT_SET_MPLS_TTL:
+        buf = 'SET_MPLS_TTL:' + str(act.mpls_ttl)
+    elif action_type == ofproto_v1_2.OFPAT_DEC_MPLS_TTL:
+        buf = 'DEC_MPLS_TTL'
+    elif action_type == ofproto_v1_2.OFPAT_PUSH_VLAN:
+        buf = 'PUSH_VLAN:' + str(act.ethertype)
+    elif action_type == ofproto_v1_2.OFPAT_POP_VLAN:
+        buf = 'POP_VLAN'
+    elif action_type == ofproto_v1_2.OFPAT_PUSH_MPLS:
+        buf = 'PUSH_MPLS:' + str(act.ethertype)
+    elif action_type == ofproto_v1_2.OFPAT_POP_MPLS:
+        buf = 'POP_MPLS'
+    elif action_type == ofproto_v1_2.OFPAT_OFPAT_SET_QUEUE:
+        buf = 'SET_QUEUE:' + str(act.queue_id)
+    elif action_type == ofproto_v1_2.OFPAT_GROUP:
+        buf = 'GROUP:' + str(act.group_id)
+    elif action_type == ofproto_v1_2.OFPAT_SET_NW_TTL:
+        buf = 'SET_NW_TTL:' + str(act.nw_ttl)
+    elif action_type == ofproto_v1_2.OFPAT_DEC_NW_TTL:
+        buf = 'DEC_NW_TTL'
+    elif action_type == ofproto_v1_2.OFPAT_SET_FIELD:
+        buf = 'SET_FIELD: {%s:%s}' % (act.field, act.value)
+    else:
+        buf = 'UNKNOWN'
+    return buf
 
 
 def actions_to_str(instructions):
     actions = []
 
     for instruction in instructions:
-        if not isinstance(instruction,
-                          ofproto_v1_2_parser.OFPInstructionActions):
-            continue
-        for a in instruction.actions:
-            action_type = a.cls_action_type
+        if isinstance(instruction,
+                      ofproto_v1_2_parser.OFPInstructionActions):
+            for a in instruction.actions:
+                actions.append(action_to_str(a))
 
-            if action_type == ofproto_v1_2.OFPAT_OUTPUT:
-                buf = 'OUTPUT:' + str(a.port)
-            else:
-                buf = 'UNKNOWN'
+        elif isinstance(instruction,
+                        ofproto_v1_2_parser.OFPInstructionGotoTable):
+            buf = 'GOTO_TABLE:' + str(instruction.table_id)
             actions.append(buf)
+
+        elif isinstance(instruction,
+                        ofproto_v1_2_parser.OFPInstructionWriteMetadata):
+            buf = ('WRITE_METADATA:0x%x/0x%x' % (instruction.metadata,
+                                                 instruction.metadata_mask)
+                   if instruction.metadata_mask
+                   else 'WRITE_METADATA:0x%x' % instruction.metadata)
+            actions.append(buf)
+
+        else:
+            continue
 
     return actions
 
@@ -348,6 +483,122 @@ def get_port_stats(dp, waiters):
     return ports
 
 
+def get_group_stats(dp, waiters):
+    stats = dp.ofproto_parser.OFPGroupStatsRequest(
+        dp, dp.ofproto.OFPG_ALL, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    groups = []
+    for msg in msgs:
+        for stats in msg.body:
+            bucket_counters = []
+            for bucket_counter in stats.bucket_counters:
+                c = {'packet_count': bucket_counter.packet_count,
+                     'byte_count': bucket_counter.byte_count}
+                bucket_counters.append(c)
+            g = {'group_id': stats.group_id,
+                 'ref_count': stats.ref_count,
+                 'packet_count': stats.packet_count,
+                 'byte_count': stats.byte_count,
+                 'bucket_stats': bucket_counters}
+            groups.append(g)
+    groups = {str(dp.id): groups}
+    return groups
+
+
+def get_group_features(dp, waiters):
+
+    ofp = dp.ofproto
+    type_convert = {ofp.OFPGT_ALL: 'ALL',
+                    ofp.OFPGT_SELECT: 'SELECT',
+                    ofp.OFPGT_INDIRECT: 'INDIRECT',
+                    ofp.OFPGT_FF: 'FF'}
+    cap_convert = {ofp.OFPGFC_SELECT_WEIGHT: 'SELECT_WEIGHT',
+                   ofp.OFPGFC_SELECT_LIVENESS: 'SELECT_LIVENESS',
+                   ofp.OFPGFC_CHAINING: 'CHAINING',
+                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHCEKS'}
+    act_convert = {ofp.OFPAT_OUTPUT: 'OUTPUT',
+                   ofp.OFPAT_COPY_TTL_OUT: 'COPY_TTL_OUT',
+                   ofp.OFPAT_COPY_TTL_IN: 'COPY_TTL_IN',
+                   ofp.OFPAT_SET_MPLS_TTL: 'SET_MPLS_TTL',
+                   ofp.OFPAT_DEC_MPLS_TTL: 'DEC_MPLS_TTL',
+                   ofp.OFPAT_PUSH_VLAN: 'PUSH_VLAN',
+                   ofp.OFPAT_POP_VLAN: 'POP_VLAN',
+                   ofp.OFPAT_PUSH_MPLS: 'PUSH_MPLS',
+                   ofp.OFPAT_POP_MPLS: 'POP_MPLS',
+                   ofp.OFPAT_SET_QUEUE: 'SET_QUEUE',
+                   ofp.OFPAT_GROUP: 'GROUP',
+                   ofp.OFPAT_SET_NW_TTL: 'SET_NW_TTL',
+                   ofp.OFPAT_DEC_NW_TTL: 'DEC_NW_TTL',
+                   ofp.OFPAT_SET_FIELD: 'SET_FIELD'}
+
+    stats = dp.ofproto_parser.OFPGroupFeaturesStatsRequest(dp, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    features = []
+    for msg in msgs:
+        feature = msg.body
+        types = []
+        for k, v in type_convert.items():
+            if (1 << k) & feature.types:
+                types.append(v)
+        capabilities = []
+        for k, v in cap_convert.items():
+            if k & feature.capabilities:
+                capabilities.append(v)
+        max_groups = []
+        for k, v in type_convert.items():
+            max_groups.append({v: feature.max_groups[k]})
+        actions = []
+        for k1, v1 in type_convert.items():
+            acts = []
+            for k2, v2 in act_convert.items():
+                if (1 << k2) & feature.actions[k1]:
+                    acts.append(v2)
+            actions.append({v1: acts})
+        f = {'types': types,
+             'capabilities': capabilities,
+             'max_groups': max_groups,
+             'actions': actions}
+        features.append(f)
+    features = {str(dp.id): features}
+    return features
+
+
+def get_group_desc(dp, waiters):
+
+    type_convert = {dp.ofproto.OFPGT_ALL: 'ALL',
+                    dp.ofproto.OFPGT_SELECT: 'SELECT',
+                    dp.ofproto.OFPGT_INDIRECT: 'INDIRECT',
+                    dp.ofproto.OFPGT_FF: 'FF'}
+
+    stats = dp.ofproto_parser.OFPGroupDescStatsRequest(dp, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    descs = []
+    for msg in msgs:
+        for stats in msg.body:
+            buckets = []
+            for bucket in stats.buckets:
+                actions = []
+                for action in bucket.actions:
+                    actions.append(action_to_str(action))
+                b = {'weight': bucket.weight,
+                     'watch_port': bucket.watch_port,
+                     'watch_group': bucket.watch_group,
+                     'actions': actions}
+                buckets.append(b)
+            d = {'type': type_convert.get(stats.type),
+                 'group_id': stats.group_id,
+                 'buckets': buckets}
+            descs.append(d)
+    descs = {str(dp.id): descs}
+    return descs
+
+
 def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     cookie_mask = int(flow.get('cookie_mask', 0))
@@ -368,6 +619,38 @@ def mod_flow_entry(dp, flow, cmd):
         flags, match, inst)
 
     dp.send_msg(flow_mod)
+
+
+def mod_group_entry(dp, group, cmd):
+
+    type_convert = {'ALL': dp.ofproto.OFPGT_ALL,
+                    'SELECT': dp.ofproto.OFPGT_SELECT,
+                    'INDIRECT': dp.ofproto.OFPGT_INDIRECT,
+                    'FF': dp.ofproto.OFPGT_FF}
+
+    type_ = type_convert.get(group.get('type'))
+    if not type_:
+        LOG.debug('Unknown type: %s', group.get('type'))
+
+    group_id = int(group.get('group_id', 0))
+
+    buckets = []
+    for bucket in group.get('buckets', []):
+        weight = int(bucket.get('weight', 0))
+        watch_port = int(bucket.get('watch_port', dp.ofproto.OFPP_ANY))
+        watch_group = int(bucket.get('watch_group', dp.ofproto.OFPG_ANY))
+        actions = []
+        for dic in bucket.get('actions', []):
+            action = to_action(dp, dic)
+            if action is not None:
+                actions.append(action)
+        buckets.append(dp.ofproto_parser.OFPBucket(
+            weight, watch_port, watch_group, actions))
+
+    group_mod = dp.ofproto_parser.OFPGroupMod(
+        dp, cmd, type_, group_id, buckets)
+
+    dp.send_msg(group_mod)
 
 
 def send_experimenter(dp, exp):

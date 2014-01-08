@@ -59,6 +59,16 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # get meters stats of the switch
 # GET /stats/meter/<dpid>
 #
+# get group features stats of the switch
+# GET /stats/groupfeatures/<dpid>
+#
+# get groups desc stats of the switch
+# GET /stats/groupdesc/<dpid>
+#
+# get groups stats of the switch
+# GET /stats/group/<dpid>
+#
+#
 ## Update the switch stats
 #
 # add a flow entry
@@ -81,6 +91,15 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # delete a meter entry
 # POST /stats/meterentry/delete
+#
+# add a group entry
+# POST /stats/groupentry/add
+#
+# modify a group entry
+# POST /stats/groupentry/modify
+#
+# delete a group entry
+# POST /stats/groupentry/delete
 #
 #
 # send a experimeter message
@@ -194,6 +213,54 @@ class StatsController(ControllerBase):
         body = json.dumps(meters)
         return (Response(content_type='application/json', body=body))
 
+    def get_group_features(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            groups = ofctl_v1_2.get_group_features(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            groups = ofctl_v1_3.get_group_features(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(groups)
+        return Response(content_type='application/json', body=body)
+
+    def get_group_desc(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            groups = ofctl_v1_2.get_group_desc(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            groups = ofctl_v1_3.get_group_desc(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(groups)
+        return Response(content_type='application/json', body=body)
+
+    def get_group_stats(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            groups = ofctl_v1_2.get_group_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            groups = ofctl_v1_3.get_group_stats(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(groups)
+        return Response(content_type='application/json', body=body)
+
     def mod_flow_entry(self, req, cmd, **_kwargs):
         try:
             flow = eval(req.body)
@@ -278,6 +345,41 @@ class StatsController(ControllerBase):
 
         return Response(status=200)
 
+    def mod_group_entry(self, req, cmd, **_kwargs):
+        try:
+            group = eval(req.body)
+        except SyntaxError:
+            LOG.debug('invalid syntax %s', req.body)
+            return Response(status=400)
+
+        dpid = group.get('dpid')
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        if cmd == 'add':
+            cmd = dp.ofproto.OFPGC_ADD
+        elif cmd == 'modify':
+            cmd = dp.ofproto.OFPGC_MODIFY
+        elif cmd == 'delete':
+            cmd = dp.ofproto.OFPGC_DELETE
+        else:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            ofctl_v1_2.mod_group_entry(dp, group, cmd)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ofctl_v1_3.mod_group_entry(dp, group, cmd)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        return Response(status=200)
+
     def send_experimenter(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
         if dp is None:
@@ -356,6 +458,21 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_meter_stats',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/groupfeatures/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_group_features',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/groupdesc/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_group_desc',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/group/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_group_stats',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/flowentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_flow_entry',
@@ -369,6 +486,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/meterentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_meter_entry',
+                       conditions=dict(method=['POST']))
+
+        uri = path + '/groupentry/{cmd}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='mod_group_entry',
                        conditions=dict(method=['POST']))
 
         uri = path + '/experimenter/{dpid}'
@@ -427,4 +549,16 @@ class RestStatsApi(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply, MAIN_DISPATCHER)
     def meter_config_stats_reply_handler(self, ev):
+        self.stats_reply_handler(ev)
+
+    @set_ev_cls(ofp_event.EventOFPGroupStatsReply, MAIN_DISPATCHER)
+    def group_stats_reply_handler(self, ev):
+        self.stats_reply_handler(ev)
+
+    @set_ev_cls(ofp_event.EventOFPGroupFeaturesStatsReply, MAIN_DISPATCHER)
+    def group_features_stats_reply_handler(self, ev):
+        self.stats_reply_handler(ev)
+
+    @set_ev_cls(ofp_event.EventOFPGroupDescStatsReply, MAIN_DISPATCHER)
+    def group_desc_stats_reply_handler(self, ev):
         self.stats_reply_handler(ev)
