@@ -550,6 +550,11 @@ def get_meter_stats(dp, waiters):
 
 
 def get_meter_features(dp, waiters):
+
+    ofp = dp.ofproto
+    type_convert = {ofp.OFPMBT_DROP: 'DROP',
+                    ofp.OFPMBT_DSCP_REMARK: 'DSCP_REMARK'}
+
     stats = dp.ofproto_parser.OFPMeterFeaturesStatsRequest(dp, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
@@ -557,8 +562,12 @@ def get_meter_features(dp, waiters):
     features = []
     for msg in msgs:
         for feature in msg.body:
+            band_types = []
+            for k, v in type_convert.items():
+                if (1 << k) & feature.band_types:
+                    band_types.append(v)
             f = {'max_meter': feature.max_meter,
-                 'band_types': feature.band_types,
+                 'band_types': band_types,
                  'max_band': feature.max_band,
                  'max_color': feature.max_color}
             features.append(f)
