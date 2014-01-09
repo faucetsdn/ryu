@@ -18,6 +18,8 @@ import glob
 import os.path
 import sys
 
+import ryu.contrib  # we require ncclient
+
 SCHEMA_DIR = os.path.dirname(__file__)
 
 _PREFIX = 'of-config-'
