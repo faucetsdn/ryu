@@ -33,6 +33,8 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
+from ryu.ofproto import ofproto_v1_4
+from ryu.ofproto import ofproto_v1_4_parser
 from ryu.ofproto import nx_match
 
 from ryu.controller import handler
@@ -108,6 +110,8 @@ class Datapath(object):
                                    ofproto_v1_2_parser),
         ofproto_v1_3.OFP_VERSION: (ofproto_v1_3,
                                    ofproto_v1_3_parser),
+        ofproto_v1_4.OFP_VERSION: (ofproto_v1_4,
+                                   ofproto_v1_4_parser),
     }
 
     def __init__(self, socket, address):
