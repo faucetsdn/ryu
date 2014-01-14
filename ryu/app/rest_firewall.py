@@ -100,10 +100,12 @@ from ryu.ofproto import ofproto_v1_3_parser
 #    "in_port" : "<int>"
 #    "dl_src"  : "<xx:xx:xx:xx:xx:xx>"
 #    "dl_dst"  : "<xx:xx:xx:xx:xx:xx>"
-#    "dl_type" : "<ARP or IPv4>"
+#    "dl_type" : "<ARP or IPv4 or IPv6>"
 #    "nw_src"  : "<A.B.C.D/M>"
 #    "nw_dst"  : "<A.B.C.D/M>"
-#    "nw_proto": "<TCP or UDP or ICMP>"
+#    "ipv6_src": "<xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx/M>"
+#    "ipv6_dst": "<xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx/M>"
+#    "nw_proto": "<TCP or UDP or ICMP or ICMPv6>"
 #    "tp_src"  : "<int>"
 #    "tp_dst"  : "<int>"
 #    "actions" : "<ALLOW or DENY>"
@@ -111,6 +113,10 @@ from ryu.ofproto import ofproto_v1_3_parser
 #   Note: specifying nw_src/nw_dst
 #         without specifying dl-type as "ARP" or "IPv4"
 #         will automatically set dl-type as "IPv4".
+#
+#   Note: specifying ipv6_src/ipv6_dst
+#         without specifying dl-type as "IPv6"
+#         will automatically set dl-type as "IPv6".
 #
 #   Note: When "priority" has not been set up,
 #         "0" is set to "priority".
@@ -157,13 +163,17 @@ REST_DST_MAC = 'dl_dst'
 REST_DL_TYPE = 'dl_type'
 REST_DL_TYPE_ARP = 'ARP'
 REST_DL_TYPE_IPV4 = 'IPv4'
+REST_DL_TYPE_IPV6 = 'IPv6'
 REST_DL_VLAN = 'dl_vlan'
 REST_SRC_IP = 'nw_src'
 REST_DST_IP = 'nw_dst'
+REST_SRC_IPV6 = 'ipv6_src'
+REST_DST_IPV6 = 'ipv6_dst'
 REST_NW_PROTO = 'nw_proto'
 REST_NW_PROTO_TCP = 'TCP'
 REST_NW_PROTO_UDP = 'UDP'
 REST_NW_PROTO_ICMP = 'ICMP'
+REST_NW_PROTO_ICMPV6 = 'ICMPv6'
 REST_TP_SRC = 'tp_src'
 REST_TP_DST = 'tp_dst'
 REST_ACTION = 'actions'
@@ -878,32 +888,114 @@ class Match(object):
 
     _CONVERT = {REST_DL_TYPE:
                 {REST_DL_TYPE_ARP: ether.ETH_TYPE_ARP,
-                 REST_DL_TYPE_IPV4: ether.ETH_TYPE_IP},
+                 REST_DL_TYPE_IPV4: ether.ETH_TYPE_IP,
+                 REST_DL_TYPE_IPV6: ether.ETH_TYPE_IPV6},
                 REST_NW_PROTO:
                 {REST_NW_PROTO_TCP: inet.IPPROTO_TCP,
                  REST_NW_PROTO_UDP: inet.IPPROTO_UDP,
-                 REST_NW_PROTO_ICMP: inet.IPPROTO_ICMP}}
+                 REST_NW_PROTO_ICMP: inet.IPPROTO_ICMP,
+                 REST_NW_PROTO_ICMPV6: inet.IPPROTO_ICMPV6}}
 
     @staticmethod
     def to_openflow(rest):
+
+        def __inv_combi(msg):
+            raise ValueError('Invalid combination: [%s]' % msg)
+
+        def __inv_2and1(*args):
+            __inv_combi('%s=%s and %s' % (args[0], args[1], args[2]))
+
+        def __inv_2and2(*args):
+            __inv_combi('%s=%s and %s=%s' % (
+                args[0], args[1], args[2], args[3]))
+
+        def __inv_1and1(*args):
+            __inv_combi('%s and %s' % (args[0], args[1]))
+
+        def __inv_1and2(*args):
+            __inv_combi('%s and %s=%s' % (args[0], args[1], args[2]))
+
         match = {}
-        set_dltype_flg = False
+
+        # error check
+        dl_type = rest.get(REST_DL_TYPE)
+        nw_proto = rest.get(REST_NW_PROTO)
+        if dl_type is not None:
+            if dl_type == REST_DL_TYPE_ARP:
+                if REST_SRC_IPV6 in rest:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_ARP, REST_SRC_IPV6)
+                if REST_DST_IPV6 in rest:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_ARP, REST_DST_IPV6)
+                if nw_proto:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_ARP, REST_NW_PROTO)
+            elif dl_type == REST_DL_TYPE_IPV4:
+                if REST_SRC_IPV6 in rest:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_IPV4, REST_SRC_IPV6)
+                if REST_DST_IPV6 in rest:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_IPV4, REST_DST_IPV6)
+                if nw_proto == REST_NW_PROTO_ICMPV6:
+                    __inv_2and2(
+                        REST_DL_TYPE, REST_DL_TYPE_IPV4,
+                        REST_NW_PROTO, REST_NW_PROTO_ICMPV6)
+            elif dl_type == REST_DL_TYPE_IPV6:
+                if REST_SRC_IP in rest:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_IPV6, REST_SRC_IP)
+                if REST_DST_IP in rest:
+                    __inv_2and1(
+                        REST_DL_TYPE, REST_DL_TYPE_IPV6, REST_DST_IP)
+                if nw_proto == REST_NW_PROTO_ICMP:
+                    __inv_2and2(
+                        REST_DL_TYPE, REST_DL_TYPE_IPV6,
+                        REST_NW_PROTO, REST_NW_PROTO_ICMP)
+            else:
+                raise ValueError('Unknown dl_type : %s' % dl_type)
+        else:
+            if REST_SRC_IP in rest:
+                if REST_SRC_IPV6 in rest:
+                    __inv_1and1(REST_SRC_IP, REST_SRC_IPV6)
+                if REST_DST_IPV6 in rest:
+                    __inv_1and1(REST_SRC_IP, REST_DST_IPV6)
+                if nw_proto == REST_NW_PROTO_ICMPV6:
+                    __inv_1and2(
+                        REST_SRC_IP, REST_NW_PROTO, REST_NW_PROTO_ICMPV6)
+                rest[REST_DL_TYPE] = REST_DL_TYPE_IPV4
+            elif REST_DST_IP in rest:
+                if REST_SRC_IPV6 in rest:
+                    __inv_1and1(REST_DST_IP, REST_SRC_IPV6)
+                if REST_DST_IPV6 in rest:
+                    __inv_1and1(REST_DST_IP, REST_DST_IPV6)
+                if nw_proto == REST_NW_PROTO_ICMPV6:
+                    __inv_1and2(
+                        REST_DST_IP, REST_NW_PROTO, REST_NW_PROTO_ICMPV6)
+                rest[REST_DL_TYPE] = REST_DL_TYPE_IPV4
+            elif REST_SRC_IPV6 in rest:
+                if nw_proto == REST_NW_PROTO_ICMP:
+                    __inv_1and2(
+                        REST_SRC_IPV6, REST_NW_PROTO, REST_NW_PROTO_ICMP)
+                rest[REST_DL_TYPE] = REST_DL_TYPE_IPV6
+            elif REST_DST_IPV6 in rest:
+                if nw_proto == REST_NW_PROTO_ICMP:
+                    __inv_1and2(
+                        REST_DST_IPV6, REST_NW_PROTO, REST_NW_PROTO_ICMP)
+                rest[REST_DL_TYPE] = REST_DL_TYPE_IPV6
+            else:
+                if nw_proto == REST_NW_PROTO_ICMP:
+                    rest[REST_DL_TYPE] = REST_DL_TYPE_IPV4
+                elif nw_proto == REST_NW_PROTO_ICMPV6:
+                    rest[REST_DL_TYPE] = REST_DL_TYPE_IPV6
+                elif nw_proto == REST_NW_PROTO_TCP or \
+                        nw_proto == REST_NW_PROTO_UDP:
+                    raise ValueError('no dl_type was specified')
+                else:
+                    raise ValueError('Unknown nw_proto: %s' % nw_proto)
 
         for key, value in rest.items():
-            if (key == REST_SRC_IP or key == REST_DST_IP
-                    or key == REST_NW_PROTO):
-                if (REST_DL_TYPE in rest) is False:
-                    set_dltype_flg = True
-                elif (rest[REST_DL_TYPE] != REST_DL_TYPE_IPV4
-                        and rest[REST_DL_TYPE] != REST_DL_TYPE_ARP):
-                    continue
-
-            elif key == REST_TP_SRC or key == REST_TP_DST:
-                if ((REST_NW_PROTO in rest) is False
-                    or (rest[REST_NW_PROTO] != REST_NW_PROTO_TCP
-                        and rest[REST_NW_PROTO] != REST_NW_PROTO_UDP)):
-                    continue
-
             if key in Match._CONVERT:
                 if value in Match._CONVERT[key]:
                     match.setdefault(key, Match._CONVERT[key][value])
@@ -911,9 +1003,6 @@ class Match(object):
                     raise ValueError('Invalid rule parameter. : key=%s' % key)
             else:
                 match.setdefault(key, value)
-
-            if set_dltype_flg:
-                match.setdefault(REST_DL_TYPE, ether.ETH_TYPE_IP)
 
         return match
 
@@ -923,6 +1012,7 @@ class Match(object):
 
         mac_dontcare = mac.haddr_to_str(mac.DONTCARE)
         ip_dontcare = '0.0.0.0'
+        ipv6_dontcare = '::'
 
         match = {}
         for key, value in of_match.items():
@@ -931,6 +1021,9 @@ class Match(object):
                     continue
             elif key == REST_SRC_IP or key == REST_DST_IP:
                 if value == ip_dontcare:
+                    continue
+            elif key == REST_SRC_IPV6 or key == REST_DST_IPV6:
+                if value == ipv6_dontcare:
                     continue
             elif value == 0:
                 continue
@@ -948,6 +1041,7 @@ class Match(object):
     def to_mod_openflow(of_match):
         mac_dontcare = mac.haddr_to_str(mac.DONTCARE)
         ip_dontcare = '0.0.0.0'
+        ipv6_dontcare = '::'
 
         match = {}
         for key, value in of_match.items():
@@ -956,6 +1050,9 @@ class Match(object):
                     continue
             elif key == REST_SRC_IP or key == REST_DST_IP:
                 if value == ip_dontcare:
+                    continue
+            elif key == REST_SRC_IPV6 or key == REST_DST_IPV6:
+                if value == ipv6_dontcare:
                     continue
             elif value == 0:
                 continue
