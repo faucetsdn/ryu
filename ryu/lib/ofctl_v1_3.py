@@ -19,6 +19,7 @@ import socket
 import logging
 import netaddr
 
+from ryu.ofproto import ether
 from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
@@ -247,6 +248,8 @@ def to_match(dp, attrs):
                'tcp_dst': int,
                'udp_src': int,
                'udp_dst': int,
+               'arp_spa': to_match_ip,
+               'arp_tpa': to_match_ip,
                'ipv6_src': to_match_ipv6,
                'ipv6_dst': to_match_ipv6}
 
@@ -273,8 +276,19 @@ def to_match(dp, attrs):
                     'tcp_dst': to_match_tpdst,
                     'udp_src': to_match_tpsrc,
                     'udp_dst': to_match_tpdst,
+                    'arp_spa': match.set_arp_spa_masked,
+                    'arp_tpa': match.set_arp_tpa_masked,
                     'ipv6_src': match.set_ipv6_src_masked,
                     'ipv6_dst': match.set_ipv6_dst_masked}
+
+    if attrs.get('dl_type') == ether.ETH_TYPE_ARP or \
+            attrs.get('eth_type') == ether.ETH_TYPE_ARP:
+        if 'nw_src' in attrs and not 'arp_spa' in attrs:
+            attrs['arp_spa'] = attrs['nw_src']
+            del attrs['nw_src']
+        if 'nw_dst' in attrs and not 'arp_tpa' in attrs:
+            attrs['arp_tpa'] = attrs['nw_dst']
+            del attrs['nw_dst']
 
     for key, value in attrs.items():
         if key in convert:
@@ -282,6 +296,7 @@ def to_match(dp, attrs):
         if key in match_append:
             if key == 'nw_src' or key == 'nw_dst' or \
                     key == 'ipv4_src' or key == 'ipv4_dst' or \
+                    key == 'arp_spa' or key == 'arp_tpa' or \
                     key == 'ipv6_src' or key == 'ipv6_dst':
                 # IP address
                 ip = value[0]
