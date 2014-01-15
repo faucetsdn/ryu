@@ -57,6 +57,8 @@ BGP_OPT_CAPABILITY = 2  # RFC 5492
 BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
 BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
 BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
+BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
+                               # draft-ietf-idr-bgp-enhanced-route-refresh-05
 
 BGP_ATTR_FLAG_OPTIONAL = 1 << 7
 BGP_ATTR_FLAG_TRANSITIVE = 1 << 6
