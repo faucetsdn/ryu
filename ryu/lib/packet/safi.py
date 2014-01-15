@@ -1,5 +1,5 @@
-# Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
+# Copyright (C) 2013,2014 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2013,2014 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,3 +22,4 @@ http://www.iana.org/assignments/safi-namespace/safi-namespace.xhtml
 UNICAST = 1
 MULTICAST = 2
 MPLS_VPN = 128  # RFC 4364
+ROUTE_TARGET_CONSTRTAINS = 132  # RFC 4684
