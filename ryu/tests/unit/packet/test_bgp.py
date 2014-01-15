@@ -1,5 +1,5 @@
-# Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
+# Copyright (C) 2013,2014 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2013,2014 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ class Test_bgp(unittest.TestCase):
                      bgp.BGPOptParamCapabilityRouteRefresh(),
                      bgp.BGPOptParamCapabilityMultiprotocol(
                          afi=afi.IP, safi=safi.MPLS_VPN),
+                     bgp.BGPOptParamCapabilityCarryingLabelInfo(),
                      bgp.BGPOptParamCapabilityFourOctetAsNumber(
                          as_number=1234567),
                      bgp.BGPOptParamUnknown(type_=99, value='fuga')]

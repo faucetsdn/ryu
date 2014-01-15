@@ -1,5 +1,5 @@
-# Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
+# Copyright (C) 2013,2014 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2013,2014 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ BGP_OPT_CAPABILITY = 2  # RFC 5492
 
 BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
 BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
+BGP_CAP_CARRYING_LABEL_INFO = 4  # RFC 3107
 BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
 BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
                                # draft-ietf-idr-bgp-enhanced-route-refresh-05
@@ -317,6 +318,15 @@ class _OptParamCapability(_OptParam, _TypeDisp):
         return buf + cap_value
 
 
+class _OptParamEmptyCapability(_OptParamCapability):
+    @classmethod
+    def parse_cap_value(cls, buf):
+        return {}
+
+    def serialize_cap_value(self):
+        return bytearray()
+
+
 @_OptParamCapability.register_unknown_type()
 class BGPOptParamCapabilityUnknown(_OptParamCapability):
     @classmethod
@@ -328,13 +338,8 @@ class BGPOptParamCapabilityUnknown(_OptParamCapability):
 
 
 @_OptParamCapability.register_type(BGP_CAP_ROUTE_REFRESH)
-class BGPOptParamCapabilityRouteRefresh(_OptParamCapability):
-    @classmethod
-    def parse_cap_value(cls, buf):
-        return {}
-
-    def serialize_cap_value(self):
-        return bytearray()
+class BGPOptParamCapabilityRouteRefresh(_OptParamEmptyCapability):
+    pass
 
 
 @_OptParamCapability.register_type(BGP_CAP_FOUR_OCTET_AS_NUMBER)
@@ -384,6 +389,11 @@ class BGPOptParamCapabilityMultiprotocol(_OptParamCapability):
         msg_pack_into(self._CAP_PACK_STR, buf, 0,
                       self.afi, self.reserved, self.safi)
         return buf
+
+
+@_OptParamCapability.register_type(BGP_CAP_CARRYING_LABEL_INFO)
+class BGPOptParamCapabilityCarryingLabelInfo(_OptParamEmptyCapability):
+    pass
 
 
 class BGPWithdrawnRoute(_IPAddrPrefix):
