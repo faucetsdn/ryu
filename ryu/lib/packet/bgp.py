@@ -21,7 +21,6 @@ RFC 4271 BGP-4
 # todo
 # - notify data
 # - notify subcode constants
-# - RFC 3107 Carrying Label Information in BGP-4
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
 # - RFC 4486 Subcodes for BGP Cease Notification Message
 
@@ -33,6 +32,9 @@ from ryu.lib.stringify import StringifyMixin
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
+
+import safi
+import afi
 
 
 BGP_MSG_OPEN = 1
@@ -108,19 +110,19 @@ class _AddrPrefix(StringifyMixin):
     @staticmethod
     @abc.abstractmethod
     def _to_bin(addr):
-        return addr
+        pass
 
     @staticmethod
     @abc.abstractmethod
-    def _to_text(addr):
-        return addr
+    def _from_bin(addr):
+        pass
 
     @classmethod
     def parser(cls, buf):
         (length, ) = struct.unpack_from(cls._PACK_STR, buffer(buf))
         rest = buf[struct.calcsize(cls._PACK_STR):]
         byte_length = (length + 7) / 8
-        addr = cls._to_text(rest[:byte_length])
+        addr = cls._from_bin(rest[:byte_length])
         rest = rest[byte_length:]
         return cls(length=length, addr=addr), rest
 
@@ -136,7 +138,7 @@ class _AddrPrefix(StringifyMixin):
             mask = 0xff00 >> (self.length % 8)
             last_byte = chr(ord(bin_addr[byte_length - 1]) & mask)
             bin_addr = bin_addr[:byte_length - 1] + last_byte
-        self.addr = self._to_text(bin_addr)
+        self.addr = self._from_bin(bin_addr)
 
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf, 0, self.length)
@@ -149,8 +151,71 @@ class _BinAddrPrefix(_AddrPrefix):
         return addr
 
     @staticmethod
-    def _to_text(addr):
+    def _from_bin(addr):
         return addr
+
+
+class _LabelledAddrPrefix(_AddrPrefix):
+    _LABEL_PACK_STR = '!3B'
+
+    def __init__(self, length, addr, labels=[]):
+        assert isinstance(labels, list)
+        if isinstance(addr, tuple):
+            assert not labels
+            our_addr = addr
+            our_length = length
+        else:
+            label_length = struct.calcsize(self._LABEL_PACK_STR) * 8 * \
+                len(labels)
+            our_length = label_length + length
+            our_addr = (labels, addr)
+        super(_LabelledAddrPrefix, self).__init__(length=our_length,
+                                                  addr=our_addr)
+
+    @classmethod
+    def _label_to_bin(cls, label):
+        buf = bytearray()
+        msg_pack_into(cls._LABEL_PACK_STR, buf, 0,
+                      (label & 0xff0000) >> 16,
+                      (label & 0x00ff00) >> 8,
+                      (label & 0x0000ff) >> 0)
+        return buf
+
+    @classmethod
+    def _label_from_bin(cls, bin):
+        (b1, b2, b3) = struct.unpack_from(cls._LABEL_PACK_STR, buffer(bin))
+        rest = bin[struct.calcsize(cls._LABEL_PACK_STR):]
+        return (b1 << 16) | (b2 << 8) | b3, rest
+
+    @classmethod
+    def _to_bin(cls, addr):
+        (labels, prefix) = addr
+        labels = map(lambda x: x << 4, labels)
+        if labels:
+            labels[-1] |= 1  # bottom of stack
+        bin_labels = map(cls._label_to_bin, labels)
+        return bytes(reduce(lambda x, y: x + y, bin_labels,
+                            bytearray()) + cls._prefix_to_bin(prefix))
+
+    @classmethod
+    def _from_bin(cls, addr):
+        labels = []
+        while True:
+            (label, addr) = cls._label_from_bin(addr)
+            labels.append(label >> 4)
+            if label & 1:  # bottom of stack
+                break
+        return (labels, cls._prefix_from_bin(addr))
+
+
+class _UnlabelledAddrPrefix(_AddrPrefix):
+    @classmethod
+    def _to_bin(cls, addr):
+        return cls._prefix_to_bin(addr)
+
+    @classmethod
+    def _from_bin(cls, addr):
+        return cls._prefix_from_bin(addr)
 
 
 class _IPAddrPrefix(_AddrPrefix):
@@ -161,12 +226,33 @@ class _IPAddrPrefix(_AddrPrefix):
     }
 
     @staticmethod
-    def _to_bin(addr):
+    def _prefix_to_bin(addr):
         return addrconv.ipv4.text_to_bin(addr)
 
     @staticmethod
-    def _to_text(addr):
+    def _prefix_from_bin(addr):
         return addrconv.ipv4.bin_to_text(pad(addr, 4))
+
+
+class LabelledIPAddrPrefix(_LabelledAddrPrefix, _IPAddrPrefix):
+    pass
+
+
+class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
+    pass
+
+
+_ADDR_CLASSES = {
+    (afi.IP, safi.UNICAST): IPAddrPrefix,
+    (afi.IP, safi.MPLS_VPN): LabelledIPAddrPrefix,
+}
+
+
+def _get_addr_class(afi, safi):
+    try:
+        return _ADDR_CLASSES[(afi, safi)]
+    except KeyError:
+        return _BinAddrPrefix
 
 
 class _Value(object):
@@ -396,7 +482,7 @@ class BGPOptParamCapabilityCarryingLabelInfo(_OptParamEmptyCapability):
     pass
 
 
-class BGPWithdrawnRoute(_IPAddrPrefix):
+class BGPWithdrawnRoute(IPAddrPrefix):
     pass
 
 
@@ -847,6 +933,9 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         self.next_hop = next_hop
         self.reserved = reserved
         self.nlri = nlri
+        addr_cls = _get_addr_class(afi, safi)
+        for i in nlri:
+            assert isinstance(i, addr_cls)
 
     @classmethod
     def parse_value(cls, buf):
@@ -857,9 +946,10 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         rest = rest[next_hop_len:]
         reserved = rest[:1]
         binnlri = rest[1:]
+        addr_cls = _get_addr_class(afi, safi)
         nlri = []
         while binnlri:
-            n, binnlri = _BinAddrPrefix.parser(binnlri)
+            n, binnlri = addr_cls.parser(binnlri)
             nlri.append(n)
         return {
             'afi': afi,
@@ -901,14 +991,18 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
         self.afi = afi
         self.safi = safi
         self.withdrawn_routes = withdrawn_routes
+        addr_cls = _get_addr_class(afi, safi)
+        for i in withdrawn_routes:
+            assert isinstance(i, addr_cls)
 
     @classmethod
     def parse_value(cls, buf):
         (afi, safi,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
         binnlri = buf[struct.calcsize(cls._VALUE_PACK_STR):]
+        addr_cls = _get_addr_class(afi, safi)
         nlri = []
         while binnlri:
-            n, binnlri = _BinAddrPrefix.parser(binnlri)
+            n, binnlri = addr_cls.parser(binnlri)
             nlri.append(n)
         return {
             'afi': afi,
@@ -926,7 +1020,7 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
         return buf
 
 
-class BGPNLRI(_IPAddrPrefix):
+class BGPNLRI(IPAddrPrefix):
     pass
 
 
