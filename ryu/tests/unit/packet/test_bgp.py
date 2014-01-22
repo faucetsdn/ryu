@@ -79,8 +79,12 @@ class Test_bgp(unittest.TestCase):
                             bgp.BGPWithdrawnRoute(length=32,
                                                   addr='192.0.2.13')]
         mp_nlri = [
-            bgp.LabelledIPAddrPrefix(24, '192.0.9.0', labels=[1, 2, 3]),
-            bgp.LabelledIPAddrPrefix(26, '192.0.10.192', labels=[5, 6, 7, 8]),
+            bgp.LabelledVPNIPAddrPrefix(24, '192.0.9.0',
+                                        route_dist=100,
+                                        labels=[1, 2, 3]),
+            bgp.LabelledVPNIPAddrPrefix(26, '192.0.10.192',
+                                        route_dist=4000000000,
+                                        labels=[5, 6, 7, 8]),
         ]
         communities = [
             bgp.BGP_COMMUNITY_NO_EXPORT,
@@ -224,8 +228,12 @@ class Test_bgp(unittest.TestCase):
                             bgp.BGPWithdrawnRoute(length=32,
                                                   addr='192.0.2.13')]
         mp_nlri = [
-            bgp.LabelledIPAddrPrefix(24, '192.0.9.0', labels=[1, 2, 3]),
-            bgp.LabelledIPAddrPrefix(26, '192.0.10.192', labels=[5, 6, 7, 8]),
+            bgp.LabelledVPNIPAddrPrefix(24, '192.0.9.0',
+                                        route_dist=100,
+                                        labels=[1, 2, 3]),
+            bgp.LabelledVPNIPAddrPrefix(26, '192.0.10.192',
+                                        route_dist=4000000000,
+                                        labels=[5, 6, 7, 8]),
         ]
         communities = [
             bgp.BGP_COMMUNITY_NO_EXPORT,
