@@ -60,4 +60,4 @@ do(Body, {OFPVersion, N}) ->
     {OFPVersion, N + 1}.
 
 x() ->
-    lists:map(fun(Mod) -> Mod:x() end, [x1, x3, x4]).
+    lists:map(fun(Mod) -> Mod:x() end, [x1, x3, x4, x5]).
