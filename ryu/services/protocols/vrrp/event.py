@@ -174,7 +174,7 @@ class EventVRRPConfigRequest(event.EventRequestBase):
 
 class EventVRRPConfigReply(event.EventReplyBase):
     def __init__(self, instance_name, interface, config):
-        # dst = None. dst is filled by app_base.RyuApp.send_reply()
+        # dst = None. dst is filled by app_base.RyuApp#reply_to_request()
         super(EventVRRPConfigReply, self).__init__(None)
         self.instance_name = instance_name  # None means failure
         self.interface = interface

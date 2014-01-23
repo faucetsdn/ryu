@@ -26,6 +26,7 @@ class EventRequestBase(EventBase):
         self.dst = None  # app.name of provide the event.
         self.src = None
         self.sync = False
+        self.reply_q = None
 
 
 class EventReplyBase(EventBase):

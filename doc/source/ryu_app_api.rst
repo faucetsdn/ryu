@@ -180,11 +180,12 @@ and block until receiving a reply.
 Returns the received reply.
 The argument should be an instance of EventRequestBase.
 
-send_reply(self, rep)
+reply_to_request(self, req, rep)
 `````````````````````
 
 Send a reply for a synchronous request sent by send_request.
-The argument should be an instance of EventReplyBase.
+The first argument should be an instance of EventRequestBase.
+The second argument should be an instance of EventReplyBase.
 
 send_event(self, name, ev)
 ``````````````````````````

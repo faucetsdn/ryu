@@ -67,7 +67,6 @@ class RyuApp(object):
         self.observers = {}     # ev_cls -> observer-name -> states:set
         self.threads = []
         self.events = hub.Queue(128)
-        self.replies = hub.Queue()
         self.logger = logging.getLogger(self.name)
 
         # prevent accidental creation of instances of this class outside RyuApp
@@ -121,16 +120,13 @@ class RyuApp(object):
 
         return observers
 
-    def send_reply(self, rep):
-        assert isinstance(rep, EventReplyBase)
-        SERVICE_BRICKS[rep.dst].replies.put(rep)
-
     def send_request(self, req):
         assert isinstance(req, EventRequestBase)
         req.sync = True
+        req.reply_q = hub.Queue()
         self.send_event(req.dst, req)
         # going to sleep for the reply
-        return self.replies.get()
+        return req.reply_q.get()
 
     def _event_loop(self):
         while self.is_active or not self.events.empty():
@@ -160,9 +156,11 @@ class RyuApp(object):
             self.send_event(observer, ev, state)
 
     def reply_to_request(self, req, rep):
+        assert isinstance(req, EventRequestBase)
+        assert isinstance(rep, EventReplyBase)
         rep.dst = req.src
         if req.sync:
-            self.send_reply(rep)
+            req.reply_q.put(rep)
         else:
             self.send_event(rep.dst, rep)
 
