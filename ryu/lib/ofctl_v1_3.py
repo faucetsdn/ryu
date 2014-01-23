@@ -170,7 +170,7 @@ def action_to_str(act):
         buf = 'PUSH_MPLS:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_POP_MPLS:
         buf = 'POP_MPLS'
-    elif action_type == ofproto_v1_3.OFPAT_OFPAT_SET_QUEUE:
+    elif action_type == ofproto_v1_3.OFPAT_SET_QUEUE:
         buf = 'SET_QUEUE:' + str(act.queue_id)
     elif action_type == ofproto_v1_3.OFPAT_GROUP:
         pass
@@ -179,7 +179,17 @@ def action_to_str(act):
     elif action_type == ofproto_v1_3.OFPAT_DEC_NW_TTL:
         buf = 'DEC_NW_TTL'
     elif action_type == ofproto_v1_3.OFPAT_SET_FIELD:
-        buf = 'SET_FIELD: {%s:%s}' % (act.field, act.value)
+        if isinstance(act.field, ofproto_v1_3_parser.MTEthDst):
+            field = 'eth_dst'
+        elif isinstance(act.field, ofproto_v1_3_parser.MTEthSrc):
+            field = 'eth_src'
+        elif isinstance(act.field, ofproto_v1_3_parser.MTVlanVid):
+            field = 'vlan_vid'
+        elif isinstance(act.field, ofproto_v1_3_parser.MTMplsLabel):
+            field = 'mpls_label'
+        else:
+            field = '(Unknown field)'
+        buf = 'SET_FIELD: {%s:%s}' % (field, act.value)
     elif action_type == ofproto_v1_3.OFPAT_PUSH_PBB:
         buf = 'PUSH_PBB:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_POP_PBB:
@@ -383,8 +393,13 @@ def match_to_str(ofmatch):
             ofproto_v1_3.OXM_OF_TCP_DST: 'tp_dst',
             ofproto_v1_3.OXM_OF_UDP_SRC: 'tp_src',
             ofproto_v1_3.OXM_OF_UDP_DST: 'tp_dst',
+            ofproto_v1_3.OXM_OF_MPLS_LABEL: 'mpls_label',
             ofproto_v1_3.OXM_OF_METADATA: 'metadata',
             ofproto_v1_3.OXM_OF_METADATA_W: 'metadata',
+            ofproto_v1_3.OXM_OF_ARP_SPA: 'arp_spa',
+            ofproto_v1_3.OXM_OF_ARP_TPA: 'arp_tpa',
+            ofproto_v1_3.OXM_OF_ARP_SPA_W: 'arp_spa',
+            ofproto_v1_3.OXM_OF_ARP_TPA_W: 'arp_tpa',
             ofproto_v1_3.OXM_OF_IPV6_SRC: 'ipv6_src',
             ofproto_v1_3.OXM_OF_IPV6_DST: 'ipv6_dst',
             ofproto_v1_3.OXM_OF_IPV6_SRC_W: 'ipv6_src',
@@ -395,7 +410,8 @@ def match_to_str(ofmatch):
         key = keys[match_field.header]
         if key == 'dl_src' or key == 'dl_dst':
             value = mac.haddr_to_str(match_field.value)
-        elif key == 'nw_src' or key == 'nw_dst':
+        elif key == 'nw_src' or key == 'nw_dst' or \
+                key == 'arp_spa' or key == 'arp_tpa':
             value = match_ip_to_str(match_field.value, match_field.mask)
         elif key == 'ipv6_src' or key == 'ipv6_dst':
             value = match_ipv6_to_str(match_field.value, match_field.mask)
