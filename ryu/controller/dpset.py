@@ -231,3 +231,6 @@ class DPSet(app_manager.RyuApp):
         Raises KeyError if no such a datapath connected to this controller.
         """
         return self.port_state[dpid].values()
+
+
+handler.register_service('ryu.controller.dpset')
