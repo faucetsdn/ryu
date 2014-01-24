@@ -47,15 +47,15 @@ class OfctlService(app_manager.RyuApp):
         assert isinstance(id, (int, long))
         old_info = self._switches.get(id, None)
         new_info = _SwitchInfo(datapath=datapath)
-        self.logger.info('add dpid %s datapath %s new_info %s old_info %s' %
-                         (id, datapath, new_info, old_info))
+        self.logger.debug('add dpid %s datapath %s new_info %s old_info %s' %
+                          (id, datapath, new_info, old_info))
         self._switches[id] = new_info
 
     @set_ev_cls(ofp_event.EventOFPStateChange, DEAD_DISPATCHER)
     def _handle_dead(self, ev):
         datapath = ev.datapath
         id = datapath.id
-        self.logger.info('del dpid %s datapath %s' % (id, datapath))
+        self.logger.debug('del dpid %s datapath %s' % (id, datapath))
         if id is None:
             return
         try:
@@ -63,7 +63,7 @@ class OfctlService(app_manager.RyuApp):
         except KeyError:
             return
         if info.datapath is datapath:
-            self.logger.info('forget info %s' % (info,))
+            self.logger.debug('forget info %s' % (info,))
             self._switches.pop(id)
 
     @set_ev_cls(event.GetDatapathRequest, MAIN_DISPATCHER)
@@ -74,7 +74,7 @@ class OfctlService(app_manager.RyuApp):
             datapath = self._switches[id].datapath
         except KeyError:
             datapath = None
-        self.logger.info('dpid %s -> datapath %s' % (id, datapath))
+        self.logger.debug('dpid %s -> datapath %s' % (id, datapath))
         rep = event.Reply(result=datapath)
         self.reply_to_request(req, rep)
 
