@@ -2464,7 +2464,7 @@ class OFPInstructionWriteMetadata(StringifyMixin):
     metadata_mask    Metadata write bitmask
     ================ ======================================================
     """
-    def __init__(self, metadata, metadata_mask, len_=None):
+    def __init__(self, metadata, metadata_mask, type_=None, len_=None):
         super(OFPInstructionWriteMetadata, self).__init__()
         self.type = ofproto_v1_3.OFPIT_WRITE_METADATA
         self.len = ofproto_v1_3.OFP_INSTRUCTION_WRITE_METADATA_SIZE
