@@ -32,11 +32,8 @@ the Ryu application will be processed.
 There are kinds of events which are used to implement synchronous
 inter-application calls between Ryu applications.
 While such requests uses the same machinary as ordinary
-events, their replies are put on another queue dedicated to replies
+events, their replies are put on a queue dedicated to the transaction
 to avoid deadlock.
-(Because, unlike erlang, our queue doesn't support selective receive.)
-It's assumed that the number of in-flight synchronous requests from
-a Ryu application is at most 1.
 
 While threads and queues is currently implemented with eventlet/greenlet,
 a direct use of them in a Ryu application is strongly discouraged.
