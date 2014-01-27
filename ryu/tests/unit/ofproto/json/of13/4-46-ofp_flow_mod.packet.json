@@ -10,6 +10,8 @@
       "instructions": [
          {
             "OFPInstructionMeter": {
+               "len": 8,
+               "type": 6,
                "meter_id": 1
             }
          }, 
