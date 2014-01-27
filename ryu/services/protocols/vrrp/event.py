@@ -116,11 +116,11 @@ class VRRPConfig(object):
     advertmisement_interval is in seconds as float. (Not in centiseconds)
     """
     def __init__(self, version=vrrp.VRRP_VERSION_V3, vrid=None,
-                 admin_state=None,
+                 admin_state=True,
                  priority=vrrp.VRRP_PRIORITY_BACKUP_DEFAULT, ip_addresses=None,
                  advertisement_interval=vrrp.VRRP_MAX_ADVER_INT_DEFAULT_IN_SEC,
                  preempt_mode=True, preempt_delay=0, accept_mode=False,
-                 statistics_interval=None, resource_id=None):
+                 statistics_interval=0, resource_id=None):
         # To allow version and priority default
         assert vrid is not None
         assert ip_addresses is not None
