@@ -48,10 +48,58 @@ def unregister_app(app):
 
 class RyuApp(object):
     """
-    Base class for Ryu network application
+    The base class for Ryu applications.
+
+    RyuApp subclasses are instantiated after ryu-manager loaded
+    all requested Ryu application modules.
+    __init__ should call RyuApp.__init__ with the same arguments.
+    It's illegal to send any events in __init__.
+
+    The instance attribute 'name' is the name of the class used for
+    message routing among Ryu applications.  (Cf. send_event)
+    It's set to __class__.__name__ by RyuApp.__init__.
+    It's discouraged for subclasses to override this.
     """
+
     _CONTEXTS = {}
-    _EVENTS = []  # list of events to be generated in app
+    """
+    A dictionary to specify contexts which this Ryu application wants to use.
+    Its key is a name of context and its value is an ordinary class
+    which implements the context.  The class is instantiated by app_manager
+    and the instance is shared among RyuApp subclasses which has _CONTEXTS
+    member with the same key.  A RyuApp subclass can obtain a reference to
+    the instance via its __init__'s kwargs as the following.
+
+    Example::
+
+        _CONTEXTS = {
+            'network': network.Network
+        }
+
+        def __init__(self, *args, *kwargs):
+            self.network = kwargs['network']
+    """
+
+    _EVENTS = []
+    """
+    A list of event classes which this RyuApp subclass would generate.
+    This should be specified if and only if event classes are defined in
+    a different python module from the RyuApp subclass is.
+    """
+
+    OFP_VERSIONS = None
+    """
+    A list of supported OpenFlow versions for this RyuApp.
+    The default is all versions supported by the framework.
+
+    Examples::
+
+        OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
+                        ofproto_v1_2.OFP_VERSION]
+
+    If multiple Ryu applications are loaded in the system,
+    the intersection of their OFP_VERSIONS is used.
+    """
 
     @classmethod
     def context_iteritems(cls):
@@ -121,6 +169,14 @@ class RyuApp(object):
         return observers
 
     def send_request(self, req):
+        """
+        Make a synchronous request.
+        Set req.sync to True, send it to a Ryu application specified by
+        req.dst, and block until receiving a reply.
+        Returns the received reply.
+        The argument should be an instance of EventRequestBase.
+        """
+
         assert isinstance(req, EventRequestBase)
         req.sync = True
         req.reply_q = hub.Queue()
@@ -141,6 +197,10 @@ class RyuApp(object):
         self.events.put((ev, state))
 
     def send_event(self, name, ev, state=None):
+        """
+        Send the specified event to the RyuApp instance specified by name.
+        """
+
         if name in SERVICE_BRICKS:
             if isinstance(ev, EventRequestBase):
                 ev.src = self.name
@@ -152,10 +212,20 @@ class RyuApp(object):
                       (self.name, name, ev.__class__.__name__))
 
     def send_event_to_observers(self, ev, state=None):
+        """
+        Send the specified event to all observers of this RyuApp.
+        """
+
         for observer in self.get_observers(ev, state):
             self.send_event(observer, ev, state)
 
     def reply_to_request(self, req, rep):
+        """
+        Send a reply for a synchronous request sent by send_request.
+        The first argument should be an instance of EventRequestBase.
+        The second argument should be an instance of EventReplyBase.
+        """
+
         assert isinstance(req, EventRequestBase)
         assert isinstance(rep, EventReplyBase)
         rep.dst = req.src
@@ -272,7 +342,7 @@ class AppManager(object):
         # Yes, maybe for slicing.
         LOG.info('instantiating app %s of %s', app_name, cls.__name__)
 
-        if hasattr(cls, 'OFP_VERSIONS'):
+        if hasattr(cls, 'OFP_VERSIONS') and not cls.OFP_VERSIONS is None:
             for k in Datapath.supported_ofp_version.keys():
                 if not k in cls.OFP_VERSIONS:
                     del Datapath.supported_ofp_version[k]
