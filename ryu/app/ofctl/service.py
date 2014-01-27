@@ -124,4 +124,7 @@ class OfctlService(app_manager.RyuApp):
         except KeyError:
             self.logger.error('unknown dpid %s' % (datapath.id,))
             return
-        si.results[xid] = ev.msg
+        try:
+            si.results[msg.xid] = ev.msg
+        except KeyError:
+            self.logger.error('unknown error xid %s' % (msg.xid,))
