@@ -2885,7 +2885,7 @@ class OFPActionPushMpls(OFPAction):
     ethertype        Ether type
     ================ ======================================================
     """
-    def __init__(self, ethertype, type_=None, len_=None):
+    def __init__(self, ethertype=ether.ETH_TYPE_MPLS, type_=None, len_=None):
         super(OFPActionPushMpls, self).__init__()
         self.ethertype = ethertype
 
@@ -2926,7 +2926,7 @@ class OFPActionPopMpls(OFPAction):
 
     This action pops the MPLS header from the packet.
     """
-    def __init__(self, ethertype, type_=None, len_=None):
+    def __init__(self, ethertype=ether.ETH_TYPE_IP, type_=None, len_=None):
         super(OFPActionPopMpls, self).__init__()
         self.ethertype = ethertype
 
