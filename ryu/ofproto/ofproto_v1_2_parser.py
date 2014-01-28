@@ -904,7 +904,10 @@ class OFPFlowMod(MsgBase):
         self.flags = flags
         if match is None:
             match = OFPMatch()
+        assert isinstance(match, OFPMatch)
         self.match = match
+        for i in instructions:
+            assert isinstance(i, OFPInstruction)
         self.instructions = instructions
 
     def _serialize_body(self):
@@ -945,7 +948,7 @@ class OFPInstruction(StringifyMixin):
 
 
 @OFPInstruction.register_instruction_type([ofproto_v1_2.OFPIT_GOTO_TABLE])
-class OFPInstructionGotoTable(StringifyMixin):
+class OFPInstructionGotoTable(OFPInstruction):
     """
     Goto table instruction
 
@@ -976,7 +979,7 @@ class OFPInstructionGotoTable(StringifyMixin):
 
 
 @OFPInstruction.register_instruction_type([ofproto_v1_2.OFPIT_WRITE_METADATA])
-class OFPInstructionWriteMetadata(StringifyMixin):
+class OFPInstructionWriteMetadata(OFPInstruction):
     """
     Write metadata instruction
 
@@ -1012,7 +1015,7 @@ class OFPInstructionWriteMetadata(StringifyMixin):
 @OFPInstruction.register_instruction_type([ofproto_v1_2.OFPIT_WRITE_ACTIONS,
                                            ofproto_v1_2.OFPIT_APPLY_ACTIONS,
                                            ofproto_v1_2.OFPIT_CLEAR_ACTIONS])
-class OFPInstructionActions(StringifyMixin):
+class OFPInstructionActions(OFPInstruction):
     """
     Actions instruction
 
@@ -1033,6 +1036,8 @@ class OFPInstructionActions(StringifyMixin):
     def __init__(self, type_, actions=None, len_=None):
         super(OFPInstructionActions, self).__init__()
         self.type = type_
+        for a in actions:
+            assert isinstance(a, OFPAction)
         self.actions = actions
 
     @classmethod
