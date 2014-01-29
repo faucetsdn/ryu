@@ -3007,3 +3007,100 @@ class OFPActionPopPbb(OFPAction):
         (type_, len_) = struct.unpack_from(
             ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
+
+
+@_set_msg_type(ofproto.OFPT_ROLE_REQUEST)
+class OFPRoleRequest(MsgBase):
+    """
+    Role request message
+
+    The controller uses this message to change its role.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    role             One of the following values.
+                     OFPCR_ROLE_NOCHANGE
+                     OFPCR_ROLE_EQUAL
+                     OFPCR_ROLE_MASTER
+                     OFPCR_ROLE_SLAVE
+    generation_id    Master Election Generation ID
+    ================ ======================================================
+
+    Example::
+
+        def send_role_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPRoleRequest(datapath, ofp.OFPCR_ROLE_EQUAL, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, role=None, generation_id=None):
+        super(OFPRoleRequest, self).__init__(datapath)
+        self.role = role
+        self.generation_id = generation_id
+
+    def _serialize_body(self):
+        assert self.role is not None
+        assert self.generation_id is not None
+        msg_pack_into(ofproto.OFP_ROLE_REQUEST_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.role, self.generation_id)
+
+
+@_register_parser
+@_set_msg_type(ofproto.OFPT_ROLE_REPLY)
+class OFPRoleReply(MsgBase):
+    """
+    Role reply message
+
+    The switch responds with this message to a role request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    role             One of the following values.
+                     OFPCR_ROLE_NOCHANGE
+                     OFPCR_ROLE_EQUAL
+                     OFPCR_ROLE_MASTER
+                     OFPCR_ROLE_SLAVE
+    generation_id    Master Election Generation ID
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPRoleReply, MAIN_DISPATCHER)
+        def role_reply_handler(self, ev):
+            msg = ev.msg
+            ofp = dp.ofproto
+
+            if msg.role == ofp.OFPCR_ROLE_NOCHANGE:
+                role = 'NOCHANGE'
+            elif msg.role == ofp.OFPCR_ROLE_EQUAL:
+                role = 'EQUAL'
+            elif msg.role == ofp.OFPCR_ROLE_MASTER:
+                role = 'MASTER'
+            elif msg.role == ofp.OFPCR_ROLE_SLAVE:
+                role = 'SLAVE'
+            else:
+                role = 'unknown'
+
+            self.logger.debug('OFPRoleReply received: '
+                              'role=%s generation_id=%d',
+                              role, msg.generation_id)
+    """
+    def __init__(self, datapath, role=None, generation_id=None):
+        super(OFPRoleReply, self).__init__(datapath)
+        self.role = role
+        self.generation_id = generation_id
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPRoleReply, cls).parser(datapath, version,
+                                              msg_type, msg_len, xid,
+                                              buf)
+        (msg.role, msg.generation_id) = struct.unpack_from(
+            ofproto.OFP_ROLE_REQUEST_PACK_STR, msg.buf,
+            ofproto.OFP_HEADER_SIZE)
+        return msg
