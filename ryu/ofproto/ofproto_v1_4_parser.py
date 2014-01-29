@@ -2483,3 +2483,28 @@ class OFPActionSetField(OFPAction):
 
     def stringify_attrs(self):
         yield (self.key, self.value)
+
+
+@OFPAction.register_action_type(ofproto.OFPAT_POP_PBB,
+                                ofproto.OFP_ACTION_HEADER_SIZE)
+class OFPActionPopPbb(OFPAction):
+    """
+    Pop PBB action
+
+    This action pops the outermost PBB service instance header from
+    the packet.
+    """
+    def __init__(self, type_=None, len_=None):
+        super(OFPActionPopPbb, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
