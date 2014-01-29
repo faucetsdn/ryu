@@ -845,6 +845,120 @@ class OFPPortDescStatsReply(OFPMultipartReply):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPBucketCounter(StringifyMixin):
+    def __init__(self, packet_count, byte_count):
+        super(OFPBucketCounter, self).__init__()
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+
+    @classmethod
+    def parser(cls, buf, offset):
+        packet_count, byte_count = struct.unpack_from(
+            ofproto.OFP_BUCKET_COUNTER_PACK_STR, buf, offset)
+        return cls(packet_count, byte_count)
+
+
+class OFPGroupStats(StringifyMixin):
+    def __init__(self, length=None, group_id=None, ref_count=None,
+                 packet_count=None, byte_count=None, duration_sec=None,
+                 duration_nsec=None, bucket_stats=None):
+        super(OFPGroupStats, self).__init__()
+        self.length = length
+        self.group_id = group_id
+        self.ref_count = ref_count
+        self.packet_count = packet_count
+        self.byte_count = byte_count
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.bucket_stats = bucket_stats
+
+    @classmethod
+    def parser(cls, buf, offset):
+        group = struct.unpack_from(ofproto.OFP_GROUP_STATS_PACK_STR,
+                                   buf, offset)
+        group_stats = cls(*group)
+
+        group_stats.bucket_stats = []
+        total_len = group_stats.length + offset
+        offset += ofproto.OFP_GROUP_STATS_SIZE
+        while total_len > offset:
+            b = OFPBucketCounter.parser(buf, offset)
+            group_stats.bucket_stats.append(b)
+            offset += ofproto.OFP_BUCKET_COUNTER_SIZE
+
+        return group_stats
+
+
+@_set_stats_type(ofproto.OFPMP_GROUP, OFPGroupStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPGroupStatsRequest(OFPMultipartRequest):
+    """
+    Group statistics request message
+
+    The controller uses this message to query statistics of one or more
+    groups.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    group_id         ID of group to read (OFPG_ALL to all groups)
+    ================ ======================================================
+
+    Example::
+
+        def send_group_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGroupStatsRequest(datapath, 0, ofp.OFPG_ALL)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, group_id, type_=None):
+        super(OFPGroupStatsRequest, self).__init__(datapath, flags)
+        self.group_id = group_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_GROUP_STATS_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.group_id)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_GROUP, OFPGroupStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPGroupStatsReply(OFPMultipartReply):
+    """
+    Group statistics reply message
+
+    The switch responds with this message to a group statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPGroupStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGroupStatsReply, MAIN_DISPATCHER)
+        def group_stats_reply_handler(self, ev):
+            groups = []
+            for stat in ev.msg.body:
+                groups.append('length=%d group_id=%d '
+                              'ref_count=%d packet_count=%d byte_count=%d '
+                              'duration_sec=%d duration_nsec=%d' %
+                              (stat.length, stat.group_id,
+                               stat.ref_count, stat.packet_count,
+                               stat.byte_count, stat.duration_sec,
+                               stat.duration_nsec))
+            self.logger.debug('GroupStats: %s', groups)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPGroupStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
