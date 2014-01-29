@@ -1359,6 +1359,11 @@ OFP_ROLE_STATUS_SIZE = 24
 assert (calcsize(OFP_ROLE_STATUS_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_ROLE_STATUS_SIZE)
 
+# struct ofp_async_config
+OFP_ASYNC_CONFIG_PACK_STR = '!2I2I2I'
+OFP_ASYNC_CONFIG_SIZE = 32
+assert (calcsize(OFP_ASYNC_CONFIG_PACK_STR) + OFP_HEADER_SIZE ==
+        OFP_ASYNC_CONFIG_SIZE)
 
 # enum ofp_async_config_prop_type
 OFPACPT_PACKET_IN_SLAVE = 0  # Packet-in mask for slave.
