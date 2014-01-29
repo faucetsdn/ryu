@@ -2127,6 +2127,126 @@ class OFPGroupFeaturesStatsReply(OFPMultipartReply):
         super(OFPGroupFeaturesStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPMeterBandStats(StringifyMixin):
+    def __init__(self, packet_band_count, byte_band_count):
+        super(OFPMeterBandStats, self).__init__()
+        self.packet_band_count = packet_band_count
+        self.byte_band_count = byte_band_count
+
+    @classmethod
+    def parser(cls, buf, offset):
+        band_stats = struct.unpack_from(
+            ofproto.OFP_METER_BAND_STATS_PACK_STR, buf, offset)
+        return cls(*band_stats)
+
+
+class OFPMeterStats(StringifyMixin):
+    def __init__(self, meter_id=None, flow_count=None, packet_in_count=None,
+                 byte_in_count=None, duration_sec=None, duration_nsec=None,
+                 band_stats=None, len_=None):
+        super(OFPMeterStats, self).__init__()
+        self.meter_id = meter_id
+        self.len = 0
+        self.flow_count = flow_count
+        self.packet_in_count = packet_in_count
+        self.byte_in_count = byte_in_count
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.band_stats = band_stats
+
+    @classmethod
+    def parser(cls, buf, offset):
+        meter_stats = cls()
+
+        (meter_stats.meter_id, meter_stats.len,
+         meter_stats.flow_count, meter_stats.packet_in_count,
+         meter_stats.byte_in_count, meter_stats.duration_sec,
+         meter_stats.duration_nsec) = struct.unpack_from(
+            ofproto.OFP_METER_STATS_PACK_STR, buf, offset)
+        offset += ofproto.OFP_METER_STATS_SIZE
+
+        meter_stats.band_stats = []
+        length = ofproto.OFP_METER_STATS_SIZE
+        while length < meter_stats.len:
+            band_stats = OFPMeterBandStats.parser(buf, offset)
+            meter_stats.band_stats.append(band_stats)
+            offset += ofproto.OFP_METER_BAND_STATS_SIZE
+            length += ofproto.OFP_METER_BAND_STATS_SIZE
+
+        return meter_stats
+
+
+@_set_stats_type(ofproto.OFPMP_METER, OFPMeterStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPMeterStatsRequest(OFPMultipartRequest):
+    """
+    Meter statistics request message
+
+    The controller uses this message to query statistics for one or more
+    meters.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    meter_id         ID of meter to read (OFPM_ALL to all meters)
+    ================ ======================================================
+
+    Example::
+
+        def send_meter_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPMeterStatsRequest(datapath, 0, ofp.OFPM_ALL)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, meter_id, type_=None):
+        super(OFPMeterStatsRequest, self).__init__(datapath, flags)
+        self.meter_id = meter_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_METER_MULTIPART_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.meter_id)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_METER, OFPMeterStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPMeterStatsReply(OFPMultipartReply):
+    """
+    Meter statistics reply message
+
+    The switch responds with this message to a meter statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPMeterStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPMeterStatsReply, MAIN_DISPATCHER)
+        def meter_stats_reply_handler(self, ev):
+            meters = []
+            for stat in ev.msg.body:
+                meters.append('meter_id=0x%08x len=%d flow_count=%d '
+                              'packet_in_count=%d byte_in_count=%d '
+                              'duration_sec=%d duration_nsec=%d '
+                              'band_stats=%s' %
+                              (stat.meter_id, stat.len, stat.flow_count,
+                               stat.packet_in_count, stat.byte_in_count,
+                               stat.duration_sec, stat.duration_nsec,
+                               stat.band_stats))
+            self.logger.debug('MeterStats: %s', meters)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPMeterStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPMeterConfigStats(StringifyMixin):
     def __init__(self, flags=None, meter_id=None, bands=None, length=None):
         super(OFPMeterConfigStats, self).__init__()
