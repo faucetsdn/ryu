@@ -553,21 +553,6 @@ x() ->
                               actions = 
                                   [#ofp_action_output{
                                        port = 2, max_len = no_buffer}]}]}]},
-        #ofp_queue_get_config_request{port = any},
-        #ofp_queue_get_config_reply{port = any,queues = [
-            #ofp_packet_queue{queue_id = 99, port_no = 77,
-                properties = [
-                    #ofp_queue_prop_min_rate{rate = 10},
-                    #ofp_queue_prop_max_rate{rate = 900}
-                ]
-            },
-            #ofp_packet_queue{queue_id = 88, port_no = 77,
-                properties = [
-                    #ofp_queue_prop_min_rate{rate = 100},
-                    #ofp_queue_prop_max_rate{rate = 200}
-                ]
-            }
-        ]},
         #ofp_queue_stats_request{flags = [],port_no = any,
                                  queue_id = all},
         #ofp_queue_stats_reply{
