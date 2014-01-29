@@ -845,6 +845,97 @@ class OFPPortDescStatsReply(OFPMultipartReply):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPExperimenterMultipart(ofproto_parser.namedtuple(
+                               'OFPExperimenterMultipart',
+                               ('experimenter', 'exp_type', 'data'))):
+    """
+    The body of OFPExperimenterStatsReply multipart messages.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    experimenter     Experimenter ID
+    exp_type         Experimenter defined
+    data             Experimenter defined additional data
+    ================ ======================================================
+    """
+
+    @classmethod
+    def parser(cls, buf, offset):
+        args = struct.unpack_from(
+            ofproto.OFP_EXPERIMENTER_MULTIPART_HEADER_PACK_STR, buf,
+            offset)
+        args = list(args)
+        args.append(buf[offset +
+                        ofproto.OFP_EXPERIMENTER_MULTIPART_HEADER_SIZE:])
+        stats = cls(*args)
+        stats.length = ofproto.OFP_METER_FEATURES_SIZE
+        return stats
+
+    def serialize(self):
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_EXPERIMENTER_MULTIPART_HEADER_PACK_STR,
+                      buf, 0,
+                      self.experimenter, self.exp_type)
+        return buf + self.data
+
+
+class OFPExperimenterStatsRequestBase(OFPMultipartRequest):
+    def __init__(self, datapath, flags,
+                 experimenter, exp_type,
+                 type_=None):
+        super(OFPExperimenterStatsRequestBase, self).__init__(datapath, flags)
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+
+
+@_set_stats_type(ofproto.OFPMP_EXPERIMENTER, OFPExperimenterMultipart)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPExperimenterStatsRequest(OFPExperimenterStatsRequestBase):
+    """
+    Experimenter multipart request message
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    experimenter     Experimenter ID
+    exp_type         Experimenter defined
+    data             Experimenter defined additional data
+    ================ ======================================================
+    """
+    def __init__(self, datapath, flags,
+                 experimenter, exp_type, data,
+                 type_=None):
+        super(OFPExperimenterStatsRequest, self).__init__(datapath, flags,
+                                                          experimenter,
+                                                          exp_type, type_)
+        self.data = data
+
+    def _serialize_stats_body(self):
+        body = OFPExperimenterMultipart(experimenter=self.experimenter,
+                                        exp_type=self.exp_type,
+                                        data=self.data)
+        self.buf += body.serialize()
+
+
+@OFPMultipartReply.register_stats_type(body_single_struct=True)
+@_set_stats_type(ofproto.OFPMP_EXPERIMENTER, OFPExperimenterMultipart)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPExperimenterStatsReply(OFPMultipartReply):
+    """
+    Experimenter multipart reply message
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             An ``OFPExperimenterMultipart`` instance
+    ================ ======================================================
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPExperimenterStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPFlowStats(StringifyMixin):
     def __init__(self, table_id=None, duration_sec=None, duration_nsec=None,
                  priority=None, idle_timeout=None, hard_timeout=None,
