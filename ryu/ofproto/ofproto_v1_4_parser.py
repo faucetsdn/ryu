@@ -2324,6 +2324,25 @@ class OFPActionSetQueue(OFPAction):
                       offset, self.type, self.len, self.queue_id)
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_COPY_TTL_OUT,
+                                ofproto.OFP_ACTION_HEADER_SIZE)
+class OFPActionCopyTtlOut(OFPAction):
+    """
+    Copy TTL Out action
+
+    This action copies the TTL from the next-to-outermost header with TTL to
+    the outermost header with TTL.
+    """
+    def __init__(self, type_=None, len_=None):
+        super(OFPActionCopyTtlOut, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_SET_FIELD,
                                 ofproto.OFP_ACTION_SET_FIELD_SIZE)
 class OFPActionSetField(OFPAction):
