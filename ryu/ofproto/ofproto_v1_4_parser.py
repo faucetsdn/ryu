@@ -478,6 +478,33 @@ class OFPMatch(StringifyMixin):
     def stringify_attrs(self):
         yield "oxm_fields", dict(self._fields2)
 
+    def to_jsondict(self):
+        """
+        Returns a dict expressing the flow match.
+        """
+        body = {"oxm_fields": [ofproto.oxm_to_jsondict(k, uv) for k, uv
+                               in self._fields2],
+                "length": self.length,
+                "type": self.type}
+        return {self.__class__.__name__: body}
+
+    @classmethod
+    def from_jsondict(cls, dict_):
+        """
+        Returns an object which is generated from a dict.
+
+        Exception raises:
+        KeyError -- Unknown match field is defined in dict
+        """
+        fields = [ofproto.oxm_from_jsondict(f) for f
+                  in dict_['oxm_fields']]
+        o = OFPMatch()
+        # XXX old api compat
+        # serialize and parse to fill OFPMatch.fields
+        buf = bytearray()
+        o.serialize(buf, 0)
+        return OFPMatch.parser(str(buf), 0)
+
 
 class OFPPortDescPropUnknown(StringifyMixin):
     def __init__(self, type_=None, length=None, buf=None):
