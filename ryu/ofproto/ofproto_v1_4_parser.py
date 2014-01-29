@@ -3552,10 +3552,10 @@ class OFPActionPushVlan(OFPAction):
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
-    ethertype        Ether type
+    ethertype        Ether type.  The default is 802.1Q. (0x8100)
     ================ ======================================================
     """
-    def __init__(self, ethertype, type_=None, len_=None):
+    def __init__(self, ethertype=ether.ETH_TYPE_8021Q, type_=None, len_=None):
         super(OFPActionPushVlan, self).__init__()
         self.ethertype = ethertype
 
