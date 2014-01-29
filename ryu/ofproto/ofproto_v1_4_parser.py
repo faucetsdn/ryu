@@ -2196,6 +2196,76 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
         return stats
 
 
+class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
+        'table_id', 'active_count', 'lookup_count',
+        'matched_count'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        tbl = struct.unpack_from(ofproto.OFP_TABLE_STATS_PACK_STR,
+                                 buf, offset)
+        stats = cls(*tbl)
+        stats.length = ofproto.OFP_TABLE_STATS_SIZE
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_TABLE, OFPTableStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPTableStatsRequest(OFPMultipartRequest):
+    """
+    Table statistics request message
+
+    The controller uses this message to query flow table statictics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_table_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPTableStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, type_=None):
+        super(OFPTableStatsRequest, self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_TABLE, OFPTableStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPTableStatsReply(OFPMultipartReply):
+    """
+    Table statistics reply message
+
+    The switch responds with this message to a table statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPTableStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPTableStatsReply, MAIN_DISPATCHER)
+        def table_stats_reply_handler(self, ev):
+            tables = []
+            for stat in ev.msg.body:
+                tables.append('table_id=%d active_count=%d lookup_count=%d '
+                              ' matched_count=%d' %
+                              (stat.table_id, stat.active_count,
+                               stat.lookup_count, stat.matched_count))
+             self.logger.debug('TableStats: %s', tables)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPTableStatsReply, self).__init__(datapath, **kwargs)
+
+
 @_set_msg_type(ofproto.OFPT_BARRIER_REQUEST)
 class OFPBarrierRequest(MsgBase):
     """
