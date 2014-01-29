@@ -3472,6 +3472,70 @@ class OFPActionPopPbb(OFPAction):
         return cls()
 
 
+@_set_msg_type(ofproto.OFPT_GROUP_MOD)
+class OFPGroupMod(MsgBase):
+    """
+    Modify group entry message
+
+    The controller sends this message to modify the group table.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    command          One of the following values.
+                     OFPFC_ADD
+                     OFPFC_MODIFY
+                     OFPFC_DELETE
+    type             One of the following values.
+                     OFPGT_ALL
+                     OFPGT_SELECT
+                     OFPGT_INDIRECT
+                     OFPGT_FF
+    group_id         Group identifier
+    buckets          list of ``OFPBucket``
+    ================ ======================================================
+
+    ``type`` attribute corresponds to ``type_`` parameter of __init__.
+
+    Example::
+
+        def send_group_mod(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            port = 1
+            max_len = 2000
+            actions = [ofp_parser.OFPActionOutput(port, max_len)]
+
+            weight = 100
+            watch_port = 0
+            watch_group = 0
+            buckets = [ofp_parser.OFPBucket(weight, watch_port, watch_group,
+                                            actions)]
+
+            group_id = 1
+            req = ofp_parser.OFPGroupMod(datapath, ofp.OFPFC_ADD,
+                                         ofp.OFPGT_SELECT, group_id, buckets)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, command, type_, group_id, buckets):
+        super(OFPGroupMod, self).__init__(datapath)
+        self.command = command
+        self.type = type_
+        self.group_id = group_id
+        self.buckets = buckets
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto.OFP_GROUP_MOD_PACK_STR, self.buf,
+                      ofproto.OFP_HEADER_SIZE,
+                      self.command, self.type, self.group_id)
+
+        offset = ofproto.OFP_GROUP_MOD_SIZE
+        for b in self.buckets:
+            b.serialize(self.buf, offset)
+            offset += b.len
+
+
 class OFPBucket(StringifyMixin):
     def __init__(self, weight, watch_port, watch_group, actions, len_=None):
         super(OFPBucket, self).__init__()
