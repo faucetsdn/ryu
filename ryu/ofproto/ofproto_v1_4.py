@@ -408,8 +408,8 @@ OFPAT_EXPERIMENTER = 0xffff
 
 
 # struct ofp_action_header
-OFP_ACTION_HEADER_PACK_STR = '!HH'
-OFP_ACTION_HEADER_SIZE = 4
+OFP_ACTION_HEADER_PACK_STR = '!HH4x'
+OFP_ACTION_HEADER_SIZE = 8
 assert calcsize(OFP_ACTION_HEADER_PACK_STR) == OFP_ACTION_HEADER_SIZE
 
 # enum ofp_controller_max_len
