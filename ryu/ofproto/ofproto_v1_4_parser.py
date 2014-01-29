@@ -2362,6 +2362,29 @@ class OFPActionCopyTtlIn(OFPAction):
         return cls()
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_POP_MPLS,
+                                ofproto.OFP_ACTION_POP_MPLS_SIZE)
+class OFPActionPopMpls(OFPAction):
+    """
+    Pop MPLS action
+
+    This action pops the MPLS header from the packet.
+    """
+    def __init__(self, ethertype, type_=None, len_=None):
+        super(OFPActionPopMpls, self).__init__()
+        self.ethertype = ethertype
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, ethertype) = struct.unpack_from(
+            ofproto.OFP_ACTION_POP_MPLS_PACK_STR, buf, offset)
+        return cls(ethertype)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_ACTION_POP_MPLS_PACK_STR, buf, offset,
+                      self.type, self.len, self.ethertype)
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_SET_FIELD,
                                 ofproto.OFP_ACTION_SET_FIELD_SIZE)
 class OFPActionSetField(OFPAction):
