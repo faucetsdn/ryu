@@ -2324,6 +2324,24 @@ class OFPActionSetQueue(OFPAction):
                       offset, self.type, self.len, self.queue_id)
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_DEC_MPLS_TTL,
+                                ofproto.OFP_ACTION_HEADER_SIZE)
+class OFPActionDecMplsTtl(OFPAction):
+    """
+    Decrement MPLS TTL action
+
+    This action decrements the MPLS TTL.
+    """
+    def __init__(self, type_=None, len_=None):
+        super(OFPActionDecMplsTtl, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_COPY_TTL_OUT,
                                 ofproto.OFP_ACTION_HEADER_SIZE)
 class OFPActionCopyTtlOut(OFPAction):
