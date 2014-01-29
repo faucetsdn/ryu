@@ -2324,6 +2324,35 @@ class OFPActionSetQueue(OFPAction):
                       offset, self.type, self.len, self.queue_id)
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_SET_MPLS_TTL,
+                                ofproto.OFP_ACTION_MPLS_TTL_SIZE)
+class OFPActionSetMplsTtl(OFPAction):
+    """
+    Set MPLS TTL action
+
+    This action sets the MPLS TTL.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    mpls_ttl         MPLS TTL
+    ================ ======================================================
+    """
+    def __init__(self, mpls_ttl, type_=None, len_=None):
+        super(OFPActionSetMplsTtl, self).__init__()
+        self.mpls_ttl = mpls_ttl
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, mpls_ttl) = struct.unpack_from(
+            ofproto.OFP_ACTION_MPLS_TTL_PACK_STR, buf, offset)
+        return cls(mpls_ttl)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_ACTION_MPLS_TTL_PACK_STR, buf,
+                      offset, self.type, self.len, self.mpls_ttl)
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_DEC_MPLS_TTL,
                                 ofproto.OFP_ACTION_HEADER_SIZE)
 class OFPActionDecMplsTtl(OFPAction):
@@ -2334,6 +2363,24 @@ class OFPActionDecMplsTtl(OFPAction):
     """
     def __init__(self, type_=None, len_=None):
         super(OFPActionDecMplsTtl, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
+@OFPAction.register_action_type(ofproto.OFPAT_DEC_NW_TTL,
+                                ofproto.OFP_ACTION_HEADER_SIZE)
+class OFPActionDecNwTtl(OFPAction):
+    """
+    Decrement IP TTL action
+
+    This action decrements the IP TTL.
+    """
+    def __init__(self, type_=None, len_=None):
+        super(OFPActionDecNwTtl, self).__init__()
 
     @classmethod
     def parser(cls, buf, offset):
