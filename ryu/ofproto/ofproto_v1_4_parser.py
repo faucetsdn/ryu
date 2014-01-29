@@ -3654,24 +3654,14 @@ class OFPActionSetField(OFPAction):
     ================ ======================================================
     """
     def __init__(self, field=None, **kwargs):
-        # old api
-        #   OFPActionSetField(field)
-        # new api
-        #   OFPActionSetField(eth_src="00:00:00:00:00")
         super(OFPActionSetField, self).__init__()
-        if isinstance(field, OFPMatchField):
-            # old api compat
-            assert len(kwargs) == 0
-            self.field = field
-        else:
-            # new api
-            assert len(kwargs) == 1
-            key = kwargs.keys()[0]
-            value = kwargs[key]
-            assert isinstance(key, (str, unicode))
-            assert not isinstance(value, tuple)  # no mask
-            self.key = key
-            self.value = value
+        assert len(kwargs) == 1
+        key = kwargs.keys()[0]
+        value = kwargs[key]
+        assert isinstance(key, (str, unicode))
+        assert not isinstance(value, tuple)  # no mask
+        self.key = key
+        self.value = value
 
     @classmethod
     def parser(cls, buf, offset):
@@ -3681,17 +3671,9 @@ class OFPActionSetField(OFPAction):
         k, uv = ofproto.oxm_to_user(n, value, mask)
         action = cls(**{k: uv})
         action.len = len_
-
-        # old api compat
-        action.field = OFPMatchField.parser(buf, offset + 4)
-
         return action
 
     def serialize(self, buf, offset):
-        # old api compat
-        if self._composed_with_old_api():
-            return self.serialize_old(buf, offset)
-
         n, value, mask = ofproto.oxm_from_user(self.key, self.value)
         len_ = ofproto.oxm_serialize(n, value, mask, buf, offset + 4)
         self.len = utils.round_up(4 + len_, 8)
@@ -3699,32 +3681,7 @@ class OFPActionSetField(OFPAction):
         pad_len = self.len - (4 + len_)
         ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset + 4 + len_)
 
-    # XXX old api compat
-    def serialize_old(self, buf, offset):
-        len_ = ofproto.OFP_ACTION_SET_FIELD_SIZE + self.field.oxm_len()
-        self.len = utils.round_up(len_, 8)
-        pad_len = self.len - len_
-
-        msg_pack_into('!HH', buf, offset, self.type, self.len)
-        self.field.serialize(buf, offset + 4)
-        offset += len_
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset)
-
-    # XXX old api compat
-    def _composed_with_old_api(self):
-        return not hasattr(self, 'value')
-
     def to_jsondict(self):
-        # XXX old api compat
-        if self._composed_with_old_api():
-            # copy object first because serialize_old is destructive
-            o2 = OFPActionSetField(self.field)
-            # serialize and parse to fill new fields
-            buf = bytearray()
-            o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(str(buf), 0)
-        else:
-            o = self
         return {
             self.__class__.__name__: {
                 'field': ofproto.oxm_to_jsondict(self.key, self.value)
@@ -3734,29 +3691,7 @@ class OFPActionSetField(OFPAction):
     @classmethod
     def from_jsondict(cls, dict_):
         k, v = ofproto.oxm_from_jsondict(dict_['field'])
-        o = OFPActionSetField(**{k: v})
-
-        # XXX old api compat
-        # serialize and parse to fill old attributes
-        buf = bytearray()
-        o.serialize(buf, 0)
-        return OFPActionSetField.parser(str(buf), 0)
-
-    # XXX old api compat
-    def __str__(self):
-        # XXX old api compat
-        if self._composed_with_old_api():
-            # copy object first because serialize_old is destructive
-            o2 = OFPActionSetField(self.field)
-            # serialize and parse to fill new fields
-            buf = bytearray()
-            o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(str(buf), 0)
-        else:
-            o = self
-        return super(OFPActionSetField, o).__str__()
-
-    __repr__ = __str__
+        return OFPActionSetField(**{k: v})
 
     def stringify_attrs(self):
         yield (self.key, self.value)
