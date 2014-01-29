@@ -2344,6 +2344,79 @@ class OFPMeterConfigStatsReply(OFPMultipartReply):
         super(OFPMeterConfigStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPMeterFeaturesStats(ofproto_parser.namedtuple('OFPMeterFeaturesStats',
+                            ('max_meter', 'band_types', 'capabilities',
+                             'max_band', 'max_color'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        meter_features = struct.unpack_from(
+            ofproto.OFP_METER_FEATURES_PACK_STR, buf, offset)
+        stats = cls(*meter_features)
+        stats.length = ofproto.OFP_METER_FEATURES_SIZE
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_METER_FEATURES, OFPMeterFeaturesStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPMeterFeaturesStatsRequest(OFPMultipartRequest):
+    """
+    Meter features statistics request message
+
+    The controller uses this message to query the set of features of the
+    metering subsystem.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_meter_features_stats_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPMeterFeaturesStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, type_=None):
+        super(OFPMeterFeaturesStatsRequest, self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_METER_FEATURES, OFPMeterFeaturesStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPMeterFeaturesStatsReply(OFPMultipartReply):
+    """
+    Meter features statistics reply message
+
+    The switch responds with this message to a meter features statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPMeterFeaturesStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPMeterFeaturesStatsReply, MAIN_DISPATCHER)
+        def meter_features_stats_reply_handler(self, ev):
+            features = []
+            for stat in ev.msg.body:
+                features.append('max_meter=%d band_types=0x%08x '
+                                'capabilities=0x%08x max_band=%d '
+                                'max_color=%d' %
+                                (stat.max_meter, stat.band_types,
+                                 stat.capabilities, stat.max_band,
+                                 stat.max_color))
+            self.logger.debug('MeterFeaturesStats: %s', configs)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPMeterFeaturesStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPMeterBand(StringifyMixin):
     def __init__(self, type_, len_):
         super(OFPMeterBand, self).__init__()
