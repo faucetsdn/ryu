@@ -314,6 +314,9 @@ OFPXMC_NXM_1 = 0x0001  # Backward compatibility with NXM
 OFPXMC_OPENFLOW_BASIC = 0x8000  # Basic class for OpenFlow
 OFPXMC_EXPERIMENTER = 0xFFFF  # Experimenter class
 
+# enum ofp_vlan_id
+OFPVID_PRESENT = 0x1000  # bit that indicate that a VLAN id is set.
+
 
 def _oxm_tlv_header(class_, field, hasmask, length):
     return (class_ << 16) | (field << 9) | (hasmask << 8) | length
