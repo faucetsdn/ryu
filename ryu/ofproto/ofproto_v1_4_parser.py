@@ -137,6 +137,98 @@ class OFPHelloElemVersionBitmap(StringifyMixin):
         return elem
 
 
+@_register_parser
+@_set_msg_type(ofproto.OFPT_ECHO_REQUEST)
+class OFPEchoRequest(MsgBase):
+    """
+    Echo request message
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    data       An arbitrary length data
+    ========== =========================================================
+
+    Example::
+
+        def send_echo_request(self, datapath, data):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPEchoRequest(datapath, data)
+            datapath.send_msg(req)
+
+        @set_ev_cls(ofp_event.EventOFPEchoRequest,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+        def echo_request_handler(self, ev):
+            self.logger.debug('OFPEchoRequest received: data=%s',
+                              utils.hex_array(ev.msg.data))
+    """
+    def __init__(self, datapath, data=None):
+        super(OFPEchoRequest, self).__init__(datapath)
+        self.data = data
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPEchoRequest, cls).parser(datapath, version, msg_type,
+                                                msg_len, xid, buf)
+        msg.data = msg.buf[ofproto.OFP_HEADER_SIZE:]
+        return msg
+
+    def _serialize_body(self):
+        if self.data is not None:
+            self.buf += self.data
+
+
+@_register_parser
+@_set_msg_type(ofproto.OFPT_ECHO_REPLY)
+class OFPEchoReply(MsgBase):
+    """
+    Echo reply message
+
+    This message is handled by the Ryu framework, so the Ryu application
+    do not need to process this typically.
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    data       An arbitrary length data
+    ========== =========================================================
+
+    Example::
+
+        def send_echo_reply(self, datapath, data):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            reply = ofp_parser.OFPEchoReply(datapath, data)
+            datapath.send_msg(reply)
+
+        @set_ev_cls(ofp_event.EventOFPEchoReply,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+        def echo_reply_handler(self, ev):
+            self.logger.debug('OFPEchoReply received: data=%s',
+                              utils.hex_array(ev.msg.data))
+    """
+    def __init__(self, datapath, data=None):
+        super(OFPEchoReply, self).__init__(datapath)
+        self.data = data
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPEchoReply, cls).parser(datapath, version, msg_type,
+                                              msg_len, xid, buf)
+        msg.data = msg.buf[ofproto.OFP_HEADER_SIZE:]
+        return msg
+
+    def _serialize_body(self):
+        assert self.data is not None
+        self.buf += self.data
+
+
 @_set_msg_type(ofproto.OFPT_FEATURES_REQUEST)
 class OFPFeaturesRequest(MsgBase):
     """
