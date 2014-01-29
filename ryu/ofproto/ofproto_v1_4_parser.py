@@ -3262,9 +3262,7 @@ class OFPInstructionMeter(StringifyMixin):
     meter_id         Meter instance
     ================ ======================================================
     """
-    _base_attributes = ['type', 'len']
-
-    def __init__(self, meter_id):
+    def __init__(self, meter_id, type_=None, len_=None):
         super(OFPInstructionMeter, self).__init__()
         self.type = ofproto.OFPIT_METER
         self.len = ofproto.OFP_INSTRUCTION_METER_SIZE
