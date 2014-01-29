@@ -2127,6 +2127,103 @@ class OFPGroupFeaturesStatsReply(OFPMultipartReply):
         super(OFPGroupFeaturesStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPMeterConfigStats(StringifyMixin):
+    def __init__(self, flags=None, meter_id=None, bands=None, length=None):
+        super(OFPMeterConfigStats, self).__init__()
+        self.length = None
+        self.flags = flags
+        self.meter_id = meter_id
+        self.bands = bands
+
+    @classmethod
+    def parser(cls, buf, offset):
+        meter_config = cls()
+
+        (meter_config.length, meter_config.flags,
+         meter_config.meter_id) = struct.unpack_from(
+            ofproto.OFP_METER_CONFIG_PACK_STR, buf, offset)
+        offset += ofproto.OFP_METER_CONFIG_SIZE
+
+        meter_config.bands = []
+        length = ofproto.OFP_METER_CONFIG_SIZE
+        while length < meter_config.length:
+            band = OFPMeterBandHeader.parser(buf, offset)
+            meter_config.bands.append(band)
+            offset += band.len
+            length += band.len
+
+        return meter_config
+
+
+@_set_stats_type(ofproto.OFPMP_METER_CONFIG, OFPMeterConfigStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPMeterConfigStatsRequest(OFPMultipartRequest):
+    """
+    Meter configuration statistics request message
+
+    The controller uses this message to query configuration for one or more
+    meters.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    meter_id         ID of meter to read (OFPM_ALL to all meters)
+    ================ ======================================================
+
+    Example::
+
+        def send_meter_config_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPMeterConfigStatsRequest(datapath, 0,
+                                                        ofp.OFPM_ALL)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, meter_id, type_=None):
+        super(OFPMeterConfigStatsRequest, self).__init__(datapath, flags)
+        self.meter_id = meter_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_METER_MULTIPART_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.meter_id)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_METER_CONFIG, OFPMeterConfigStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPMeterConfigStatsReply(OFPMultipartReply):
+    """
+    Meter configuration statistics reply message
+
+    The switch responds with this message to a meter configuration
+    statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPMeterConfigStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply, MAIN_DISPATCHER)
+        def meter_config_stats_reply_handler(self, ev):
+            configs = []
+            for stat in ev.msg.body:
+                configs.append('length=%d flags=0x%04x meter_id=0x%08x '
+                               'bands=%s' %
+                               (stat.length, stat.flags, stat.meter_id,
+                                stat.bands))
+            self.logger.debug('MeterConfigStats: %s', configs)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPMeterConfigStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPMeterBand(StringifyMixin):
     def __init__(self, type_, len_):
         super(OFPMeterBand, self).__init__()
