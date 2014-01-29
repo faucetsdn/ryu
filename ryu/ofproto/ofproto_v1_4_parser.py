@@ -1838,6 +1838,81 @@ class OFPGroupStatsReply(OFPMultipartReply):
         super(OFPGroupStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPGroupFeaturesStats(ofproto_parser.namedtuple('OFPGroupFeaturesStats',
+                            ('types', 'capabilities', 'max_groups',
+                             'actions'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        group_features = struct.unpack_from(
+            ofproto.OFP_GROUP_FEATURES_PACK_STR, buf, offset)
+        types = group_features[0]
+        capabilities = group_features[1]
+        max_groups = list(group_features[2:6])
+        actions = list(group_features[6:10])
+        stats = cls(types, capabilities, max_groups, actions)
+        stats.length = ofproto.OFP_GROUP_FEATURES_SIZE
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_GROUP_FEATURES, OFPGroupFeaturesStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
+    """
+    Group features request message
+
+    The controller uses this message to list the capabilities of groups on
+    a switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_group_features_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGroupFeaturesStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, type_=None):
+        super(OFPGroupFeaturesStatsRequest, self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type(body_single_struct=True)
+@_set_stats_type(ofproto.OFPMP_GROUP_FEATURES, OFPGroupFeaturesStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPGroupFeaturesStatsReply(OFPMultipartReply):
+    """
+    Group features reply message
+
+    The switch responds with this message to a group features request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPGroupFeaturesStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGroupFeaturesStatsReply, MAIN_DISPATCHER)
+        def group_features_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('GroupFeaturesStats: types=%d '
+                              'capabilities=0x%08x max_groups=%s '
+                              'actions=%s',
+                              body.types, body.capabilities,
+                              body.max_groups, body.actions)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPGroupFeaturesStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
