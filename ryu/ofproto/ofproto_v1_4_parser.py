@@ -360,6 +360,46 @@ class OFPFeaturesRequest(MsgBase):
 
 
 @_register_parser
+@_set_msg_type(ofproto.OFPT_EXPERIMENTER)
+class OFPExperimenter(MsgBase):
+    """
+    Experimenter extension message
+
+    ============= =========================================================
+    Attribute     Description
+    ============= =========================================================
+    experimenter  Experimenter ID
+    exp_type      Experimenter defined
+    data          Experimenter defined arbitrary additional data
+    ============= =========================================================
+    """
+    def __init__(self, datapath, experimenter=None, exp_type=None, data=None):
+        super(OFPExperimenter, self).__init__(datapath)
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPExperimenter, cls).parser(datapath, version,
+                                                 msg_type, msg_len,
+                                                 xid, buf)
+        (msg.experimenter, msg.exp_type) = struct.unpack_from(
+            ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR, msg.buf,
+            ofproto.OFP_HEADER_SIZE)
+        msg.data = msg.buf[ofproto.OFP_EXPERIMENTER_HEADER_SIZE:]
+
+        return msg
+
+    def _serialize_body(self):
+        assert self.data is not None
+        msg_pack_into(ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        self.buf += self.data
+
+
+@_register_parser
 @_set_msg_type(ofproto.OFPT_FEATURES_REPLY)
 class OFPSwitchFeatures(MsgBase):
     """
