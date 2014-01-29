@@ -653,6 +653,12 @@ OFPMF_PKTPS = 1 << 1  # Rate value in packet/sec.
 OFPMF_BURST = 1 << 2  # Do burst size.
 OFPMF_STATS = 1 << 3  # Collect statistics.
 
+# struct ofp_meter_band_header
+OFP_METER_BAND_HEADER_PACK_STR = '!HHII'
+OFP_METER_BAND_HEADER_SIZE = 12
+assert (calcsize(OFP_METER_BAND_HEADER_PACK_STR) ==
+        OFP_METER_BAND_HEADER_SIZE)
+
 # struct ofp_meter_mod
 OFP_METER_MOD_PACK_STR = '!HHI'
 OFP_METER_MOD_SIZE = 16
