@@ -2092,6 +2092,44 @@ class OFPFlowStatsReply(OFPMultipartReply):
         super(OFPFlowStatsReply, self).__init__(datapath, **kwargs)
 
 
+@_set_msg_type(ofproto.OFPT_BARRIER_REQUEST)
+class OFPBarrierRequest(MsgBase):
+    """
+    Barrier request message
+
+    The controller sends this message to ensure message dependencies have
+    been met or receive notifications for completed operations.
+
+    Example::
+
+        def send_barrier_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPBarrierRequest(datapath)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath):
+        super(OFPBarrierRequest, self).__init__(datapath)
+
+
+@_register_parser
+@_set_msg_type(ofproto.OFPT_BARRIER_REPLY)
+class OFPBarrierReply(MsgBase):
+    """
+    Barrier reply message
+
+    The switch responds with this message to a barrier request.
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
+        def barrier_reply_handler(self, ev):
+            self.logger.debug('OFPBarrierReply received')
+    """
+    def __init__(self, datapath):
+        super(OFPBarrierReply, self).__init__(datapath)
+
+
 @_set_msg_type(ofproto.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
     """
