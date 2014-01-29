@@ -4105,3 +4105,67 @@ class OFPGetAsyncReply(MsgBase):
         msg.port_status_mask = [port_status_mask_m, port_status_mask_s]
         msg.flow_removed_mask = [flow_removed_mask_m, flow_removed_mask_s]
         return msg
+
+
+@_set_msg_type(ofproto.OFPT_SET_ASYNC)
+class OFPSetAsync(MsgBase):
+    """
+    Set asynchronous configuration message
+
+    The controller sends this message to set the asynchronous messages that
+    it wants to receive on a given OpneFlow channel.
+
+    ================== ====================================================
+    Attribute          Description
+    ================== ====================================================
+    packet_in_mask     2-element array: element 0, when the controller has a
+                       OFPCR_ROLE_EQUAL or OFPCR_ROLE_MASTER role. element 1,
+                       OFPCR_ROLE_SLAVE role controller.
+                       Bitmasks of following values.
+                       OFPR_NO_MATCH
+                       OFPR_ACTION
+                       OFPR_INVALID_TTL
+    port_status_mask   2-element array.
+                       Bitmasks of following values.
+                       OFPPR_ADD
+                       OFPPR_DELETE
+                       OFPPR_MODIFY
+    flow_removed_mask  2-element array.
+                       Bitmasks of following values.
+                       OFPRR_IDLE_TIMEOUT
+                       OFPRR_HARD_TIMEOUT
+                       OFPRR_DELETE
+                       OFPRR_GROUP_DELETE
+    ================== ====================================================
+
+    Example::
+
+        def send_set_async(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            packet_in_mask = ofp.OFPR_ACTION | ofp.OFPR_INVALID_TTL
+            port_status_mask = (ofp.OFPPR_ADD | ofp.OFPPR_DELETE |
+                                ofp.OFPPR_MODIFY)
+            flow_removed_mask = (ofp.OFPRR_IDLE_TIMEOUT |
+                                 ofp.OFPRR_HARD_TIMEOUT |
+                                 ofp.OFPRR_DELETE)
+            req = ofp_parser.OFPSetAsync(datapath,
+                                         [packet_in_mask, 0],
+                                         [port_status_mask, 0],
+                                         [flow_removed_mask, 0])
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath,
+                 packet_in_mask, port_status_mask, flow_removed_mask):
+        super(OFPSetAsync, self).__init__(datapath)
+        self.packet_in_mask = packet_in_mask
+        self.port_status_mask = port_status_mask
+        self.flow_removed_mask = flow_removed_mask
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto.OFP_ASYNC_CONFIG_PACK_STR, self.buf,
+                      ofproto.OFP_HEADER_SIZE,
+                      self.packet_in_mask[0], self.packet_in_mask[1],
+                      self.port_status_mask[0], self.port_status_mask[1],
+                      self.flow_removed_mask[0], self.flow_removed_mask[1])
