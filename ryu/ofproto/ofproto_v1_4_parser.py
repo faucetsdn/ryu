@@ -3258,6 +3258,45 @@ class OFPActionPopPbb(OFPAction):
         return cls()
 
 
+class OFPBucket(StringifyMixin):
+    def __init__(self, weight, watch_port, watch_group, actions, len_=None):
+        super(OFPBucket, self).__init__()
+        self.weight = weight
+        self.watch_port = watch_port
+        self.watch_group = watch_group
+        self.actions = actions
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (len_, weight, watch_port, watch_group) = struct.unpack_from(
+            ofproto.OFP_BUCKET_PACK_STR, buf, offset)
+        msg = cls(weight, watch_port, watch_group, [])
+        msg.len = len_
+
+        length = ofproto.OFP_BUCKET_SIZE
+        offset += ofproto.OFP_BUCKET_SIZE
+        while length < msg.len:
+            action = OFPAction.parser(buf, offset)
+            msg.actions.append(action)
+            offset += action.len
+            length += action.len
+
+        return msg
+
+    def serialize(self, buf, offset):
+        action_offset = offset + ofproto.OFP_BUCKET_SIZE
+        action_len = 0
+        for a in self.actions:
+            a.serialize(buf, action_offset)
+            action_offset += a.len
+            action_len += a.len
+
+        self.len = utils.round_up(ofproto.OFP_BUCKET_SIZE + action_len, 8)
+        msg_pack_into(ofproto.OFP_BUCKET_PACK_STR, buf, offset,
+                      self.len, self.weight, self.watch_port,
+                      self.watch_group)
+
+
 @_set_msg_type(ofproto.OFPT_ROLE_REQUEST)
 class OFPRoleRequest(MsgBase):
     """
