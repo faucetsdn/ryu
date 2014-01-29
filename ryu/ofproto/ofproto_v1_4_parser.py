@@ -2371,6 +2371,35 @@ class OFPActionDecMplsTtl(OFPAction):
         return cls()
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_SET_NW_TTL,
+                                ofproto.OFP_ACTION_NW_TTL_SIZE)
+class OFPActionSetNwTtl(OFPAction):
+    """
+    Set IP TTL action
+
+    This action sets the IP TTL.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    nw_ttl           IP TTL
+    ================ ======================================================
+    """
+    def __init__(self, nw_ttl, type_=None, len_=None):
+        super(OFPActionSetNwTtl, self).__init__()
+        self.nw_ttl = nw_ttl
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, nw_ttl) = struct.unpack_from(
+            ofproto.OFP_ACTION_NW_TTL_PACK_STR, buf, offset)
+        return cls(nw_ttl)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_ACTION_NW_TTL_PACK_STR, buf, offset,
+                      self.type, self.len, self.nw_ttl)
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_DEC_NW_TTL,
                                 ofproto.OFP_ACTION_HEADER_SIZE)
 class OFPActionDecNwTtl(OFPAction):
