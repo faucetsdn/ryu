@@ -738,12 +738,7 @@ class OFPMatch(StringifyMixin):
         """
         fields = [ofproto.oxm_from_jsondict(f) for f
                   in dict_['oxm_fields']]
-        o = OFPMatch()
-        # XXX old api compat
-        # serialize and parse to fill OFPMatch.fields
-        buf = bytearray()
-        o.serialize(buf, 0)
-        return OFPMatch.parser(str(buf), 0)
+        return OFPMatch(**dict(fields))
 
 
 class OFPPortDescPropUnknown(StringifyMixin):
