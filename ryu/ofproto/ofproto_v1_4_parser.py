@@ -788,6 +788,88 @@ class OFPMultipartReply(MsgBase):
         return msg
 
 
+class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
+        'mfr_desc', 'hw_desc', 'sw_desc', 'serial_num', 'dp_desc'))):
+
+    _TYPE = {
+        'ascii': [
+            'mfr_desc',
+            'hw_desc',
+            'sw_desc',
+            'serial_num',
+            'dp_desc',
+        ]
+    }
+
+    @classmethod
+    def parser(cls, buf, offset):
+        desc = struct.unpack_from(ofproto.OFP_DESC_PACK_STR,
+                                  buf, offset)
+        desc = list(desc)
+        desc = map(lambda x: x.rstrip('\0'), desc)
+        stats = cls(*desc)
+        stats.length = ofproto.OFP_DESC_SIZE
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_DESC, OFPDescStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPDescStatsRequest(OFPMultipartRequest):
+    """
+    Description statistics request message
+
+    The controller uses this message to query description of the switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_desc_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, type_=None):
+        super(OFPDescStatsRequest, self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type(body_single_struct=True)
+@_set_stats_type(ofproto.OFPMP_DESC, OFPDescStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPDescStatsReply(OFPMultipartReply):
+    """
+    Description statistics reply message
+
+    The switch responds with this message to a description statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPDescStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPDescStatsReply, MAIN_DISPATCHER)
+        def desc_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('DescStats: mfr_desc=%s hw_desc=%s sw_desc=%s '
+                              'serial_num=%s dp_desc=%s',
+                              body.mfr_desc, body.hw_desc, body.sw_desc,
+                              body.serial_num, body.dp_desc)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPDescStatsReply, self).__init__(datapath, **kwargs)
+
+
 @_set_stats_type(ofproto.OFPMP_PORT_DESC, OFPPort)
 @_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
 class OFPPortDescStatsRequest(OFPMultipartRequest):
