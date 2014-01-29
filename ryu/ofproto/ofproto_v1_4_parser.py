@@ -2391,6 +2391,24 @@ class OFPActionPushMpls(OFPAction):
                       self.type, self.len, self.ethertype)
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_POP_VLAN,
+                                ofproto.OFP_ACTION_HEADER_SIZE)
+class OFPActionPopVlan(OFPAction):
+    """
+    Pop VLAN action
+
+    This action pops the outermost VLAN tag from the packet.
+    """
+    def __init__(self, type_=None, len_=None):
+        super(OFPActionPopVlan, self).__init__()
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_) = struct.unpack_from(
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        return cls()
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_POP_MPLS,
                                 ofproto.OFP_ACTION_POP_MPLS_SIZE)
 class OFPActionPopMpls(OFPAction):
