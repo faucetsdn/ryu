@@ -1612,6 +1612,41 @@ class OFPMultipartRequest(MsgBase):
         self._serialize_stats_body()
 
 
+@_set_msg_type(ofproto.OFPT_TABLE_MOD)
+class OFPTableMod(MsgBase):
+    """
+    Flow table configuration message
+
+    The controller sends this message to configure table state.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    table_id         ID of the table (OFPTT_ALL indicates all tables)
+    config           Bitmap of the following flags.
+                     OFPTC_DEPRECATED_MASK (3)
+    ================ ======================================================
+
+    Example::
+
+        def send_table_mod(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPTableMod(datapath, 1, 3)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, table_id, config):
+        super(OFPTableMod, self).__init__(datapath)
+        self.table_id = table_id
+        self.config = config
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto.OFP_TABLE_MOD_PACK_STR, self.buf,
+                      ofproto.OFP_HEADER_SIZE,
+                      self.table_id, self.config)
+
+
 @_register_parser
 @_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
 class OFPMultipartReply(MsgBase):
