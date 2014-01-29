@@ -2092,6 +2092,110 @@ class OFPFlowStatsReply(OFPMultipartReply):
         super(OFPFlowStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPAggregateStats(ofproto_parser.namedtuple('OFPAggregateStats', (
+        'packet_count', 'byte_count', 'flow_count'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        agg = struct.unpack_from(
+            ofproto.OFP_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
+        stats = cls(*agg)
+        stats.length = ofproto.OFP_AGGREGATE_STATS_REPLY_SIZE
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_AGGREGATE, OFPAggregateStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
+    """
+    Aggregate flow statistics request message
+
+    The controller uses this message to query aggregate flow statictics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    table_id         ID of table to read
+    out_port         Require matching entries to include this as an output
+                     port
+    out_group        Require matching entries to include this as an output
+                     group
+    cookie           Require matching entries to contain this cookie value
+    cookie_mask      Mask used to restrict the cookie bits that must match
+    match            Instance of ``OFPMatch``
+    ================ ======================================================
+
+    Example::
+
+        def send_aggregate_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            cookie = cookie_mask = 0
+            match = ofp_parser.OFPMatch(in_port=1)
+            req = ofp_parser.OFPAggregateStatsRequest(datapath, 0,
+                                                      ofp.OFPTT_ALL,
+                                                      ofp.OFPP_ANY,
+                                                      ofp.OFPG_ANY,
+                                                      cookie, cookie_mask,
+                                                      match)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, table_id, out_port, out_group,
+                 cookie, cookie_mask, match, type_=None):
+        super(OFPAggregateStatsRequest, self).__init__(datapath,
+                                                       flags,
+                                                       table_id,
+                                                       out_port,
+                                                       out_group,
+                                                       cookie,
+                                                       cookie_mask,
+                                                       match)
+
+
+@OFPMultipartReply.register_stats_type(body_single_struct=True)
+@_set_stats_type(ofproto.OFPMP_AGGREGATE, OFPAggregateStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPAggregateStatsReply(OFPMultipartReply):
+    """
+    Aggregate flow statistics reply message
+
+    The switch responds with this message to an aggregate flow statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPAggregateStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPAggregateStatsReply, MAIN_DISPATCHER)
+        def aggregate_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('AggregateStats: packet_count=%d byte_count=%d '
+                              'flow_count=%d',
+                              body.packet_count, body.byte_count,
+                              body.flow_count)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPAggregateStatsReply, self).__init__(datapath, **kwargs)
+
+
+class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
+        'table_id', 'active_count', 'lookup_count',
+        'matched_count'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        tbl = struct.unpack_from(ofproto.OFP_TABLE_STATS_PACK_STR,
+                                 buf, offset)
+        stats = cls(*tbl)
+        stats.length = ofproto.OFP_TABLE_STATS_SIZE
+        return stats
+
+
 @_set_msg_type(ofproto.OFPT_BARRIER_REQUEST)
 class OFPBarrierRequest(MsgBase):
     """
