@@ -1838,6 +1838,91 @@ class OFPGroupStatsReply(OFPMultipartReply):
         super(OFPGroupStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPGroupDescStats(StringifyMixin):
+    def __init__(self, type_=None, group_id=None, buckets=None, length=None):
+        super(OFPGroupDescStats, self).__init__()
+        self.type = type_
+        self.group_id = group_id
+        self.buckets = buckets
+
+    @classmethod
+    def parser(cls, buf, offset):
+        stats = cls()
+
+        (stats.length, stats.type, stats.group_id) = struct.unpack_from(
+            ofproto.OFP_GROUP_DESC_STATS_PACK_STR, buf, offset)
+        offset += ofproto.OFP_GROUP_DESC_STATS_SIZE
+
+        stats.buckets = []
+        length = ofproto.OFP_GROUP_DESC_STATS_SIZE
+        while length < stats.length:
+            bucket = OFPBucket.parser(buf, offset)
+            stats.buckets.append(bucket)
+
+            offset += bucket.len
+            length += bucket.len
+
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_GROUP_DESC, OFPGroupDescStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPGroupDescStatsRequest(OFPMultipartRequest):
+    """
+    Group description request message
+
+    The controller uses this message to list the set of groups on a switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_group_desc_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPGroupDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, type_=None):
+        super(OFPGroupDescStatsRequest, self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_GROUP_DESC, OFPGroupDescStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPGroupDescStatsReply(OFPMultipartReply):
+    """
+    Group description reply message
+
+    The switch responds with this message to a group description request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPGroupDescStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPGroupDescStatsReply, MAIN_DISPATCHER)
+        def group_desc_stats_reply_handler(self, ev):
+            descs = []
+            for stat in ev.msg.body:
+                descs.append('length=%d type=%d group_id=%d '
+                             'buckets=%s' %
+                             (stat.length, stat.type, stat.group_id,
+                              stat.bucket))
+            self.logger.debug('GroupDescStats: %s', groups)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPGroupDescStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPGroupFeaturesStats(ofproto_parser.namedtuple('OFPGroupFeaturesStats',
                             ('types', 'capabilities', 'max_groups',
                              'actions'))):
