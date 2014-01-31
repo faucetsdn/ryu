@@ -120,7 +120,7 @@ class VRRPConfig(object):
                  priority=vrrp.VRRP_PRIORITY_BACKUP_DEFAULT, ip_addresses=None,
                  advertisement_interval=vrrp.VRRP_MAX_ADVER_INT_DEFAULT_IN_SEC,
                  preempt_mode=True, preempt_delay=0, accept_mode=False,
-                 statistics_interval=0, resource_id=None):
+                 statistics_interval=30, resource_id=None):
         # To allow version and priority default
         assert vrid is not None
         assert ip_addresses is not None
