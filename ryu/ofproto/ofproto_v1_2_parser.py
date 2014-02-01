@@ -2169,8 +2169,10 @@ class OFPAggregateStatsRequest(OFPStatsRequest):
                                                       match)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, table_id, out_port, out_group,
-                 cookie, cookie_mask, match, flags=0):
+    def __init__(self, datapath, table_id=ofproto_v1_2.OFPTT_ALL,
+                 out_port=ofproto_v1_2.OFPP_ANY,
+                 out_group=ofproto_v1_2.OFPP_ANY,
+                 cookie=0, cookie_mask=0, match=None, flags=0):
         super(OFPAggregateStatsRequest, self).__init__(
             datapath,
             ofproto_v1_2.OFPST_AGGREGATE,
@@ -2180,6 +2182,8 @@ class OFPAggregateStatsRequest(OFPStatsRequest):
         self.out_group = out_group
         self.cookie = cookie
         self.cookie_mask = cookie_mask
+        if match is None:
+            match = OFPMatch()
         self.match = match
 
     def _serialize_stats_body(self):
@@ -2379,7 +2383,7 @@ class OFPPortStatsRequest(OFPStatsRequest):
             req = ofp_parser.OFPPortStatsRequest(datapath, ofp.OFPP_ANY)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, port_no, flags=0):
+    def __init__(self, datapath, port_no=ofproto_v1_2.OFPP_ANY, flags=0):
         super(OFPPortStatsRequest, self).__init__(datapath,
                                                   ofproto_v1_2.OFPST_PORT,
                                                   flags)
@@ -2488,7 +2492,8 @@ class OFPQueueStatsRequest(OFPStatsRequest):
                                                   ofp.OFPQ_ALL)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, port_no, queue_id, flags=0):
+    def __init__(self, datapath, port_no=ofproto_v1_2.OFPP_ANY,
+                 queue_id=ofproto_v1_2.OFPQ_ALL, flags=0):
         super(OFPQueueStatsRequest, self).__init__(datapath,
                                                    ofproto_v1_2.OFPST_QUEUE,
                                                    flags)
@@ -2589,7 +2594,7 @@ class OFPGroupStatsRequest(OFPStatsRequest):
             req = ofp_parser.OFPGroupStatsRequest(datapath, ofp.OFPG_ALL)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, group_id, flags=0):
+    def __init__(self, datapath, group_id=ofproto_v1_2.OFPG_ALL, flags=0):
         super(OFPGroupStatsRequest, self).__init__(datapath,
                                                    ofproto_v1_2.OFPST_GROUP,
                                                    flags)
