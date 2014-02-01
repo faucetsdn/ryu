@@ -115,7 +115,10 @@ class RyuApp(object):
         self.observers = {}     # ev_cls -> observer-name -> states:set
         self.threads = []
         self.events = hub.Queue(128)
-        self.logger = logging.getLogger(self.name)
+        if hasattr(self.__class__, 'LOGGER_NAME'):
+            self.logger = logging.getLogger(self.__class__.LOGGER_NAME)
+        else:
+            self.logger = logging.getLogger(self.name)
 
         # prevent accidental creation of instances of this class outside RyuApp
         class _EventThreadStop(event.EventBase):
