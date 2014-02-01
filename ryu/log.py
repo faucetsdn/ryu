@@ -17,6 +17,7 @@
 from __future__ import print_function
 from oslo.config import cfg
 import inspect
+import platform
 import logging
 import logging.config
 import logging.handlers
@@ -85,7 +86,11 @@ def init_log():
         _EARLY_LOG_HANDLER = None
 
     if CONF.use_syslog:
-        syslog = logging.handlers.SysLogHandler(address='/dev/log')
+        if platform.system() == 'Darwin':
+            address = '/var/run/syslog'
+        else:
+            address = '/dev/log'
+        syslog = logging.handlers.SysLogHandler(address=address)
         log.addHandler(syslog)
 
     log_file = _get_log_file()
