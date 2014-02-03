@@ -25,6 +25,7 @@ from ryu.controller.controller import Datapath
 from ryu.controller import event
 from ryu.controller.event import EventRequestBase, EventReplyBase
 from ryu.lib import hub
+from ryu.ofproto import ofproto_protocol
 
 LOG = logging.getLogger('ryu.base.app_manager')
 
@@ -346,12 +347,7 @@ class AppManager(object):
         LOG.info('instantiating app %s of %s', app_name, cls.__name__)
 
         if hasattr(cls, 'OFP_VERSIONS') and not cls.OFP_VERSIONS is None:
-            for k in Datapath.supported_ofp_version.keys():
-                if not k in cls.OFP_VERSIONS:
-                    del Datapath.supported_ofp_version[k]
-
-        assert len(Datapath.supported_ofp_version), \
-            'No OpenFlow version is available'
+            ofproto_protocol.set_app_supported_versions(cls.OFP_VERSIONS)
 
         if app_name is not None:
             assert app_name not in self.applications

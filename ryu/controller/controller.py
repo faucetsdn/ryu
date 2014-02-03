@@ -27,14 +27,8 @@ import ryu.base.app_manager
 
 from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_v1_0
-from ryu.ofproto import ofproto_v1_0_parser
-from ryu.ofproto import ofproto_v1_2
-from ryu.ofproto import ofproto_v1_2_parser
-from ryu.ofproto import ofproto_v1_3
-from ryu.ofproto import ofproto_v1_3_parser
-from ryu.ofproto import ofproto_v1_4
-from ryu.ofproto import ofproto_v1_4_parser
 from ryu.ofproto import nx_match
 
 from ryu.controller import handler
@@ -102,18 +96,7 @@ def _deactivate(method):
     return deactivate
 
 
-class Datapath(object):
-    supported_ofp_version = {
-        ofproto_v1_0.OFP_VERSION: (ofproto_v1_0,
-                                   ofproto_v1_0_parser),
-        ofproto_v1_2.OFP_VERSION: (ofproto_v1_2,
-                                   ofproto_v1_2_parser),
-        ofproto_v1_3.OFP_VERSION: (ofproto_v1_3,
-                                   ofproto_v1_3_parser),
-        ofproto_v1_4.OFP_VERSION: (ofproto_v1_4,
-                                   ofproto_v1_4_parser),
-    }
-
+class Datapath(ofproto_protocol.ProtocolDesc):
     def __init__(self, socket, address):
         super(Datapath, self).__init__()
 
@@ -125,7 +108,6 @@ class Datapath(object):
         # prevent it from eating memory up
         self.send_q = hub.Queue(16)
 
-        self.set_version(max(self.supported_ofp_version))
         self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
         self.ports = None
@@ -141,10 +123,6 @@ class Datapath(object):
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
         self.ofp_brick.send_event_to_observers(ev, state)
-
-    def set_version(self, version):
-        assert version in self.supported_ofp_version
-        self.ofproto, self.ofproto_parser = self.supported_ofp_version[version]
 
     # Low level socket handling layer
     @_deactivate
