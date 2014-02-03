@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
+# Copyright (C) 2013,2014 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2013,2014 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,14 +21,11 @@ import unittest
 from nose.tools import eq_
 
 from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
-from ryu.ofproto import ofproto_v1_0_parser
-from ryu.ofproto import ofproto_v1_2_parser
-from ryu.ofproto import ofproto_v1_3_parser
-from ryu.ofproto import ofproto_v1_4_parser
 import json
 
 
@@ -118,27 +115,9 @@ implemented = {
 }
 
 
-# XXX dummy dp for testing
-class DummyDatapath(object):
-    def __init__(self, ofp, ofpp):
-        self.ofproto = ofp
-        self.ofproto_parser = ofpp
-
-
 class Test_Parser(unittest.TestCase):
     """ Test case for ryu.ofproto, especially json representation
     """
-
-    _ofp_versions = {
-        ofproto_v1_0.OFP_VERSION: (ofproto_v1_0,
-                                   ofproto_v1_0_parser),
-        ofproto_v1_2.OFP_VERSION: (ofproto_v1_2,
-                                   ofproto_v1_2_parser),
-        ofproto_v1_3.OFP_VERSION: (ofproto_v1_3,
-                                   ofproto_v1_3_parser),
-        ofproto_v1_4.OFP_VERSION: (ofproto_v1_4,
-                                   ofproto_v1_4_parser),
-    }
 
     def __init__(self, methodName):
         print 'init', methodName
@@ -168,7 +147,7 @@ class Test_Parser(unittest.TestCase):
             has_parser = True
             has_serializer = True
 
-        dp = DummyDatapath(*self._ofp_versions[version])
+        dp = ofproto_protocol.ProtocolDesc(version=version)
         if has_parser:
             msg = ofproto_parser.msg(dp, version, msg_type, msg_len, xid,
                                      wire_msg)
