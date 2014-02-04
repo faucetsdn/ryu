@@ -2653,6 +2653,54 @@ class OFPMeterBandDrop(OFPMeterBandHeader):
         return cls(rate, burst_size)
 
 
+@OFPMeterBandHeader.register_meter_band_type(
+    ofproto.OFPMBT_DSCP_REMARK,
+    ofproto.OFP_METER_BAND_DSCP_REMARK_SIZE)
+class OFPMeterBandDscpRemark(OFPMeterBandHeader):
+    def __init__(self, rate, burst_size, prec_level, type_=None, len_=None):
+        super(OFPMeterBandDscpRemark, self).__init__()
+        self.rate = rate
+        self.burst_size = burst_size
+        self.prec_level = prec_level
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_METER_BAND_DSCP_REMARK_PACK_STR, buf,
+                      offset, self.type, self.len, self.rate,
+                      self.burst_size, self.prec_level)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, rate, burst_size, prec_level = struct.unpack_from(
+            ofproto.OFP_METER_BAND_DSCP_REMARK_PACK_STR, buf, offset)
+        assert cls.cls_meter_band_type == type_
+        assert cls.cls_meter_band_len == len_
+        return cls(rate, burst_size, prec_level)
+
+
+@OFPMeterBandHeader.register_meter_band_type(
+    ofproto.OFPMBT_EXPERIMENTER,
+    ofproto.OFP_METER_BAND_EXPERIMENTER_SIZE)
+class OFPMeterBandExperimenter(OFPMeterBandHeader):
+    def __init__(self, rate, burst_size, experimenter, type_=None, len_=None):
+        super(OFPMeterBandExperimenter, self).__init__()
+        self.rate = rate
+        self.burst_size = burst_size
+        self.experimenter = experimenter
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_METER_BAND_EXPERIMENTER_PACK_STR, buf,
+                      offset, self.type, self.len, self.rate,
+                      self.burst_size, self.experimenter)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, rate, burst_size, experimenter = struct.unpack_from(
+            ofproto.OFP_METER_BAND_EXPERIMENTER_PACK_STR, buf, offset)
+        assert cls.cls_meter_band_type == type_
+        assert cls.cls_meter_band_len == len_
+        return cls(rate, burst_size, experimenter)
+
+
 class OFPMeterConfigStats(StringifyMixin):
     def __init__(self, flags=None, meter_id=None, bands=None, length=None):
         super(OFPMeterConfigStats, self).__init__()
