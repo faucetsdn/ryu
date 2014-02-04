@@ -2251,6 +2251,114 @@ class OFPPortDescStatsReply(OFPMultipartReply):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPQueueProp(OFPPropBase):
+    _TYPES = {}
+
+
+class OFPQueueStats(StringifyMixin):
+    def __init__(self, length=None, port_no=None, queue_id=None,
+                 tx_type=None, tx_packets=None, tx_errors=None,
+                 duration_sec=None, duration_nsec=None, properties=None):
+        super(OFPQueueStats, self).__init__()
+        self.length = length
+        self.port_no = port_no
+        self.queue_id = queue_id
+        self.tx_type = tx_type
+        self.tx_packets = tx_packets
+        self.tx_errors = tx_errors
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.properties = properties
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, port_no, queue_id, tx_type, tx_packets, tx_errors,
+         duration_sec, duration_nsec) = struct.unpack_from(
+            ofproto.OFP_QUEUE_STATS_PACK_STR, buf, offset)
+        props = []
+        rest = buf[offset + ofproto.OFP_QUEUE_STATS_SIZE:offset + length]
+        while rest:
+            p, rest = OFPQueueProp.parse(rest)
+            props.append(p)
+        stats = cls(length, port_no, queue_id, tx_type, tx_packets, tx_errors,
+                    duration_sec, duration_nsec, props)
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_QUEUE, OFPQueueStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPQueueStatsRequest(OFPMultipartRequest):
+    """
+    Queue statistics request message
+
+    The controller uses this message to query queue statictics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    port_no          Port number to read
+    queue_id         ID of queue to read
+    ================ ======================================================
+
+    Example::
+
+        def send_queue_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPQueueStatsRequest(datapath, 0, ofp.OFPP_ANY,
+                                                  ofp.OFPQ_ALL)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, port_no=ofproto.OFPP_ANY,
+                 queue_id=ofproto.OFPQ_ALL, type_=None):
+        super(OFPQueueStatsRequest, self).__init__(datapath, flags)
+        self.port_no = port_no
+        self.queue_id = queue_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_QUEUE_STATS_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.port_no, self.queue_id)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_QUEUE, OFPQueueStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPQueueStatsReply(OFPMultipartReply):
+    """
+    Queue statistics reply message
+
+    The switch responds with this message to an aggregate flow statistics
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPQueueStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPQueueStatsReply, MAIN_DISPATCHER)
+        def queue_stats_reply_handler(self, ev):
+            queues = []
+            for stat in ev.msg.body:
+                queues.append('port_no=%d queue_id=%d '
+                              'tx_bytes=%d tx_packets=%d tx_errors=%d '
+                              'duration_sec=%d duration_nsec=%d' %
+                              (stat.port_no, stat.queue_id,
+                               stat.tx_bytes, stat.tx_packets, stat.tx_errors,
+                               stat.duration_sec, stat.duration_nsec,
+                               repr(stat.properties)))
+            self.logger.debug('QueueStats: %s', queues)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPQueueStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPBucketCounter(StringifyMixin):
     def __init__(self, packet_count, byte_count):
         super(OFPBucketCounter, self).__init__()
