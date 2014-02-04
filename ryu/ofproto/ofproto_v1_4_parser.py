@@ -3348,6 +3348,138 @@ class OFPTableStatsReply(OFPMultipartReply):
         super(OFPTableStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPPortStatsProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPPortStatsProp.register_type(ofproto.OFPPSPT_ETHERNET)
+class OFPPortStatsPropEthernet(StringifyMixin):
+    def __init__(self, type_=None, length=None, rx_frame_err=None,
+                 rx_over_err=None, rx_crc_err=None, collisions=None):
+        self.type = type_
+        self.length = length
+        self.rx_frame_err = rx_frame_err
+        self.rx_over_err = rx_over_err
+        self.rx_crc_err = rx_crc_err
+        self.collisions = collisions
+
+    @classmethod
+    def parser(cls, buf):
+        ether = cls()
+        (ether.type, ether.length, ether.rx_frame_err, ether.rx_over_err,
+         ether.rx_crc_err, ether.collisions) = struct.unpack_from(
+            ofproto.OFP_PORT_STATS_PROP_ETHERNET_PACK_STR, buf, 0)
+        return ether
+
+
+class OFPPortStats(StringifyMixin):
+    def __init__(self, length=None, port_no=None, duration_sec=None,
+                 duration_nsec=None, rx_packets=None, tx_packets=None,
+                 rx_bytes=None, tx_bytes=None, rx_dropped=None,
+                 tx_dropped=None, rx_errors=None, tx_errors=None,
+                 properties=None):
+        super(OFPPortStats, self).__init__()
+        self.length = length
+        self.port_no = port_no
+        self.duration_sec = duration_sec
+        self.duration_nsec = duration_nsec
+        self.rx_packets = rx_packets
+        self.tx_packets = tx_packets
+        self.rx_bytes = rx_bytes
+        self.tx_bytes = tx_bytes
+        self.rx_dropped = rx_dropped
+        self.tx_dropped = tx_dropped
+        self.rx_errors = rx_errors
+        self.tx_errors = tx_errors
+        self.properties = properties
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, port_no, duration_sec, duration_nsec, rx_packets,
+         tx_packets, rx_bytes, tx_bytes, rx_dropped, tx_dropped,
+         rx_errors, tx_errors) = struct.unpack_from(
+            ofproto.OFP_PORT_STATS_PACK_STR, buf, offset)
+        props = []
+        rest = buf[offset + ofproto.OFP_PORT_STATS_SIZE:offset + length]
+        while rest:
+            p, rest = OFPPortStatsProp.parse(rest)
+            props.append(p)
+        stats = cls(length, port_no, duration_sec, duration_nsec, rx_packets,
+                    tx_packets, rx_bytes, tx_bytes, rx_dropped, tx_dropped,
+                    rx_errors, tx_errors, props)
+        return stats
+
+
+@_set_stats_type(ofproto.OFPMP_PORT_STATS, OFPPortStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPPortStatsRequest(OFPMultipartRequest):
+    """
+    Port statistics request message
+
+    The controller uses this message to query information about ports
+    statistics.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    port_no          Port number to read (OFPP_ANY to all ports)
+    ================ ======================================================
+
+    Example::
+
+        def send_port_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags, port_no, type_=None):
+        super(OFPPortStatsRequest, self).__init__(datapath, flags)
+        self.port_no = port_no
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_PORT_STATS_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.port_no)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_PORT_STATS, OFPPortStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPPortStatsReply(OFPMultipartReply):
+    """
+    Port statistics reply message
+
+    The switch responds with this message to a port statistics request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPPortStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
+        def port_stats_reply_handler(self, ev):
+            ports = []
+            for stat in ev.msg.body:
+                ports.append(stat.length, stat.port_no,
+                             stat.duration_sec, stat.duration_nsec,
+                             stat.rx_packets, stat.tx_packets,
+                             stat.rx_bytes, stat.tx_bytes,
+                             stat.rx_dropped, stat.tx_dropped,
+                             stat.rx_errors, stat.tx_errors,
+                             repr(stat.properties))
+        self.logger.debug('PortStats: %s', ports)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPPortStatsReply, self).__init__(datapath, **kwargs)
+
+
 @_set_msg_type(ofproto.OFPT_BARRIER_REQUEST)
 class OFPBarrierRequest(MsgBase):
     """
