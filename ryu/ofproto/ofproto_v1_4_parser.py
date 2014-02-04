@@ -749,7 +749,7 @@ class OFPMatch(StringifyMixin):
         return OFPMatch(_ordered_fields=fields)
 
 
-class OFPPortPropUnknown(StringifyMixin):
+class OFPPropUnknown(StringifyMixin):
     def __init__(self, type_=None, length=None, buf=None):
         self.buf = buf
 
@@ -758,9 +758,9 @@ class OFPPortPropUnknown(StringifyMixin):
         return cls(buf=buf)
 
 
-class OFPPortProp(StringifyMixin):
+class OFPPropBase(StringifyMixin):
     _PACK_STR = '!HH'
-    _TYPES = {}
+    # _TYPES = {} must be an attribute of subclass
 
     def __init__(self, type_, length=None):
         self.type = type_
@@ -781,11 +781,15 @@ class OFPPortProp(StringifyMixin):
         try:
             subcls = cls._TYPES[type_]
         except KeyError:
-            subcls = OFPPortPropUnknown
+            subcls = OFPPropUnknown
         prop = subcls.parser(buf)
         prop.type = type_
         prop.length = length
         return prop, rest
+
+
+class OFPPortProp(OFPPropBase):
+    _TYPES = {}
 
 
 @OFPPortProp.register_type(ofproto.OFPPDPT_ETHERNET)
