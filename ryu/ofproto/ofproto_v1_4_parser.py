@@ -1616,6 +1616,50 @@ class OFPMultipartRequest(MsgBase):
         self._serialize_stats_body()
 
 
+@_set_msg_type(ofproto.OFPT_METER_MOD)
+class OFPMeterMod(MsgBase):
+    """
+    Meter modification message
+
+    The controller sends this message to modify the meter.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    command          One of the following values.
+                     OFPMC_ADD
+                     OFPMC_MODIFY
+                     OFPMC_DELETE
+    flags            One of the following flags.
+                     OFPMF_KBPS
+                     OFPMF_PKTPS
+                     OFPMF_BURST
+                     OFPMF_STATS
+    meter_id         Meter instance
+    bands            list of the following class instance.
+                     OFPMeterBandDrop
+                     OFPMeterBandDscpRemark
+                     OFPMeterBandExperimenter
+    ================ ======================================================
+    """
+    def __init__(self, datapath, command, flags, meter_id, bands):
+        super(OFPMeterMod, self).__init__(datapath)
+        self.command = command
+        self.flags = flags
+        self.meter_id = meter_id
+        self.bands = bands
+
+    def _serialize_body(self):
+        msg_pack_into(ofproto.OFP_METER_MOD_PACK_STR, self.buf,
+                      ofproto.OFP_HEADER_SIZE,
+                      self.command, self.flags, self.meter_id)
+
+        offset = ofproto.OFP_METER_MOD_SIZE
+        for b in self.bands:
+            b.serialize(self.buf, offset)
+            offset += b.len
+
+
 @_set_msg_type(ofproto.OFPT_TABLE_MOD)
 class OFPTableMod(MsgBase):
     """
