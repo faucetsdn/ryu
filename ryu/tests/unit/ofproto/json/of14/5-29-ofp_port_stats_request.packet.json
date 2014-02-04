@@ -1,0 +1,7 @@
+{
+   "OFPPortStatsRequest": {
+      "flags": 0, 
+      "port_no": 4294967295, 
+      "type": 4
+   }
+}

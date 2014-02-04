@@ -1,0 +1,18 @@
+{
+   "OFPPacketOut": {
+      "actions": [
+         {
+            "OFPActionOutput": {
+               "len": 16, 
+               "max_len": 65535, 
+               "port": 4294967292, 
+               "type": 0
+            }
+         }
+      ], 
+      "actions_len": 16, 
+      "buffer_id": 4294967295, 
+      "data": "8guk0D9w8gukffjqCABFAABU+BoAAP8Br4sKAAABCgAAAggAAgj3YAAAMdYCAAAAAACrjS0xAAAAABAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vAAAAAAAAAAA=", 
+      "in_port": 4294967293
+   }
+}

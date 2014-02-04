@@ -1,0 +1,47 @@
+{
+   "OFPQueueStatsReply": {
+      "body": [
+         {
+            "OFPQueueStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 48, 
+               "port_no": 7, 
+               "properties": [], 
+               "queue_id": 1, 
+               "tx_bytes": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 0
+            }
+         }, 
+         {
+            "OFPQueueStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 48, 
+               "port_no": 6, 
+               "properties": [], 
+               "queue_id": 1, 
+               "tx_bytes": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 0
+            }
+         }, 
+         {
+            "OFPQueueStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 48, 
+               "port_no": 7, 
+               "properties": [], 
+               "queue_id": 2, 
+               "tx_bytes": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 0
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 5
+   }
+}

@@ -1,0 +1,6 @@
+{
+   "OFPPortDescStatsRequest": {
+      "flags": 0, 
+      "type": 13
+   }
+}

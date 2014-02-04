@@ -2257,13 +2257,13 @@ class OFPQueueProp(OFPPropBase):
 
 class OFPQueueStats(StringifyMixin):
     def __init__(self, length=None, port_no=None, queue_id=None,
-                 tx_type=None, tx_packets=None, tx_errors=None,
+                 tx_bytes=None, tx_packets=None, tx_errors=None,
                  duration_sec=None, duration_nsec=None, properties=None):
         super(OFPQueueStats, self).__init__()
         self.length = length
         self.port_no = port_no
         self.queue_id = queue_id
-        self.tx_type = tx_type
+        self.tx_bytes = tx_bytes
         self.tx_packets = tx_packets
         self.tx_errors = tx_errors
         self.duration_sec = duration_sec
@@ -2272,7 +2272,7 @@ class OFPQueueStats(StringifyMixin):
 
     @classmethod
     def parser(cls, buf, offset):
-        (length, port_no, queue_id, tx_type, tx_packets, tx_errors,
+        (length, port_no, queue_id, tx_bytes, tx_packets, tx_errors,
          duration_sec, duration_nsec) = struct.unpack_from(
             ofproto.OFP_QUEUE_STATS_PACK_STR, buf, offset)
         props = []
@@ -2280,7 +2280,7 @@ class OFPQueueStats(StringifyMixin):
         while rest:
             p, rest = OFPQueueProp.parse(rest)
             props.append(p)
-        stats = cls(length, port_no, queue_id, tx_type, tx_packets, tx_errors,
+        stats = cls(length, port_no, queue_id, tx_bytes, tx_packets, tx_errors,
                     duration_sec, duration_nsec, props)
         return stats
 

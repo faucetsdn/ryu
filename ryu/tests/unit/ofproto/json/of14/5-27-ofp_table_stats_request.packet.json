@@ -1,0 +1,6 @@
+{
+   "OFPTableStatsRequest": {
+      "flags": 0, 
+      "type": 3
+   }
+}

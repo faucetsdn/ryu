@@ -1,0 +1,324 @@
+{
+   "OFPFlowStatsReply": {
+      "body": [
+         {
+            "OFPFlowStats": {
+               "byte_count": 0, 
+               "cookie": 0, 
+               "duration_nsec": 115277000, 
+               "duration_sec": 358, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "importance": 0, 
+               "instructions": [], 
+               "length": 56, 
+               "match": {
+                  "OFPMatch": {
+                     "length": 4, 
+                     "oxm_fields": [], 
+                     "type": 1
+                  }
+               }, 
+               "packet_count": 0, 
+               "priority": 65535, 
+               "table_id": 0
+            }
+         }, 
+         {
+            "OFPFlowStats": {
+               "byte_count": 0, 
+               "cookie": 0, 
+               "duration_nsec": 115055000, 
+               "duration_sec": 358, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "importance": 0, 
+               "instructions": [
+                  {
+                     "OFPInstructionActions": {
+                        "actions": [
+                           {
+                              "OFPActionOutput": {
+                                 "len": 16, 
+                                 "max_len": 0, 
+                                 "port": 4294967290, 
+                                 "type": 0
+                              }
+                           }
+                        ], 
+                        "len": 24, 
+                        "type": 4
+                     }
+                  }
+               ], 
+               "length": 88, 
+               "match": {
+                  "OFPMatch": {
+                     "length": 10, 
+                     "oxm_fields": [
+                        {
+                           "OXMTlv": {
+                              "field": "eth_type", 
+                              "mask": null, 
+                              "value": 2054
+                           }
+                        }
+                     ], 
+                     "type": 1
+                  }
+               }, 
+               "packet_count": 0, 
+               "priority": 65534, 
+               "table_id": 0
+            }
+         }, 
+         {
+            "OFPFlowStats": {
+               "byte_count": 238, 
+               "cookie": 0, 
+               "duration_nsec": 511582000, 
+               "duration_sec": 316220, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "importance": 0, 
+               "instructions": [
+                  {
+                     "OFPInstructionGotoTable": {
+                        "len": 8, 
+                        "table_id": 1, 
+                        "type": 1
+                     }
+                  }
+               ], 
+               "length": 80, 
+               "match": {
+                  "OFPMatch": {
+                     "length": 22, 
+                     "oxm_fields": [
+                        {
+                           "OXMTlv": {
+                              "field": "in_port", 
+                              "mask": null, 
+                              "value": 6
+                           }
+                        }, 
+                        {
+                           "OXMTlv": {
+                              "field": "eth_src", 
+                              "mask": null, 
+                              "value": "f2:0b:a4:7d:f8:ea"
+                           }
+                        }
+                     ], 
+                     "type": 1
+                  }
+               }, 
+               "packet_count": 3, 
+               "priority": 123, 
+               "table_id": 0
+            }
+         }, 
+         {
+            "OFPFlowStats": {
+               "byte_count": 98, 
+               "cookie": 0, 
+               "duration_nsec": 980901000, 
+               "duration_sec": 313499, 
+               "flags": 0, 
+               "hard_timeout": 0, 
+               "idle_timeout": 0, 
+               "importance": 0, 
+               "instructions": [
+                  {
+                     "OFPInstructionActions": {
+                        "actions": [
+                           {
+                              "OFPActionSetField": {
+                                 "field": {
+                                    "OXMTlv": {
+                                       "field": "vlan_vid", 
+                                       "mask": null, 
+                                       "value": 258
+                                    }
+                                 }
+                              }
+                           }, 
+                           {
+                              "OFPActionCopyTtlOut": {
+                                 "len": 8, 
+                                 "type": 11
+                              }
+                           }, 
+                           {
+                              "OFPActionCopyTtlIn": {
+                                 "len": 8, 
+                                 "type": 12
+                              }
+                           }, 
+                           {
+                              "OFPActionCopyTtlIn": {
+                                 "len": 8, 
+                                 "type": 12
+                              }
+                           }, 
+                           {
+                              "OFPActionPopPbb": {
+                                 "len": 8, 
+                                 "type": 27
+                              }
+                           }, 
+                           {
+                              "OFPActionPushPbb": {
+                                 "ethertype": 4660, 
+                                 "len": 8, 
+                                 "type": 26
+                              }
+                           }, 
+                           {
+                              "OFPActionPopMpls": {
+                                 "ethertype": 39030, 
+                                 "len": 8, 
+                                 "type": 20
+                              }
+                           }, 
+                           {
+                              "OFPActionPushMpls": {
+                                 "ethertype": 34887, 
+                                 "len": 8, 
+                                 "type": 19
+                              }
+                           }, 
+                           {
+                              "OFPActionPopVlan": {
+                                 "len": 8, 
+                                 "type": 18
+                              }
+                           }, 
+                           {
+                              "OFPActionPushVlan": {
+                                 "ethertype": 33024, 
+                                 "len": 8, 
+                                 "type": 17
+                              }
+                           }, 
+                           {
+                              "OFPActionDecMplsTtl": {
+                                 "len": 8, 
+                                 "type": 16
+                              }
+                           }, 
+                           {
+                              "OFPActionSetMplsTtl": {
+                                 "len": 8, 
+                                 "mpls_ttl": 10, 
+                                 "type": 15
+                              }
+                           }, 
+                           {
+                              "OFPActionDecNwTtl": {
+                                 "len": 8, 
+                                 "type": 24
+                              }
+                           }, 
+                           {
+                              "OFPActionSetNwTtl": {
+                                 "len": 8, 
+                                 "nw_ttl": 10, 
+                                 "type": 23
+                              }
+                           }, 
+                           {
+                              "OFPActionSetQueue": {
+                                 "len": 8, 
+                                 "queue_id": 3, 
+                                 "type": 21
+                              }
+                           }, 
+                           {
+                              "OFPActionGroup": {
+                                 "group_id": 99, 
+                                 "len": 8, 
+                                 "type": 22
+                              }
+                           }, 
+                           {
+                              "OFPActionOutput": {
+                                 "len": 16, 
+                                 "max_len": 65535, 
+                                 "port": 6, 
+                                 "type": 0
+                              }
+                           }
+                        ], 
+                        "len": 160, 
+                        "type": 3
+                     }
+                  }, 
+                  {
+                     "OFPInstructionActions": {
+                        "actions": [
+                           {
+                              "OFPActionSetField": {
+                                 "field": {
+                                    "OXMTlv": {
+                                       "field": "eth_src", 
+                                       "mask": null, 
+                                       "value": "01:02:03:04:05:06"
+                                    }
+                                 }
+                              }
+                           }, 
+                           {
+                              "OFPActionSetField": {
+                                 "field": {
+                                    "OXMTlv": {
+                                       "field": "pbb_uca", 
+                                       "mask": null, 
+                                       "value": 1
+                                    }
+                                 }
+                              }
+                           }
+                        ], 
+                        "len": 40, 
+                        "type": 4
+                     }
+                  }, 
+                  {
+                     "OFPInstructionActions": {
+                        "actions": [
+                           {
+                              "OFPActionOutput": {
+                                 "len": 16, 
+                                 "max_len": 65535, 
+                                 "port": 4294967293, 
+                                 "type": 0
+                              }
+                           }
+                        ], 
+                        "len": 24, 
+                        "type": 3
+                     }
+                  }
+               ], 
+               "length": 280, 
+               "match": {
+                  "OFPMatch": {
+                     "length": 4, 
+                     "oxm_fields": [], 
+                     "type": 1
+                  }
+               }, 
+               "packet_count": 1, 
+               "priority": 0, 
+               "table_id": 0
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 1
+   }
+}

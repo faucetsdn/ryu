@@ -1,0 +1,81 @@
+{
+   "OFPPacketIn": {
+      "buffer_id": 2, 
+      "cookie": 283686884868096, 
+      "data": "////////8gukffjqCAYAAQgABgQAAfILpH346goAAAEAAAAAAAAKAAAD", 
+      "match": {
+         "OFPMatch": {
+            "length": 80, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "in_port", 
+                     "mask": null, 
+                     "value": 6
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_type", 
+                     "mask": null, 
+                     "value": 2054
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "ff:ff:ff:ff:ff:ff"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_src", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_op", 
+                     "mask": null, 
+                     "value": 1
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_spa", 
+                     "mask": null, 
+                     "value": "10.0.0.1"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_tpa", 
+                     "mask": null, 
+                     "value": "10.0.0.3"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_sha", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "arp_tha", 
+                     "mask": null, 
+                     "value": "00:00:00:00:00:00"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "reason": 3, 
+      "table_id": 1, 
+      "total_len": 42
+   }
+}

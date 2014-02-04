@@ -1,0 +1,20 @@
+{
+   "OFPHello": {
+      "elements": [
+         {
+            "OFPHelloElemVersionBitmap": {
+               "length": 8, 
+               "type": 1, 
+               "versions": [
+                  1, 
+                  2, 
+                  3, 
+                  9, 
+                  10, 
+                  30
+               ]
+            }
+         }
+      ]
+   }
+}

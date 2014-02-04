@@ -1,0 +1,16 @@
+{
+   "OFPSetAsync": {
+      "flow_removed_mask": [
+         15, 
+         3
+      ], 
+      "packet_in_mask": [
+         5, 
+         1
+      ], 
+      "port_status_mask": [
+         7, 
+         3
+      ]
+   }
+}

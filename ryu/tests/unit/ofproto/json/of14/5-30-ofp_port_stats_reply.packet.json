@@ -1,0 +1,64 @@
+{
+   "OFPPortStatsReply": {
+      "body": [
+         {
+            "OFPPortStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 120, 
+               "port_no": 7, 
+               "properties": [
+                  {
+                     "OFPPortStatsPropEthernet": {
+                        "collisions": 0, 
+                        "length": 40, 
+                        "rx_crc_err": 0, 
+                        "rx_frame_err": 0, 
+                        "rx_over_err": 0, 
+                        "type": 0
+                     }
+                  }
+               ], 
+               "rx_bytes": 0, 
+               "rx_dropped": 0, 
+               "rx_errors": 0, 
+               "rx_packets": 0, 
+               "tx_bytes": 336, 
+               "tx_dropped": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 4
+            }
+         }, 
+         {
+            "OFPPortStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 120, 
+               "port_no": 6, 
+               "properties": [
+                  {
+                     "OFPPortStatsPropEthernet": {
+                        "collisions": 0, 
+                        "length": 40, 
+                        "rx_crc_err": 0, 
+                        "rx_frame_err": 0, 
+                        "rx_over_err": 0, 
+                        "type": 0
+                     }
+                  }
+               ], 
+               "rx_bytes": 336, 
+               "rx_dropped": 0, 
+               "rx_errors": 0, 
+               "rx_packets": 4, 
+               "tx_bytes": 336, 
+               "tx_dropped": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 4
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 4
+   }
+}

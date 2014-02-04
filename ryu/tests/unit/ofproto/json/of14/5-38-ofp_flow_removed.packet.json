@@ -1,0 +1,29 @@
+{
+   "OFPFlowRemoved": {
+      "byte_count": 86, 
+      "cookie": 0, 
+      "duration_nsec": 48825000, 
+      "duration_sec": 3, 
+      "hard_timeout": 0, 
+      "idle_timeout": 3, 
+      "match": {
+         "OFPMatch": {
+            "length": 14, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "packet_count": 1, 
+      "priority": 65535, 
+      "reason": 0, 
+      "table_id": 0
+   }
+}

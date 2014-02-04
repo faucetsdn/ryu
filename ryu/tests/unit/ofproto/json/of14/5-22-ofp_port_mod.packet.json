@@ -1,0 +1,17 @@
+{
+   "OFPPortMod": {
+      "config": 0, 
+      "hw_addr": "00:11:00:00:11:11", 
+      "mask": 0, 
+      "properties": [
+          {
+              "OFPPortModPropEthernet": {
+                  "type": 0, 
+                  "length": 8, 
+                  "advertise": 4096
+              }
+          }
+      ], 
+      "port_no": 1
+   }
+}
