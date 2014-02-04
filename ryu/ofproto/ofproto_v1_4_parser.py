@@ -2599,6 +2599,60 @@ class OFPMeterStatsReply(OFPMultipartReply):
         super(OFPMeterStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPMeterBand(StringifyMixin):
+    def __init__(self, type_, len_):
+        super(OFPMeterBand, self).__init__()
+        self.type = type_
+        self.len = len_
+
+
+class OFPMeterBandHeader(OFPMeterBand):
+    _METER_BAND = {}
+
+    @staticmethod
+    def register_meter_band_type(type_, len_):
+        def _register_meter_band_type(cls):
+            OFPMeterBandHeader._METER_BAND[type_] = cls
+            cls.cls_meter_band_type = type_
+            cls.cls_meter_band_len = len_
+            return cls
+        return _register_meter_band_type
+
+    def __init__(self):
+        cls = self.__class__
+        super(OFPMeterBandHeader, self).__init__(cls.cls_meter_band_type,
+                                                 cls.cls_meter_band_len)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, _rate, _burst_size = struct.unpack_from(
+            ofproto.OFP_METER_BAND_HEADER_PACK_STR, buf, offset)
+        cls_ = cls._METER_BAND[type_]
+        assert cls_.cls_meter_band_len == len_
+        return cls_.parser(buf, offset)
+
+
+@OFPMeterBandHeader.register_meter_band_type(
+    ofproto.OFPMBT_DROP, ofproto.OFP_METER_BAND_DROP_SIZE)
+class OFPMeterBandDrop(OFPMeterBandHeader):
+    def __init__(self, rate, burst_size, type_=None, len_=None):
+        super(OFPMeterBandDrop, self).__init__()
+        self.rate = rate
+        self.burst_size = burst_size
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_METER_BAND_DROP_PACK_STR, buf, offset,
+                      self.type, self.len, self.rate, self.burst_size)
+
+    @classmethod
+    def parser(cls, buf, offset):
+        type_, len_, rate, burst_size = struct.unpack_from(
+            ofproto.OFP_METER_BAND_DROP_PACK_STR, buf, offset)
+        assert cls.cls_meter_band_type == type_
+        assert cls.cls_meter_band_len == len_
+        return cls(rate, burst_size)
+
+
 class OFPMeterConfigStats(StringifyMixin):
     def __init__(self, flags=None, meter_id=None, bands=None, length=None):
         super(OFPMeterConfigStats, self).__init__()
@@ -2768,60 +2822,6 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
     """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPMeterFeaturesStatsReply, self).__init__(datapath, **kwargs)
-
-
-class OFPMeterBand(StringifyMixin):
-    def __init__(self, type_, len_):
-        super(OFPMeterBand, self).__init__()
-        self.type = type_
-        self.len = len_
-
-
-class OFPMeterBandHeader(OFPMeterBand):
-    _METER_BAND = {}
-
-    @staticmethod
-    def register_meter_band_type(type_, len_):
-        def _register_meter_band_type(cls):
-            OFPMeterBandHeader._METER_BAND[type_] = cls
-            cls.cls_meter_band_type = type_
-            cls.cls_meter_band_len = len_
-            return cls
-        return _register_meter_band_type
-
-    def __init__(self):
-        cls = self.__class__
-        super(OFPMeterBandHeader, self).__init__(cls.cls_meter_band_type,
-                                                 cls.cls_meter_band_len)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        type_, len_, _rate, _burst_size = struct.unpack_from(
-            ofproto.OFP_METER_BAND_HEADER_PACK_STR, buf, offset)
-        cls_ = cls._METER_BAND[type_]
-        assert cls_.cls_meter_band_len == len_
-        return cls_.parser(buf, offset)
-
-
-@OFPMeterBandHeader.register_meter_band_type(
-    ofproto.OFPMBT_DROP, ofproto.OFP_METER_BAND_DROP_SIZE)
-class OFPMeterBandDrop(OFPMeterBandHeader):
-    def __init__(self, rate, burst_size, type_=None, len_=None):
-        super(OFPMeterBandDrop, self).__init__()
-        self.rate = rate
-        self.burst_size = burst_size
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.OFP_METER_BAND_DROP_PACK_STR, buf, offset,
-                      self.type, self.len, self.rate, self.burst_size)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        type_, len_, rate, burst_size = struct.unpack_from(
-            ofproto.OFP_METER_BAND_DROP_PACK_STR, buf, offset)
-        assert cls.cls_meter_band_type == type_
-        assert cls.cls_meter_band_len == len_
-        return cls(rate, burst_size)
 
 
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
