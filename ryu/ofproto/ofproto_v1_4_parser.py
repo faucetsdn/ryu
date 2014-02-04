@@ -1757,7 +1757,7 @@ class OFPDescStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPDescStatsRequest(datapath, 0)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, type_=None):
+    def __init__(self, datapath, flags=0, type_=None):
         super(OFPDescStatsRequest, self).__init__(datapath, flags)
 
 
@@ -1814,7 +1814,7 @@ class OFPPortDescStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, type_=None):
+    def __init__(self, datapath, flags=0, type_=None):
         super(OFPPortDescStatsRequest, self).__init__(datapath, flags)
 
 
@@ -1918,7 +1918,8 @@ class OFPGroupStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPGroupStatsRequest(datapath, 0, ofp.OFPG_ALL)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, group_id, type_=None):
+    def __init__(self, datapath, flags=0, group_id=ofproto.OFPG_ALL,
+                 type_=None):
         super(OFPGroupStatsRequest, self).__init__(datapath, flags)
         self.group_id = group_id
 
@@ -2013,7 +2014,7 @@ class OFPGroupDescStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPGroupDescStatsRequest(datapath, 0)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, type_=None):
+    def __init__(self, datapath, flags=0, type_=None):
         super(OFPGroupDescStatsRequest, self).__init__(datapath, flags)
 
 
@@ -2088,7 +2089,7 @@ class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPGroupFeaturesStatsRequest(datapath, 0)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, type_=None):
+    def __init__(self, datapath, flags=0, type_=None):
         super(OFPGroupFeaturesStatsRequest, self).__init__(datapath, flags)
 
 
@@ -2197,7 +2198,8 @@ class OFPMeterStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPMeterStatsRequest(datapath, 0, ofp.OFPM_ALL)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, meter_id, type_=None):
+    def __init__(self, datapath, flags=0, meter_id=ofproto.OFPM_ALL,
+                 type_=None):
         super(OFPMeterStatsRequest, self).__init__(datapath, flags)
         self.meter_id = meter_id
 
@@ -2297,7 +2299,8 @@ class OFPMeterConfigStatsRequest(OFPMultipartRequest):
                                                         ofp.OFPM_ALL)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, meter_id, type_=None):
+    def __init__(self, datapath, flags=0, meter_id=ofproto.OFPM_ALL,
+                 type_=None):
         super(OFPMeterConfigStatsRequest, self).__init__(datapath, flags)
         self.meter_id = meter_id
 
@@ -2375,7 +2378,7 @@ class OFPMeterFeaturesStatsRequest(OFPMultipartRequest):
             req = ofp_parser.OFPMeterFeaturesStatsRequest(datapath, 0)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags, type_=None):
+    def __init__(self, datapath, flags=0, type_=None):
         super(OFPMeterFeaturesStatsRequest, self).__init__(datapath, flags)
 
 
