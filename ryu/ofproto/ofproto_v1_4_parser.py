@@ -3078,7 +3078,10 @@ class OFPFlowMod(MsgBase):
         self.importance = importance
         if match is None:
             match = OFPMatch()
+        assert isinstance(match, OFPMatch)
         self.match = match
+        for i in instructions:
+            assert isinstance(i, OFPInstruction)
         self.instructions = instructions
 
     def _serialize_body(self):
@@ -3100,7 +3103,7 @@ class OFPFlowMod(MsgBase):
             offset += inst.len
 
 
-class OFPInstruction(object):
+class OFPInstruction(StringifyMixin):
     _INSTRUCTION_TYPES = {}
 
     @staticmethod
@@ -3119,7 +3122,7 @@ class OFPInstruction(object):
 
 
 @OFPInstruction.register_instruction_type([ofproto.OFPIT_GOTO_TABLE])
-class OFPInstructionGotoTable(StringifyMixin):
+class OFPInstructionGotoTable(OFPInstruction):
     """
     Goto table instruction
 
@@ -3150,7 +3153,7 @@ class OFPInstructionGotoTable(StringifyMixin):
 
 
 @OFPInstruction.register_instruction_type([ofproto.OFPIT_WRITE_METADATA])
-class OFPInstructionWriteMetadata(StringifyMixin):
+class OFPInstructionWriteMetadata(OFPInstruction):
     """
     Write metadata instruction
 
@@ -3186,7 +3189,7 @@ class OFPInstructionWriteMetadata(StringifyMixin):
 @OFPInstruction.register_instruction_type([ofproto.OFPIT_WRITE_ACTIONS,
                                            ofproto.OFPIT_APPLY_ACTIONS,
                                            ofproto.OFPIT_CLEAR_ACTIONS])
-class OFPInstructionActions(StringifyMixin):
+class OFPInstructionActions(OFPInstruction):
     """
     Actions instruction
 
@@ -3207,6 +3210,8 @@ class OFPInstructionActions(StringifyMixin):
     def __init__(self, type_, actions=None, len_=None):
         super(OFPInstructionActions, self).__init__()
         self.type = type_
+        for a in actions:
+            assert isinstance(a, OFPAction)
         self.actions = actions
 
     @classmethod
@@ -3245,7 +3250,7 @@ class OFPInstructionActions(StringifyMixin):
 
 
 @OFPInstruction.register_instruction_type([ofproto.OFPIT_METER])
-class OFPInstructionMeter(StringifyMixin):
+class OFPInstructionMeter(OFPInstruction):
     """
     Meter instruction
 
