@@ -604,6 +604,13 @@ OFPRR_GROUP_DELETE = 3  # Group was removed.
 OFPRR_METER_DELETE = 4  # Meter was removed.
 OFPRR_EVICTION = 5  # Switch eviction to free resources.
 
+# struct ofp_port_status
+OFP_PORT_STATUS_PACK_STR = '!B7x' + _OFP_PORT_PACK_STR
+OFP_PORT_STATUS_DESC_OFFSET = OFP_HEADER_SIZE + 8
+OFP_PORT_STATUS_SIZE = 56
+assert (calcsize(OFP_PORT_STATUS_PACK_STR) + OFP_HEADER_SIZE ==
+        OFP_PORT_STATUS_SIZE)
+
 # struct ofp_flow_removed
 _OFP_FLOW_REMOVED_PACK_STR0 = 'QHBBIIHHQQ'
 OFP_FLOW_REMOVED_PACK_STR = '!' + _OFP_FLOW_REMOVED_PACK_STR0 + \
