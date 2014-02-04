@@ -749,7 +749,7 @@ class OFPMatch(StringifyMixin):
         return OFPMatch(_ordered_fields=fields)
 
 
-class OFPPortDescPropUnknown(StringifyMixin):
+class OFPPortPropUnknown(StringifyMixin):
     def __init__(self, type_=None, length=None, buf=None):
         self.buf = buf
 
