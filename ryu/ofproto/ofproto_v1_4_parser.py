@@ -641,17 +641,25 @@ class OFPMatch(StringifyMixin):
         ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
     """
 
-    def __init__(self, type_=None, length=None, **kwargs):
+    def __init__(self, type_=None, length=None, _ordered_fields=None,
+                 **kwargs):
         super(OFPMatch, self).__init__()
         self.type = ofproto.OFPMT_OXM
         self.length = length
-        kwargs = dict(ofproto.oxm_normalize_user(k, v) for
-                      (k, v) in kwargs.iteritems())
-        fields = [ofproto.oxm_from_user(k, v) for (k, v)
-                  in kwargs.iteritems()]
-        fields.sort()
-        self._fields2 = [ofproto.oxm_to_user(n, v, m) for (n, v, m)
-                         in fields]
+
+        if not _ordered_fields is None:
+            assert not kwargs
+            self._fields2 = _ordered_fields
+        else:
+            kwargs = dict(ofproto.oxm_normalize_user(k, v) for
+                          (k, v) in kwargs.iteritems())
+            fields = [ofproto.oxm_from_user(k, v) for (k, v)
+                      in kwargs.iteritems()]
+            # assumption: sorting by OXM type values makes fields
+            # meet ordering requirements (eg. eth_type before ipv4_src)
+            fields.sort()
+            self._fields2 = [ofproto.oxm_to_user(n, v, m) for (n, v, m)
+                             in fields]
 
     @classmethod
     def parser(cls, buf, offset):
@@ -738,7 +746,7 @@ class OFPMatch(StringifyMixin):
         """
         fields = [ofproto.oxm_from_jsondict(f) for f
                   in dict_['oxm_fields']]
-        return OFPMatch(**dict(fields))
+        return OFPMatch(_ordered_fields=fields)
 
 
 class OFPPortDescPropUnknown(StringifyMixin):
