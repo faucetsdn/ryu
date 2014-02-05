@@ -32,7 +32,7 @@ LOG = logging.getLogger('test_ofproto_v12')
 
 
 class _Datapath(object):
-    ofproto = ofproto_v1_2
+    ofproto = ofproto  # copy to class attribute
     ofproto_parser = ofproto_v1_2_parser
 
 
@@ -79,10 +79,10 @@ class TestMsgParser(unittest.TestCase):
     def _test_msg_parser(self, xid, msg_len):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_HELLO
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_HELLO
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version,  msg_type, msg_len, xid)
 
         c = msg_parser(_Datapath, version, msg_type, msg_len, xid, buf)
@@ -93,7 +93,7 @@ class TestMsgParser(unittest.TestCase):
         eq_(xid, c.xid)
 
         # buf
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         res = struct.unpack(fmt, c.buf)
 
         eq_(version, res[0])
@@ -122,11 +122,11 @@ class TestOFPHello(unittest.TestCase):
     """
 
     def _test_parser(self, xid):
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_HELLO
-        msg_len = ofproto_v1_2.OFP_HEADER_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_HELLO
+        msg_len = ofproto.OFP_HEADER_SIZE
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         res = OFPHello.parser(object, version, msg_type, msg_len, xid,
@@ -153,8 +153,8 @@ class TestOFPHello(unittest.TestCase):
     def test_serialize(self):
         c = OFPHello(_Datapath)
         c.serialize()
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_HELLO, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_HELLO, c.msg_type)
         eq_(0, c.xid)
 
 
@@ -164,12 +164,12 @@ class TestOFPErrorMsg(unittest.TestCase):
 
     # OFP_HEADER_PACK_STR
     # '!BBHI'...version, msg_type, msg_len, xid
-    version = ofproto_v1_2.OFP_VERSION
-    msg_type = ofproto_v1_2.OFPT_ERROR
-    msg_len = ofproto_v1_2.OFP_ERROR_MSG_SIZE
+    version = ofproto.OFP_VERSION
+    msg_type = ofproto.OFPT_ERROR
+    msg_len = ofproto.OFP_ERROR_MSG_SIZE
     xid = 2495926989
 
-    fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+    fmt = ofproto.OFP_HEADER_PACK_STR
     buf = pack(fmt, version, msg_type, msg_len, xid)
 
     def test_init(self):
@@ -181,7 +181,7 @@ class TestOFPErrorMsg(unittest.TestCase):
     def _test_parser(self, type_, code, data=None):
 
         # OFP_ERROR_MSG_PACK_STR = '!HH'
-        fmt = ofproto_v1_2.OFP_ERROR_MSG_PACK_STR
+        fmt = ofproto.OFP_ERROR_MSG_PACK_STR
         buf = self.buf + pack(fmt, type_, code)
 
         if data is not None:
@@ -219,548 +219,548 @@ class TestOFPErrorMsg(unittest.TestCase):
         self._test_parser(type_, code, data)
 
     def test_parser_p0_1(self):
-        type_ = ofproto_v1_2.OFPET_HELLO_FAILED
-        code = ofproto_v1_2.OFPHFC_EPERM
+        type_ = ofproto.OFPET_HELLO_FAILED
+        code = ofproto.OFPHFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_0(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_VERSION
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_VERSION
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_1(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_TYPE
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_2(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_STAT
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_STAT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_3(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_EXPERIMENTER
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_EXPERIMENTER
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_4(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_EXP_TYPE
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_EXP_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_5(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_EPERM
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_6(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_LEN
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_LEN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_7(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BUFFER_EMPTY
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BUFFER_EMPTY
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_8(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BUFFER_UNKNOWN
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BUFFER_UNKNOWN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_9(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_TABLE_ID
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_TABLE_ID
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_10(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_IS_SLAVE
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_IS_SLAVE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_11(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_PORT
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_PORT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p1_12(self):
-        type_ = ofproto_v1_2.OFPET_BAD_REQUEST
-        code = ofproto_v1_2.OFPBRC_BAD_PACKET
+        type_ = ofproto.OFPET_BAD_REQUEST
+        code = ofproto.OFPBRC_BAD_PACKET
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_0(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_TYPE
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_1(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_LEN
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_LEN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_2(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_EXPERIMENTER
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_EXPERIMENTER
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_3(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_EXP_TYPE
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_EXP_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_4(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_OUT_PORT
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_OUT_PORT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_5(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_ARGUMENT
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_ARGUMENT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_6(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_EPERM
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_7(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_TOO_MANY
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_TOO_MANY
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_8(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_QUEUE
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_QUEUE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_9(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_OUT_GROUP
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_OUT_GROUP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_10(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_MATCH_INCONSISTENT
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_MATCH_INCONSISTENT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_11(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_UNSUPPORTED_ORDER
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_UNSUPPORTED_ORDER
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_12(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_TAG
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_TAG
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_13(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_SET_TYPE
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_SET_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_14(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_SET_LEN
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_SET_LEN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p2_15(self):
-        type_ = ofproto_v1_2.OFPET_BAD_ACTION
-        code = ofproto_v1_2.OFPBAC_BAD_SET_ARGUMENT
+        type_ = ofproto.OFPET_BAD_ACTION
+        code = ofproto.OFPBAC_BAD_SET_ARGUMENT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_0(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_UNKNOWN_INST
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_UNKNOWN_INST
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_1(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_UNSUP_INST
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_UNSUP_INST
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_2(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_BAD_TABLE_ID
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_BAD_TABLE_ID
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_3(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_UNSUP_METADATA
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_UNSUP_METADATA
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_4(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_UNSUP_METADATA_MASK
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_UNSUP_METADATA_MASK
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_5(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_BAD_EXPERIMENTER
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_BAD_EXPERIMENTER
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_6(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_BAD_EXP_TYPE
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_BAD_EXP_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_7(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_BAD_LEN
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_BAD_LEN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p3_8(self):
-        type_ = ofproto_v1_2.OFPET_BAD_INSTRUCTION
-        code = ofproto_v1_2.OFPBIC_EPERM
+        type_ = ofproto.OFPET_BAD_INSTRUCTION
+        code = ofproto.OFPBIC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_0(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_TYPE
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_1(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_LEN
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_LEN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_2(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_TAG
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_TAG
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_3(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_DL_ADDR_MASK
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_DL_ADDR_MASK
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_4(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_NW_ADDR_MASK
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_NW_ADDR_MASK
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_5(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_WILDCARDS
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_WILDCARDS
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_6(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_FIELD
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_FIELD
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_7(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_VALUE
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_VALUE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_8(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_MASK
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_MASK
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_9(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_BAD_PREREQ
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_BAD_PREREQ
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_10(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_DUP_FIELD
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_DUP_FIELD
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p4_11(self):
-        type_ = ofproto_v1_2.OFPET_BAD_MATCH
-        code = ofproto_v1_2.OFPBMC_EPERM
+        type_ = ofproto.OFPET_BAD_MATCH
+        code = ofproto.OFPBMC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_0(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_UNKNOWN
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_UNKNOWN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_1(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_TABLE_FULL
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_TABLE_FULL
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_2(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_BAD_TABLE_ID
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_BAD_TABLE_ID
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_3(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_OVERLAP
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_OVERLAP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_4(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_EPERM
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_5(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_BAD_TIMEOUT
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_BAD_TIMEOUT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_6(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_BAD_COMMAND
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_BAD_COMMAND
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p5_7(self):
-        type_ = ofproto_v1_2.OFPET_FLOW_MOD_FAILED
-        code = ofproto_v1_2.OFPFMFC_BAD_FLAGS
+        type_ = ofproto.OFPET_FLOW_MOD_FAILED
+        code = ofproto.OFPFMFC_BAD_FLAGS
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_0(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_GROUP_EXISTS
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_GROUP_EXISTS
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_1(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_INVALID_GROUP
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_INVALID_GROUP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_2(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_WEIGHT_UNSUPPORTED
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_WEIGHT_UNSUPPORTED
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_3(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_OUT_OF_GROUPS
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_OUT_OF_GROUPS
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_4(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_OUT_OF_BUCKETS
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_OUT_OF_BUCKETS
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_5(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_CHAINING_UNSUPPORTED
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_CHAINING_UNSUPPORTED
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_6(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_WATCH_UNSUPPORTED
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_WATCH_UNSUPPORTED
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_7(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_LOOP
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_LOOP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_8(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_UNKNOWN_GROUP
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_UNKNOWN_GROUP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_9(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_CHAINED_GROUP
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_CHAINED_GROUP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_10(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_BAD_TYPE
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_BAD_TYPE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_11(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_BAD_COMMAND
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_BAD_COMMAND
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_12(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_BAD_BUCKET
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_BAD_BUCKET
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_13(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_BAD_WATCH
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_BAD_WATCH
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p6_14(self):
-        type_ = ofproto_v1_2.OFPET_GROUP_MOD_FAILED
-        code = ofproto_v1_2.OFPGMFC_EPERM
+        type_ = ofproto.OFPET_GROUP_MOD_FAILED
+        code = ofproto.OFPGMFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p7_0(self):
-        type_ = ofproto_v1_2.OFPET_PORT_MOD_FAILED
-        code = ofproto_v1_2.OFPPMFC_BAD_PORT
+        type_ = ofproto.OFPET_PORT_MOD_FAILED
+        code = ofproto.OFPPMFC_BAD_PORT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p7_1(self):
-        type_ = ofproto_v1_2.OFPET_PORT_MOD_FAILED
-        code = ofproto_v1_2.OFPPMFC_BAD_HW_ADDR
+        type_ = ofproto.OFPET_PORT_MOD_FAILED
+        code = ofproto.OFPPMFC_BAD_HW_ADDR
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p7_2(self):
-        type_ = ofproto_v1_2.OFPET_PORT_MOD_FAILED
-        code = ofproto_v1_2.OFPPMFC_BAD_CONFIG
+        type_ = ofproto.OFPET_PORT_MOD_FAILED
+        code = ofproto.OFPPMFC_BAD_CONFIG
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p7_3(self):
-        type_ = ofproto_v1_2.OFPET_PORT_MOD_FAILED
-        code = ofproto_v1_2.OFPPMFC_BAD_ADVERTISE
+        type_ = ofproto.OFPET_PORT_MOD_FAILED
+        code = ofproto.OFPPMFC_BAD_ADVERTISE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p7_4(self):
-        type_ = ofproto_v1_2.OFPET_PORT_MOD_FAILED
-        code = ofproto_v1_2.OFPPMFC_EPERM
+        type_ = ofproto.OFPET_PORT_MOD_FAILED
+        code = ofproto.OFPPMFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p8_0(self):
-        type_ = ofproto_v1_2.OFPET_TABLE_MOD_FAILED
-        code = ofproto_v1_2.OFPTMFC_BAD_TABLE
+        type_ = ofproto.OFPET_TABLE_MOD_FAILED
+        code = ofproto.OFPTMFC_BAD_TABLE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p8_1(self):
-        type_ = ofproto_v1_2.OFPET_TABLE_MOD_FAILED
-        code = ofproto_v1_2.OFPTMFC_BAD_CONFIG
+        type_ = ofproto.OFPET_TABLE_MOD_FAILED
+        code = ofproto.OFPTMFC_BAD_CONFIG
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p8_2(self):
-        type_ = ofproto_v1_2.OFPET_TABLE_MOD_FAILED
-        code = ofproto_v1_2.OFPTMFC_EPERM
+        type_ = ofproto.OFPET_TABLE_MOD_FAILED
+        code = ofproto.OFPTMFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p9_0(self):
-        type_ = ofproto_v1_2.OFPET_QUEUE_OP_FAILED
-        code = ofproto_v1_2.OFPQOFC_BAD_PORT
+        type_ = ofproto.OFPET_QUEUE_OP_FAILED
+        code = ofproto.OFPQOFC_BAD_PORT
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p9_1(self):
-        type_ = ofproto_v1_2.OFPET_QUEUE_OP_FAILED
-        code = ofproto_v1_2.OFPQOFC_BAD_QUEUE
+        type_ = ofproto.OFPET_QUEUE_OP_FAILED
+        code = ofproto.OFPQOFC_BAD_QUEUE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p9_2(self):
-        type_ = ofproto_v1_2.OFPET_QUEUE_OP_FAILED
-        code = ofproto_v1_2.OFPQOFC_EPERM
+        type_ = ofproto.OFPET_QUEUE_OP_FAILED
+        code = ofproto.OFPQOFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p10_0(self):
-        type_ = ofproto_v1_2.OFPET_SWITCH_CONFIG_FAILED
-        code = ofproto_v1_2.OFPSCFC_BAD_FLAGS
+        type_ = ofproto.OFPET_SWITCH_CONFIG_FAILED
+        code = ofproto.OFPSCFC_BAD_FLAGS
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p10_1(self):
-        type_ = ofproto_v1_2.OFPET_SWITCH_CONFIG_FAILED
-        code = ofproto_v1_2.OFPSCFC_BAD_LEN
+        type_ = ofproto.OFPET_SWITCH_CONFIG_FAILED
+        code = ofproto.OFPSCFC_BAD_LEN
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p10_2(self):
-        type_ = ofproto_v1_2.OFPET_SWITCH_CONFIG_FAILED
-        code = ofproto_v1_2.OFPQCFC_EPERM
+        type_ = ofproto.OFPET_SWITCH_CONFIG_FAILED
+        code = ofproto.OFPQCFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p11_0(self):
-        type_ = ofproto_v1_2.OFPET_ROLE_REQUEST_FAILED
-        code = ofproto_v1_2.OFPRRFC_STALE
+        type_ = ofproto.OFPET_ROLE_REQUEST_FAILED
+        code = ofproto.OFPRRFC_STALE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p11_1(self):
-        type_ = ofproto_v1_2.OFPET_ROLE_REQUEST_FAILED
-        code = ofproto_v1_2.OFPRRFC_UNSUP
+        type_ = ofproto.OFPET_ROLE_REQUEST_FAILED
+        code = ofproto.OFPRRFC_UNSUP
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
     def test_parser_p11_2(self):
-        type_ = ofproto_v1_2.OFPET_ROLE_REQUEST_FAILED
-        code = ofproto_v1_2.OFPRRFC_BAD_ROLE
+        type_ = ofproto.OFPET_ROLE_REQUEST_FAILED
+        code = ofproto.OFPRRFC_BAD_ROLE
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
@@ -771,7 +771,7 @@ class TestOFPErrorMsg(unittest.TestCase):
         data = 'Error Experimenter Message.'
 
         # OFP_ERROR_EXPERIMENTER_MSG_PACK_STR = '!HHI'
-        fmt = ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR
+        fmt = ofproto.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR
         buf = self.buf + pack(fmt, type_, exp_type, experimenter) \
             + data
 
@@ -789,7 +789,7 @@ class TestOFPErrorMsg(unittest.TestCase):
 
     def _test_serialize(self, type_, code, data):
         # OFP_ERROR_MSG_PACK_STR = '!HH'
-        fmt = ofproto_v1_2.OFP_ERROR_MSG_PACK_STR
+        fmt = ofproto.OFP_ERROR_MSG_PACK_STR
         buf = self.buf + pack(fmt, type_, code) + data
 
         # initialization
@@ -800,20 +800,20 @@ class TestOFPErrorMsg(unittest.TestCase):
 
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_ERROR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ERROR, c.msg_type)
         eq_(0, c.xid)
         eq_(len(buf), c.msg_len)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_ERROR_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_ERROR_MSG_PACK_STR.replace('!', '') \
             + str(len(c.data)) + 's'
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_ERROR)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_ERROR)
         eq_(res[2], len(buf))
         eq_(res[3], 0)
         eq_(res[4], type_)
@@ -833,8 +833,8 @@ class TestOFPErrorMsg(unittest.TestCase):
         self._test_serialize(type_, code, data)
 
     def test_serialize_min_except_data(self):
-        type_ = ofproto_v1_2.OFPET_HELLO_FAILED
-        code = ofproto_v1_2.OFPHFC_INCOMPATIBLE
+        type_ = ofproto.OFPET_HELLO_FAILED
+        code = ofproto.OFPHFC_INCOMPATIBLE
         data = 'Error Message.'
         self._test_serialize(type_, code, data)
 
@@ -847,368 +847,368 @@ class TestOFPErrorMsg(unittest.TestCase):
         self._test_serialize(type_, code, 'Error Message.')
 
     def test_serialize_p0_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_HELLO_FAILED,
-                               ofproto_v1_2.OFPHFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_HELLO_FAILED,
+                               ofproto.OFPHFC_EPERM)
 
     def test_serialize_p1_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_VERSION)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_VERSION)
 
     def test_serialize_p1_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_TYPE)
 
     def test_serialize_p1_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_STAT)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_STAT)
 
     def test_serialize_p1_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_EXPERIMENTER)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_EXPERIMENTER)
 
     def test_serialize_p1_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_EXP_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_EXP_TYPE)
 
     def test_serialize_p1_5(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_EPERM)
 
     def test_serialize_p1_6(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_LEN)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_LEN)
 
     def test_serialize_p1_7(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BUFFER_EMPTY)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BUFFER_EMPTY)
 
     def test_serialize_p1_8(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BUFFER_UNKNOWN)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BUFFER_UNKNOWN)
 
     def test_serialize_p1_9(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_TABLE_ID)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_TABLE_ID)
 
     def test_serialize_p1_10(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_IS_SLAVE)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_IS_SLAVE)
 
     def test_serialize_p1_11(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_PORT)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_PORT)
 
     def test_serialize_p1_12(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_REQUEST,
-                               ofproto_v1_2.OFPBRC_BAD_PACKET)
+        self._test_serialize_p(ofproto.OFPET_BAD_REQUEST,
+                               ofproto.OFPBRC_BAD_PACKET)
 
     def test_serialize_p2_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_TYPE)
 
     def test_serialize_p2_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_LEN)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_LEN)
 
     def test_serialize_p2_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_EXPERIMENTER)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_EXPERIMENTER)
 
     def test_serialize_p2_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_EXP_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_EXP_TYPE)
 
     def test_serialize_p2_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_OUT_PORT)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_OUT_PORT)
 
     def test_serialize_p2_5(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_ARGUMENT)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_ARGUMENT)
 
     def test_serialize_p2_6(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_EPERM)
 
     def test_serialize_p2_7(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_TOO_MANY)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_TOO_MANY)
 
     def test_serialize_p2_8(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_QUEUE)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_QUEUE)
 
     def test_serialize_p2_9(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_OUT_GROUP)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_OUT_GROUP)
 
     def test_serialize_p2_10(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_MATCH_INCONSISTENT)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_MATCH_INCONSISTENT)
 
     def test_serialize_p2_11(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_UNSUPPORTED_ORDER)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_UNSUPPORTED_ORDER)
 
     def test_serialize_p2_12(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_TAG)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_TAG)
 
     def test_serialize_p2_13(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_SET_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_SET_TYPE)
 
     def test_serialize_p2_14(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_SET_LEN)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_SET_LEN)
 
     def test_serialize_p2_15(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_ACTION,
-                               ofproto_v1_2.OFPBAC_BAD_SET_ARGUMENT)
+        self._test_serialize_p(ofproto.OFPET_BAD_ACTION,
+                               ofproto.OFPBAC_BAD_SET_ARGUMENT)
 
     def test_serialize_p3_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_UNKNOWN_INST)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_UNKNOWN_INST)
 
     def test_serialize_p3_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_UNSUP_INST)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_UNSUP_INST)
 
     def test_serialize_p3_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_BAD_TABLE_ID)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_BAD_TABLE_ID)
 
     def test_serialize_p3_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_UNSUP_METADATA)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_UNSUP_METADATA)
 
     def test_serialize_p3_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_UNSUP_METADATA_MASK)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_UNSUP_METADATA_MASK)
 
     def test_serialize_p3_5(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_BAD_EXPERIMENTER)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_BAD_EXPERIMENTER)
 
     def test_serialize_p3_6(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_BAD_EXP_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_BAD_EXP_TYPE)
 
     def test_serialize_p3_7(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_BAD_LEN)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_BAD_LEN)
 
     def test_serialize_p3_8(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_INSTRUCTION,
-                               ofproto_v1_2.OFPBIC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_BAD_INSTRUCTION,
+                               ofproto.OFPBIC_EPERM)
 
     def test_serialize_p4_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_TYPE)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_TYPE)
 
     def test_serialize_p4_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_LEN)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_LEN)
 
     def test_serialize_p4_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_TAG)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_TAG)
 
     def test_serialize_p4_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_DL_ADDR_MASK)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_DL_ADDR_MASK)
 
     def test_serialize_p4_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_NW_ADDR_MASK)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_NW_ADDR_MASK)
 
     def test_serialize_p4_5(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_WILDCARDS)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_WILDCARDS)
 
     def test_serialize_p4_6(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_FIELD)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_FIELD)
 
     def test_serialize_p4_7(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_VALUE)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_VALUE)
 
     def test_serialize_p4_8(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_MASK)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_MASK)
 
     def test_serialize_p4_9(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_BAD_PREREQ)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_BAD_PREREQ)
 
     def test_serialize_p4_10(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_DUP_FIELD)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_DUP_FIELD)
 
     def test_serialize_p4_11(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_BAD_MATCH,
-                               ofproto_v1_2.OFPBMC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_BAD_MATCH,
+                               ofproto.OFPBMC_EPERM)
 
     def test_serialize_p5_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_UNKNOWN)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_UNKNOWN)
 
     def test_serialize_p5_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_TABLE_FULL)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_TABLE_FULL)
 
     def test_serialize_p5_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_BAD_TABLE_ID)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_BAD_TABLE_ID)
 
     def test_serialize_p5_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_OVERLAP)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_OVERLAP)
 
     def test_serialize_p5_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_EPERM)
 
     def test_serialize_p5_5(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_BAD_TIMEOUT)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_BAD_TIMEOUT)
 
     def test_serialize_p5_6(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_BAD_COMMAND)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_BAD_COMMAND)
 
     def test_serialize_p5_7(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_FLOW_MOD_FAILED,
-                               ofproto_v1_2.OFPFMFC_BAD_FLAGS)
+        self._test_serialize_p(ofproto.OFPET_FLOW_MOD_FAILED,
+                               ofproto.OFPFMFC_BAD_FLAGS)
 
     def test_serialize_p6_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_GROUP_EXISTS)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_GROUP_EXISTS)
 
     def test_serialize_p6_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_INVALID_GROUP)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_INVALID_GROUP)
 
     def test_serialize_p6_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_WEIGHT_UNSUPPORTED)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_WEIGHT_UNSUPPORTED)
 
     def test_serialize_p6_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_OUT_OF_GROUPS)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_OUT_OF_GROUPS)
 
     def test_serialize_p6_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_OUT_OF_BUCKETS)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_OUT_OF_BUCKETS)
 
     def test_serialize_p6_5(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_CHAINING_UNSUPPORTED)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_CHAINING_UNSUPPORTED)
 
     def test_serialize_p6_6(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_WATCH_UNSUPPORTED)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_WATCH_UNSUPPORTED)
 
     def test_serialize_p6_7(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_LOOP)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_LOOP)
 
     def test_serialize_p6_8(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_UNKNOWN_GROUP)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_UNKNOWN_GROUP)
 
     def test_serialize_p6_9(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_CHAINED_GROUP)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_CHAINED_GROUP)
 
     def test_serialize_p6_10(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_BAD_TYPE)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_BAD_TYPE)
 
     def test_serialize_p6_11(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_BAD_COMMAND)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_BAD_COMMAND)
 
     def test_serialize_p6_12(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_BAD_BUCKET)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_BAD_BUCKET)
 
     def test_serialize_p6_13(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_BAD_WATCH)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_BAD_WATCH)
 
     def test_serialize_p6_14(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_GROUP_MOD_FAILED,
-                               ofproto_v1_2.OFPGMFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_GROUP_MOD_FAILED,
+                               ofproto.OFPGMFC_EPERM)
 
     def test_serialize_p7_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_PORT_MOD_FAILED,
-                               ofproto_v1_2.OFPPMFC_BAD_PORT)
+        self._test_serialize_p(ofproto.OFPET_PORT_MOD_FAILED,
+                               ofproto.OFPPMFC_BAD_PORT)
 
     def test_serialize_p7_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_PORT_MOD_FAILED,
-                               ofproto_v1_2.OFPPMFC_BAD_HW_ADDR)
+        self._test_serialize_p(ofproto.OFPET_PORT_MOD_FAILED,
+                               ofproto.OFPPMFC_BAD_HW_ADDR)
 
     def test_serialize_p7_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_PORT_MOD_FAILED,
-                               ofproto_v1_2.OFPPMFC_BAD_CONFIG)
+        self._test_serialize_p(ofproto.OFPET_PORT_MOD_FAILED,
+                               ofproto.OFPPMFC_BAD_CONFIG)
 
     def test_serialize_p7_3(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_PORT_MOD_FAILED,
-                               ofproto_v1_2.OFPPMFC_BAD_ADVERTISE)
+        self._test_serialize_p(ofproto.OFPET_PORT_MOD_FAILED,
+                               ofproto.OFPPMFC_BAD_ADVERTISE)
 
     def test_serialize_p7_4(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_PORT_MOD_FAILED,
-                               ofproto_v1_2.OFPPMFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_PORT_MOD_FAILED,
+                               ofproto.OFPPMFC_EPERM)
 
     def test_serialize_p8_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_TABLE_MOD_FAILED,
-                               ofproto_v1_2.OFPTMFC_BAD_TABLE)
+        self._test_serialize_p(ofproto.OFPET_TABLE_MOD_FAILED,
+                               ofproto.OFPTMFC_BAD_TABLE)
 
     def test_serialize_p8_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_TABLE_MOD_FAILED,
-                               ofproto_v1_2.OFPTMFC_BAD_CONFIG)
+        self._test_serialize_p(ofproto.OFPET_TABLE_MOD_FAILED,
+                               ofproto.OFPTMFC_BAD_CONFIG)
 
     def test_serialize_p8_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_TABLE_MOD_FAILED,
-                               ofproto_v1_2.OFPTMFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_TABLE_MOD_FAILED,
+                               ofproto.OFPTMFC_EPERM)
 
     def test_serialize_p9_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_QUEUE_OP_FAILED,
-                               ofproto_v1_2.OFPQOFC_BAD_PORT)
+        self._test_serialize_p(ofproto.OFPET_QUEUE_OP_FAILED,
+                               ofproto.OFPQOFC_BAD_PORT)
 
     def test_serialize_p9_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_QUEUE_OP_FAILED,
-                               ofproto_v1_2.OFPQOFC_BAD_QUEUE)
+        self._test_serialize_p(ofproto.OFPET_QUEUE_OP_FAILED,
+                               ofproto.OFPQOFC_BAD_QUEUE)
 
     def test_serialize_p9_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_QUEUE_OP_FAILED,
-                               ofproto_v1_2.OFPQOFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_QUEUE_OP_FAILED,
+                               ofproto.OFPQOFC_EPERM)
 
     def test_serialize_p10_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_SWITCH_CONFIG_FAILED,
-                               ofproto_v1_2.OFPSCFC_BAD_FLAGS)
+        self._test_serialize_p(ofproto.OFPET_SWITCH_CONFIG_FAILED,
+                               ofproto.OFPSCFC_BAD_FLAGS)
 
     def test_serialize_p10_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_SWITCH_CONFIG_FAILED,
-                               ofproto_v1_2.OFPSCFC_BAD_LEN)
+        self._test_serialize_p(ofproto.OFPET_SWITCH_CONFIG_FAILED,
+                               ofproto.OFPSCFC_BAD_LEN)
 
     def test_serialize_p10_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_SWITCH_CONFIG_FAILED,
-                               ofproto_v1_2.OFPQCFC_EPERM)
+        self._test_serialize_p(ofproto.OFPET_SWITCH_CONFIG_FAILED,
+                               ofproto.OFPQCFC_EPERM)
 
     def test_serialize_p11_0(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_ROLE_REQUEST_FAILED,
-                               ofproto_v1_2.OFPRRFC_STALE)
+        self._test_serialize_p(ofproto.OFPET_ROLE_REQUEST_FAILED,
+                               ofproto.OFPRRFC_STALE)
 
     def test_serialize_p11_1(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_ROLE_REQUEST_FAILED,
-                               ofproto_v1_2.OFPRRFC_UNSUP)
+        self._test_serialize_p(ofproto.OFPET_ROLE_REQUEST_FAILED,
+                               ofproto.OFPRRFC_UNSUP)
 
     def test_serialize_p11_2(self):
-        self._test_serialize_p(ofproto_v1_2.OFPET_ROLE_REQUEST_FAILED,
-                               ofproto_v1_2.OFPRRFC_BAD_ROLE)
+        self._test_serialize_p(ofproto.OFPET_ROLE_REQUEST_FAILED,
+                               ofproto.OFPRRFC_BAD_ROLE)
 
 
 class TestOFPErrorExperimenterMsg(unittest.TestCase):
@@ -1225,17 +1225,17 @@ class TestOFPErrorExperimenterMsg(unittest.TestCase):
     def _test_parser(self, exp_type, experimenter, data=None):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_ERROR
-        msg_len = ofproto_v1_2.OFP_ERROR_MSG_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_ERROR
+        msg_len = ofproto.OFP_ERROR_MSG_SIZE
         xid = 2495926989
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_ERROR_EXPERIMENTER_MSG_PACK_STR = '!HHI'
         type_ = 0xffff
-        fmt = ofproto_v1_2.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR
+        fmt = ofproto.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR
         buf += pack(fmt, type_, exp_type, experimenter)
 
         if data is not None:
@@ -1278,9 +1278,9 @@ class TestOFPEchoRequest(unittest.TestCase):
     """
     # OFP_HEADER_PACK_STR
     # '!BBHI'...version, msg_type, msg_len, xid
-    version = ofproto_v1_2.OFP_VERSION
-    msg_type = ofproto_v1_2.OFPT_ECHO_REQUEST
-    msg_len = ofproto_v1_2.OFP_HEADER_SIZE
+    version = ofproto.OFP_VERSION
+    msg_type = ofproto.OFPT_ECHO_REQUEST
+    msg_len = ofproto.OFP_HEADER_SIZE
     xid = 2495926989
 
     def test_init(self):
@@ -1288,7 +1288,7 @@ class TestOFPEchoRequest(unittest.TestCase):
         eq_(c.data, None)
 
     def _test_parser(self, data=None):
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, self.version, self.msg_type,
                    self.msg_len, self.xid)
 
@@ -1323,19 +1323,19 @@ class TestOFPEchoRequest(unittest.TestCase):
         c.data = data
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_ECHO_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ECHO_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
 
         if data is not None:
             fmt += str(len(c.data)) + 's'
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_ECHO_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_ECHO_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
 
@@ -1361,9 +1361,9 @@ class TestOFPEchoReply(unittest.TestCase):
 
     # OFP_HEADER_PACK_STR
     # '!BBHI'...version, msg_type, msg_len, xid
-    version = ofproto_v1_2.OFP_VERSION
-    msg_type = ofproto_v1_2.OFPT_ECHO_REPLY
-    msg_len = ofproto_v1_2.OFP_HEADER_SIZE
+    version = ofproto.OFP_VERSION
+    msg_type = ofproto.OFPT_ECHO_REPLY
+    msg_len = ofproto.OFP_HEADER_SIZE
     xid = 2495926989
 
     def test_init(self):
@@ -1371,7 +1371,7 @@ class TestOFPEchoReply(unittest.TestCase):
         eq_(c.data, None)
 
     def _test_parser(self, data):
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, self.version, self.msg_type,
                    self.msg_len, self.xid)
 
@@ -1402,7 +1402,7 @@ class TestOFPEchoReply(unittest.TestCase):
         self._test_parser(data)
 
     def _test_serialize(self, data):
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, self.version, self.msg_type,
                    self.msg_len, self.xid) + data
 
@@ -1410,18 +1410,18 @@ class TestOFPEchoReply(unittest.TestCase):
         c.data = data
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_ECHO_REPLY, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ECHO_REPLY, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + str(len(c.data)) + 's'
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_ECHO_REPLY)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_ECHO_REPLY)
         eq_(res[2], len(buf))
         eq_(res[3], 0)
         eq_(res[4], data)
@@ -1449,16 +1449,16 @@ class TestOFPExperimenter(unittest.TestCase):
     def _test_parser(self, xid, experimenter, exp_type):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_EXPERIMENTER
-        msg_len = ofproto_v1_2.OFP_EXPERIMENTER_HEADER_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_EXPERIMENTER
+        msg_len = ofproto.OFP_EXPERIMENTER_HEADER_SIZE
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version,  msg_type, msg_len, xid)
 
         # OFP_EXPERIMENTER_HEADER_PACK_STR
         # '!II'...experimenter, exp_type
-        fmt = ofproto_v1_2.OFP_EXPERIMENTER_HEADER_PACK_STR
+        fmt = ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR
         buf += pack(fmt, experimenter, exp_type)
 
         res = OFPExperimenter.parser(object, version, msg_type,
@@ -1511,7 +1511,7 @@ class TestOFPPort(unittest.TestCase):
         curr_speed = 2641353507
         max_speed = 1797291672
 
-        fmt = ofproto_v1_2.OFP_PORT_PACK_STR
+        fmt = ofproto.OFP_PORT_PACK_STR
         buf = pack(fmt, port_no, hw_addr, name, config, state, curr,
                    advertised, supported, peer, curr_speed, max_speed)
 
@@ -1533,7 +1533,7 @@ class TestOFPPort(unittest.TestCase):
     def _test_parser(self, port_no, hw_addr, config, state, curr, advertised,
                      supported, peer, curr_speed, max_speed):
         name = 'name'.ljust(16)
-        fmt = ofproto_v1_2.OFP_PORT_PACK_STR
+        fmt = ofproto.OFP_PORT_PACK_STR
         buf = pack(fmt, port_no, addrconv.mac.text_to_bin(hw_addr), name,
                    config, state, curr,
                    advertised, supported, peer, curr_speed, max_speed)
@@ -1567,7 +1567,7 @@ class TestOFPPort(unittest.TestCase):
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_max(self):
-        port_no = ofproto_v1_2.OFPP_ANY
+        port_no = ofproto.OFPP_ANY
         hw_addr = 'ff:ff:ff:ff:ff:ff'
         config = 4294967295
         state = 4294967295
@@ -1595,178 +1595,178 @@ class TestOFPPort(unittest.TestCase):
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p1(self):
-        port_no = ofproto_v1_2.OFPP_MAX
+        port_no = ofproto.OFPP_MAX
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_PORT_DOWN
-        state = ofproto_v1_2.OFPPS_LINK_DOWN
+        config = ofproto.OFPPC_PORT_DOWN
+        state = ofproto.OFPPS_LINK_DOWN
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_10MB_HD
+             = ofproto.OFPPF_10MB_HD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p2(self):
-        port_no = ofproto_v1_2.OFPP_IN_PORT
+        port_no = ofproto.OFPP_IN_PORT
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_RECV
-        state = ofproto_v1_2.OFPPS_BLOCKED
+        config = ofproto.OFPPC_NO_RECV
+        state = ofproto.OFPPS_BLOCKED
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_10MB_FD
+             = ofproto.OFPPF_10MB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p3(self):
-        port_no = ofproto_v1_2.OFPP_TABLE
+        port_no = ofproto.OFPP_TABLE
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_FWD
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_FWD
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_100MB_HD
+             = ofproto.OFPPF_100MB_HD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p4(self):
-        port_no = ofproto_v1_2.OFPP_NORMAL
+        port_no = ofproto.OFPP_NORMAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_100MB_FD
+             = ofproto.OFPPF_100MB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p5(self):
-        port_no = ofproto_v1_2.OFPP_FLOOD
+        port_no = ofproto.OFPP_FLOOD
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_1GB_HD
+             = ofproto.OFPPF_1GB_HD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p6(self):
-        port_no = ofproto_v1_2.OFPP_ALL
+        port_no = ofproto.OFPP_ALL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_1GB_FD
+             = ofproto.OFPPF_1GB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p7(self):
-        port_no = ofproto_v1_2.OFPP_CONTROLLER
+        port_no = ofproto.OFPP_CONTROLLER
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_10GB_FD
+             = ofproto.OFPPF_10GB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p8(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_40GB_FD
+             = ofproto.OFPPF_40GB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p9(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_100GB_FD
+             = ofproto.OFPPF_100GB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p10(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_1TB_FD
+             = ofproto.OFPPF_1TB_FD
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p11(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_OTHER
+             = ofproto.OFPPF_OTHER
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p12(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_COPPER
+             = ofproto.OFPPF_COPPER
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p13(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_FIBER
+             = ofproto.OFPPF_FIBER
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p14(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_AUTONEG
+             = ofproto.OFPPF_AUTONEG
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p15(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_PAUSE
+             = ofproto.OFPPF_PAUSE
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p16(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = 'c0:26:53:c4:29:e2'
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        state = ofproto_v1_2.OFPPS_LIVE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        state = ofproto.OFPPS_LIVE
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_PAUSE_ASYM
+             = ofproto.OFPPF_PAUSE_ASYM
         self._test_parser(port_no, hw_addr, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
@@ -1779,16 +1779,16 @@ class TestOFPFeaturesRequest(unittest.TestCase):
         c = OFPFeaturesRequest(_Datapath)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_FEATURES_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_FEATURES_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_FEATURES_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_FEATURES_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
 
@@ -1802,19 +1802,19 @@ class TestOFPSwitchFeatures(unittest.TestCase):
 
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_FEATURES_REPLY
-        msg_len = ofproto_v1_2.OFP_SWITCH_FEATURES_SIZE \
-            + ofproto_v1_2.OFP_PORT_SIZE * port_cnt
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_FEATURES_REPLY
+        msg_len = ofproto.OFP_SWITCH_FEATURES_SIZE \
+            + ofproto.OFP_PORT_SIZE * port_cnt
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_SWITCH_FEATURES_PACK_STR
         # '!QIB3xII'...datapath_id, n_buffers, n_tables,
         #              pad(3), capabilities, reserved
 
-        fmt = ofproto_v1_2.OFP_SWITCH_FEATURES_PACK_STR
+        fmt = ofproto.OFP_SWITCH_FEATURES_PACK_STR
         buf += pack(fmt, datapath_id, n_buffers, n_tables,
                     capabilities, reserved)
 
@@ -1825,7 +1825,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
             #                          peer, curr_speed, max_speed
             port_no = i
 
-            fmt = ofproto_v1_2.OFP_PORT_PACK_STR
+            fmt = ofproto.OFP_PORT_PACK_STR
             buf += pack(fmt, port_no, '\x00' * 6, '\x00' * 16, 0, 0, 0,
                         0, 0, 0, 0, 0)
 
@@ -1891,15 +1891,15 @@ class TestOFPGetConfigRequest(unittest.TestCase):
         c = OFPGetConfigRequest(_Datapath)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_GET_CONFIG_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_GET_CONFIG_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
 
         res = struct.unpack(fmt, str(c.buf))
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_GET_CONFIG_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_GET_CONFIG_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
 
@@ -1911,16 +1911,16 @@ class TestOFPGetConfigReply(unittest.TestCase):
     def _test_parser(self, xid, flags, miss_send_len):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_GET_CONFIG_REPLY
-        msg_len = ofproto_v1_2.OFP_SWITCH_CONFIG_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_GET_CONFIG_REPLY
+        msg_len = ofproto.OFP_SWITCH_CONFIG_SIZE
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_SWITCH_CONFIG_PACK_STR
         # '!HH'...flags, miss_send_len
-        fmt = ofproto_v1_2.OFP_SWITCH_CONFIG_PACK_STR
+        fmt = ofproto.OFP_SWITCH_CONFIG_PACK_STR
         buf += pack(fmt, flags, miss_send_len)
 
         res = OFPGetConfigReply.parser(object, version, msg_type,
@@ -1947,31 +1947,31 @@ class TestOFPGetConfigReply(unittest.TestCase):
 
     def test_parser_min(self):
         xid = 0
-        flags = ofproto_v1_2.OFPC_FRAG_NORMAL
+        flags = ofproto.OFPC_FRAG_NORMAL
         miss_send_len = 0
         self._test_parser(xid, flags, miss_send_len)
 
     def test_parser_p1(self):
         xid = 3423224276
-        flags = ofproto_v1_2.OFPC_FRAG_DROP
+        flags = ofproto.OFPC_FRAG_DROP
         miss_send_len = 13838
         self._test_parser(xid, flags, miss_send_len)
 
     def test_parser_p2(self):
         xid = 3423224276
-        flags = ofproto_v1_2.OFPC_FRAG_REASM
+        flags = ofproto.OFPC_FRAG_REASM
         miss_send_len = 13838
         self._test_parser(xid, flags, miss_send_len)
 
     def test_parser_p3(self):
         xid = 3423224276
-        flags = ofproto_v1_2.OFPC_FRAG_MASK
+        flags = ofproto.OFPC_FRAG_MASK
         miss_send_len = 13838
         self._test_parser(xid, flags, miss_send_len)
 
     def test_parser_p4(self):
         xid = 3423224276
-        flags = ofproto_v1_2.OFPC_INVALID_TTL_TO_CONTROLLER
+        flags = ofproto.OFPC_INVALID_TTL_TO_CONTROLLER
         miss_send_len = 13838
         self._test_parser(xid, flags, miss_send_len)
 
@@ -1995,18 +1995,18 @@ class TestOFPSetConfig(unittest.TestCase):
         c = OFPSetConfig(_Datapath, flags, miss_send_len)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_SET_CONFIG, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_SET_CONFIG, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_SWITCH_CONFIG_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_SWITCH_CONFIG_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_SET_CONFIG)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_SET_CONFIG)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], flags)
@@ -2023,27 +2023,27 @@ class TestOFPSetConfig(unittest.TestCase):
         self._test_serialize(flags, miss_send_len)
 
     def test_serialize_min(self):
-        flags = ofproto_v1_2.OFPC_FRAG_NORMAL
+        flags = ofproto.OFPC_FRAG_NORMAL
         miss_send_len = 0
         self._test_serialize(flags, miss_send_len)
 
     def test_serialize_p1(self):
-        flags = ofproto_v1_2.OFPC_FRAG_DROP
+        flags = ofproto.OFPC_FRAG_DROP
         miss_send_len = 13838
         self._test_serialize(flags, miss_send_len)
 
     def test_serialize_p2(self):
-        flags = ofproto_v1_2.OFPC_FRAG_REASM
+        flags = ofproto.OFPC_FRAG_REASM
         miss_send_len = 13838
         self._test_serialize(flags, miss_send_len)
 
     def test_serialize_p3(self):
-        flags = ofproto_v1_2.OFPC_FRAG_MASK
+        flags = ofproto.OFPC_FRAG_MASK
         miss_send_len = 13838
         self._test_serialize(flags, miss_send_len)
 
     def test_serialize_p4(self):
-        flags = ofproto_v1_2.OFPC_INVALID_TTL_TO_CONTROLLER
+        flags = ofproto.OFPC_INVALID_TTL_TO_CONTROLLER
         miss_send_len = 13838
         self._test_serialize(flags, miss_send_len)
 
@@ -2073,15 +2073,15 @@ class TestOFPPacketIn(unittest.TestCase):
 
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_PACKET_IN
-        msg_len = ofproto_v1_2.OFP_PACKET_IN_SIZE + len(data)
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_PACKET_IN
+        msg_len = ofproto.OFP_PACKET_IN_SIZE + len(data)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_PACKET_IN_PACK_STR
-        fmt = ofproto_v1_2.OFP_PACKET_IN_PACK_STR
+        fmt = ofproto.OFP_PACKET_IN_PACK_STR
         buf += pack(fmt, buffer_id, total_len, reason, table_id)
 
         # match
@@ -2106,7 +2106,7 @@ class TestOFPPacketIn(unittest.TestCase):
         eq_(reason, res.reason)
         eq_(table_id, res.table_id)
         ok_(hasattr(res, 'match'))
-        eq_(ofproto_v1_2.OFPMT_OXM, res.match.type)
+        eq_(ofproto.OFPMT_OXM, res.match.type)
 
         if data:
             eq_(data[:total_len], res.data)
@@ -2142,7 +2142,7 @@ class TestOFPPacketIn(unittest.TestCase):
     def test_parser_min(self):
         xid = 0
         buffer_id = 0
-        reason = ofproto_v1_2.OFPR_NO_MATCH
+        reason = ofproto.OFPR_NO_MATCH
         table_id = 0
         total_len = 0
         self._test_parser(xid, buffer_id, total_len, reason, table_id)
@@ -2152,7 +2152,7 @@ class TestOFPPacketIn(unittest.TestCase):
         xid = 3423224276
         buffer_id = 2926809324
         total_len = len(data)
-        reason = ofproto_v1_2.OFPR_ACTION
+        reason = ofproto.OFPR_ACTION
         table_id = 3
         self._test_parser(xid, buffer_id, total_len, reason, table_id, data)
 
@@ -2161,7 +2161,7 @@ class TestOFPPacketIn(unittest.TestCase):
         xid = 3423224276
         buffer_id = 2926809324
         total_len = len(data)
-        reason = ofproto_v1_2.OFPR_INVALID_TTL
+        reason = ofproto.OFPR_INVALID_TTL
         table_id = 3
         self._test_parser(xid, buffer_id, total_len, reason, table_id, data)
 
@@ -2176,11 +2176,11 @@ class TestOFPFlowRemoved(unittest.TestCase):
                      packet_count, byte_count):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_FLOW_REMOVED
-        msg_len = ofproto_v1_2.OFP_FLOW_REMOVED_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_FLOW_REMOVED
+        msg_len = ofproto.OFP_FLOW_REMOVED_SIZE
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_FLOW_REMOVED_PACK_STR0
@@ -2188,7 +2188,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         #                  duration_sec, duration_nsec, idle_timeout,
         #                  hard_timeout, packet_count, byte_count
 
-        fmt = ofproto_v1_2.OFP_FLOW_REMOVED_PACK_STR0
+        fmt = ofproto.OFP_FLOW_REMOVED_PACK_STR0
         buf += pack(fmt, cookie, priority, reason, table_id,
                     duration_sec, duration_nsec, idle_timeout,
                     hard_timeout, packet_count, byte_count)
@@ -2218,7 +2218,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         eq_(packet_count, res.packet_count)
         eq_(byte_count, res.byte_count)
         ok_(hasattr(res, 'match'))
-        eq_(ofproto_v1_2.OFPMT_OXM, res.match.type)
+        eq_(ofproto.OFPMT_OXM, res.match.type)
 
     def test_parser_mid(self):
         xid = 3423224276
@@ -2258,7 +2258,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         xid = 0
         cookie = 0
         priority = 0
-        reason = ofproto_v1_2.OFPRR_IDLE_TIMEOUT
+        reason = ofproto.OFPRR_IDLE_TIMEOUT
         table_id = 0
         duration_sec = 0
         duration_nsec = 0
@@ -2275,7 +2275,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         xid = 3423224276
         cookie = 178378173441633860
         priority = 718
-        reason = ofproto_v1_2.OFPRR_HARD_TIMEOUT
+        reason = ofproto.OFPRR_HARD_TIMEOUT
         table_id = 169
         duration_sec = 2250548154
         duration_nsec = 2492776995
@@ -2292,7 +2292,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         xid = 3423224276
         cookie = 178378173441633860
         priority = 718
-        reason = ofproto_v1_2.OFPRR_DELETE
+        reason = ofproto.OFPRR_DELETE
         table_id = 169
         duration_sec = 2250548154
         duration_nsec = 2492776995
@@ -2309,7 +2309,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         xid = 3423224276
         cookie = 178378173441633860
         priority = 718
-        reason = ofproto_v1_2.OFPRR_GROUP_DELETE
+        reason = ofproto.OFPRR_GROUP_DELETE
         table_id = 169
         duration_sec = 2250548154
         duration_nsec = 2492776995
@@ -2333,11 +2333,11 @@ class TestOFPPortStatus(unittest.TestCase):
 
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_PORT_STATUS
-        msg_len = ofproto_v1_2.OFP_PORT_STATUS_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_PORT_STATUS
+        msg_len = ofproto.OFP_PORT_STATUS_SIZE
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_PORT_STATUS_PACK_STR = '!B7x' + _OFP_PORT_PACK_STR
@@ -2349,7 +2349,7 @@ class TestOFPPortStatus(unittest.TestCase):
         hw_addr = '80:ff:9a:e3:72:85'
         name = 'name'.ljust(16)
 
-        fmt = ofproto_v1_2.OFP_PORT_STATUS_PACK_STR
+        fmt = ofproto.OFP_PORT_STATUS_PACK_STR
         buf += pack(fmt, reason, port_no, addrconv.mac.text_to_bin(hw_addr),
                     name, config, state, curr, advertised,
                     supported, peer, curr_speed, max_speed)
@@ -2389,7 +2389,7 @@ class TestOFPPortStatus(unittest.TestCase):
     def test_parser_max(self):
         xid = 4294967295
         reason = 255
-        port_no = ofproto_v1_2.OFPP_ANY
+        port_no = ofproto.OFPP_ANY
         config = 4294967295
         state = 4294967295
         curr = 4294967295
@@ -2420,26 +2420,26 @@ class TestOFPPortStatus(unittest.TestCase):
 
     def test_parser_p1(self):
         xid = 3423224276
-        reason = ofproto_v1_2.OFPPR_DELETE
-        port_no = ofproto_v1_2.OFPP_MAX
-        config = ofproto_v1_2.OFPPC_PORT_DOWN
-        state = ofproto_v1_2.OFPPS_LINK_DOWN
+        reason = ofproto.OFPPR_DELETE
+        port_no = ofproto.OFPP_MAX
+        config = ofproto.OFPPC_PORT_DOWN
+        state = ofproto.OFPPS_LINK_DOWN
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_10MB_HD
+             = ofproto.OFPPF_10MB_HD
         self._test_parser(xid, reason,
                           port_no, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
 
     def test_parser_p2(self):
         xid = 3423224276
-        reason = ofproto_v1_2.OFPPR_MODIFY
-        port_no = ofproto_v1_2.OFPP_MAX
-        config = ofproto_v1_2.OFPPC_PORT_DOWN
-        state = ofproto_v1_2.OFPPS_LINK_DOWN
+        reason = ofproto.OFPPR_MODIFY
+        port_no = ofproto.OFPP_MAX
+        config = ofproto.OFPPC_PORT_DOWN
+        state = ofproto.OFPPS_LINK_DOWN
         curr = advertised = supported \
              = peer = curr_speed = max_speed \
-             = ofproto_v1_2.OFPPF_10MB_HD
+             = ofproto.OFPPF_10MB_HD
         self._test_parser(xid, reason,
                           port_no, config, state, curr, advertised,
                           supported, peer, curr_speed, max_speed)
@@ -2480,31 +2480,31 @@ class TestOFPPacketOut(unittest.TestCase):
         c = OFPPacketOut(_Datapath, buffer_id, in_port, actions, data)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_PACKET_OUT, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_PACKET_OUT, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR \
-            + ofproto_v1_2.OFP_PACKET_OUT_PACK_STR[1:] \
-            + ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR[1:] * action_cnt
+        fmt = ofproto.OFP_HEADER_PACK_STR \
+            + ofproto.OFP_PACKET_OUT_PACK_STR[1:] \
+            + ofproto.OFP_ACTION_OUTPUT_PACK_STR[1:] * action_cnt
 
         if data is not None:
             fmt += str(len(data)) + 's'
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_PACKET_OUT)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_PACKET_OUT)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], buffer_id)
         eq_(res[5], in_port)
-        eq_(res[6], ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE * action_cnt)
+        eq_(res[6], ofproto.OFP_ACTION_OUTPUT_SIZE * action_cnt)
 
         for i in range(action_cnt):
             index = 7 + i * 4
-            eq_(res[index], ofproto_v1_2.OFPAT_OUTPUT)
-            eq_(res[index + 1], ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE)
+            eq_(res[index], ofproto.OFPAT_OUTPUT)
+            eq_(res[index + 1], ofproto.OFP_ACTION_OUTPUT_SIZE)
             eq_(res[index + 2], i)
             eq_(res[index + 3], 0)
 
@@ -2537,7 +2537,7 @@ class TestOFPPacketOut(unittest.TestCase):
 
     def test_serialize_p1(self):
         buffer_id = 2147483648
-        in_port = ofproto_v1_2.OFPP_CONTROLLER
+        in_port = ofproto.OFPP_CONTROLLER
         self._test_serialize(buffer_id, in_port)
 
     @raises(AssertionError)
@@ -2610,20 +2610,20 @@ class TestOFPFlowMod(unittest.TestCase):
                        out_port, out_group, flags, match, insts)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_FLOW_MOD, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_FLOW_MOD, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR \
-            + ofproto_v1_2.OFP_FLOW_MOD_PACK_STR0[1:] \
+        fmt = ofproto.OFP_HEADER_PACK_STR \
+            + ofproto.OFP_FLOW_MOD_PACK_STR0[1:] \
             + 'HHHBB' \
             + MTEthType.pack_str[1:] + '6x' \
-            + ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR[1:] * inst_cnt
+            + ofproto.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR[1:] * inst_cnt
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_FLOW_MOD)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_FLOW_MOD)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], cookie)
@@ -2639,10 +2639,10 @@ class TestOFPFlowMod(unittest.TestCase):
         eq_(res[14], flags)
 
         # OFP_MATCH (type, length, class, [field, hashmask], n_byte, ip_proto)
-        eq_(res[15], ofproto_v1_2.OFPMT_OXM)
+        eq_(res[15], ofproto.OFPMT_OXM)
         eq_(res[16], 10)  # OFP_MATCH_STR + MTEthType.pack_str
-        eq_(res[17], ofproto_v1_2.OFPXMC_OPENFLOW_BASIC)
-        eq_(res[18] >> 1, ofproto_v1_2.OFPXMT_OFB_ETH_TYPE)
+        eq_(res[17], ofproto.OFPXMC_OPENFLOW_BASIC)
+        eq_(res[18] >> 1, ofproto.OFPXMT_OFB_ETH_TYPE)
         eq_(res[18] & 0b0001, 0)
         eq_(res[19], calcsize(MTEthType.pack_str))
         eq_(res[20], dl_type)
@@ -2650,8 +2650,8 @@ class TestOFPFlowMod(unittest.TestCase):
         # insts (type, length, table_id)
         for i in range(inst_cnt):
             index = 21 + 3 * i
-            eq_(res[index], ofproto_v1_2.OFPIT_GOTO_TABLE)
-            eq_(res[index + 1], ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_SIZE)
+            eq_(res[index], ofproto.OFPIT_GOTO_TABLE)
+            eq_(res[index + 1], ofproto.OFP_INSTRUCTION_GOTO_TABLE_SIZE)
             eq_(res[index + 2], i)
 
     def test_serialize_mid(self):
@@ -2694,7 +2694,7 @@ class TestOFPFlowMod(unittest.TestCase):
         cookie = 0
         cookie_mask = 0
         table_id = 0
-        command = ofproto_v1_2.OFPFC_ADD
+        command = ofproto.OFPFC_ADD
         idle_timeout = 0
         hard_timeout = 0
         priority = 0
@@ -2782,10 +2782,10 @@ class TestOFPInstructionGotoTable(unittest.TestCase):
 
     # OFP_INSTRUCTION_GOTO_TABLE_PACK_STR
     # '!HHB3x'...type, len, table_id, pad(3)
-    type_ = ofproto_v1_2.OFPIT_GOTO_TABLE
-    len_ = ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_SIZE
+    type_ = ofproto.OFPIT_GOTO_TABLE
+    len_ = ofproto.OFP_INSTRUCTION_GOTO_TABLE_SIZE
 
-    fmt = ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR
+    fmt = ofproto.OFP_INSTRUCTION_GOTO_TABLE_PACK_STR
 
     def test_init(self):
         table_id = 3
@@ -2839,12 +2839,12 @@ class TestOFPInstructionWriteMetadata(unittest.TestCase):
 
     # OFP_INSTRUCTION_WRITE_METADATA_PACK_STR
     # '!HH4xQQ'...type, len, pad(4), metadata, metadata_mask
-    type_ = ofproto_v1_2.OFPIT_WRITE_METADATA
-    len_ = ofproto_v1_2.OFP_INSTRUCTION_WRITE_METADATA_SIZE
+    type_ = ofproto.OFPIT_WRITE_METADATA
+    len_ = ofproto.OFP_INSTRUCTION_WRITE_METADATA_SIZE
     metadata = 0x1212121212121212
     metadata_mask = 0xff00ff00ff00ff00
 
-    fmt = ofproto_v1_2.OFP_INSTRUCTION_WRITE_METADATA_PACK_STR
+    fmt = ofproto.OFP_INSTRUCTION_WRITE_METADATA_PACK_STR
 
     def test_init(self):
         c = OFPInstructionWriteMetadata(self.metadata,
@@ -2922,16 +2922,16 @@ class TestOFPInstructionActions(unittest.TestCase):
     """
     # OFP_INSTRUCTION_ACTIONS_PACK_STR
     # '!HH4x'...type, len, pad(4)
-    type_ = ofproto_v1_2.OFPIT_WRITE_ACTIONS
-    len_ = ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE \
-        + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+    type_ = ofproto.OFPIT_WRITE_ACTIONS
+    len_ = ofproto.OFP_INSTRUCTION_ACTIONS_SIZE \
+        + ofproto.OFP_ACTION_OUTPUT_SIZE
 
-    fmt = ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_PACK_STR
+    fmt = ofproto.OFP_INSTRUCTION_ACTIONS_PACK_STR
     buf = pack(fmt, type_, len_)
 
     # OFP_ACTION (OFP_ACTION_OUTPUT)
     port = 0x00002ae0
-    max_len = ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+    max_len = ofproto.OFP_ACTION_OUTPUT_SIZE
     actions = [OFPActionOutput(port, max_len)]
     buf_actions = bytearray()
     actions[0].serialize(buf_actions, 0)
@@ -2947,10 +2947,10 @@ class TestOFPInstructionActions(unittest.TestCase):
     def _test_parser(self, action_cnt):
         # OFP_INSTRUCTION_ACTIONS_PACK_STR
         # '!HH4x'...type, len, pad(4)
-        len_ = ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE \
-            + (ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE * action_cnt)
+        len_ = ofproto.OFP_INSTRUCTION_ACTIONS_SIZE \
+            + (ofproto.OFP_ACTION_OUTPUT_SIZE * action_cnt)
 
-        fmt = ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_PACK_STR
+        fmt = ofproto.OFP_INSTRUCTION_ACTIONS_PACK_STR
         buf = pack(fmt, self.type_, len_)
 
         actions = []
@@ -2989,8 +2989,8 @@ class TestOFPInstructionActions(unittest.TestCase):
     def _test_serialize(self, action_cnt):
         # OFP_INSTRUCTION_ACTIONS_PACK_STR
         # '!HH4x'...type, len, pad(4)
-        len_ = ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_SIZE \
-            + (ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE * action_cnt)
+        len_ = ofproto.OFP_INSTRUCTION_ACTIONS_SIZE \
+            + (ofproto.OFP_ACTION_OUTPUT_SIZE * action_cnt)
 
         actions = []
         for a in range(action_cnt):
@@ -3005,10 +3005,10 @@ class TestOFPInstructionActions(unittest.TestCase):
         c.serialize(buf, 0)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_INSTRUCTION_ACTIONS_PACK_STR.replace('!', '')
+            + ofproto.OFP_INSTRUCTION_ACTIONS_PACK_STR.replace('!', '')
 
         for a in range(action_cnt):
-            fmt += ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
+            fmt += ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
         res = struct.unpack(fmt, buffer(buf))
 
         eq_(res[0], self.type_)
@@ -3038,10 +3038,10 @@ class TestOFPActionHeader(unittest.TestCase):
     def test_init(self):
         # OFP_ACTION_HEADER_PACK_STR
         # '!HH4x'...type, len, pad(4)
-        type_ = ofproto_v1_2.OFPAT_OUTPUT
-        len_ = ofproto_v1_2.OFP_ACTION_HEADER_SIZE
+        type_ = ofproto.OFPAT_OUTPUT
+        len_ = ofproto.OFP_ACTION_HEADER_SIZE
 
-        fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+        fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
         buf = pack(fmt, type_, len_)
 
         c = OFPActionHeader(type_, len_)
@@ -3053,7 +3053,7 @@ class TestOFPActionHeader(unittest.TestCase):
         # OFP_ACTION_HEADER_PACK_STR
         # '!HH4x'...type, len, pad(4)
 
-        fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+        fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
         buf = pack(fmt, type_, len_)
 
         c = OFPActionHeader(type_, len_)
@@ -3061,7 +3061,7 @@ class TestOFPActionHeader(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+        fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
         res = struct.unpack(fmt, buffer(buf))
 
         eq_(res[0], type_)
@@ -3089,19 +3089,19 @@ class TestOFPActionOutput(unittest.TestCase):
 
     # OFP_ACTION_OUTPUT_PACK_STR
     # '!HHIH6x'...type, len, port, max_len, pad(6)
-    type_ = ofproto_v1_2.OFPAT_OUTPUT
-    len_ = ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+    type_ = ofproto.OFPAT_OUTPUT
+    len_ = ofproto.OFP_ACTION_OUTPUT_SIZE
 
     def test_init(self):
         port = 6606
         max_len = 1500
-        fmt = ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR
+        fmt = ofproto.OFP_ACTION_OUTPUT_PACK_STR
         c = OFPActionOutput(port, max_len)
         eq_(port, c.port)
         eq_(max_len, c.max_len)
 
     def _test_parser(self, port, max_len):
-        fmt = ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR
+        fmt = ofproto.OFP_ACTION_OUTPUT_PACK_STR
         buf = pack(fmt, self.type_, self.len_, port, max_len)
 
         c = OFPActionOutput(port, max_len)
@@ -3139,7 +3139,7 @@ class TestOFPActionOutput(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        fmt = ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR
+        fmt = ofproto.OFP_ACTION_OUTPUT_PACK_STR
         res = struct.unpack(fmt, buffer(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
@@ -3173,11 +3173,11 @@ class TestOFPActionGroup(unittest.TestCase):
 
     # OFP_ACTION_GROUP_PACK_STR
     # '!HHI'...type, len, group_id
-    type_ = ofproto_v1_2.OFPAT_GROUP
-    len_ = ofproto_v1_2.OFP_ACTION_GROUP_SIZE
+    type_ = ofproto.OFPAT_GROUP
+    len_ = ofproto.OFP_ACTION_GROUP_SIZE
     group_id = 6606
 
-    fmt = ofproto_v1_2.OFP_ACTION_GROUP_PACK_STR
+    fmt = ofproto.OFP_ACTION_GROUP_PACK_STR
 
     def test_init(self):
         c = OFPActionGroup(self.group_id)
@@ -3227,11 +3227,11 @@ class TestOFPActionSetQueue(unittest.TestCase):
 
     # OFP_ACTION_SET_QUEUE_PACK_STR
     # '!HHI'...type, len, queue_id
-    type_ = ofproto_v1_2.OFPAT_SET_QUEUE
-    len_ = ofproto_v1_2.OFP_ACTION_SET_QUEUE_SIZE
+    type_ = ofproto.OFPAT_SET_QUEUE
+    len_ = ofproto.OFP_ACTION_SET_QUEUE_SIZE
     queue_id = 6606
 
-    fmt = ofproto_v1_2.OFP_ACTION_SET_QUEUE_PACK_STR
+    fmt = ofproto.OFP_ACTION_SET_QUEUE_PACK_STR
 
     def test_init(self):
         c = OFPActionSetQueue(self.queue_id)
@@ -3281,11 +3281,11 @@ class TestOFPActionSetMplsTtl(unittest.TestCase):
 
     # OFP_ACTION_MPLS_TTL_PACK_STR
     # '!HHB3x'...type, len, mpls_ttl, pad(3)
-    type_ = ofproto_v1_2.OFPAT_SET_MPLS_TTL
-    len_ = ofproto_v1_2.OFP_ACTION_MPLS_TTL_SIZE
+    type_ = ofproto.OFPAT_SET_MPLS_TTL
+    len_ = ofproto.OFP_ACTION_MPLS_TTL_SIZE
     mpls_ttl = 254
 
-    fmt = ofproto_v1_2.OFP_ACTION_MPLS_TTL_PACK_STR
+    fmt = ofproto.OFP_ACTION_MPLS_TTL_PACK_STR
 
     def test_init(self):
         c = OFPActionSetMplsTtl(self.mpls_ttl)
@@ -3333,9 +3333,9 @@ class TestOFPActionDecMplsTtl(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPActionDecMplsTtl
     """
 
-    type_ = ofproto_v1_2.OFPAT_DEC_MPLS_TTL
-    len_ = ofproto_v1_2.OFP_ACTION_MPLS_TTL_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+    type_ = ofproto.OFPAT_DEC_MPLS_TTL
+    len_ = ofproto.OFP_ACTION_MPLS_TTL_SIZE
+    fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
     buf = pack(fmt, type_, len_)
     c = OFPActionDecMplsTtl()
 
@@ -3360,11 +3360,11 @@ class TestOFPActionSetNwTtl(unittest.TestCase):
 
     # OFP_ACTION_NW_TTL_PACK_STR
     # '!HHB3x'...type, len, nw_ttl, pad(3)
-    type_ = ofproto_v1_2.OFPAT_SET_NW_TTL
-    len_ = ofproto_v1_2.OFP_ACTION_NW_TTL_SIZE
+    type_ = ofproto.OFPAT_SET_NW_TTL
+    len_ = ofproto.OFP_ACTION_NW_TTL_SIZE
     nw_ttl = 240
 
-    fmt = ofproto_v1_2.OFP_ACTION_NW_TTL_PACK_STR
+    fmt = ofproto.OFP_ACTION_NW_TTL_PACK_STR
 
     def test_init(self):
         c = OFPActionSetNwTtl(self.nw_ttl)
@@ -3412,9 +3412,9 @@ class TestOFPActionDecNwTtl(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPActionDecNwTtl
     """
 
-    type_ = ofproto_v1_2.OFPAT_DEC_NW_TTL
-    len_ = ofproto_v1_2.OFP_ACTION_NW_TTL_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+    type_ = ofproto.OFPAT_DEC_NW_TTL
+    len_ = ofproto.OFP_ACTION_NW_TTL_SIZE
+    fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
     buf = pack(fmt, type_, len_)
     c = OFPActionDecNwTtl()
 
@@ -3437,9 +3437,9 @@ class TestOFPActionCopyTtlOut(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPActionCopyTtlOut
     """
 
-    type_ = ofproto_v1_2.OFPAT_COPY_TTL_OUT
-    len_ = ofproto_v1_2.OFP_ACTION_HEADER_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+    type_ = ofproto.OFPAT_COPY_TTL_OUT
+    len_ = ofproto.OFP_ACTION_HEADER_SIZE
+    fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
     buf = pack(fmt, type_, len_)
     c = OFPActionCopyTtlOut()
 
@@ -3463,9 +3463,9 @@ class TestOFPActionCopyTtlIn(unittest.TestCase):
 
     # OFP_ACTION_HEADER_PACK_STR
     # '!HH'...type, len
-    type_ = ofproto_v1_2.OFPAT_COPY_TTL_IN
-    len_ = ofproto_v1_2.OFP_ACTION_HEADER_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+    type_ = ofproto.OFPAT_COPY_TTL_IN
+    len_ = ofproto.OFP_ACTION_HEADER_SIZE
+    fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
     buf = pack(fmt, type_, len_)
     c = OFPActionCopyTtlIn()
 
@@ -3490,9 +3490,9 @@ class TestOFPActionPushVlan(unittest.TestCase):
 
     # OFP_ACTION_PUSH_PACK_STR
     # '!HHH2x'...type, len, ethertype, pad(2)
-    type_ = ofproto_v1_2.OFPAT_PUSH_VLAN
-    len_ = ofproto_v1_2.OFP_ACTION_PUSH_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_PUSH_PACK_STR
+    type_ = ofproto.OFPAT_PUSH_VLAN
+    len_ = ofproto.OFP_ACTION_PUSH_SIZE
+    fmt = ofproto.OFP_ACTION_PUSH_PACK_STR
 
     def test_init(self):
         ethertype = 0x8100
@@ -3542,9 +3542,9 @@ class TestOFPActionPushMpls(unittest.TestCase):
 
     # OFP_ACTION_PUSH_PACK_STR
     # '!HHH2x'...type, len, ethertype, pad(2)
-    type_ = ofproto_v1_2.OFPAT_PUSH_MPLS
-    len_ = ofproto_v1_2.OFP_ACTION_PUSH_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_PUSH_PACK_STR
+    type_ = ofproto.OFPAT_PUSH_MPLS
+    len_ = ofproto.OFP_ACTION_PUSH_SIZE
+    fmt = ofproto.OFP_ACTION_PUSH_PACK_STR
 
     def test_init(self):
         ethertype = 0x8100
@@ -3594,9 +3594,9 @@ class TestOFPActionPopVlan(unittest.TestCase):
 
     # OFP_ACTION_HEADER_PACK_STR
     # '!HH'...type, len
-    type_ = ofproto_v1_2.OFPAT_POP_VLAN
-    len_ = ofproto_v1_2.OFP_ACTION_HEADER_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_HEADER_PACK_STR
+    type_ = ofproto.OFPAT_POP_VLAN
+    len_ = ofproto.OFP_ACTION_HEADER_SIZE
+    fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
     buf = pack(fmt, type_, len_)
     c = OFPActionPopVlan()
 
@@ -3620,9 +3620,9 @@ class TestOFPActionPopMpls(unittest.TestCase):
 
     # OFP_ACTION_POP_MPLS_PACK_STR
     # '!HHH2x'...type, len, ethertype, pad(2)
-    type_ = ofproto_v1_2.OFPAT_POP_MPLS
-    len_ = ofproto_v1_2.OFP_ACTION_POP_MPLS_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_POP_MPLS_PACK_STR
+    type_ = ofproto.OFPAT_POP_MPLS
+    len_ = ofproto.OFP_ACTION_POP_MPLS_SIZE
+    fmt = ofproto.OFP_ACTION_POP_MPLS_PACK_STR
 
     def test_init(self):
         ethertype = 0x8100
@@ -3670,12 +3670,12 @@ class TestOFPActionSetField(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPActionSetField
     """
 
-    type_ = ofproto_v1_2.OFPAT_SET_FIELD
-    header = ofproto_v1_2.OXM_OF_IN_PORT
+    type_ = ofproto.OFPAT_SET_FIELD
+    header = ofproto.OXM_OF_IN_PORT
     in_port = 6606
 
     field = MTInPort(header, in_port)
-    length = ofproto_v1_2.OFP_ACTION_SET_FIELD_SIZE + field.oxm_len()
+    length = ofproto.OFP_ACTION_SET_FIELD_SIZE + field.oxm_len()
     len_ = utils.round_up(length, 8)
 
     fmt = '!HHII4x'
@@ -3712,9 +3712,9 @@ class TestOFPActionExperimenter(unittest.TestCase):
 
     # OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR v1.2
     # '!HHI'...type, len, experimenter
-    type_ = ofproto_v1_2.OFPAT_EXPERIMENTER
-    len_ = ofproto_v1_2.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
-    fmt = ofproto_v1_2.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR
+    type_ = ofproto.OFPAT_EXPERIMENTER
+    len_ = ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
+    fmt = ofproto.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR
 
     def test_init(self):
         experimenter = 4294967295
@@ -3792,17 +3792,17 @@ class TestOFPBucket(unittest.TestCase):
     def _test_parser(self, weight, watch_port, watch_group, action_cnt):
         # OFP_BUCKET_PACK_STR
         # '!HHII4x'...len, weight, watch_port, watch_group, pad(4)
-        len_ = ofproto_v1_2.OFP_BUCKET_SIZE \
-            + (ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE * action_cnt)
+        len_ = ofproto.OFP_BUCKET_SIZE \
+            + (ofproto.OFP_ACTION_OUTPUT_SIZE * action_cnt)
 
-        fmt = ofproto_v1_2.OFP_BUCKET_PACK_STR
+        fmt = ofproto.OFP_BUCKET_PACK_STR
         buf = pack(fmt, len_, weight, watch_port, watch_group)
 
         actions = []
         for a in range(action_cnt):
             # OFP_ACTION (OFP_ACTION_OUTPUT)
             port = a
-            max_len = ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+            max_len = ofproto.OFP_ACTION_OUTPUT_SIZE
             action = OFPActionOutput(port, max_len)
             actions.append(action)
             buf_actions = bytearray()
@@ -3852,14 +3852,14 @@ class TestOFPBucket(unittest.TestCase):
                         action_cnt):
         # OFP_BUCKET_PACK_STR
         # '!HHII4x'...len, weight, watch_port, watch_group, pad(4)
-        len_ = ofproto_v1_2.OFP_BUCKET_SIZE \
-            + (ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE * action_cnt)
+        len_ = ofproto.OFP_BUCKET_SIZE \
+            + (ofproto.OFP_ACTION_OUTPUT_SIZE * action_cnt)
 
         actions = []
         for a in range(action_cnt):
             # OFP_ACTION (OFP_ACTION_OUTPUT)
             port = a
-            max_len = ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+            max_len = ofproto.OFP_ACTION_OUTPUT_SIZE
             action = OFPActionOutput(port, max_len)
             actions.append(action)
 
@@ -3868,9 +3868,9 @@ class TestOFPBucket(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        fmt = ofproto_v1_2.OFP_BUCKET_PACK_STR
+        fmt = ofproto.OFP_BUCKET_PACK_STR
         for a in range(action_cnt):
-            fmt += ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR[1:]
+            fmt += ofproto.OFP_ACTION_OUTPUT_PACK_STR[1:]
         res = struct.unpack(fmt, buffer(buf))
 
         eq_(res[0], len_)
@@ -3917,8 +3917,8 @@ class TestOFPGroupMod(unittest.TestCase):
     def test_init(self):
         # OFP_GROUP_MOD_PACK_STR
         # '!HBBI'...command, type, pad, group_id
-        command = ofproto_v1_2.OFPFC_ADD
-        type_ = ofproto_v1_2.OFPGT_SELECT
+        command = ofproto.OFPFC_ADD
+        type_ = ofproto.OFPGT_SELECT
         group_id = 6606
 
         # OFP_BUCKET
@@ -3943,8 +3943,8 @@ class TestOFPGroupMod(unittest.TestCase):
         eq_(max_len, c.buckets[0].actions[0].max_len)
 
     def _test_serialize(self, command, type_, group_id, bucket_cnt):
-        len_ = ofproto_v1_2.OFP_BUCKET_SIZE \
-            + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+        len_ = ofproto.OFP_BUCKET_SIZE \
+            + ofproto.OFP_ACTION_OUTPUT_SIZE
 
         buckets = []
         for b in range(bucket_cnt):
@@ -3958,28 +3958,28 @@ class TestOFPGroupMod(unittest.TestCase):
 
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_GROUP_MOD, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_GROUP_MOD, c.msg_type)
         eq_(0, c.xid)
         eq_(len(c.buf), c.msg_len)
 
         # 16 byte
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR \
-            + ofproto_v1_2.OFP_GROUP_MOD_PACK_STR[1:]
+        fmt = ofproto.OFP_HEADER_PACK_STR \
+            + ofproto.OFP_GROUP_MOD_PACK_STR[1:]
 
         # 16 + (16 + 16) * bucket_cnt < 65535 byte
         # bucket_cnt <= 2047
         for b in range(bucket_cnt):
-            fmt += ofproto_v1_2.OFP_BUCKET_PACK_STR[1:] \
-                + ofproto_v1_2.OFP_ACTION_OUTPUT_PACK_STR[1:]
+            fmt += ofproto.OFP_BUCKET_PACK_STR[1:] \
+                + ofproto.OFP_ACTION_OUTPUT_PACK_STR[1:]
 
         res = struct.unpack(fmt, str(c.buf))
 
-        msg_len = ofproto_v1_2.OFP_GROUP_MOD_SIZE \
+        msg_len = ofproto.OFP_GROUP_MOD_SIZE \
             + (len_ * bucket_cnt)
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_GROUP_MOD)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_GROUP_MOD)
         eq_(res[2], msg_len)
         eq_(res[3], 0)
         eq_(res[4], command)
@@ -4066,18 +4066,18 @@ class TestOFPPortMod(unittest.TestCase):
                        mask, advertise)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_PORT_MOD, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_PORT_MOD, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_PORT_MOD_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_PORT_MOD_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_PORT_MOD)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_PORT_MOD)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], port_no)
@@ -4091,7 +4091,7 @@ class TestOFPPortMod(unittest.TestCase):
                              self.config, self.mask, self.advertise)
 
     def test_serialize_max(self):
-        port_no = ofproto_v1_2.OFPP_ANY
+        port_no = ofproto.OFPP_ANY
         hw_addr = 'ff:ff:ff:ff:ff:ff'
         config = 0xffffffff
         mask = 0xffffffff
@@ -4107,131 +4107,131 @@ class TestOFPPortMod(unittest.TestCase):
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p1(self):
-        port_no = ofproto_v1_2.OFPP_MAX
+        port_no = ofproto.OFPP_MAX
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_PORT_DOWN
-        mask = ofproto_v1_2.OFPPC_PORT_DOWN
-        advertise = ofproto_v1_2.OFPPF_10MB_HD
+        config = ofproto.OFPPC_PORT_DOWN
+        mask = ofproto.OFPPC_PORT_DOWN
+        advertise = ofproto.OFPPF_10MB_HD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p2(self):
-        port_no = ofproto_v1_2.OFPP_IN_PORT
+        port_no = ofproto.OFPP_IN_PORT
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_RECV
-        mask = ofproto_v1_2.OFPPC_NO_RECV
-        advertise = ofproto_v1_2.OFPPF_10MB_FD
+        config = ofproto.OFPPC_NO_RECV
+        mask = ofproto.OFPPC_NO_RECV
+        advertise = ofproto.OFPPF_10MB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p3(self):
-        port_no = ofproto_v1_2.OFPP_TABLE
+        port_no = ofproto.OFPP_TABLE
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_FWD
-        mask = ofproto_v1_2.OFPPC_NO_FWD
-        advertise = ofproto_v1_2.OFPPF_100MB_HD
+        config = ofproto.OFPPC_NO_FWD
+        mask = ofproto.OFPPC_NO_FWD
+        advertise = ofproto.OFPPF_100MB_HD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p4(self):
-        port_no = ofproto_v1_2.OFPP_NORMAL
+        port_no = ofproto.OFPP_NORMAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_100MB_FD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_100MB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p5(self):
-        port_no = ofproto_v1_2.OFPP_FLOOD
+        port_no = ofproto.OFPP_FLOOD
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_1GB_HD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_1GB_HD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p6(self):
-        port_no = ofproto_v1_2.OFPP_ALL
+        port_no = ofproto.OFPP_ALL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_1GB_FD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_1GB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p7(self):
-        port_no = ofproto_v1_2.OFPP_CONTROLLER
+        port_no = ofproto.OFPP_CONTROLLER
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_10GB_FD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_10GB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p8(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_40GB_FD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_40GB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p9(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_100GB_FD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_100GB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p10(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_1TB_FD
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_1TB_FD
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p11(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_OTHER
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_OTHER
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p12(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_COPPER
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_COPPER
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p13(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_FIBER
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_FIBER
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p14(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_AUTONEG
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_AUTONEG
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p15(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_PAUSE
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_PAUSE
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
     def test_serialize_p16(self):
-        port_no = ofproto_v1_2.OFPP_LOCAL
+        port_no = ofproto.OFPP_LOCAL
         hw_addr = self.hw_addr
-        config = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        mask = ofproto_v1_2.OFPPC_NO_PACKET_IN
-        advertise = ofproto_v1_2.OFPPF_PAUSE_ASYM
+        config = ofproto.OFPPC_NO_PACKET_IN
+        mask = ofproto.OFPPC_NO_PACKET_IN
+        advertise = ofproto.OFPPF_PAUSE_ASYM
         self._test_serialize(port_no, hw_addr, config, mask, advertise)
 
 
@@ -4253,18 +4253,18 @@ class TestOFPTableMod(unittest.TestCase):
         c = OFPTableMod(_Datapath, table_id, config)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_TABLE_MOD, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_TABLE_MOD, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_TABLE_MOD_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_TABLE_MOD_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_TABLE_MOD)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_TABLE_MOD)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], table_id)
@@ -4274,7 +4274,7 @@ class TestOFPTableMod(unittest.TestCase):
         self._test_serialize(self.table_id, self.config)
 
     def test_serialize_max(self):
-        table_id = ofproto_v1_2.OFPTT_ALL
+        table_id = ofproto.OFPTT_ALL
         config = 0xffffffff
         self._test_serialize(table_id, config)
 
@@ -4284,18 +4284,18 @@ class TestOFPTableMod(unittest.TestCase):
         self._test_serialize(table_id, config)
 
     def test_serialize_p1(self):
-        table_id = ofproto_v1_2.OFPTT_MAX
-        config = ofproto_v1_2.OFPTC_TABLE_MISS_CONTINUE
+        table_id = ofproto.OFPTT_MAX
+        config = ofproto.OFPTC_TABLE_MISS_CONTINUE
         self._test_serialize(table_id, config)
 
     def test_serialize_p2(self):
-        table_id = ofproto_v1_2.OFPTT_MAX
-        config = ofproto_v1_2.OFPTC_TABLE_MISS_DROP
+        table_id = ofproto.OFPTT_MAX
+        config = ofproto.OFPTC_TABLE_MISS_DROP
         self._test_serialize(table_id, config)
 
     def test_serialize_p3(self):
-        table_id = ofproto_v1_2.OFPTT_MAX
-        config = ofproto_v1_2.OFPTC_TABLE_MISS_MASK
+        table_id = ofproto.OFPTT_MAX
+        config = ofproto.OFPTC_TABLE_MISS_MASK
         self._test_serialize(table_id, config)
 
 
@@ -4303,7 +4303,7 @@ class TestOFPStatsRequest(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPStatsRequest
     """
 
-    type_ = ofproto_v1_2.OFPST_DESC
+    type_ = ofproto.OFPST_DESC
     c = OFPStatsRequest(_Datapath, type_)
 
     def test_init(self):
@@ -4311,14 +4311,14 @@ class TestOFPStatsRequest(unittest.TestCase):
         eq_(0, self.c.flags)
 
     def test_serialize_body(self):
-        len_ = ofproto_v1_2.OFP_HEADER_SIZE \
-            + ofproto_v1_2.OFP_STATS_REQUEST_SIZE
+        len_ = ofproto.OFP_HEADER_SIZE \
+            + ofproto.OFP_STATS_REQUEST_SIZE
         self.c.buf = bytearray(len_)
         self.c._serialize_body()
 
-        fmt = ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR
+        fmt = ofproto.OFP_STATS_REQUEST_PACK_STR
         res = struct.unpack_from(fmt, str(self.c.buf),
-                                 ofproto_v1_2.OFP_HEADER_SIZE)
+                                 ofproto.OFP_HEADER_SIZE)
 
         eq_(res[0], self.type_)
         eq_(res[1], 0)
@@ -4333,21 +4333,21 @@ class TestOFPStatsReply(unittest.TestCase):
     def test_parser_single_struct_true(self):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_STATS_REPLY
-        msg_len = ofproto_v1_2.OFP_STATS_REPLY_SIZE \
-            + ofproto_v1_2.OFP_AGGREGATE_STATS_REPLY_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_STATS_REPLY
+        msg_len = ofproto.OFP_STATS_REPLY_SIZE \
+            + ofproto.OFP_AGGREGATE_STATS_REPLY_SIZE
         xid = 2495926989
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_STATS_REPLY_PACK_STR
         # '!HH4x'...type, flags, pad(4)
-        type_ = ofproto_v1_2.OFPST_AGGREGATE
+        type_ = ofproto.OFPST_AGGREGATE
         flags = 41802
 
-        fmt = ofproto_v1_2.OFP_STATS_REPLY_PACK_STR
+        fmt = ofproto.OFP_STATS_REPLY_PACK_STR
         buf += pack(fmt, type_, flags)
 
         # OFP_AGGREGATE_STATS_REPLY_PACK_STR
@@ -4356,7 +4356,7 @@ class TestOFPStatsReply(unittest.TestCase):
         flow_count = 1344694860
         body = OFPAggregateStatsReply(packet_count, byte_count, flow_count)
 
-        fmt = ofproto_v1_2.OFP_AGGREGATE_STATS_REPLY_PACK_STR
+        fmt = ofproto.OFP_AGGREGATE_STATS_REPLY_PACK_STR
         buf += pack(fmt, packet_count, byte_count, flow_count)
 
         res = self.c.parser(object, version, msg_type, msg_len, xid, buf)
@@ -4374,21 +4374,21 @@ class TestOFPStatsReply(unittest.TestCase):
     def test_parser_single_struct_flase(self):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_STATS_REPLY
-        msg_len = ofproto_v1_2.OFP_STATS_REPLY_SIZE \
-            + ofproto_v1_2.OFP_QUEUE_STATS_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_STATS_REPLY
+        msg_len = ofproto.OFP_STATS_REPLY_SIZE \
+            + ofproto.OFP_QUEUE_STATS_SIZE
         xid = 2495926989
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_STATS_REPLY_PACK_STR
         # '!HH4x'...type, flags, pad(4)
-        type_ = ofproto_v1_2.OFPST_QUEUE
+        type_ = ofproto.OFPST_QUEUE
         flags = 11884
 
-        fmt = ofproto_v1_2.OFP_STATS_REPLY_PACK_STR
+        fmt = ofproto.OFP_STATS_REPLY_PACK_STR
         buf += pack(fmt, type_, flags)
 
         # OFP_QUEUE_STATS_PACK_STR
@@ -4400,7 +4400,7 @@ class TestOFPStatsReply(unittest.TestCase):
         body = [OFPQueueStats(port_no, queue_id, tx_bytes, tx_packets,
                               tx_errors)]
 
-        fmt = ofproto_v1_2.OFP_QUEUE_STATS_PACK_STR
+        fmt = ofproto.OFP_QUEUE_STATS_PACK_STR
         buf += pack(fmt, port_no, queue_id, tx_bytes, tx_packets, tx_errors)
 
         res = self.c.parser(object, version, msg_type, msg_len, xid, buf)
@@ -4420,20 +4420,20 @@ class TestOFPStatsReply(unittest.TestCase):
     def test_parser_max(self):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_STATS_REPLY
-        msg_len = ofproto_v1_2.OFP_STATS_REPLY_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_STATS_REPLY
+        msg_len = ofproto.OFP_STATS_REPLY_SIZE
         xid = 0xffffffff
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_STATS_REPLY_PACK_STR
         # '!HH4x'...type, flags, pad(4)
-        type_ = ofproto_v1_2.OFPST_QUEUE
+        type_ = ofproto.OFPST_QUEUE
         flags = 0xffff
 
-        fmt = ofproto_v1_2.OFP_STATS_REPLY_PACK_STR
+        fmt = ofproto.OFP_STATS_REPLY_PACK_STR
         buf += pack(fmt, type_, flags)
         res = self.c.parser(object, version, msg_type, msg_len, xid, buf)
 
@@ -4447,20 +4447,20 @@ class TestOFPStatsReply(unittest.TestCase):
     def test_parser_min(self):
         # OFP_HEADER_PACK_STR
         # '!BBHI'...version, msg_type, msg_len, xid
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_STATS_REPLY
-        msg_len = ofproto_v1_2.OFP_STATS_REPLY_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_STATS_REPLY
+        msg_len = ofproto.OFP_STATS_REPLY_SIZE
         xid = 0
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_STATS_REPLY_PACK_STR
         # '!HH4x'...type, flags, pad(4)
-        type_ = ofproto_v1_2.OFPST_QUEUE
+        type_ = ofproto.OFPST_QUEUE
         flags = 0
 
-        fmt = ofproto_v1_2.OFP_STATS_REPLY_PACK_STR
+        fmt = ofproto.OFP_STATS_REPLY_PACK_STR
         buf += pack(fmt, type_, flags)
         res = self.c.parser(object, version, msg_type, msg_len, xid, buf)
 
@@ -4481,16 +4481,16 @@ class TestOFPDescStatsRequest(unittest.TestCase):
         c.serialize()
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_DESC)
+        eq_(res[4], ofproto.OFPST_DESC)
         eq_(res[5], 0)
 
 
@@ -4570,26 +4570,26 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
                                 out_group, cookie, cookie_mask, match)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_STATS_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR[1:] \
-            + ofproto_v1_2.OFP_FLOW_STATS_REQUEST_PACK_STR[1:] \
+        fmt = ofproto.OFP_HEADER_PACK_STR \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR[1:] \
+            + ofproto.OFP_FLOW_STATS_REQUEST_PACK_STR[1:] \
             + 'HHHBB' \
             + MTEthType.pack_str[1:] + '6x'
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
-        size = ofproto_v1_2.OFP_STATS_REPLY_SIZE \
-            + ofproto_v1_2.OFP_FLOW_STATS_REQUEST_SIZE \
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
+        size = ofproto.OFP_STATS_REPLY_SIZE \
+            + ofproto.OFP_FLOW_STATS_REQUEST_SIZE \
             + calcsize(MTEthType.pack_str + '6x')
         eq_(res[2], size)
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_FLOW)
+        eq_(res[4], ofproto.OFPST_FLOW)
         eq_(res[5], 0)
         eq_(res[6], table_id)
         eq_(res[7], out_port)
@@ -4597,10 +4597,10 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
         eq_(res[9], cookie)
         eq_(res[10], cookie_mask)
         # match
-        eq_(res[11], ofproto_v1_2.OFPMT_OXM)
+        eq_(res[11], ofproto.OFPMT_OXM)
         eq_(res[12], 10)
-        eq_(res[13], ofproto_v1_2.OFPXMC_OPENFLOW_BASIC)
-        eq_(res[14] >> 1, ofproto_v1_2.OFPXMT_OFB_ETH_TYPE)
+        eq_(res[13], ofproto.OFPXMC_OPENFLOW_BASIC)
+        eq_(res[14] >> 1, ofproto.OFPXMT_OFB_ETH_TYPE)
         eq_(res[14] & 0b0001, 0)
         eq_(res[15], calcsize(MTEthType.pack_str))
         eq_(res[16], dl_type)
@@ -4628,7 +4628,7 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
                              cookie, cookie_mask)
 
     def test_serialize_p1(self):
-        table_id = ofproto_v1_2.OFPTT_MAX
+        table_id = ofproto.OFPTT_MAX
         self._test_serialize(table_id, self.out_port, self.out_group,
                              self.cookie, self.cookie_mask)
 
@@ -4638,7 +4638,7 @@ class TestOFPFlowStats(unittest.TestCase):
     """
 
     def test_init(self):
-        length = ofproto_v1_2.OFP_FLOW_STATS_SIZE
+        length = ofproto.OFP_FLOW_STATS_SIZE
         table_id = 81
         duration_sec = 2484712402
         duration_nsec = 3999715196
@@ -4675,12 +4675,12 @@ class TestOFPFlowStats(unittest.TestCase):
                      priority, idle_timeout, hard_timeout, cookie,
                      packet_count, byte_count, inst_cnt=0):
 
-        length = ofproto_v1_2.OFP_FLOW_STATS_SIZE \
+        length = ofproto.OFP_FLOW_STATS_SIZE \
             + calcsize(MTEthType.pack_str[1:] + '6x') \
-            + ofproto_v1_2.OFP_INSTRUCTION_GOTO_TABLE_SIZE * inst_cnt
+            + ofproto.OFP_INSTRUCTION_GOTO_TABLE_SIZE * inst_cnt
 
         # OFP_FLOW_STATS_PACK_STR
-        buf = pack(ofproto_v1_2.OFP_FLOW_STATS_PACK_STR,
+        buf = pack(ofproto.OFP_FLOW_STATS_PACK_STR,
                    length, table_id, duration_sec, duration_nsec,
                    priority, idle_timeout, hard_timeout, cookie,
                    packet_count, byte_count)
@@ -4793,22 +4793,22 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
                                      cookie_mask, match)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_STATS_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR[1:] \
-            + ofproto_v1_2.OFP_AGGREGATE_STATS_REQUEST_PACK_STR[1:] \
+        fmt = ofproto.OFP_HEADER_PACK_STR \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR[1:] \
+            + ofproto.OFP_AGGREGATE_STATS_REQUEST_PACK_STR[1:] \
             + 'HHHBB' \
             + MTEthType.pack_str[1:] + '6x'
 
         res = struct.unpack(fmt, str(c.buf))
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_AGGREGATE)
+        eq_(res[4], ofproto.OFPST_AGGREGATE)
         eq_(res[5], 0)
         eq_(res[6], table_id)
         eq_(res[7], out_port)
@@ -4816,10 +4816,10 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
         eq_(res[9], cookie)
         eq_(res[10], cookie_mask)
         # match
-        eq_(res[11], ofproto_v1_2.OFPMT_OXM)
+        eq_(res[11], ofproto.OFPMT_OXM)
         eq_(res[12], 10)
-        eq_(res[13], ofproto_v1_2.OFPXMC_OPENFLOW_BASIC)
-        eq_(res[14] >> 1, ofproto_v1_2.OFPXMT_OFB_ETH_TYPE)
+        eq_(res[13], ofproto.OFPXMC_OPENFLOW_BASIC)
+        eq_(res[14] >> 1, ofproto.OFPXMT_OFB_ETH_TYPE)
         eq_(res[14] & 0b0001, 0)
         eq_(res[15], calcsize(MTEthType.pack_str))
         eq_(res[16], dl_type)
@@ -4847,7 +4847,7 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
                              cookie, cookie_mask)
 
     def test_serialize_p1(self):
-        table_id = ofproto_v1_2.OFPTT_MAX
+        table_id = ofproto.OFPTT_MAX
         self._test_serialize(table_id, self.out_port, self.out_group,
                              self.cookie, self.cookie_mask)
 
@@ -4871,7 +4871,7 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         eq_(c.flow_count, self.flow_count)
 
     def _test_parser(self, packet_count, byte_count, flow_count):
-        fmt = ofproto_v1_2.OFP_AGGREGATE_STATS_REPLY_PACK_STR
+        fmt = ofproto.OFP_AGGREGATE_STATS_REPLY_PACK_STR
         buf = pack(fmt, packet_count, byte_count, flow_count)
 
         res = OFPAggregateStatsReply.parser(buf, 0)
@@ -4907,16 +4907,16 @@ class TestOFPTableStatsRequest(unittest.TestCase):
         c.serialize()
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_TABLE)
+        eq_(res[4], ofproto.OFPST_TABLE)
         eq_(res[5], 0)
 
 
@@ -4975,7 +4975,7 @@ class TestOFPTableStats(unittest.TestCase):
         #    write_setfields, apply_setfields', metadata_match, metadata_write,
         #    instructions, config, max_entries,
         #    active_count, lookup_count, matched_count
-        fmt = ofproto_v1_2.OFP_TABLE_STATS_PACK_STR
+        fmt = ofproto.OFP_TABLE_STATS_PACK_STR
         buf = pack(fmt, table_id, name, match, wildcards, write_actions,
                    apply_actions, write_setfields, apply_setfields,
                    metadata_match, metadata_write, instructions, config,
@@ -5098,184 +5098,184 @@ class TestOFPTableStats(unittest.TestCase):
                           matched_count)
 
     def test_parser_p1(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IN_PORT,
-                            ofproto_v1_2.OFPIT_GOTO_TABLE,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_CONTINUE)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IN_PORT,
+                            ofproto.OFPIT_GOTO_TABLE,
+                            ofproto.OFPTC_TABLE_MISS_CONTINUE)
 
     def test_parser_p2(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IN_PHY_PORT,
-                            ofproto_v1_2.OFPIT_WRITE_METADATA,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_DROP)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IN_PHY_PORT,
+                            ofproto.OFPIT_WRITE_METADATA,
+                            ofproto.OFPTC_TABLE_MISS_DROP)
 
     def test_parser_p3(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_METADATA,
-                            ofproto_v1_2.OFPIT_WRITE_ACTIONS,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_METADATA,
+                            ofproto.OFPIT_WRITE_ACTIONS,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p4(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ETH_DST,
-                            ofproto_v1_2.OFPIT_APPLY_ACTIONS,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ETH_DST,
+                            ofproto.OFPIT_APPLY_ACTIONS,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p5(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ETH_SRC,
-                            ofproto_v1_2.OFPIT_CLEAR_ACTIONS,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ETH_SRC,
+                            ofproto.OFPIT_CLEAR_ACTIONS,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p6(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ETH_TYPE,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ETH_TYPE,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p7(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_VLAN_VID,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_VLAN_VID,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p8(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_VLAN_PCP,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_VLAN_PCP,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p9(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IP_DSCP,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IP_DSCP,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p10(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IP_ECN,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IP_ECN,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p11(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IP_PROTO,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IP_PROTO,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p12(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV4_SRC,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV4_SRC,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p13(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV4_DST,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV4_DST,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p14(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_TCP_SRC,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_TCP_SRC,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p15(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_TCP_DST,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_TCP_DST,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p16(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_UDP_SRC,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_UDP_SRC,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p17(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_UDP_DST,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_UDP_DST,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p18(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_SCTP_SRC,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_SCTP_SRC,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p19(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_SCTP_DST,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_SCTP_DST,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p20(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ICMPV4_TYPE,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ICMPV4_TYPE,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p21(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ICMPV4_CODE,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ICMPV4_CODE,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p22(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ARP_OP,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ARP_OP,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p23(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ARP_SPA,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ARP_SPA,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p24(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ARP_TPA,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ARP_TPA,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p25(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ARP_SHA,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ARP_SHA,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p26(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ARP_THA,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ARP_THA,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p27(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV6_SRC,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV6_SRC,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p28(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV6_DST,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV6_DST,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p29(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV6_FLABEL,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV6_FLABEL,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p30(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ICMPV6_TYPE,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ICMPV6_TYPE,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p31(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_ICMPV6_CODE,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_ICMPV6_CODE,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p32(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TARGET,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV6_ND_TARGET,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p33(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_SLL,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV6_ND_SLL,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p34(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_IPV6_ND_TLL,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_IPV6_ND_TLL,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p35(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_MPLS_LABEL,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_MPLS_LABEL,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
     def test_parser_p36(self):
-        self._test_parser_p(ofproto_v1_2.OFPXMT_OFB_MPLS_TC,
-                            ofproto_v1_2.OFPIT_EXPERIMENTER,
-                            ofproto_v1_2.OFPTC_TABLE_MISS_MASK)
+        self._test_parser_p(ofproto.OFPXMT_OFB_MPLS_TC,
+                            ofproto.OFPIT_EXPERIMENTER,
+                            ofproto.OFPTC_TABLE_MISS_MASK)
 
 
 class TestOFPPortStatsRequest(unittest.TestCase):
@@ -5294,21 +5294,21 @@ class TestOFPPortStatsRequest(unittest.TestCase):
         c = OFPPortStatsRequest(_Datapath, port_no)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_STATS_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_PORT_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '') \
+            + ofproto.OFP_PORT_STATS_REQUEST_PACK_STR.replace('!', '')
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_PORT)
+        eq_(res[4], ofproto.OFPST_PORT)
         eq_(res[5], 0)
         eq_(res[6], port_no)
 
@@ -5316,34 +5316,34 @@ class TestOFPPortStatsRequest(unittest.TestCase):
         self._test_serialize(self.port_no)
 
     def test_serialize_max(self):
-        self._test_serialize(ofproto_v1_2.OFPP_ANY)
+        self._test_serialize(ofproto.OFPP_ANY)
 
     def test_serialize_min(self):
         self._test_serialize(0)
 
     def test_serialize_p1(self):
-        self._test_serialize(ofproto_v1_2.OFPP_MAX)
+        self._test_serialize(ofproto.OFPP_MAX)
 
     def test_serialize_p2(self):
-        self._test_serialize(ofproto_v1_2.OFPP_IN_PORT)
+        self._test_serialize(ofproto.OFPP_IN_PORT)
 
     def test_serialize_p3(self):
-        self._test_serialize(ofproto_v1_2.OFPP_TABLE)
+        self._test_serialize(ofproto.OFPP_TABLE)
 
     def test_serialize_p4(self):
-        self._test_serialize(ofproto_v1_2.OFPP_NORMAL)
+        self._test_serialize(ofproto.OFPP_NORMAL)
 
     def test_serialize_p5(self):
-        self._test_serialize(ofproto_v1_2.OFPP_FLOOD)
+        self._test_serialize(ofproto.OFPP_FLOOD)
 
     def test_serialize_p6(self):
-        self._test_serialize(ofproto_v1_2.OFPP_ALL)
+        self._test_serialize(ofproto.OFPP_ALL)
 
     def test_serialize_p7(self):
-        self._test_serialize(ofproto_v1_2.OFPP_CONTROLLER)
+        self._test_serialize(ofproto.OFPP_CONTROLLER)
 
     def test_serialize_p8(self):
-        self._test_serialize(ofproto_v1_2.OFPP_LOCAL)
+        self._test_serialize(ofproto.OFPP_LOCAL)
 
 
 class TestOFPPortStats(unittest.TestCase):
@@ -5390,7 +5390,7 @@ class TestOFPPortStats(unittest.TestCase):
                      rx_over_err, rx_crc_err, collisions):
 
         # OFP_PORT_STATS_PACK_STR = '!H6xQQQQQQQQQQQQ'
-        fmt = ofproto_v1_2.OFP_PORT_STATS_PACK_STR
+        fmt = ofproto.OFP_PORT_STATS_PACK_STR
         buf = pack(fmt, port_no, rx_packets, tx_packets, rx_bytes, tx_bytes,
                    rx_dropped, tx_dropped, rx_errors, tx_errors, rx_frame_err,
                    rx_over_err, rx_crc_err, collisions)
@@ -5488,28 +5488,28 @@ class TestOFPPortStats(unittest.TestCase):
                           rx_frame_err, rx_over_err, rx_crc_err, collisions)
 
     def test_parser_p1(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_MAX)
+        self._test_parser_p(ofproto.OFPP_MAX)
 
     def test_parser_p2(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_IN_PORT)
+        self._test_parser_p(ofproto.OFPP_IN_PORT)
 
     def test_parser_p3(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_TABLE)
+        self._test_parser_p(ofproto.OFPP_TABLE)
 
     def test_parser_p4(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_NORMAL)
+        self._test_parser_p(ofproto.OFPP_NORMAL)
 
     def test_parser_p5(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_FLOOD)
+        self._test_parser_p(ofproto.OFPP_FLOOD)
 
     def test_parser_p6(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_ALL)
+        self._test_parser_p(ofproto.OFPP_ALL)
 
     def test_parser_p7(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_CONTROLLER)
+        self._test_parser_p(ofproto.OFPP_CONTROLLER)
 
     def test_parser_p8(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_LOCAL)
+        self._test_parser_p(ofproto.OFPP_LOCAL)
 
 
 class TestOFPQueueStatsRequest(unittest.TestCase):
@@ -5531,21 +5531,21 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
         c = OFPQueueStatsRequest(_Datapath, port_no, queue_id)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_STATS_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_QUEUE_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '') \
+            + ofproto.OFP_QUEUE_STATS_REQUEST_PACK_STR.replace('!', '')
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_QUEUE)
+        eq_(res[4], ofproto.OFPST_QUEUE)
         eq_(res[5], 0)
         eq_(res[6], port_no)
         eq_(res[7], queue_id)
@@ -5560,28 +5560,28 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
         self._test_serialize(0, 0)
 
     def test_serialize_p1(self):
-        self._test_serialize(ofproto_v1_2.OFPP_MAX, self.queue_id)
+        self._test_serialize(ofproto.OFPP_MAX, self.queue_id)
 
     def test_serialize_p2(self):
-        self._test_serialize(ofproto_v1_2.OFPP_IN_PORT, self.queue_id)
+        self._test_serialize(ofproto.OFPP_IN_PORT, self.queue_id)
 
     def test_serialize_p3(self):
-        self._test_serialize(ofproto_v1_2.OFPP_NORMAL, self.queue_id)
+        self._test_serialize(ofproto.OFPP_NORMAL, self.queue_id)
 
     def test_serialize_p4(self):
-        self._test_serialize(ofproto_v1_2.OFPP_TABLE, self.queue_id)
+        self._test_serialize(ofproto.OFPP_TABLE, self.queue_id)
 
     def test_serialize_p5(self):
-        self._test_serialize(ofproto_v1_2.OFPP_FLOOD, self.queue_id)
+        self._test_serialize(ofproto.OFPP_FLOOD, self.queue_id)
 
     def test_serialize_p6(self):
-        self._test_serialize(ofproto_v1_2.OFPP_ALL, self.queue_id)
+        self._test_serialize(ofproto.OFPP_ALL, self.queue_id)
 
     def test_serialize_p7(self):
-        self._test_serialize(ofproto_v1_2.OFPP_CONTROLLER, self.queue_id)
+        self._test_serialize(ofproto.OFPP_CONTROLLER, self.queue_id)
 
     def test_serialize_p8(self):
-        self._test_serialize(ofproto_v1_2.OFPP_LOCAL, self.queue_id)
+        self._test_serialize(ofproto.OFPP_LOCAL, self.queue_id)
 
 
 class TestOFPQueueStats(unittest.TestCase):
@@ -5608,7 +5608,7 @@ class TestOFPQueueStats(unittest.TestCase):
                      tx_packets, tx_errors):
 
         # OFP_QUEUE_STATS_PACK_STR = '!IIQQQ'
-        fmt = ofproto_v1_2.OFP_QUEUE_STATS_PACK_STR
+        fmt = ofproto.OFP_QUEUE_STATS_PACK_STR
         buf = pack(fmt, port_no, queue_id, tx_bytes, tx_packets, tx_errors)
         res = OFPQueueStats.parser(buf, 0)
 
@@ -5658,28 +5658,28 @@ class TestOFPQueueStats(unittest.TestCase):
                           tx_packets, tx_errors)
 
     def test_parser_p1(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_MAX)
+        self._test_parser_p(ofproto.OFPP_MAX)
 
     def test_parser_p2(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_IN_PORT)
+        self._test_parser_p(ofproto.OFPP_IN_PORT)
 
     def test_parser_p3(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_TABLE)
+        self._test_parser_p(ofproto.OFPP_TABLE)
 
     def test_parser_p4(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_NORMAL)
+        self._test_parser_p(ofproto.OFPP_NORMAL)
 
     def test_parser_p5(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_FLOOD)
+        self._test_parser_p(ofproto.OFPP_FLOOD)
 
     def test_parser_p6(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_ALL)
+        self._test_parser_p(ofproto.OFPP_ALL)
 
     def test_parser_p7(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_CONTROLLER)
+        self._test_parser_p(ofproto.OFPP_CONTROLLER)
 
     def test_parser_p8(self):
-        self._test_parser_p(ofproto_v1_2.OFPP_LOCAL)
+        self._test_parser_p(ofproto.OFPP_LOCAL)
 
 
 class TestOFPBucketCounter(unittest.TestCase):
@@ -5697,7 +5697,7 @@ class TestOFPBucketCounter(unittest.TestCase):
         eq_(self.byte_count, c.byte_count)
 
     def _test_parser(self, packet_count, byte_count):
-        fmt = ofproto_v1_2.OFP_BUCKET_COUNTER_PACK_STR
+        fmt = ofproto.OFP_BUCKET_COUNTER_PACK_STR
         buf = pack(fmt, packet_count, byte_count)
 
         res = OFPBucketCounter.parser(buf, 0)
@@ -5734,21 +5734,21 @@ class TestOFPGroupStatsRequest(unittest.TestCase):
         c = OFPGroupStatsRequest(_Datapath, group_id)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_STATS_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_GROUP_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '') \
+            + ofproto.OFP_GROUP_STATS_REQUEST_PACK_STR.replace('!', '')
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_GROUP)
+        eq_(res[4], ofproto.OFPST_GROUP)
         eq_(res[5], 0)
         eq_(res[6], group_id)
 
@@ -5762,10 +5762,10 @@ class TestOFPGroupStatsRequest(unittest.TestCase):
         self._test_serialize(0)
 
     def test_serialize_p1(self):
-        self._test_serialize(ofproto_v1_2.OFPG_MAX)
+        self._test_serialize(ofproto.OFPG_MAX)
 
     def test_serialize_p2(self):
-        self._test_serialize(ofproto_v1_2.OFPG_ALL)
+        self._test_serialize(ofproto.OFPG_ALL)
 
 
 class TestOFPGroupStats(unittest.TestCase):
@@ -5773,8 +5773,8 @@ class TestOFPGroupStats(unittest.TestCase):
     """
 
     # OFP_GROUP_STATS_PACK_STR = '!H2xII4xQQ'
-    length = ofproto_v1_2.OFP_GROUP_STATS_SIZE \
-        + ofproto_v1_2.OFP_BUCKET_COUNTER_SIZE
+    length = ofproto.OFP_GROUP_STATS_SIZE \
+        + ofproto.OFP_BUCKET_COUNTER_SIZE
     group_id = 6606
     ref_count = 2102
     packet_count = 6489108735192644493
@@ -5784,10 +5784,10 @@ class TestOFPGroupStats(unittest.TestCase):
     buck_packet_count = 3519264449364891087
     buck_byte_count = 3123449724733434448
     bucket_counters = [OFPBucketCounter(buck_packet_count, buck_byte_count)]
-    buf_bucket_counters = pack(ofproto_v1_2.OFP_BUCKET_COUNTER_PACK_STR,
+    buf_bucket_counters = pack(ofproto.OFP_BUCKET_COUNTER_PACK_STR,
                                buck_packet_count, buck_byte_count)
 
-    fmt = ofproto_v1_2.OFP_GROUP_STATS_PACK_STR
+    fmt = ofproto.OFP_GROUP_STATS_PACK_STR
     buf = pack(fmt, length, group_id, ref_count, packet_count, byte_count) \
         + buf_bucket_counters
 
@@ -5805,9 +5805,9 @@ class TestOFPGroupStats(unittest.TestCase):
     def _test_parser(self, group_id, ref_count, packet_count,
                      byte_count, bucket_counter_cnt):
         # OFP_GROUP_STATS_PACK_STR = '!H2xII4xQQ'
-        length = ofproto_v1_2.OFP_GROUP_STATS_SIZE \
-            + (ofproto_v1_2.OFP_BUCKET_COUNTER_SIZE * bucket_counter_cnt)
-        fmt = ofproto_v1_2.OFP_GROUP_STATS_PACK_STR
+        length = ofproto.OFP_GROUP_STATS_SIZE \
+            + (ofproto.OFP_BUCKET_COUNTER_SIZE * bucket_counter_cnt)
+        fmt = ofproto.OFP_GROUP_STATS_PACK_STR
         buf = pack(fmt, length, group_id, ref_count,
                    packet_count, byte_count)
 
@@ -5820,7 +5820,7 @@ class TestOFPGroupStats(unittest.TestCase):
                                               buck_byte_count)
             bucket_counters.append(bucket_counter)
             buf_bucket_counters = \
-                pack(ofproto_v1_2.OFP_BUCKET_COUNTER_PACK_STR,
+                pack(ofproto.OFP_BUCKET_COUNTER_PACK_STR,
                      buck_packet_count, buck_byte_count)
             buf += buf_bucket_counters
 
@@ -5877,16 +5877,16 @@ class TestOFPGroupDescStatsRequest(unittest.TestCase):
         c.serialize()
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_GROUP_DESC)
+        eq_(res[4], ofproto.OFPST_GROUP_DESC)
         eq_(res[5], 0)
 
 
@@ -5895,15 +5895,15 @@ class TestOFPGroupDescStats(unittest.TestCase):
     """
 
     # OFP_GROUP_DESC_STATS_PACK_STR = '!HBxI'
-    length = ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE \
-        + ofproto_v1_2.OFP_BUCKET_SIZE \
-        + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+    length = ofproto.OFP_GROUP_DESC_STATS_SIZE \
+        + ofproto.OFP_BUCKET_SIZE \
+        + ofproto.OFP_ACTION_OUTPUT_SIZE
     type_ = 128
     group_id = 6606
 
     # OFP_ACTION (OFP_ACTION_OUTPUT)
     port = 0x00002ae0
-    max_len = ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE
+    max_len = ofproto.OFP_ACTION_OUTPUT_SIZE
     actions = [OFPActionOutput(port, max_len)]
     buf_actions = bytearray()
     actions[0].serialize(buf_actions, 0)
@@ -5925,11 +5925,11 @@ class TestOFPGroupDescStats(unittest.TestCase):
 
     def _test_parser(self, type_, group_id, bucket_cnt):
         # OFP_GROUP_DESC_STATS_PACK_STR = '!HBxI'
-        length = ofproto_v1_2.OFP_GROUP_DESC_STATS_SIZE \
-            + (ofproto_v1_2.OFP_BUCKET_SIZE
-               + ofproto_v1_2.OFP_ACTION_OUTPUT_SIZE) * bucket_cnt
+        length = ofproto.OFP_GROUP_DESC_STATS_SIZE \
+            + (ofproto.OFP_BUCKET_SIZE
+               + ofproto.OFP_ACTION_OUTPUT_SIZE) * bucket_cnt
 
-        fmt = ofproto_v1_2.OFP_GROUP_DESC_STATS_PACK_STR
+        fmt = ofproto.OFP_GROUP_DESC_STATS_PACK_STR
         buf = pack(fmt, length, type_, group_id)
 
         buckets = []
@@ -5972,20 +5972,20 @@ class TestOFPGroupDescStats(unittest.TestCase):
 
     def test_parser_min(self):
         group_id = 0
-        type_ = ofproto_v1_2.OFPGT_ALL
+        type_ = ofproto.OFPGT_ALL
         bucket_cnt = 0
         self._test_parser(type_, group_id, bucket_cnt)
 
     def test_parser_p1(self):
-        type_ = ofproto_v1_2.OFPGT_SELECT
+        type_ = ofproto.OFPGT_SELECT
         self._test_parser(type_, self.group_id, self.bucket_cnt)
 
     def test_parser_p2(self):
-        type_ = ofproto_v1_2.OFPGT_INDIRECT
+        type_ = ofproto.OFPGT_INDIRECT
         self._test_parser(type_, self.group_id, self.bucket_cnt)
 
     def test_parser_p3(self):
-        type_ = ofproto_v1_2.OFPGT_FF
+        type_ = ofproto.OFPGT_FF
         self._test_parser(type_, self.group_id, self.bucket_cnt)
 
 
@@ -5998,16 +5998,16 @@ class TestOFPGroupFeaturesStatsRequest(unittest.TestCase):
         c.serialize()
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_REQUEST_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_STATS_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_STATS_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
-        eq_(res[4], ofproto_v1_2.OFPST_GROUP_FEATURES)
+        eq_(res[4], ofproto.OFPST_GROUP_FEATURES)
         eq_(res[5], 0)
 
 
@@ -6016,13 +6016,13 @@ class TestOFPGroupFeaturesStats(unittest.TestCase):
     """
 
     # OFP_GROUP_FEATURES_STATS_PACK_STR = '!II4I4I'
-    types = ofproto_v1_2.OFPGT_ALL
-    capabilities = ofproto_v1_2.OFPGFC_SELECT_WEIGHT
+    types = ofproto.OFPGT_ALL
+    capabilities = ofproto.OFPGFC_SELECT_WEIGHT
     max_groups = [1, 2, 3, 4]
-    actions = [1 << ofproto_v1_2.OFPAT_OUTPUT,
-               1 << ofproto_v1_2.OFPAT_COPY_TTL_OUT,
-               1 << ofproto_v1_2.OFPAT_SET_MPLS_TTL,
-               1 << ofproto_v1_2.OFPAT_PUSH_VLAN]
+    actions = [1 << ofproto.OFPAT_OUTPUT,
+               1 << ofproto.OFPAT_COPY_TTL_OUT,
+               1 << ofproto.OFPAT_SET_MPLS_TTL,
+               1 << ofproto.OFPAT_PUSH_VLAN]
 
     def test_init(self):
         c = OFPGroupFeaturesStats(self.types, self.capabilities,
@@ -6078,40 +6078,40 @@ class TestOFPGroupFeaturesStats(unittest.TestCase):
                           self.max_groups, actions)
 
     def test_parser_p1(self):
-        actions = [1 << ofproto_v1_2.OFPAT_COPY_TTL_IN,
-                   1 << ofproto_v1_2.OFPAT_DEC_MPLS_TTL,
-                   1 << ofproto_v1_2.OFPAT_POP_VLAN,
-                   1 << ofproto_v1_2.OFPAT_PUSH_MPLS]
-        self._test_parser_p(1 << ofproto_v1_2.OFPGT_ALL,
-                            ofproto_v1_2.OFPGFC_CHAINING,
+        actions = [1 << ofproto.OFPAT_COPY_TTL_IN,
+                   1 << ofproto.OFPAT_DEC_MPLS_TTL,
+                   1 << ofproto.OFPAT_POP_VLAN,
+                   1 << ofproto.OFPAT_PUSH_MPLS]
+        self._test_parser_p(1 << ofproto.OFPGT_ALL,
+                            ofproto.OFPGFC_CHAINING,
                             actions)
 
     def test_parser_p2(self):
-        actions = [1 << ofproto_v1_2.OFPAT_POP_MPLS,
-                   1 << ofproto_v1_2.OFPAT_SET_QUEUE,
-                   1 << ofproto_v1_2.OFPAT_GROUP,
-                   1 << ofproto_v1_2.OFPAT_SET_NW_TTL]
-        self._test_parser_p(1 << ofproto_v1_2.OFPGT_SELECT,
-                            ofproto_v1_2.OFPGFC_SELECT_WEIGHT,
+        actions = [1 << ofproto.OFPAT_POP_MPLS,
+                   1 << ofproto.OFPAT_SET_QUEUE,
+                   1 << ofproto.OFPAT_GROUP,
+                   1 << ofproto.OFPAT_SET_NW_TTL]
+        self._test_parser_p(1 << ofproto.OFPGT_SELECT,
+                            ofproto.OFPGFC_SELECT_WEIGHT,
                             actions)
 
     def test_parser_p3(self):
-        actions = [1 << ofproto_v1_2.OFPAT_DEC_NW_TTL,
-                   1 << ofproto_v1_2.OFPAT_SET_FIELD,
-                   1 << ofproto_v1_2.OFPAT_GROUP,
-                   1 << ofproto_v1_2.OFPAT_SET_NW_TTL]
-        self._test_parser_p(1 << ofproto_v1_2.OFPGT_SELECT,
-                            ofproto_v1_2.OFPGFC_SELECT_LIVENESS,
+        actions = [1 << ofproto.OFPAT_DEC_NW_TTL,
+                   1 << ofproto.OFPAT_SET_FIELD,
+                   1 << ofproto.OFPAT_GROUP,
+                   1 << ofproto.OFPAT_SET_NW_TTL]
+        self._test_parser_p(1 << ofproto.OFPGT_SELECT,
+                            ofproto.OFPGFC_SELECT_LIVENESS,
                             actions)
 
     def test_parser_p4(self):
-        self._test_parser_p(1 << ofproto_v1_2.OFPGT_INDIRECT,
-                            ofproto_v1_2.OFPGFC_CHAINING,
+        self._test_parser_p(1 << ofproto.OFPGT_INDIRECT,
+                            ofproto.OFPGFC_CHAINING,
                             self.actions)
 
     def test_parser_p5(self):
-        self._test_parser_p(1 << ofproto_v1_2.OFPGT_FF,
-                            ofproto_v1_2.OFPGFC_CHAINING_CHECKS,
+        self._test_parser_p(1 << ofproto.OFPGT_FF,
+                            ofproto.OFPGFC_CHAINING_CHECKS,
                             self.actions)
 
 
@@ -6131,16 +6131,16 @@ class TestOFPQueueGetConfigRequest(unittest.TestCase):
         c = OFPQueueGetConfigRequest(_Datapath, port)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_QUEUE_GET_CONFIG_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR \
-            + ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR[1:]
+        fmt = ofproto.OFP_HEADER_PACK_STR \
+            + ofproto.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR[1:]
 
         res = struct.unpack(fmt, str(c.buf))
-        eq_(res[0], ofproto_v1_2.OFP_VERSION)
-        eq_(res[1], ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REQUEST)
+        eq_(res[0], ofproto.OFP_VERSION)
+        eq_(res[1], ofproto.OFPT_QUEUE_GET_CONFIG_REQUEST)
         eq_(res[2], len(c.buf))
         eq_(res[3], 0)
         eq_(res[4], port)
@@ -6155,7 +6155,7 @@ class TestOFPQueueGetConfigRequest(unittest.TestCase):
         self._test_serialize(0)
 
     def test_serialize_p1(self):
-        self._test_serialize(ofproto_v1_2.OFPP_MAX)
+        self._test_serialize(ofproto.OFPP_MAX)
 
 
 class TestOFPQueuePropHeader(unittest.TestCase):
@@ -6176,7 +6176,7 @@ class TestOFPQueuePropHeader(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        fmt = ofproto_v1_2.OFP_QUEUE_PROP_HEADER_PACK_STR
+        fmt = ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR
         res = struct.unpack(fmt, buffer(buf))
 
         eq_(res[0], property_)
@@ -6209,21 +6209,21 @@ class TestOFPPacketQueue(unittest.TestCase):
 
     def _test_parser(self, queue_id, port, prop_cnt):
         # OFP_PACKET_QUEUE_PACK_STR = '!IIH6x'
-        fmt = ofproto_v1_2.OFP_PACKET_QUEUE_PACK_STR
-        queue_len = ofproto_v1_2.OFP_PACKET_QUEUE_SIZE \
-            + ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE * prop_cnt
+        fmt = ofproto.OFP_PACKET_QUEUE_PACK_STR
+        queue_len = ofproto.OFP_PACKET_QUEUE_SIZE \
+            + ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE * prop_cnt
 
         buf = pack(fmt, queue_id, port, queue_len)
 
         for rate in range(prop_cnt):
             # OFP_QUEUE_PROP_HEADER_PACK_STR = '!HH4x'
-            fmt = ofproto_v1_2.OFP_QUEUE_PROP_HEADER_PACK_STR
-            prop_type = ofproto_v1_2.OFPQT_MIN_RATE
-            prop_len = ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+            fmt = ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR
+            prop_type = ofproto.OFPQT_MIN_RATE
+            prop_len = ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE
             buf += pack(fmt, prop_type, prop_len)
 
             # OFP_QUEUE_PROP_MIN_RATE_PACK_STR = '!H6x'
-            fmt = ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_PACK_STR
+            fmt = ofproto.OFP_QUEUE_PROP_MIN_RATE_PACK_STR
             prop_rate = rate
             buf += pack(fmt, prop_rate)
 
@@ -6269,7 +6269,7 @@ class TestOFPQueuePropMinRate(unittest.TestCase):
 
     def _test_parser(self, rate):
         # OFP_QUEUE_PROP_MIN_RATE_PACK_STR...H6x
-        buf = pack(ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_PACK_STR, rate)
+        buf = pack(ofproto.OFP_QUEUE_PROP_MIN_RATE_PACK_STR, rate)
         res = OFPQueuePropMinRate.parser(buf, 0)
         eq_(rate, res.rate)
 
@@ -6288,12 +6288,12 @@ class TestOFPQueuePropMaxRate(unittest.TestCase):
     """
 
     rate = 100
-    buf = pack(ofproto_v1_2.OFP_QUEUE_PROP_MAX_RATE_PACK_STR, rate)
+    buf = pack(ofproto.OFP_QUEUE_PROP_MAX_RATE_PACK_STR, rate)
     c = OFPQueuePropMaxRate(rate)
 
     def _test_parser(self, rate):
         # OFP_QUEUE_PROP_MAX_RATE_PACK_STR...H6x
-        buf = pack(ofproto_v1_2.OFP_QUEUE_PROP_MAX_RATE_PACK_STR, rate)
+        buf = pack(ofproto.OFP_QUEUE_PROP_MAX_RATE_PACK_STR, rate)
         res = OFPQueuePropMaxRate.parser(buf, 0)
         eq_(rate, res.rate)
 
@@ -6312,43 +6312,43 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
     """
 
     def _test_parser(self, xid, port, queue_cnt):
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_QUEUE_GET_CONFIG_REPLY
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_QUEUE_GET_CONFIG_REPLY
 
         queues_len = 0
         for q in range(queue_cnt):
-            queues_len += ofproto_v1_2.OFP_PACKET_QUEUE_SIZE
-            queues_len += ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+            queues_len += ofproto.OFP_PACKET_QUEUE_SIZE
+            queues_len += ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE
 
-        msg_len = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
+        msg_len = ofproto.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
             + queues_len
 
         # OFP_HEADER_PACK_STR = '!BBHI'
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR = '!I4x'
-        fmt = ofproto_v1_2.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR
+        fmt = ofproto.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR
         buf += pack(fmt, port)
 
         queues = []
         for q in range(1, queue_cnt + 1):
             # OFP_PACKET_QUEUE_PACK_STR = '!IIH6x'
-            fmt = ofproto_v1_2.OFP_PACKET_QUEUE_PACK_STR
+            fmt = ofproto.OFP_PACKET_QUEUE_PACK_STR
             queue_id = q * 100
             queue_port = q
-            queue_len = ofproto_v1_2.OFP_PACKET_QUEUE_SIZE \
-                + ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+            queue_len = ofproto.OFP_PACKET_QUEUE_SIZE \
+                + ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE
             buf += pack(fmt, queue_id, queue_port, queue_len)
 
             # OFP_QUEUE_PROP_HEADER_PACK_STR = '!HH4x'
-            fmt = ofproto_v1_2.OFP_QUEUE_PROP_HEADER_PACK_STR
-            prop_type = ofproto_v1_2.OFPQT_MIN_RATE
-            prop_len = ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_SIZE
+            fmt = ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR
+            prop_type = ofproto.OFPQT_MIN_RATE
+            prop_len = ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE
             buf += pack(fmt, prop_type, prop_len)
 
             # OFP_QUEUE_PROP_MIN_RATE_PACK_STR = '!H6x'
-            fmt = ofproto_v1_2.OFP_QUEUE_PROP_MIN_RATE_PACK_STR
+            fmt = ofproto.OFP_QUEUE_PROP_MIN_RATE_PACK_STR
             prop_rate = q * 10
             buf += pack(fmt, prop_rate)
 
@@ -6396,15 +6396,15 @@ class TestOFPBarrierRequest(unittest.TestCase):
         c = OFPBarrierRequest(_Datapath)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_BARRIER_REQUEST, c.msg_type)
-        eq_(ofproto_v1_2.OFP_HEADER_SIZE, c.msg_len)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_BARRIER_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_HEADER_SIZE, c.msg_len)
         eq_(0, c.xid)
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         res = unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_2.OFP_VERSION, res[0])
-        eq_(ofproto_v1_2.OFPT_BARRIER_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_BARRIER_REQUEST, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, c.xid)
 
@@ -6414,11 +6414,11 @@ class TestOFPBarrierReply(unittest.TestCase):
     """
 
     def _test_parser(self, xid):
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_BARRIER_REPLY
-        msg_len = ofproto_v1_2.OFP_HEADER_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_BARRIER_REPLY
+        msg_len = ofproto.OFP_HEADER_SIZE
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
         res = OFPBarrierReply.parser(object, version, msg_type,
@@ -6456,18 +6456,18 @@ class TestOFPRoleRequest(unittest.TestCase):
         c = OFPRoleRequest(_Datapath, role, generation_id)
         c.serialize()
 
-        eq_(ofproto_v1_2.OFP_VERSION, c.version)
-        eq_(ofproto_v1_2.OFPT_ROLE_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ROLE_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_2.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_2.OFP_ROLE_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_ROLE_REQUEST_PACK_STR.replace('!', '')
 
         res = struct.unpack(fmt, str(c.buf))
 
-        eq_(ofproto_v1_2.OFP_VERSION, res[0])
-        eq_(ofproto_v1_2.OFPT_ROLE_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_ROLE_REQUEST, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
         eq_(role, res[4])
@@ -6487,15 +6487,15 @@ class TestOFPRoleRequest(unittest.TestCase):
         self._test_serialize(role, generation_id)
 
     def test_serialize_p1(self):
-        role = ofproto_v1_2.OFPCR_ROLE_EQUAL
+        role = ofproto.OFPCR_ROLE_EQUAL
         self._test_serialize(role, self.generation_id)
 
     def test_serialize_p2(self):
-        role = ofproto_v1_2.OFPCR_ROLE_MASTER
+        role = ofproto.OFPCR_ROLE_MASTER
         self._test_serialize(role, self.generation_id)
 
     def test_serialize_p3(self):
-        role = ofproto_v1_2.OFPCR_ROLE_SLAVE
+        role = ofproto.OFPCR_ROLE_SLAVE
         self._test_serialize(role, self.generation_id)
 
 
@@ -6505,21 +6505,21 @@ class TestOFPRoleReply(unittest.TestCase):
 
     # OFP_ROLE_REQUEST_PACK_STR
     # '!I4xQ'...role, pad(4), generation_id
-    #role = ofproto_v1_2.OFPCR_ROLE_NOCHANGE
+    #role = ofproto.OFPCR_ROLE_NOCHANGE
     role = 2147483648
     generation_id = 1270985291017894273
 
     def _test_parser(self, role, generation_id):
         # OFP_HEADER_PACK_STR
-        version = ofproto_v1_2.OFP_VERSION
-        msg_type = ofproto_v1_2.OFPT_ROLE_REPLY
-        msg_len = ofproto_v1_2.OFP_ROLE_REQUEST_SIZE
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_ROLE_REPLY
+        msg_len = ofproto.OFP_ROLE_REQUEST_SIZE
         xid = 2495926989
 
-        fmt = ofproto_v1_2.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
         buf = pack(fmt, version, msg_type, msg_len, xid)
 
-        fmt = ofproto_v1_2.OFP_ROLE_REQUEST_PACK_STR
+        fmt = ofproto.OFP_ROLE_REQUEST_PACK_STR
         buf += pack(fmt, role, generation_id)
 
         res = OFPRoleReply.parser(object, version, msg_type, msg_len, xid, buf)
@@ -6543,20 +6543,20 @@ class TestOFPRoleReply(unittest.TestCase):
         self._test_parser(role, generation_id)
 
     def test_parser_min(self):
-        role = ofproto_v1_2.OFPCR_ROLE_NOCHANGE
+        role = ofproto.OFPCR_ROLE_NOCHANGE
         generation_id = 0
         self._test_parser(role, generation_id)
 
     def test_parser_p1(self):
-        role = ofproto_v1_2.OFPCR_ROLE_EQUAL
+        role = ofproto.OFPCR_ROLE_EQUAL
         self._test_parser(role, self.generation_id)
 
     def test_parser_p2(self):
-        role = ofproto_v1_2.OFPCR_ROLE_MASTER
+        role = ofproto.OFPCR_ROLE_MASTER
         self._test_parser(role, self.generation_id)
 
     def test_parser_p3(self):
-        role = ofproto_v1_2.OFPCR_ROLE_SLAVE
+        role = ofproto.OFPCR_ROLE_SLAVE
         self._test_parser(role, self.generation_id)
 
 
@@ -6646,7 +6646,7 @@ class TestOFPMatch(unittest.TestCase):
         else:
             res_value = res.pop(0)
             if cls_.__name__ == 'MTVlanVid':
-                eq_(res_value, value | ofproto_v1_2.OFPVID_PRESENT)
+                eq_(res_value, value | ofproto.OFPVID_PRESENT)
             else:
                 eq_(res_value, value)
             if mask and res and res[0]:
@@ -6655,7 +6655,7 @@ class TestOFPMatch(unittest.TestCase):
 
         # parser
         res = match.parser(str(buf), 0)
-        eq_(res.type, ofproto_v1_2.OFPMT_OXM)
+        eq_(res.type, ofproto.OFPMT_OXM)
         eq_(res.fields[0].header, header)
         eq_(res.fields[0].value, value)
         if mask and res.fields[0].mask is not None:
@@ -6673,11 +6673,11 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_parse_unknown_field(self):
         buf = bytearray()
-        ofproto_parser.msg_pack_into('!HH', buf, 0, ofproto_v1_2.OFPMT_OXM,
+        ofproto_parser.msg_pack_into('!HH', buf, 0, ofproto.OFPMT_OXM,
                                      4 + 6)
-        header = ofproto_v1_2.oxm_tlv_header(36, 2)
+        header = ofproto.oxm_tlv_header(36, 2)
         ofproto_parser.msg_pack_into('!IH', buf, 4, header, 1)
-        header = ofproto_v1_2.OXM_OF_ETH_TYPE
+        header = ofproto.OXM_OF_ETH_TYPE
         ofproto_v1_2_parser.msg_pack_into('!IH', buf, 10, header, 1)
 
         match = OFPMatch()
@@ -6685,7 +6685,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_in_port
     def _test_set_in_port(self, in_port):
-        header = ofproto_v1_2.OXM_OF_IN_PORT
+        header = ofproto.OXM_OF_IN_PORT
         match = OFPMatch()
         match.set_in_port(in_port)
         self._test_serialize_and_parser(match, header, in_port)
@@ -6701,7 +6701,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_in_phy_port
     def _test_set_in_phy_port(self, phy_port):
-        header = ofproto_v1_2.OXM_OF_IN_PHY_PORT
+        header = ofproto.OXM_OF_IN_PHY_PORT
         match = OFPMatch()
         match.set_in_phy_port(phy_port)
         self._test_serialize_and_parser(match, header, phy_port)
@@ -6717,13 +6717,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_metadata
     def _test_set_metadata(self, metadata, mask=None):
-        header = ofproto_v1_2.OXM_OF_METADATA
+        header = ofproto.OXM_OF_METADATA
         match = OFPMatch()
         if mask is None:
             match.set_metadata(metadata)
         else:
             if (mask + 1) >> 64 != 1:
-                header = ofproto_v1_2.OXM_OF_METADATA_W
+                header = ofproto.OXM_OF_METADATA_W
             match.set_metadata_masked(metadata, mask)
             metadata &= mask
         self._test_serialize_and_parser(match, header, metadata, mask)
@@ -6748,13 +6748,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_dl_dst
     def _test_set_dl_dst(self, dl_dst, mask=None):
-        header = ofproto_v1_2.OXM_OF_ETH_DST
+        header = ofproto.OXM_OF_ETH_DST
         match = OFPMatch()
         dl_dst = mac.haddr_to_bin(dl_dst)
         if mask is None:
             match.set_dl_dst(dl_dst)
         else:
-            header = ofproto_v1_2.OXM_OF_ETH_DST_W
+            header = ofproto.OXM_OF_ETH_DST_W
             mask = mac.haddr_to_bin(mask)
             match.set_dl_dst_masked(dl_dst, mask)
             dl_dst = mac.haddr_bitand(dl_dst, mask)
@@ -6780,13 +6780,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_dl_src
     def _test_set_dl_src(self, dl_src, mask=None):
-        header = ofproto_v1_2.OXM_OF_ETH_SRC
+        header = ofproto.OXM_OF_ETH_SRC
         match = OFPMatch()
         dl_src = mac.haddr_to_bin(dl_src)
         if mask is None:
             match.set_dl_src(dl_src)
         else:
-            header = ofproto_v1_2.OXM_OF_ETH_SRC_W
+            header = ofproto.OXM_OF_ETH_SRC_W
             mask = mac.haddr_to_bin(mask)
             match.set_dl_src_masked(dl_src, mask)
             dl_src = mac.haddr_bitand(dl_src, mask)
@@ -6812,7 +6812,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_dl_type
     def _test_set_dl_type(self, value):
-        header = ofproto_v1_2.OXM_OF_ETH_TYPE
+        header = ofproto.OXM_OF_ETH_TYPE
         match = OFPMatch()
         match.set_dl_type(value)
         self._test_serialize_and_parser(match, header, value)
@@ -6844,12 +6844,12 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_vlan_vid
     def _test_set_vlan_vid(self, vid, mask=None):
-        header = ofproto_v1_2.OXM_OF_VLAN_VID
+        header = ofproto.OXM_OF_VLAN_VID
         match = OFPMatch()
         if mask is None:
             match.set_vlan_vid(vid)
         else:
-            header = ofproto_v1_2.OXM_OF_VLAN_VID_W
+            header = ofproto.OXM_OF_VLAN_VID_W
             match.set_vlan_vid_masked(vid, mask)
         self._test_serialize_and_parser(match, header, vid, mask)
 
@@ -6873,7 +6873,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_vlan_pcp
     def _test_set_vlan_pcp(self, pcp):
-        header = ofproto_v1_2.OXM_OF_VLAN_PCP
+        header = ofproto.OXM_OF_VLAN_PCP
         match = OFPMatch()
         match.set_vlan_pcp(pcp)
         self._test_serialize_and_parser(match, header, pcp)
@@ -6889,7 +6889,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ip_dscp
     def _test_set_ip_dscp(self, ip_dscp):
-        header = ofproto_v1_2.OXM_OF_IP_DSCP
+        header = ofproto.OXM_OF_IP_DSCP
         match = OFPMatch()
         match.set_ip_dscp(ip_dscp)
         self._test_serialize_and_parser(match, header, ip_dscp)
@@ -6905,7 +6905,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ip_ecn
     def _test_set_ip_ecn(self, ip_ecn):
-        header = ofproto_v1_2.OXM_OF_IP_ECN
+        header = ofproto.OXM_OF_IP_ECN
         match = OFPMatch()
         match.set_ip_ecn(ip_ecn)
         self._test_serialize_and_parser(match, header, ip_ecn)
@@ -6921,7 +6921,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ip_proto
     def _test_set_ip_proto(self, ip_proto):
-        header = ofproto_v1_2.OXM_OF_IP_PROTO
+        header = ofproto.OXM_OF_IP_PROTO
         match = OFPMatch()
         match.set_ip_proto(ip_proto)
         self._test_serialize_and_parser(match, header, ip_proto)
@@ -6937,7 +6937,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv4_src
     def _test_set_ipv4_src(self, ip, mask=None):
-        header = ofproto_v1_2.OXM_OF_IPV4_SRC
+        header = ofproto.OXM_OF_IPV4_SRC
         match = OFPMatch()
         ip = unpack('!I', socket.inet_aton(ip))[0]
         if mask is None:
@@ -6945,7 +6945,7 @@ class TestOFPMatch(unittest.TestCase):
         else:
             mask = unpack('!I', socket.inet_aton(mask))[0]
             if (mask + 1) >> 32 != 1:
-                header = ofproto_v1_2.OXM_OF_IPV4_SRC_W
+                header = ofproto.OXM_OF_IPV4_SRC_W
             match.set_ipv4_src_masked(ip, mask)
         self._test_serialize_and_parser(match, header, ip, mask)
 
@@ -6969,7 +6969,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv4_dst
     def _test_set_ipv4_dst(self, ip, mask=None):
-        header = ofproto_v1_2.OXM_OF_IPV4_DST
+        header = ofproto.OXM_OF_IPV4_DST
         match = OFPMatch()
         ip = unpack('!I', socket.inet_aton(ip))[0]
         if mask is None:
@@ -6977,7 +6977,7 @@ class TestOFPMatch(unittest.TestCase):
         else:
             mask = unpack('!I', socket.inet_aton(mask))[0]
             if (mask + 1) >> 32 != 1:
-                header = ofproto_v1_2.OXM_OF_IPV4_DST_W
+                header = ofproto.OXM_OF_IPV4_DST_W
             match.set_ipv4_dst_masked(ip, mask)
         self._test_serialize_and_parser(match, header, ip, mask)
 
@@ -7001,7 +7001,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_tcp_src
     def _test_set_tcp_src(self, tcp_src):
-        header = ofproto_v1_2.OXM_OF_TCP_SRC
+        header = ofproto.OXM_OF_TCP_SRC
         match = OFPMatch()
         match.set_tcp_src(tcp_src)
         self._test_serialize_and_parser(match, header, tcp_src)
@@ -7017,7 +7017,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_tcp_dst
     def _test_set_tcp_dst(self, tcp_dst):
-        header = ofproto_v1_2.OXM_OF_TCP_DST
+        header = ofproto.OXM_OF_TCP_DST
         match = OFPMatch()
         match.set_tcp_dst(tcp_dst)
         self._test_serialize_and_parser(match, header, tcp_dst)
@@ -7033,7 +7033,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_udp_src
     def _test_set_udp_src(self, udp_src):
-        header = ofproto_v1_2.OXM_OF_UDP_SRC
+        header = ofproto.OXM_OF_UDP_SRC
         match = OFPMatch()
         match.set_udp_src(udp_src)
         self._test_serialize_and_parser(match, header, udp_src)
@@ -7049,7 +7049,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_udp_dst
     def _test_set_udp_dst(self, udp_dst):
-        header = ofproto_v1_2.OXM_OF_UDP_DST
+        header = ofproto.OXM_OF_UDP_DST
         match = OFPMatch()
         match.set_udp_dst(udp_dst)
         self._test_serialize_and_parser(match, header, udp_dst)
@@ -7065,7 +7065,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_sctp_src
     def _test_set_sctp_src(self, sctp_src):
-        header = ofproto_v1_2.OXM_OF_SCTP_SRC
+        header = ofproto.OXM_OF_SCTP_SRC
         match = OFPMatch()
         match.set_sctp_src(sctp_src)
         self._test_serialize_and_parser(match, header, sctp_src)
@@ -7081,7 +7081,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_sctp_dst
     def _test_set_sctp_dst(self, sctp_dst):
-        header = ofproto_v1_2.OXM_OF_SCTP_DST
+        header = ofproto.OXM_OF_SCTP_DST
         match = OFPMatch()
         match.set_sctp_dst(sctp_dst)
         self._test_serialize_and_parser(match, header, sctp_dst)
@@ -7097,7 +7097,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_icmpv4_type
     def _test_set_icmpv4_type(self, icmpv4_type):
-        header = ofproto_v1_2.OXM_OF_ICMPV4_TYPE
+        header = ofproto.OXM_OF_ICMPV4_TYPE
         match = OFPMatch()
         match.set_icmpv4_type(icmpv4_type)
         self._test_serialize_and_parser(match, header, icmpv4_type)
@@ -7113,7 +7113,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_icmpv4_code
     def _test_set_icmpv4_code(self, icmpv4_code):
-        header = ofproto_v1_2.OXM_OF_ICMPV4_CODE
+        header = ofproto.OXM_OF_ICMPV4_CODE
         match = OFPMatch()
         match.set_icmpv4_code(icmpv4_code)
         self._test_serialize_and_parser(match, header, icmpv4_code)
@@ -7129,7 +7129,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_arp_opcode
     def _test_set_arp_opcode(self, arp_op):
-        header = ofproto_v1_2.OXM_OF_ARP_OP
+        header = ofproto.OXM_OF_ARP_OP
         match = OFPMatch()
         match.set_arp_opcode(arp_op)
         self._test_serialize_and_parser(match, header, arp_op)
@@ -7145,7 +7145,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_arp_spa
     def _test_set_arp_spa(self, ip, mask=None):
-        header = ofproto_v1_2.OXM_OF_ARP_SPA
+        header = ofproto.OXM_OF_ARP_SPA
         match = OFPMatch()
         ip = unpack('!I', socket.inet_aton(ip))[0]
         if mask is None:
@@ -7153,7 +7153,7 @@ class TestOFPMatch(unittest.TestCase):
         else:
             mask = unpack('!I', socket.inet_aton(mask))[0]
             if (mask + 1) >> 32 != 1:
-                header = ofproto_v1_2.OXM_OF_ARP_SPA_W
+                header = ofproto.OXM_OF_ARP_SPA_W
             match.set_arp_spa_masked(ip, mask)
         self._test_serialize_and_parser(match, header, ip, mask)
 
@@ -7177,7 +7177,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_arp_tpa
     def _test_set_arp_tpa(self, ip, mask=None):
-        header = ofproto_v1_2.OXM_OF_ARP_TPA
+        header = ofproto.OXM_OF_ARP_TPA
         match = OFPMatch()
         ip = unpack('!I', socket.inet_aton(ip))[0]
         if mask is None:
@@ -7185,7 +7185,7 @@ class TestOFPMatch(unittest.TestCase):
         else:
             mask = unpack('!I', socket.inet_aton(mask))[0]
             if (mask + 1) >> 32 != 1:
-                header = ofproto_v1_2.OXM_OF_ARP_TPA_W
+                header = ofproto.OXM_OF_ARP_TPA_W
             match.set_arp_tpa_masked(ip, mask)
         self._test_serialize_and_parser(match, header, ip, mask)
 
@@ -7209,13 +7209,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_arp_sha
     def _test_set_arp_sha(self, arp_sha, mask=None):
-        header = ofproto_v1_2.OXM_OF_ARP_SHA
+        header = ofproto.OXM_OF_ARP_SHA
         match = OFPMatch()
         arp_sha = mac.haddr_to_bin(arp_sha)
         if mask is None:
             match.set_arp_sha(arp_sha)
         else:
-            header = ofproto_v1_2.OXM_OF_ARP_SHA_W
+            header = ofproto.OXM_OF_ARP_SHA_W
             mask = mac.haddr_to_bin(mask)
             match.set_arp_sha_masked(arp_sha, mask)
             arp_sha = mac.haddr_bitand(arp_sha, mask)
@@ -7241,13 +7241,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_arp_tha
     def _test_set_arp_tha(self, arp_tha, mask=None):
-        header = ofproto_v1_2.OXM_OF_ARP_THA
+        header = ofproto.OXM_OF_ARP_THA
         match = OFPMatch()
         arp_tha = mac.haddr_to_bin(arp_tha)
         if mask is None:
             match.set_arp_tha(arp_tha)
         else:
-            header = ofproto_v1_2.OXM_OF_ARP_THA_W
+            header = ofproto.OXM_OF_ARP_THA_W
             mask = mac.haddr_to_bin(mask)
             match.set_arp_tha_masked(arp_tha, mask)
             arp_tha = mac.haddr_bitand(arp_tha, mask)
@@ -7273,13 +7273,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv6_src
     def _test_set_ipv6_src(self, ipv6, mask=None):
-        header = ofproto_v1_2.OXM_OF_IPV6_SRC
+        header = ofproto.OXM_OF_IPV6_SRC
         match = OFPMatch()
         ipv6 = [int(x, 16) for x in ipv6.split(":")]
         if mask is None:
             match.set_ipv6_src(ipv6)
         else:
-            header = ofproto_v1_2.OXM_OF_IPV6_SRC_W
+            header = ofproto.OXM_OF_IPV6_SRC_W
             mask = [int(x, 16) for x in mask.split(":")]
             match.set_ipv6_src_masked(ipv6, mask)
             ipv6 = [x & y for (x, y) in itertools.izip(ipv6, mask)]
@@ -7314,13 +7314,13 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv6_dst
     def _test_set_ipv6_dst(self, ipv6, mask=None):
-        header = ofproto_v1_2.OXM_OF_IPV6_DST
+        header = ofproto.OXM_OF_IPV6_DST
         match = OFPMatch()
         ipv6 = [int(x, 16) for x in ipv6.split(":")]
         if mask is None:
             match.set_ipv6_dst(ipv6)
         else:
-            header = ofproto_v1_2.OXM_OF_IPV6_DST_W
+            header = ofproto.OXM_OF_IPV6_DST_W
             mask = [int(x, 16) for x in mask.split(":")]
             match.set_ipv6_dst_masked(ipv6, mask)
             ipv6 = [x & y for (x, y) in itertools.izip(ipv6, mask)]
@@ -7355,12 +7355,12 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv6_flabel
     def _test_set_ipv6_flabel(self, flabel, mask=None):
-        header = ofproto_v1_2.OXM_OF_IPV6_FLABEL
+        header = ofproto.OXM_OF_IPV6_FLABEL
         match = OFPMatch()
         if mask is None:
             match.set_ipv6_flabel(flabel)
         else:
-            header = ofproto_v1_2.OXM_OF_IPV6_FLABEL_W
+            header = ofproto.OXM_OF_IPV6_FLABEL_W
             match.set_ipv6_flabel_masked(flabel, mask)
         self._test_serialize_and_parser(match, header, flabel, mask)
 
@@ -7384,7 +7384,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_icmpv6_type
     def _test_set_icmpv6_type(self, icmpv6_type):
-        header = ofproto_v1_2.OXM_OF_ICMPV6_TYPE
+        header = ofproto.OXM_OF_ICMPV6_TYPE
         match = OFPMatch()
         match.set_icmpv6_type(icmpv6_type)
         self._test_serialize_and_parser(match, header, icmpv6_type)
@@ -7400,7 +7400,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_icmpv6_code
     def _test_set_icmpv6_code(self, icmpv6_code):
-        header = ofproto_v1_2.OXM_OF_ICMPV6_CODE
+        header = ofproto.OXM_OF_ICMPV6_CODE
         match = OFPMatch()
         match.set_icmpv6_code(icmpv6_code)
         self._test_serialize_and_parser(match, header, icmpv6_code)
@@ -7416,7 +7416,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv6_nd_target
     def _test_set_ipv6_nd_target(self, ipv6):
-        header = ofproto_v1_2.OXM_OF_IPV6_ND_TARGET
+        header = ofproto.OXM_OF_IPV6_ND_TARGET
         match = OFPMatch()
         ipv6 = [int(x, 16) for x in ipv6.split(":")]
         match.set_ipv6_nd_target(ipv6)
@@ -7436,7 +7436,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv6_nd_sll
     def _test_set_ipv6_nd_sll(self, nd_sll):
-        header = ofproto_v1_2.OXM_OF_IPV6_ND_SLL
+        header = ofproto.OXM_OF_IPV6_ND_SLL
         match = OFPMatch()
         nd_sll = mac.haddr_to_bin(nd_sll)
         match.set_ipv6_nd_sll(nd_sll)
@@ -7453,7 +7453,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_ipv6_nd_tll
     def _test_set_ipv6_nd_tll(self, nd_tll):
-        header = ofproto_v1_2.OXM_OF_IPV6_ND_TLL
+        header = ofproto.OXM_OF_IPV6_ND_TLL
         match = OFPMatch()
         nd_tll = mac.haddr_to_bin(nd_tll)
         match.set_ipv6_nd_tll(nd_tll)
@@ -7470,7 +7470,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_mpls_label
     def _test_set_mpls_label(self, mpls_label):
-        header = ofproto_v1_2.OXM_OF_MPLS_LABEL
+        header = ofproto.OXM_OF_MPLS_LABEL
         match = OFPMatch()
         match.set_mpls_label(mpls_label)
         self._test_serialize_and_parser(match, header, mpls_label)
@@ -7486,7 +7486,7 @@ class TestOFPMatch(unittest.TestCase):
 
     # set_mpls_tc
     def _test_set_mpls_tc(self, mpls_tc):
-        header = ofproto_v1_2.OXM_OF_MPLS_TC
+        header = ofproto.OXM_OF_MPLS_TC
         match = OFPMatch()
         match.set_mpls_tc(mpls_tc)
         self._test_serialize_and_parser(match, header, mpls_tc)
