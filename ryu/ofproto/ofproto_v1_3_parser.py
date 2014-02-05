@@ -3198,9 +3198,9 @@ class OFPGroupMod(MsgBase):
     Attribute        Description
     ================ ======================================================
     command          One of the following values.
-                     OFPFC_ADD
-                     OFPFC_MODIFY
-                     OFPFC_DELETE
+                     OFPGC_ADD
+                     OFPGC_MODIFY
+                     OFPGC_DELETE
     type             One of the following values.
                      OFPGT_ALL
                      OFPGT_SELECT
@@ -3229,7 +3229,7 @@ class OFPGroupMod(MsgBase):
                                             actions)]
 
             group_id = 1
-            req = ofp_parser.OFPGroupMod(datapath, ofp.OFPFC_ADD,
+            req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
                                          ofp.OFPGT_SELECT, group_id, buckets)
             datapath.send_msg(req)
     """
