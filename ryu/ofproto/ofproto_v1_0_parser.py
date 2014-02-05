@@ -21,7 +21,7 @@ from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
 from ryu.lib import addrconv
 from ryu.lib import mac
 from . import ofproto_parser
-from . import ofproto_v1_0
+from . import ofproto_v1_0 as ofproto
 from . import nx_match
 from ryu import utils
 
@@ -47,7 +47,7 @@ def _register_parser(cls):
     return cls
 
 
-@ofproto_parser.register_msg_parser(ofproto_v1_0.OFP_VERSION)
+@ofproto_parser.register_msg_parser(ofproto.OFP_VERSION)
 def msg_parser(datapath, version, msg_type, msg_len, xid, buf):
     parser = _MSG_PARSERS.get(msg_type)
     return parser(datapath, version, msg_type, msg_len, xid, buf)
@@ -96,7 +96,7 @@ class OFPPhyPort(ofproto_parser.namedtuple('OFPPhyPort', (
 
     @classmethod
     def parser(cls, buf, offset):
-        port = struct.unpack_from(ofproto_v1_0.OFP_PHY_PORT_PACK_STR,
+        port = struct.unpack_from(ofproto.OFP_PHY_PORT_PACK_STR,
                                   buf, offset)
         port = list(port)
         i = cls._fields.index('hw_addr')
@@ -112,17 +112,17 @@ class OFPMatch(StringifyMixin):
                  nw_proto=None, nw_src=None, nw_dst=None,
                  tp_src=None, tp_dst=None, nw_src_mask=32, nw_dst_mask=32):
         super(OFPMatch, self).__init__()
-        wc = ofproto_v1_0.OFPFW_ALL
+        wc = ofproto.OFPFW_ALL
         if in_port is None:
             self.in_port = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_IN_PORT
+            wc &= ~ofproto.OFPFW_IN_PORT
             self.in_port = in_port
 
         if dl_src is None:
             self.dl_src = mac.DONTCARE
         else:
-            wc &= ~ofproto_v1_0.OFPFW_DL_SRC
+            wc &= ~ofproto.OFPFW_DL_SRC
             if dl_src == 0:
                 self.dl_src = mac.DONTCARE
             else:
@@ -131,7 +131,7 @@ class OFPMatch(StringifyMixin):
         if dl_dst is None:
             self.dl_dst = mac.DONTCARE
         else:
-            wc &= ~ofproto_v1_0.OFPFW_DL_DST
+            wc &= ~ofproto.OFPFW_DL_DST
             if dl_dst == 0:
                 self.dl_dst = mac.DONTCARE
             else:
@@ -140,57 +140,57 @@ class OFPMatch(StringifyMixin):
         if dl_vlan is None:
             self.dl_vlan = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_DL_VLAN
+            wc &= ~ofproto.OFPFW_DL_VLAN
             self.dl_vlan = dl_vlan
 
         if dl_vlan_pcp is None:
             self.dl_vlan_pcp = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_DL_VLAN_PCP
+            wc &= ~ofproto.OFPFW_DL_VLAN_PCP
             self.dl_vlan_pcp = dl_vlan_pcp
 
         if dl_type is None:
             self.dl_type = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_DL_TYPE
+            wc &= ~ofproto.OFPFW_DL_TYPE
             self.dl_type = dl_type
 
         if nw_tos is None:
             self.nw_tos = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_NW_TOS
+            wc &= ~ofproto.OFPFW_NW_TOS
             self.nw_tos = nw_tos
 
         if nw_proto is None:
             self.nw_proto = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_NW_PROTO
+            wc &= ~ofproto.OFPFW_NW_PROTO
             self.nw_proto = nw_proto
 
         if nw_src is None:
             self.nw_src = 0
         else:
-            wc &= (32 - nw_src_mask) << ofproto_v1_0.OFPFW_NW_SRC_SHIFT \
-                | ~ofproto_v1_0.OFPFW_NW_SRC_MASK
+            wc &= (32 - nw_src_mask) << ofproto.OFPFW_NW_SRC_SHIFT \
+                | ~ofproto.OFPFW_NW_SRC_MASK
             self.nw_src = nw_src
 
         if nw_dst is None:
             self.nw_dst = 0
         else:
-            wc &= (32 - nw_dst_mask) << ofproto_v1_0.OFPFW_NW_DST_SHIFT \
-                | ~ofproto_v1_0.OFPFW_NW_DST_MASK
+            wc &= (32 - nw_dst_mask) << ofproto.OFPFW_NW_DST_SHIFT \
+                | ~ofproto.OFPFW_NW_DST_MASK
             self.nw_dst = nw_dst
 
         if tp_src is None:
             self.tp_src = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_TP_SRC
+            wc &= ~ofproto.OFPFW_TP_SRC
             self.tp_src = tp_src
 
         if tp_dst is None:
             self.tp_dst = 0
         else:
-            wc &= ~ofproto_v1_0.OFPFW_TP_DST
+            wc &= ~ofproto.OFPFW_TP_DST
             self.tp_dst = tp_dst
 
         if wildcards is None:
@@ -199,7 +199,7 @@ class OFPMatch(StringifyMixin):
             self.wildcards = wildcards
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_MATCH_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.OFP_MATCH_PACK_STR, buf, offset,
                       self.wildcards, self.in_port, self.dl_src,
                       self.dl_dst, self.dl_vlan, self.dl_vlan_pcp,
                       self.dl_type, self.nw_tos, self.nw_proto,
@@ -207,7 +207,7 @@ class OFPMatch(StringifyMixin):
 
     @classmethod
     def parse(cls, buf, offset):
-        match = struct.unpack_from(ofproto_v1_0.OFP_MATCH_PACK_STR,
+        match = struct.unpack_from(ofproto.OFP_MATCH_PACK_STR,
                                    buf, offset)
         return cls(*match)
 
@@ -220,7 +220,7 @@ class OFPActionHeader(StringifyMixin):
         self.len = len_
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_HEADER_PACK_STR,
                       buf, offset, self.type, self.len)
 
 
@@ -244,14 +244,14 @@ class OFPAction(OFPActionHeader):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_ = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         cls_ = cls._ACTION_TYPES.get(type_)
         assert cls_ is not None
         return cls_.parser(buf, offset)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_OUTPUT,
-                                ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_OUTPUT,
+                                ofproto.OFP_ACTION_OUTPUT_SIZE)
 class OFPActionOutput(OFPAction):
     # NOTE: The reason of this magic number (0xffe5)
     #       is because there is no good constant in of1.0.
@@ -264,18 +264,18 @@ class OFPActionOutput(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, port, max_len = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR, buf, offset)
-        assert type_ == ofproto_v1_0.OFPAT_OUTPUT
-        assert len_ == ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE
+            ofproto.OFP_ACTION_OUTPUT_PACK_STR, buf, offset)
+        assert type_ == ofproto.OFPAT_OUTPUT
+        assert len_ == ofproto.OFP_ACTION_OUTPUT_SIZE
         return cls(port, max_len)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR, buf,
+        msg_pack_into(ofproto.OFP_ACTION_OUTPUT_PACK_STR, buf,
                       offset, self.type, self.len, self.port, self.max_len)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_VLAN_VID,
-                                ofproto_v1_0.OFP_ACTION_VLAN_VID_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_VLAN_VID,
+                                ofproto.OFP_ACTION_VLAN_VID_SIZE)
 class OFPActionVlanVid(OFPAction):
     def __init__(self, vlan_vid):
         super(OFPActionVlanVid, self).__init__()
@@ -284,18 +284,18 @@ class OFPActionVlanVid(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vlan_vid = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_VLAN_VID_PACK_STR, buf, offset)
-        assert type_ == ofproto_v1_0.OFPAT_SET_VLAN_VID
-        assert len_ == ofproto_v1_0.OFP_ACTION_VLAN_VID_SIZE
+            ofproto.OFP_ACTION_VLAN_VID_PACK_STR, buf, offset)
+        assert type_ == ofproto.OFPAT_SET_VLAN_VID
+        assert len_ == ofproto.OFP_ACTION_VLAN_VID_SIZE
         return cls(vlan_vid)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_VLAN_VID_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_VLAN_VID_PACK_STR,
                       buf, offset, self.type, self.len, self.vlan_vid)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_VLAN_PCP,
-                                ofproto_v1_0.OFP_ACTION_VLAN_PCP_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_VLAN_PCP,
+                                ofproto.OFP_ACTION_VLAN_PCP_SIZE)
 class OFPActionVlanPcp(OFPAction):
     def __init__(self, vlan_pcp):
         super(OFPActionVlanPcp, self).__init__()
@@ -304,18 +304,18 @@ class OFPActionVlanPcp(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vlan_pcp = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_VLAN_PCP_PACK_STR, buf, offset)
-        assert type_ == ofproto_v1_0.OFPAT_SET_VLAN_PCP
-        assert len_ == ofproto_v1_0.OFP_ACTION_VLAN_PCP_SIZE
+            ofproto.OFP_ACTION_VLAN_PCP_PACK_STR, buf, offset)
+        assert type_ == ofproto.OFPAT_SET_VLAN_PCP
+        assert len_ == ofproto.OFP_ACTION_VLAN_PCP_SIZE
         return cls(vlan_pcp)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_VLAN_PCP_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_VLAN_PCP_PACK_STR,
                       buf, offset, self.type, self.len, self.vlan_pcp)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_STRIP_VLAN,
-                                ofproto_v1_0.OFP_ACTION_HEADER_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_STRIP_VLAN,
+                                ofproto.OFP_ACTION_HEADER_SIZE)
 class OFPActionStripVlan(OFPAction):
     def __init__(self):
         super(OFPActionStripVlan, self).__init__()
@@ -323,9 +323,9 @@ class OFPActionStripVlan(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_ = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR, buf, offset)
-        assert type_ == ofproto_v1_0.OFPAT_STRIP_VLAN
-        assert len_ == ofproto_v1_0.OFP_ACTION_HEADER_SIZE
+            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
+        assert type_ == ofproto.OFPAT_STRIP_VLAN
+        assert len_ == ofproto.OFP_ACTION_HEADER_SIZE
         return cls()
 
 
@@ -337,26 +337,26 @@ class OFPActionDlAddr(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, dl_addr = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_DL_ADDR_PACK_STR, buf, offset)
-        assert type_ in (ofproto_v1_0.OFPAT_SET_DL_SRC,
-                         ofproto_v1_0.OFPAT_SET_DL_DST)
-        assert len_ == ofproto_v1_0.OFP_ACTION_DL_ADDR_SIZE
+            ofproto.OFP_ACTION_DL_ADDR_PACK_STR, buf, offset)
+        assert type_ in (ofproto.OFPAT_SET_DL_SRC,
+                         ofproto.OFPAT_SET_DL_DST)
+        assert len_ == ofproto.OFP_ACTION_DL_ADDR_SIZE
         return cls(dl_addr)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_DL_ADDR_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_DL_ADDR_PACK_STR,
                       buf, offset, self.type, self.len, self.dl_addr)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_DL_SRC,
-                                ofproto_v1_0.OFP_ACTION_DL_ADDR_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_DL_SRC,
+                                ofproto.OFP_ACTION_DL_ADDR_SIZE)
 class OFPActionSetDlSrc(OFPActionDlAddr):
     def __init__(self, dl_addr):
         super(OFPActionSetDlSrc, self).__init__(dl_addr)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_DL_DST,
-                                ofproto_v1_0.OFP_ACTION_DL_ADDR_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_DL_DST,
+                                ofproto.OFP_ACTION_DL_ADDR_SIZE)
 class OFPActionSetDlDst(OFPActionDlAddr):
     def __init__(self, dl_addr):
         super(OFPActionSetDlDst, self).__init__(dl_addr)
@@ -370,33 +370,33 @@ class OFPActionNwAddr(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, nw_addr = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_NW_ADDR_PACK_STR, buf, offset)
-        assert type_ in (ofproto_v1_0.OFPAT_SET_NW_SRC,
-                         ofproto_v1_0.OFPAT_SET_NW_DST)
-        assert len_ == ofproto_v1_0.OFP_ACTION_NW_ADDR_SIZE
+            ofproto.OFP_ACTION_NW_ADDR_PACK_STR, buf, offset)
+        assert type_ in (ofproto.OFPAT_SET_NW_SRC,
+                         ofproto.OFPAT_SET_NW_DST)
+        assert len_ == ofproto.OFP_ACTION_NW_ADDR_SIZE
         return cls(nw_addr)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_NW_ADDR_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_NW_ADDR_PACK_STR,
                       buf, offset, self.type, self.len, self.nw_addr)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_NW_SRC,
-                                ofproto_v1_0.OFP_ACTION_NW_ADDR_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_NW_SRC,
+                                ofproto.OFP_ACTION_NW_ADDR_SIZE)
 class OFPActionSetNwSrc(OFPActionNwAddr):
     def __init__(self, nw_addr):
         super(OFPActionSetNwSrc, self).__init__(nw_addr)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_NW_DST,
-                                ofproto_v1_0.OFP_ACTION_NW_ADDR_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_NW_DST,
+                                ofproto.OFP_ACTION_NW_ADDR_SIZE)
 class OFPActionSetNwDst(OFPActionNwAddr):
     def __init__(self, nw_addr):
         super(OFPActionSetNwDst, self).__init__(nw_addr)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_NW_TOS,
-                                ofproto_v1_0.OFP_ACTION_NW_TOS_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_NW_TOS,
+                                ofproto.OFP_ACTION_NW_TOS_SIZE)
 class OFPActionSetNwTos(OFPAction):
     def __init__(self, tos):
         super(OFPActionSetNwTos, self).__init__()
@@ -405,13 +405,13 @@ class OFPActionSetNwTos(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, tos = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_NW_TOS_PACK_STR, buf, offset)
-        assert type_ == ofproto_v1_0.OFPAT_SET_NW_TOS
-        assert len_ == ofproto_v1_0.OFP_ACTION_NW_TOS_SIZE
+            ofproto.OFP_ACTION_NW_TOS_PACK_STR, buf, offset)
+        assert type_ == ofproto.OFPAT_SET_NW_TOS
+        assert len_ == ofproto.OFP_ACTION_NW_TOS_SIZE
         return cls(tos)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_NW_TOS_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_NW_TOS_PACK_STR,
                       buf, offset, self.type, self.len, self.tos)
 
 
@@ -423,33 +423,33 @@ class OFPActionTpPort(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, tp = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_TP_PORT_PACK_STR, buf, offset)
-        assert type_ in (ofproto_v1_0.OFPAT_SET_TP_SRC,
-                         ofproto_v1_0.OFPAT_SET_TP_DST)
-        assert len_ == ofproto_v1_0.OFP_ACTION_TP_PORT_SIZE
+            ofproto.OFP_ACTION_TP_PORT_PACK_STR, buf, offset)
+        assert type_ in (ofproto.OFPAT_SET_TP_SRC,
+                         ofproto.OFPAT_SET_TP_DST)
+        assert len_ == ofproto.OFP_ACTION_TP_PORT_SIZE
         return cls(tp)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_TP_PORT_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_TP_PORT_PACK_STR,
                       buf, offset, self.type, self.len, self.tp)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_TP_SRC,
-                                ofproto_v1_0.OFP_ACTION_TP_PORT_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_TP_SRC,
+                                ofproto.OFP_ACTION_TP_PORT_SIZE)
 class OFPActionSetTpSrc(OFPActionTpPort):
     def __init__(self, tp):
         super(OFPActionSetTpSrc, self).__init__(tp)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_SET_TP_DST,
-                                ofproto_v1_0.OFP_ACTION_TP_PORT_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_SET_TP_DST,
+                                ofproto.OFP_ACTION_TP_PORT_SIZE)
 class OFPActionSetTpDst(OFPActionTpPort):
     def __init__(self, tp):
         super(OFPActionSetTpDst, self).__init__(tp)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_ENQUEUE,
-                                ofproto_v1_0.OFP_ACTION_ENQUEUE_SIZE)
+@OFPAction.register_action_type(ofproto.OFPAT_ENQUEUE,
+                                ofproto.OFP_ACTION_ENQUEUE_SIZE)
 class OFPActionEnqueue(OFPAction):
     def __init__(self, port, queue_id):
         super(OFPActionEnqueue, self).__init__()
@@ -459,17 +459,17 @@ class OFPActionEnqueue(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, port, queue_id = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_ENQUEUE_PACK_STR, buf, offset)
-        assert type_ == ofproto_v1_0.OFPAT_ENQUEUE
-        assert len_ == ofproto_v1_0.OFP_ACTION_ENQUEUE_SIZE
+            ofproto.OFP_ACTION_ENQUEUE_PACK_STR, buf, offset)
+        assert type_ == ofproto.OFPAT_ENQUEUE
+        assert len_ == ofproto.OFP_ACTION_ENQUEUE_SIZE
         return cls(port, queue_id)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_ENQUEUE_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.OFP_ACTION_ENQUEUE_PACK_STR, buf, offset,
                       self.type, self.len, self.port, self.queue_id)
 
 
-@OFPAction.register_action_type(ofproto_v1_0.OFPAT_VENDOR, 0)
+@OFPAction.register_action_type(ofproto.OFPAT_VENDOR, 0)
 class OFPActionVendor(OFPAction):
     _ACTION_VENDORS = {}
 
@@ -488,12 +488,12 @@ class OFPActionVendor(OFPAction):
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor = struct.unpack_from(
-            ofproto_v1_0.OFP_ACTION_VENDOR_HEADER_PACK_STR, buf, offset)
+            ofproto.OFP_ACTION_VENDOR_HEADER_PACK_STR, buf, offset)
         cls_ = cls._ACTION_VENDORS.get(vendor)
         return cls_.parser(buf, offset)
 
 
-@OFPActionVendor.register_action_vendor(ofproto_v1_0.NX_VENDOR_ID)
+@OFPActionVendor.register_action_vendor(ofproto.NX_VENDOR_ID)
 class NXActionHeader(OFPActionVendor):
     _NX_ACTION_SUBTYPES = {}
 
@@ -511,13 +511,13 @@ class NXActionHeader(OFPActionVendor):
         self.subtype = self.cls_subtype
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR,
+        msg_pack_into(ofproto.OFP_ACTION_HEADER_PACK_STR,
                       buf, offset, self.type, self.len)
 
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor, subtype = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset)
         cls_ = cls._NX_ACTION_SUBTYPES.get(subtype)
         return cls_.parser(buf, offset)
 
@@ -525,101 +525,101 @@ class NXActionHeader(OFPActionVendor):
 class NXActionResubmitBase(NXActionHeader):
     def __init__(self, in_port, table):
         super(NXActionResubmitBase, self).__init__()
-        assert self.subtype in (ofproto_v1_0.NXAST_RESUBMIT,
-                                ofproto_v1_0.NXAST_RESUBMIT_TABLE)
+        assert self.subtype in (ofproto.NXAST_RESUBMIT,
+                                ofproto.NXAST_RESUBMIT_TABLE)
         self.in_port = in_port
         self.table = table
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_RESUBMIT_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.in_port, self.table)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_RESUBMIT, ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE)
+    ofproto.NXAST_RESUBMIT, ofproto.NX_ACTION_RESUBMIT_SIZE)
 class NXActionResubmit(NXActionResubmitBase):
-    def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT):
+    def __init__(self, in_port=ofproto.OFPP_IN_PORT):
         super(NXActionResubmit, self).__init__(in_port, 0)
 
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
         return cls(in_port)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_RESUBMIT_TABLE, ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE)
+    ofproto.NXAST_RESUBMIT_TABLE, ofproto.NX_ACTION_RESUBMIT_SIZE)
 class NXActionResubmitTable(NXActionResubmitBase):
-    def __init__(self, in_port=ofproto_v1_0.OFPP_IN_PORT, table=0xff):
+    def __init__(self, in_port=ofproto.OFPP_IN_PORT, table=0xff):
         super(NXActionResubmitTable, self).__init__(in_port, table)
 
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
         return cls(in_port, table)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_SET_TUNNEL, ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE)
+    ofproto.NXAST_SET_TUNNEL, ofproto.NX_ACTION_SET_TUNNEL_SIZE)
 class NXActionSetTunnel(NXActionHeader):
     def __init__(self, tun_id):
         super(NXActionSetTunnel, self).__init__()
         self.tun_id = tun_id
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_SET_TUNNEL_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.tun_id)
 
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor, subtype, tun_id = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_SET_TUNNEL_PACK_STR, buf, offset)
         return cls(tun_id)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_SET_QUEUE, ofproto_v1_0.NX_ACTION_SET_QUEUE_SIZE)
+    ofproto.NXAST_SET_QUEUE, ofproto.NX_ACTION_SET_QUEUE_SIZE)
 class NXActionSetQueue(NXActionHeader):
     def __init__(self, queue_id):
         super(NXActionSetQueue, self).__init__()
         self.queue_id = queue_id
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_SET_QUEUE_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_SET_QUEUE_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor,
                       self.subtype, self.queue_id)
 
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, queue_id) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_SET_QUEUE_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_SET_QUEUE_PACK_STR, buf, offset)
         return cls(queue_id)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_POP_QUEUE, ofproto_v1_0.NX_ACTION_POP_QUEUE_SIZE)
+    ofproto.NXAST_POP_QUEUE, ofproto.NX_ACTION_POP_QUEUE_SIZE)
 class NXActionPopQueue(NXActionHeader):
     def __init__(self):
         super(NXActionPopQueue, self).__init__()
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_POP_QUEUE_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor,
                       self.subtype)
 
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_POP_QUEUE_PACK_STR, buf, offset)
         return cls()
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_REG_MOVE, ofproto_v1_0.NX_ACTION_REG_MOVE_SIZE)
+    ofproto.NXAST_REG_MOVE, ofproto.NX_ACTION_REG_MOVE_SIZE)
 class NXActionRegMove(NXActionHeader):
     def __init__(self, n_bits, src_ofs, dst_ofs, src, dst):
         super(NXActionRegMove, self).__init__()
@@ -630,7 +630,7 @@ class NXActionRegMove(NXActionHeader):
         self.dst = dst
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_REG_MOVE_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor,
                       self.subtype, self.n_bits, self.src_ofs, self.dst_ofs,
                       self.src, self.dst)
@@ -639,12 +639,12 @@ class NXActionRegMove(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, n_bits, src_ofs, dst_ofs,
             src, dst) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
         return cls(n_bits, src_ofs, dst_ofs, src, dst)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_REG_LOAD, ofproto_v1_0.NX_ACTION_REG_LOAD_SIZE)
+    ofproto.NXAST_REG_LOAD, ofproto.NX_ACTION_REG_LOAD_SIZE)
 class NXActionRegLoad(NXActionHeader):
     def __init__(self, ofs_nbits, dst, value):
         super(NXActionRegLoad, self).__init__()
@@ -653,7 +653,7 @@ class NXActionRegLoad(NXActionHeader):
         self.value = value
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_REG_LOAD_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor,
                       self.subtype, self.ofs_nbits, self.dst, self.value)
 
@@ -661,31 +661,31 @@ class NXActionRegLoad(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
             value) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, value)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_SET_TUNNEL64, ofproto_v1_0.NX_ACTION_SET_TUNNEL64_SIZE)
+    ofproto.NXAST_SET_TUNNEL64, ofproto.NX_ACTION_SET_TUNNEL64_SIZE)
 class NXActionSetTunnel64(NXActionHeader):
     def __init__(self, tun_id):
         super(NXActionSetTunnel64, self).__init__()
         self.tun_id = tun_id
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.tun_id)
 
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor, subtype, tun_id = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_SET_TUNNEL64_PACK_STR, buf, offset)
         return cls(tun_id)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_MULTIPATH, ofproto_v1_0.NX_ACTION_MULTIPATH_SIZE)
+    ofproto.NXAST_MULTIPATH, ofproto.NX_ACTION_MULTIPATH_SIZE)
 class NXActionMultipath(NXActionHeader):
     def __init__(self, fields, basis, algorithm, max_link, arg,
                  ofs_nbits, dst):
@@ -699,7 +699,7 @@ class NXActionMultipath(NXActionHeader):
         self.dst = dst
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_MULTIPATH_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.fields, self.basis, self.algorithm, self.max_link,
                       self.arg, self.ofs_nbits, self.dst)
@@ -708,12 +708,12 @@ class NXActionMultipath(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, fields, basis, algorithm,
             max_link, arg, ofs_nbits, dst) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
         return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
                    dst)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_NOTE, 0)
+@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_NOTE, 0)
 class NXActionNote(NXActionHeader):
     def __init__(self, note):
         super(NXActionNote, self).__init__()
@@ -731,23 +731,23 @@ class NXActionNote(NXActionHeader):
         if extra_len > 0:
             extra = note[6:]
         note = note[0:6]
-        msg_pack_into(ofproto_v1_0.NX_ACTION_NOTE_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_NOTE_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor, self.subtype,
                       *note)
         if extra_len > 0:
             msg_pack_into('B' * extra_len, buf,
-                          offset + ofproto_v1_0.NX_ACTION_NOTE_SIZE,
+                          offset + ofproto.NX_ACTION_NOTE_SIZE,
                           *extra)
 
     @classmethod
     def parser(cls, buf, offset):
         note = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_NOTE_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_NOTE_PACK_STR, buf, offset)
         (type_, len_, vendor, subtype) = note[0:4]
         note = [i for i in note[4:]]
-        if len_ > ofproto_v1_0.NX_ACTION_NOTE_SIZE:
-            note_start = offset + ofproto_v1_0.NX_ACTION_NOTE_SIZE
-            note_end = note_start + len_ - ofproto_v1_0.NX_ACTION_NOTE_SIZE
+        if len_ > ofproto.NX_ACTION_NOTE_SIZE:
+            note_start = offset + ofproto.NX_ACTION_NOTE_SIZE
+            note_end = note_start + len_ - ofproto.NX_ACTION_NOTE_SIZE
             note += [int(binascii.b2a_hex(i), 16) for i
                      in buf[note_start:note_end]]
         return cls(note)
@@ -757,7 +757,7 @@ class NXActionBundleBase(NXActionHeader):
     def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
                  ofs_nbits, dst, slaves):
         super(NXActionBundleBase, self).__init__()
-        _len = ofproto_v1_0.NX_ACTION_BUNDLE_SIZE + len(slaves) * 2
+        _len = ofproto.NX_ACTION_BUNDLE_SIZE + len(slaves) * 2
         _len += (_len % 8)
         self.len = _len
 
@@ -771,19 +771,19 @@ class NXActionBundleBase(NXActionHeader):
         self.slaves = slaves
 
     def serialize(self, buf, offset):
-        slave_offset = offset + ofproto_v1_0.NX_ACTION_BUNDLE_SIZE
+        slave_offset = offset + ofproto.NX_ACTION_BUNDLE_SIZE
 
         for s in self.slaves:
             msg_pack_into('!H', buf, slave_offset, s)
             slave_offset += 2
 
         pad_len = (len(self.slaves) * 2 +
-                   ofproto_v1_0.NX_ACTION_BUNDLE_SIZE) % 8
+                   ofproto.NX_ACTION_BUNDLE_SIZE) % 8
 
         if pad_len != 0:
             msg_pack_into('%dx' % pad_len, buf, slave_offset)
 
-        msg_pack_into(ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf,
+        msg_pack_into(ofproto.NX_ACTION_BUNDLE_PACK_STR, buf,
                       offset, self.type, self.len, self.vendor, self.subtype,
                       self.algorithm, self.fields, self.basis,
                       self.slave_type, self.n_slaves,
@@ -793,8 +793,8 @@ class NXActionBundleBase(NXActionHeader):
     def parser(cls, action_cls, buf, offset):
         (type_, len_, vendor, subtype, algorithm, fields, basis,
             slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
-        slave_offset = offset + ofproto_v1_0.NX_ACTION_BUNDLE_SIZE
+            ofproto.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
+        slave_offset = offset + ofproto.NX_ACTION_BUNDLE_SIZE
 
         slaves = []
         for i in range(0, n_slaves):
@@ -806,7 +806,7 @@ class NXActionBundleBase(NXActionHeader):
                           n_slaves, ofs_nbits, dst, slaves)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_BUNDLE, 0)
+@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_BUNDLE, 0)
 class NXActionBundle(NXActionBundleBase):
     def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
                  ofs_nbits, dst, slaves):
@@ -819,7 +819,7 @@ class NXActionBundle(NXActionBundleBase):
         return NXActionBundleBase.parser(NXActionBundle, buf, offset)
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_BUNDLE_LOAD, 0)
+@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_BUNDLE_LOAD, 0)
 class NXActionBundleLoad(NXActionBundleBase):
     def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
                  ofs_nbits, dst, slaves):
@@ -833,7 +833,7 @@ class NXActionBundleLoad(NXActionBundleBase):
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_AUTOPATH, ofproto_v1_0.NX_ACTION_AUTOPATH_SIZE)
+    ofproto.NXAST_AUTOPATH, ofproto.NX_ACTION_AUTOPATH_SIZE)
 class NXActionAutopath(NXActionHeader):
     def __init__(self, ofs_nbits, dst, id_):
         super(NXActionAutopath, self).__init__()
@@ -842,7 +842,7 @@ class NXActionAutopath(NXActionHeader):
         self.id = id_
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_AUTOPATH_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.ofs_nbits, self.dst, self.id)
 
@@ -850,12 +850,12 @@ class NXActionAutopath(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, dst,
             id_) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
         return cls(ofs_nbits, dst, id_)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_OUTPUT_REG, ofproto_v1_0.NX_ACTION_OUTPUT_REG_SIZE)
+    ofproto.NXAST_OUTPUT_REG, ofproto.NX_ACTION_OUTPUT_REG_SIZE)
 class NXActionOutputReg(NXActionHeader):
     def __init__(self, ofs_nbits, src, max_len):
         super(NXActionOutputReg, self).__init__()
@@ -864,7 +864,7 @@ class NXActionOutputReg(NXActionHeader):
         self.max_len = max_len
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.ofs_nbits, self.src, self.max_len)
 
@@ -872,50 +872,50 @@ class NXActionOutputReg(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, ofs_nbits, src,
             max_len) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
         return cls(ofs_nbits, src, max_len)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_EXIT, ofproto_v1_0.NX_ACTION_HEADER_SIZE)
+    ofproto.NXAST_EXIT, ofproto.NX_ACTION_HEADER_SIZE)
 class NXActionExit(NXActionHeader):
     def __init__(self):
         super(NXActionExit, self).__init__()
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype)
 
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_DEC_TTL, ofproto_v1_0.NX_ACTION_HEADER_SIZE)
+    ofproto.NXAST_DEC_TTL, ofproto.NX_ACTION_HEADER_SIZE)
 class NXActionDecTtl(NXActionHeader):
     def __init__(self):
         super(NXActionDecTtl, self).__init__()
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype)
 
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_HEADER_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
 
-@NXActionHeader.register_nx_action_subtype(ofproto_v1_0.NXAST_LEARN, 0)
+@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_LEARN, 0)
 class NXActionLearn(NXActionHeader):
     def __init__(self, idle_timeout, hard_timeout, priority, cookie, flags,
                  table_id, fin_idle_timeout, fin_hard_timeout, spec):
         super(NXActionLearn, self).__init__()
-        len_ = len(spec) + ofproto_v1_0.NX_ACTION_LEARN_SIZE
+        len_ = len(spec) + ofproto.NX_ACTION_LEARN_SIZE
         pad_len = 8 - (len_ % 8)
         self.len = len_ + pad_len
 
@@ -930,7 +930,7 @@ class NXActionLearn(NXActionHeader):
         self.spec = spec + bytearray('\x00' * pad_len)
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_LEARN_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.idle_timeout, self.hard_timeout, self.priority,
                       self.cookie, self.flags, self.table_id,
@@ -942,15 +942,15 @@ class NXActionLearn(NXActionHeader):
         (type_, len_, vendor, subtype, idle_timeout, hard_timeout, priority,
             cookie, flags, table_id, fin_idle_timeout,
             fin_hard_timeout) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_LEARN_PACK_STR, buf, offset)
-        spec = buf[offset + ofproto_v1_0.NX_ACTION_LEARN_SIZE:]
+            ofproto.NX_ACTION_LEARN_PACK_STR, buf, offset)
+        spec = buf[offset + ofproto.NX_ACTION_LEARN_SIZE:]
         return cls(idle_timeout, hard_timeout, priority,
                    cookie, flags, table_id, fin_idle_timeout,
                    fin_hard_timeout, spec)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_CONTROLLER, ofproto_v1_0.NX_ACTION_CONTROLLER_SIZE)
+    ofproto.NXAST_CONTROLLER, ofproto.NX_ACTION_CONTROLLER_SIZE)
 class NXActionController(NXActionHeader):
     def __init__(self, max_len, controller_id, reason):
         super(NXActionController, self).__init__()
@@ -959,7 +959,7 @@ class NXActionController(NXActionHeader):
         self.reason = reason
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_CONTROLLER_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_CONTROLLER_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.max_len, self.controller_id, self.reason, 0)
 
@@ -967,12 +967,12 @@ class NXActionController(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, max_len, controller_id, reason,
             _zero) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
         return cls(max_len, controller_id, reason)
 
 
 @NXActionHeader.register_nx_action_subtype(
-    ofproto_v1_0.NXAST_FIN_TIMEOUT, ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_SIZE)
+    ofproto.NXAST_FIN_TIMEOUT, ofproto.NX_ACTION_FIN_TIMEOUT_SIZE)
 class NXActionFinTimeout(NXActionHeader):
     def __init__(self, fin_idle_timeout, fin_hard_timeout):
         super(NXActionFinTimeout, self).__init__()
@@ -980,7 +980,7 @@ class NXActionFinTimeout(NXActionHeader):
         self.fin_hard_timeout = fin_hard_timeout
 
     def serialize(self, buf, offset):
-        msg_pack_into(ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset,
+        msg_pack_into(ofproto.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset,
                       self.type, self.len, self.vendor, self.subtype,
                       self.fin_idle_timeout, self.fin_hard_timeout)
 
@@ -988,7 +988,7 @@ class NXActionFinTimeout(NXActionHeader):
     def parser(cls, buf, offset):
         (type_, len_, vendor, subtype, fin_idle_timeout,
             fin_hard_timeout) = struct.unpack_from(
-            ofproto_v1_0.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
+            ofproto.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
         return cls(fin_idle_timeout, fin_hard_timeout)
 
 
@@ -1007,12 +1007,12 @@ class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
 
     @classmethod
     def parser(cls, buf, offset):
-        desc = struct.unpack_from(ofproto_v1_0.OFP_DESC_STATS_PACK_STR,
+        desc = struct.unpack_from(ofproto.OFP_DESC_STATS_PACK_STR,
                                   buf, offset)
         desc = list(desc)
         desc = map(lambda x: x.rstrip('\0'), desc)
         stats = cls(*desc)
-        stats.length = ofproto_v1_0.OFP_DESC_STATS_SIZE
+        stats.length = ofproto.OFP_DESC_STATS_SIZE
         return stats
 
 
@@ -1037,11 +1037,11 @@ class OFPFlowStats(StringifyMixin):
         flow_stats = cls()
 
         flow_stats.length, flow_stats.table_id = struct.unpack_from(
-            ofproto_v1_0.OFP_FLOW_STATS_0_PACK_STR, buf, offset)
-        offset += ofproto_v1_0.OFP_FLOW_STATS_0_SIZE
+            ofproto.OFP_FLOW_STATS_0_PACK_STR, buf, offset)
+        offset += ofproto.OFP_FLOW_STATS_0_SIZE
 
         flow_stats.match = OFPMatch.parse(buf, offset)
-        offset += ofproto_v1_0.OFP_MATCH_SIZE
+        offset += ofproto.OFP_MATCH_SIZE
 
         (flow_stats.duration_sec,
          flow_stats.duration_nsec,
@@ -1051,11 +1051,11 @@ class OFPFlowStats(StringifyMixin):
          flow_stats.cookie,
          flow_stats.packet_count,
          flow_stats.byte_count) = struct.unpack_from(
-            ofproto_v1_0.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
-        offset += ofproto_v1_0.OFP_FLOW_STATS_1_SIZE
+            ofproto.OFP_FLOW_STATS_1_PACK_STR, buf, offset)
+        offset += ofproto.OFP_FLOW_STATS_1_SIZE
 
         flow_stats.actions = []
-        length = ofproto_v1_0.OFP_FLOW_STATS_SIZE
+        length = ofproto.OFP_FLOW_STATS_SIZE
         while length < flow_stats.length:
             action = OFPAction.parser(buf, offset)
             flow_stats.actions.append(action)
@@ -1071,9 +1071,9 @@ class OFPAggregateStats(ofproto_parser.namedtuple('OFPAggregateStats', (
     @classmethod
     def parser(cls, buf, offset):
         agg = struct.unpack_from(
-            ofproto_v1_0.OFP_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
+            ofproto.OFP_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
         stats = cls(*agg)
-        stats.length = ofproto_v1_0.OFP_AGGREGATE_STATS_REPLY_SIZE
+        stats.length = ofproto.OFP_AGGREGATE_STATS_REPLY_SIZE
         return stats
 
 
@@ -1091,13 +1091,13 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
 
     @classmethod
     def parser(cls, buf, offset):
-        tbl = struct.unpack_from(ofproto_v1_0.OFP_TABLE_STATS_PACK_STR,
+        tbl = struct.unpack_from(ofproto.OFP_TABLE_STATS_PACK_STR,
                                  buf, offset)
         tbl = list(tbl)
         i = cls._fields.index('name')
         tbl[i] = tbl[i].rstrip('\0')
         stats = cls(*tbl)
-        stats.length = ofproto_v1_0.OFP_TABLE_STATS_SIZE
+        stats.length = ofproto.OFP_TABLE_STATS_SIZE
         return stats
 
 
@@ -1107,10 +1107,10 @@ class OFPPortStats(ofproto_parser.namedtuple('OFPPortStats', (
         'rx_frame_err', 'rx_over_err', 'rx_crc_err', 'collisions'))):
     @classmethod
     def parser(cls, buf, offset):
-        port = struct.unpack_from(ofproto_v1_0.OFP_PORT_STATS_PACK_STR,
+        port = struct.unpack_from(ofproto.OFP_PORT_STATS_PACK_STR,
                                   buf, offset)
         stats = cls(*port)
-        stats.length = ofproto_v1_0.OFP_PORT_STATS_SIZE
+        stats.length = ofproto.OFP_PORT_STATS_SIZE
         return stats
 
 
@@ -1118,10 +1118,10 @@ class OFPQueueStats(ofproto_parser.namedtuple('OFPQueueStats', (
         'port_no', 'queue_id', 'tx_bytes', 'tx_packets', 'tx_errors'))):
     @classmethod
     def parser(cls, buf, offset):
-        queue = struct.unpack_from(ofproto_v1_0.OFP_QUEUE_STATS_PACK_STR,
+        queue = struct.unpack_from(ofproto.OFP_QUEUE_STATS_PACK_STR,
                                    buf, offset)
         stats = cls(*queue)
-        stats.length = ofproto_v1_0.OFP_QUEUE_STATS_SIZE
+        stats.length = ofproto.OFP_QUEUE_STATS_SIZE
         return stats
 
 
@@ -1162,8 +1162,8 @@ class NXFlowStats(StringifyMixin):
          nxflow_stats.idle_age, nxflow_stats.hard_age,
          nxflow_stats.cookie, nxflow_stats.packet_count,
          nxflow_stats.byte_count) = struct.unpack_from(
-            ofproto_v1_0.NX_FLOW_STATS_PACK_STR, buf, offset)
-        offset += ofproto_v1_0.NX_FLOW_STATS_SIZE
+            ofproto.NX_FLOW_STATS_PACK_STR, buf, offset)
+        offset += ofproto.NX_FLOW_STATS_SIZE
 
         fields = []
         match_len = nxflow_stats.match_len
@@ -1193,9 +1193,9 @@ class NXAggregateStats(ofproto_parser.namedtuple('NXAggregateStats', (
     @classmethod
     def parser(cls, buf, offset):
         agg = struct.unpack_from(
-            ofproto_v1_0.NX_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
+            ofproto.NX_AGGREGATE_STATS_REPLY_PACK_STR, buf, offset)
         stats = cls(*agg)
-        stats.length = ofproto_v1_0.NX_AGGREGATE_STATS_REPLY_SIZE
+        stats.length = ofproto.NX_AGGREGATE_STATS_REPLY_SIZE
 
         return stats
 
@@ -1219,17 +1219,17 @@ class OFPQueuePropHeader(StringifyMixin):
     @classmethod
     def parser(cls, buf, offset):
         property_, len_ = struct.unpack_from(
-            ofproto_v1_0.OFP_QUEUE_PROP_HEADER_PACK_STR, buf, offset)
+            ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR, buf, offset)
         prop_cls = cls._QUEUE_PROPERTIES[property_]
         assert property_ == prop_cls.cls_prop_type
         assert len_ == prop_cls.cls_prop_len
 
-        offset += ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE
+        offset += ofproto.OFP_QUEUE_PROP_HEADER_SIZE
         return prop_cls.parser(buf, offset)
 
 
 @OFPQueuePropHeader.register_queue_property(
-    ofproto_v1_0.OFPQT_NONE, ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE)
+    ofproto.OFPQT_NONE, ofproto.OFP_QUEUE_PROP_HEADER_SIZE)
 class OFPQueuePropNone(OFPQueuePropHeader):
     def __init__(self):
         super(OFPQueuePropNone, self).__init__()
@@ -1240,7 +1240,7 @@ class OFPQueuePropNone(OFPQueuePropHeader):
 
 
 @OFPQueuePropHeader.register_queue_property(
-    ofproto_v1_0.OFPQT_MIN_RATE, ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_SIZE)
+    ofproto.OFPQT_MIN_RATE, ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE)
 class OFPQueuePropMinRate(OFPQueuePropHeader):
     def __init__(self, rate):
         super(OFPQueuePropMinRate, self).__init__()
@@ -1249,7 +1249,7 @@ class OFPQueuePropMinRate(OFPQueuePropHeader):
     @classmethod
     def parser(cls, buf, offset):
         (rate,) = struct.unpack_from(
-            ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_PACK_STR,
+            ofproto.OFP_QUEUE_PROP_MIN_RATE_PACK_STR,
             buf, offset)
         return cls(rate)
 
@@ -1263,13 +1263,13 @@ class OFPPacketQueue(StringifyMixin):
     @classmethod
     def parser(cls, buf, offset):
         queue_id, len_ = struct.unpack_from(
-            ofproto_v1_0.OFP_PACKET_QUEUE_PQCK_STR, buf, offset)
+            ofproto.OFP_PACKET_QUEUE_PQCK_STR, buf, offset)
         packet_queue = cls(queue_id, len_)
 
         packet_queue.properties = []
-        cur_len = ofproto_v1_0.OFP_PACKET_QUEUE_SIZE
-        offset += ofproto_v1_0.OFP_PACKET_QUEUE_SIZE
-        while (cur_len + ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE <=
+        cur_len = ofproto.OFP_PACKET_QUEUE_SIZE
+        offset += ofproto.OFP_PACKET_QUEUE_SIZE
+        while (cur_len + ofproto.OFP_QUEUE_PROP_HEADER_SIZE <=
                packet_queue.len):
             prop = OFPQueuePropHeader.parser(buf, offset)
             packet_queue.properties.append(prop)
@@ -1286,14 +1286,14 @@ class OFPPacketQueue(StringifyMixin):
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_HELLO)
+@_set_msg_type(ofproto.OFPT_HELLO)
 class OFPHello(MsgBase):
     def __init__(self, datapath):
         super(OFPHello, self).__init__(datapath)
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_ERROR)
+@_set_msg_type(ofproto.OFPT_ERROR)
 class OFPErrorMsg(MsgBase):
     def __init__(self, datapath, type_=None, code=None, data=None):
         super(OFPErrorMsg, self).__init__(datapath)
@@ -1306,20 +1306,20 @@ class OFPErrorMsg(MsgBase):
         msg = super(OFPErrorMsg, cls).parser(datapath, version, msg_type,
                                              msg_len, xid, buf)
         msg.type, msg.code = struct.unpack_from(
-            ofproto_v1_0.OFP_ERROR_MSG_PACK_STR, msg.buf,
-            ofproto_v1_0.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto_v1_0.OFP_ERROR_MSG_SIZE:]
+            ofproto.OFP_ERROR_MSG_PACK_STR, msg.buf,
+            ofproto.OFP_HEADER_SIZE)
+        msg.data = msg.buf[ofproto.OFP_ERROR_MSG_SIZE:]
         return msg
 
     def _serialize_body(self):
         assert self.data is not None
-        msg_pack_into(ofproto_v1_0.OFP_ERROR_MSG_PACK_STR, self.buf,
-                      ofproto_v1_0.OFP_HEADER_SIZE, self.type, self.code)
+        msg_pack_into(ofproto.OFP_ERROR_MSG_PACK_STR, self.buf,
+                      ofproto.OFP_HEADER_SIZE, self.type, self.code)
         self.buf += self.data
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_ECHO_REQUEST)
+@_set_msg_type(ofproto.OFPT_ECHO_REQUEST)
 class OFPEchoRequest(MsgBase):
     def __init__(self, datapath, data=None):
         super(OFPEchoRequest, self).__init__(datapath)
@@ -1329,7 +1329,7 @@ class OFPEchoRequest(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPEchoRequest, cls).parser(datapath, version, msg_type,
                                                 msg_len, xid, buf)
-        msg.data = msg.buf[ofproto_v1_0.OFP_HEADER_SIZE:]
+        msg.data = msg.buf[ofproto.OFP_HEADER_SIZE:]
         return msg
 
     def _serialize_body(self):
@@ -1338,7 +1338,7 @@ class OFPEchoRequest(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_ECHO_REPLY)
+@_set_msg_type(ofproto.OFPT_ECHO_REPLY)
 class OFPEchoReply(MsgBase):
     def __init__(self, datapath, data=None):
         super(OFPEchoReply, self).__init__(datapath)
@@ -1348,7 +1348,7 @@ class OFPEchoReply(MsgBase):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPEchoReply, cls).parser(datapath, version, msg_type,
                                               msg_len, xid, buf)
-        msg.data = msg.buf[ofproto_v1_0.OFP_HEADER_SIZE:]
+        msg.data = msg.buf[ofproto.OFP_HEADER_SIZE:]
         return msg
 
     def _serialize_body(self):
@@ -1357,7 +1357,7 @@ class OFPEchoReply(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_VENDOR)
+@_set_msg_type(ofproto.OFPT_VENDOR)
 class OFPVendor(MsgBase):
     _VENDORS = {}
 
@@ -1378,20 +1378,20 @@ class OFPVendor(MsgBase):
         msg = super(OFPVendor, cls).parser(datapath, version, msg_type,
                                            msg_len, xid, buf)
         (msg.vendor,) = struct.unpack_from(
-            ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR, msg.buf,
-            ofproto_v1_0.OFP_HEADER_SIZE)
+            ofproto.OFP_VENDOR_HEADER_PACK_STR, msg.buf,
+            ofproto.OFP_HEADER_SIZE)
 
         cls_ = cls._VENDORS.get(msg.vendor)
         if cls_:
             msg.data = cls_.parser(datapath, msg.buf, 0)
         else:
-            msg.data = msg.buf[ofproto_v1_0.OFP_VENDOR_HEADER_SIZE:]
+            msg.data = msg.buf[ofproto.OFP_VENDOR_HEADER_SIZE:]
 
         return msg
 
     def serialize_header(self):
-        msg_pack_into(ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.vendor)
+        msg_pack_into(ofproto.OFP_VENDOR_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE, self.vendor)
 
     def _serialize_body(self):
         assert self.data is not None
@@ -1399,7 +1399,7 @@ class OFPVendor(MsgBase):
         self.buf += self.data
 
 
-@OFPVendor.register_vendor(ofproto_v1_0.NX_VENDOR_ID)
+@OFPVendor.register_vendor(ofproto.NX_VENDOR_ID)
 class NiciraHeader(OFPVendor):
     _NX_SUBTYPES = {}
 
@@ -1413,42 +1413,42 @@ class NiciraHeader(OFPVendor):
 
     def __init__(self, datapath, subtype):
         super(NiciraHeader, self).__init__(datapath)
-        self.vendor = ofproto_v1_0.NX_VENDOR_ID
+        self.vendor = ofproto.NX_VENDOR_ID
         self.subtype = subtype
 
     def serialize_header(self):
         super(NiciraHeader, self).serialize_header()
-        msg_pack_into(ofproto_v1_0.NICIRA_HEADER_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+        msg_pack_into(ofproto.NICIRA_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
                       self.vendor, self.subtype)
 
     @classmethod
     def parser(cls, datapath, buf, offset):
         vendor, subtype = struct.unpack_from(
-            ofproto_v1_0.NICIRA_HEADER_PACK_STR, buf,
-            offset + ofproto_v1_0.OFP_HEADER_SIZE)
+            ofproto.NICIRA_HEADER_PACK_STR, buf,
+            offset + ofproto.OFP_HEADER_SIZE)
         cls_ = cls._NX_SUBTYPES.get(subtype)
         return cls_.parser(datapath, buf,
-                           offset + ofproto_v1_0.NICIRA_HEADER_SIZE)
+                           offset + ofproto.NICIRA_HEADER_SIZE)
 
 
 class NXTSetFlowFormat(NiciraHeader):
     def __init__(self, datapath, flow_format):
         super(NXTSetFlowFormat, self).__init__(
-            datapath, ofproto_v1_0.NXT_SET_FLOW_FORMAT)
+            datapath, ofproto.NXT_SET_FLOW_FORMAT)
         self.format = flow_format
 
     def _serialize_body(self):
         self.serialize_header()
-        msg_pack_into(ofproto_v1_0.NX_SET_FLOW_FORMAT_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.format)
+        msg_pack_into(ofproto.NX_SET_FLOW_FORMAT_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE, self.format)
 
 
 class NXTFlowMod(NiciraHeader):
     def __init__(self, datapath, cookie, command,
                  idle_timeout=0, hard_timeout=0,
-                 priority=ofproto_v1_0.OFP_DEFAULT_PRIORITY,
-                 buffer_id=0xffffffff, out_port=ofproto_v1_0.OFPP_NONE,
+                 priority=ofproto.OFP_DEFAULT_PRIORITY,
+                 buffer_id=0xffffffff, out_port=ofproto.OFPP_NONE,
                  flags=0, rule=None, actions=None):
 
         # the argument, rule, is positioned at the one before the last due
@@ -1459,7 +1459,7 @@ class NXTFlowMod(NiciraHeader):
 
         if actions is None:
             actions = []
-        super(NXTFlowMod, self).__init__(datapath, ofproto_v1_0.NXT_FLOW_MOD)
+        super(NXTFlowMod, self).__init__(datapath, ofproto.NXT_FLOW_MOD)
         self.cookie = cookie
         self.command = command
         self.idle_timeout = idle_timeout
@@ -1474,12 +1474,12 @@ class NXTFlowMod(NiciraHeader):
     def _serialize_body(self):
         self.serialize_header()
 
-        offset = ofproto_v1_0.NX_FLOW_MOD_SIZE
+        offset = ofproto.NX_FLOW_MOD_SIZE
         match_len = nx_match.serialize_nxm_match(self.rule, self.buf, offset)
         offset += nx_match.round_up(match_len)
 
-        msg_pack_into(ofproto_v1_0.NX_FLOW_MOD_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+        msg_pack_into(ofproto.NX_FLOW_MOD_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE,
                       self.cookie, self.command, self.idle_timeout,
                       self.hard_timeout, self.priority, self.buffer_id,
                       self.out_port, self.flags, match_len)
@@ -1493,49 +1493,49 @@ class NXTFlowMod(NiciraHeader):
 class NXTRoleRequest(NiciraHeader):
     def __init__(self, datapath, role):
         super(NXTRoleRequest, self).__init__(
-            datapath, ofproto_v1_0.NXT_ROLE_REQUEST)
+            datapath, ofproto.NXT_ROLE_REQUEST)
         self.role = role
 
     def _serialize_body(self):
         self.serialize_header()
-        msg_pack_into(ofproto_v1_0.NX_ROLE_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE, self.role)
+        msg_pack_into(ofproto.NX_ROLE_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE, self.role)
 
 
-@NiciraHeader.register_nx_subtype(ofproto_v1_0.NXT_ROLE_REPLY)
+@NiciraHeader.register_nx_subtype(ofproto.NXT_ROLE_REPLY)
 class NXTRoleReply(NiciraHeader):
     def __init__(self, datapath, role):
         super(NXTRoleReply, self).__init__(
-            datapath, ofproto_v1_0.NXT_ROLE_REPLY)
+            datapath, ofproto.NXT_ROLE_REPLY)
         self.role = role
 
     @classmethod
     def parser(cls, datapath, buf, offset):
         (role,) = struct.unpack_from(
-            ofproto_v1_0.NX_ROLE_PACK_STR, buf, offset)
+            ofproto.NX_ROLE_PACK_STR, buf, offset)
         return cls(datapath, role)
 
 
 class NXTFlowModTableId(NiciraHeader):
     def __init__(self, datapath, set_):
         super(NXTFlowModTableId, self).__init__(
-            datapath, ofproto_v1_0.NXT_FLOW_MOD_TABLE_ID)
+            datapath, ofproto.NXT_FLOW_MOD_TABLE_ID)
         self.set = set_
 
     def _serialize_body(self):
         self.serialize_header()
-        msg_pack_into(ofproto_v1_0.NX_FLOW_MOD_TABLE_ID_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+        msg_pack_into(ofproto.NX_FLOW_MOD_TABLE_ID_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE,
                       self.set)
 
 
-@NiciraHeader.register_nx_subtype(ofproto_v1_0.NXT_FLOW_REMOVED)
+@NiciraHeader.register_nx_subtype(ofproto.NXT_FLOW_REMOVED)
 class NXTFlowRemoved(NiciraHeader):
     def __init__(self, datapath, cookie, priority, reason,
                  duration_sec, duration_nsec, idle_timeout, match_len,
                  packet_count, byte_count, match):
         super(NXTFlowRemoved, self).__init__(
-            datapath, ofproto_v1_0.NXT_FLOW_REMOVED)
+            datapath, ofproto.NXT_FLOW_REMOVED)
         self.cookie = cookie
         self.priority = priority
         self.reason = reason
@@ -1552,9 +1552,9 @@ class NXTFlowRemoved(NiciraHeader):
         (cookie, priority, reason, duration_sec, duration_nsec,
          idle_timeout, match_len,
          packet_count, byte_count) = struct.unpack_from(
-            ofproto_v1_0.NX_FLOW_REMOVED_PACK_STR, buf, offset)
-        offset += (ofproto_v1_0.NX_FLOW_REMOVED_SIZE
-                   - ofproto_v1_0.NICIRA_HEADER_SIZE)
+            ofproto.NX_FLOW_REMOVED_PACK_STR, buf, offset)
+        offset += (ofproto.NX_FLOW_REMOVED_SIZE
+                   - ofproto.NICIRA_HEADER_SIZE)
         match = nx_match.NXMatch.parser(buf, offset, match_len)
         return cls(datapath, cookie, priority, reason, duration_sec,
                    duration_nsec, idle_timeout, match_len, packet_count,
@@ -1564,22 +1564,22 @@ class NXTFlowRemoved(NiciraHeader):
 class NXTSetPacketInFormat(NiciraHeader):
     def __init__(self, datapath, packet_in_format):
         super(NXTSetPacketInFormat, self).__init__(
-            datapath, ofproto_v1_0.NXT_SET_PACKET_IN_FORMAT)
+            datapath, ofproto.NXT_SET_PACKET_IN_FORMAT)
         self.format = packet_in_format
 
     def _serialize_body(self):
         self.serialize_header()
-        msg_pack_into(ofproto_v1_0.NX_SET_PACKET_IN_FORMAT_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+        msg_pack_into(ofproto.NX_SET_PACKET_IN_FORMAT_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE,
                       self.format)
 
 
-@NiciraHeader.register_nx_subtype(ofproto_v1_0.NXT_PACKET_IN)
+@NiciraHeader.register_nx_subtype(ofproto.NXT_PACKET_IN)
 class NXTPacketIn(NiciraHeader):
     def __init__(self, datapath, buffer_id, total_len, reason, table_id,
                  cookie, match_len, match, frame):
         super(NXTPacketIn, self).__init__(
-            datapath, ofproto_v1_0.NXT_PACKET_IN)
+            datapath, ofproto.NXT_PACKET_IN)
         self.buffer_id = buffer_id
         self.total_len = total_len
         self.reason = reason
@@ -1593,10 +1593,10 @@ class NXTPacketIn(NiciraHeader):
     def parser(cls, datapath, buf, offset):
         (buffer_id, total_len, reason, table_id,
          cookie, match_len) = struct.unpack_from(
-            ofproto_v1_0.NX_PACKET_IN_PACK_STR, buf, offset)
+            ofproto.NX_PACKET_IN_PACK_STR, buf, offset)
 
-        offset += (ofproto_v1_0.NX_PACKET_IN_SIZE
-                   - ofproto_v1_0.NICIRA_HEADER_SIZE)
+        offset += (ofproto.NX_PACKET_IN_SIZE
+                   - ofproto.NICIRA_HEADER_SIZE)
 
         match = nx_match.NXMatch.parser(buf, offset, match_len)
         offset += (match_len + 7) / 8 * 8
@@ -1610,7 +1610,7 @@ class NXTPacketIn(NiciraHeader):
 class NXTFlowAge(NiciraHeader):
     def __init__(self, datapath):
         super(NXTFlowAge, self).__init__(
-            datapath, ofproto_v1_0.NXT_FLOW_AGE)
+            datapath, ofproto.NXT_FLOW_AGE)
 
     def _serialize_body(self):
         self.serialize_header()
@@ -1620,15 +1620,15 @@ class NXTSetAsyncConfig(NiciraHeader):
     def __init__(self, datapath, packet_in_mask, port_status_mask,
                  flow_removed_mask):
         super(NXTSetAsyncConfig, self).__init__(
-            datapath, ofproto_v1_0.NXT_SET_ASYNC_CONFIG)
+            datapath, ofproto.NXT_SET_ASYNC_CONFIG)
         self.packet_in_mask = packet_in_mask
         self.port_status_mask = port_status_mask
         self.flow_removed_mask = flow_removed_mask
 
     def _serialize_body(self):
         self.serialize_header()
-        msg_pack_into(ofproto_v1_0.NX_ASYNC_CONFIG_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+        msg_pack_into(ofproto.NX_ASYNC_CONFIG_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE,
                       self.packet_in_mask[0], self.packet_in_mask[1],
                       self.port_status_mask[0], self.port_status_mask[1],
                       self.flow_removed_mask[0], self.flow_removed_mask[1])
@@ -1637,13 +1637,13 @@ class NXTSetAsyncConfig(NiciraHeader):
 class NXTSetControllerId(NiciraHeader):
     def __init__(self, datapath, controller_id):
         super(NXTSetControllerId, self).__init__(
-            datapath, ofproto_v1_0.NXT_SET_CONTROLLER_ID)
+            datapath, ofproto.NXT_SET_CONTROLLER_ID)
         self.controller_id = controller_id
 
     def _serialize_body(self):
         self.serialize_header()
-        msg_pack_into(ofproto_v1_0.NX_CONTROLLER_ID_PACK_STR,
-                      self.buf, ofproto_v1_0.NICIRA_HEADER_SIZE,
+        msg_pack_into(ofproto.NX_CONTROLLER_ID_PACK_STR,
+                      self.buf, ofproto.NICIRA_HEADER_SIZE,
                       self.controller_id)
 
 
@@ -1654,7 +1654,7 @@ class NXTSetControllerId(NiciraHeader):
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_FEATURES_REPLY)
+@_set_msg_type(ofproto.OFPT_FEATURES_REPLY)
 class OFPSwitchFeatures(MsgBase):
     def __init__(self, datapath, datapath_id=None, n_buffers=None,
                  n_tables=None, capabilities=None, actions=None, ports=None):
@@ -1675,24 +1675,24 @@ class OFPSwitchFeatures(MsgBase):
          msg.n_tables,
          msg.capabilities,
          msg.actions) = struct.unpack_from(
-            ofproto_v1_0.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
-            ofproto_v1_0.OFP_HEADER_SIZE)
+            ofproto.OFP_SWITCH_FEATURES_PACK_STR, msg.buf,
+            ofproto.OFP_HEADER_SIZE)
 
         msg.ports = {}
-        n_ports = ((msg_len - ofproto_v1_0.OFP_SWITCH_FEATURES_SIZE) /
-                   ofproto_v1_0.OFP_PHY_PORT_SIZE)
-        offset = ofproto_v1_0.OFP_SWITCH_FEATURES_SIZE
+        n_ports = ((msg_len - ofproto.OFP_SWITCH_FEATURES_SIZE) /
+                   ofproto.OFP_PHY_PORT_SIZE)
+        offset = ofproto.OFP_SWITCH_FEATURES_SIZE
         for _i in range(n_ports):
             port = OFPPhyPort.parser(msg.buf, offset)
             # print 'port = %s' % str(port)
             msg.ports[port.port_no] = port
-            offset += ofproto_v1_0.OFP_PHY_PORT_SIZE
+            offset += ofproto.OFP_PHY_PORT_SIZE
 
         return msg
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_PORT_STATUS)
+@_set_msg_type(ofproto.OFPT_PORT_STATUS)
 class OFPPortStatus(MsgBase):
     def __init__(self, datapath, reason=None, desc=None):
         super(OFPPortStatus, self).__init__(datapath)
@@ -1704,15 +1704,15 @@ class OFPPortStatus(MsgBase):
         msg = super(OFPPortStatus, cls).parser(datapath, version, msg_type,
                                                msg_len, xid, buf)
         msg.reason = struct.unpack_from(
-            ofproto_v1_0.OFP_PORT_STATUS_PACK_STR,
-            msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)[0]
+            ofproto.OFP_PORT_STATUS_PACK_STR,
+            msg.buf, ofproto.OFP_HEADER_SIZE)[0]
         msg.desc = OFPPhyPort.parser(msg.buf,
-                                     ofproto_v1_0.OFP_PORT_STATUS_DESC_OFFSET)
+                                     ofproto.OFP_PORT_STATUS_DESC_OFFSET)
         return msg
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_PACKET_IN)
+@_set_msg_type(ofproto.OFPT_PACKET_IN)
 class OFPPacketIn(MsgBase):
     def __init__(self, datapath, buffer_id=None, total_len=None, in_port=None,
                  reason=None, data=None):
@@ -1731,9 +1731,9 @@ class OFPPacketIn(MsgBase):
          msg.total_len,
          msg.in_port,
          msg.reason) = struct.unpack_from(
-            ofproto_v1_0.OFP_PACKET_IN_PACK_STR,
-            msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto_v1_0.OFP_PACKET_IN_SIZE:]
+            ofproto.OFP_PACKET_IN_PACK_STR,
+            msg.buf, ofproto.OFP_HEADER_SIZE)
+        msg.data = msg.buf[ofproto.OFP_PACKET_IN_SIZE:]
         if msg.total_len < len(msg.data):
             # discard padding for 8-byte alignment of OFP packet
             msg.data = msg.data[:msg.total_len]
@@ -1741,7 +1741,7 @@ class OFPPacketIn(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_GET_CONFIG_REPLY)
+@_set_msg_type(ofproto.OFPT_GET_CONFIG_REPLY)
 class OFPGetConfigReply(MsgBase):
     def __init__(self, datapath):
         super(OFPGetConfigReply, self).__init__(datapath)
@@ -1751,20 +1751,20 @@ class OFPGetConfigReply(MsgBase):
         msg = super(OFPGetConfigReply, cls).parser(datapath, version, msg_type,
                                                    msg_len, xid, buf)
         (msg.flags, msg.miss_send_len) = struct.unpack_from(
-            ofproto_v1_0.OFP_SWITCH_CONFIG_PACK_STR,
-            msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
+            ofproto.OFP_SWITCH_CONFIG_PACK_STR,
+            msg.buf, ofproto.OFP_HEADER_SIZE)
         return msg
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_BARRIER_REPLY)
+@_set_msg_type(ofproto.OFPT_BARRIER_REPLY)
 class OFPBarrierReply(MsgBase):
     def __init__(self, datapath):
         super(OFPBarrierReply, self).__init__(datapath)
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_FLOW_REMOVED)
+@_set_msg_type(ofproto.OFPT_FLOW_REMOVED)
 class OFPFlowRemoved(MsgBase):
     def __init__(self, datapath):
         super(OFPFlowRemoved, self).__init__(datapath)
@@ -1774,7 +1774,7 @@ class OFPFlowRemoved(MsgBase):
         msg = super(OFPFlowRemoved, cls).parser(datapath, version, msg_type,
                                                 msg_len, xid, buf)
 
-        msg.match = OFPMatch.parse(msg.buf, ofproto_v1_0.OFP_HEADER_SIZE)
+        msg.match = OFPMatch.parse(msg.buf, ofproto.OFP_HEADER_SIZE)
 
         (msg.cookie,
          msg.priority,
@@ -1784,14 +1784,14 @@ class OFPFlowRemoved(MsgBase):
          msg.idle_timeout,
          msg.packet_count,
          msg.byte_count) = struct.unpack_from(
-            ofproto_v1_0.OFP_FLOW_REMOVED_PACK_STR0, msg.buf,
-            ofproto_v1_0.OFP_HEADER_SIZE + ofproto_v1_0.OFP_MATCH_SIZE)
+            ofproto.OFP_FLOW_REMOVED_PACK_STR0, msg.buf,
+            ofproto.OFP_HEADER_SIZE + ofproto.OFP_MATCH_SIZE)
 
         return msg
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_QUEUE_GET_CONFIG_REPLY)
+@_set_msg_type(ofproto.OFPT_QUEUE_GET_CONFIG_REPLY)
 class OFPQueueGetConfigReply(MsgBase):
     def __init__(self, datapath):
         super(OFPQueueGetConfigReply, self).__init__(datapath)
@@ -1801,13 +1801,13 @@ class OFPQueueGetConfigReply(MsgBase):
         msg = super(OFPQueueGetConfigReply, cls).parser(
             datapath, version, msg_type, msg_len, xid, buf)
 
-        offset = ofproto_v1_0.OFP_HEADER_SIZE
+        offset = ofproto.OFP_HEADER_SIZE
         (msg.port,) = struct.unpack_from(
-            ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR, msg.buf, offset)
+            ofproto.OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR, msg.buf, offset)
 
         msg.queues = []
-        offset = ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
-        while offset + ofproto_v1_0.OFP_PACKET_QUEUE_SIZE <= msg_len:
+        offset = ofproto.OFP_QUEUE_GET_CONFIG_REPLY_SIZE
+        while offset + ofproto.OFP_PACKET_QUEUE_SIZE <= msg_len:
             queue = OFPPacketQueue.parser(msg.buf, offset)
             msg.queues.append(queue)
 
@@ -1825,7 +1825,7 @@ def _set_stats_type(stats_type, stats_body_cls):
 
 
 @_register_parser
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPStatsReply(MsgBase):
     _STATS_MSG_TYPES = {}
 
@@ -1865,14 +1865,14 @@ class OFPStatsReply(MsgBase):
         msg = MsgBase.parser.__func__(
             cls, datapath, version, msg_type, msg_len, xid, buf)
         msg.body = msg.parser_stats_body(msg.buf, msg.msg_len,
-                                         ofproto_v1_0.OFP_STATS_MSG_SIZE)
+                                         ofproto.OFP_STATS_MSG_SIZE)
         return msg
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        type_, flags = struct.unpack_from(ofproto_v1_0.OFP_STATS_MSG_PACK_STR,
+        type_, flags = struct.unpack_from(ofproto.OFP_STATS_MSG_PACK_STR,
                                           buffer(buf),
-                                          ofproto_v1_0.OFP_HEADER_SIZE)
+                                          ofproto.OFP_HEADER_SIZE)
         stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
         msg = stats_type_cls.parser_stats(
             datapath, version, msg_type, msg_len, xid, buf)
@@ -1882,56 +1882,56 @@ class OFPStatsReply(MsgBase):
 
 
 @OFPStatsReply.register_stats_type(body_single_struct=True)
-@_set_stats_type(ofproto_v1_0.OFPST_DESC, OFPDescStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_DESC, OFPDescStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPDescStatsReply(OFPStatsReply):
     def __init__(self, datapath):
         super(OFPDescStatsReply, self).__init__(datapath)
 
 
 @OFPStatsReply.register_stats_type()
-@_set_stats_type(ofproto_v1_0.OFPST_FLOW, OFPFlowStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_FLOW, OFPFlowStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPFlowStatsReply(OFPStatsReply):
     def __init__(self, datapath):
         super(OFPFlowStatsReply, self).__init__(datapath)
 
 
 @OFPStatsReply.register_stats_type()
-@_set_stats_type(ofproto_v1_0.OFPST_AGGREGATE, OFPAggregateStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_AGGREGATE, OFPAggregateStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPAggregateStatsReply(OFPStatsReply):
     def __init__(self, datapath):
         super(OFPAggregateStatsReply, self).__init__(datapath)
 
 
 @OFPStatsReply.register_stats_type()
-@_set_stats_type(ofproto_v1_0.OFPST_TABLE, OFPTableStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_TABLE, OFPTableStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPTableStatsReply(OFPStatsReply):
     def __init__(self, datapath):
         super(OFPTableStatsReply, self).__init__(datapath)
 
 
 @OFPStatsReply.register_stats_type()
-@_set_stats_type(ofproto_v1_0.OFPST_PORT, OFPPortStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_PORT, OFPPortStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPPortStatsReply(OFPStatsReply):
     def __init__(self, datapath):
         super(OFPPortStatsReply, self).__init__(datapath)
 
 
 @OFPStatsReply.register_stats_type()
-@_set_stats_type(ofproto_v1_0.OFPST_QUEUE, OFPQueueStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_QUEUE, OFPQueueStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPQueueStatsReply(OFPStatsReply):
     def __init__(self, datapath):
         super(OFPQueueStatsReply, self).__init__(datapath)
 
 
 @OFPStatsReply.register_stats_type()
-@_set_stats_type(ofproto_v1_0.OFPST_VENDOR, OFPVendorStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REPLY)
+@_set_stats_type(ofproto.OFPST_VENDOR, OFPVendorStats)
+@_set_msg_type(ofproto.OFPT_STATS_REPLY)
 class OFPVendorStatsReply(OFPStatsReply):
     _STATS_VENDORS = {}
 
@@ -1950,8 +1950,8 @@ class OFPVendorStatsReply(OFPStatsReply):
     def parser_stats(cls, datapath, version, msg_type, msg_len, xid,
                      buf):
         (type_,) = struct.unpack_from(
-            ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR, buffer(buf),
-            ofproto_v1_0.OFP_STATS_MSG_SIZE)
+            ofproto.OFP_VENDOR_STATS_MSG_PACK_STR, buffer(buf),
+            ofproto.OFP_STATS_MSG_SIZE)
 
         cls_ = cls._STATS_VENDORS.get(type_)
 
@@ -1960,16 +1960,16 @@ class OFPVendorStatsReply(OFPStatsReply):
                 cls, datapath, version, msg_type, msg_len, xid, buf)
             body_cls = cls.cls_stats_body_cls
             body = body_cls.parser(buf,
-                                   ofproto_v1_0.OFP_STATS_MSG_SIZE)
+                                   ofproto.OFP_STATS_MSG_SIZE)
             msg.body = body
             return msg
 
         return cls_.parser(
             datapath, version, msg_type, msg_len, xid, buf,
-            ofproto_v1_0.OFP_VENDOR_STATS_MSG_SIZE)
+            ofproto.OFP_VENDOR_STATS_MSG_SIZE)
 
 
-@OFPVendorStatsReply.register_stats_vendor(ofproto_v1_0.NX_VENDOR_ID)
+@OFPVendorStatsReply.register_stats_vendor(ofproto.NX_VENDOR_ID)
 class NXStatsReply(OFPStatsReply):
     _NX_STATS_TYPES = {}
 
@@ -2011,8 +2011,8 @@ class NXStatsReply(OFPStatsReply):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf,
                offset):
         (type_,) = struct.unpack_from(
-            ofproto_v1_0.NX_STATS_MSG_PACK_STR, buffer(buf), offset)
-        offset += ofproto_v1_0.NX_STATS_MSG0_SIZE
+            ofproto.NX_STATS_MSG_PACK_STR, buffer(buf), offset)
+        offset += ofproto.NX_STATS_MSG0_SIZE
 
         cls_ = cls._NX_STATS_TYPES.get(type_)
 
@@ -2023,14 +2023,14 @@ class NXStatsReply(OFPStatsReply):
 
 
 @NXStatsReply.register_nx_stats_type()
-@_set_stats_type(ofproto_v1_0.NXST_FLOW, NXFlowStats)
+@_set_stats_type(ofproto.NXST_FLOW, NXFlowStats)
 class NXFlowStatsReply(NXStatsReply):
     def __init__(self, datapath):
         super(NXFlowStatsReply, self).__init__(datapath)
 
 
 @NXStatsReply.register_nx_stats_type()
-@_set_stats_type(ofproto_v1_0.NXST_AGGREGATE, NXAggregateStats)
+@_set_stats_type(ofproto.NXST_AGGREGATE, NXAggregateStats)
 class NXAggregateStatsReply(NXStatsReply):
     def __init__(self, datapath):
         super(NXAggregateStatsReply, self).__init__(datapath)
@@ -2043,19 +2043,19 @@ class NXAggregateStatsReply(NXStatsReply):
 
 
 @_set_msg_reply(OFPSwitchFeatures)
-@_set_msg_type(ofproto_v1_0.OFPT_FEATURES_REQUEST)
+@_set_msg_type(ofproto.OFPT_FEATURES_REQUEST)
 class OFPFeaturesRequest(MsgBase):
     def __init__(self, datapath):
         super(OFPFeaturesRequest, self).__init__(datapath)
 
 
-@_set_msg_type(ofproto_v1_0.OFPT_GET_CONFIG_REQUEST)
+@_set_msg_type(ofproto.OFPT_GET_CONFIG_REQUEST)
 class OFPGetConfigRequest(MsgBase):
     def __init__(self, datapath):
         super(OFPGetConfigRequest, self).__init__(datapath)
 
 
-@_set_msg_type(ofproto_v1_0.OFPT_SET_CONFIG)
+@_set_msg_type(ofproto.OFPT_SET_CONFIG)
 class OFPSetConfig(MsgBase):
     def __init__(self, datapath, flags=None, miss_send_len=None):
         super(OFPSetConfig, self).__init__(datapath)
@@ -2065,12 +2065,12 @@ class OFPSetConfig(MsgBase):
     def _serialize_body(self):
         assert self.flags is not None
         assert self.miss_send_len is not None
-        msg_pack_into(ofproto_v1_0.OFP_SWITCH_CONFIG_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+        msg_pack_into(ofproto.OFP_SWITCH_CONFIG_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
                       self.flags, self.miss_send_len)
 
 
-@_set_msg_type(ofproto_v1_0.OFPT_PACKET_OUT)
+@_set_msg_type(ofproto.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
     def __init__(self, datapath, buffer_id=None, in_port=None, actions=None,
                  data=None):
@@ -2087,7 +2087,7 @@ class OFPPacketOut(MsgBase):
         assert self.actions is not None
 
         self._actions_len = 0
-        offset = ofproto_v1_0.OFP_PACKET_OUT_SIZE
+        offset = ofproto.OFP_PACKET_OUT_SIZE
         for a in self.actions:
             a.serialize(self.buf, offset)
             offset += a.len
@@ -2097,17 +2097,17 @@ class OFPPacketOut(MsgBase):
             assert self.buffer_id == 0xffffffff
             self.buf += self.data
 
-        msg_pack_into(ofproto_v1_0.OFP_PACKET_OUT_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+        msg_pack_into(ofproto.OFP_PACKET_OUT_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
                       self.buffer_id, self.in_port, self._actions_len)
 
 
-@_set_msg_type(ofproto_v1_0.OFPT_FLOW_MOD)
+@_set_msg_type(ofproto.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
     def __init__(self, datapath, match, cookie, command,
                  idle_timeout=0, hard_timeout=0,
-                 priority=ofproto_v1_0.OFP_DEFAULT_PRIORITY,
-                 buffer_id=0xffffffff, out_port=ofproto_v1_0.OFPP_NONE,
+                 priority=ofproto.OFP_DEFAULT_PRIORITY,
+                 buffer_id=0xffffffff, out_port=ofproto.OFPP_NONE,
                  flags=0, actions=None):
         if actions is None:
             actions = []
@@ -2124,24 +2124,24 @@ class OFPFlowMod(MsgBase):
         self.actions = actions
 
     def _serialize_body(self):
-        offset = ofproto_v1_0.OFP_HEADER_SIZE
+        offset = ofproto.OFP_HEADER_SIZE
         self.match.serialize(self.buf, offset)
 
-        offset += ofproto_v1_0.OFP_MATCH_SIZE
-        msg_pack_into(ofproto_v1_0.OFP_FLOW_MOD_PACK_STR0, self.buf, offset,
+        offset += ofproto.OFP_MATCH_SIZE
+        msg_pack_into(ofproto.OFP_FLOW_MOD_PACK_STR0, self.buf, offset,
                       self.cookie, self.command,
                       self.idle_timeout, self.hard_timeout,
                       self.priority, self.buffer_id, self.out_port,
                       self.flags)
 
-        offset = ofproto_v1_0.OFP_FLOW_MOD_SIZE
+        offset = ofproto.OFP_FLOW_MOD_SIZE
         if self.actions is not None:
             for a in self.actions:
                 a.serialize(self.buf, offset)
                 offset += a.len
 
 
-@_set_msg_type(ofproto_v1_0.OFPT_PORT_MOD)
+@_set_msg_type(ofproto.OFPT_PORT_MOD)
 class OFPPortMod(MsgBase):
 
     _TYPE = {
@@ -2159,29 +2159,29 @@ class OFPPortMod(MsgBase):
         self.advertise = advertise
 
     def _serialize_body(self):
-        msg_pack_into(ofproto_v1_0.OFP_PORT_MOD_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+        msg_pack_into(ofproto.OFP_PORT_MOD_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
                       self.port_no, addrconv.mac.text_to_bin(self.hw_addr),
                       self.config, self.mask, self.advertise)
 
 
 @_set_msg_reply(OFPBarrierReply)
-@_set_msg_type(ofproto_v1_0.OFPT_BARRIER_REQUEST)
+@_set_msg_type(ofproto.OFPT_BARRIER_REQUEST)
 class OFPBarrierRequest(MsgBase):
     def __init__(self, datapath):
         super(OFPBarrierRequest, self).__init__(datapath)
 
 
 @_set_msg_reply(OFPQueueGetConfigReply)
-@_set_msg_type(ofproto_v1_0.OFPT_QUEUE_GET_CONFIG_REQUEST)
+@_set_msg_type(ofproto.OFPT_QUEUE_GET_CONFIG_REQUEST)
 class OFPQueueGetConfigRequest(MsgBase):
     def __init__(self, datapath, port):
         super(OFPQueueGetConfigRequest, self).__init__(datapath)
         self.port = port
 
     def _serialize_body(self):
-        msg_pack_into(ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE, self.port)
+        msg_pack_into(ofproto.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE, self.port)
 
 
 class OFPStatsRequest(MsgBase):
@@ -2196,15 +2196,15 @@ class OFPStatsRequest(MsgBase):
         pass
 
     def _serialize_body(self):
-        msg_pack_into(ofproto_v1_0.OFP_STATS_MSG_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_HEADER_SIZE,
+        msg_pack_into(ofproto.OFP_STATS_MSG_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
                       self.type, self.flags)
         self._serialize_stats_body()
 
 
 @_set_msg_reply(OFPDescStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_DESC, OFPDescStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_DESC, OFPDescStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPDescStatsRequest(OFPStatsRequest):
     def __init__(self, datapath, flags):
         super(OFPDescStatsRequest, self).__init__(datapath, flags)
@@ -2218,17 +2218,17 @@ class OFPFlowStatsRequestBase(OFPStatsRequest):
         self.out_port = out_port
 
     def _serialize_stats_body(self):
-        offset = ofproto_v1_0.OFP_STATS_MSG_SIZE
+        offset = ofproto.OFP_STATS_MSG_SIZE
         self.match.serialize(self.buf, offset)
 
-        offset += ofproto_v1_0.OFP_MATCH_SIZE
-        msg_pack_into(ofproto_v1_0.OFP_FLOW_STATS_REQUEST_ID_PORT_STR,
+        offset += ofproto.OFP_MATCH_SIZE
+        msg_pack_into(ofproto.OFP_FLOW_STATS_REQUEST_ID_PORT_STR,
                       self.buf, offset, self.table_id, self.out_port)
 
 
 @_set_msg_reply(OFPFlowStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_FLOW, OFPFlowStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_FLOW, OFPFlowStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPFlowStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, match, table_id, out_port):
         super(OFPFlowStatsRequest, self).__init__(
@@ -2236,8 +2236,8 @@ class OFPFlowStatsRequest(OFPFlowStatsRequestBase):
 
 
 @_set_msg_reply(OFPAggregateStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_AGGREGATE, OFPAggregateStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_AGGREGATE, OFPAggregateStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
     def __init__(self, datapath, flags, match, table_id, out_port):
         super(OFPAggregateStatsRequest, self).__init__(
@@ -2245,29 +2245,29 @@ class OFPAggregateStatsRequest(OFPFlowStatsRequestBase):
 
 
 @_set_msg_reply(OFPTableStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_TABLE, OFPTableStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_TABLE, OFPTableStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPTableStatsRequest(OFPStatsRequest):
     def __init__(self, datapath, flags):
         super(OFPTableStatsRequest, self).__init__(datapath, flags)
 
 
 @_set_msg_reply(OFPPortStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_PORT, OFPPortStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_PORT, OFPPortStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPPortStatsRequest(OFPStatsRequest):
     def __init__(self, datapath, flags, port_no):
         super(OFPPortStatsRequest, self).__init__(datapath, flags)
         self.port_no = port_no
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto_v1_0.OFP_PORT_STATS_REQUEST_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE, self.port_no)
+        msg_pack_into(ofproto.OFP_PORT_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto.OFP_STATS_MSG_SIZE, self.port_no)
 
 
 @_set_msg_reply(OFPQueueStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_QUEUE, OFPQueueStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_QUEUE, OFPQueueStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPQueueStatsRequest(OFPStatsRequest):
     def __init__(self, datapath, flags, port_no, queue_id):
         super(OFPQueueStatsRequest, self).__init__(datapath, flags)
@@ -2275,14 +2275,14 @@ class OFPQueueStatsRequest(OFPStatsRequest):
         self.queue_id = queue_id
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto_v1_0.OFP_QUEUE_STATS_REQUEST_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
+        msg_pack_into(ofproto.OFP_QUEUE_STATS_REQUEST_PACK_STR,
+                      self.buf, ofproto.OFP_STATS_MSG_SIZE,
                       self.port_no, self.queue_id)
 
 
 @_set_msg_reply(OFPVendorStatsReply)
-@_set_stats_type(ofproto_v1_0.OFPST_VENDOR, OFPVendorStats)
-@_set_msg_type(ofproto_v1_0.OFPT_STATS_REQUEST)
+@_set_stats_type(ofproto.OFPST_VENDOR, OFPVendorStats)
+@_set_msg_type(ofproto.OFPT_STATS_REQUEST)
 class OFPVendorStatsRequest(OFPStatsRequest):
     def __init__(self, datapath, flags, vendor, specific_data=None):
         super(OFPVendorStatsRequest, self).__init__(datapath, flags)
@@ -2293,8 +2293,8 @@ class OFPVendorStatsRequest(OFPStatsRequest):
         self.buf += self.specific_data
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR,
-                      self.buf, ofproto_v1_0.OFP_STATS_MSG_SIZE,
+        msg_pack_into(ofproto.OFP_VENDOR_STATS_MSG_PACK_STR,
+                      self.buf, ofproto.OFP_STATS_MSG_SIZE,
                       self.vendor)
         self._serialize_vendor_stats()
 
@@ -2302,15 +2302,15 @@ class OFPVendorStatsRequest(OFPStatsRequest):
 class NXStatsRequest(OFPVendorStatsRequest):
     def __init__(self, datapath, flags, subtype):
         super(NXStatsRequest, self).__init__(datapath, flags,
-                                             ofproto_v1_0.NX_VENDOR_ID)
+                                             ofproto.NX_VENDOR_ID)
         self.subtype = subtype
 
     def _serialize_vendor_stats_body(self):
         pass
 
     def _serialize_vendor_stats(self):
-        msg_pack_into(ofproto_v1_0.NX_STATS_MSG_PACK_STR, self.buf,
-                      ofproto_v1_0.OFP_VENDOR_STATS_MSG_SIZE,
+        msg_pack_into(ofproto.NX_STATS_MSG_PACK_STR, self.buf,
+                      ofproto.OFP_VENDOR_STATS_MSG_SIZE,
                       self.subtype)
         self._serialize_vendor_stats_body()
 
@@ -2318,7 +2318,7 @@ class NXStatsRequest(OFPVendorStatsRequest):
 class NXFlowStatsRequest(NXStatsRequest):
     def __init__(self, datapath, flags, out_port, table_id, rule=None):
         super(NXFlowStatsRequest, self).__init__(datapath, flags,
-                                                 ofproto_v1_0.NXST_FLOW)
+                                                 ofproto.NXST_FLOW)
         self.out_port = out_port
         self.table_id = table_id
         self.rule = rule
@@ -2326,21 +2326,21 @@ class NXFlowStatsRequest(NXStatsRequest):
 
     def _serialize_vendor_stats_body(self):
         if self.rule is not None:
-            offset = ofproto_v1_0.NX_STATS_MSG_SIZE + \
-                ofproto_v1_0.NX_FLOW_STATS_REQUEST_SIZE
+            offset = ofproto.NX_STATS_MSG_SIZE + \
+                ofproto.NX_FLOW_STATS_REQUEST_SIZE
             self.match_len = nx_match.serialize_nxm_match(
                 self.rule, self.buf, offset)
 
         msg_pack_into(
-            ofproto_v1_0.NX_FLOW_STATS_REQUEST_PACK_STR,
-            self.buf, ofproto_v1_0.NX_STATS_MSG_SIZE, self.out_port,
+            ofproto.NX_FLOW_STATS_REQUEST_PACK_STR,
+            self.buf, ofproto.NX_STATS_MSG_SIZE, self.out_port,
             self.match_len, self.table_id)
 
 
 class NXAggregateStatsRequest(NXStatsRequest):
     def __init__(self, datapath, flags, out_port, table_id, rule=None):
         super(NXAggregateStatsRequest, self).__init__(
-            datapath, flags, ofproto_v1_0.NXST_AGGREGATE)
+            datapath, flags, ofproto.NXST_AGGREGATE)
         self.out_port = out_port
         self.table_id = table_id
         self.rule = rule
@@ -2348,12 +2348,12 @@ class NXAggregateStatsRequest(NXStatsRequest):
 
     def _serialize_vendor_stats_body(self):
         if self.rule is not None:
-            offset = ofproto_v1_0.NX_STATS_MSG_SIZE + \
-                ofproto_v1_0.NX_AGGREGATE_STATS_REQUEST_SIZE
+            offset = ofproto.NX_STATS_MSG_SIZE + \
+                ofproto.NX_AGGREGATE_STATS_REQUEST_SIZE
             self.match_len = nx_match.serialize_nxm_match(
                 self.rule, self.buf, offset)
 
         msg_pack_into(
-            ofproto_v1_0.NX_AGGREGATE_STATS_REQUEST_PACK_STR,
-            self.buf, ofproto_v1_0.NX_STATS_MSG_SIZE, self.out_port,
+            ofproto.NX_AGGREGATE_STATS_REQUEST_PACK_STR,
+            self.buf, ofproto.NX_STATS_MSG_SIZE, self.out_port,
             self.match_len, self.table_id)
