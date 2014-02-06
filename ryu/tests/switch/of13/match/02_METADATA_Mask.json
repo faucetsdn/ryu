@@ -154,7 +154,7 @@
         ]
     },
     {
-        "description":"ethernet/ipv4/tcp-->'actions=write_metadata:255/0xffffffff,goto_table:1','table_id:1,metadata=240(mask=0xfffffff0),actions=output:2'",
+        "description":"ethernet/ipv4/tcp-->'actions=write_metadata:155/0xffffffff,goto_table:1','table_id:1,metadata=240(mask=0xfffffff0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -167,7 +167,7 @@
                     "instructions":[
                         {
                             "OFPInstructionWriteMetadata":{
-                                "metadata":255,
+                                "metadata":155,
                                 "metadata_mask":4294967295
                             }
                         },
@@ -380,7 +380,7 @@
         ]
     },
     {
-        "description":"ethernet/ipv6/tcp-->'actions=write_metadata:255/0xffffffff,goto_table:1','table_id:1,metadata=240(mask=0xfffffff0),actions=output:2'",
+        "description":"ethernet/ipv6/tcp-->'actions=write_metadata:155/0xffffffff,goto_table:1','table_id:1,metadata=240(mask=0xfffffff0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -393,7 +393,7 @@
                     "instructions":[
                         {
                             "OFPInstructionWriteMetadata":{
-                                "metadata":255,
+                                "metadata":155,
                                 "metadata_mask":4294967295
                             }
                         },
@@ -602,7 +602,7 @@
         ]
     },
     {
-        "description":"ethernet/arp-->'actions=write_metadata:255/0xffffffff,goto_table:1','table_id:1,metadata=240(mask=0xfffffff0),actions=output:2'",
+        "description":"ethernet/arp-->'actions=write_metadata:155/0xffffffff,goto_table:1','table_id:1,metadata=240(mask=0xfffffff0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -615,7 +615,7 @@
                     "instructions":[
                         {
                             "OFPInstructionWriteMetadata":{
-                                "metadata":255,
+                                "metadata":155,
                                 "metadata_mask":4294967295
                             }
                         },

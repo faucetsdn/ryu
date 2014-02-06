@@ -594,7 +594,7 @@
         ]
     },
     {
-        "description":"ethernet/arp-->'actions=write_metadata:255/0xffffffff,goto_table:1','table_id:1,metadata=255,actions=output:2'",
+        "description":"ethernet/arp-->'actions=write_metadata:155/0xffffffff,goto_table:1','table_id:1,metadata=255,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -607,7 +607,7 @@
                     "instructions":[
                         {
                             "OFPInstructionWriteMetadata":{
-                                "metadata":255,
+                                "metadata":155,
                                 "metadata_mask":4294967295
                             }
                         },
