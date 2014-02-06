@@ -20,7 +20,6 @@ import logging
 
 from nose.tools import *
 
-from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import (
     set_ev_cls,
@@ -40,11 +39,7 @@ class _Datapath(object):
     ofproto_parser = ofproto_v1_3_parser
 
 
-class _PacketInFilterApp(app_manager.RyuApp):
-
-    def __init__(self, *args, **kwargs):
-        super(_PacketInFilterApp, self).__init__(*args, **kwargs)
-
+class _PacketInFilterApp(object):
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     @packet_in_filter(RequiredTypeFilter, {'types': [
         vlan.vlan,
