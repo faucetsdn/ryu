@@ -37,8 +37,10 @@ _supported_versions = set(_versions.keys())
 
 
 def set_app_supported_versions(vers):
-    _versions &= set(vers)
-    assert _versions, 'No OpenFlow version is available'
+    global _supported_versions
+
+    _supported_versions &= set(vers)
+    assert _supported_versions, 'No OpenFlow version is available'
 
 
 class ProtocolDesc(object):
