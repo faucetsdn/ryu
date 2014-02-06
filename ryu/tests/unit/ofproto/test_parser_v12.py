@@ -23,6 +23,8 @@ from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto.ofproto_v1_2_parser import *
 from ryu.ofproto import ofproto_v1_2_parser
+from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ether
 from ryu.ofproto.ofproto_parser import MsgBase
 from ryu import utils
@@ -31,9 +33,7 @@ from ryu.lib import addrconv
 LOG = logging.getLogger('test_ofproto_v12')
 
 
-class _Datapath(object):
-    ofproto = ofproto  # copy to class attribute
-    ofproto_parser = ofproto_v1_2_parser
+_Datapath = ofproto_protocol.ProtocolDesc(version=ofproto_v1_2.OFP_VERSION)
 
 
 class TestRegisterParser(unittest.TestCase):
