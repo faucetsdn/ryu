@@ -56,3 +56,7 @@ class ProtocolDesc(object):
     def set_version(self, version):
         assert version in _supported_versions
         (self.ofproto, self.ofproto_parser) = _versions[version]
+
+    @property
+    def supported_ofp_version(self):
+        return _supported_versions
