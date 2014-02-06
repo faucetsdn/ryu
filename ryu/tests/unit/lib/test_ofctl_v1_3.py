@@ -21,14 +21,10 @@ from nose.tools import *
 
 from ryu.lib import ofctl_v1_3
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
+from ryu.ofproto import ofproto_protocol
 from ryu.ofproto.ofproto_v1_3_parser import OFPActionPopMpls
 
 LOG = logging.getLogger('test_ofctl_v1_3')
-
-
-class _Datapath(object):
-    ofproto = ofproto_v1_3
-    ofproto_parser = ofproto_v1_3_parser
 
 
 class Test_ofctl_v1_3(unittest.TestCase):
@@ -43,7 +39,7 @@ class Test_ofctl_v1_3(unittest.TestCase):
         pass
 
     def test_to_actions_pop_mpls(self):
-        dp = _Datapath()
+        dp = ofproto_protocol.ProtocolDesc(version=ofproto_v1_3.OFP_VERSION)
 
         acts = [
             {
