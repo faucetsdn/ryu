@@ -1,7 +1,7 @@
 [
     "match: 39_IPV6_EXTHDR",
     {
-        "description":"ethernet/ipv6(ext_hdrs=[hop_opts,auth]/tcp-->'ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/ipv6(ext_hdrs=[hop_opts,auth]/tcp-->'ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -18,7 +18,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -59,7 +59,7 @@
         ]
     },
     {
-        "description":"ethernet/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=64,actions=output:CONTROLLER'",
+        "description":"ethernet/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=68,actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -76,7 +76,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -118,7 +118,7 @@
         ]
     },
     {
-        "description":"ethernet/ipv6/tcp-->'ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/ipv6/tcp-->'ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -135,7 +135,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -173,7 +173,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -190,7 +190,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -233,7 +233,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=64,actions=output:CONTROLLER'",
+        "description":"ethernet/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=68,actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -250,7 +250,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -294,7 +294,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/ipv6/tcp-->'ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/vlan/ipv6/tcp-->'ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -311,7 +311,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -350,7 +350,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/mpls/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -403,7 +403,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -445,7 +445,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_exthdr=64,actions=output:CONTROLLER'",
+        "description":"ethernet/mpls/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_exthdr=68,actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -498,7 +498,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -541,7 +541,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/ipv6/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/mpls/ipv6/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -594,7 +594,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -633,7 +633,7 @@
         ]
     },
     {
-        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -650,7 +650,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -701,7 +701,7 @@
         ]
     },
     {
-        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=64,actions=output:CONTROLLER'",
+        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/ipv6(ext_hdrs=[hop_opts,auth])/tcp-->'ipv6_exthdr=68,actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -718,7 +718,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
@@ -770,7 +770,7 @@
         ]
     },
     {
-        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/ipv6/tcp-->'ipv6_exthdr=64,actions=output:2'",
+        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/ipv6/tcp-->'ipv6_exthdr=68,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -787,7 +787,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_exthdr",
-                                        "value":64
+                                        "value":68
                                     }
                                 }
                             ]
