@@ -105,6 +105,8 @@ class RpcOFPManager(app_manager.RyuApp):
                 d = peer.wait_for_ofp_resepnse.setdefault(e.dpid, {})
                 d[e.xid] = e.msgid
                 continue
+            except:
+                logger.info(_({'bogus RPC': data}))
 
             peer._endpoint.send_response(msgid, error=error, result=result)
 
