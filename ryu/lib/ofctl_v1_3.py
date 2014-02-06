@@ -173,7 +173,7 @@ def action_to_str(act):
     elif action_type == ofproto_v1_3.OFPAT_SET_QUEUE:
         buf = 'SET_QUEUE:' + str(act.queue_id)
     elif action_type == ofproto_v1_3.OFPAT_GROUP:
-        pass
+        buf = 'GROUP:' + str(act.group_id)
     elif action_type == ofproto_v1_3.OFPAT_SET_NW_TTL:
         buf = 'SET_NW_TTL:' + str(act.nw_ttl)
     elif action_type == ofproto_v1_3.OFPAT_DEC_NW_TTL:
