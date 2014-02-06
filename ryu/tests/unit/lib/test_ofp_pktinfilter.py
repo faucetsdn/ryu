@@ -29,14 +29,10 @@ from ryu.lib.packet import vlan, ethernet, ipv4
 from ryu.lib.ofp_pktinfilter import packet_in_filter, RequiredTypeFilter
 from ryu.lib import mac
 from ryu.ofproto import ether, ofproto_v1_3, ofproto_v1_3_parser
+from ryu.ofproto.ofproto_protocol import ProtocolDesc
 
 
 LOG = logging.getLogger('test_pktinfilter')
-
-
-class _Datapath(object):
-    ofproto = ofproto_v1_3
-    ofproto_parser = ofproto_v1_3_parser
 
 
 class _PacketInFilterApp(object):
@@ -60,7 +56,7 @@ class Test_packet_in_filter(unittest.TestCase):
         pass
 
     def test_pkt_in_filter_pass(self):
-        datapath = _Datapath()
+        datapath = ProtocolDesc(version=ofproto_v1_3.OFP_VERSION)
         e = ethernet.ethernet(mac.BROADCAST_STR,
                               mac.BROADCAST_STR,
                               ether.ETH_TYPE_8021Q)
@@ -74,7 +70,7 @@ class Test_packet_in_filter(unittest.TestCase):
         ok_(self.app.packet_in_handler(ev))
 
     def test_pkt_in_filter_discard(self):
-        datapath = _Datapath()
+        datapath = ProtocolDesc(version=ofproto_v1_3.OFP_VERSION)
         e = ethernet.ethernet(mac.BROADCAST_STR,
                               mac.BROADCAST_STR,
                               ether.ETH_TYPE_IP)
@@ -87,7 +83,7 @@ class Test_packet_in_filter(unittest.TestCase):
         ok_(not self.app.packet_in_handler(ev))
 
     def test_pkt_in_filter_truncated(self):
-        datapath = _Datapath()
+        datapath = ProtocolDesc(version=ofproto_v1_3.OFP_VERSION)
         truncated_data = buffer('')
         pkt_in = ofproto_v1_3_parser.OFPPacketIn(datapath,
                                                  data=truncated_data)
