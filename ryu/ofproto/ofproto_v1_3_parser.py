@@ -3383,7 +3383,8 @@ class OFPMeterMod(MsgBase):
                      OFPMeterBandExperimenter
     ================ ======================================================
     """
-    def __init__(self, datapath, command, flags, meter_id, bands):
+    def __init__(self, datapath, command=ofproto.OFPMC_ADD,
+                 flags=ofproto.OFPMF_KBPS, meter_id=1, bands=[]):
         super(OFPMeterMod, self).__init__(datapath)
         self.command = command
         self.flags = flags
