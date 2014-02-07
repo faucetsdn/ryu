@@ -157,8 +157,17 @@ class TestRpcOFPManager(unittest.TestCase):
             pass
 
         dp = dps.get(dpid)
-        match = ofpp.OFPMatch(in_port=1)
-        ofmsg = ofpp.OFPFlowMod(datapath=dp, match=match)
+        match = ofpp.OFPMatch(metadata=(100, 63),
+                              eth_type=2048,
+                              ip_proto=112,
+                              ipv4_src='172.17.45.1',
+                              ipv4_dst='224.0.0.18')
+        inst = [ofpp.OFPInstructionActions(
+                ofp.OFPIT_APPLY_ACTIONS, [ofpp.OFPActionPopVlan()]),
+                ofpp.OFPInstructionGotoTable(35),
+                ofpp.OFPInstructionWriteMetadata(100, 0x255)]
+
+        ofmsg = ofpp.OFPFlowMod(datapath=dp, match=match, instructions=inst)
 
         r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
                                           'ofmsg': ofmsg.to_jsondict()}])
@@ -177,9 +186,8 @@ class TestRpcOFPManager(unittest.TestCase):
         eq_(m.monitored_flows[m.format_key(match.to_jsondict())],
             contexts)
 
-        match = ofpp.OFPMatch(in_port=1)
         ofmsg = ofpp.OFPFlowMod(datapath=dp,
-                                command=ofproto_v1_2.OFPFC_DELETE,
+                                command=ofp.OFPFC_DELETE,
                                 match=match)
 
         r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
