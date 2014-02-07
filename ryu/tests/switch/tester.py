@@ -547,6 +547,9 @@ class OfTester(app_manager.RyuApp):
         for attr in attr_list:
             value1 = getattr(stats1, attr)
             value2 = getattr(stats2, attr)
+            if attr == 'instructions':
+                value1 = sorted(value1)
+                value2 = sorted(value2)
             if str(value1) != str(value2):
                 flow_stats = []
                 for attr in attr_list:
