@@ -747,7 +747,7 @@ class TargetSw(OpenFlowSw):
                                 command=ofp.OFPFC_DELETE,
                                 out_port=ofp.OFPP_ANY,
                                 out_group=ofp.OFPG_ANY)
-        self.dp.send_msg(mod)
+        return self._send_msg(mod)
 
     def send_flow_stats(self):
         """ Get all flow. """
