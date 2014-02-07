@@ -592,8 +592,8 @@ class OfTester(app_manager.RyuApp):
         if msg:
             return '/'.join(msg)
         else:
-            raise RyuException('Internal error.'
-                               ' receive packet is matching.')
+            return ('Encounter an error during packet comparison.'
+                    ' it is malformed.')
 
     def _wait(self):
         """ Wait until specific OFP message received
