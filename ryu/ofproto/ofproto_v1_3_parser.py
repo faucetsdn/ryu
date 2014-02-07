@@ -14,6 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This module implements OpenFlow 1.3.x.
+
+This module also implements some of extensions shown in
+"OpenFlow Extensions for 1.3.X Pack 1".
+Namely, the following extensions are implemented.
+
+    - EXT-236 Bad flow entry priority error Extension
+    - EXT-237 Set async config error Extension
+    - EXT-256 PBB UCA header field Extension
+    - EXT-260 Duplicate instruction error Extension
+    - EXT-264 Multipart timeout errors Extension
+
+The following extensions are partially implemented.
+
+    - EXT-187 Flow entry notifications Extension (ONFMP_FLOW_MONITOR only)
+    - EXT-230 Bundle Extension (Error codes only)
+    - EXT-232 Table synchronisation Extension (Error codes only)
+
+The following extensions are not implemented yet.
+
+    - EXT-191 Role Status Extension
+    - EXT-192-e Flow entry eviction Extension
+    - EXT-192-v Vacancy events Extension
+"""
+
 import struct
 import itertools
 
