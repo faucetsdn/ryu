@@ -33,7 +33,6 @@ import lxml.etree as ET
 
 from ryu.lib import of_config
 from ryu.lib.of_config import capable_switch
-from ryu.lib.of_config import constants as consts
 from ncclient.operations.rpc import RPCError
 import ryu.lib.of_config.classes as ofc
 
