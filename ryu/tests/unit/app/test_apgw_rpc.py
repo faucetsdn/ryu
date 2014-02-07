@@ -211,6 +211,49 @@ class TestRpcOFPManager(unittest.TestCase):
     def test_handle_ofprotocol_flowmod_13(self):
         self._test_handle_ofprotocol_flowmod(ofproto_v1_3, ofproto_v1_3_parser)
 
+    def _test_handle_ofprotocol_meter_mod(self, ofp, ofpp):
+        dpid = 10
+        msgid = 1
+        nr_sent = 0
+        dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
+        m = api.RpcOFPManager(dpset=dps)
+
+        dp = dps.get(dpid)
+        bands = [ofpp.OFPMeterBandDrop(10, 100)]
+        meter_id = 10
+        ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_ADD,
+                                 ofp.OFPMF_KBPS, meter_id, bands)
+
+        r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
+                                          'ofmsg': ofmsg.to_jsondict()}])
+        nr_sent += 1
+        eq_(r, {'xid': 1})
+        eq_(len(dp.sent), nr_sent)
+
+        contexts = {'hello': 'world'}
+        r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
+                                          'ofmsg': ofmsg.to_jsondict(),
+                                          'contexts': contexts}])
+        nr_sent += 1
+        eq_(r, {'xid': 1})
+        eq_(len(dp.sent), nr_sent)
+        eq_(len(m.monitored_meters), 1)
+        eq_(m.monitored_meters[meter_id], contexts)
+
+        ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_DELETE, ofp.OFPMF_KBPS,
+                                 meter_id)
+        r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
+                                          'ofmsg': ofmsg.to_jsondict(),
+                                          'contexts': contexts}])
+        nr_sent += 1
+        eq_(r, {'xid': 1})
+        eq_(len(dp.sent), nr_sent)
+        eq_(len(m.monitored_meters), 0)
+
+    def test_handle_ofprotocol_meter_mod_13(self):
+        self._test_handle_ofprotocol_meter_mod(ofproto_v1_3,
+                                               ofproto_v1_3_parser)
+
     def _test_handle_ofprotocol(self, ofp, ofpp):
         dpid = 10
         dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
@@ -448,6 +491,42 @@ class TestRpcOFPManager(unittest.TestCase):
     def test_flow_stats_loop_13(self):
         self._test_flow_stats_loop(ofproto_v1_3, ofproto_v1_3_parser)
 
+    def _test_meter_stats_loop(self, ofp, ofpp):
+        dpid = 10
+        msgid = 1
+        dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
+        dp = dps.get(dpid)
+        m = api.RpcOFPManager(dpset=dps)
+        bands = [ofpp.OFPMeterBandDrop(10, 100)]
+        meter_id = 10
+        ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_ADD,
+                                 ofp.OFPMF_KBPS, meter_id, bands)
+        contexts = {'hello': 'world'}
+        r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
+                                          'ofmsg': ofmsg.to_jsondict(),
+                                          'contexts': contexts}])
+        threads = []
+        with hub.Timeout(5):
+            threads.append(hub.spawn(m._meter_stats_loop,
+                                     dp, 0.1, meter_id))
+            hub.sleep(0.5)
+            ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_DELETE, ofp.OFPMF_KBPS,
+                                     meter_id)
+            r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
+                                              'ofmsg': ofmsg.to_jsondict(),
+                                              'contexts': contexts}])
+            eq_(len(m.monitored_meters), 0)
+            hub.joinall(threads)
+
+        for m in dp.sent:
+            if m.__class__ in (ofpp.OFPMeterMod, ofpp.OFPPortStatsRequest):
+                continue
+            eq_(m.__class__, ofpp.OFPMeterStatsRequest)
+            eq_(m.meter_id, ofmsg.meter_id)
+
+    def test_meter_stats_loop_13(self):
+        self._test_meter_stats_loop(ofproto_v1_3, ofproto_v1_3_parser)
+
     def _test_rpc_message_thread(self, ofp, ofpp):
         dpid = 10
         dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
@@ -598,3 +677,31 @@ class TestRpcOFPManager(unittest.TestCase):
                                match=ofpp.OFPMatch(in_port=2))
         msg.body = [s1, s2]
         manager._flow_stats_reply_handler(ev)
+
+    def test_stats_reply_meter_handler_13(self):
+        ofp = ofproto_v1_3
+        ofpp = ofproto_v1_3_parser
+        dpid = 10
+        msgid = 9
+        dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
+        m = api.RpcOFPManager(dpset=dps)
+
+        dp = dps.get(dpid)
+        bands = [ofpp.OFPMeterBandDrop(10, 100)]
+        meter_id = 10
+        ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_ADD,
+                                 ofp.OFPMF_KBPS, meter_id, bands)
+        contexts = {'hello': 'world'}
+        r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
+                                          'ofmsg': ofmsg.to_jsondict(),
+                                          'contexts': contexts}])
+
+        msg = ofpp.OFPMeterStatsReply(datapath=dp)
+        ev = ofp_event.EventOFPStatsReply(msg)
+        s = ofpp.OFPMeterStats(meter_id=meter_id, flow_count=10,
+                               packet_in_count=10, byte_in_count=10,
+                               duration_sec=10, duration_nsec=10,
+                               band_stats=[])
+
+        msg.body = [s]
+        m._meter_stats_reply_handler(ev)

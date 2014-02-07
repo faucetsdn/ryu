@@ -65,6 +65,7 @@ class RpcOFPManager(app_manager.RyuApp):
         self.traceroute_source = {}
         self.monitored_ports = {}
         self.monitored_flows = {}
+        self.monitored_meters = {}
         self.pending_rpc_requests = []
         self._rpc_events = hub.Queue(128)
         # per 30 secs by default
@@ -248,6 +249,20 @@ class RpcOFPManager(app_manager.RyuApp):
                 stats.update(self.monitored_ports[port.name])
                 self.logger.info(_(msg=stats, log_type='stats'))
 
+    @handler.set_ev_cls(ofp_event.EventOFPMeterStatsReply,
+                        handler.MAIN_DISPATCHER)
+    def _meter_stats_reply_handler(self, ev):
+        msg = ev.msg
+        dp = msg.datapath
+        for stat in msg.body:
+            if stat.meter_id in self.monitored_meters:
+                contexts = self.monitored_meters[stat.meter_id]
+                stats = {'meter_id': stat.meter_id,
+                         'flow_count': stat.flow_count,
+                         'byte_in_count': stat.byte_in_count}
+                stats.update(contexts)
+                self.logger.info(_(msg=stats, log_type='stats'))
+
     @handler.set_ev_cls(ofp_event.EventOFPStatsReply,
                         handler.MAIN_DISPATCHER)
     def _stats_reply_handler(self, ev):
@@ -335,6 +350,15 @@ class RpcOFPManager(app_manager.RyuApp):
             dp.send_msg(msg)
             hub.sleep(interval)
 
+    def _meter_stats_loop(self, dp, interval, meter_id):
+        while True:
+            if not meter_id in self.monitored_meters:
+                break
+            msg = dp.ofproto_parser.OFPMeterStatsRequest(datapath=dp,
+                                                         meter_id=meter_id)
+            dp.send_msg(msg)
+            hub.sleep(interval)
+
     def _handle_ofprotocol(self, msgid, params):
         try:
             param_dict = params[0]
@@ -415,6 +439,25 @@ class RpcOFPManager(app_manager.RyuApp):
                         del self.monitored_flows[key]
                     except:
                         raise RPCError('unknown key, %s' % (str(key)))
+        elif (dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION and
+              ofmsg.msg_type is dp.ofproto.OFPT_METER_MOD):
+            if contexts is not None:
+                if ofmsg.command is dp.ofproto.OFPMC_ADD:
+                    if ofmsg.meter_id in self.monitored_meters:
+                        raise RPCError('meter already exitsts %d' %
+                                       (ofmsg.meter_id))
+                    self.monitored_meters[ofmsg.meter_id] = contexts
+                    hub.spawn(self._meter_stats_loop,
+                              dp, interval, ofmsg.meter_id)
+                elif ofmsg.command is dp.ofproto.OFPMC_DELETE:
+                    try:
+                        del self.monitored_meters[ofmsg.meter_id]
+                    except:
+                        raise RPCError('unknown meter %d' % (ofmsg.meter_id))
+                elif ofmsg.command is dp.ofproto.OFPMC_MODIFY:
+                    raise RPCError('METER_MOD with contexts is not supported')
+                else:
+                    raise RPCError('unknown meter_mod command')
         else:
             raise RPCError('unknown of message, %s' % (str(param_dict)))
 
