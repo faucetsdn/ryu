@@ -877,8 +877,6 @@ class Test(stringify.StringifyMixin):
             if not KEY_INGRESS in test:
                 raise ValueError('a test requires "%s" field.' % KEY_INGRESS)
             test_pkt[KEY_INGRESS] = __test_pkt_from_json(test[KEY_INGRESS])
-            if len(test_pkt[KEY_INGRESS]) < 64:
-                print 'NG!!!'
             # parse 'egress' or 'PACKET_IN' or 'table-miss'
             if KEY_EGRESS in test:
                 test_pkt[KEY_EGRESS] = __test_pkt_from_json(test[KEY_EGRESS])
