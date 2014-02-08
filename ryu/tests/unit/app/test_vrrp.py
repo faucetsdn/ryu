@@ -76,11 +76,22 @@ class TestVRRP(unittest.TestCase):
         msgid_, error, result = peer._endpoint.response.pop()
         eq_(result, None)
 
-        params = {'primary_ip_address': '192.168.1.1',
-                  'device_name': 'veth0',
+        params = {'version': 3,
                   'vrid': 1,
-                  'ip_addresses': ['192.168.1.2']}
-
+                  'ip_addr': '192.168.1.1',
+                  'contexts': {'resource_id': 'XXX',
+                               'resource_name': 'vrrp_session'},
+                  'statistics_log_enabled': True,
+                  'statistics_interval': 10,
+                  'priority': 100,
+                  'ifname': 'veth0',
+                  'vlan_id': None,
+                  'ip_address': '192.168.1.2',
+                  'advertisement_interval': 10,
+                  'preempt_mode': True,
+                  'preempt_delay': 10,
+                  'admin_state_up': True
+                  }
         with hub.Timeout(2):
             peer._handle_vrrp_request((msgid, 'vrrp_config', [params]))
             hub.sleep(0.1)

@@ -83,6 +83,9 @@ class RpcVRRPManager(app_manager.RyuApp):
                     error = 'Unknown method %s' % (target_method)
             except RPCError as e:
                 error = str(e)
+            self.logger.info(_(msg={'msgid': msgid,
+                                    'error': error,
+                                    'result': result}))
             peer._endpoint.send_response(msgid, error=error, result=result)
 
     def _peer_loop_thread(self, peer):
@@ -118,8 +121,16 @@ class RpcVRRPManager(app_manager.RyuApp):
             raise RPCError('parameters are missing')
 
         if_params = self._params_to_dict(param_dict,
-                                         ('primary_ip_address',
-                                          'device_name'))
+                                         ('ip_addr',
+                                          'ifname'))
+        try:
+            if_params['primary_ip_address'] = if_params.pop('ip_addr')
+        except:
+            raise RPCError('ip_addr parameter is missing')
+        try:
+            if_params['device_name'] = if_params.pop('ifname')
+        except:
+            raise RPCError('ifname parameter is missing')
         # drop vlan support later
         if_params['vlan_id'] = None
         if_params['mac_address'] = mac.DONTCARE_STR
@@ -130,7 +141,7 @@ class RpcVRRPManager(app_manager.RyuApp):
 
         config_params = self._params_to_dict(param_dict,
                                              ('vrid',  # mandatory
-                                              'ip_addresses',  # mandatory
+                                              'ip_address',  # mandatory
                                               'version',
                                               'admin_state',
                                               'priority',
@@ -138,6 +149,10 @@ class RpcVRRPManager(app_manager.RyuApp):
                                               'preempt_mode',
                                               'preempt_delay',
                                               'statistics_interval'))
+        try:
+            config_params['ip_addresses'] = [config_params.pop('ip_address')]
+        except:
+            raise RPCError('ip_address parameter is missing')
         try:
             config = vrrp_event.VRRPConfig(**config_params)
         except:
