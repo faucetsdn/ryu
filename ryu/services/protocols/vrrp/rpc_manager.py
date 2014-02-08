@@ -24,6 +24,7 @@ from ryu.services.protocols.vrrp import api as vrrp_api
 from ryu.lib import rpc
 from ryu.lib import hub
 from ryu.lib import mac
+from ryu.lib import apgw
 
 VRRP_RPC_PORT = 50004  # random
 CONF = cfg.CONF
@@ -31,6 +32,9 @@ CONF = cfg.CONF
 CONF.register_opts([
     cfg.IntOpt('vrrp-rpc-port', default=VRRP_RPC_PORT,
                help='port for vrrp rpc interface')])
+
+_ = type('', (apgw.StructuredMessage,), {})
+_.COMPONENT_NAME = 'vrrp'
 
 
 class RPCError(Exception):
@@ -47,6 +51,8 @@ class Peer(object):
 
 
 class RpcVRRPManager(app_manager.RyuApp):
+    LOGGER_NAME = 'vrrp'
+
     def __init__(self, *args, **kwargs):
         super(RpcVRRPManager, self).__init__(*args, **kwargs)
         self._args = args
@@ -55,6 +61,7 @@ class RpcVRRPManager(app_manager.RyuApp):
         self._rpc_events = hub.Queue(128)
         self.server_thread = hub.spawn(self._peer_accept_thread)
         self.event_thread = hub.spawn(self._rpc_request_loop_thread)
+        apgw.update_syslog_format()
 
     def _rpc_request_loop_thread(self):
         while True:
@@ -63,6 +70,9 @@ class RpcVRRPManager(app_manager.RyuApp):
             error = None
             result = None
             try:
+                self.logger.info(_(msg={'msgid': msgid,
+                                        'target_method': target_method,
+                                        'params': params}))
                 if target_method == "vrrp_config":
                     result = self._config(msgid, params)
                 elif target_method == "vrrp_list":
@@ -102,7 +112,6 @@ class RpcVRRPManager(app_manager.RyuApp):
         return d
 
     def _config(self, msgid, params):
-        self.logger.debug('handle vrrp_config request')
         try:
             param_dict = params[0]
         except:
@@ -149,7 +158,6 @@ class RpcVRRPManager(app_manager.RyuApp):
         return None
 
     def _config_change(self, msgid, params):
-        self.logger.debug('handle vrrp_config_change request')
         try:
             config_values = params[0]
         except:
@@ -167,7 +175,6 @@ class RpcVRRPManager(app_manager.RyuApp):
         return {}
 
     def _list(self, msgid, params):
-        self.logger.debug('handle vrrp_list request')
         result = vrrp_api.vrrp_list(self)
         instance_list = result.instance_list
         ret_list = []
@@ -186,13 +193,11 @@ class RpcVRRPManager(app_manager.RyuApp):
 
     @handler.set_ev_cls(vrrp_event.EventVRRPStateChanged)
     def vrrp_state_changed_handler(self, ev):
-        self.logger.info('handle EventVRRPStateChanged')
         name = ev.instance_name
         old_state = ev.old_state
         new_state = ev.new_state
         vrid = ev.config.vrid
-        self.logger.info('VRID:%s %s: %s -> %s', vrid, name, old_state,
-                         new_state)
         params = {'vrid': vrid, 'old_state': old_state, 'new_state': new_state}
+        self.logger.info(_(msg=params))
         for peer in self._peers:
             peer._endpoint.send_notification("notify_status", [params])

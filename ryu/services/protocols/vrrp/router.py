@@ -26,9 +26,14 @@ from ryu.base import app_manager
 from ryu.controller import event
 from ryu.controller import handler
 from ryu.lib import hub
+from ryu.lib import apgw
 from ryu.lib.packet import vrrp
 from ryu.services.protocols.vrrp import event as vrrp_event
 from ryu.services.protocols.vrrp import api as vrrp_api
+
+
+_ = type('', (apgw.StructuredMessage,), {})
+_.COMPONENT_NAME = 'vrrp'
 
 
 # TODO: improve Timer service and move it into framework
@@ -139,6 +144,7 @@ class VRRPRouter(app_manager.RyuApp):
     _EVENTS = [vrrp_event.EventVRRPStateChanged]
     _CONSTRUCTORS = {}
     _STATE_MAP = {}     # should be overrided by concrete class
+    LOGGER_NAME = 'vrrp'
 
     @staticmethod
     def register(version):
@@ -271,8 +277,8 @@ class VRRPRouter(app_manager.RyuApp):
 
     @handler.set_ev_handler(_EventStatisticsOut)
     def statistics_handler(self, ev):
-        # sends stats to somewhere here
-        # print self.statistics.get_stats()
+        stats = self.statistics.get_stats()
+        self.logger.info(_(msg=stats, log_type='stats'))
         self.stats_out_timer.start(self.statistics.statistics_interval)
 
 # RFC defines that start timer, then change the state.
