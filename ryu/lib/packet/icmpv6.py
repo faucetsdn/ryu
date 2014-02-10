@@ -15,6 +15,7 @@
 
 import abc
 import struct
+import six
 import sys
 import array
 import binascii
@@ -387,10 +388,8 @@ class nd_router_advert(stringify.StringifyMixin):
         return length
 
 
+@six.add_metaclass(abc.ABCMeta)
 class nd_option(stringify.StringifyMixin):
-
-    __metaclass__ = abc.ABCMeta
-
     @classmethod
     @abc.abstractmethod
     def option_type(cls):

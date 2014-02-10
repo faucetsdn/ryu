@@ -14,12 +14,13 @@
 # limitations under the License.
 
 import abc
+import six
 from ryu.lib import stringify
 
 
+@six.add_metaclass(abc.ABCMeta)
 class PacketBase(stringify.StringifyMixin):
     """A base class for a protocol (ethernet, ipv4, ...) header."""
-    __metaclass__ = abc.ABCMeta
     _TYPES = {}
 
     @classmethod

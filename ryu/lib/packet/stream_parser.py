@@ -16,8 +16,10 @@
 
 
 from abc import ABCMeta, abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class StreamParser(object):
     """Streaming parser base class.
 
@@ -29,9 +31,6 @@ class StreamParser(object):
     is TCP.
 
     """
-
-    __metaclass__ = ABCMeta
-
     class TooSmallException(Exception):
         pass
 

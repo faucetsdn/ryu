@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import abc
+import six
 import struct
 from . import packet_base
 from . import arp
@@ -26,9 +27,8 @@ from . import pbb
 from ryu.ofproto import ether
 
 
+@six.add_metaclass(abc.ABCMeta)
 class _vlan(packet_base.PacketBase):
-
-    __metaclass__ = abc.ABCMeta
     _PACK_STR = "!HH"
     _MIN_LEN = struct.calcsize(_PACK_STR)
 

@@ -16,6 +16,7 @@
 
 import logging
 from abc import ABCMeta, abstractmethod
+import six
 
 from ryu.lib.packet import packet
 
@@ -36,9 +37,8 @@ def packet_in_filter(cls, args=None):
     return _packet_in_filter
 
 
+@six.add_metaclass(ABCMeta)
 class PacketInFilterBase(object):
-    __metaclass__ = ABCMeta
-
     def __init__(self, args):
         self.args = args
 

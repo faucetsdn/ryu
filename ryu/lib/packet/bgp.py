@@ -23,6 +23,7 @@ RFC 4271 BGP-4
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
 
 import abc
+import six
 import struct
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
@@ -137,8 +138,8 @@ def pad(bin, len_):
     return bin + (len_ - len(bin)) * '\0'
 
 
+@six.add_metaclass(abc.ABCMeta)
 class _AddrPrefix(StringifyMixin):
-    __metaclass__ = abc.ABCMeta
     _PACK_STR = '!B'  # length
 
     def __init__(self, length, addr, prefixes=None):

@@ -5,4 +5,5 @@ netaddr
 oslo.config
 paramiko
 routes
+six
 webob>=1.0.8
