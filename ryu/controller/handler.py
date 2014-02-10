@@ -80,6 +80,17 @@ def get_dependent_services(cls):
 
 
 def register_service(service):
+    """
+    Register the ryu application specified by 'service' as
+    a provider of events defined in the calling module.
+
+    If an application being loaded consumes events (in the sense of
+    set_ev_cls) provided by the 'service' application, the latter
+    application will be automatically loaded.
+
+    This mechanism is used to e.g. automatically start ofp_handler if
+    there are applications consuming OFP events.
+    """
     frm = inspect.stack()[1]
     m = inspect.getmodule(frm[0])
     m._SERVICE_NAME = service
