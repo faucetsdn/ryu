@@ -1,8 +1,8 @@
 eventlet
-routes
-webob>=1.0.8
-paramiko
 lxml
+msgpack-python>=0.4.0
 netaddr
 oslo.config
-msgpack-python>=0.4.0
+paramiko
+routes
+webob>=1.0.8
