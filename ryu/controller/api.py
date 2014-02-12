@@ -17,10 +17,25 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import icmp
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import vlan
+from ryu.lib.of_config import capable_switch as cs
+from ryu.lib.of_config import constants as consts
+import eventlet
 
 
 _ = type('', (apgw.StructuredMessage,), {})
 _.COMPONENT_NAME = 'ofwire'
+
+CONF = cfg.CONF
+CONF.register_cli_opts([
+    cfg.StrOpt('ofconfig-address', default='127.0.0.1',
+               help='of-config switch address'),
+    cfg.IntOpt('ofconfig-port', default=1830,
+               help='of-config switch port'),
+    cfg.StrOpt('ofconfig-user', default='linc',
+               help='of-config user name'),
+    cfg.StrOpt('ofconfig-password', default='linc',
+               help='of-config password'),
+])
 
 
 class RPCError(Exception):
@@ -28,7 +43,7 @@ class RPCError(Exception):
 
 
 class NoRPCResponse(Exception):
-    def __init__(self, dpid, xid, msgid):
+    def __init__(self, dpid=None, xid=None, msgid=None):
         self.dpid = dpid
         self.xid = xid
         self.msgid = msgid
@@ -70,9 +85,11 @@ class RpcOFPManager(app_manager.RyuApp):
         self._rpc_events = hub.Queue(128)
         # per 30 secs by default
         self.port_monitor_interval = 30
+        self.ofconfig = hub.Queue(128)
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._port_status_thread)
         hub.spawn(self._rpc_message_thread)
+        hub.spawn(self._ofconfig_thread)
         apgw.update_syslog_format()
 
     def _rpc_message_thread(self):
@@ -87,6 +104,8 @@ class RpcOFPManager(app_manager.RyuApp):
                         result = self._handle_ofprotocol(msgid, params)
                     elif target_method == "monitor_port":
                         result = self._monitor_port(msgid, params)
+                    elif target_method == "ofconfig":
+                        self._ofconfig(peer, msgid, params)
                     else:
                         error = 'Unknown method %s' % (target_method)
                 elif _type == rpc.MessageType.NOTIFY:
@@ -103,8 +122,9 @@ class RpcOFPManager(app_manager.RyuApp):
             except NoRPCResponse as e:
                 # we'll send RPC sesponse after we get a response from
                 # datapath.
-                d = peer.wait_for_ofp_resepnse.setdefault(e.dpid, {})
-                d[e.xid] = e.msgid
+                if e.dpid is not None:
+                    d = peer.wait_for_ofp_resepnse.setdefault(e.dpid, {})
+                    d[e.xid] = e.msgid
                 continue
             except:
                 self.logger.info(_({'bogus RPC': data}))
@@ -482,6 +502,45 @@ class RpcOFPManager(app_manager.RyuApp):
                             'ip': param_dict['ip'],
                             'port': param_dict['port']}))
         return {}
+
+    def _ofconfig_thread(self):
+        while True:
+            (peer, msgid, params) = self.ofconfig.get()
+            error = None
+            result = None
+            # TODO: don't need to create a new conneciton every time.
+            try:
+                s = cs.OFCapableSwitch(host=CONF.ofconfig_address,
+                                       port=CONF.ofconfig_port,
+                                       username=CONF.ofconfig_user,
+                                       password=CONF.ofconfig_password,
+                                       unknown_host_cb=lambda h, f: True)
+            except:
+                s = None
+
+            if s is None:
+                error = 'faied to connect to ofs'
+            else:
+                o = s.get()
+                ports = []
+                for p in o.resources.port:
+                    config = p.configuration
+                    ports.append({'name': str(p.name),
+                                  'number': int(p.number),
+                                  'admin-state': str(config.admin_state)})
+                result = {}
+                result['OFPort'] = ports
+
+            peer._endpoint.send_response(msgid, error=error, result=result)
+
+    def _ofconfig(self, peer, msgid, params):
+        try:
+            param_dict = params[0]
+        except:
+            raise RPCError('parameters are missing')
+
+        self.ofconfig.put((peer, msgid, params))
+        raise NoRPCResponse()
 
     def _monitor_port(self, msgid, params):
         try:

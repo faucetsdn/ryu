@@ -40,6 +40,7 @@ from ryu import version
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
+from ryu.controller import api
 from ryu.topology import switches
 
 
