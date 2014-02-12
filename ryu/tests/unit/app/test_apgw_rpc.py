@@ -569,6 +569,12 @@ class TestRpcOFPManager(unittest.TestCase):
         m._handler_datapath(ev)
         eq_(len(peer.wait_for_ofp_resepnse), 0)
 
+        # bogus RPC
+        with hub.Timeout(2):
+            m._rpc_events.put((peer, rpc.MessageType.REQUEST,
+                               (msgid, 'you')))
+            hub.sleep(0.5)
+
     def test_rpc_message_thread_12(self):
         self._test_rpc_message_thread(ofproto_v1_2, ofproto_v1_2_parser)
 

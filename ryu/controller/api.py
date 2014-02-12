@@ -107,7 +107,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 d[e.xid] = e.msgid
                 continue
             except:
-                logger.info(_({'bogus RPC': data}))
+                self.logger.info(_({'bogus RPC': data}))
 
             peer._endpoint.send_response(msgid, error=error, result=result)
 
