@@ -527,7 +527,8 @@ class RpcOFPManager(app_manager.RyuApp):
                     config = p.configuration
                     ports.append({'name': str(p.name),
                                   'number': int(p.number),
-                                  'admin-state': str(config.admin_state)})
+                                  'admin-state': str(config.admin_state),
+                                  'oper-state': str(p.state.oper_state)})
                 result = {}
                 result['OFPort'] = ports
 
