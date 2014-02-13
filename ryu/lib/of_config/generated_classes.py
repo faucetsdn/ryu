@@ -30,6 +30,14 @@ class OFPortConfigurationType(_Base):
     ]
 
 
+class OFPortStateType(_Base):
+    _ELEMENTS = [
+        _e('oper-state', is_list=False),
+        _e('blocked', is_list=False),
+        _e('live', is_list=False),
+    ]
+
+
 class OFPortType(_Base):
     _ELEMENTS = [
         _e('resource-id', is_list=False),
@@ -38,7 +46,7 @@ class OFPortType(_Base):
         _e('current-rate', is_list=False),
         _e('max-rate', is_list=False),
         _ct('configuration', OFPortConfigurationType, is_list=False),
-        _ct('state', None, is_list=False),
+        _ct('state', OFPortStateType, is_list=False),
         _ct('features', None, is_list=False),
         _ct('tunnel-type', None, is_list=False),
     ]
