@@ -35,6 +35,7 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import nx_match
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_4
 
 
 LOG = logging.getLogger(__name__)
@@ -426,7 +427,8 @@ class LLDPPacket(object):
 
 
 class Switches(app_manager.RyuApp):
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_3.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_2.OFP_VERSION,
+                    ofproto_v1_3.OFP_VERSION, ofproto_v1_4.OFP_VERSION]
     _EVENTS = [event.EventSwitchEnter, event.EventSwitchLeave,
                event.EventPortAdd, event.EventPortDelete,
                event.EventPortModify,
@@ -548,7 +550,7 @@ class Switches(app_manager.RyuApp):
                         rule=rule, cookie=0, command=ofproto.OFPFC_ADD,
                         idle_timeout=0, hard_timeout=0, actions=actions,
                         priority=0xFFFF)
-                elif ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+                elif ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
                     match = ofproto_parser.OFPMatch(
                         eth_type=ETH_TYPE_LLDP,
                         eth_dst=lldp.LLDP_MAC_NEAREST_BRIDGE)
@@ -680,7 +682,7 @@ class Switches(app_manager.RyuApp):
         dst_dpid = msg.datapath.id
         if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             dst_port_no = msg.in_port
-        elif msg.datapath.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+        elif msg.datapath.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
             dst_port_no = msg.match['in_port']
         else:
             LOG.error('cannot accept LLDP. unsupported version. %x',
@@ -743,11 +745,11 @@ class Switches(app_manager.RyuApp):
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
             dp.send_packet_out(actions=actions, data=port_data.lldp_data)
-        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
             actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
             out = dp.ofproto_parser.OFPPacketOut(
-                datapath=dp, in_port=ofproto_v1_3.OFPP_CONTROLLER,
-                buffer_id=ofproto_v1_3.OFP_NO_BUFFER, actions=actions,
+                datapath=dp, in_port=dp.ofproto.OFPP_CONTROLLER,
+                buffer_id=dp.ofproto.OFP_NO_BUFFER, actions=actions,
                 data=port_data.lldp_data)
             dp.send_msg(out)
         else:
