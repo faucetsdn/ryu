@@ -19,6 +19,7 @@ from ryu.lib.packet import ipv4
 from ryu.lib.packet import vlan
 from ryu.lib.of_config import capable_switch as cs
 from ryu.lib.of_config import constants as consts
+import ryu.lib.of_config.classes as ofc
 import eventlet
 
 
@@ -504,10 +505,80 @@ class RpcOFPManager(app_manager.RyuApp):
         return {}
 
     def _ofconfig_thread(self):
-        while True:
-            (peer, msgid, params) = self.ofconfig.get()
-            error = None
-            result = None
+        def _handle_edit(s, o, param_dict):
+            target = 'candidate'
+            if 'port' in param_dict:
+                port_id = param_dict.pop('port')
+                config = ofc.OFPortConfigurationType(**param_dict)
+                port_type = ofc.OFPortType(resource_id=port_id,
+                                           configuration=config)
+                r = ofc.OFCapableSwitchResourcesType(port=[port_type])
+                c = ofc.OFCapableSwitchType(id=o.id, resources=r)
+                s.edit_config(target, c)
+            else:
+                queue = param_dict.pop('queue')
+                if 'experimenter' in param_dict:
+                    new_val = param_dict['experimenter']
+                    param_dict['experimenter'] = [new_val]
+                prop = ofc.OFQueuePropertiesType(**param_dict)
+                queue_type = ofc.OFQueueType(resource_id=queue,
+                                             properties=prop)
+                r = ofc.OFCapableSwitchResourcesType(queue=[queue_type])
+                c = ofc.OFCapableSwitchType(id=o.id,
+                                            resources=r)
+                if 'experimenter' in param_dict:
+                    old_val = None
+                    for q in o.resources.queue:
+                        if q.resource_id == queue:
+                            old_val = q.properties.experimenter[0]
+                            break
+                    if old_val is None:
+                        raise RPCError('cannot find queue, %s' % (queue))
+                    xml = ofc.NETCONF_Config(capable_switch=c).to_xml()
+                    key = '<of111:experimenter>'
+                    sidx = xml.find(key)
+                    eidx = xml.find('</of111:experimenter>')
+                    xml = xml[:sidx] + \
+                        '<of111:experimenter operation=\"delete\">' + \
+                        str(old_val) + xml[eidx:]
+                    key = '/of111:experimenter>\n'
+                    sidx = xml.find(key) + len(key)
+                    xml = xml[:sidx + 1] + \
+                        '<of111:experimenter operation=\"replace\">' + \
+                        str(new_val) + '</of111:experimenter>\n' + \
+                        xml[sidx + 1:]
+                    s.raw_edit_config(target, xml, None)
+                else:
+                    s.edit_config(target, c)
+            try:
+                s.commit()
+            except Exception as e:
+                s.discard_changes()
+                raise RPCError(str(e))
+            return {}
+
+        def _handle_get(o):
+            result = {}
+            ports = []
+            for p in o.resources.port:
+                config = p.configuration
+                ports.append({'name': str(p.name),
+                              'number': int(p.number),
+                              'admin-state': str(config.admin_state),
+                              'oper-state': str(p.state.oper_state)})
+                result['OFPort'] = ports
+
+                queues = []
+                for q in o.resources.queue:
+                    p = q.properties
+                    queues.append({'id': str(q.id),
+                                   'resource_id': str(q.resource_id),
+                                   'max-rate': str(p.max_rate),
+                                   'experimenter': str(p.experimenter)})
+                    result['OFQueue'] = queues
+            return result
+
+        def _handle(param_dict):
             # TODO: don't need to create a new conneciton every time.
             try:
                 s = cs.OFCapableSwitch(host=CONF.ofconfig_address,
@@ -516,23 +587,35 @@ class RpcOFPManager(app_manager.RyuApp):
                                        password=CONF.ofconfig_password,
                                        unknown_host_cb=lambda h, f: True)
             except:
-                s = None
+                raise RPCError('faied to connect to ofs')
 
-            if s is None:
-                error = 'faied to connect to ofs'
+            o = s.get()
+            if len(param_dict) == 0:
+                return _handle_get(o)
+            elif 'port' or 'queue' in param_dict:
+                return _handle_edit(s, o, param_dict)
+            elif 'port' and 'queue' in param_dict:
+                raise RPCError('only one resource at one shot')
             else:
-                o = s.get()
-                ports = []
-                for p in o.resources.port:
-                    config = p.configuration
-                    ports.append({'name': str(p.name),
-                                  'number': int(p.number),
-                                  'admin-state': str(config.admin_state),
-                                  'oper-state': str(p.state.oper_state)})
-                result = {}
-                result['OFPort'] = ports
+                raise RPCError('ununkown resource edit %s' % (str(param_dict)))
 
-            peer._endpoint.send_response(msgid, error=error, result=result)
+        while True:
+            error = None
+            result = None
+            (peer, msgid, params) = self.ofconfig.get()
+            param_dict = params[0]
+
+            try:
+                result = _handle(param_dict)
+            except RPCError as e:
+                error = str(e)
+            except Exception as e:
+                error = str(e)
+            try:
+                peer._endpoint.send_response(msgid, error=error, result=result)
+            except:
+                self.logger.info(_({'RPC send error %s, %s' %
+                                    (error, result)}))
 
     def _ofconfig(self, peer, msgid, params):
         try:
