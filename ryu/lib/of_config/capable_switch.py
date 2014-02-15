@@ -123,5 +123,11 @@ class OFCapableSwitch(object):
     def copy_config(self, source, target):
         self.netconf.copy_config(source, target)
 
+    def commit(self):
+        self.netconf.commit()
+
+    def discard_changes(self):
+        self.netconf.discard_changes()
+
     # TODO: more netconf operations
     # TODO: convinience(higher level) methods

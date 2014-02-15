@@ -143,11 +143,31 @@ class Cmd(cmd.Cmd):
 
     def do_get(self, line):
         """get <peer>
-        eg. get_config sw1
+        eg. get sw1
         """
 
         def f(p, args):
             print p.get()
+
+        self._request(line, f)
+
+    def do_commit(self, line):
+        """commit <peer>
+        eg. commit sw1
+        """
+
+        def f(p, args):
+            print p.commit()
+
+        self._request(line, f)
+
+    def do_discard(self, line):
+        """discard <peer>
+        eg. discard sw1
+        """
+
+        def f(p, args):
+            print p.discard_changes()
 
         self._request(line, f)
 
