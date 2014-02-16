@@ -779,7 +779,7 @@ OFPBMC_EPERM = 11  # Permissions error.
 
 # enum ofp_flow_mod_failed_code
 OFPFMFC_UNKNOWN = 0  # Unspecified error.
-OFPFMFC_TABLES_FULL = 1  # Flow not added because table was full.
+OFPFMFC_TABLE_FULL = 1  # Flow not added because table was full.
 OFPFMFC_BAD_TABLE_ID = 2  # Table does not exist
 OFPFMFC_OVERLAP = 3  # Attempted to add overlapping flow with
                      # CHECK_OVERLAP flag set.
