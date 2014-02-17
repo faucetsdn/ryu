@@ -87,7 +87,7 @@ class RunTest(tester.TestFlowBase):
         if name == 'field':
             if s_val.header != field:
                 return "Field error. send:%s val:%s" \
-                    % (field, s_val.field)
+                    % (field, s_val.header)
             s_val = s_val.value
 
         if name and s_val != value:
