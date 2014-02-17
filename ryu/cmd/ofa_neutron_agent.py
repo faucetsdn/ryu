@@ -55,17 +55,17 @@ CONF.register_cli_opts([
 
 def main():
     try:
-        CONF(project='ryu', version='ofs_neutron_agent %s' % version,
+        CONF(project='ryu', version='ofa_neutron_agent %s' % version,
              default_config_files=['/usr/local/etc/ryu/ryu.conf'])
     except cfg.ConfigFilesNotFoundError:
-        CONF(project='ryu', version='ofs_neutron_agent %s' % version)
+        CONF(project='ryu', version='ofa_neutron_agent %s' % version)
 
     osn_config.setup_logging(CONF)
 
     app_lists = CONF.app_lists + CONF.app
     if not app_lists:
         app_lists = ['ryu.app.ofctl.service',
-                     'neutron.plugins.ofswitch.agent.ofs_neutron_agent']
+                     'neutron.plugins.ofagent.agent.ofa_neutron_agent']
 
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)

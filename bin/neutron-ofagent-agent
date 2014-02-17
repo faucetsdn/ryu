@@ -15,5 +15,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ryu.cmd.ofs_neutron_agent import main
+from ryu.cmd.ofa_neutron_agent import main
 main()
