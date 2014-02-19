@@ -281,17 +281,25 @@ class OfTester(app_manager.RyuApp):
             self.logger.warning(NO_TEST_FILE)
             self._test_end()
 
+        test_report = {}
         self.logger.info('--- Test start ---')
         test_keys = tests.keys()
         test_keys.sort()
         for file_name in test_keys:
-            self._test_file_execute(tests[file_name])
-        self._test_end(msg='---  Test end  ---')
+            report = self._test_file_execute(tests[file_name])
+            for result, descriptions in report.items():
+                test_report.setdefault(result, [])
+                test_report[result].extend(descriptions)
+        self._test_end(msg='---  Test end  ---', report=test_report)
 
     def _test_file_execute(self, testfile):
+        report = {}
         for i, test in enumerate(testfile.tests):
             desc = testfile.description if i == 0 else None
-            self._test_execute(test, desc)
+            result = self._test_execute(test, desc)
+            report.setdefault(result, [])
+            report[result].append([testfile.description, test.description])
+        return report
 
     def _test_execute(self, test, description):
         if not self.target_sw or not self.tester_sw:
@@ -334,11 +342,14 @@ class OfTester(app_manager.RyuApp):
                     hub.sleep(INTERVAL)
                     self._test(STATE_FLOW_UNMATCH_CHK, before_stats, pkt)
             result = [TEST_OK]
+            result_type = TEST_OK
         except (TestFailure, TestError,
                 TestTimeout, TestReceiveError) as err:
             result = [TEST_ERROR, str(err)]
+            result_type = str(err).split(':', 1)[0]
         except Exception:
             result = [TEST_ERROR, RYU_INTERNAL_ERROR]
+            result_type = RYU_INTERNAL_ERROR
 
         # Output test result.
         self.logger.info('    %-100s %s', test.description, result[0])
@@ -351,13 +362,31 @@ class OfTester(app_manager.RyuApp):
         if result[0] != TEST_OK and self.state == STATE_INIT:
             self._test_end('--- Test terminated ---')
         hub.sleep(0)
+        return result_type
 
-    def _test_end(self, msg=None):
+    def _test_end(self, msg=None, report=None):
         self.test_thread = None
         if msg:
             self.logger.info(msg)
+        if report:
+            self._output_test_report(report)
         pid = os.getpid()
         os.kill(pid, signal.SIGTERM)
+
+    def _output_test_report(self, report):
+        self.logger.info('%s--- Test report ---', os.linesep)
+        ok_count = error_count = 0
+        for result_type in sorted(report.keys()):
+            test_descriptions = report[result_type]
+            if result_type == TEST_OK:
+                ok_count = len(test_descriptions)
+                continue
+            error_count += len(test_descriptions)
+            self.logger.info('%s(%d)', result_type, len(test_descriptions))
+            for file_desc, test_desc in test_descriptions:
+                self.logger.info('    %-40s %s', file_desc, test_desc)
+        self.logger.info('%s%s(%d) / %s(%d)', os.linesep,
+                         TEST_OK, ok_count, TEST_ERROR, error_count)
 
     def _test(self, state, *args):
         test = {STATE_INIT: self._test_initialize,
