@@ -1482,6 +1482,8 @@ class OFPFlowRemoved(MsgBase):
                      OFPRR_HARD_TIMEOUT
                      OFPRR_DELETE
                      OFPRR_GROUP_DELETE
+                     OFPRR_METER_DELETE
+                     OFPRR_EVICTION
     table_id         ID of the table
     duration_sec     Time flow was alive in seconds
     duration_nsec    Time flow was alive in nanoseconds beyond duration_sec
