@@ -2579,6 +2579,35 @@ class OFPQueueDescStatsRequest(OFPMultipartRequest):
                       self.port_no, self.queue_id)
 
 
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_QUEUE_DESC, OFPQueueDesc)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPQueueDescStatsReply(OFPMultipartReply):
+    """
+    Queue description reply message
+
+    The switch responds with this message to a queue description request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPQueueDescStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPQueueDescStatsReply, MAIN_DISPATCHER)
+        def queue_desc_stats_reply_handler(self, ev):
+            queues = []
+            for q in ev.msg.body:
+                queues.append('port_no=%d queue_id=0x%08x properties=%s' %
+                             (q.port_no, q.queue_id, repr(q.properties)))
+            self.logger.debug('OFPQueueDescStatsReply received: %s', queues)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPQueueDescStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPQueueProp(OFPPropBase):
     _TYPES = {}
 
