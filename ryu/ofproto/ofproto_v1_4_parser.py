@@ -1796,6 +1796,28 @@ class OFPTableDesc(StringifyMixin):
         return ofptabledesc
 
 
+class OFPQueueDesc(StringifyMixin):
+    def __init__(self, port_no=None, queue_id=None, len_=None,
+                 properties=None):
+        super(OFPQueueDesc, self).__init__()
+        self.port_no = port_no
+        self.queue_id = queue_id
+        self.len = len_
+        self.properties = properties
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (port_no, queue_id, len_) = struct.unpack_from(
+            ofproto.OFP_QUEUE_DESC_PACK_STR, buf, offset)
+        props = []
+        rest = buf[offset + ofproto.OFP_QUEUE_DESC_SIZE:offset + len_]
+        while rest:
+            p, rest = OFPQueueDescProp.parse(rest)
+            props.append(p)
+        ofpqueuedesc = cls(port_no, queue_id, len_, props)
+        return ofpqueuedesc
+
+
 def _set_stats_type(stats_type, stats_body_cls):
     def _set_cls_stats_type(cls):
         cls.cls_stats_type = stats_type
