@@ -2627,6 +2627,34 @@ x() ->
                               data = <<1:32,2:32>>}]}]},
         #ofp_queue_desc_request{
             port_no = 7,
-            queue_id = all}
+            queue_id = all},
+        #ofp_queue_desc_reply{
+            queues =
+                [#ofp_queue_desc{
+                     port_no = 7,
+                     properties =
+                         [#ofp_queue_desc_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>}],
+                     queue_id = 0},
+                 #ofp_queue_desc{
+                     port_no = 8,
+                     properties =
+                         [#ofp_queue_desc_prop_min_rate{rate = 300},
+                          #ofp_queue_desc_prop_max_rate{rate = 900},
+                          #ofp_queue_desc_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>},
+                          #ofp_queue_desc_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 1,
+                              data = <<1:32>>},
+                          #ofp_queue_desc_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 2,
+                              data = <<1:32,2:32>>}],
+                     queue_id = 1}]}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
