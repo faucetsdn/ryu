@@ -815,6 +815,74 @@ class OFPPortDescPropEthernet(StringifyMixin):
         return ether
 
 
+class OFPTableModProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPTableModProp.register_type(ofproto.OFPTMPT_EVICTION)
+class OFPTableModPropEviction(StringifyMixin):
+    def __init__(self, type_=None, length=None, flags=None):
+        self.type = type_
+        self.length = length
+        self.flags = flags
+
+    @classmethod
+    def parser(cls, buf):
+        eviction = cls()
+        (eviction.type, eviction.length, eviction.flags) = struct.unpack_from(
+            ofproto.OFP_TABLE_MOD_PROP_EVICTION_PACK_STR, buf, 0)
+        return eviction
+
+
+@OFPTableModProp.register_type(ofproto.OFPTMPT_VACANCY)
+class OFPTableModPropVacancy(StringifyMixin):
+    def __init__(self, type_=None, length=None, vacancy_down=None,
+                 vacancy_up=None, vacancy=None):
+        self.type = type_
+        self.length = length
+        self.vacancy_down = vacancy_down
+        self.vacancy_up = vacancy_up
+        self.vacancy = vacancy
+
+    @classmethod
+    def parser(cls, buf):
+        vacancy = cls()
+        (vacancy.type, vacancy.length, vacancy.vacancy_down,
+         vacancy.vacancy_up, vacancy.vacancy) = struct.unpack_from(
+            ofproto.OFP_TABLE_MOD_PROP_VACANCY_PACK_STR, buf, 0)
+        return vacancy
+
+
+@OFPTableModProp.register_type(ofproto.OFPTMPT_EXPERIMENTER)
+class OFPTableModPropExperimenter(StringifyMixin):
+    def __init__(self, type_=None, length=None, experimenter=None,
+                 exp_type=None, data=None):
+        self.type = type_
+        self.length = length
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf):
+        exp = cls()
+        (exp.type, exp.length, exp.experimenter,
+         exp.exp_type) = struct.unpack_from(
+            ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf, 0)
+
+        # Parse trailing data, a list of 4-byte words
+        exp.data = []
+        pack_str = '!I'
+        pack_size = struct.calcsize(pack_str)
+        offset = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
+        while offset < exp.length:
+            (word,) = struct.unpack_from(pack_str, buf, offset)
+            exp.data.append(word)
+            offset += pack_size
+
+        return exp
+
+
 class OFPMatchField(StringifyMixin):
     _FIELDS_HEADERS = {}
 
