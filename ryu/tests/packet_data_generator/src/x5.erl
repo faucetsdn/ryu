@@ -489,7 +489,26 @@ x() ->
             config = [],mask = [],
             properties = 
                 [#ofp_port_mod_prop_ethernet{advertise = [fiber]}]},
-        #ofp_table_mod{table_id = all},
+        #ofp_table_mod{
+            properties =
+                 [#ofp_table_mod_prop_eviction{flags = []},
+                  #ofp_table_mod_prop_vacancy{
+                      vacancy = 0,
+                      vacancy_down = 0,
+                      vacancy_up = 0},
+                  #ofp_table_mod_prop_experimenter{
+                      experimenter = 101,
+                      exp_type = 0,
+                      data = <<>>},
+                  #ofp_table_mod_prop_experimenter{
+                      experimenter = 101,
+                      exp_type = 1,
+                      data = <<1:32>>},
+                  #ofp_table_mod_prop_experimenter{
+                      experimenter = 101,
+                      exp_type = 2,
+                      data = <<1:32,2:32>>}],
+            table_id = all},
         #ofp_desc_request{},
         #ofp_aggregate_stats_request{
             flags = [],table_id = all,out_port = any,out_group = any,
