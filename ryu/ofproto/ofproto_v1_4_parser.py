@@ -833,6 +833,15 @@ class OFPTableModPropEviction(StringifyMixin):
             ofproto.OFP_TABLE_MOD_PROP_EVICTION_PACK_STR, buf, 0)
         return eviction
 
+    def serialize(self):
+        # fixup
+        self.length = ofproto.OFP_TABLE_MOD_PROP_EVICTION_SIZE
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_TABLE_MOD_PROP_EVICTION_PACK_STR, buf, 0,
+                      self.type, self.length, self.flags)
+        return buf
+
 
 @OFPTableModProp.register_type(ofproto.OFPTMPT_VACANCY)
 class OFPTableModPropVacancy(StringifyMixin):
@@ -852,9 +861,21 @@ class OFPTableModPropVacancy(StringifyMixin):
             ofproto.OFP_TABLE_MOD_PROP_VACANCY_PACK_STR, buf, 0)
         return vacancy
 
+    def serialize(self):
+        # fixup
+        self.length = ofproto.OFP_TABLE_MOD_PROP_VACANCY_SIZE
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_TABLE_MOD_PROP_VACANCY_PACK_STR, buf, 0,
+                      self.type, self.length, self.vacancy_down,
+                      self.vacancy_up, self.vacancy)
+        return buf
+
 
 @OFPTableModProp.register_type(ofproto.OFPTMPT_EXPERIMENTER)
 class OFPTableModPropExperimenter(StringifyMixin):
+    _DATA_ELEMENT_PACK_STR = '!I'
+
     def __init__(self, type_=None, length=None, experimenter=None,
                  exp_type=None, data=None):
         self.type = type_
@@ -872,15 +893,37 @@ class OFPTableModPropExperimenter(StringifyMixin):
 
         # Parse trailing data, a list of 4-byte words
         exp.data = []
-        pack_str = '!I'
-        pack_size = struct.calcsize(pack_str)
+        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
         offset = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
         while offset < exp.length:
-            (word,) = struct.unpack_from(pack_str, buf, offset)
+            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
+                                         buf, offset)
             exp.data.append(word)
             offset += pack_size
 
         return exp
+
+    def serialize(self):
+        data_buf = bytearray()
+        if len(self.data):
+            ofproto_parser.msg_pack_into('!%dI' % len(self.data),
+                                         data_buf, 0, *self.data)
+
+        #fixup
+        self.length = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
+        self.length += len(data_buf)
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf,
+                      0, self.type, self.length, self.experimenter,
+                      self.exp_type)
+        buf += data_buf
+
+        # Pad
+        pad_len = utils.round_up(self.length, 8) - self.length
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, len(buf))
+
+        return buf
 
 
 class OFPMatchField(StringifyMixin):
