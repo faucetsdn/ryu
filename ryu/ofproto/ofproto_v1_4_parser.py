@@ -2540,6 +2540,45 @@ class OFPTableDescStatsReply(OFPMultipartReply):
         super(OFPTableDescStatsReply, self).__init__(datapath, **kwargs)
 
 
+@_set_stats_type(ofproto.OFPMP_QUEUE_DESC, OFPQueueDesc)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPQueueDescStatsRequest(OFPMultipartRequest):
+    """
+    Queue description request message
+
+    The controller uses this message to query description of all the queues.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    port_no          Port number to read (OFPP_ANY for all ports)
+    queue_id         ID of queue to read (OFPQ_ALL for all queues)
+    ================ ======================================================
+
+    Example::
+
+        def send_tablet_desc_stats_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPQueueDescStatsRequest(datapath, 0,
+                                                      ofp.OFPP_ANY,
+                                                      ofp.OFPQ_ALL)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, port_no=ofproto.OFPP_ANY,
+                 queue_id=ofproto.OFPQ_ALL, type_=None):
+        super(OFPQueueDescStatsRequest, self).__init__(datapath, flags)
+        self.port_no = port_no
+        self.queue_id = queue_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_QUEUE_DESC_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.port_no, self.queue_id)
+
+
 class OFPQueueProp(OFPPropBase):
     _TYPES = {}
 
