@@ -926,6 +926,72 @@ class OFPTableModPropExperimenter(StringifyMixin):
         return buf
 
 
+class OFPQueueDescProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPQueueDescProp.register_type(ofproto.OFPQDPT_MIN_RATE)
+class OFPQueueDescPropMinRate(StringifyMixin):
+    def __init__(self, type_=None, length=None, rate=None):
+        self.type = type_
+        self.length = length
+        self.rate = rate
+
+    @classmethod
+    def parser(cls, buf):
+        minrate = cls()
+        (minrate.type, minrate.length, minrate.rate) = struct.unpack_from(
+            ofproto.OFP_QUEUE_DESC_PROP_MIN_RATE_PACK_STR, buf, 0)
+        return minrate
+
+
+@OFPQueueDescProp.register_type(ofproto.OFPQDPT_MAX_RATE)
+class OFPQueueDescPropMaxRate(StringifyMixin):
+    def __init__(self, type_=None, length=None, rate=None):
+        self.type = type_
+        self.length = length
+        self.rate = rate
+
+    @classmethod
+    def parser(cls, buf):
+        maxrate = cls()
+        (maxrate.type, maxrate.length, maxrate.rate) = struct.unpack_from(
+            ofproto.OFP_QUEUE_DESC_PROP_MAX_RATE_PACK_STR, buf, 0)
+        return maxrate
+
+
+@OFPQueueDescProp.register_type(ofproto.OFPQDPT_EXPERIMENTER)
+class OFPQueueDescPropExperimenter(StringifyMixin):
+    _DATA_ELEMENT_PACK_STR = '!I'
+
+    def __init__(self, type_=None, length=None, experimenter=None,
+                 exp_type=None, data=None):
+        self.type = type_
+        self.length = length
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf):
+        exp = cls()
+        (exp.type, exp.length, exp.experimenter,
+         exp.exp_type) = struct.unpack_from(
+            ofproto.OFP_QUEUE_DESC_PROP_EXPERIMENTER_PACK_STR, buf, 0)
+
+        # Parse trailing data, a list of 4-byte words
+        exp.data = []
+        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
+        offset = ofproto.OFP_QUEUE_DESC_PROP_EXPERIMENTER_SIZE
+        while offset < exp.length:
+            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
+                                         buf, offset)
+            exp.data.append(word)
+            offset += pack_size
+
+        return exp
+
+
 class OFPMatchField(StringifyMixin):
     _FIELDS_HEADERS = {}
 
