@@ -2624,6 +2624,9 @@ x() ->
                           #ofp_table_mod_prop_experimenter{
                               experimenter = 101,
                               exp_type = 2,
-                              data = <<1:32,2:32>>}]}]}
+                              data = <<1:32,2:32>>}]}]},
+        #ofp_queue_desc_request{
+            port_no = 7,
+            queue_id = all}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
