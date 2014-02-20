@@ -2344,6 +2344,61 @@ class OFPPortDescStatsReply(OFPMultipartReply):
         super(OFPPortDescStatsReply, self).__init__(datapath, **kwargs)
 
 
+@_set_stats_type(ofproto.OFPMP_TABLE_DESC, OFPTableDesc)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPTableDescStatsRequest(OFPMultipartRequest):
+    """
+    Table description request message
+
+    The controller uses this message to query description of all the tables.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_tablet_desc_stats_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPTableDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, type_=None):
+        super(OFPTableDescStatsRequest, self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_TABLE_DESC, OFPTableDesc)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPTableDescStatsReply(OFPMultipartReply):
+    """
+    Table description reply message
+
+    The switch responds with this message to a table description request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPTableDescStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPTableDescStatsReply, MAIN_DISPATCHER)
+        def table_desc_stats_reply_handler(self, ev):
+            tables = []
+            for p in ev.msg.body:
+                tables.append('table_id=%d config=0x%08x properties=%s' %
+                             (p.table_id, p.config, repr(p.properties)))
+            self.logger.debug('OFPTableDescStatsReply received: %s', ports)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPTableDescStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPQueueProp(OFPPropBase):
     _TYPES = {}
 
