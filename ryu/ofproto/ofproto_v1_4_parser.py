@@ -1665,6 +1665,28 @@ class OFPPort(StringifyMixin):
         return ofpport
 
 
+class OFPTableDesc(StringifyMixin):
+    def __init__(self, length=None, table_id=None, config=None,
+                 properties=None):
+        super(OFPTableDesc, self).__init__()
+        self.table_id = table_id
+        self.length = length
+        self.config = config
+        self.properties = properties
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, table_id, config) = struct.unpack_from(
+            ofproto.OFP_TABLE_DESC_PACK_STR, buf, offset)
+        props = []
+        rest = buf[offset + ofproto.OFP_TABLE_DESC_SIZE:offset + length]
+        while rest:
+            p, rest = OFPTableModProp.parse(rest)
+            props.append(p)
+        ofptabledesc = cls(length, table_id, config, props)
+        return ofptabledesc
+
+
 def _set_stats_type(stats_type, stats_body_cls):
     def _set_cls_stats_type(cls):
         cls.cls_stats_type = stats_type
