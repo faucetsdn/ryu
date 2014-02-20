@@ -2573,6 +2573,38 @@ x() ->
             experimenter = 16#deadbeaf,
             exp_type = 16#cafe7777,
             data = <<"testdata99999999">>
-        }
+        },
+        #ofp_table_desc_request{flags = []},
+        #ofp_table_desc_reply{flags = [],
+            tables =
+                [#ofp_table_desc{
+                     table_id = 7,
+                     config = [],
+                     properties =
+                         [ #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>}]},
+                 #ofp_table_desc{
+                     table_id = 8,
+                     config = [],
+                     properties =
+                         [#ofp_table_mod_prop_eviction{flags = []},
+                          #ofp_table_mod_prop_vacancy{
+                              vacancy = 0,
+                              vacancy_down = 0,
+                              vacancy_up = 0},
+                          #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>},
+                          #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 1,
+                              data = <<1:32>>},
+                          #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 2,
+                              data = <<1:32,2:32>>}]}]}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
