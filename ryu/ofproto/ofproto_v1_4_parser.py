@@ -1822,17 +1822,27 @@ class OFPTableMod(MsgBase):
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPTableMod(datapath, 1, 3)
+            flags = ofproto.OFPTMPEF_OTHER
+            properties = [ofp_parser.OFPTableModPropEviction(flags)]
+            req = ofp_parser.OFPTableMod(datapath, 1, 3, properties)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, table_id, config):
+    def __init__(self, datapath, table_id, config, properties):
         super(OFPTableMod, self).__init__(datapath)
         self.table_id = table_id
         self.config = config
+        self.properties = properties
 
     def _serialize_body(self):
+        props_buf = bytearray()
+        for p in self.properties:
+            props_buf += p.serialize()
+
         msg_pack_into(ofproto.OFP_TABLE_MOD_PACK_STR, self.buf,
                       ofproto.OFP_HEADER_SIZE,
                       self.table_id, self.config)
+
+        self.buf += props_buf
 
 
 @_register_parser
