@@ -16,6 +16,7 @@
 
 # client for ryu.app.ofctl.service
 
+from ryu.base import app_manager
 import event
 
 
@@ -33,3 +34,6 @@ def send_msg(app, msg):
     Send an openflow message.
     """
     return app.send_request(event.SendMsgRequest(msg=msg))()
+
+
+app_manager.require_app('ryu.app.ofctl.service')
