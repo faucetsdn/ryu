@@ -18,7 +18,6 @@
 Usage:
 PYTHONPATH=. ./bin/ryu-manager --verbose \
              ryu.topology.switches \
-             ryu.services.protocols.vrrp.manager \
              ryu.tests.integrated.test_vrrp_multi \
              ryu.services.protocols.vrrp.dumper
 

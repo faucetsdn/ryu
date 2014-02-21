@@ -17,7 +17,6 @@
 """
 Usage:
 PYTHONPATH=. ./bin/ryu-manager --verbose \
-             ryu.services.protocols.vrrp.manager \
              ryu.services.protocols.vrrp.dumper \
              ryu.services.protocols.vrrp.sample_manager.py \
              ryu.tests.integrated.test_vrrp_linux_multi \
