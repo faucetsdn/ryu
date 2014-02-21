@@ -3159,19 +3159,26 @@ class OFPActionExperimenter(OFPAction):
     experimenter     Experimenter ID
     ================ ======================================================
     """
-    def __init__(self, experimenter, type_=None, len_=None):
+    def __init__(self, experimenter, data=None, type_=None, len_=None):
         super(OFPActionExperimenter, self).__init__()
         self.experimenter = experimenter
+        self.data = data
+        self.len = (utils.round_up(len(data), 8) +
+                    ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
 
     @classmethod
     def parser(cls, buf, offset):
         (type_, len_, experimenter) = struct.unpack_from(
             ofproto.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR, buf, offset)
-        return cls(experimenter)
+        data = buf[(offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
+                    ): offset + len_]
+        return cls(experimenter, data)
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR,
                       buf, offset, self.type, self.len, self.experimenter)
+        if self.data:
+            buf += self.data
 
 
 class OFPBucket(StringifyMixin):
