@@ -20,7 +20,7 @@ from ryu.app.wsgi import ControllerBase, WSGIApplication
 from ryu.base import app_manager
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import port_no as port_no_lib
-from ryu.topology.switches import get_switch, get_link
+from ryu.topology.api import get_switch, get_link
 
 # REST API for switch configuration
 #
