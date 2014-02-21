@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ryu.base import app_manager
 from ryu.services.protocols.vrrp import event as vrrp_event
 
 
@@ -63,3 +64,6 @@ def vrrp_config_change(app, instance_name,
         instance_name, priority, advertisement_interval,
         preempt_mode, accept_mode)
     return app.send_event(vrrp_event.VRRP_MANAGER_NAME, config_change)
+
+
+app_manager.require_app('ryu.services.protocols.vrrp.manager')
