@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011-2014 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,6 +46,19 @@ def register_app(app):
 
 def unregister_app(app):
     SERVICE_BRICKS.pop(app.name)
+
+
+def require_app(app_name):
+    """
+    Request the application to be loaded.
+
+    This is used for "api" style modules, which is imported by a client
+    application, to automatically load the corresponding server application.
+    """
+    frm = inspect.stack()[2]  # skip a frame for "api" module
+    m = inspect.getmodule(frm[0])  # client module
+    m._REQUIRED_APP = getattr(m, '_REQUIRED_APP', [])
+    m._REQUIRED_APP.append(app_name)
 
 
 class RyuApp(object):

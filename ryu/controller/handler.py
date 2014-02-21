@@ -90,6 +90,8 @@ def get_dependent_services(cls):
                     if cls.__module__ != service:
                         services.append(service)
 
+    m = sys.modules[cls.__module__]
+    services.extend(getattr(m, '_REQUIRED_APP', []))
     services = list(set(services))
     return services
 
