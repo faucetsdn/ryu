@@ -64,8 +64,7 @@ def main():
 
     app_lists = CONF.app_lists + CONF.app
     if not app_lists:
-        app_lists = ['ryu.app.ofctl.service',
-                     'neutron.plugins.ofagent.agent.ofa_neutron_agent']
+        app_lists = ['neutron.plugins.ofagent.agent.ofa_neutron_agent']
 
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
