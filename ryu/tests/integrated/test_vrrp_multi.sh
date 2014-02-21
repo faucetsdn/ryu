@@ -16,8 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VSCTL=ovs-vsctl
-#VSCTL=${HOME}/ovs/bin/ovs-vsctl
+if [ -z "$VSCTL" ]; then
+    VSCTL=ovs-vsctl
+fi
 
 # create two bridges.
 # conncect them using patch ports.
