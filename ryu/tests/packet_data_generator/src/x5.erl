@@ -2655,6 +2655,23 @@ x() ->
                               experimenter = 101,
                               exp_type = 2,
                               data = <<1:32,2:32>>}],
-                     queue_id = 1}]}
+                     queue_id = 1}]},
+        #ofp_role_status{
+            role = master,
+            reason = master_request,
+            generation_id=7,
+            properties =
+                [#ofp_role_prop_experimenter{
+                     experimenter = 101,
+                     exp_type = 0,
+                     data = <<>>},
+                 #ofp_role_prop_experimenter{
+                     experimenter = 101,
+                     exp_type = 1,
+                     data = <<1:32>>},
+                 #ofp_role_prop_experimenter{
+                     experimenter = 101,
+                     exp_type = 2,
+                     data = <<1:32,2:32>>}]}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
