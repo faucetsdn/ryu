@@ -970,6 +970,15 @@ class OFPQueueDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
 
+class OFPRoleProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPRoleProp.register_type(ofproto.OFPRPT_EXPERIMENTER)
+class OFPRolePropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 class OFPMatchField(StringifyMixin):
     _FIELDS_HEADERS = {}
 
