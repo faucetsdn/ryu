@@ -788,6 +788,60 @@ class OFPPropBase(StringifyMixin):
         return prop, rest
 
 
+class OFPPropCommonExperimenter4ByteData(StringifyMixin):
+    _DATA_ELEMENT_PACK_STR = '!I'
+    _PACK_STR = '!HHII'
+
+    def __init__(self, type_=None, length=None, experimenter=None,
+                 exp_type=None, data=None):
+        self.type = type_
+        self.length = length
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf):
+        exp = cls()
+        (exp.type, exp.length, exp.experimenter,
+         exp.exp_type) = struct.unpack_from(
+            ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf, 0)
+
+        # Parse trailing data, a list of 4-byte words
+        exp.data = []
+        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
+        offset = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
+        while offset < exp.length:
+            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
+                                         buf, offset)
+            exp.data.append(word)
+            offset += pack_size
+
+        return exp
+
+    def serialize(self):
+        data_buf = bytearray()
+        if len(self.data):
+            ofproto_parser.msg_pack_into('!%dI' % len(self.data),
+                                         data_buf, 0, *self.data)
+
+        #fixup
+        self.length = struct.calcsize(self._PACK_STR)
+        self.length += len(data_buf)
+
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf,
+                      0, self.type, self.length, self.experimenter,
+                      self.exp_type)
+        buf += data_buf
+
+        # Pad
+        pad_len = utils.round_up(self.length, 8) - self.length
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, len(buf))
+
+        return buf
+
+
 class OFPPortProp(OFPPropBase):
     _TYPES = {}
 
@@ -873,57 +927,8 @@ class OFPTableModPropVacancy(StringifyMixin):
 
 
 @OFPTableModProp.register_type(ofproto.OFPTMPT_EXPERIMENTER)
-class OFPTableModPropExperimenter(StringifyMixin):
-    _DATA_ELEMENT_PACK_STR = '!I'
-
-    def __init__(self, type_=None, length=None, experimenter=None,
-                 exp_type=None, data=None):
-        self.type = type_
-        self.length = length
-        self.experimenter = experimenter
-        self.exp_type = exp_type
-        self.data = data
-
-    @classmethod
-    def parser(cls, buf):
-        exp = cls()
-        (exp.type, exp.length, exp.experimenter,
-         exp.exp_type) = struct.unpack_from(
-            ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf, 0)
-
-        # Parse trailing data, a list of 4-byte words
-        exp.data = []
-        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
-        offset = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
-        while offset < exp.length:
-            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
-                                         buf, offset)
-            exp.data.append(word)
-            offset += pack_size
-
-        return exp
-
-    def serialize(self):
-        data_buf = bytearray()
-        if len(self.data):
-            ofproto_parser.msg_pack_into('!%dI' % len(self.data),
-                                         data_buf, 0, *self.data)
-
-        #fixup
-        self.length = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
-        self.length += len(data_buf)
-
-        buf = bytearray()
-        msg_pack_into(ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf,
-                      0, self.type, self.length, self.experimenter,
-                      self.exp_type)
-        buf += data_buf
-
-        # Pad
-        pad_len = utils.round_up(self.length, 8) - self.length
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, len(buf))
-
-        return buf
+class OFPTableModPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
 
 
 class OFPQueueDescProp(OFPPropBase):
@@ -961,35 +966,8 @@ class OFPQueueDescPropMaxRate(StringifyMixin):
 
 
 @OFPQueueDescProp.register_type(ofproto.OFPQDPT_EXPERIMENTER)
-class OFPQueueDescPropExperimenter(StringifyMixin):
-    _DATA_ELEMENT_PACK_STR = '!I'
-
-    def __init__(self, type_=None, length=None, experimenter=None,
-                 exp_type=None, data=None):
-        self.type = type_
-        self.length = length
-        self.experimenter = experimenter
-        self.exp_type = exp_type
-        self.data = data
-
-    @classmethod
-    def parser(cls, buf):
-        exp = cls()
-        (exp.type, exp.length, exp.experimenter,
-         exp.exp_type) = struct.unpack_from(
-            ofproto.OFP_QUEUE_DESC_PROP_EXPERIMENTER_PACK_STR, buf, 0)
-
-        # Parse trailing data, a list of 4-byte words
-        exp.data = []
-        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
-        offset = ofproto.OFP_QUEUE_DESC_PROP_EXPERIMENTER_SIZE
-        while offset < exp.length:
-            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
-                                         buf, offset)
-            exp.data.append(word)
-            offset += pack_size
-
-        return exp
+class OFPQueueDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
 
 
 class OFPMatchField(StringifyMixin):
