@@ -545,7 +545,8 @@ class OfTester(app_manager.RyuApp):
     def _test_unmatch_packet_send(self, pkt):
         # Send a packet from the OpenFlow Switch.
         self.logger.debug("send_packet:[%s]", packet.Packet(pkt[KEY_INGRESS]))
-        self.tester_sw.send_packet_out(pkt[KEY_INGRESS])
+        xid = self.tester_sw.send_packet_out(pkt[KEY_INGRESS])
+        self.send_msg_xids.append(xid)
 
         # Wait OFPBarrierReply.
         xid = self.tester_sw.send_barrier_request()
