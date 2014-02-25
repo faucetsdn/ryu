@@ -86,17 +86,19 @@ class TestRpcOFPManager(unittest.TestCase):
         except api.RPCError as e:
             pass
 
+        port_name = 'OFP11'
+        interval = 10
         try:
-            m._monitor_port(msgid, {'physical_port_no': 1})
+            m._monitor_port(msgid, {'physical_port_no': port_name})
         except api.RPCError as e:
             pass
 
         contents = {'hoge': 'jail'}
-        r = m._monitor_port(msgid, [{'physical_port_no': 1,
+        r = m._monitor_port(msgid, [{'physical_port_no': port_name,
                                      'contexts': contents,
-                                     'interval': 30}])
+                                     'interval': interval}])
         eq_(r, {})
-        eq_(m.monitored_ports[1], contents)
+        eq_(m.monitored_ports[port_name], (contents, interval))
 
     def test_register_traceroute(self):
         m = api.RpcOFPManager(dpset=None)
@@ -137,8 +139,8 @@ class TestRpcOFPManager(unittest.TestCase):
         if ports:
             class DummyPort(object):
                 def __init__(self, port_no):
-                    self.name = port_no
-            dps.ports = dict(map((lambda n: (n, DummyPort(n))), ports))
+                    self.port_no = port_no
+            dps.ports = map(lambda n: DummyPort(n), ports)
             dps.get_ports = lambda dpid: dps.ports
 
         dps._register(dp)
@@ -423,23 +425,28 @@ class TestRpcOFPManager(unittest.TestCase):
 
     def _test_port_status_thread(self, ofp, ofpp):
         dpid = 10
-        dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
+        port_no = 1
+        port_name = 'OFP11'
+        dps = self._create_dpset(dpid, ports=(port_no,), ofp=ofp, ofpp=ofpp)
         dp = dps.get(dpid)
         m = api.RpcOFPManager(dpset=dps)
-        m.port_monitor_interval = 10
-
+        p = dps.get_ports(dpid)
+        p[0].name = port_name
         threads = []
+        m.monitored_ports[port_name] = ({}, 1)
         with hub.Timeout(2):
-            threads.append(hub.spawn(m._port_status_thread))
-
+            threads.append(hub.spawn(m._monitor_thread, port_name,
+                                     m.monitored_ports,
+                                     m._port_stats_generator))
             hub.sleep(0.5)
             for t in threads:
                 hub.kill(t)
             hub.joinall(threads)
 
+        assert len(dp.sent)
         for m in dp.sent:
             eq_(m.__class__, ofpp.OFPPortStatsRequest)
-            eq_(m.port_no, ofp.OFPP_ANY)
+            eq_(m.port_no, port_no)
 
     def test_port_status_thread_12(self):
         self._test_port_status_thread(ofproto_v1_2, ofproto_v1_2_parser)
