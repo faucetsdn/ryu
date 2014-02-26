@@ -2641,6 +2641,11 @@ class OFPQueueStatsProp(OFPPropBase):
     _TYPES = {}
 
 
+@OFPQueueStatsProp.register_type(ofproto.OFPQSPT_EXPERIMENTER)
+class OFPQueueStatsPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 class OFPQueueStats(StringifyMixin):
     def __init__(self, length=None, port_no=None, queue_id=None,
                  tx_bytes=None, tx_packets=None, tx_errors=None,
