@@ -2401,6 +2401,12 @@ class OFPTableFeaturePropOxm(OFPTableFeatureProp):
         return bin_ids
 
 
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
+class OFPTableFeaturePropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 @_set_stats_type(ofproto.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
 @_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
 class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
