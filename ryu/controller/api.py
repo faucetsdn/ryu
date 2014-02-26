@@ -238,10 +238,7 @@ class RpcOFPManager(app_manager.RyuApp):
                     contexts = self.monitored_flows[k]
                     break
             if contexts is not None:
-                stats = {'byte_count': body.byte_count,
-                         'packet_count': body.packet_count,
-                         'match': body.match.to_jsondict(),
-                         'table_id': body.table_id}
+                stats = body.to_jsondict()['OFPFlowStats']
                 stats.update(contexts)
                 self.logger.info(_(msg=stats, log_type='stats'))
 
@@ -270,9 +267,7 @@ class RpcOFPManager(app_manager.RyuApp):
         for stat in msg.body:
             if stat.meter_id in self.monitored_meters:
                 contexts = self.monitored_meters[stat.meter_id]
-                stats = {'meter_id': stat.meter_id,
-                         'flow_count': stat.flow_count,
-                         'byte_in_count': stat.byte_in_count}
+                stats = stat.to_jsondict()['OFPMeterStats']
                 stats.update(contexts)
                 self.logger.info(_(msg=stats, log_type='stats'))
 
@@ -284,6 +279,7 @@ class RpcOFPManager(app_manager.RyuApp):
         for stat in msg.body:
             if stat.queue_id in self.monitored_queues:
                 contexts, interval_ = self.monitored_queues[stat.queue_id]
+                stats = stat.to_jsondict()['OFPQueueStats']
                 stats = {'queue_id': stat.queue_id,
                          'port_no': stat.port_no,
                          'tx_bytes': stat.tx_bytes,
