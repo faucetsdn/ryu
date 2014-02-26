@@ -899,6 +899,11 @@ class OFPPortDescPropOptical(StringifyMixin):
         return optical
 
 
+@OFPPortProp.register_type(ofproto.OFPPDPT_EXPERIMENTER)
+class OFPPortDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 class OFPTableModProp(OFPPropBase):
     _TYPES = {}
 
