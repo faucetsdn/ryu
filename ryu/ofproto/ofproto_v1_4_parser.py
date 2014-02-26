@@ -2637,7 +2637,7 @@ class OFPQueueDescStatsReply(OFPMultipartReply):
         super(OFPQueueDescStatsReply, self).__init__(datapath, **kwargs)
 
 
-class OFPQueueProp(OFPPropBase):
+class OFPQueueStatsProp(OFPPropBase):
     _TYPES = {}
 
 
@@ -2664,7 +2664,7 @@ class OFPQueueStats(StringifyMixin):
         props = []
         rest = buf[offset + ofproto.OFP_QUEUE_STATS_SIZE:offset + length]
         while rest:
-            p, rest = OFPQueueProp.parse(rest)
+            p, rest = OFPQueueStatsProp.parse(rest)
             props.append(p)
         stats = cls(length, port_no, queue_id, tx_bytes, tx_packets, tx_errors,
                     duration_sec, duration_nsec, props)
