@@ -729,7 +729,19 @@ x() ->
                                                        rx_max_freq_lmda = 2000,
                                                        rx_grid_freq_lmda = 1500,
                                                        tx_pwr_min = 1000,
-                                                       tx_pwr_max = 2000}]},
+                                                       tx_pwr_max = 2000},
+                                                    #ofp_port_desc_prop_experimenter{
+                                                       experimenter = 101,
+                                                       exp_type = 0,
+                                                       data = <<>>},
+                                                    #ofp_port_desc_prop_experimenter{
+                                                       experimenter = 101,
+                                                       exp_type = 1,
+                                                       data = <<1:32>>},
+                                                    #ofp_port_desc_prop_experimenter{
+                                                       experimenter = 101,
+                                                       exp_type = 2,
+                                                       data = <<1:32,2:32>>}]},
                                      #ofp_port{port_no = 6,hw_addr = <<"\362\v\244}\370\352">>,
                                                name = <<"Port6">>,config = [],
                                                state = [live],

@@ -5,7 +5,7 @@
             "OFPPort": {
                "config": 0, 
                "hw_addr": "f2:0b:a4:d0:3f:70", 
-               "length": 112, 
+               "length": 168, 
                "name": "Port7", 
                "properties": [
                    {
@@ -33,6 +33,33 @@
                            "tx_min_freq_lmda": 1000, 
                            "tx_pwr_max": 2000, 
                            "tx_pwr_min": 1000
+                       }
+                    },
+                    {
+                       "OFPPortDescPropExperimenter": {
+                           "length": 12, 
+                           "type": 65535, 
+                           "exp_type": 0, 
+                           "experimenter": 101, 
+                           "data": []
+                       }
+                    },
+                    {
+                       "OFPPortDescPropExperimenter": {
+                           "length": 16, 
+                           "type": 65535, 
+                           "exp_type": 1, 
+                           "experimenter": 101, 
+                           "data": [1]
+                       }
+                    },
+                    {
+                       "OFPPortDescPropExperimenter": {
+                           "length": 20, 
+                           "type": 65535, 
+                           "exp_type": 2, 
+                           "experimenter": 101, 
+                           "data": [1, 2]
                        }
                    }
                ],
