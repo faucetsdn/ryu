@@ -258,6 +258,9 @@ x() ->
                           #ofp_action_set_mpls_ttl{mpls_ttl = 10},
                           #ofp_action_dec_nw_ttl{},
                           #ofp_action_set_nw_ttl{nw_ttl = 10},
+                          #ofp_action_experimenter{
+                              experimenter = 101,
+                              data = <<0,1,2,3,4,5,6,7>>},
                           #ofp_action_set_queue{queue_id = 3},
                           #ofp_action_group{group_id = 99},
                           #ofp_action_output{port = 6,max_len = no_buffer}]},
