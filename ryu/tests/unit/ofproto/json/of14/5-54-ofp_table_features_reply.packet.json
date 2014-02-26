@@ -4,7 +4,7 @@
          {
             "OFPTableFeaturesStats": {
                "config": 0, 
-               "length": 1112, 
+               "length": 1168, 
                "max_entries": 16777216, 
                "metadata_match": 18446744073709551615, 
                "metadata_write": 18446744073709551615, 
@@ -1590,8 +1590,35 @@
                            }
                         ], 
                         "type": 14
-                     }
-                  }
+                       }
+                    }, 
+                    {
+                       "OFPTableFeaturePropExperimenter": {
+                           "length": 12, 
+                           "type": 65534, 
+                           "exp_type": 0, 
+                           "experimenter": 101, 
+                           "data": []
+                       }
+                    }, 
+                    {
+                       "OFPTableFeaturePropExperimenter": {
+                           "length": 16, 
+                           "type": 65534, 
+                           "exp_type": 1, 
+                           "experimenter": 101, 
+                           "data": [1]
+                       }
+                    }, 
+                    {
+                       "OFPTableFeaturePropExperimenter": {
+                           "length": 20, 
+                           "type": 65534, 
+                           "exp_type": 2, 
+                           "experimenter": 101, 
+                           "data": [1, 2]
+                       }
+                    }
                ], 
                "table_id": 0
             }

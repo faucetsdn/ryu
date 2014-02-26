@@ -1768,7 +1768,19 @@ x() ->
                                    arp_tha,ipv6_src,ipv6_dst,ipv6_flabel,
                                    icmpv6_type,icmpv6_code,ipv6_nd_target,
                                    ipv6_nd_sll,ipv6_nd_tll,mpls_label,mpls_tc,
-                                   mpls_bos,pbb_isid]}]},
+                                   mpls_bos,pbb_isid]},
+                          #ofp_table_feature_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>},
+                          #ofp_table_feature_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 1,
+                              data = <<1:32>>},
+                          #ofp_table_feature_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 2,
+                              data = <<1:32,2:32>>}]},
                  #ofp_table_features{
                      table_id = 1,name = <<"Flow Table 0x01">>,
                      metadata_match = <<"\377\377\377\377\377\377\377\377">>,
