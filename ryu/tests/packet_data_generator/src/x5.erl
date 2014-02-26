@@ -582,7 +582,20 @@ x() ->
             body = 
                 [#ofp_queue_stats{
                      port_no = 7,queue_id = 1,tx_bytes = 0,tx_packets = 0,
-                     tx_errors = 0},
+                     tx_errors = 0,
+                     properties =
+                         [#ofp_queue_stats_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>},
+                          #ofp_queue_stats_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 1,
+                              data = <<1:32>>},
+                          #ofp_queue_stats_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 2,
+                              data = <<1:32,2:32>>}]},
                  #ofp_queue_stats{
                      port_no = 6,queue_id = 1,tx_bytes = 0,tx_packets = 0,
                      tx_errors = 0},
