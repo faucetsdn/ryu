@@ -2293,6 +2293,7 @@ class OFPTableFeaturePropActions(OFPTableFeatureProp):
 
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_NEXT_TABLES)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_NEXT_TABLES_MISS)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_TABLE_SYNC_FROM)
 class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
     _TABLE_ID_PACK_STR = '!B'
 
