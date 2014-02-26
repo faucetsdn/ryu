@@ -602,7 +602,17 @@ x() ->
                              advertised = [copper,autoneg],
                              supported = ['100mb_fd',copper,autoneg],
                              peer = ['100mb_fd',copper,autoneg],
-                             curr_speed = 5000,max_speed = 5000}]}
+                             curr_speed = 5000,max_speed = 5000},
+                          #ofp_port_desc_prop_optical{
+                             supported = [rx_tune],
+                             tx_min_freq_lmda = 1000,
+                             tx_max_freq_lmda = 2000,
+                             tx_grid_freq_lmda = 1500,
+                             rx_min_freq_lmda = 1000,
+                             rx_max_freq_lmda = 2000,
+                             rx_grid_freq_lmda = 1500,
+                             tx_pwr_min = 1000,
+                             tx_pwr_max = 2000}]}
         },
         #ofp_flow_removed{
             cookie = <<0,0,0,0,0,0,0,0>>,
