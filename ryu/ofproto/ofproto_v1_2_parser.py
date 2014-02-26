@@ -1447,11 +1447,11 @@ class OFPActionSetField(OFPAction):
 
     This action modifies a header field in the packet.
 
-    ================ ======================================================
-    Attribute        Description
-    ================ ======================================================
-    field            Instance of ``OFPMatchField``
-    ================ ======================================================
+    The set of keywords available for this is same as OFPMatch.
+
+    Example::
+
+        set_field = OFPActionSetField(eth_src="00:00:00:00:00")
     """
     def __init__(self, field=None, **kwargs):
         # old api
