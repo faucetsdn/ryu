@@ -5,7 +5,7 @@
             "OFPPort": {
                "config": 0, 
                "hw_addr": "f2:0b:a4:d0:3f:70", 
-               "length": 72, 
+               "length": 112, 
                "name": "Port7", 
                "properties": [
                    {
@@ -18,6 +18,21 @@
                            "max_speed": 5000, 
                            "peer": 10248, 
                            "supported": 10248
+                       }
+                    },
+                    {
+                       "OFPPortDescPropOptical": {
+                           "length": 40, 
+                           "type": 1, 
+                           "rx_grid_freq_lmda": 1500, 
+                           "rx_max_freq_lmda": 2000, 
+                           "rx_min_freq_lmda": 1000, 
+                           "supported": 1, 
+                           "tx_grid_freq_lmda": 1500, 
+                           "tx_max_freq_lmda": 2000, 
+                           "tx_min_freq_lmda": 1000, 
+                           "tx_pwr_max": 2000, 
+                           "tx_pwr_min": 1000
                        }
                    }
                ],
