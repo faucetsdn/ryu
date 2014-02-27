@@ -5106,19 +5106,18 @@ class OFPGroupMod(MsgBase):
 
 
 class OFPPortModPropEthernet(StringifyMixin):
-    _PACK_STR = '!HHI'  # type, len, advertise
-
     def __init__(self, type_=None, length=None, advertise=None):
         self.type = type_
         self.advertise = advertise
 
     def serialize(self):
         # fixup
-        self.length = struct.calcsize(self._PACK_STR)
+        self.length = struct.calcsize(
+            ofproto.OFP_PORT_MOD_PROP_ETHERNET_PACK_STR)
 
         buf = bytearray()
-        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length,
-                      self.advertise)
+        msg_pack_into(ofproto.OFP_PORT_MOD_PROP_ETHERNET_PACK_STR,
+                      buf, 0, self.type, self.length, self.advertise)
         return buf
 
 
