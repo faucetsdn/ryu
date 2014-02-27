@@ -3904,6 +3904,11 @@ class OFPPortStatsPropOptical(StringifyMixin):
         return optical
 
 
+@OFPPortStatsProp.register_type(ofproto.OFPPSPT_EXPERIMENTER)
+class OFPPortStatsPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 class OFPPortStats(StringifyMixin):
     def __init__(self, length=None, port_no=None, duration_sec=None,
                  duration_nsec=None, rx_packets=None, tx_packets=None,
