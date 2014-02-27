@@ -5149,7 +5149,7 @@ class OFPTableFeaturePropExperimenter(OFPTableFeatureProp):
         while offset < length:
             (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
                                          buf, offset)
-            exp.data.append(word)
+            data.append(word)
             offset += pack_size
 
         return {

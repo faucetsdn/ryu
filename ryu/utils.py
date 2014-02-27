@@ -100,7 +100,7 @@ def hex_array(data):
 
 def bytearray_to_hex(data):
     """Convert bytearray into array of hexes to be printed."""
-    return ' '.join(hex(byte) for byte in data)
+    return ' '.join(hex(ord(byte)) for byte in data)
 
 
 # the following functions are taken from OpenStack
