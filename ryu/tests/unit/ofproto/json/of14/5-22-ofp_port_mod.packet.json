@@ -21,6 +21,33 @@
                   "grid_span": 3000, 
                   "tx_pwr": 300
               }
+           },
+           {
+              "OFPPortModPropExperimenter": {
+                  "length": 12, 
+                  "type": 65535, 
+                  "exp_type": 0, 
+                  "experimenter": 101, 
+                  "data": []
+              }
+           }, 
+           {
+              "OFPPortModPropExperimenter": {
+                  "length": 16, 
+                  "type": 65535, 
+                  "exp_type": 1, 
+                  "experimenter": 101, 
+                  "data": [1]
+              }
+           }, 
+           {
+              "OFPPortModPropExperimenter": {
+                  "length": 20, 
+                  "type": 65535, 
+                  "exp_type": 2, 
+                  "experimenter": 101, 
+                  "data": [1, 2]
+              }
           }
       ], 
       "port_no": 1

@@ -497,7 +497,19 @@ x() ->
                      freq_lmda = 1500,
                      fl_offset = 2000,
                      grid_span = 3000,
-                     tx_pwr = 300}]},
+                     tx_pwr = 300},
+                  #ofp_port_mod_prop_experimenter{
+                      experimenter = 101,
+                      exp_type = 0,
+                      data = <<>>},
+                  #ofp_port_mod_prop_experimenter{
+                      experimenter = 101,
+                      exp_type = 1,
+                      data = <<1:32>>},
+                  #ofp_port_mod_prop_experimenter{
+                      experimenter = 101,
+                      exp_type = 2,
+                      data = <<1:32,2:32>>}]},
         #ofp_table_mod{
             properties =
                  [#ofp_table_mod_prop_eviction{flags = []},
