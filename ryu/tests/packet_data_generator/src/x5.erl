@@ -555,7 +555,19 @@ x() ->
                              tx_pwr = 2000,
                              rx_pwr = 2000,
                              bias_current = 300,
-                             temperature = 273}]},
+                             temperature = 273},
+                          #ofp_port_stats_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>},
+                          #ofp_port_stats_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 1,
+                              data = <<1:32>>},
+                          #ofp_port_stats_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 2,
+                              data = <<1:32,2:32>>}]},
                  #ofp_port_stats{
                      port_no = 6,rx_packets = 4,tx_packets = 4,rx_bytes = 336,
                      tx_bytes = 336,rx_dropped = 0,tx_dropped = 0,

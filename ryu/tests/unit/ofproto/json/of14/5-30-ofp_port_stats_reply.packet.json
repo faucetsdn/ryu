@@ -5,7 +5,7 @@
             "OFPPortStats": {
                "duration_nsec": 0, 
                "duration_sec": 0, 
-               "length": 168, 
+               "length": 224, 
                "port_no": 7, 
                "properties": [
                   {
@@ -34,6 +34,33 @@
                           "type": 1, 
                           "tx_grid_span": 500
                       }
+                  },
+                  {
+                     "OFPPortStatsPropExperimenter": {
+                         "length": 12, 
+                         "type": 65535, 
+                         "exp_type": 0, 
+                         "experimenter": 101, 
+                         "data": []
+                     }
+                  }, 
+                  {
+                     "OFPPortStatsPropExperimenter": {
+                         "length": 16, 
+                         "type": 65535, 
+                         "exp_type": 1, 
+                         "experimenter": 101, 
+                         "data": [1]
+                     }
+                  }, 
+                  {
+                     "OFPPortStatsPropExperimenter": {
+                         "length": 20, 
+                         "type": 65535, 
+                         "exp_type": 2, 
+                         "experimenter": 101, 
+                         "data": [1, 2]
+                     }
                   }
                ], 
                "rx_bytes": 0, 
