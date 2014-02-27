@@ -491,7 +491,13 @@ x() ->
         #ofp_port_mod{port_no = 1, hw_addr = <<0,17,0,0,17,17>>,
             config = [],mask = [],
             properties = 
-                [#ofp_port_mod_prop_ethernet{advertise = [fiber]}]},
+                [#ofp_port_mod_prop_ethernet{advertise = [fiber]},
+                 #ofp_port_mod_prop_optical{
+                     configure = [rx_tune, tx_tune],
+                     freq_lmda = 1500,
+                     fl_offset = 2000,
+                     grid_span = 3000,
+                     tx_pwr = 300}]},
         #ofp_table_mod{
             properties =
                  [#ofp_table_mod_prop_eviction{flags = []},

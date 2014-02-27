@@ -10,6 +10,17 @@
                   "length": 8, 
                   "advertise": 4096
               }
+           },
+           {
+              "OFPPortModPropOptical": {
+                  "length": 24, 
+                  "type": 1, 
+                  "configure": 3, 
+                  "freq_lmda": 1500, 
+                  "fl_offset": 2000, 
+                  "grid_span": 3000, 
+                  "tx_pwr": 300
+              }
           }
       ], 
       "port_no": 1
