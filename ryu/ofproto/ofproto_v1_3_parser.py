@@ -5126,7 +5126,7 @@ class OFPTableFeaturePropOxm(OFPTableFeatureProp):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MISS)
 class OFPTableFeaturePropExperimenter(OFPTableFeatureProp):
     _DATA_ELEMENT_PACK_STR = '!I'
-    _PACK_STR = '!II'
+    _BODY_PACK_STR = '!II'
 
     def __init__(self, type_, experimenter=None, exp_type=None,
                  data=None, length=None):
@@ -5138,13 +5138,14 @@ class OFPTableFeaturePropExperimenter(OFPTableFeatureProp):
 
     @classmethod
     def _parse_prop(cls, buf):
-        (experimenter, exp_type) = struct.unpack_from(cls._PACK_STR, buf, 0)
+        (experimenter, exp_type) = struct.unpack_from(cls._BODY_PACK_STR,
+                                                      buf, 0)
 
         # Parse trailing data, a list of 4-byte words
         length = len(buf)
         data = []
         pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
-        offset = struct.calcsize(cls._PACK_STR)
+        offset = struct.calcsize(cls._BODY_PACK_STR)
         while offset < length:
             (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
                                          buf, offset)
@@ -5160,19 +5161,13 @@ class OFPTableFeaturePropExperimenter(OFPTableFeatureProp):
     def _serialize_prop(self):
         # experimenter, exp_type
         buf = bytearray()
-        msg_pack_into(self._PACK_STR, buf, 0, self.experimenter,
+        msg_pack_into(self._BODY_PACK_STR, buf, 0, self.experimenter,
                       self.exp_type)
 
         # data
         if len(self.data):
             ofproto_parser.msg_pack_into('!%dI' % len(self.data),
-                                         data_buf, len(buf), *self.data)
-
-        # pad
-        length = super(OFPTableFeaturePropExperimenter, self)._PACK_STR
-        length += len(buf)
-        pad_len = utils.round_up(length, 8) - length
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, len(buf))
+                                         buf, len(buf), *self.data)
 
         return buf
 
