@@ -5145,6 +5145,10 @@ class OFPPortModPropOptical(StringifyMixin):
         return buf
 
 
+class OFPPortModPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 @_set_msg_type(ofproto.OFPT_PORT_MOD)
 class OFPPortMod(MsgBase):
     """
