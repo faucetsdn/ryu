@@ -5,7 +5,7 @@
             "OFPPortStats": {
                "duration_nsec": 0, 
                "duration_sec": 0, 
-               "length": 120, 
+               "length": 168, 
                "port_no": 7, 
                "properties": [
                   {
@@ -17,6 +17,23 @@
                         "rx_over_err": 0, 
                         "type": 0
                      }
+                  }, 
+                  {
+                      "OFPPortStatsPropOptical": {
+                          "bias_current": 300, 
+                          "tx_freq_lmda": 1500, 
+                          "temperature": 273, 
+                          "rx_freq_lmda": 1500, 
+                          "tx_pwr": 2000, 
+                          "length": 44, 
+                          "flags": 3, 
+                          "rx_offset": 700, 
+                          "rx_grid_span": 500, 
+                          "rx_pwr": 2000, 
+                          "tx_offset": 700, 
+                          "type": 1, 
+                          "tx_grid_span": 500
+                      }
                   }
                ], 
                "rx_bytes": 0, 

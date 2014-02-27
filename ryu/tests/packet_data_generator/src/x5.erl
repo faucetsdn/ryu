@@ -543,7 +543,19 @@ x() ->
                      properties = 
                          [#ofp_port_stats_prop_ethernet{
                              rx_frame_err = 0,rx_over_err = 0,
-                             rx_crc_err = 0,collisions = 0}]},
+                             rx_crc_err = 0,collisions = 0},
+                          #ofp_port_stats_prop_optical{
+                             flags = [rx_tune,tx_tune],
+                             tx_freq_lmda = 1500,
+                             tx_offset = 700,
+                             tx_grid_span = 500,
+                             rx_freq_lmda = 1500,
+                             rx_offset = 700,
+                             rx_grid_span = 500,
+                             tx_pwr = 2000,
+                             rx_pwr = 2000,
+                             bias_current = 300,
+                             temperature = 273}]},
                  #ofp_port_stats{
                      port_no = 6,rx_packets = 4,tx_packets = 4,rx_bytes = 336,
                      tx_bytes = 336,rx_dropped = 0,tx_dropped = 0,
