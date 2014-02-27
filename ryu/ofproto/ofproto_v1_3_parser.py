@@ -5122,8 +5122,59 @@ class OFPTableFeaturePropOxm(OFPTableFeatureProp):
         return bin_ids
 
 
-# XXX ofproto.OFPTFPT_EXPERIMENTER
-# XXX ofproto.OFPTFPT_EXPERIMENTER_MISS
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MISS)
+class OFPTableFeaturePropExperimenter(OFPTableFeatureProp):
+    _DATA_ELEMENT_PACK_STR = '!I'
+    _PACK_STR = '!II'
+
+    def __init__(self, type_, experimenter=None, exp_type=None,
+                 data=None, length=None):
+        self.type = type_
+        self.length = length
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
+
+    @classmethod
+    def _parse_prop(cls, buf):
+        (experimenter, exp_type) = struct.unpack_from(cls._PACK_STR, buf, 0)
+
+        # Parse trailing data, a list of 4-byte words
+        length = len(buf)
+        data = []
+        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
+        offset = struct.calcsize(cls._PACK_STR)
+        while offset < length:
+            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
+                                         buf, offset)
+            exp.data.append(word)
+            offset += pack_size
+
+        return {
+            'experimenter': experimenter,
+            'exp_type': exp_type,
+            'data': data,
+        }
+
+    def _serialize_prop(self):
+        # experimenter, exp_type
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.experimenter,
+                      self.exp_type)
+
+        # data
+        if len(self.data):
+            ofproto_parser.msg_pack_into('!%dI' % len(self.data),
+                                         data_buf, len(buf), *self.data)
+
+        # pad
+        length = super(OFPTableFeaturePropExperimenter, self)._PACK_STR
+        length += len(buf)
+        pad_len = utils.round_up(length, 8) - length
+        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, len(buf))
+
+        return buf
 
 
 @_set_stats_type(ofproto.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
