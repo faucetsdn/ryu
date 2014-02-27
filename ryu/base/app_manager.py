@@ -287,13 +287,19 @@ class AppManager(object):
 
             services = []
             for key, context_cls in cls.context_iteritems():
-                cls = self.contexts_cls.setdefault(key, context_cls)
-                assert cls == context_cls
+                v = self.contexts_cls.setdefault(key, context_cls)
+                assert v == context_cls
 
                 if issubclass(context_cls, RyuApp):
                     services.extend(get_dependent_services(context_cls))
 
-            services.extend(get_dependent_services(cls))
+            # we can't load an app that will be initiataed for
+            # contexts.
+            context_modules = map(lambda x: x.__module__,
+                                  self.contexts_cls.values())
+            for i in get_dependent_services(cls):
+                if not i in context_modules:
+                    services.append(i)
             if services:
                 app_lists.extend(services)
 
