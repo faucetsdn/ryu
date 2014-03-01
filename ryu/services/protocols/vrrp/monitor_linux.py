@@ -17,6 +17,7 @@
 import contextlib
 import socket
 import struct
+import fcntl
 
 from ryu.controller import handler
 from ryu.ofproto import ether
@@ -69,6 +70,11 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
         # socket module doesn't define IPPROTO_VRRP
         self.ip_socket = socket.socket(family, socket.SOCK_RAW,
                                        inet.IPPROTO_VRRP)
+        if self.config.use_virtual_mac is False:
+            i = fcntl.ioctl(self.ip_socket.fileno(), 0x8927,
+                            struct.pack('256s',
+                                        self.interface.device_name[:15]))
+            mac_address = addrconv.mac.bin_to_text(i[18:24])
 
         self.packet_socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
                                            socket.htons(ether_type))
@@ -78,6 +84,7 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
                                  addrconv.mac.text_to_bin(mac_address)))
 
         self.ifindex = if_nametoindex(self.interface.device_name)
+        self.config.src_mac = mac_address
 
     def start(self):
         # discard received packets before joining multicast membership
@@ -104,10 +111,7 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
     # multicast are aligned in the same way on all the archtectures.
     def _join_multicast_membership(self, join_leave):
         config = self.config
-        if config.is_ipv6:
-            mac_address = vrrp.vrrp_ipv6_src_mac_address(config.vrid)
-        else:
-            mac_address = vrrp.vrrp_ipv4_src_mac_address(config.vrid)
+        mac_address = self.config.src_mac
         if join_leave:
             add_drop = PACKET_ADD_MEMBERSHIP
         else:

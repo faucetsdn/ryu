@@ -325,7 +325,7 @@ class vrrp(packet_base.PacketBase):
             self.identification &= 0xffff
         return self.identification
 
-    def create_packet(self, primary_ip_address, vlan_id=None):
+    def create_packet(self, primary_ip_address, vlan_id=None, src_mac=None):
         """Prepare a VRRP packet.
 
         Returns a newly created ryu.lib.packet.packet.Packet object
@@ -348,8 +348,10 @@ class vrrp(packet_base.PacketBase):
             traffic_class = 0xc0        # set tos to internetwork control
             flow_label = 0
             payload_length = ipv6.ipv6._MIN_LEN + len(self)     # XXX _MIN_LEN
+            if src_mac is None:
+                src_mac = vrrp_ipv6_src_mac_address(self.vrid)
             e = ethernet.ethernet(VRRP_IPV6_DST_MAC_ADDRESS,
-                                  vrrp_ipv6_src_mac_address(self.vrid),
+                                  src_mac,
                                   ether.ETH_TYPE_IPV6)
             ip = ipv6.ipv6(6, traffic_class, flow_label, payload_length,
                            inet.IPPROTO_VRRP, VRRP_IPV6_HOP_LIMIT,
@@ -359,8 +361,10 @@ class vrrp(packet_base.PacketBase):
             total_length = 0
             tos = 0xc0  # set tos to internetwork control
             identification = self.get_identification()
+            if src_mac is None:
+                src_mac = vrrp_ipv4_src_mac_address(self.vrid)
             e = ethernet.ethernet(VRRP_IPV4_DST_MAC_ADDRESS,
-                                  vrrp_ipv4_src_mac_address(self.vrid),
+                                  src_mac,
                                   ether.ETH_TYPE_IP)
             ip = ipv4.ipv4(4, header_length, tos, total_length, identification,
                            0, 0, VRRP_IPV4_TTL, inet.IPPROTO_VRRP, 0,

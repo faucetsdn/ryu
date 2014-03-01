@@ -221,7 +221,7 @@ class VRRPRouter(app_manager.RyuApp):
         # create packet frame each time to generate new ip identity
         interface = self.interface
         packet_ = vrrp_.create_packet(interface.primary_ip_address,
-                                      interface.vlan_id)
+                                      interface.vlan_id, self.config.src_mac)
         packet_.serialize()
         vrrp_api.vrrp_transmit(self, self.monitor_name, packet_.data)
         self.statistics.tx_vrrp_packets += 1

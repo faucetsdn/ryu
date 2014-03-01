@@ -26,12 +26,7 @@ from ryu.lib import hub
 from ryu.lib import mac
 from ryu.lib import apgw
 
-VRRP_RPC_PORT = 50004  # random
 CONF = cfg.CONF
-
-CONF.register_opts([
-    cfg.IntOpt('vrrp-rpc-port', default=VRRP_RPC_PORT,
-               help='port for vrrp rpc interface')])
 
 _ = type('', (apgw.StructuredMessage,), {})
 _.COMPONENT_NAME = 'vrrp'
@@ -149,6 +144,8 @@ class RpcVRRPManager(app_manager.RyuApp):
                                               'preempt_mode',
                                               'preempt_delay',
                                               'statistics_interval'))
+        if CONF.vrrp_use_vmac:
+            config_params.update({'use_virtual_mac': True})
         try:
             config_params['ip_addresses'] = [config_params.pop('ip_address')]
         except:
