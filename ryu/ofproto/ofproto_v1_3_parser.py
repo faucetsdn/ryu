@@ -3374,7 +3374,7 @@ class OFPMeterMod(MsgBase):
                      OFPMC_ADD
                      OFPMC_MODIFY
                      OFPMC_DELETE
-    flags            One of the following flags.
+    flags            Bitmap of the following flags.
                      OFPMF_KBPS
                      OFPMF_PKTPS
                      OFPMF_BURST
