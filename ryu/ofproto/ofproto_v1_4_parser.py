@@ -3182,7 +3182,7 @@ class OFPMeterBandHeader(OFPMeterBand):
 @OFPMeterBandHeader.register_meter_band_type(
     ofproto.OFPMBT_DROP, ofproto.OFP_METER_BAND_DROP_SIZE)
 class OFPMeterBandDrop(OFPMeterBandHeader):
-    def __init__(self, rate, burst_size, type_=None, len_=None):
+    def __init__(self, rate=0, burst_size=0, type_=None, len_=None):
         super(OFPMeterBandDrop, self).__init__()
         self.rate = rate
         self.burst_size = burst_size
@@ -3204,7 +3204,8 @@ class OFPMeterBandDrop(OFPMeterBandHeader):
     ofproto.OFPMBT_DSCP_REMARK,
     ofproto.OFP_METER_BAND_DSCP_REMARK_SIZE)
 class OFPMeterBandDscpRemark(OFPMeterBandHeader):
-    def __init__(self, rate, burst_size, prec_level, type_=None, len_=None):
+    def __init__(self, rate=0, burst_size=0, prec_level=0,
+                 type_=None, len_=None):
         super(OFPMeterBandDscpRemark, self).__init__()
         self.rate = rate
         self.burst_size = burst_size
@@ -3228,7 +3229,8 @@ class OFPMeterBandDscpRemark(OFPMeterBandHeader):
     ofproto.OFPMBT_EXPERIMENTER,
     ofproto.OFP_METER_BAND_EXPERIMENTER_SIZE)
 class OFPMeterBandExperimenter(OFPMeterBandHeader):
-    def __init__(self, rate, burst_size, experimenter, type_=None, len_=None):
+    def __init__(self, rate=0, burst_size=0, experimenter=None,
+                 type_=None, len_=None):
         super(OFPMeterBandExperimenter, self).__init__()
         self.rate = rate
         self.burst_size = burst_size
@@ -4516,7 +4518,7 @@ class OFPInstructionMeter(OFPInstruction):
     meter_id         Meter instance
     ================ ======================================================
     """
-    def __init__(self, meter_id, type_=None, len_=None):
+    def __init__(self, meter_id=1, type_=None, len_=None):
         super(OFPInstructionMeter, self).__init__()
         self.type = ofproto.OFPIT_METER
         self.len = ofproto.OFP_INSTRUCTION_METER_SIZE
