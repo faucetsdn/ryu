@@ -564,11 +564,10 @@ class OFPSetConfig(MsgBase):
     ============= =========================================================
     Attribute     Description
     ============= =========================================================
-    flags         One of the following configuration flags.
+    flags         Bitmap of the following flags.
                   OFPC_FRAG_NORMAL
                   OFPC_FRAG_DROP
                   OFPC_FRAG_REASM
-                  OFPC_FRAG_MASK
     miss_send_len Max bytes of new flow that datapath should send to the
                   controller
     ============= =========================================================
