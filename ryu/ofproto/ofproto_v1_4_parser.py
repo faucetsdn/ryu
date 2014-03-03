@@ -481,11 +481,10 @@ class OFPGetConfigReply(MsgBase):
     ============= =========================================================
     Attribute     Description
     ============= =========================================================
-    flags         One of the following configuration flags.
+    flags         Bitmap of the following flags.
                   OFPC_FRAG_NORMAL
                   OFPC_FRAG_DROP
                   OFPC_FRAG_REASM
-                  OFPC_FRAG_MASK
     miss_send_len Max bytes of new flow that datapath should send to the
                   controller
     ============= =========================================================
@@ -497,20 +496,17 @@ class OFPGetConfigReply(MsgBase):
             msg = ev.msg
             dp = msg.datapath
             ofp = dp.ofproto
+            flags = []
 
-            if msg.flags == ofp.OFPC_FRAG_NORMAL:
-                flags = 'NORMAL'
-            elif msg.flags == ofp.OFPC_FRAG_DROP:
-                flags = 'DROP'
-            elif msg.flags == ofp.OFPC_FRAG_REASM:
-                flags = 'REASM'
-            elif msg.flags == ofp.OFPC_FRAG_MASK:
-                flags = 'MASK'
-            else:
-                flags = 'unknown'
+            if msg.flags & ofp.OFPC_FRAG_NORMAL:
+                flags.append('NORMAL')
+            if msg.flags & ofp.OFPC_FRAG_DROP:
+                flags.append('DROP')
+            if msg.flags & ofp.OFPC_FRAG_REASM:
+                flags.append('REASM')
             self.logger.debug('OFPGetConfigReply received: '
                               'flags=%s miss_send_len=%d',
-                              flags, msg.miss_send_len)
+                              ','.join(flags), msg.miss_send_len)
     """
     def __init__(self, datapath, flags=None, miss_send_len=None):
         super(OFPGetConfigReply, self).__init__(datapath)
