@@ -2346,7 +2346,7 @@ class OFPFlowMod(MsgBase):
                      entries to include this as an output port
     out_group        For ``OFPFC_DELETE*`` commands, require matching
                      entries to include this as an output group
-    flags            One of the following values.
+    flags            Bitmap of the following flags.
                      OFPFF_SEND_FLOW_REM
                      OFPFF_CHECK_OVERLAP
                      OFPFF_RESET_COUNTS
