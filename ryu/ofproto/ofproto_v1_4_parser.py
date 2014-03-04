@@ -1916,8 +1916,10 @@ class OFPTableMod(MsgBase):
     Attribute        Description
     ================ ======================================================
     table_id         ID of the table (OFPTT_ALL indicates all tables)
-    config           Bitmap of the following flags.
-                     OFPTC_DEPRECATED_MASK (3)
+    config           Bitmap of configuration flags.
+                     OFPTC_EVICTION
+                     OFPTC_VACANCY_EVENTS
+    properties       List of ``OFPTableModProp`` subclass instance
     ================ ======================================================
 
     Example::
@@ -1927,7 +1929,7 @@ class OFPTableMod(MsgBase):
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPTableMod(datapath, 1, 3)
-            flags = ofproto.OFPTMPEF_OTHER
+            flags = ofproto.OFPTC_VACANCY_EVENTS
             properties = [ofp_parser.OFPTableModPropEviction(flags)]
             req = ofp_parser.OFPTableMod(datapath, 1, 3, properties)
             datapath.send_msg(req)
