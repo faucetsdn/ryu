@@ -779,7 +779,7 @@
                                  "length": 0, 
                                  "type": "mpls_bos"
                               }
-                           },
+                           }, 
                            {
                               "OFPOxmId": {
                                  "hasmask": 0, 
@@ -1591,32 +1591,37 @@
                         ], 
                         "type": 14
                      }
-                  },
+                  }, 
                   {
                      "OFPTableFeaturePropExperimenter": {
-                         "length": 12, 
-                         "type": 65534, 
-                         "exp_type": 0, 
-                         "experimenter": 101, 
-                         "data": []
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65534
                      }
                   }, 
                   {
                      "OFPTableFeaturePropExperimenter": {
-                         "length": 16, 
-                         "type": 65534, 
-                         "exp_type": 1, 
-                         "experimenter": 101, 
-                         "data": [1]
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65534
                      }
                   }, 
                   {
                      "OFPTableFeaturePropExperimenter": {
-                         "length": 20, 
-                         "type": 65534, 
-                         "exp_type": 2, 
-                         "experimenter": 101, 
-                         "data": [1, 2]
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65534
                      }
                   }
                ], 

@@ -1590,35 +1590,40 @@
                            }
                         ], 
                         "type": 14
-                       }
-                    }, 
-                    {
-                       "OFPTableFeaturePropExperimenter": {
-                           "length": 12, 
-                           "type": 65534, 
-                           "exp_type": 0, 
-                           "experimenter": 101, 
-                           "data": []
-                       }
-                    }, 
-                    {
-                       "OFPTableFeaturePropExperimenter": {
-                           "length": 16, 
-                           "type": 65534, 
-                           "exp_type": 1, 
-                           "experimenter": 101, 
-                           "data": [1]
-                       }
-                    }, 
-                    {
-                       "OFPTableFeaturePropExperimenter": {
-                           "length": 20, 
-                           "type": 65534, 
-                           "exp_type": 2, 
-                           "experimenter": 101, 
-                           "data": [1, 2]
-                       }
-                    }
+                     }
+                  }, 
+                  {
+                     "OFPTableFeaturePropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65534
+                     }
+                  }, 
+                  {
+                     "OFPTableFeaturePropExperimenter": {
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65534
+                     }
+                  }, 
+                  {
+                     "OFPTableFeaturePropExperimenter": {
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65534
+                     }
+                  }
                ], 
                "table_id": 0
             }

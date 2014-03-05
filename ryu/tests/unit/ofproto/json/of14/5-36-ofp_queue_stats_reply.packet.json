@@ -10,32 +10,37 @@
                "properties": [
                   {
                      "OFPQueueStatsPropExperimenter": {
-                         "length": 12, 
-                         "type": 65535, 
-                         "exp_type": 0, 
-                         "experimenter": 101, 
-                         "data": []
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
                      }
                   }, 
                   {
                      "OFPQueueStatsPropExperimenter": {
-                         "length": 16, 
-                         "type": 65535, 
-                         "exp_type": 1, 
-                         "experimenter": 101, 
-                         "data": [1]
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65535
                      }
                   }, 
                   {
                      "OFPQueueStatsPropExperimenter": {
-                         "length": 20, 
-                         "type": 65535, 
-                         "exp_type": 2, 
-                         "experimenter": 101, 
-                         "data": [1, 2]
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65535
                      }
-                  } 
-               ],
+                  }
+               ], 
                "queue_id": 1, 
                "tx_bytes": 0, 
                "tx_errors": 0, 
