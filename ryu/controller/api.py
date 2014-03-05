@@ -212,7 +212,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 if ev.dp.id in peer.wait_for_ofp_resepnse:
                     del peer.wait_for_ofp_resepnse[ev.dp.id]
 
-        self.logger.info(_(log_msg))
+        self.logger.critical(_(log_msg))
         for peer in self._peers:
             peer._endpoint.send_notification("state", [notify_param])
 
