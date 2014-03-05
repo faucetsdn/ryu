@@ -210,6 +210,6 @@ class RpcVRRPManager(app_manager.RyuApp):
         new_state = ev.new_state
         vrid = ev.config.vrid
         params = {'vrid': vrid, 'old_state': old_state, 'new_state': new_state}
-        self.logger.info(_(msg=params))
+        self.logger.critical(_(msg=params))
         for peer in self._peers:
             peer._endpoint.send_notification("notify_status", [params])
