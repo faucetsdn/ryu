@@ -783,11 +783,10 @@ class OFPPropBase(StringifyMixin):
 
 
 class OFPPropCommonExperimenter4ByteData(StringifyMixin):
-    _DATA_ELEMENT_PACK_STR = '!I'
     _PACK_STR = '!HHII'
 
     def __init__(self, type_=None, length=None, experimenter=None,
-                 exp_type=None, data=None):
+                 exp_type=None, data=bytearray()):
         self.type = type_
         self.length = length
         self.experimenter = experimenter
@@ -796,38 +795,21 @@ class OFPPropCommonExperimenter4ByteData(StringifyMixin):
 
     @classmethod
     def parser(cls, buf):
-        exp = cls()
-        (exp.type, exp.length, exp.experimenter,
-         exp.exp_type) = struct.unpack_from(
+        (type_, length, experimenter, exp_type) = struct.unpack_from(
             ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf, 0)
-
-        # Parse trailing data, a list of 4-byte words
-        exp.data = []
-        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
-        offset = ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE
-        while offset < exp.length:
-            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
-                                         buf, offset)
-            exp.data.append(word)
-            offset += pack_size
-
-        return exp
+        data = buf[ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE:length]
+        return cls(type_, length, experimenter, exp_type, data)
 
     def serialize(self):
-        data_buf = bytearray()
-        if len(self.data):
-            ofproto_parser.msg_pack_into('!%dI' % len(self.data),
-                                         data_buf, 0, *self.data)
-
         #fixup
         self.length = struct.calcsize(self._PACK_STR)
-        self.length += len(data_buf)
+        self.length += len(self.data)
 
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf,
                       0, self.type, self.length, self.experimenter,
                       self.exp_type)
-        buf += data_buf
+        buf += self.data
 
         # Pad
         pad_len = utils.round_up(self.length, 8) - self.length
