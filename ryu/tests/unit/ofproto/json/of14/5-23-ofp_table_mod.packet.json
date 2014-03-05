@@ -20,7 +20,7 @@
          }, 
          {
             "OFPTableModPropExperimenter": {
-               "data": [], 
+               "data": "", 
                "exp_type": 0, 
                "experimenter": 101, 
                "length": 12, 
@@ -29,9 +29,7 @@
          }, 
          {
             "OFPTableModPropExperimenter": {
-               "data": [
-                  1
-               ], 
+               "data": "AAAAAQ==", 
                "exp_type": 1, 
                "experimenter": 101, 
                "length": 16, 
@@ -40,10 +38,7 @@
          }, 
          {
             "OFPTableModPropExperimenter": {
-               "data": [
-                  1, 
-                  2
-               ], 
+               "data": "AAAAAQAAAAI=", 
                "exp_type": 2, 
                "experimenter": 101, 
                "length": 20, 
