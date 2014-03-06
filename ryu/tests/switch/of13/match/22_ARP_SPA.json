@@ -618,11 +618,45 @@
         ]
     },
     {
-        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/arp(src_ip='192.168.10.10')-->'arp_spa=192.168.10.10,actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(src_ip='192.168.10.10')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_spa=192.168.10.10,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
                     "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":35047
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopPbb":{}
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
                     "match":{
                         "OFPMatch":{
                             "oxm_fields":[
@@ -661,22 +695,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
                     "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
-                    "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
                     "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
@@ -684,11 +710,45 @@
         ]
     },
     {
-        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/arp(src_ip='192.168.10.10')-->'arp_spa=192.168.10.10,actions=output:CONTROLLER'",
+        "description":"ethernet/itag/ethernet/arp(src_ip='192.168.10.10')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_spa=192.168.10.10,actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
                     "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":35047
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopPbb":{}
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
                     "match":{
                         "OFPMatch":{
                             "oxm_fields":[
@@ -728,22 +788,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
                     "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
-                    "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
                     "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
@@ -751,11 +803,45 @@
         ]
     },
     {
-        "description":"ethernet/svlan/itag/ethernet/svlan/vlan/arp(src_ip='10.10.10.10')-->'arp_spa=192.168.10.10,actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(src_ip='10.10.10.10')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_spa=192.168.10.10,actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
                     "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":35047
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopPbb":{}
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
                     "match":{
                         "OFPMatch":{
                             "oxm_fields":[
@@ -794,17 +880,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
+                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=35047)",
                     "itag(sid=203)",
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=5, cfi=0, vid=203, ethertype=2054)",
+                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2054)",
                     "arp(dst_ip='10.10.20.20',dst_mac='bb:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "table-miss":[
-                    0
+                    1
                 ]
             }
         ]

@@ -256,11 +256,45 @@
         ]
     },
     {
-        "description": "ethernet/svlan/itag/ethernet/svlan/vlan/ipv4/sctp(dst_port=2222)-->'sctp_dst=2222,actions=set_field:6789->sctp_dst,output:2'",
+        "description": "ethernet/itag/ethernet/ipv4/sctp(dst_port=2222)-->'actions=pop_pbb,goto_table:1','table_id:1,sctp_dst=2222,actions=set_field:6789->sctp_dst,output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
                     "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":35047
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopPbb":{}
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
                     "match":{
                         "OFPMatch":{
                             "oxm_fields":[
@@ -315,22 +349,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
                     "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
-                    "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
                     "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=6789, src_port=11111)"
                 ]

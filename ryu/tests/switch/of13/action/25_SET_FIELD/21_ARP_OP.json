@@ -238,11 +238,45 @@
         ]
     },
     {
-        "description": "ethernet/svlan/itag/ethernet/svlan/vlan/arp(opcode=1)-->'arp_op=1,actions=set_field:2->arp_op,output:2'",
+        "description": "ethernet/itag/ethernet/arp(opcode=1)-->'actions=pop_pbb,goto_table:1','table_id:1,arp_op=1,actions=set_field:2->arp_op,output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
                     "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":35047
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopPbb":{}
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
                     "match":{
                         "OFPMatch":{
                             "oxm_fields":[
@@ -291,22 +325,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
                     "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=35047, vid=10)",
-                    "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34984)",
-                    "svlan(ethertype=33024, vid=10)",
-                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
                     "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=2, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
