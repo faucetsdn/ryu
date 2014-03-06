@@ -104,20 +104,20 @@ class TestRpcOFPManager(unittest.TestCase):
         m = api.RpcOFPManager(dpset=None)
         msgid = 1
         try:
-            m._register_traceroute(msgid, [{}])
+            m._register_traceroute([{}])
         except api.RPCError as e:
             pass
 
         try:
-            m._register_traceroute(msgid, [{'vlan': 1}])
+            m._register_traceroute([{'vlan': 1}])
         except api.RPCError as e:
             pass
 
         vlan_id = 1
         port_no = 10
-        m._register_traceroute(msgid, [{'vlan': vlan_id,
-                                        'ip': '192.168.1.1',
-                                        'port': port_no}])
+        m._register_traceroute([{'vlan': vlan_id,
+                                 'ip': '192.168.1.1',
+                                 'port': port_no}])
 
     def test_handle_ofprotocol_without_dp(self):
         m = api.RpcOFPManager(dpset=dpset.DPSet())
@@ -353,9 +353,9 @@ class TestRpcOFPManager(unittest.TestCase):
         # test the failure case
         m._packet_in_handler(ev)
 
-        m._register_traceroute(msgid, [{'vlan': vlan_id,
-                                        'ip': src_ip,
-                                        'port': port_no}])
+        m._register_traceroute([{'vlan': vlan_id,
+                                 'ip': src_ip,
+                                 'port': port_no}])
         m._packet_in_handler(ev)
 
         (in_port, actions, data) = dp.sent[0]
