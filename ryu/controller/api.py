@@ -99,8 +99,8 @@ class RpcOFPManager(app_manager.RyuApp):
             error = None
             result = None
             try:
-                msgid, target_method, params = data
                 if _type == rpc.MessageType.REQUEST:
+                    msgid, target_method, params = data
                     if target_method == "ofp":
                         result = self._handle_ofprotocol(msgid, params)
                     elif target_method == "monitor_port":
@@ -112,10 +112,15 @@ class RpcOFPManager(app_manager.RyuApp):
                     else:
                         error = 'Unknown method %s' % (target_method)
                 elif _type == rpc.MessageType.NOTIFY:
+                    target_method, params = data
                     if target_method == 'traceroute':
-                        result = self._register_traceroute(msgid, params)
+                        try:
+                            self._register_traceroute(params)
+                        except RPCError as e:
+                            self.logger.error(_({'error': str(e)}))
                     else:
-                        error = 'Unknown method %s' % (target_method)
+                        self.logger.error(_({'unknown method': target_method}))
+                    continue
             except RPCError as e:
                 error = str(e)
             except PendingRPC as e:
@@ -489,7 +494,7 @@ class RpcOFPManager(app_manager.RyuApp):
         dp.send_msg(ofmsg)
         return result
 
-    def _register_traceroute(self, msgid, params):
+    def _register_traceroute(self, params):
         try:
             param_dict = params[0]
         except:
