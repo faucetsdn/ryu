@@ -1,3 +1,5 @@
+import json
+import logging
 from operator import attrgetter
 from oslo.config import cfg
 from ryu.base import app_manager
@@ -37,6 +39,10 @@ CONF.register_cli_opts([
                help='of-config user name'),
     cfg.StrOpt('ofconfig-password', default='linc',
                help='of-config password'),
+    cfg.StrOpt('stats-file', default='/tmp/stats.log',
+               help='File name that statistics info is written to'),
+    cfg.StrOpt('states-file', default='/tmp/states.log',
+               help='File name that states info is written to')
 ])
 
 
@@ -92,6 +98,10 @@ class RpcOFPManager(app_manager.RyuApp):
         hub.spawn(self._rpc_message_thread)
         hub.spawn(self._ofconfig_thread)
         apgw.update_syslog_format()
+        self.stats_log = logging.getLogger('stats')
+        self.stats_log.addHandler(logging.FileHandler(CONF.stats_file))
+        self.states_log = logging.getLogger('states')
+        self.states_log.addHandler(logging.FileHandler(CONF.states_file))
 
     def _rpc_message_thread(self):
         while True:
@@ -245,6 +255,7 @@ class RpcOFPManager(app_manager.RyuApp):
             if contexts is not None:
                 stats = body.to_jsondict()['OFPFlowStats']
                 stats.update(contexts)
+                self.stats_log.info(json.dumps(stats))
                 self.logger.info(_(msg=stats, log_type='stats'))
 
     @handler.set_ev_cls(ofp_event.EventOFPPortStatsReply,
@@ -262,6 +273,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 stats.update(stat.to_jsondict()['OFPPortStats'])
                 contexts, interval_ = self.monitored_ports[port.name]
                 stats.update(contexts)
+                self.stats_log.info(json.dumps(stats))
                 self.logger.info(_(msg=stats, log_type='stats'))
 
     @handler.set_ev_cls(ofp_event.EventOFPMeterStatsReply,
@@ -274,6 +286,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 contexts = self.monitored_meters[stat.meter_id]
                 stats = stat.to_jsondict()['OFPMeterStats']
                 stats.update(contexts)
+                self.stats_log.info(json.dumps(stats))
                 self.logger.info(_(msg=stats, log_type='stats'))
 
     @handler.set_ev_cls(ofp_event.EventOFPQueueStatsReply,
@@ -291,6 +304,7 @@ class RpcOFPManager(app_manager.RyuApp):
                          'tx_packets': stat.tx_packets,
                          'tx_errors': stat.tx_errors}
                 stats.update(contexts)
+                self.stats_log.info(json.dumps(stats))
                 self.logger.info(_(msg=stats, log_type='stats'))
 
     @handler.set_ev_cls(ofp_event.EventOFPStatsReply,
