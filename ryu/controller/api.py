@@ -608,7 +608,8 @@ class RpcOFPManager(app_manager.RyuApp):
                                        port=CONF.ofconfig_port,
                                        username=CONF.ofconfig_user,
                                        password=CONF.ofconfig_password,
-                                       unknown_host_cb=lambda h, f: True)
+                                       unknown_host_cb=lambda h, f: True,
+                                       timeout=180)
             except:
                 raise RPCError('faied to connect to ofs')
 
