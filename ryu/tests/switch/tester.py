@@ -104,6 +104,8 @@ STATE_GET_MATCH_COUNT = 7
 STATE_UNMATCH_PKT_SEND = 8
 STATE_FLOW_UNMATCH_CHK = 9
 
+STATE_DISCONNECTED = 99
+
 # Test result.
 TEST_OK = 'OK'
 TEST_ERROR = 'ERROR'
@@ -150,7 +152,9 @@ MSG = {STATE_INIT:
        {FAILURE: 'Table-miss error: increment in matched_count.',
         ERROR: 'Table-miss error: no change in lookup_count.',
         TIMEOUT: 'Failed to request table stats: request timeout.',
-        RCV_ERR: 'Failed to request table stats: %(err_msg)s'}}
+        RCV_ERR: 'Failed to request table stats: %(err_msg)s'},
+       STATE_DISCONNECTED:
+       {ERROR: 'Disconnected from switch'}}
 
 ERR_MSG = 'OFPErrorMsg[type=0x%02x, code=0x%02x]'
 
@@ -200,8 +204,8 @@ class OfTester(app_manager.RyuApp):
         test_dir = CONF['test-switch']['dir']
         self.logger.info('Test files directory = %s', test_dir)
 
-        self.target_sw = None
-        self.tester_sw = None
+        self.target_sw = TargetSw(DummyDatapath(), self.logger)
+        self.tester_sw = TesterSw(DummyDatapath(), self.logger)
         self.state = STATE_INIT
         self.sw_waiter = None
         self.waiter = None
@@ -243,10 +247,13 @@ class OfTester(app_manager.RyuApp):
 
     def _register_sw(self, dp):
         if dp.id == self.target_dpid:
-            self.target_sw = TargetSw(dp, self.logger)
+            self.target_sw.dp = dp
             msg = 'Join target SW.'
         elif dp.id == self.tester_dpid:
-            self.tester_sw = TesterSw(dp, self.logger)
+            self.tester_sw.dp = dp
+            self.tester_sw.add_flow(
+                in_port=TESTER_RECEIVE_PORT,
+                out_port=dp.ofproto.OFPP_CONTROLLER)
             msg = 'Join tester SW.'
         else:
             msg = 'Connect unknown SW.'
@@ -254,18 +261,17 @@ class OfTester(app_manager.RyuApp):
             self.logger.info('dpid=%s : %s',
                              dpid_lib.dpid_to_str(dp.id), msg)
 
-        if self.target_sw and self.tester_sw:
+        if not (isinstance(self.target_sw.dp, DummyDatapath) or
+                isinstance(self.tester_sw.dp, DummyDatapath)):
             if self.sw_waiter is not None:
                 self.sw_waiter.set()
 
     def _unregister_sw(self, dp):
         if dp.id == self.target_dpid:
-            del self.target_sw
-            self.target_sw = None
+            self.target_sw.dp = DummyDatapath()
             msg = 'Leave target SW.'
         elif dp.id == self.tester_dpid:
-            del self.tester_sw
-            self.tester_sw = None
+            self.tester_sw.dp = DummyDatapath()
             msg = 'Leave tester SW.'
         else:
             msg = 'Disconnect unknown SW.'
@@ -302,7 +308,8 @@ class OfTester(app_manager.RyuApp):
         return report
 
     def _test_execute(self, test, description):
-        if not self.target_sw or not self.tester_sw:
+        if isinstance(self.target_sw.dp, DummyDatapath) or \
+                isinstance(self.tester_sw.dp, DummyDatapath):
             self.logger.info('waiting for switches connection...')
             self.sw_waiter = hub.Event()
             self.sw_waiter.wait()
@@ -723,6 +730,8 @@ class OpenFlowSw(object):
         self.logger = logger
 
     def _send_msg(self, msg):
+        if isinstance(self.dp, DummyDatapath):
+            raise TestError(STATE_DISCONNECTED)
         msg.xid = None
         self.dp.set_xid(msg)
         self.dp.send_msg(msg)
@@ -796,10 +805,6 @@ class TargetSw(OpenFlowSw):
 class TesterSw(OpenFlowSw):
     def __init__(self, dp, logger):
         super(TesterSw, self).__init__(dp, logger)
-        # Add packet in flow.
-        ofp = self.dp.ofproto
-        self.add_flow(in_port=TESTER_RECEIVE_PORT,
-                      out_port=ofp.OFPP_CONTROLLER)
 
     def send_packet_out(self, data):
         """ send a PacketOut message."""
