@@ -2798,6 +2798,22 @@ x() ->
                  #ofp_role_prop_experimenter{
                      experimenter = 101,
                      exp_type = 2,
-                     data = <<1:32,2:32>>}]}
+                     data = <<1:32,2:32>>}]},
+        #ofp_flow_monitor_request{
+            flags = [],
+            monitor_id = 100000000,
+            out_port = 22,
+            out_group = any,
+            monitor_flags = [initial, add, removed, modify],
+            table_id = 33,
+            command = add,
+            match =
+                #ofp_match{
+                    fields =
+                        [#ofp_field{
+                             class = openflow_basic,name = eth_dst,
+                             has_mask = false,
+                             value = <<"\362\v\244}\370\352">>,
+                             mask = undefined}]}}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
