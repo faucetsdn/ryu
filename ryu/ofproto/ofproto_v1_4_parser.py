@@ -3516,6 +3516,88 @@ class OFPFlowUpdatePaused(OFPFlowUpdateHeader):
         return cls(length, event)
 
 
+class OFPFlowMonitorRequestBase(OFPMultipartRequest):
+    def __init__(self, datapath, flags, monitor_id, out_port, out_group,
+                 monitor_flags, table_id, command, match):
+        super(OFPFlowMonitorRequestBase, self).__init__(datapath, flags)
+        self.monitor_id = monitor_id
+        self.out_port = out_port
+        self.out_group = out_group
+        self.monitor_flags = monitor_flags
+        self.table_id = table_id
+        self.command = command
+        self.match = match
+
+    def _serialize_stats_body(self):
+        offset = ofproto.OFP_MULTIPART_REQUEST_SIZE
+        msg_pack_into(ofproto.OFP_FLOW_MONITOR_REQUEST_0_PACK_STR, self.buf,
+                      offset, self.monitor_id, self.out_port, self.out_group,
+                      self.monitor_flags, self.table_id, self.command)
+
+        offset += ofproto.OFP_FLOW_MONITOR_REQUEST_0_SIZE
+        self.match.serialize(self.buf, offset)
+
+
+@_set_stats_type(ofproto.OFPMP_FLOW_MONITOR, OFPFlowUpdateHeader)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPFlowMonitorRequest(OFPFlowMonitorRequestBase):
+    """
+    Flow monitor request message
+
+    The controller uses this message to query flow monitors.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    monitor_id       Controller-assigned ID for this monitor
+    out_port         Require matching entries to include this as an output
+                     port
+    out_group        Require matching entries to include this as an output
+                     group
+    monitor_flags    Bitmap of the following flags.
+                     OFPFMF_INITIAL
+                     OFPFMF_ADD
+                     OFPFMF_REMOVED
+                     OFPFMF_MODIFY
+                     OFPFMF_INSTRUCTIONS
+                     OFPFMF_NO_ABBREV
+                     OFPFMF_ONLY_OWN
+    table_id         ID of table to monitor
+    command          One of the following values.
+                     OFPFMC_ADD
+                     OFPFMC_MODIFY
+                     OFPFMC_DELETE
+    match            Instance of ``OFPMatch``
+    ================ ======================================================
+
+    Example::
+
+        def send_flow_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            monitor_flags = [ofp.OFPFMF_INITIAL, ofp.OFPFMF_ONLY_OWN]
+            match = ofp_parser.OFPMatch(in_port=1)
+            req = ofp_parser.OFPFlowMonitorRequest(datapath, 0, 10000,
+                                                   ofp.OFPP_ANY, ofp.OFPG_ANY,
+                                                   monitor_flags,
+                                                   ofp.OFPTT_ALL,
+                                                   ofp.OFPFMC_ADD, match)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, monitor_id=0,
+                 out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,
+                 monitor_flags=0, table_id=ofproto.OFPTT_ALL,
+                 command=ofproto.OFPFMC_ADD, match=None, type_=None):
+        if match is None:
+            match = OFPMatch()
+        super(OFPFlowMonitorRequest, self).__init__(datapath, flags,
+                                                    monitor_id, out_port,
+                                                    out_group, monitor_flags,
+                                                    table_id, command, match)
+
+
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
