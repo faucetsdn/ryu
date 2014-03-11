@@ -2955,6 +2955,23 @@ x() ->
                           #ofp_table_mod_prop_experimenter{
                               experimenter = 101,
                               exp_type = 2,
-                              data = <<1:32,2:32>>}]}}
+                              data = <<1:32,2:32>>}]}},
+        #ofp_bundle_ctrl_msg{
+            bundle_id = 1234,
+            type = open_request,
+            flags = [atomic],
+            properties =
+                [#ofp_bundle_prop_experimenter{
+                     experimenter = 101,
+                     exp_type = 0,
+                     data = <<>>},
+                 #ofp_bundle_prop_experimenter{
+                     experimenter = 101,
+                     exp_type = 1,
+                     data = <<1:32>>},
+                 #ofp_bundle_prop_experimenter{
+                     experimenter = 101,
+                     exp_type = 2,
+                     data = <<1:32,2:32>>}]}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).

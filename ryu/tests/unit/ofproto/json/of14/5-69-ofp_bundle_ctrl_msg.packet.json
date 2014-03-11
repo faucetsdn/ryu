@@ -1,0 +1,36 @@
+{
+   "OFPBundleCtrlMsg": {
+      "bundle_id": 1234, 
+      "flags": 1, 
+      "properties": [
+         {
+            "OFPBundlePropExperimenter": {
+               "data": "", 
+               "exp_type": 0, 
+               "experimenter": 101, 
+               "length": 12, 
+               "type": 65535
+            }
+         }, 
+         {
+            "OFPBundlePropExperimenter": {
+               "data": "AAAAAQ==", 
+               "exp_type": 1, 
+               "experimenter": 101, 
+               "length": 16, 
+               "type": 65535
+            }
+         }, 
+         {
+            "OFPBundlePropExperimenter": {
+               "data": "AAAAAQAAAAI=", 
+               "exp_type": 2, 
+               "experimenter": 101, 
+               "length": 20, 
+               "type": 65535
+            }
+         }
+      ], 
+      "type": 0
+   }
+}

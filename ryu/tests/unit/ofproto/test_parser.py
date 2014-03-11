@@ -113,6 +113,7 @@ implemented = {
         ofproto_v1_4.OFPT_SET_ASYNC: (False, True),
         ofproto_v1_4.OFPT_ROLE_STATUS: (True, False),
         ofproto_v1_4.OFPT_TABLE_STATUS: (True, False),
+        ofproto_v1_4.OFPT_BUNDLE_CONTROL: (False, True),
     },
 }
 
