@@ -2814,6 +2814,34 @@ x() ->
                              class = openflow_basic,name = eth_dst,
                              has_mask = false,
                              value = <<"\362\v\244}\370\352">>,
-                             mask = undefined}]}}
+                             mask = undefined}]}},
+        #ofp_flow_monitor_reply{
+            flags = [],
+            updates =
+                [#ofp_flow_update_full{
+                     event = initial,
+                     table_id = 0,
+                     reason = idle_timeout,
+                     idle_timeout = 600,
+                     hard_timeout = 700,
+                     priority = 3,
+                     cookie = <<0,0,0,0,0,0,0,0>>,
+                     match =
+                         #ofp_match{
+                             fields =
+                                 [#ofp_field{
+                                      class = openflow_basic,
+                                      name = eth_type,
+                                      has_mask = false,
+                                      value = <<8,6>>,
+                                      mask = undefined}]},
+                     instructions =
+                         [#ofp_instruction_apply_actions{
+                              actions =
+                                  [#ofp_action_output{
+                                       port = normal,
+                                       max_len = 0}]}]},
+                 #ofp_flow_update_abbrev{event = abbrev,xid=1234},
+                 #ofp_flow_update_paused{event = paused}]}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
