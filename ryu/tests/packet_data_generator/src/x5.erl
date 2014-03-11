@@ -701,22 +701,111 @@ x() ->
         },
         #ofp_get_async_request{},
         #ofp_get_async_reply{
-            packet_in_mask = {[table_miss, invalid_ttl], [table_miss]},
-            port_status_mask = {[add, delete, modify], [add, delete]},
-            flow_removed_mask = {
-                [idle_timeout, hard_timeout, delete, group_delete],
-                [idle_timeout, hard_timeout]
-            }
-        },
+            properties =
+	        [#ofp_async_config_prop_reasons{
+		    type = packet_in_slave,
+		    mask = [table_miss, apply_action]},
+	         #ofp_async_config_prop_reasons{
+		    type = packet_in_master,
+		    mask = [table_miss, apply_action]},
+	         #ofp_async_config_prop_reasons{
+		    type = port_status_slave,
+		    mask = [add, delete]},
+	         #ofp_async_config_prop_reasons{
+		    type = port_status_master,
+		    mask = [add, delete]},
+	         #ofp_async_config_prop_reasons{
+		    type = flow_removed_slave,
+		    mask = [idle_timeout, hard_timeout]},
+	         #ofp_async_config_prop_reasons{
+		    type = flow_removed_master,
+		    mask = [idle_timeout, hard_timeout]},
+	         #ofp_async_config_prop_reasons{
+		    type = role_status_slave,
+		    mask = [master_request, config]},
+	         #ofp_async_config_prop_reasons{
+		    type = role_status_master,
+		    mask = [master_request, config]},
+	         #ofp_async_config_prop_reasons{
+		    type = table_status_slave,
+		    mask = [vacancy_down, vacancy_up]},
+	         #ofp_async_config_prop_reasons{
+		    type = table_status_master,
+		    mask = [vacancy_down, vacancy_up]},
+	         #ofp_async_config_prop_reasons{
+		    type = requestforward_slave,
+		    mask = [group_mod, meter_mod]},
+	         #ofp_async_config_prop_reasons{
+		    type = requestforward_master,
+		    mask = [group_mod, meter_mod]},
+                 #ofp_async_config_prop_experimenter{
+                    type = experimenter_slave,
+                    experimenter = 101,
+                    exp_type = 0,
+                    data = <<>>},
+                 #ofp_async_config_prop_experimenter{
+                    type = experimenter_master,
+                    experimenter = 101,
+                    exp_type = 1,
+                    data = <<1:32>>},
+                 #ofp_async_config_prop_experimenter{
+                    type = experimenter_master,
+                    experimenter = 101,
+                    exp_type = 2,
+                    data = <<1:32, 2:32>>}]},
         #ofp_set_async{
-            packet_in_mask = {[table_miss, invalid_ttl], [table_miss]},
-            port_status_mask = {[add, delete, modify], [add, delete]},
-            flow_removed_mask = {
-                [idle_timeout, hard_timeout, delete, group_delete],
-                [idle_timeout, hard_timeout]
-            }
-        },
-
+            properties =
+	        [#ofp_async_config_prop_reasons{
+		    type = packet_in_slave,
+		    mask = [table_miss, apply_action]},
+	         #ofp_async_config_prop_reasons{
+		    type = packet_in_master,
+		    mask = [table_miss, apply_action]},
+	         #ofp_async_config_prop_reasons{
+		    type = port_status_slave,
+		    mask = [add, delete]},
+	         #ofp_async_config_prop_reasons{
+		    type = port_status_master,
+		    mask = [add, delete]},
+	         #ofp_async_config_prop_reasons{
+		    type = flow_removed_slave,
+		    mask = [idle_timeout, hard_timeout]},
+	         #ofp_async_config_prop_reasons{
+		    type = flow_removed_master,
+		    mask = [idle_timeout, hard_timeout]},
+	         #ofp_async_config_prop_reasons{
+		    type = role_status_slave,
+		    mask = [master_request, config]},
+	         #ofp_async_config_prop_reasons{
+		    type = role_status_master,
+		    mask = [master_request, config]},
+	         #ofp_async_config_prop_reasons{
+		    type = table_status_slave,
+		    mask = [vacancy_down, vacancy_up]},
+	         #ofp_async_config_prop_reasons{
+		    type = table_status_master,
+		    mask = [vacancy_down, vacancy_up]},
+	         #ofp_async_config_prop_reasons{
+		    type = requestforward_slave,
+		    mask = [group_mod, meter_mod]},
+	         #ofp_async_config_prop_reasons{
+		    type = requestforward_master,
+		    mask = [group_mod, meter_mod]},
+                 #ofp_async_config_prop_experimenter{
+                    type = experimenter_slave,
+                    experimenter = 101,
+                    exp_type = 0,
+                    data = <<>>},
+                 #ofp_async_config_prop_experimenter{
+                    type = experimenter_master,
+                    experimenter = 101,
+                    exp_type = 1,
+                    data = <<1:32>>},
+                 #ofp_async_config_prop_experimenter{
+                    type = experimenter_master,
+                    experimenter = 101,
+                    exp_type = 2,
+                    data = <<1:32, 2:32>>}]},
         #ofp_meter_mod{
             command = add,
             flags = [pktps, burst, stats],

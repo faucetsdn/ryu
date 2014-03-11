@@ -5680,7 +5680,7 @@ class OFPAsyncConfigPropReasons(StringifyMixin):
 
 @OFPAsyncConfigProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_SLAVE)
 @OFPAsyncConfigProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MASTER)
-class OFPQueueDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
+class OFPAsyncConfigPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
 
@@ -5715,24 +5715,7 @@ class OFPGetAsyncReply(MsgBase):
     ================== ====================================================
     Attribute          Description
     ================== ====================================================
-    packet_in_mask     2-element array: element 0, when the controller has a
-                       OFPCR_ROLE_EQUAL or OFPCR_ROLE_MASTER role. element 1,
-                       OFPCR_ROLE_SLAVE role controller.
-                       Bitmasks of following values.
-                       OFPR_NO_MATCH
-                       OFPR_ACTION
-                       OFPR_INVALID_TTL
-    port_status_mask   2-element array.
-                       Bitmasks of following values.
-                       OFPPR_ADD
-                       OFPPR_DELETE
-                       OFPPR_MODIFY
-    flow_removed_mask  2-element array.
-                       Bitmasks of following values.
-                       OFPRR_IDLE_TIMEOUT
-                       OFPRR_HARD_TIMEOUT
-                       OFPRR_DELETE
-                       OFPRR_GROUP_DELETE
+    properties         List of ``OFPAsyncConfigProp`` subclass instances
     ================== ====================================================
 
     Example::
@@ -5742,36 +5725,24 @@ class OFPGetAsyncReply(MsgBase):
             msg = ev.msg
 
             self.logger.debug('OFPGetAsyncReply received: '
-                              'packet_in_mask=0x%08x:0x%08x '
-                              'port_status_mask=0x%08x:0x%08x '
-                              'flow_removed_mask=0x%08x:0x%08x',
-                              msg.packet_in_mask[0],
-                              msg.packet_in_mask[1],
-                              msg.port_status_mask[0],
-                              msg.port_status_mask[1],
-                              msg.flow_removed_mask[0],
-                              msg.flow_removed_mask[1])
+                              'properties=%s', repr(msg.properties))
     """
-    def __init__(self, datapath, packet_in_mask=None, port_status_mask=None,
-                 flow_removed_mask=None):
+    def __init__(self, datapath, properties=None):
         super(OFPGetAsyncReply, self).__init__(datapath)
-        self.packet_in_mask = packet_in_mask
-        self.port_status_mask = port_status_mask
-        self.flow_removed_mask = flow_removed_mask
+        self.properties = properties
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPGetAsyncReply, cls).parser(datapath, version,
                                                   msg_type, msg_len,
                                                   xid, buf)
-        (packet_in_mask_m, packet_in_mask_s,
-         port_status_mask_m, port_status_mask_s,
-         flow_removed_mask_m, flow_removed_mask_s) = struct.unpack_from(
-            ofproto.OFP_ASYNC_CONFIG_PACK_STR, msg.buf,
-            ofproto.OFP_HEADER_SIZE)
-        msg.packet_in_mask = [packet_in_mask_m, packet_in_mask_s]
-        msg.port_status_mask = [port_status_mask_m, port_status_mask_s]
-        msg.flow_removed_mask = [flow_removed_mask_m, flow_removed_mask_s]
+
+        msg.properties = []
+        rest = msg.buf[ofproto.OFP_HEADER_SIZE:]
+        while rest:
+            p, rest = OFPAsyncConfigProp.parse(rest)
+            msg.properties.append(p)
+
         return msg
 
 
@@ -5786,24 +5757,7 @@ class OFPSetAsync(MsgBase):
     ================== ====================================================
     Attribute          Description
     ================== ====================================================
-    packet_in_mask     2-element array: element 0, when the controller has a
-                       OFPCR_ROLE_EQUAL or OFPCR_ROLE_MASTER role. element 1,
-                       OFPCR_ROLE_SLAVE role controller.
-                       Bitmasks of following values.
-                       OFPR_NO_MATCH
-                       OFPR_ACTION
-                       OFPR_INVALID_TTL
-    port_status_mask   2-element array.
-                       Bitmasks of following values.
-                       OFPPR_ADD
-                       OFPPR_DELETE
-                       OFPPR_MODIFY
-    flow_removed_mask  2-element array.
-                       Bitmasks of following values.
-                       OFPRR_IDLE_TIMEOUT
-                       OFPRR_HARD_TIMEOUT
-                       OFPRR_DELETE
-                       OFPRR_GROUP_DELETE
+    properties         List of ``OFPAsyncConfigProp`` subclass instances
     ================== ====================================================
 
     Example::
@@ -5812,28 +5766,23 @@ class OFPSetAsync(MsgBase):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            packet_in_mask = ofp.OFPR_ACTION | ofp.OFPR_INVALID_TTL
-            port_status_mask = (ofp.OFPPR_ADD | ofp.OFPPR_DELETE |
-                                ofp.OFPPR_MODIFY)
-            flow_removed_mask = (ofp.OFPRR_IDLE_TIMEOUT |
-                                 ofp.OFPRR_HARD_TIMEOUT |
-                                 ofp.OFPRR_DELETE)
-            req = ofp_parser.OFPSetAsync(datapath,
-                                         [packet_in_mask, 0],
-                                         [port_status_mask, 0],
-                                         [flow_removed_mask, 0])
+            properties = [ofp_parser.OFPAsyncConfigPropReasons(
+                              8, ofp_parser.OFPACPT_PACKET_IN_SLAVE,
+                              (ofp_parser.OFPR_APPLY_ACTION |
+                               ofp_parser.OFPR_INVALID_TTL)),
+                          ofp_parser.OFPAsyncConfigPropExperimenter(
+                              ofproto.OFPTFPT_EXPERIMENTER_MASTER,
+                              16, 100, 2, bytearray())]
+            req = ofp_parser.OFPSetAsync(datapath, properties)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath,
-                 packet_in_mask, port_status_mask, flow_removed_mask):
+    def __init__(self, datapath, properties=None):
         super(OFPSetAsync, self).__init__(datapath)
-        self.packet_in_mask = packet_in_mask
-        self.port_status_mask = port_status_mask
-        self.flow_removed_mask = flow_removed_mask
+        self.properties = properties
 
     def _serialize_body(self):
-        msg_pack_into(ofproto.OFP_ASYNC_CONFIG_PACK_STR, self.buf,
-                      ofproto.OFP_HEADER_SIZE,
-                      self.packet_in_mask[0], self.packet_in_mask[1],
-                      self.port_status_mask[0], self.port_status_mask[1],
-                      self.flow_removed_mask[0], self.flow_removed_mask[1])
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+
+        self.buf += bin_props
