@@ -2842,6 +2842,30 @@ x() ->
                                        port = normal,
                                        max_len = 0}]}]},
                  #ofp_flow_update_abbrev{event = abbrev,xid=1234},
-                 #ofp_flow_update_paused{event = paused}]}
+                 #ofp_flow_update_paused{event = paused}]},
+        #ofp_table_status{
+            reason = vacancy_down,
+            table =
+                 #ofp_table_desc{
+                     table_id = 8,
+                     config = [],
+                     properties =
+                         [#ofp_table_mod_prop_eviction{flags = []},
+                          #ofp_table_mod_prop_vacancy{
+                              vacancy = 0,
+                              vacancy_down = 0,
+                              vacancy_up = 0},
+                          #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 0,
+                              data = <<>>},
+                          #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 1,
+                              data = <<1:32>>},
+                          #ofp_table_mod_prop_experimenter{
+                              experimenter = 101,
+                              exp_type = 2,
+                              data = <<1:32,2:32>>}]}}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
