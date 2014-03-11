@@ -3400,6 +3400,122 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
         super(OFPMeterFeaturesStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPFlowUpdate(StringifyMixin):
+    def __init__(self, length, event):
+        super(OFPFlowUpdate, self).__init__()
+        self.length = length
+        self.event = event
+
+
+class OFPFlowUpdateHeader(OFPFlowUpdate):
+    _EVENT = {}
+
+    @staticmethod
+    def register_flow_update_event(event, length):
+        def _register_flow_update_event(cls):
+            OFPFlowUpdateHeader._EVENT[event] = cls
+            cls.cls_flow_update_event = event
+            cls.cls_flow_update_length = length
+            return cls
+        return _register_flow_update_event
+
+    def __init__(self, length=None, event=None):
+        cls = self.__class__
+        super(OFPFlowUpdateHeader, self).__init__(length,
+                                                  cls.cls_flow_update_event)
+        self.length = length
+
+    @classmethod
+    def parser(cls, buf, offset):
+        length, event = struct.unpack_from(
+            ofproto.OFP_FLOW_UPDATE_HEADER_PACK_STR, buf, offset)
+        cls_ = cls._EVENT[event]
+        return cls_.parser(buf, offset)
+
+
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_INITIAL, ofproto.OFP_FLOW_UPDATE_FULL_SIZE)
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_ADDED, ofproto.OFP_FLOW_UPDATE_FULL_SIZE)
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_REMOVED, ofproto.OFP_FLOW_UPDATE_FULL_SIZE)
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_MODIFIED, ofproto.OFP_FLOW_UPDATE_FULL_SIZE)
+class OFPFlowUpdateFull(OFPFlowUpdateHeader):
+    def __init__(self, length=None, event=None, table_id=None, reason=None,
+                 idle_timeout=None, hard_timeout=None, priority=None,
+                 cookie=None, match=None, instructions=[]):
+        super(OFPFlowUpdateFull, self).__init__(length, event)
+        self.table_id = table_id
+        self.reason = reason
+        self.idle_timeout = idle_timeout
+        self.hard_timeout = hard_timeout
+        self.priority = priority
+        self.cookie = cookie
+        self.match = match
+        assert (event != ofproto.OFPFME_REMOVED or len(instructions) == 0)
+        for i in instructions:
+            assert isinstance(i, OFPInstruction)
+        self.instructions = instructions
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (length, event, table_id, reason, idle_timeout, hard_timeout, priority,
+         cookie) = struct.unpack_from(ofproto.OFP_FLOW_UPDATE_FULL_0_PACK_STR,
+                                      buf, offset)
+        offset += ofproto.OFP_FLOW_UPDATE_FULL_0_SIZE
+        assert cls.cls_flow_update_length <= length
+        assert cls.cls_flow_update_event == event
+
+        match = OFPMatch.parser(buf, offset)
+        match_length = utils.round_up(match.length, 8)
+        offset += match_length
+
+        inst_length = (length - ofproto.OFP_FLOW_UPDATE_FULL_0_SIZE -
+                       match_length)
+        instructions = []
+        while inst_length > 0:
+            inst = OFPInstruction.parser(buf, offset)
+            instructions.append(inst)
+            offset += inst.len
+            inst_length -= inst.len
+
+        return cls(length, event, table_id, reason, idle_timeout,
+                   hard_timeout, priority, cookie, match, instructions)
+
+
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_ABBREV, ofproto.OFP_FLOW_UPDATE_ABBREV_SIZE)
+class OFPFlowUpdateAbbrev(OFPFlowUpdateHeader):
+    def __init__(self, length=None, event=None, xid=None):
+        super(OFPFlowUpdateAbbrev, self).__init__(length, event)
+        self.xid = xid
+
+    @classmethod
+    def parser(cls, buf, offset):
+        length, event, xid = struct.unpack_from(
+            ofproto.OFP_FLOW_UPDATE_ABBREV_PACK_STR, buf, offset)
+        assert cls.cls_flow_update_length == length
+        assert cls.cls_flow_update_event == event
+
+        return cls(length, event, xid)
+
+
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_PAUSED, ofproto.OFP_FLOW_UPDATE_PAUSED_SIZE)
+@OFPFlowUpdateHeader.register_flow_update_event(
+    ofproto.OFPFME_RESUMED, ofproto.OFP_FLOW_UPDATE_PAUSED_SIZE)
+class OFPFlowUpdatePaused(OFPFlowUpdateHeader):
+    @classmethod
+    def parser(cls, buf, offset):
+        length, event = struct.unpack_from(
+            ofproto.OFP_FLOW_UPDATE_PAUSED_PACK_STR, buf, offset)
+        assert cls.cls_flow_update_length == length
+        assert cls.cls_flow_update_event == event
+
+        return cls(length, event)
+
+
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
