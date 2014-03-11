@@ -5639,6 +5639,51 @@ class OFPRoleReply(MsgBase):
         return msg
 
 
+class OFPAsyncConfigProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_PACKET_IN_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_PACKET_IN_MASTER)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_PORT_STATUS_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_PORT_STATUS_MASTER)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_FLOW_REMOVED_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_FLOW_REMOVED_MASTER)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_ROLE_STATUS_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_ROLE_STATUS_MASTER)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_TABLE_STATUS_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_TABLE_STATUS_MASTER)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_REQUESTFORWARD_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_REQUESTFORWARD_MASTER)
+class OFPAsyncConfigPropReasons(StringifyMixin):
+    def __init__(self, type_=None, length=None, mask=None):
+        self.type = type_
+        self.length = length
+        self.mask = mask
+
+    @classmethod
+    def parser(cls, buf):
+        reasons = cls()
+        (reasons.type, reasons.length, reasons.mask) = struct.unpack_from(
+            ofproto.OFP_ASYNC_CONFIG_PROP_REASONS_PACK_STR, buf, 0)
+        return reasons
+
+    def serialize(self):
+        # fixup
+        self.length = ofproto.OFP_ASYNC_CONFIG_PROP_REASONS_SIZE
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_ASYNC_CONFIG_PROP_REASONS_PACK_STR, buf, 0,
+                      self.type, self.length, self.mask)
+        return buf
+
+
+@OFPAsyncConfigProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MASTER)
+class OFPQueueDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 @_set_msg_type(ofproto.OFPT_GET_ASYNC_REQUEST)
 class OFPGetAsyncRequest(MsgBase):
     """
