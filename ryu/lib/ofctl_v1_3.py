@@ -368,17 +368,8 @@ def to_match_tpdst(value, match, rest):
 
 
 def to_match_ip(value):
-    ip_mask = value.split('/')
-    # ip
-    ipv4 = struct.unpack('!I', socket.inet_aton(ip_mask[0]))[0]
-    # netmask
-    mask = 32
-    if len(ip_mask) == 2:
-        mask = int(ip_mask[1])
-    netmask = ofproto_v1_3_parser.UINT32_MAX << 32 - mask\
-        & ofproto_v1_3_parser.UINT32_MAX
-
-    return ipv4, netmask
+    ip = netaddr.IPNetwork(value)
+    return ip.ip.value, ip.netmask.value
 
 
 def to_match_ipv6(value):
