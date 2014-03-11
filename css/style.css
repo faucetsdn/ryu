@@ -239,12 +239,12 @@ textarea { overflow: auto; }
 .main .post img { float: left; margin-right: 20px; width: 333px; height: 333px; }
 .main .post-cnt h2 { font-size: 24px}
 .main .post-cnt { font-size: 16px; padding-top: 22px; }
-.main .post-cnt p { padding-bottom: 10px; float:left}
+.main .post-cnt p { padding-bottom: 10px; }
 .main .post-cnt ul { list-style: none; list-style-position: outside; height: 100%; overflow: hidden; }
 .main .post-cnt ul li { padding-left: 11px; background: url(images/green-arr.png) no-repeat 0 9px; padding-bottom: 7px;  }
 .main .post-cnt ul li a { text-decoration: underline; }
 .main .post-cnt ul li a:hover { text-decoration: none; }
-.main .post-cnt img { float: left; }
+
 .main .post-cnt code {
   	margin: 5px 0px;
 	width: 400px;
