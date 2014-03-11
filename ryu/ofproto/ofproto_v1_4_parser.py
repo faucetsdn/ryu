@@ -3598,6 +3598,56 @@ class OFPFlowMonitorRequest(OFPFlowMonitorRequestBase):
                                                     table_id, command, match)
 
 
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_FLOW_MONITOR, OFPFlowUpdateHeader)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPFlowMonitorReply(OFPMultipartReply):
+    """
+    Flow monitor reply message
+
+    The switch responds with this message to a flow monitor request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of list of the following class instance.
+                     OFPFlowMonitorFull
+                     OFPFlowMonitorAbbrev
+                     OFPFlowMonitorPaused
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPFlowMonitorReply, MAIN_DISPATCHER)
+        def flow_monitor_reply_handler(self, ev):
+            msg = ev.msg
+            dp = msg.datapath
+            ofp = dp.ofproto
+            flow_updates = []
+
+            for update in msg.body:
+                update_str = 'length=%d event=%d' %
+                             (update.length, update.event)
+                if (update.event == ofp.OFPFME_INITIAL or
+                    update.event == ofp.OFPFME_ADDED or
+                    update.event == ofp.OFPFME_REMOVED or
+                    update.event == ofp.OFPFME_MODIFIED):
+                    update_str += 'table_id=%d reason=%d idle_timeout=%d '
+                                  'hard_timeout=%d priority=%d cookie=%d '
+                                  'match=%d instructions=%s' %
+                                  (stat.table_id, stat.reason,
+                                   stat.idle_timeout, stat.hard_timeout,
+                                   stat.priority, stat.cookie,
+                                   stat.match, stat.instructions)
+                elif update.event == ofp.OFPFME_ABBREV:
+                    update_str += 'xid=%d' % (stat.xid)
+                flow_updates.append(update_str)
+            self.logger.debug('FlowUpdates: %s', flow_updates)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPFlowMonitorReply, self).__init__(datapath, **kwargs)
+
+
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
