@@ -33,3 +33,13 @@ import oslo.config.cfg
 # to allow app-specific options.
 
 CONF = oslo.config.cfg.CONF
+
+# re-export for convenience
+
+from oslo.config.cfg import BoolOpt
+from oslo.config.cfg import IntOpt
+from oslo.config.cfg import ListOpt
+from oslo.config.cfg import MultiStrOpt
+from oslo.config.cfg import StrOpt
+
+from oslo.config.cfg import ConfigFilesNotFoundError
