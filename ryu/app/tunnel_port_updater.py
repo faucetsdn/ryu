@@ -17,7 +17,7 @@
 # This module updates OVS tunnel ports for OpenStack integration.
 
 import collections
-from oslo.config import cfg
+from ryu import cfg
 import logging
 import netaddr
 
@@ -33,12 +33,6 @@ from ryu.lib import dpid as dpid_lib
 from ryu.lib import hub
 from ryu.lib.ovs import bridge as ovs_bridge
 
-
-CONF = cfg.CONF
-CONF.register_opts([
-    cfg.StrOpt('tunnel-type', default='gre',
-               help='tunnel type for ovs tunnel port')
-])
 
 _TUNNEL_TYPE_TO_NW_ID = {
     'gre': rest_nw_id.NW_ID_VPORT_GRE,
@@ -104,15 +98,15 @@ class TunnelPort(object):
 
 
 class TunnelDP(object):
-    def __init__(self, dpid, ovsdb_addr, tunnel_ip, tunnel_type, conf_switch_,
-                 network_api, tunnel_api, logger):
+    def __init__(self, CONF, dpid, ovsdb_addr, tunnel_ip, tunnel_type,
+                 conf_switch_, network_api, tunnel_api, logger):
         super(TunnelDP, self).__init__()
         self.dpid = dpid
         self.network_api = network_api
         self.tunnel_api = tunnel_api
         self.logger = logger
 
-        self.ovs_bridge = ovs_bridge.OVSBridge(dpid, ovsdb_addr)
+        self.ovs_bridge = ovs_bridge.OVSBridge(CONF, dpid, ovsdb_addr)
 
         self.tunnel_ip = tunnel_ip
         self.tunnel_type = tunnel_type
@@ -355,7 +349,11 @@ class TunnelPortUpdater(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(TunnelPortUpdater, self).__init__(args, kwargs)
-        self.tunnel_type = CONF.tunnel_type
+        self.CONF.register_opts([
+            cfg.StrOpt('tunnel-type', default='gre',
+                       help='tunnel type for ovs tunnel port')
+        ])
+        self.tunnel_type = self.CONF.tunnel_type
         self.cs = kwargs['conf_switch']
         self.nw = kwargs['network']
         self.tunnels = kwargs['tunnels']
@@ -373,7 +371,7 @@ class TunnelPortUpdater(app_manager.RyuApp):
                           ovs_tunnel_addr)
         if dpid not in self.tunnel_dpset:
             # TODO:XXX changing ovsdb_addr, ovs_tunnel_addr
-            tunnel_dp = TunnelDP(dpid, ovsdb_addr, ovs_tunnel_addr,
+            tunnel_dp = TunnelDP(self.CONF, dpid, ovsdb_addr, ovs_tunnel_addr,
                                  self.tunnel_type, self.cs,
                                  self.network_api, self.tunnel_api,
                                  self.logger)

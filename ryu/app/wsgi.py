@@ -16,7 +16,7 @@
 
 import inspect
 
-from oslo.config import cfg
+from ryu import cfg
 import webob.dec
 
 from ryu.lib import hub

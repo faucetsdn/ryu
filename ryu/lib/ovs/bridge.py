@@ -19,7 +19,7 @@ slimmed down version of OVSBridge in quantum agent
 """
 
 import functools
-from oslo.config import cfg
+from ryu import cfg
 import logging
 
 import ryu.exception as ryu_exc
@@ -88,7 +88,8 @@ class TunnelPort(object):
 
 
 class OVSBridge(object):
-    def __init__(self, datapath_id, ovsdb_addr, timeout=None, exception=None):
+    def __init__(self, CONF, datapath_id, ovsdb_addr, timeout=None,
+                 exception=None):
         super(OVSBridge, self).__init__()
         self.datapath_id = datapath_id
         self.vsctl = ovs_vsctl.VSCtl(ovsdb_addr)

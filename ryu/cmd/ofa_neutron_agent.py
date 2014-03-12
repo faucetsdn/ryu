@@ -29,7 +29,7 @@ hub.patch()
 # eg. oslo.config.cfg.
 import ryu.contrib
 
-from oslo.config import cfg
+from ryu import cfg
 import sys
 
 from neutron.openstack.common import log as os_logging

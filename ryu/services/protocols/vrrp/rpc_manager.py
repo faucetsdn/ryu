@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo.config import cfg
+from ryu import cfg
 import socket
 
 import netaddr
@@ -26,11 +26,6 @@ from ryu.lib import hub
 from ryu.lib import mac
 
 VRRP_RPC_PORT = 50004  # random
-CONF = cfg.CONF
-
-CONF.register_opts([
-    cfg.IntOpt('vrrp-rpc-port', default=VRRP_RPC_PORT,
-               help='port for vrrp rpc interface')])
 
 
 class RPCError(Exception):
@@ -49,6 +44,10 @@ class Peer(object):
 class RpcVRRPManager(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(RpcVRRPManager, self).__init__(*args, **kwargs)
+        self.CONF.register_opts([
+            cfg.IntOpt('vrrp-rpc-port', default=VRRP_RPC_PORT,
+                       help='port for vrrp rpc interface')])
+
         self._args = args
         self._kwargs = kwargs
         self._peers = []
@@ -90,7 +89,7 @@ class RpcVRRPManager(app_manager.RyuApp):
         hub.spawn(self._peer_loop_thread, peer)
 
     def _peer_accept_thread(self):
-        server = hub.StreamServer(('', CONF.vrrp_rpc_port),
+        server = hub.StreamServer(('', self.CONF.vrrp_rpc_port),
                                   self.peer_accept_handler)
         server.serve_forever()
 

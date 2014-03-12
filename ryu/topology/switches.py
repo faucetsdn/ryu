@@ -17,7 +17,7 @@ import logging
 import struct
 import time
 import json
-from oslo.config import cfg
+from ryu import cfg
 
 from ryu.topology import event
 from ryu.base import app_manager
@@ -453,10 +453,10 @@ class Switches(app_manager.RyuApp):
         self.links = LinkState()      # Link class -> timestamp
         self.is_active = True
 
-        self.link_discovery = CONF.observe_links
+        self.link_discovery = self.CONF.observe_links
         if self.link_discovery:
-            self.install_flow = CONF.install_lldp_flow
-            self.explicit_drop = CONF.explicit_drop
+            self.install_flow = self.CONF.install_lldp_flow
+            self.explicit_drop = self.CONF.explicit_drop
             self.lldp_event = hub.Event()
             self.link_event = hub.Event()
             self.threads.append(hub.spawn(self.lldp_loop))

@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import traceback
-from oslo.config import cfg
 
 try:
     from neutronclient import client as q_client
@@ -45,10 +44,7 @@ from ryu.lib.ovs import bridge
 from ryu.lib.quantum_ifaces import QuantumIfaces
 
 
-CONF = cfg.CONF
-
-
-def _get_auth_token(logger):
+def _get_auth_token(CONF, logger):
     httpclient = q_client.HTTPClient(
         username=CONF.neutron_admin_username,
         tenant_name=CONF.neutron_admin_tenant_name,
@@ -65,7 +61,7 @@ def _get_auth_token(logger):
     return httpclient.auth_token
 
 
-def _get_quantum_client(token):
+def _get_quantum_client(CONF, token):
     if token:
         my_client = q_clientv2.Client(
             endpoint_url=CONF.neutron_url,
@@ -130,14 +126,15 @@ class OVSPort(object):
 
 
 class OVSSwitch(object):
-    def __init__(self, dpid, nw, ifaces, logger):
+    def __init__(self, CONF, dpid, nw, ifaces, logger):
         # TODO: clean up
+        self.CONF = CONF
         self.dpid = dpid
         self.network_api = nw
         self.ifaces = ifaces
         self.logger = logger
         self._q_api = None      # lazy initialization
-        self.ctrl_addr = CONF.neutron_controller_addr
+        self.ctrl_addr = self.CONF.neutron_controller_addr
         if not self.ctrl_addr:
             raise ValueError('option neutron_controler_addr must be speicfied')
 
@@ -153,9 +150,9 @@ class OVSSwitch(object):
     def q_api(self):
         if self._q_api is None:
             token = None
-            if CONF.neutron_auth_strategy:
-                token = _get_auth_token(self.logger)
-            self._q_api = _get_quantum_client(token)
+            if self.CONF.neutron_auth_strategy:
+                token = _get_auth_token(self.CONF, self.logger)
+            self._q_api = _get_quantum_client(self.CONF, token)
         return self._q_api
 
     def set_ovsdb_addr(self, dpid, ovsdb_addr):
@@ -176,7 +173,7 @@ class OVSSwitch(object):
         self.ovsdb_addr = ovsdb_addr
         if self.ovs_bridge is None:
             self.logger.debug('ovsdb: adding ports %s', self.ports)
-            ovs_bridge = bridge.OVSBridge(dpid, ovsdb_addr)
+            ovs_bridge = bridge.OVSBridge(self.CONF, dpid, ovsdb_addr)
             self.ovs_bridge = ovs_bridge
             ovs_bridge.init()
             # TODO: for multi-controller
@@ -352,7 +349,8 @@ class QuantumAdapter(app_manager.RyuApp):
         ovs_switch = self.dps.get(dpid)
         if not ovs_switch:
             if create:
-                ovs_switch = OVSSwitch(dpid, self.nw, self.ifaces, self.logger)
+                ovs_switch = OVSSwitch(self.CONF, dpid, self.nw, self.ifaces,
+                                       self.logger)
                 self.dps[dpid] = ovs_switch
         else:
             self.logger.debug('ovs switch %s is already known', dpid)

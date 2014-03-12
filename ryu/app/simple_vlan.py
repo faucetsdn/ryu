@@ -124,7 +124,7 @@ class SimpleVLAN(app_manager.RyuApp):
         self.logger.debug('ovs_port_update dpid %s port_no %s', dpid, port_no)
         # ovs-vsctl --db=ovsdb_addr --timeout=2
         # set Port port.name tag=tunnel_key
-        ovs_br = bridge.OVSBridge(dpid, ovsdb_addr, 2)
+        ovs_br = bridge.OVSBridge(self.CONF, dpid, ovsdb_addr, 2)
         # ofp_phy_port::name is zero-padded
         port_name = port.name.rstrip('\x00')
         try:

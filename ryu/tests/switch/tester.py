@@ -21,7 +21,7 @@ import signal
 import sys
 import traceback
 
-from oslo.config import cfg
+from ryu import cfg
 
 # import all packet libraries.
 PKT_LIB_PATH = 'ryu.lib.packet'

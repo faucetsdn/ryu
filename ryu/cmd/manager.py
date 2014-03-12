@@ -28,7 +28,7 @@ hub.patch()
 # eg. oslo.config.cfg.
 import ryu.contrib
 
-from oslo.config import cfg
+from ryu import cfg
 import logging
 import sys
 

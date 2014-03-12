@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import contextlib
-from oslo.config import cfg
+from ryu import cfg
 import logging
 from ryu.lib import hub
 from ryu.lib.hub import StreamServer

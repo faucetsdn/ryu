@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import print_function
-from oslo.config import cfg
+from ryu import cfg
 import inspect
 import platform
 import logging

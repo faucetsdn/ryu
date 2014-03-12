@@ -17,7 +17,7 @@
 global flags
 """
 
-from oslo.config import cfg
+from ryu import cfg
 
 CONF = cfg.CONF
 

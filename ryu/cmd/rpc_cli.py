@@ -31,7 +31,7 @@
 
 import ryu.contrib
 
-from oslo.config import cfg
+from ryu import cfg
 
 import cmd
 import signal
