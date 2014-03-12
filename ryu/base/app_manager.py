@@ -19,6 +19,7 @@ import itertools
 import logging
 import sys
 
+from ryu import cfg
 from ryu import utils
 from ryu.controller.handler import register_instance, get_dependent_services
 from ryu.controller.controller import Datapath
@@ -120,6 +121,7 @@ class RyuApp(object):
             self.logger = logging.getLogger(self.__class__.LOGGER_NAME)
         else:
             self.logger = logging.getLogger(self.name)
+        self.CONF = cfg.CONF
 
         # prevent accidental creation of instances of this class outside RyuApp
         class _EventThreadStop(event.EventBase):
