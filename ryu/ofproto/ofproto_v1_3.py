@@ -744,6 +744,13 @@ OFPR_NO_MATCH = 0    # No matching flow.
 OFPR_ACTION = 1        # Action explicitly output to controller.
 OFPR_INVALID_TTL = 2    # Packet has invalid TTL.
 
+# Masks used for OFPT_SET_ASYNC, OFPT_GET_ASYNC_REPLY messages.
+# Used for setting packet_in_mask field.
+OFPR_NO_MATCH_MASK = 1 << OFPR_NO_MATCH
+OFPR_ACTION_MASK = 1 << OFPR_ACTION
+OFPR_INVALID_TTL_MASK = 1 << OFPR_INVALID_TTL
+
+
 # struct ofp_flow_removed
 _OFP_FLOW_REMOVED_PACK_STR0 = 'QHBBIIHHQQ'
 OFP_FLOW_REMOVED_PACK_STR = '!' + _OFP_FLOW_REMOVED_PACK_STR0 + \
@@ -759,6 +766,15 @@ OFPRR_HARD_TIMEOUT = 1    # Time exceeded hard_timeout.
 OFPRR_DELETE = 2    # Evicted by a DELETE flow mod.
 OFPRR_GROUP_DELETE = 3  # Group was removed.
 
+# Masks used for OFPT_SET_ASYNC, OFPT_GET_ASYNC_REPLY messages.
+# Used for setting flow_removed_mask. 
+
+OFPRR_IDLE_TIMEOUT_MASK = 1 << OFPRR_IDLE_TIMEOUT
+OFPRR_HARD_TIMEOUT_MASK = 1 << OFPRR_HARD_TIMEOUT
+OFPRR_DELETE_MASK = 1 << OFPRR_DELETE
+OFPRR_GROUP_DELETE_MASK = 1 << OFPRR_GROUP_DELETE
+
+
 # struct ofp_port_status
 OFP_PORT_STATUS_PACK_STR = '!B7x' + _OFP_PORT_PACK_STR
 OFP_PORT_STATUS_DESC_OFFSET = OFP_HEADER_SIZE + 8
@@ -770,6 +786,12 @@ assert (calcsize(OFP_PORT_STATUS_PACK_STR) + OFP_HEADER_SIZE ==
 OFPPR_ADD = 0    # The port was added.
 OFPPR_DELETE = 1    # The port was removed.
 OFPPR_MODIFY = 2    # Some attribute of the port has changed.
+
+# Masks used for OFPT_SET_ASYNC, OFPT_GET_ASYNC_REPLY messages.
+# Used for setting  port_status_mask. 
+OFPPR_ADD_MASK = 1 << OFPPR_ADD
+OFPPR_DELETE_MASK = 1 << OFPPR_DELETE
+OFPPR_MODIFY_MASK = 1 << OFPPR_MODIFY
 
 # OFPMP_EXPERIMENTER
 # struct onf_experimenter_multipart_msg

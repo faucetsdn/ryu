@@ -207,9 +207,11 @@ class RpcOFPManager(app_manager.RyuApp):
                                         ofp.OFPC_INVALID_TTL_TO_CONTROLLER,
                                         ofp.OFPCML_MAX)
             elif ofp.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
-                packet_in_mask = ofp.OFPR_ACTION | ofp.OFPR_INVALID_TTL
-                port_status_mask = (ofp.OFPPR_ADD | ofp.OFPPR_DELETE |
-                                    ofp.OFPPR_MODIFY)
+                packet_in_mask = (ofp.OFPR_ACTION_MASK |
+                                  ofp.OFPR_INVALID_TTL_MASK)
+                port_status_mask = (ofp.OFPPR_ADD_MASK |
+                                    ofp.OFPPR_DELETE_MASK |
+                                    ofp.OFPPR_MODIFY_MASK)
                 m = parser.OFPSetAsync(dp, [packet_in_mask, 0],
                                        [port_status_mask, 0],
                                        [0, 0])
