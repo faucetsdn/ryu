@@ -150,9 +150,10 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                     ev = ofp_event.ofp_msg_to_ev(msg)
                     self.ofp_brick.send_event_to_observers(ev, self.state)
 
+                    dispatchers = lambda x: x.callers[ev.__class__].dispatchers
                     handlers = [handler for handler in
                                 self.ofp_brick.get_handlers(ev) if
-                                self.state in handler.dispatchers]
+                                self.state in dispatchers(handler)]
                     for handler in handlers:
                         handler(ev)
 

@@ -17,6 +17,7 @@
 import inspect
 import logging
 import sys
+from collections import namedtuple
 
 LOG = logging.getLogger('ryu.controller.handler')
 
@@ -26,27 +27,38 @@ CONFIG_DISPATCHER = "config"
 MAIN_DISPATCHER = "main"
 DEAD_DISPATCHER = "dead"
 
+caller = namedtuple('caller', 'ev_cls dispatchers ev_source')
+
 
 # should be named something like 'observe_event'
 def set_ev_cls(ev_cls, dispatchers=None):
     def _set_ev_cls_dec(handler):
-        handler.ev_cls = ev_cls
-        handler.dispatchers = _listify(dispatchers)
-        handler.observer = ev_cls.__module__
+        if 'callers' not in dir(handler):
+            handler.callers = {}
+        for e in _listify(ev_cls):
+            c = caller(e, _listify(dispatchers), e.__module__)
+            handler.callers[e] = c
         return handler
     return _set_ev_cls_dec
 
 
 def set_ev_handler(ev_cls, dispatchers=None):
     def _set_ev_cls_dec(handler):
-        handler.ev_cls = ev_cls
-        handler.dispatchers = _listify(dispatchers)
+        if 'callers' not in dir(handler):
+            handler.callers = {}
+        for e in _listify(ev_cls):
+            c = caller(e, _listify(dispatchers), None)
+            handler.callers[e] = c
         return handler
     return _set_ev_cls_dec
 
 
 def _is_ev_cls(meth):
     return hasattr(meth, 'ev_cls')
+
+
+def _has_caller(meth):
+    return hasattr(meth, 'callers')
 
 
 def _listify(may_list):
@@ -60,20 +72,23 @@ def _listify(may_list):
 def register_instance(i):
     for _k, m in inspect.getmembers(i, inspect.ismethod):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
-        if _is_ev_cls(m):
-            i.register_handler(m.ev_cls, m)
+        if _has_caller(m):
+            for c in m.callers.values():
+                i.register_handler(c.ev_cls, m)
 
 
 def get_dependent_services(cls):
     services = []
     for _k, m in inspect.getmembers(cls, inspect.ismethod):
-        if _is_ev_cls(m):
-            service = getattr(sys.modules[m.ev_cls.__module__],
-                              '_SERVICE_NAME', None)
-            if service:
-                # avoid cls that registers the own events (like ofp_handler)
-                if cls.__module__ != service:
-                    services.append(service)
+        if _has_caller(m):
+            for c in m.callers.values():
+                service = getattr(sys.modules[c.ev_cls.__module__],
+                                  '_SERVICE_NAME', None)
+                if service:
+                    # avoid cls that registers the own events (like
+                    # ofp_handler)
+                    if cls.__module__ != service:
+                        services.append(service)
 
     services = list(set(services))
     return services
