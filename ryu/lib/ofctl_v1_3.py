@@ -863,7 +863,7 @@ def mod_group_entry(dp, group, cmd):
                     'FF': dp.ofproto.OFPGT_FF}
 
     type_ = type_convert.get(group.get('type'))
-    if not type_:
+    if type_ is None:
         LOG.debug('Unknown type: %s', group.get('type'))
 
     group_id = int(group.get('group_id', 0))
