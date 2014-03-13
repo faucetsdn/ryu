@@ -21,6 +21,8 @@ class StructuredMessage(object):
         self.message['timestamp'] = cur_time
         self.message['component_name'] = self.__class__.COMPONENT_NAME
         self.message['msg'] = msg
+        log = logging.getLogger()
+        self.message['level'] = logging.getLevelName(log.level)
         if resource_id:
             self.message['resource_id'] = resource_id
         if resource_name:

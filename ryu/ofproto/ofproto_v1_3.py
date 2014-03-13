@@ -767,7 +767,7 @@ OFPRR_DELETE = 2    # Evicted by a DELETE flow mod.
 OFPRR_GROUP_DELETE = 3  # Group was removed.
 
 # Masks used for OFPT_SET_ASYNC, OFPT_GET_ASYNC_REPLY messages.
-# Used for setting flow_removed_mask. 
+# Used for setting flow_removed_mask.
 
 OFPRR_IDLE_TIMEOUT_MASK = 1 << OFPRR_IDLE_TIMEOUT
 OFPRR_HARD_TIMEOUT_MASK = 1 << OFPRR_HARD_TIMEOUT
@@ -788,7 +788,7 @@ OFPPR_DELETE = 1    # The port was removed.
 OFPPR_MODIFY = 2    # Some attribute of the port has changed.
 
 # Masks used for OFPT_SET_ASYNC, OFPT_GET_ASYNC_REPLY messages.
-# Used for setting  port_status_mask. 
+# Used for setting  port_status_mask.
 OFPPR_ADD_MASK = 1 << OFPPR_ADD
 OFPPR_DELETE_MASK = 1 << OFPPR_DELETE
 OFPPR_MODIFY_MASK = 1 << OFPPR_MODIFY

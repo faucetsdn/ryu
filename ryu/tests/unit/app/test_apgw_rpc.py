@@ -419,9 +419,10 @@ class TestRpcOFPManager(unittest.TestCase):
         msg = dp.sent[0]
         eq_(msg.__class__, ofproto_v1_3_parser.OFPSetAsync)
         eq_(msg.packet_in_mask,
-            [ofp.OFPR_ACTION | ofp.OFPR_INVALID_TTL, 0])
+            [1 << ofp.OFPR_ACTION | 1 << ofp.OFPR_INVALID_TTL, 0])
         eq_(msg.port_status_mask,
-            [(ofp.OFPPR_ADD | ofp.OFPPR_DELETE | ofp.OFPPR_MODIFY), 0])
+            [(1 << ofp.OFPPR_ADD | 1 << ofp.OFPPR_DELETE |
+              1 << ofp.OFPPR_MODIFY), 0])
 
     def _test_port_status_thread(self, ofp, ofpp):
         dpid = 10
