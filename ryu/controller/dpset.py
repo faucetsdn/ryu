@@ -88,7 +88,7 @@ class DPSet(app_manager.RyuApp):
     connected to this controller.
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super(DPSet, self).__init__()
         self.name = 'dpset'
 
