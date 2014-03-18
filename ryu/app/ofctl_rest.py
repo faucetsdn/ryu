@@ -498,6 +498,16 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='send_experimenter',
                        conditions=dict(method=['POST']))
 
+    @set_ev_cls([ofp_event.EventOFPStatsReply,
+                 ofp_event.EventOFPDescStatsReply,
+                 ofp_event.EventOFPFlowStatsReply,
+                 ofp_event.EventOFPPortStatsReply,
+                 ofp_event.EventOFPMeterStatsReply,
+                 ofp_event.EventOFPMeterFeaturesStatsReply,
+                 ofp_event.EventOFPMeterConfigStatsReply,
+                 ofp_event.EventOFPGroupStatsReply,
+                 ofp_event.EventOFPGroupFeaturesStatsReply,
+                 ofp_event.EventOFPGroupDescStatsReply], MAIN_DISPATCHER)
     def stats_reply_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
@@ -521,44 +531,3 @@ class RestStatsApi(app_manager.RyuApp):
             return
         del self.waiters[dp.id][msg.xid]
         lock.set()
-
-    @set_ev_cls(ofp_event.EventOFPStatsReply, MAIN_DISPATCHER)
-    def any_stats_reply_handler(self, ev):
-        # for OpenFlow 1.2
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPDescStatsReply, MAIN_DISPATCHER)
-    def desc_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
-    def flow_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
-    def port_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPMeterStatsReply, MAIN_DISPATCHER)
-    def meter_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPMeterFeaturesStatsReply, MAIN_DISPATCHER)
-    def meter_features_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply, MAIN_DISPATCHER)
-    def meter_config_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPGroupStatsReply, MAIN_DISPATCHER)
-    def group_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPGroupFeaturesStatsReply, MAIN_DISPATCHER)
-    def group_features_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
-
-    @set_ev_cls(ofp_event.EventOFPGroupDescStatsReply, MAIN_DISPATCHER)
-    def group_desc_stats_reply_handler(self, ev):
-        self.stats_reply_handler(ev)
