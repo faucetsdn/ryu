@@ -368,13 +368,37 @@ def to_match_tpdst(value, match, rest):
 
 
 def to_match_ip(value):
-    ip = netaddr.IPNetwork(value)
-    return ip.ip.value, ip.netmask.value
+    ip_mask = value.split('/')
+
+    # IP address
+    ipv4 = struct.unpack('!I', socket.inet_aton(ip_mask[0]))[0]
+    # netmask
+    netmask = ofproto_v1_3_parser.UINT32_MAX
+
+    if len(ip_mask) == 2:
+        # Check the mask is CIDR or not.
+        if ip_mask[1].isdigit():
+            netmask &= ofproto_v1_3_parser.UINT32_MAX << 32 - int(ip_mask[1])
+        else:
+            netmask = struct.unpack('!I', socket.inet_aton(ip_mask[1]))[0]
+
+    return ipv4, netmask
 
 
 def to_match_ipv6(value):
-    ip = netaddr.IPNetwork(value)
-    return ip.ip.words, ip.netmask.words
+    ip_mask = value.split('/')
+
+    if len(ip_mask) == 2 and ip_mask[1].isdigit() is False:
+        # Both address and netmask are colon-hexadecimal.
+        ipv6 = netaddr.IPAddress(ip_mask[0]).words
+        netmask = netaddr.IPAddress(ip_mask[1]).words
+    else:
+        # For other formats.
+        network = netaddr.IPNetwork(value)
+        ipv6 = network.ip.words
+        netmask = network.netmask.words
+
+    return ipv6, netmask
 
 
 def to_match_metadata(value):
