@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import collections
 import logging
 import struct
@@ -115,7 +116,6 @@ class StringifyMixin(stringify.StringifyMixin):
     @classmethod
     def cls_from_jsondict_key(cls, k):
         obj_cls = super(StringifyMixin, cls).cls_from_jsondict_key(k)
-        assert not issubclass(obj_cls, MsgBase)
         return obj_cls
 
 
@@ -202,6 +202,14 @@ class MsgBase(StringifyMixin):
         self._serialize_pre()
         self._serialize_body()
         self._serialize_header()
+
+
+class MsgInMsgBase(MsgBase):
+    @classmethod
+    def _decode_value(cls, k, json_value, decode_string=base64.b64decode,
+                      **additional_args):
+        return cls._get_decoder(k, decode_string)(json_value,
+                                                  **additional_args)
 
 
 def msg_pack_into(fmt, buf, offset, *args):

@@ -216,11 +216,11 @@ class StringifyMixin(object):
         return getattr(mod, k)
 
     @classmethod
-    def obj_from_jsondict(cls, jsondict):
+    def obj_from_jsondict(cls, jsondict, **additional_args):
         assert len(jsondict) == 1
         for k, v in jsondict.iteritems():
             obj_cls = cls.cls_from_jsondict_key(k)
-            return obj_cls.from_jsondict(v)
+            return obj_cls.from_jsondict(v, **additional_args)
 
     @classmethod
     def _get_decoder(cls, k, decode_string):
@@ -230,19 +230,20 @@ class StringifyMixin(object):
         return cls._get_default_decoder(decode_string)
 
     @classmethod
-    def _decode_value(cls, k, json_value, decode_string=base64.b64decode):
+    def _decode_value(cls, k, json_value, decode_string=base64.b64decode,
+                      **additional_args):
         return cls._get_decoder(k, decode_string)(json_value)
 
     @classmethod
     def _get_default_decoder(cls, decode_string):
-        def _decode(json_value):
+        def _decode(json_value, **additional_args):
             if isinstance(json_value, (bytes, unicode)):
                 v = decode_string(json_value)
             elif isinstance(json_value, list):
                 v = map(_decode, json_value)
             elif isinstance(json_value, dict):
                 if cls._is_class(json_value):
-                    v = cls.obj_from_jsondict(json_value)
+                    v = cls.obj_from_jsondict(json_value, **additional_args)
                 else:
                     v = _mapdict(_decode, json_value)
                     # XXXhack
@@ -287,7 +288,8 @@ class StringifyMixin(object):
         additional_args (Optional) Additional kwargs for constructor.
         =============== =====================================================
         """
-        decode = lambda k, x: cls._decode_value(k, x, decode_string)
+        decode = lambda k, x: cls._decode_value(k, x, decode_string,
+                                                **additional_args)
         kwargs = cls._restore_args(_mapdict_kv(decode, dict_))
         try:
             return cls(**dict(kwargs, **additional_args))
