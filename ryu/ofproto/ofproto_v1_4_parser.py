@@ -4481,6 +4481,54 @@ class OFPTableStatus(MsgBase):
         return msg
 
 
+@_set_msg_type(ofproto.OFPT_REQUESTFORWARD)
+class OFPRequestForward(MsgInMsgBase):
+    """
+    Forwarded request message
+
+    The swtich forwards request messages from one controller to other
+    controllers.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    request          ``OFPGroupMod`` or ``OFPMeterMod`` instance
+    ================ ======================================================
+
+    Example::
+
+        def send_bundle_add_message(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            port = 1
+            max_len = 2000
+            actions = [ofp_parser.OFPActionOutput(port, max_len)]
+
+            weight = 100
+            watch_port = 0
+            watch_group = 0
+            buckets = [ofp_parser.OFPBucket(weight, watch_port, watch_group,
+                                            actions)]
+
+            group_id = 1
+            msg = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
+                                         ofp.OFPGT_SELECT, group_id, buckets)
+
+            req = ofp_parser.OFPRequestForward(datapath, msg)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, request):
+        super(OFPRequestForward, self).__init__(datapath)
+        assert(isinstance(request, OFPGroupMod) or
+               isinstance(request, OFPMeterMod))
+        self.request = request
+
+    def _serialize_body(self):
+        tail_buf = self.request.serialize()
+        self.buf += self.request.buf
+
+
 @_set_msg_type(ofproto.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
     """
