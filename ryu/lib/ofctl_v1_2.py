@@ -87,23 +87,7 @@ def to_action(dp, dic):
     elif action_type == 'SET_FIELD':
         field = dic.get('field')
         value = dic.get('value')
-        if field == 'eth_dst':
-            field = ofp.OXM_OF_ETH_DST
-            value = mac.haddr_to_bin(str(value))
-        elif field == 'eth_src':
-            field = ofp.OXM_OF_ETH_SRC
-            value = mac.haddr_to_bin(str(value))
-        elif field == 'vlan_vid':
-            field = ofp.OXM_OF_VLAN_VID
-            value = int(value)
-        elif field == 'mpls_label':
-            field = ofp.OXM_OF_MPLS_LABEL
-            value = int(value)
-        else:
-            LOG.debug('Unknown field: %s' % field)
-            return None
-        f = parser.OFPMatchField.make(field, value)
-        result = parser.OFPActionSetField(f)
+        result = parser.OFPActionSetField(**{field: value})
     else:
         LOG.debug('Unknown action type: %s' % action_type)
 
@@ -171,17 +155,7 @@ def action_to_str(act):
     elif action_type == ofproto_v1_2.OFPAT_DEC_NW_TTL:
         buf = 'DEC_NW_TTL'
     elif action_type == ofproto_v1_2.OFPAT_SET_FIELD:
-        if isinstance(act.field, ofproto_v1_2_parser.MTEthDst):
-            field = 'eth_dst'
-        elif isinstance(act.field, ofproto_v1_2_parser.MTEthSrc):
-            field = 'eth_src'
-        elif isinstance(act.field, ofproto_v1_2_parser.MTVlanVid):
-            field = 'vlan_vid'
-        elif isinstance(act.field, ofproto_v1_2_parser.MTMplsLabel):
-            field = 'mpls_label'
-        else:
-            field = '(Unknown field)'
-        buf = 'SET_FIELD: {%s:%s}' % (field, act.value)
+        buf = 'SET_FIELD: {%s:%s}' % (act.key, act.value)
     else:
         buf = 'UNKNOWN'
     return buf
@@ -219,10 +193,14 @@ def to_match(dp, attrs):
     match = dp.ofproto_parser.OFPMatch()
 
     convert = {'in_port': int,
+               'in_phy_port': int,
                'dl_src': mac.haddr_to_bin,
                'dl_dst': mac.haddr_to_bin,
                'dl_type': int,
                'dl_vlan': int,
+               'vlan_pcp': int,
+               'ip_dscp': int,
+               'ip_ecn': int,
                'nw_src': to_match_ip,
                'nw_dst': to_match_ip,
                'nw_proto': int,
@@ -239,16 +217,32 @@ def to_match(dp, attrs):
                'tcp_dst': int,
                'udp_src': int,
                'udp_dst': int,
+               'sctp_src': int,
+               'sctp_dst': int,
+               'icmpv4_type': int,
+               'icmpv4_code': int,
+               'arp_op': int,
                'arp_spa': to_match_ip,
                'arp_tpa': to_match_ip,
+               'arp_sha': mac.haddr_to_bin,
+               'arp_tha': mac.haddr_to_bin,
                'ipv6_src': to_match_ipv6,
-               'ipv6_dst': to_match_ipv6}
+               'ipv6_dst': to_match_ipv6,
+               'ipv6_flabel': int,
+               'icmpv6_type': int,
+               'icmpv6_code': int,
+               'ipv6_nd_target': to_match_ipv6,
+               'ipv6_nd_sll': mac.haddr_to_bin,
+               'ipv6_nd_tll': mac.haddr_to_bin,
+               'mpls_tc': int}
 
     match_append = {'in_port': match.set_in_port,
+                    'in_phy_port': match.set_in_phy_port,
                     'dl_src': match.set_dl_src,
                     'dl_dst': match.set_dl_dst,
                     'dl_type': match.set_dl_type,
                     'dl_vlan': match.set_vlan_vid,
+                    'vlan_pcp': match.set_vlan_pcp,
                     'nw_src': match.set_ipv4_src_masked,
                     'nw_dst': match.set_ipv4_dst_masked,
                     'nw_proto': match.set_ip_proto,
@@ -258,6 +252,8 @@ def to_match(dp, attrs):
                     'eth_dst': match.set_dl_dst,
                     'eth_type': match.set_dl_type,
                     'vlan_vid': match.set_vlan_vid,
+                    'ip_dscp': match.set_ip_dscp,
+                    'ip_ecn': match.set_ip_ecn,
                     'ipv4_src': match.set_ipv4_src_masked,
                     'ipv4_dst': match.set_ipv4_dst_masked,
                     'ip_proto': match.set_ip_proto,
@@ -265,10 +261,24 @@ def to_match(dp, attrs):
                     'tcp_dst': to_match_tpdst,
                     'udp_src': to_match_tpsrc,
                     'udp_dst': to_match_tpdst,
+                    'sctp_src': match.set_sctp_src,
+                    'sctp_dst': match.set_sctp_dst,
+                    'icmpv4_type': match.set_icmpv4_type,
+                    'icmpv4_code': match.set_icmpv4_code,
+                    'arp_op': match.set_arp_opcode,
                     'arp_spa': match.set_arp_spa_masked,
                     'arp_tpa': match.set_arp_tpa_masked,
+                    'arp_sha': match.set_arp_sha,
+                    'arp_tha': match.set_arp_tha,
                     'ipv6_src': match.set_ipv6_src_masked,
-                    'ipv6_dst': match.set_ipv6_dst_masked}
+                    'ipv6_dst': match.set_ipv6_dst_masked,
+                    'ipv6_flabel': match.set_ipv6_flabel,
+                    'icmpv6_type': match.set_icmpv6_type,
+                    'icmpv6_code': match.set_icmpv6_code,
+                    'ipv6_nd_target': match.set_ipv6_nd_target,
+                    'ipv6_nd_sll': match.set_ipv6_nd_sll,
+                    'ipv6_nd_tll': match.set_ipv6_nd_tll,
+                    'mpls_tc': match.set_mpls_tc}
 
     if attrs.get('dl_type') == ether.ETH_TYPE_ARP or \
             attrs.get('eth_type') == ether.ETH_TYPE_ARP:
@@ -361,10 +371,14 @@ def to_match_ipv6(value):
 
 def match_to_str(ofmatch):
     keys = {ofproto_v1_2.OXM_OF_IN_PORT: 'in_port',
+            ofproto_v1_2.OXM_OF_IN_PHY_PORT: 'in_phy_port',
             ofproto_v1_2.OXM_OF_ETH_SRC: 'dl_src',
             ofproto_v1_2.OXM_OF_ETH_DST: 'dl_dst',
             ofproto_v1_2.OXM_OF_ETH_TYPE: 'dl_type',
             ofproto_v1_2.OXM_OF_VLAN_VID: 'dl_vlan',
+            ofproto_v1_2.OXM_OF_VLAN_PCP: 'vlan_pcp',
+            ofproto_v1_2.OXM_OF_IP_DSCP: 'ip_dscp',
+            ofproto_v1_2.OXM_OF_IP_ECN: 'ip_ecn',
             ofproto_v1_2.OXM_OF_IPV4_SRC: 'nw_src',
             ofproto_v1_2.OXM_OF_IPV4_DST: 'nw_dst',
             ofproto_v1_2.OXM_OF_IPV4_SRC_W: 'nw_src',
@@ -374,14 +388,29 @@ def match_to_str(ofmatch):
             ofproto_v1_2.OXM_OF_TCP_DST: 'tp_dst',
             ofproto_v1_2.OXM_OF_UDP_SRC: 'tp_src',
             ofproto_v1_2.OXM_OF_UDP_DST: 'tp_dst',
+            ofproto_v1_2.OXM_OF_SCTP_SRC: 'sctp_src',
+            ofproto_v1_2.OXM_OF_SCTP_DST: 'sctp_dst',
+            ofproto_v1_2.OXM_OF_ICMPV4_TYPE: 'icmpv4_type',
+            ofproto_v1_2.OXM_OF_ICMPV4_CODE: 'icmpv4_code',
+            ofproto_v1_2.OXM_OF_MPLS_LABEL: 'mpls_label',
+            ofproto_v1_2.OXM_OF_MPLS_TC: 'mpls_tc',
+            ofproto_v1_2.OXM_OF_ARP_OP: 'arp_op',
             ofproto_v1_2.OXM_OF_ARP_SPA: 'arp_spa',
             ofproto_v1_2.OXM_OF_ARP_TPA: 'arp_tpa',
             ofproto_v1_2.OXM_OF_ARP_SPA_W: 'arp_spa',
             ofproto_v1_2.OXM_OF_ARP_TPA_W: 'arp_tpa',
+            ofproto_v1_2.OXM_OF_ARP_SHA: 'arp_sha',
+            ofproto_v1_2.OXM_OF_ARP_THA: 'arp_tha',
             ofproto_v1_2.OXM_OF_IPV6_SRC: 'ipv6_src',
             ofproto_v1_2.OXM_OF_IPV6_DST: 'ipv6_dst',
             ofproto_v1_2.OXM_OF_IPV6_SRC_W: 'ipv6_src',
-            ofproto_v1_2.OXM_OF_IPV6_DST_W: 'ipv6_dst'}
+            ofproto_v1_2.OXM_OF_IPV6_DST_W: 'ipv6_dst',
+            ofproto_v1_2.OXM_OF_IPV6_FLABEL: 'ipv6_flabel',
+            ofproto_v1_2.OXM_OF_ICMPV6_TYPE: 'icmpv6_type',
+            ofproto_v1_2.OXM_OF_ICMPV6_CODE: 'icmpv6_code',
+            ofproto_v1_2.OXM_OF_IPV6_ND_TARGET: 'ipv6_nd_target',
+            ofproto_v1_2.OXM_OF_IPV6_ND_SLL: 'ipv6_nd_sll',
+            ofproto_v1_2.OXM_OF_IPV6_ND_TLL: 'ipv6_nd_tll'}
 
     match = {}
     for match_field in ofmatch.fields:
@@ -476,7 +505,7 @@ def get_desc_stats(dp, waiters):
 
 
 def get_flow_stats(dp, waiters):
-    table_id = 0
+    table_id = dp.ofproto.OFPTT_ALL
     out_port = dp.ofproto.OFPP_ANY
     out_group = dp.ofproto.OFPG_ANY
     cookie = 0
