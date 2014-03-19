@@ -1,0 +1,31 @@
+{
+   "OFPRequestForward": {
+      "request": {
+         "OFPGroupMod": {
+            "buckets": [
+               {
+                  "OFPBucket": {
+                     "actions": [
+                        {
+                           "OFPActionOutput": {
+                              "len": 16, 
+                              "max_len": 65535, 
+                              "port": 2, 
+                              "type": 0
+                           }
+                        }
+                     ], 
+                     "len": 32, 
+                     "watch_group": 1, 
+                     "watch_port": 1, 
+                     "weight": 1
+                  }
+               }
+            ], 
+            "command": 0, 
+            "group_id": 1, 
+            "type": 0
+         }
+      }
+   }
+}

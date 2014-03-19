@@ -2994,6 +2994,26 @@ x() ->
                  #ofp_bundle_prop_experimenter{
                      experimenter = 101,
                      exp_type = 2,
-                     data = <<1:32,2:32>>}]}
+                     data = <<1:32,2:32>>}]},
+        #ofp_requestforward{
+            request =
+                #ofp_message{
+                    version = 5,
+                    type = group_mod,
+                    xid = 0,
+                    body = 
+                        #ofp_group_mod{
+                            command = add,
+                            type = all,
+                            group_id = 1,
+                            buckets = 
+                                [#ofp_bucket{
+                                     weight = 1,
+                                     watch_port = 1,
+                                     watch_group = 1,
+                                     actions = 
+                                         [#ofp_action_output{
+                                              port = 2,
+                                              max_len = no_buffer}]}]}}}
     ],
     lists:foldl(fun x:do/2, {5, 0}, List).
