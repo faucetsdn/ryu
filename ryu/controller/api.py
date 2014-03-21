@@ -25,6 +25,8 @@ import ryu.lib.of_config.classes as ofc
 import eventlet
 import sys
 
+_OFCONFIG_RETRIES = 5
+_OFCONFIG_TIMEOUT = 280
 
 _ = type('', (apgw.StructuredMessage,), {})
 _.COMPONENT_NAME = 'ofwire'
@@ -39,6 +41,10 @@ CONF.register_cli_opts([
                help='of-config user name'),
     cfg.StrOpt('ofconfig-password', default='linc',
                help='of-config password'),
+    cfg.StrOpt('ofconfig-timeout', default=_OFCONFIG_TIMEOUT,
+               help='of-config timeout per attempt'),
+    cfg.StrOpt('ofconfig-retries', default=_OFCONFIG_RETRIES,
+               help='of-config retries'),
     cfg.StrOpt('stats-file', default='/tmp/stats.log',
                help='File name that statistics info is written to'),
     cfg.StrOpt('states-file', default='/tmp/states.log',
@@ -613,15 +619,28 @@ class RpcOFPManager(app_manager.RyuApp):
 
         def _handle(param_dict):
             # TODO: don't need to create a new conneciton every time.
-            try:
-                s = cs.OFCapableSwitch(host=CONF.ofconfig_address,
-                                       port=CONF.ofconfig_port,
-                                       username=CONF.ofconfig_user,
-                                       password=CONF.ofconfig_password,
-                                       unknown_host_cb=lambda h, f: True,
-                                       timeout=180)
-            except:
-                raise RPCError('faied to connect to ofs')
+            # FIXME(KK): Nice place to put a context-manager?
+            s = None
+            attempt = 0
+            while attempt < CONF.ofconfig_retries:
+                try:
+                    s = cs.OFCapableSwitch(host=CONF.ofconfig_address,
+                                           port=CONF.ofconfig_port,
+                                           username=CONF.ofconfig_user,
+                                           password=CONF.ofconfig_password,
+                                           unknown_host_cb=lambda h, f: True,
+                                           timeout=CONF.ofconfig_timeout)
+                except Exception as e:
+                    self.logger.error(
+                        _({"event": "ofconfig failed to connect",
+                           "reason": "exception: {0!s}".format(e)}))
+                else:
+                    break
+                attempt += 1
+                backoff_time = attempt ** 2
+                hub.sleep(backoff_time)
+            if not s:
+                raise RPCError('failed to connect to ofs')
 
             o = s.get()
             if len(param_dict) == 0:
