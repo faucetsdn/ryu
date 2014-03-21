@@ -1818,14 +1818,14 @@ class OfCtl_v1_3(OfCtl_after_v1_2):
         super(OfCtl_v1_3, self).__init__(dp, logger)
 
     def set_sw_config_for_ttl(self):
-        packet_in_mask = (self.dp.ofproto.OFPR_ACTION |
-                          self.dp.ofproto.OFPR_INVALID_TTL)
-        port_status_mask = (self.dp.ofproto.OFPPR_ADD |
-                            self.dp.ofproto.OFPPR_DELETE |
-                            self.dp.ofproto.OFPPR_MODIFY)
-        flow_removed_mask = (self.dp.ofproto.OFPRR_IDLE_TIMEOUT |
-                             self.dp.ofproto.OFPRR_HARD_TIMEOUT |
-                             self.dp.ofproto.OFPRR_DELETE)
+        packet_in_mask = (1 << self.dp.ofproto.OFPR_ACTION |
+                          1 << self.dp.ofproto.OFPR_INVALID_TTL)
+        port_status_mask = (1 << self.dp.ofproto.OFPPR_ADD |
+                            1 << self.dp.ofproto.OFPPR_DELETE |
+                            1 << self.dp.ofproto.OFPPR_MODIFY)
+        flow_removed_mask = (1 << self.dp.ofproto.OFPRR_IDLE_TIMEOUT |
+                             1 << self.dp.ofproto.OFPRR_HARD_TIMEOUT |
+                             1 << self.dp.ofproto.OFPRR_DELETE)
         m = self.dp.ofproto_parser.OFPSetAsync(
             self.dp, [packet_in_mask, 0], [port_status_mask, 0],
             [flow_removed_mask, 0])
