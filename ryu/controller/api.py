@@ -278,6 +278,13 @@ class RpcOFPManager(app_manager.RyuApp):
                 self.stats_log.info(json.dumps(stats))
                 self.logger.info(_(msg=stats, log_type='stats'))
 
+    def _add_band_name(self, stats):
+       new_stats = [
+           {'band_name':{'pir':stats[0]}},
+           {'band_name':{'cir':stats[1]}}
+       ]
+       return new_stats
+
     @handler.set_ev_cls(ofp_event.EventOFPMeterStatsReply,
                         handler.MAIN_DISPATCHER)
     def _meter_stats_reply_handler(self, ev):
@@ -287,6 +294,7 @@ class RpcOFPManager(app_manager.RyuApp):
             if stat.meter_id in self.monitored_meters:
                 contexts = self.monitored_meters[stat.meter_id]
                 stats = stat.to_jsondict()['OFPMeterStats']
+                stats['band_stats'] = self._add_band_name(stats['band_stats'])
                 stats.update(contexts)
                 self.stats_log.info(json.dumps(stats))
                 self.logger.info(_(msg=stats, log_type='stats'))
