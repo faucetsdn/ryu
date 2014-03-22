@@ -471,12 +471,12 @@ class Switches(app_manager.RyuApp):
 
     def _register(self, dp):
         assert dp.id is not None
-        assert dp.id not in self.dps
 
         self.dps[dp.id] = dp
-        self.port_state[dp.id] = PortState()
-        for port in dp.ports.values():
-            self.port_state[dp.id].add(port.port_no, port)
+        if not dp.id in self.port_state:
+            self.port_state[dp.id] = PortState()
+            for port in dp.ports.values():
+                self.port_state[dp.id].add(port.port_no, port)
 
     def _unregister(self, dp):
         if dp.id in self.dps:
@@ -526,10 +526,18 @@ class Switches(app_manager.RyuApp):
         LOG.debug(dp)
 
         if ev.state == MAIN_DISPATCHER:
+            dp_multiple_conns = False
+            if dp.id in self.dps:
+                LOG.warning('multiple connections from %s', dpid_to_str(dp.id))
+                dp_multiple_conns = True
+
             self._register(dp)
             switch = self._get_switch(dp.id)
             LOG.debug('register %s', switch)
-            self.send_event_to_observers(event.EventSwitchEnter(switch))
+
+            # Do not send event while dp has multiple connections.
+            if not dp_multiple_conns:
+                self.send_event_to_observers(event.EventSwitchEnter(switch))
 
             if not self.link_discovery:
                 return
@@ -571,9 +579,12 @@ class Switches(app_manager.RyuApp):
                     LOG.error('cannot install flow. unsupported version. %x',
                               dp.ofproto.OFP_VERSION)
 
-            for port in switch.ports:
-                if not port.is_reserved():
-                    self._port_added(port)
+            # Do not add ports while dp has multiple connections to controller.
+            if not dp_multiple_conns:
+                for port in switch.ports:
+                    if not port.is_reserved():
+                        self._port_added(port)
+
             self.lldp_event.set()
 
         elif ev.state == DEAD_DISPATCHER:
