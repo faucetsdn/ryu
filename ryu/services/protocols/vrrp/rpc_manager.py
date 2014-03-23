@@ -116,10 +116,10 @@ class RpcVRRPManager(app_manager.RyuApp):
             raise RPCError('parameters are missing')
 
         if_params = self._params_to_dict(param_dict,
-                                         ('ip_addr',
+                                         ('ip_address',
                                           'ifname'))
         try:
-            if_params['primary_ip_address'] = if_params.pop('ip_addr')
+            if_params['primary_ip_address'] = if_params.pop('ip_address')
         except:
             raise RPCError('ip_addr parameter is missing')
         try:
@@ -136,7 +136,7 @@ class RpcVRRPManager(app_manager.RyuApp):
 
         config_params = self._params_to_dict(param_dict,
                                              ('vrid',  # mandatory
-                                              'ip_address',  # mandatory
+                                              'ip_addr',  # mandatory
                                               'version',
                                               'admin_state',
                                               'priority',
@@ -147,9 +147,9 @@ class RpcVRRPManager(app_manager.RyuApp):
         if CONF.vrrp_use_vmac:
             config_params.update({'use_virtual_mac': True})
         try:
-            config_params['ip_addresses'] = [config_params.pop('ip_address')]
+            config_params['ip_addresses'] = [config_params.pop('ip_addr')]
         except:
-            raise RPCError('ip_address parameter is missing')
+            raise RPCError('ip_addr parameter is missing')
         try:
             config = vrrp_event.VRRPConfig(**config_params)
         except:
