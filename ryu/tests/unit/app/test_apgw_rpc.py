@@ -479,6 +479,37 @@ class TestRpcOFPManager(unittest.TestCase):
     def test_port_status_thread_13(self):
         self._test_port_status_thread(ofproto_v1_3, ofproto_v1_3_parser)
 
+    def _test_queue_status_thread(self, ofp, ofpp):
+        dpid = 10
+        queue_id = 2
+        port_no = 16
+        dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
+        dp = dps.get(dpid)
+        m = api.RpcOFPManager(dpset=dps)
+        p = dps.get_ports(dpid)
+        threads = []
+        m.monitored_queues[queue_id] = ({}, 1)
+        with hub.Timeout(2):
+            threads.append(hub.spawn(m._monitor_thread, queue_id,
+                                     m.monitored_queues, {'port_no': port_no},
+                                     m._queue_stats_generator))
+            hub.sleep(0.5)
+            for t in threads:
+                hub.kill(t)
+            hub.joinall(threads)
+
+        assert len(dp.sent)
+        for m in dp.sent:
+            eq_(m.__class__, ofpp.OFPQueueStatsRequest)
+            eq_(m.port_no, port_no)
+            eq_(m.queue_id, queue_id)
+
+    def test_queue_status_thread_12(self):
+        self._test_queue_status_thread(ofproto_v1_2, ofproto_v1_2_parser)
+
+    def test_queue_status_thread_13(self):
+        self._test_queue_status_thread(ofproto_v1_3, ofproto_v1_3_parser)
+
     def _test_flow_stats_loop(self, ofp, ofpp):
         dpid = 10
         dps = self._create_dpset(dpid, ofp=ofp, ofpp=ofpp)
