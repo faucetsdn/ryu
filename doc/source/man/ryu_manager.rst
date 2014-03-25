@@ -15,10 +15,6 @@ Options
 -------
 -h, --help
 
-See also
---------
-:manpage:`ryu-client(1)`
-
 Author
 ------
 Ryu development team
