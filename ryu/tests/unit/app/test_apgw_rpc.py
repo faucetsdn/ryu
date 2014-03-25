@@ -100,6 +100,30 @@ class TestRpcOFPManager(unittest.TestCase):
         eq_(r, {})
         eq_(m.monitored_ports[port_name], (contents, interval))
 
+    def test_monitor_queue(self):
+        m = api.RpcOFPManager(dpset=None)
+        msgid = 1
+        try:
+            m._monitor_queue(msgid, {})
+        except api.RPCError as e:
+            pass
+
+        queue_id = 10
+        port_no = 10
+        interval = 10
+        try:
+            m._monitor_queue(msgid, {'queue_id': queue_id, 'port_no': port_no})
+        except api.RPCError as e:
+            pass
+
+        contents = {'hoge': 'jail'}
+        r = m._monitor_queue(msgid, [{'queue_id': queue_id,
+                                      'port_no': port_no,
+                                      'contexts': contents,
+                                      'interval': interval}])
+        eq_(r, {})
+        eq_(m.monitored_queues[queue_id], (contents, interval))
+
     def test_register_traceroute(self):
         m = api.RpcOFPManager(dpset=None)
         msgid = 1
@@ -437,7 +461,7 @@ class TestRpcOFPManager(unittest.TestCase):
         m.monitored_ports[port_name] = ({}, 1)
         with hub.Timeout(2):
             threads.append(hub.spawn(m._monitor_thread, port_name,
-                                     m.monitored_ports,
+                                     m.monitored_ports, {},
                                      m._port_stats_generator))
             hub.sleep(0.5)
             for t in threads:
