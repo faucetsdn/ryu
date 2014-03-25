@@ -275,11 +275,11 @@ class RpcOFPManager(app_manager.RyuApp):
                 self.logger.info(_(msg=stats, log_type='stats'))
 
     def _add_band_name(self, stats):
-       new_stats = [
-           {'band_name':{'pir':stats[0]}},
-           {'band_name':{'cir':stats[1]}}
-       ]
-       return new_stats
+        new_stats = [
+            {'band_name': {'pir': stats[0]}},
+            {'band_name': {'cir': stats[1]}}
+            ]
+        return new_stats
 
     @handler.set_ev_cls(ofp_event.EventOFPMeterStatsReply,
                         handler.MAIN_DISPATCHER)

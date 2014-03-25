@@ -739,7 +739,8 @@ class TestRpcOFPManager(unittest.TestCase):
         s = ofpp.OFPMeterStats(meter_id=meter_id, flow_count=10,
                                packet_in_count=10, byte_in_count=10,
                                duration_sec=10, duration_nsec=10,
-                               band_stats=[])
+                               band_stats=[ofpp.OFPMeterBandStats(1, 8),
+                                           ofpp.OFPMeterBandStats(2, 16)])
 
         msg.body = [s]
         m._meter_stats_reply_handler(ev)
