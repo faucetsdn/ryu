@@ -22,6 +22,7 @@ from ryu.lib.hub import StreamServer
 import traceback
 import random
 import ssl
+from socket import IPPROTO_TCP, TCP_NODELAY
 
 import ryu.base.app_manager
 
@@ -101,6 +102,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         super(Datapath, self).__init__()
 
         self.socket = socket
+        self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         self.address = address
         self.is_active = True
 
