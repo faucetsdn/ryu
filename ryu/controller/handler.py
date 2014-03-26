@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011-2014 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
 import inspect
 import logging
 import sys
-from collections import namedtuple
 
 LOG = logging.getLogger('ryu.controller.handler')
 
@@ -27,7 +26,25 @@ CONFIG_DISPATCHER = "config"
 MAIN_DISPATCHER = "main"
 DEAD_DISPATCHER = "dead"
 
-caller = namedtuple('caller', 'ev_cls dispatchers ev_source')
+
+class _Caller(object):
+    """Describe how to handle an event class.
+    """
+
+    def __init__(self, ev_cls, dispatchers, ev_source):
+        """Initialize _Caller.
+
+        :param ev_cls: The event class to accept.
+        :param dispatchers: A list of states or a state, in which this
+                            is in effect.
+                            None and [] mean all states.
+        :param ev_source: The module which generates the event.
+                          ev_cls.__module__ for set_ev_cls.
+                          None for set_ev_handler.
+        """
+        self.ev_cls = ev_cls
+        self.dispatchers = dispatchers
+        self.ev_source = ev_source
 
 
 # should be named something like 'observe_event'
@@ -36,7 +53,7 @@ def set_ev_cls(ev_cls, dispatchers=None):
         if 'callers' not in dir(handler):
             handler.callers = {}
         for e in _listify(ev_cls):
-            c = caller(e, _listify(dispatchers), e.__module__)
+            c = _Caller(e, _listify(dispatchers), e.__module__)
             handler.callers[e] = c
         return handler
     return _set_ev_cls_dec
@@ -47,7 +64,7 @@ def set_ev_handler(ev_cls, dispatchers=None):
         if 'callers' not in dir(handler):
             handler.callers = {}
         for e in _listify(ev_cls):
-            c = caller(e, _listify(dispatchers), None)
+            c = _Caller(e, _listify(dispatchers), None)
             handler.callers[e] = c
         return handler
     return _set_ev_cls_dec
