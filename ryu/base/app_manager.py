@@ -176,13 +176,28 @@ class RyuApp(object):
             observers.pop(name, None)
 
     def get_handlers(self, ev, state=None):
-        handlers = self.event_handlers.get(ev.__class__, [])
+        """Returns a list of handlers for the specific event.
+
+        :param ev: The event to handle.
+        :param state: The current state. ("dispatcher")
+                      If None is given, returns all handlers for the event.
+                      Otherwise, returns only handlers that are interested
+                      in the specified state.
+                      The default is None.
+        """
+        ev_cls = ev.__class__
+        handlers = self.event_handlers.get(ev_cls, [])
         if state is None:
             return handlers
 
-        dispatchers = lambda x: x.callers[ev.__class__].dispatchers
-        return [handler for handler in handlers
-                if not dispatchers(handler) or state in dispatchers(handler)]
+        def test(h):
+            states = h.callers[ev_cls].dispatchers
+            if not states:
+                # empty states means all states
+                return True
+            return state in states
+
+        return filter(test, handlers)
 
     def get_observers(self, ev, state):
         observers = []
