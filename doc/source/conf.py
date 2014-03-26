@@ -220,6 +220,8 @@ man_pages = [
      [u'ryu development team'], 1),
     ('man/rpc_cli', 'rpc-cli', u'a simple msgpack-rpc client',
      [u'ryu development team'], 1),
+    ('man/ryu', 'ryu', u'ryu',
+     [u'ryu development team'], 1),
     ('man/ryu_manager', 'ryu-manager', u'ryu manager',
      [u'ryu development team'], 1),
 ]
