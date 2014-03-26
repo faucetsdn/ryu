@@ -31,10 +31,9 @@ class _Caller(object):
     """Describe how to handle an event class.
     """
 
-    def __init__(self, ev_cls, dispatchers, ev_source):
+    def __init__(self, dispatchers, ev_source):
         """Initialize _Caller.
 
-        :param ev_cls: The event class to accept.
         :param dispatchers: A list of states or a state, in which this
                             is in effect.
                             None and [] mean all states.
@@ -42,7 +41,6 @@ class _Caller(object):
                           ev_cls.__module__ for set_ev_cls.
                           None for set_ev_handler.
         """
-        self.ev_cls = ev_cls
         self.dispatchers = dispatchers
         self.ev_source = ev_source
 
@@ -53,8 +51,7 @@ def set_ev_cls(ev_cls, dispatchers=None):
         if 'callers' not in dir(handler):
             handler.callers = {}
         for e in _listify(ev_cls):
-            c = _Caller(e, _listify(dispatchers), e.__module__)
-            handler.callers[e] = c
+            handler.callers[e] = _Caller(_listify(dispatchers), e.__module__)
         return handler
     return _set_ev_cls_dec
 
@@ -64,8 +61,7 @@ def set_ev_handler(ev_cls, dispatchers=None):
         if 'callers' not in dir(handler):
             handler.callers = {}
         for e in _listify(ev_cls):
-            c = _Caller(e, _listify(dispatchers), None)
-            handler.callers[e] = c
+            handler.callers[e] = _Caller(_listify(dispatchers), None)
         return handler
     return _set_ev_cls_dec
 
@@ -86,16 +82,16 @@ def register_instance(i):
     for _k, m in inspect.getmembers(i, inspect.ismethod):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
         if _has_caller(m):
-            for c in m.callers.values():
-                i.register_handler(c.ev_cls, m)
+            for ev_cls, c in m.callers.iteritems():
+                i.register_handler(ev_cls, m)
 
 
 def get_dependent_services(cls):
     services = []
     for _k, m in inspect.getmembers(cls, inspect.ismethod):
         if _has_caller(m):
-            for c in m.callers.values():
-                service = getattr(sys.modules[c.ev_cls.__module__],
+            for ev_cls, c in m.callers.iteritems():
+                service = getattr(sys.modules[ev_cls.__module__],
                                   '_SERVICE_NAME', None)
                 if service:
                     # avoid cls that registers the own events (like

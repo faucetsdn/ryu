@@ -336,21 +336,21 @@ class AppManager(object):
             for _k, m in inspect.getmembers(i, inspect.ismethod):
                 if not hasattr(m, 'callers'):
                     continue
-                for e in m.callers.values():
-                    if not e.ev_source:
+                for ev_cls, c in m.callers.iteritems():
+                    if not c.ev_source:
                         continue
                     # name is module name of ev_cls
-                    name = e.ev_source.split('.')[-1]
+                    name = c.ev_source.split('.')[-1]
                     if name in SERVICE_BRICKS:
                         brick = SERVICE_BRICKS[name]
                         brick.register_observer(
-                            e.ev_cls, i.name, e.dispatchers)
+                            ev_cls, i.name, c.dispatchers)
 
                     # allow RyuApp and Event class are in different module
                     for brick in SERVICE_BRICKS.itervalues():
-                        if e.ev_cls in brick._EVENTS:
-                            brick.register_observer(e.ev_cls, i.name,
-                                                    e.dispatchers)
+                        if ev_cls in brick._EVENTS:
+                            brick.register_observer(ev_cls, i.name,
+                                                    c.dispatchers)
 
     @staticmethod
     def _report_brick(name, app):
