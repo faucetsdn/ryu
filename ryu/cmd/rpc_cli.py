@@ -222,8 +222,8 @@ class Cmd(cmd.Cmd):
         signal.alarm(self._notification_check_interval)
 
 
-def main():
-    CONF(project='rpc-cli', version='rpc-cli')
+def main(args=None, prog=None):
+    CONF(args=args, prog=prog, project='rpc-cli', version='rpc-cli')
 
     for p_str in CONF.peers:
         name, addr = p_str.split('=')

@@ -545,8 +545,9 @@ lost-connection-behavior failStandaloneMode
             self._in_onecmd = False
 
 
-def main():
-    CONF(project='of-config-cli', version='of-config-cli')
+def main(args=None, prog=None):
+    CONF(args=args, prog=prog,
+         project='of-config-cli', version='of-config-cli')
 
     for p_str in CONF.peers:
         name, addr = p_str.split('=')
