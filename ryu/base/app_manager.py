@@ -158,6 +158,10 @@ class RyuApp(object):
         self.event_handlers.setdefault(ev_cls, [])
         self.event_handlers[ev_cls].append(handler)
 
+    def unregister_handler(self, ev_cls, handler):
+        assert callable(handler)
+        self.event_handlers[ev_cls].remove(handler)
+
     def register_observer(self, ev_cls, name, states=None):
         states = states or set()
         ev_cls_observers = self.observers.setdefault(ev_cls, {})
