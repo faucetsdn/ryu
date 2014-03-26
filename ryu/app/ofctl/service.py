@@ -62,6 +62,11 @@ class OfctlService(app_manager.RyuApp):
             self.unobserve_event(ev_cls)
             self.logger.debug('ofctl: stop observing %s' % (ev_cls,))
 
+    @staticmethod
+    def _is_error(msg):
+        return (ofp_event.ofp_msg_to_ev_cls(type(msg)) ==
+                ofp_event.EventOFPErrorMsg)
+
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _switch_features_handler(self, ev):
         datapath = ev.msg.datapath
@@ -142,7 +147,9 @@ class OfctlService(app_manager.RyuApp):
         req = si.xids.pop(xid)
         if not req.reply_cls is None:
             self._unobserve_msg(req.reply_cls)
-        if req.reply_multi:
+        if any(self._is_error(r) for r in result):
+            rep = event.Reply(exception=exception.OFError(result=result))
+        elif req.reply_multi:
             rep = event.Reply(result=result)
         elif len(result) == 0:
             rep = event.Reply()

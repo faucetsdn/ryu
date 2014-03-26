@@ -27,3 +27,7 @@ class _ExceptionBase(exception.RyuException):
 
 class UnexpectedMultiReply(_ExceptionBase):
     message = 'Unexpected Multi replies %(result)s'
+
+
+class OFError(_ExceptionBase):
+    message = 'OpenFlow errors %(result)s'
