@@ -53,10 +53,6 @@ def set_ev_handler(ev_cls, dispatchers=None):
     return _set_ev_cls_dec
 
 
-def _is_ev_cls(meth):
-    return hasattr(meth, 'ev_cls')
-
-
 def _has_caller(meth):
     return hasattr(meth, 'callers')
 
