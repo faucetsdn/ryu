@@ -191,6 +191,9 @@ class RyuApp(object):
             return handlers
 
         def test(h):
+            if not ev_cls in h.callers:
+                # this handler does not listen the event.
+                return False
             states = h.callers[ev_cls].dispatchers
             if not states:
                 # empty states means all states
