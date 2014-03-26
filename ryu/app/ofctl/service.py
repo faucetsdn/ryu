@@ -39,6 +39,27 @@ class OfctlService(app_manager.RyuApp):
         super(OfctlService, self).__init__(*args, **kwargs)
         self.name = 'ofctl_service'
         self._switches = {}
+        self._observing_events = {}
+
+    def _observe_msg(self, msg_cls):
+        assert msg_cls is not None
+        ev_cls = ofp_event.ofp_msg_to_ev_cls(msg_cls)
+        self._observing_events.setdefault(ev_cls, 0)
+        if self._observing_events[ev_cls] == 0:
+            self.logger.debug('ofctl: start observing %s' % (ev_cls,))
+            self.register_handler(ev_cls, self._handle_reply)
+            self.observe_event(ev_cls)
+        self._observing_events[ev_cls] += 1
+
+    def _unobserve_msg(self, msg_cls):
+        assert msg_cls is not None
+        ev_cls = ofp_event.ofp_msg_to_ev_cls(msg_cls)
+        assert self._observing_events[ev_cls] > 0
+        self._observing_events[ev_cls] -= 1
+        if self._observing_events[ev_cls] == 0:
+            self.unregister_handler(ev_cls, self._handle_reply)
+            self.unobserve_event(ev_cls)
+            self.logger.debug('ofctl: stop observing %s' % (ev_cls,))
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _switch_features_handler(self, ev):
@@ -80,6 +101,8 @@ class OfctlService(app_manager.RyuApp):
 
     @set_ev_cls(event.SendMsgRequest, MAIN_DISPATCHER)
     def _handle_send_msg(self, req):
+        if not req.reply_cls is None:
+            self._observe_msg(req.reply_cls)
         msg = req.msg
         datapath = msg.datapath
         datapath.set_xid(msg)
@@ -112,17 +135,29 @@ class OfctlService(app_manager.RyuApp):
         except KeyError:
             result = None
         req = si.xids.pop(xid)
+        if not req.reply_cls is None:
+            self._unobserve_msg(req.reply_cls)
         rep = event.Reply(result=result)
         self.reply_to_request(req, rep)
 
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
-    def _handle_error(self, ev):
+    def _handle_reply(self, ev):
         msg = ev.msg
         datapath = msg.datapath
         try:
             si = self._switches[datapath.id]
         except KeyError:
             self.logger.error('unknown dpid %s' % (datapath.id,))
+            return
+        try:
+            req = si.xids[msg.xid]
+        except KeyError:
+            self.logger.error('unknown error xid %s' % (msg.xid,))
+            return
+        if ((not isinstance(ev, ofp_event.EventOFPErrorMsg)) and
+           (req.reply_cls is None or not isinstance(ev.msg, req.reply_cls))):
+            self.logger.error('unexpected reply %s for xid %s' %
+                              (ev, msg.xid,))
             return
         try:
             si.results[msg.xid] = ev.msg

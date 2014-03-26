@@ -29,11 +29,12 @@ def get_datapath(app, dpid):
     return app.send_request(event.GetDatapathRequest(dpid=dpid))()
 
 
-def send_msg(app, msg):
+def send_msg(app, msg, reply_cls=None):
     """
     Send an openflow message.
     """
-    return app.send_request(event.SendMsgRequest(msg=msg))()
+    return app.send_request(event.SendMsgRequest(msg=msg,
+                                                 reply_cls=reply_cls))()
 
 
 app_manager.require_app('ryu.app.ofctl.service')
