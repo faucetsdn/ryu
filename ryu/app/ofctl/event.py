@@ -40,17 +40,21 @@ class GetDatapathRequest(_RequestBase):
 # send msg
 
 class SendMsgRequest(_RequestBase):
-    def __init__(self, msg, reply_cls=None):
+    def __init__(self, msg, reply_cls=None, reply_multi=False):
         super(SendMsgRequest, self).__init__()
         self.msg = msg
         self.reply_cls = reply_cls
+        self.reply_multi = reply_multi
 
 
 # generic reply
 
 class Reply(_ReplyBase):
-    def __init__(self, result=None):
+    def __init__(self, result=None, exception=None):
         self.result = result
+        self.exception = exception
 
     def __call__(self):
+        if self.exception:
+            raise self.exception
         return self.result

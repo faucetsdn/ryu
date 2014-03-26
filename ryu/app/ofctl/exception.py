@@ -14,28 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# client for ryu.app.ofctl.service
-
-from ryu.base import app_manager
-import event
+from ryu import exception
 
 
-def get_datapath(app, dpid):
-    """
-    Get datapath object by dpid.
-    Returns None on error.
-    """
-    assert isinstance(dpid, (int, long))
-    return app.send_request(event.GetDatapathRequest(dpid=dpid))()
+# base classes
+
+class _ExceptionBase(exception.RyuException):
+    def __init__(self, result):
+        self.result = result
+        super(_ExceptionBase, self).__init__(result=result)
 
 
-def send_msg(app, msg, reply_cls=None, reply_multi=False):
-    """
-    Send an openflow message.
-    """
-    return app.send_request(event.SendMsgRequest(msg=msg,
-                                                 reply_cls=reply_cls,
-                                                 reply_multi=reply_multi))()
-
-
-app_manager.require_app('ryu.app.ofctl.service')
+class UnexpectedMultiReply(_ExceptionBase):
+    message = 'Unexpected Multi replies %(result)s'

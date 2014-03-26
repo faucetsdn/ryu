@@ -24,6 +24,7 @@ from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER,\
 from ryu.controller.handler import set_ev_cls
 
 import event
+import exception
 
 
 class _SwitchInfo(object):
@@ -103,18 +104,25 @@ class OfctlService(app_manager.RyuApp):
     def _handle_send_msg(self, req):
         if not req.reply_cls is None:
             self._observe_msg(req.reply_cls)
+
         msg = req.msg
         datapath = msg.datapath
         datapath.set_xid(msg)
         xid = msg.xid
-        datapath.send_msg(msg)
         barrier = datapath.ofproto_parser.OFPBarrierRequest(datapath)
         datapath.set_xid(barrier)
         barrier_xid = barrier.xid
-        datapath.send_msg(barrier)
+
         si = self._switches[datapath.id]
+        assert not xid in si.results
+        assert not xid in si.xids
+        assert not barrier_xid in si.barriers
+        si.results[xid] = []
         si.xids[xid] = req
         si.barriers[barrier_xid] = xid
+
+        datapath.send_msg(msg)
+        datapath.send_msg(barrier)
 
     @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
     def _handle_barrier(self, ev):
@@ -126,18 +134,23 @@ class OfctlService(app_manager.RyuApp):
             self.logger.error('unknown dpid %s' % (datapath.id,))
             return
         try:
-            xid = si.barriers[msg.xid]
+            xid = si.barriers.pop(msg.xid)
         except KeyError:
             self.logger.error('unknown barrier xid %s' % (msg.xid,))
             return
-        try:
-            result = si.results.pop(xid)
-        except KeyError:
-            result = None
+        result = si.results.pop(xid)
         req = si.xids.pop(xid)
         if not req.reply_cls is None:
             self._unobserve_msg(req.reply_cls)
-        rep = event.Reply(result=result)
+        if req.reply_multi:
+            rep = event.Reply(result=result)
+        elif len(result) == 0:
+            rep = event.Reply()
+        elif len(result) == 1:
+            rep = event.Reply(result=result[0])
+        else:
+            rep = event.Reply(exception=exception.
+                              UnexpectedMultiReply(result=result))
         self.reply_to_request(req, rep)
 
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
@@ -160,6 +173,6 @@ class OfctlService(app_manager.RyuApp):
                               (ev, msg.xid,))
             return
         try:
-            si.results[msg.xid] = ev.msg
+            si.results[msg.xid].append(ev.msg)
         except KeyError:
             self.logger.error('unknown error xid %s' % (msg.xid,))
