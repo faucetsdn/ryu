@@ -86,6 +86,7 @@ WAIT_TIMER = 3  # sec
 KEY_DESC = 'description'
 KEY_PREREQ = 'prerequisite'
 KEY_FLOW = 'OFPFlowMod'
+KEY_METER = 'OFPMeterMod'
 KEY_TESTS = 'tests'
 KEY_INGRESS = 'ingress'
 KEY_EGRESS = 'egress'
@@ -982,9 +983,15 @@ class Test(stringify.StringifyMixin):
         prerequisite = []
         if not KEY_PREREQ in buf:
             raise ValueError('a test requires a "%s" block' % KEY_PREREQ)
+        allowed_mod = [KEY_FLOW, KEY_METER]
         for flow in buf[KEY_PREREQ]:
-            cls = getattr(ofproto_v1_3_parser, KEY_FLOW)
-            msg = cls.from_jsondict(flow[KEY_FLOW], datapath=DummyDatapath())
+            key, value = flow.popitem()
+            if key not in allowed_mod:
+                raise ValueError(
+                    '"%s" block allows only the followings: %s' % (
+                        KEY_PREREQ, allowed_mod))
+            cls = getattr(ofproto_v1_3_parser, key)
+            msg = cls.from_jsondict(value, datapath=DummyDatapath())
             msg.version = ofproto_v1_3.OFP_VERSION
             msg.msg_type = msg.cls_msg_type
             msg.xid = 0
