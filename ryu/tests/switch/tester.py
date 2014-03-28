@@ -93,7 +93,7 @@ KEY_PKT_IN = 'PACKET_IN'
 KEY_TBL_MISS = 'table-miss'
 
 # Test state.
-STATE_INIT = 0
+STATE_INIT_FLOW = 0
 STATE_FLOW_INSTALL = 1
 STATE_FLOW_EXIST_CHK = 2
 STATE_TARGET_PKT_COUNT = 3
@@ -120,7 +120,7 @@ ERROR = 1
 TIMEOUT = 2
 RCV_ERR = 3
 
-MSG = {STATE_INIT:
+MSG = {STATE_INIT_FLOW:
        {TIMEOUT: 'Failed to initialize flow tables: barrier request timeout.',
         RCV_ERR: 'Failed to initialize flow tables: %(err_msg)s'},
        STATE_FLOW_INSTALL:
@@ -206,7 +206,7 @@ class OfTester(app_manager.RyuApp):
 
         self.target_sw = TargetSw(DummyDatapath(), self.logger)
         self.tester_sw = TesterSw(DummyDatapath(), self.logger)
-        self.state = STATE_INIT
+        self.state = STATE_INIT_FLOW
         self.sw_waiter = None
         self.waiter = None
         self.send_msg_xids = []
@@ -321,7 +321,7 @@ class OfTester(app_manager.RyuApp):
         # Test execute.
         try:
             # 0. Initialize.
-            self._test(STATE_INIT)
+            self._test(STATE_INIT_FLOW)
             # 1. Install flows.
             for flow in test.prerequisite:
                 self._test(STATE_FLOW_INSTALL, flow)
@@ -394,7 +394,7 @@ class OfTester(app_manager.RyuApp):
                          TEST_OK, ok_count, TEST_ERROR, error_count)
 
     def _test(self, state, *args):
-        test = {STATE_INIT: self._test_initialize,
+        test = {STATE_INIT_FLOW: self._test_initialize_flow,
                 STATE_FLOW_INSTALL: self._test_flow_install,
                 STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
@@ -411,7 +411,7 @@ class OfTester(app_manager.RyuApp):
         self.state = state
         return test[state](*args)
 
-    def _test_initialize(self):
+    def _test_initialize_flow(self):
         xid = self.target_sw.del_test_flow()
         self.send_msg_xids.append(xid)
 
@@ -694,7 +694,7 @@ class OfTester(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPBarrierReply, handler.MAIN_DISPATCHER)
     def barrier_reply_handler(self, ev):
-        state_list = [STATE_INIT,
+        state_list = [STATE_INIT_FLOW,
                       STATE_FLOW_INSTALL,
                       STATE_UNMATCH_PKT_SEND]
         if self.state in state_list:
