@@ -123,6 +123,8 @@ STATE_INIT_METER = 10
 STATE_METER_INSTALL = 11
 STATE_METER_EXIST_CHK = 12
 STATE_INIT_THROUGHPUT_FLOW = 13
+STATE_THROUGHPUT_FLOW_INSTALL = 14
+STATE_THROUGHPUT_FLOW_EXIST_CHK = 15
 
 STATE_DISCONNECTED = 99
 
@@ -151,6 +153,9 @@ MSG = {STATE_INIT_FLOW:
        STATE_FLOW_INSTALL:
        {TIMEOUT: 'Failed to add flows: barrier request timeout.',
         RCV_ERR: 'Failed to add flows: %(err_msg)s'},
+       STATE_THROUGHPUT_FLOW_INSTALL:
+       {TIMEOUT: 'Failed to add flows to tester_sw: barrier request timeout.',
+        RCV_ERR: 'Failed to add flows to tester_sw: %(err_msg)s'},
        STATE_METER_INSTALL:
        {TIMEOUT: 'Failed to add meters: barrier request timeout.',
         RCV_ERR: 'Failed to add meters: %(err_msg)s'},
@@ -185,6 +190,11 @@ MSG = {STATE_INIT_FLOW:
         ERROR: 'Table-miss error: no change in lookup_count.',
         TIMEOUT: 'Failed to request table stats: request timeout.',
         RCV_ERR: 'Failed to request table stats: %(err_msg)s'},
+       STATE_THROUGHPUT_FLOW_EXIST_CHK:
+       {FAILURE: 'Added incorrect flows to tester_sw: %(flows)s',
+        TIMEOUT: 'Failed to add flows to tester_sw: '
+                 'flow stats request timeout.',
+        RCV_ERR: 'Failed to add flows to tester_sw: %(err_msg)s'},
        STATE_DISCONNECTED:
        {ERROR: 'Disconnected from switch'}}
 
@@ -365,8 +375,8 @@ class OfTester(app_manager.RyuApp):
             # Install flows.
             for flow in test.prerequisite:
                 if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
-                    self._test(STATE_FLOW_INSTALL, flow)
-                    self._test(STATE_FLOW_EXIST_CHK, flow)
+                    self._test(STATE_FLOW_INSTALL, self.target_sw, flow)
+                    self._test(STATE_FLOW_EXIST_CHK, self.target_sw, flow)
                 elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
                     self._test(STATE_METER_INSTALL, flow)
                     self._test(STATE_METER_EXIST_CHK, flow)
@@ -379,6 +389,14 @@ class OfTester(app_manager.RyuApp):
                                                    True)]
                     tester_pkt_count = [self._test(STATE_TESTER_PKT_COUNT,
                                                    False)]
+                elif KEY_THROUGHPUT in pkt:
+                    # install flows for throughput analysis
+                    for throughput in pkt[KEY_THROUGHPUT]:
+                        flow = throughput[KEY_FLOW]
+                        self._test(STATE_THROUGHPUT_FLOW_INSTALL,
+                                   self.tester_sw, flow)
+                        self._test(STATE_THROUGHPUT_FLOW_EXIST_CHK,
+                                   self.tester_sw, flow)
                 elif KEY_TBL_MISS in pkt:
                     before_stats = self._test(STATE_GET_MATCH_COUNT)
 
@@ -460,8 +478,10 @@ class OfTester(app_manager.RyuApp):
                 STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow_tester,
                 STATE_INIT_METER: self._test_initialize_meter,
                 STATE_FLOW_INSTALL: self._test_flow_install,
+                STATE_THROUGHPUT_FLOW_INSTALL: self._test_flow_install,
                 STATE_METER_INSTALL: self._test_meter_install,
                 STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
+                STATE_THROUGHPUT_FLOW_EXIST_CHK: self._test_flow_exist_check,
                 STATE_METER_EXIST_CHK: self._test_meter_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
                 STATE_TESTER_PKT_COUNT: self._test_get_packet_count,
@@ -504,11 +524,11 @@ class OfTester(app_manager.RyuApp):
     def _test_initialize_meter(self):
         self.target_sw.del_test_meter()
 
-    def _test_flow_install(self, flow):
-        xid = self.target_sw.add_flow(flow_mod=flow)
+    def _test_flow_install(self, datapath, flow):
+        xid = datapath.add_flow(flow_mod=flow)
         self.send_msg_xids.append(xid)
 
-        xid = self.target_sw.send_barrier_request()
+        xid = datapath.send_barrier_request()
         self.send_msg_xids.append(xid)
 
         self._wait()
@@ -528,8 +548,8 @@ class OfTester(app_manager.RyuApp):
         msg = self.rcv_msgs[0]
         assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
 
-    def _test_flow_exist_check(self, flow_mod):
-        xid = self.target_sw.send_flow_stats()
+    def _test_flow_exist_check(self, datapath, flow_mod):
+        xid = datapath.send_flow_stats()
         self.send_msg_xids.append(xid)
         self._wait()
 
@@ -841,7 +861,8 @@ class OfTester(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, handler.MAIN_DISPATCHER)
     def flow_stats_reply_handler(self, ev):
-        state_list = [STATE_FLOW_EXIST_CHK]
+        state_list = [STATE_FLOW_EXIST_CHK,
+                      STATE_THROUGHPUT_FLOW_EXIST_CHK]
         if self.state in state_list:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
@@ -888,6 +909,7 @@ class OfTester(app_manager.RyuApp):
                       STATE_INIT_THROUGHPUT_FLOW,
                       STATE_INIT_METER,
                       STATE_FLOW_INSTALL,
+                      STATE_THROUGHPUT_FLOW_INSTALL,
                       STATE_METER_INSTALL,
                       STATE_SEND_BARRIER]
         if self.state in state_list:
@@ -963,6 +985,15 @@ class OpenFlowSw(object):
         req = parser.OFPPortStatsRequest(self.dp, flags, ofp.OFPP_ANY)
         return self._send_msg(req)
 
+    def send_flow_stats(self):
+        """ Get all flow. """
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        req = parser.OFPFlowStatsRequest(self.dp, 0, ofp.OFPTT_ALL,
+                                         ofp.OFPP_ANY, ofp.OFPG_ANY,
+                                         0, 0, parser.OFPMatch())
+        return self._send_msg(req)
+
 
 class TargetSw(OpenFlowSw):
     def __init__(self, dp, logger):
@@ -988,15 +1019,6 @@ class TargetSw(OpenFlowSw):
                                  flags=0,
                                  meter_id=ofp.OFPM_ALL)
         return self._send_msg(mod)
-
-    def send_flow_stats(self):
-        """ Get all flow. """
-        ofp = self.dp.ofproto
-        parser = self.dp.ofproto_parser
-        req = parser.OFPFlowStatsRequest(self.dp, 0, ofp.OFPTT_ALL,
-                                         ofp.OFPP_ANY, ofp.OFPG_ANY,
-                                         0, 0, parser.OFPMatch())
-        return self._send_msg(req)
 
     def send_meter_config_stats(self):
         """ Get all meter. """
