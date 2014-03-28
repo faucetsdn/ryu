@@ -35,9 +35,6 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 
 
-STP_EV_DISPATCHER = "stplib"
-
-
 MAX_PORT_NO = 0xfff
 
 # for OpenFlow 1.2/1.3

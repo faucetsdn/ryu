@@ -16,6 +16,7 @@
 import struct
 
 from ryu.base import app_manager
+from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_0
 from ryu.lib import dpid as dpid_lib
@@ -75,7 +76,7 @@ class SimpleSwitchStp(app_manager.RyuApp):
             command=ofproto.OFPFC_DELETE)
         datapath.send_msg(mod)
 
-    @set_ev_cls(stplib.EventPacketIn, stplib.STP_EV_DISPATCHER)
+    @set_ev_cls(stplib.EventPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
@@ -109,7 +110,7 @@ class SimpleSwitchStp(app_manager.RyuApp):
             actions=actions)
         datapath.send_msg(out)
 
-    @set_ev_cls(stplib.EventTopologyChange, stplib.STP_EV_DISPATCHER)
+    @set_ev_cls(stplib.EventTopologyChange, MAIN_DISPATCHER)
     def _topology_change_handler(self, ev):
         dp = ev.dp
         dpid_str = dpid_lib.dpid_to_str(dp.id)
@@ -120,7 +121,7 @@ class SimpleSwitchStp(app_manager.RyuApp):
             del self.mac_to_port[dp.id]
         self.delete_flow(dp)
 
-    @set_ev_cls(stplib.EventPortStateChange, stplib.STP_EV_DISPATCHER)
+    @set_ev_cls(stplib.EventPortStateChange, MAIN_DISPATCHER)
     def _port_state_change_handler(self, ev):
         dpid_str = dpid_lib.dpid_to_str(ev.dp.id)
         of_state = {stplib.PORT_STATE_DISABLE: 'DISABLE',
