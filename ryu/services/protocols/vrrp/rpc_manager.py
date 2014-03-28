@@ -74,6 +74,8 @@ class RpcVRRPManager(app_manager.RyuApp):
                     result = self._list(msgid, params)
                 elif target_method == "vrrp_config_change":
                     result = self._config_change(msgid, params)
+                elif target_method == "vrrp_shutdown":
+                    result = self._shutdown(msgid, params)
                 else:
                     error = 'Unknown method %s' % (target_method)
             except RPCError as e:
@@ -168,6 +170,19 @@ class RpcVRRPManager(app_manager.RyuApp):
             if vrid == instance.config.vrid:
                 return instance.instance_name
         return None
+
+    def _shutdown(self, msgid, params):
+        try:
+            config_values = params[0]
+        except:
+            raise RPCError('parameters are missing')
+
+        vrid = config_values.get('vrid')
+        instance_name = self._lookup_instance(vrid)
+        if not instance_name:
+            raise RPCError('vrid %d is not found' % (vrid))
+        vrrp_api.vrrp_shutdown(self, instance_name)
+        return [{}]
 
     def _config_change(self, msgid, params):
         try:
