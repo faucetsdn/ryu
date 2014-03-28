@@ -402,6 +402,7 @@ class OfTester(app_manager.RyuApp):
                                    self.tester_sw, flow)
                         self._test(STATE_THROUGHPUT_FLOW_EXIST_CHK,
                                    self.tester_sw, flow)
+                    start = self._test(STATE_GET_THROUGHPUT)
                 elif KEY_TBL_MISS in pkt:
                     before_stats = self._test(STATE_GET_MATCH_COUNT)
 
@@ -423,6 +424,10 @@ class OfTester(app_manager.RyuApp):
                                      else KEY_PKT_IN)
                         self._test(STATE_NO_PKTIN_REASON, test_type,
                                    target_pkt_count, tester_pkt_count)
+                elif KEY_THROUGHPUT in pkt:
+                    end = self._test(STATE_GET_THROUGHPUT)
+                    self._test(STATE_THROUGHPUT_CHK, pkt[KEY_THROUGHPUT],
+                               start, end)
                 elif KEY_TBL_MISS in pkt:
                     self._test(STATE_SEND_BARRIER)
                     hub.sleep(INTERVAL)
