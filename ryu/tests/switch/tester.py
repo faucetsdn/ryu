@@ -83,6 +83,8 @@ INTERVAL = 1  # sec
 WAIT_TIMER = 3  # sec
 CONTINUOUS_THREAD_INTVL = float(0.01)  # sec
 CONTINUOUS_PROGRESS_SPAN = 3  # sec
+THROUGHPUT_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY+1
+THROUGHPUT_COOKIE = THROUGHPUT_PRIORITY
 
 # Default settings for 'ingress: packets'
 DEFAULT_DURATION_TIME = 30
@@ -100,8 +102,11 @@ KEY_PKT_IN = 'PACKET_IN'
 KEY_TBL_MISS = 'table-miss'
 KEY_PACKETS = 'packets'
 KEY_DATA = 'data'
+KEY_KBPS = 'kbps'
 KEY_PKTPS = 'pktps'
 KEY_DURATION_TIME = 'duration_time'
+KEY_THROUGHPUT = 'throughput'
+KEY_MATCH = 'OFPMatch'
 
 # Test state.
 STATE_INIT_FLOW = 0
@@ -1115,7 +1120,30 @@ class Test(stringify.StringifyMixin):
                 raise ValueError('invalid format: "%s" field' % KEY_INGRESS)
             # parse 'egress' or 'PACKET_IN' or 'table-miss'
             if KEY_EGRESS in test:
-                test_pkt[KEY_EGRESS] = __test_pkt_from_json(test[KEY_EGRESS])
+                if isinstance(test[KEY_EGRESS], list):
+                    test_pkt[KEY_EGRESS] = __test_pkt_from_json(
+                        test[KEY_EGRESS])
+                elif isinstance(test[KEY_EGRESS], dict):
+                    throughputs = []
+                    for throughput in test[KEY_EGRESS][KEY_THROUGHPUT]:
+                        one = {}
+                        mod = {'match': {'OFPMatch': throughput[KEY_MATCH]}}
+                        cls = getattr(ofproto_v1_3_parser, KEY_FLOW)
+                        msg = cls.from_jsondict(
+                            mod, datapath=DummyDatapath(),
+                            cookie=THROUGHPUT_COOKIE,
+                            priority=THROUGHPUT_PRIORITY)
+                        one[KEY_FLOW] = msg
+                        one[KEY_KBPS] = throughput.get(KEY_KBPS)
+                        one[KEY_PKTPS] = throughput.get(KEY_PKTPS)
+                        if not bool(one[KEY_KBPS]) != bool(one[KEY_PKTPS]):
+                            raise ValueError(
+                                '"%s" requires either "%s" or "%s".' % (
+                                    KEY_THROUGHPUT, KEY_KBPS, KEY_PKTPS))
+                        throughputs.append(one)
+                    test_pkt[KEY_THROUGHPUT] = throughputs
+                else:
+                    raise ValueError('invalid format: "%s" field' % KEY_EGRESS)
             elif KEY_PKT_IN in test:
                 test_pkt[KEY_PKT_IN] = __test_pkt_from_json(test[KEY_PKT_IN])
             elif KEY_TBL_MISS in test:
