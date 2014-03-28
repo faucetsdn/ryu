@@ -104,6 +104,7 @@ STATE_GET_MATCH_COUNT = 7
 STATE_UNMATCH_PKT_SEND = 8
 STATE_FLOW_UNMATCH_CHK = 9
 STATE_INIT_METER = 10
+STATE_METER_INSTALL = 11
 
 STATE_DISCONNECTED = 99
 
@@ -127,6 +128,9 @@ MSG = {STATE_INIT_FLOW:
        STATE_FLOW_INSTALL:
        {TIMEOUT: 'Failed to add flows: barrier request timeout.',
         RCV_ERR: 'Failed to add flows: %(err_msg)s'},
+       STATE_METER_INSTALL:
+       {TIMEOUT: 'Failed to add meters: barrier request timeout.',
+        RCV_ERR: 'Failed to add meters: %(err_msg)s'},
        STATE_FLOW_EXIST_CHK:
        {FAILURE: 'Added incorrect flows: %(flows)s',
         TIMEOUT: 'Failed to add flows: flow stats request timeout.',
@@ -326,8 +330,11 @@ class OfTester(app_manager.RyuApp):
             self._test(STATE_INIT_FLOW)
             # 1. Install flows.
             for flow in test.prerequisite:
-                self._test(STATE_FLOW_INSTALL, flow)
-                self._test(STATE_FLOW_EXIST_CHK, flow)
+                if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
+                    self._test(STATE_FLOW_INSTALL, flow)
+                    self._test(STATE_FLOW_EXIST_CHK, flow)
+                elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
+                    self._test(STATE_METER_INSTALL, flow)
             # 2. Check flow matching.
             for pkt in test.tests:
                 if KEY_EGRESS in pkt or KEY_PKT_IN in pkt:
@@ -399,6 +406,7 @@ class OfTester(app_manager.RyuApp):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
                 STATE_INIT_METER: self._test_initialize_meter,
                 STATE_FLOW_INSTALL: self._test_flow_install,
+                STATE_METER_INSTALL: self._test_meter_install,
                 STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
                 STATE_TESTER_PKT_COUNT: self._test_get_packet_count,
@@ -431,6 +439,18 @@ class OfTester(app_manager.RyuApp):
 
     def _test_flow_install(self, flow):
         xid = self.target_sw.add_flow(flow_mod=flow)
+        self.send_msg_xids.append(xid)
+
+        xid = self.target_sw.send_barrier_request()
+        self.send_msg_xids.append(xid)
+
+        self._wait()
+        assert len(self.rcv_msgs) == 1
+        msg = self.rcv_msgs[0]
+        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+
+    def _test_meter_install(self, meter):
+        xid = self.target_sw._send_msg(meter)
         self.send_msg_xids.append(xid)
 
         xid = self.target_sw.send_barrier_request()
@@ -703,6 +723,7 @@ class OfTester(app_manager.RyuApp):
         state_list = [STATE_INIT_FLOW,
                       STATE_INIT_METER,
                       STATE_FLOW_INSTALL,
+                      STATE_METER_INSTALL,
                       STATE_UNMATCH_PKT_SEND]
         if self.state in state_list:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
