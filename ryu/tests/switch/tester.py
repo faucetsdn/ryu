@@ -19,6 +19,7 @@ import logging
 import os
 import signal
 import sys
+import time
 import traceback
 
 from ryu import cfg
@@ -125,6 +126,7 @@ STATE_METER_EXIST_CHK = 12
 STATE_INIT_THROUGHPUT_FLOW = 13
 STATE_THROUGHPUT_FLOW_INSTALL = 14
 STATE_THROUGHPUT_FLOW_EXIST_CHK = 15
+STATE_GET_THROUGHPUT = 16
 
 STATE_DISCONNECTED = 99
 
@@ -195,6 +197,9 @@ MSG = {STATE_INIT_FLOW:
         TIMEOUT: 'Failed to add flows to tester_sw: '
                  'flow stats request timeout.',
         RCV_ERR: 'Failed to add flows to tester_sw: %(err_msg)s'},
+       STATE_GET_THROUGHPUT:
+       {TIMEOUT: 'Failed to request flow stats: request timeout.',
+        RCV_ERR: 'Failed to request flow stats: %(err_msg)s'},
        STATE_DISCONNECTED:
        {ERROR: 'Disconnected from switch'}}
 
@@ -489,7 +494,8 @@ class OfTester(app_manager.RyuApp):
                 STATE_NO_PKTIN_REASON: self._test_no_pktin_reason_check,
                 STATE_GET_MATCH_COUNT: self._test_get_match_count,
                 STATE_SEND_BARRIER: self._test_send_barrier,
-                STATE_FLOW_UNMATCH_CHK: self._test_flow_unmatching_check}
+                STATE_FLOW_UNMATCH_CHK: self._test_flow_unmatching_check,
+                STATE_GET_THROUGHPUT: self._test_get_throughput}
 
         self.send_msg_xids = []
         self.rcv_msgs = []
@@ -832,6 +838,21 @@ class OfTester(app_manager.RyuApp):
             return ('Encounter an error during packet comparison.'
                     ' it is malformed.')
 
+    def _test_get_throughput(self):
+        xid = self.tester_sw.send_flow_stats()
+        self.send_msg_xids.append(xid)
+        self._wait()
+
+        assert len(self.rcv_msgs) == 1
+        flow_stats = self.rcv_msgs[0].body
+        self.logger.debug(flow_stats)
+        result = {}
+        for stat in flow_stats:
+            if stat.cookie != THROUGHPUT_COOKIE:
+                continue
+            result[str(stat.match)] = (stat.byte_count, stat.packet_count)
+        return (time.time(), result)
+
     def _wait(self):
         """ Wait until specific OFP message received
              or timer is exceeded. """
@@ -862,7 +883,8 @@ class OfTester(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, handler.MAIN_DISPATCHER)
     def flow_stats_reply_handler(self, ev):
         state_list = [STATE_FLOW_EXIST_CHK,
-                      STATE_THROUGHPUT_FLOW_EXIST_CHK]
+                      STATE_THROUGHPUT_FLOW_EXIST_CHK,
+                      STATE_GET_THROUGHPUT]
         if self.state in state_list:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
