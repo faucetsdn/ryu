@@ -112,7 +112,7 @@ STATE_TESTER_PKT_COUNT = 4
 STATE_FLOW_MATCH_CHK = 5
 STATE_NO_PKTIN_REASON = 6
 STATE_GET_MATCH_COUNT = 7
-STATE_UNMATCH_PKT_SEND = 8
+STATE_SEND_BARRIER = 8
 STATE_FLOW_UNMATCH_CHK = 9
 STATE_INIT_METER = 10
 STATE_METER_INSTALL = 11
@@ -166,7 +166,7 @@ MSG = {STATE_INIT_FLOW:
        STATE_GET_MATCH_COUNT:
        {TIMEOUT: 'Failed to request table stats: request timeout.',
         RCV_ERR: 'Failed to request table stats: %(err_msg)s'},
-       STATE_UNMATCH_PKT_SEND:
+       STATE_SEND_BARRIER:
        {TIMEOUT: 'Faild to send packet: barrier request timeout.',
         RCV_ERR: 'Faild to send packet: %(err_msg)s'},
        STATE_FLOW_UNMATCH_CHK:
@@ -377,7 +377,7 @@ class OfTester(app_manager.RyuApp):
                                    target_pkt_count, tester_pkt_count)
                 else:
                     before_stats = self._test(STATE_GET_MATCH_COUNT)
-                    self._test(STATE_UNMATCH_PKT_SEND, pkt)
+                    self._test(STATE_SEND_BARRIER)
                     hub.sleep(INTERVAL)
                     self._test(STATE_FLOW_UNMATCH_CHK, before_stats, pkt)
             result = [TEST_OK]
@@ -442,7 +442,7 @@ class OfTester(app_manager.RyuApp):
                 STATE_FLOW_MATCH_CHK: self._test_flow_matching_check,
                 STATE_NO_PKTIN_REASON: self._test_no_pktin_reason_check,
                 STATE_GET_MATCH_COUNT: self._test_get_match_count,
-                STATE_UNMATCH_PKT_SEND: self._test_unmatch_packet_send,
+                STATE_SEND_BARRIER: self._test_send_barrier,
                 STATE_FLOW_UNMATCH_CHK: self._test_flow_unmatching_check}
 
         self.send_msg_xids = []
@@ -614,7 +614,7 @@ class OfTester(app_manager.RyuApp):
                                           'matched': stats.matched_count}
         return result
 
-    def _test_unmatch_packet_send(self, pkt):
+    def _test_send_barrier(self):
         # Wait OFPBarrierReply.
         xid = self.tester_sw.send_barrier_request()
         self.send_msg_xids.append(xid)
@@ -850,7 +850,7 @@ class OfTester(app_manager.RyuApp):
                       STATE_INIT_METER,
                       STATE_FLOW_INSTALL,
                       STATE_METER_INSTALL,
-                      STATE_UNMATCH_PKT_SEND]
+                      STATE_SEND_BARRIER]
         if self.state in state_list:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
