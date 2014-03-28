@@ -82,6 +82,10 @@ TARGET_RECEIVE_PORT = 1
 INTERVAL = 1  # sec
 WAIT_TIMER = 3  # sec
 
+# Default settings for 'ingress: packets'
+DEFAULT_DURATION_TIME = 30
+DEFAULT_PKTPS = 1000
+
 # Test file format.
 KEY_DESC = 'description'
 KEY_PREREQ = 'prerequisite'
@@ -92,6 +96,10 @@ KEY_INGRESS = 'ingress'
 KEY_EGRESS = 'egress'
 KEY_PKT_IN = 'PACKET_IN'
 KEY_TBL_MISS = 'table-miss'
+KEY_PACKETS = 'packets'
+KEY_DATA = 'data'
+KEY_PKTPS = 'pktps'
+KEY_DURATION_TIME = 'duration_time'
 
 # Test state.
 STATE_INIT_FLOW = 0
@@ -1012,7 +1020,18 @@ class Test(stringify.StringifyMixin):
             # parse 'ingress'
             if not KEY_INGRESS in test:
                 raise ValueError('a test requires "%s" field.' % KEY_INGRESS)
-            test_pkt[KEY_INGRESS] = __test_pkt_from_json(test[KEY_INGRESS])
+            if isinstance(test[KEY_INGRESS], list):
+                test_pkt[KEY_INGRESS] = __test_pkt_from_json(test[KEY_INGRESS])
+            elif isinstance(test[KEY_INGRESS], dict):
+                test_pkt[KEY_PACKETS] = {
+                    KEY_DATA: __test_pkt_from_json(
+                        test[KEY_INGRESS][KEY_PACKETS][KEY_DATA]),
+                    KEY_DURATION_TIME: test[KEY_INGRESS][KEY_PACKETS].get(
+                        KEY_DURATION_TIME, DEFAULT_DURATION_TIME),
+                    KEY_PKTPS: test[KEY_INGRESS][KEY_PACKETS].get(
+                        KEY_PKTPS, DEFAULT_PKTPS)}
+            else:
+                raise ValueError('invalid format: "%s" field' % KEY_INGRESS)
             # parse 'egress' or 'PACKET_IN' or 'table-miss'
             if KEY_EGRESS in test:
                 test_pkt[KEY_EGRESS] = __test_pkt_from_json(test[KEY_EGRESS])
