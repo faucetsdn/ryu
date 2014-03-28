@@ -769,4 +769,4 @@ class RpcOFPManager(app_manager.RyuApp):
                              msgid, params)
 
     def _query_secure_channel_state(self, msgid, params):
-        return [self._get_secure_channel_state_param()]
+        return self._get_secure_channel_state_param()
