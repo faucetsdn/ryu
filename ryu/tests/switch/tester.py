@@ -347,10 +347,10 @@ class OfTester(app_manager.RyuApp):
 
         # Test execute.
         try:
-            # 0. Initialize.
+            # Initialize.
             self._test(STATE_INIT_METER)
             self._test(STATE_INIT_FLOW)
-            # 1. Install flows.
+            # Install flows.
             for flow in test.prerequisite:
                 if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
                     self._test(STATE_FLOW_INSTALL, flow)
@@ -358,13 +358,26 @@ class OfTester(app_manager.RyuApp):
                 elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
                     self._test(STATE_METER_INSTALL, flow)
                     self._test(STATE_METER_EXIST_CHK, flow)
-            # 2. Check flow matching.
+            # Do tests.
             for pkt in test.tests:
+
+                # Get stats before sending packet(s).
                 if KEY_EGRESS in pkt or KEY_PKT_IN in pkt:
                     target_pkt_count = [self._test(STATE_TARGET_PKT_COUNT,
                                                    True)]
                     tester_pkt_count = [self._test(STATE_TESTER_PKT_COUNT,
                                                    False)]
+                elif KEY_TBL_MISS in pkt:
+                    before_stats = self._test(STATE_GET_MATCH_COUNT)
+
+                # Send packet(s).
+                if KEY_INGRESS in pkt:
+                    self._one_time_packet_send(pkt)
+                elif KEY_PACKETS in pkt:
+                    self._continuous_packet_send(pkt)
+
+                # Check a result.
+                if KEY_EGRESS in pkt or KEY_PKT_IN in pkt:
                     result = self._test(STATE_FLOW_MATCH_CHK, pkt)
                     if result == TIMEOUT:
                         target_pkt_count.append(self._test(
@@ -375,11 +388,11 @@ class OfTester(app_manager.RyuApp):
                                      else KEY_PKT_IN)
                         self._test(STATE_NO_PKTIN_REASON, test_type,
                                    target_pkt_count, tester_pkt_count)
-                else:
-                    before_stats = self._test(STATE_GET_MATCH_COUNT)
+                elif KEY_TBL_MISS in pkt:
                     self._test(STATE_SEND_BARRIER)
                     hub.sleep(INTERVAL)
                     self._test(STATE_FLOW_UNMATCH_CHK, before_stats, pkt)
+
             result = [TEST_OK]
             result_type = TEST_OK
         except (TestFailure, TestError,
