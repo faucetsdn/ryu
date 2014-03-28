@@ -16,6 +16,7 @@
 import inspect
 import json
 import logging
+import math
 import os
 import signal
 import sys
@@ -86,6 +87,7 @@ CONTINUOUS_THREAD_INTVL = float(0.01)  # sec
 CONTINUOUS_PROGRESS_SPAN = 3  # sec
 THROUGHPUT_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY+1
 THROUGHPUT_COOKIE = THROUGHPUT_PRIORITY
+THROUGHPUT_THRESHOLD = float(0.10)  # expected throughput plus/minus 10 %
 
 # Default settings for 'ingress: packets'
 DEFAULT_DURATION_TIME = 30
@@ -127,6 +129,7 @@ STATE_INIT_THROUGHPUT_FLOW = 13
 STATE_THROUGHPUT_FLOW_INSTALL = 14
 STATE_THROUGHPUT_FLOW_EXIST_CHK = 15
 STATE_GET_THROUGHPUT = 16
+STATE_THROUGHPUT_CHK = 17
 
 STATE_DISCONNECTED = 99
 
@@ -200,6 +203,8 @@ MSG = {STATE_INIT_FLOW:
        STATE_GET_THROUGHPUT:
        {TIMEOUT: 'Failed to request flow stats: request timeout.',
         RCV_ERR: 'Failed to request flow stats: %(err_msg)s'},
+       STATE_THROUGHPUT_CHK:
+       {FAILURE: 'Received unexpected throughput: %(detail)s'},
        STATE_DISCONNECTED:
        {ERROR: 'Disconnected from switch'}}
 
@@ -500,7 +505,8 @@ class OfTester(app_manager.RyuApp):
                 STATE_GET_MATCH_COUNT: self._test_get_match_count,
                 STATE_SEND_BARRIER: self._test_send_barrier,
                 STATE_FLOW_UNMATCH_CHK: self._test_flow_unmatching_check,
-                STATE_GET_THROUGHPUT: self._test_get_throughput}
+                STATE_GET_THROUGHPUT: self._test_get_throughput,
+                STATE_THROUGHPUT_CHK: self._test_throughput_check}
 
         self.send_msg_xids = []
         self.rcv_msgs = []
@@ -857,6 +863,47 @@ class OfTester(app_manager.RyuApp):
                 continue
             result[str(stat.match)] = (stat.byte_count, stat.packet_count)
         return (time.time(), result)
+
+    def _test_throughput_check(self, throughputs, start, end):
+        msgs = []
+        elapsed_sec = end[0] - start[0]
+
+        for throughput in throughputs:
+            match = str(throughput[KEY_FLOW].match)
+            # get oxm_fields of OFPMatch
+            fields = dict(throughput[KEY_FLOW].match._fields2)
+
+            if match not in start[1] or match not in end[1]:
+                raise TestError(self.state, match=match)
+            increased_bytes = end[1][match][0] - start[1][match][0]
+            increased_packets = end[1][match][1] - start[1][match][1]
+
+            if throughput[KEY_PKTPS]:
+                key = KEY_PKTPS
+                conv = 1
+                measured_value = increased_packets
+                unit = 'pktps'
+            elif throughput[KEY_KBPS]:
+                key = KEY_KBPS
+                conv = 1024 / 8  # Kilobits -> bytes
+                measured_value = increased_bytes
+                unit = 'kbps'
+            else:
+                raise RyuException(
+                    'An invalid key exists that is neither "%s" nor "%s".'
+                    % (KEY_KBPS, KEY_PKTPS))
+
+            expected_value = throughput[key] * elapsed_sec * conv
+            margin = expected_value * THROUGHPUT_THRESHOLD
+            self.logger.debug("measured_value:[%s]", measured_value)
+            self.logger.debug("expected_value:[%s]", expected_value)
+            self.logger.debug("margin:[%s]", margin)
+            if math.fabs(measured_value - expected_value) > margin:
+                msgs.append('{0} {1:.2f}{2}'.format(fields,
+                            measured_value / elapsed_sec / conv, unit))
+
+        if msgs:
+            raise TestFailure(self.state, detail=', '.join(msgs))
 
     def _wait(self):
         """ Wait until specific OFP message received
