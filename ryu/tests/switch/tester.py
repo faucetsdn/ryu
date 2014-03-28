@@ -536,16 +536,11 @@ class OfTester(app_manager.RyuApp):
         return result
 
     def _test_flow_matching_check(self, pkt):
-        self.logger.debug("send_packet:[%s]", packet.Packet(pkt[KEY_INGRESS]))
         self.logger.debug("egress:[%s]", packet.Packet(pkt.get(KEY_EGRESS)))
         self.logger.debug("packet_in:[%s]",
                           packet.Packet(pkt.get(KEY_PKT_IN)))
 
-        # 1. send a packet from the OpenFlow Switch.
-        xid = self.tester_sw.send_packet_out(pkt[KEY_INGRESS])
-        self.send_msg_xids.append(xid)
-
-        # 2. receive a PacketIn message.
+        # receive a PacketIn message.
         try:
             self._wait()
         except TestTimeout:
@@ -558,7 +553,7 @@ class OfTester(app_manager.RyuApp):
                           dpid_lib.dpid_to_str(msg.datapath.id),
                           packet.Packet(msg.data))
 
-        # 3. check the SW which sended PacketIn and output packet.
+        # check the SW which sended PacketIn and output packet.
         pkt_in_src_model = (self.tester_sw if KEY_EGRESS in pkt
                             else self.target_sw)
         model_pkt = (pkt[KEY_EGRESS] if KEY_EGRESS in pkt
@@ -620,11 +615,6 @@ class OfTester(app_manager.RyuApp):
         return result
 
     def _test_unmatch_packet_send(self, pkt):
-        # Send a packet from the OpenFlow Switch.
-        self.logger.debug("send_packet:[%s]", packet.Packet(pkt[KEY_INGRESS]))
-        xid = self.tester_sw.send_packet_out(pkt[KEY_INGRESS])
-        self.send_msg_xids.append(xid)
-
         # Wait OFPBarrierReply.
         xid = self.tester_sw.send_barrier_request()
         self.send_msg_xids.append(xid)
@@ -647,6 +637,11 @@ class OfTester(app_manager.RyuApp):
                     raise TestFailure(self.state)
         if not lookup:
             raise TestError(self.state)
+
+    def _one_time_packet_send(self, pkt):
+        self.logger.debug("send_packet:[%s]", packet.Packet(pkt[KEY_INGRESS]))
+        xid = self.tester_sw.send_packet_out(pkt[KEY_INGRESS])
+        self.send_msg_xids.append(xid)
 
     def _continuous_packet_send(self, pkt):
         assert self.ingress_event is None
