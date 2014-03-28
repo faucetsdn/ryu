@@ -105,6 +105,7 @@ STATE_UNMATCH_PKT_SEND = 8
 STATE_FLOW_UNMATCH_CHK = 9
 STATE_INIT_METER = 10
 STATE_METER_INSTALL = 11
+STATE_METER_EXIST_CHK = 12
 
 STATE_DISCONNECTED = 99
 
@@ -135,6 +136,10 @@ MSG = {STATE_INIT_FLOW:
        {FAILURE: 'Added incorrect flows: %(flows)s',
         TIMEOUT: 'Failed to add flows: flow stats request timeout.',
         RCV_ERR: 'Failed to add flows: %(err_msg)s'},
+       STATE_METER_EXIST_CHK:
+       {FAILURE: 'Added incorrect meters: %(meters)s',
+        TIMEOUT: 'Failed to add meters: meter config stats request timeout.',
+        RCV_ERR: 'Failed to add meters: %(err_msg)s'},
        STATE_TARGET_PKT_COUNT:
        {TIMEOUT: 'Failed to request port stats from target: request timeout.',
         RCV_ERR: 'Failed to request port stats from target: %(err_msg)s'},
@@ -335,6 +340,7 @@ class OfTester(app_manager.RyuApp):
                     self._test(STATE_FLOW_EXIST_CHK, flow)
                 elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
                     self._test(STATE_METER_INSTALL, flow)
+                    self._test(STATE_METER_EXIST_CHK, flow)
             # 2. Check flow matching.
             for pkt in test.tests:
                 if KEY_EGRESS in pkt or KEY_PKT_IN in pkt:
@@ -408,6 +414,7 @@ class OfTester(app_manager.RyuApp):
                 STATE_FLOW_INSTALL: self._test_flow_install,
                 STATE_METER_INSTALL: self._test_meter_install,
                 STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
+                STATE_METER_EXIST_CHK: self._test_meter_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
                 STATE_TESTER_PKT_COUNT: self._test_get_packet_count,
                 STATE_FLOW_MATCH_CHK: self._test_flow_matching_check,
@@ -476,6 +483,23 @@ class OfTester(app_manager.RyuApp):
                 else:
                     ng_stats.append(stats)
         raise TestFailure(self.state, flows=', '.join(ng_stats))
+
+    def _test_meter_exist_check(self, meter_mod):
+        xid = self.target_sw.send_meter_config_stats()
+        self.send_msg_xids.append(xid)
+        self._wait()
+
+        ng_stats = []
+        for msg in self.rcv_msgs:
+            assert isinstance(
+                msg, ofproto_v1_3_parser.OFPMeterConfigStatsReply)
+            for stats in msg.body:
+                result, stats = self._compare_meter(stats, meter_mod)
+                if result:
+                    return
+                else:
+                    ng_stats.append(stats)
+        raise TestFailure(self.state, meters=', '.join(ng_stats))
 
     def _test_get_packet_count(self, is_target):
         sw = self.target_sw if is_target else self.tester_sw
@@ -618,6 +642,20 @@ class OfTester(app_manager.RyuApp):
                 return False, 'flow_stats(%s)' % ','.join(flow_stats)
         return True, None
 
+    def _compare_meter(self, stats1, stats2):
+        """compare the message used to install and the message got from
+           the switch."""
+        attr_list = ['flags', 'meter_id', 'bands']
+        for attr in attr_list:
+            value1 = getattr(stats1, attr)
+            value2 = getattr(stats2, attr)
+            if str(value1) != str(value2):
+                meter_stats = []
+                for attr in attr_list:
+                    meter_stats.append('%s=%s' % (attr, getattr(stats1, attr)))
+                return False, 'meter_stats(%s)' % ','.join(meter_stats)
+            return True, None
+
     def _diff_packets(self, model_pkt, rcv_pkt):
         msg = []
         for rcv_p in rcv_pkt.protocols:
@@ -689,6 +727,17 @@ class OfTester(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, handler.MAIN_DISPATCHER)
     def flow_stats_reply_handler(self, ev):
         state_list = [STATE_FLOW_EXIST_CHK]
+        if self.state in state_list:
+            if self.waiter and ev.msg.xid in self.send_msg_xids:
+                self.rcv_msgs.append(ev.msg)
+                if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
+                    self.waiter.set()
+                    hub.sleep(0)
+
+    @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply,
+                handler.MAIN_DISPATCHER)
+    def meter_config_stats_reply_handler(self, ev):
+        state_list = [STATE_METER_EXIST_CHK]
         if self.state in state_list:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
@@ -832,6 +881,12 @@ class TargetSw(OpenFlowSw):
                                          ofp.OFPP_ANY, ofp.OFPG_ANY,
                                          0, 0, parser.OFPMatch())
         return self._send_msg(req)
+
+    def send_meter_config_stats(self):
+        """ Get all meter. """
+        parser = self.dp.ofproto_parser
+        stats = parser.OFPMeterConfigStatsRequest(self.dp)
+        return self._send_msg(stats)
 
     def send_table_stats(self):
         """ Get table stats. """
