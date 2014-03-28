@@ -122,6 +122,7 @@ STATE_FLOW_UNMATCH_CHK = 9
 STATE_INIT_METER = 10
 STATE_METER_INSTALL = 11
 STATE_METER_EXIST_CHK = 12
+STATE_INIT_THROUGHPUT_FLOW = 13
 
 STATE_DISCONNECTED = 99
 
@@ -142,6 +143,11 @@ RCV_ERR = 3
 MSG = {STATE_INIT_FLOW:
        {TIMEOUT: 'Failed to initialize flow tables: barrier request timeout.',
         RCV_ERR: 'Failed to initialize flow tables: %(err_msg)s'},
+       STATE_INIT_THROUGHPUT_FLOW:
+       {TIMEOUT: 'Failed to initialize flow tables of tester_sw: '
+                 'barrier request timeout.',
+        RCV_ERR: 'Failed to initialize flow tables of tester_sw: '
+                 '%(err_msg)s'},
        STATE_FLOW_INSTALL:
        {TIMEOUT: 'Failed to add flows: barrier request timeout.',
         RCV_ERR: 'Failed to add flows: %(err_msg)s'},
@@ -355,6 +361,7 @@ class OfTester(app_manager.RyuApp):
             # Initialize.
             self._test(STATE_INIT_METER)
             self._test(STATE_INIT_FLOW)
+            self._test(STATE_INIT_THROUGHPUT_FLOW)
             # Install flows.
             for flow in test.prerequisite:
                 if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
@@ -450,6 +457,7 @@ class OfTester(app_manager.RyuApp):
 
     def _test(self, state, *args):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
+                STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow_tester,
                 STATE_INIT_METER: self._test_initialize_meter,
                 STATE_FLOW_INSTALL: self._test_flow_install,
                 STATE_METER_INSTALL: self._test_meter_install,
@@ -474,6 +482,18 @@ class OfTester(app_manager.RyuApp):
         self.send_msg_xids.append(xid)
 
         xid = self.target_sw.send_barrier_request()
+        self.send_msg_xids.append(xid)
+
+        self._wait()
+        assert len(self.rcv_msgs) == 1
+        msg = self.rcv_msgs[0]
+        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+
+    def _test_initialize_flow_tester(self):
+        xid = self.tester_sw.del_flows_for_throughput_analysis()
+        self.send_msg_xids.append(xid)
+
+        xid = self.tester_sw.send_barrier_request()
         self.send_msg_xids.append(xid)
 
         self._wait()
@@ -865,6 +885,7 @@ class OfTester(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPBarrierReply, handler.MAIN_DISPATCHER)
     def barrier_reply_handler(self, ev):
         state_list = [STATE_INIT_FLOW,
+                      STATE_INIT_THROUGHPUT_FLOW,
                       STATE_INIT_METER,
                       STATE_FLOW_INSTALL,
                       STATE_METER_INSTALL,
@@ -993,6 +1014,19 @@ class TargetSw(OpenFlowSw):
 class TesterSw(OpenFlowSw):
     def __init__(self, dp, logger):
         super(TesterSw, self).__init__(dp, logger)
+
+    def del_flows_for_throughput_analysis(self):
+        """ Delete all flow except default flow. """
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        mod = parser.OFPFlowMod(self.dp,
+                                cookie=THROUGHPUT_COOKIE,
+                                cookie_mask=0xffffffffffffffff,
+                                table_id=ofp.OFPTT_ALL,
+                                command=ofp.OFPFC_DELETE,
+                                out_port=ofp.OFPP_ANY,
+                                out_group=ofp.OFPG_ANY)
+        return self._send_msg(mod)
 
     def send_packet_out(self, data):
         """ send a PacketOut message."""
