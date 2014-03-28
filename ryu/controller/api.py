@@ -238,7 +238,7 @@ class RpcOFPManager(app_manager.RyuApp):
         self.logger.critical(_(log_msg))
         notify_param = self._get_secure_channel_state_param()
         for peer in self._peers:
-            peer._endpoint.send_notification("state", notify_param)
+            peer._endpoint.send_notification("state", [notify_param])
 
     @handler.set_ev_cls(ofp_event.EventOFPErrorMsg,
                         handler.MAIN_DISPATCHER)
