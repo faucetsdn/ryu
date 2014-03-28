@@ -103,6 +103,7 @@ STATE_NO_PKTIN_REASON = 6
 STATE_GET_MATCH_COUNT = 7
 STATE_UNMATCH_PKT_SEND = 8
 STATE_FLOW_UNMATCH_CHK = 9
+STATE_INIT_METER = 10
 
 STATE_DISCONNECTED = 99
 
@@ -321,6 +322,7 @@ class OfTester(app_manager.RyuApp):
         # Test execute.
         try:
             # 0. Initialize.
+            self._test(STATE_INIT_METER)
             self._test(STATE_INIT_FLOW)
             # 1. Install flows.
             for flow in test.prerequisite:
@@ -395,6 +397,7 @@ class OfTester(app_manager.RyuApp):
 
     def _test(self, state, *args):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
+                STATE_INIT_METER: self._test_initialize_meter,
                 STATE_FLOW_INSTALL: self._test_flow_install,
                 STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
@@ -422,6 +425,9 @@ class OfTester(app_manager.RyuApp):
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
         assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+
+    def _test_initialize_meter(self):
+        self.target_sw.del_test_meter()
 
     def _test_flow_install(self, flow):
         xid = self.target_sw.add_flow(flow_mod=flow)
@@ -695,6 +701,7 @@ class OfTester(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPBarrierReply, handler.MAIN_DISPATCHER)
     def barrier_reply_handler(self, ev):
         state_list = [STATE_INIT_FLOW,
+                      STATE_INIT_METER,
                       STATE_FLOW_INSTALL,
                       STATE_UNMATCH_PKT_SEND]
         if self.state in state_list:
@@ -784,6 +791,16 @@ class TargetSw(OpenFlowSw):
                                 command=ofp.OFPFC_DELETE,
                                 out_port=ofp.OFPP_ANY,
                                 out_group=ofp.OFPG_ANY)
+        return self._send_msg(mod)
+
+    def del_test_meter(self):
+        """ Delete all meter entries. """
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        mod = parser.OFPMeterMod(self.dp,
+                                 command=ofp.OFPMC_DELETE,
+                                 flags=0,
+                                 meter_id=ofp.OFPM_ALL)
         return self._send_msg(mod)
 
     def send_flow_stats(self):
