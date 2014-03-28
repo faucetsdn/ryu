@@ -245,6 +245,7 @@ class RpcOFPManager(app_manager.RyuApp):
                         handler.MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
         msg = ev.msg
+        self._send_waited_rpc_response(msg)
         for body in msg.body:
             key = self.format_key(body.match.to_jsondict())
             contexts = None
@@ -261,6 +262,7 @@ class RpcOFPManager(app_manager.RyuApp):
                         handler.MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         msg = ev.msg
+        self._send_waited_rpc_response(msg)
         dp = msg.datapath
         for stat in sorted(msg.body, key=attrgetter('port_no')):
             try:
@@ -315,7 +317,6 @@ class RpcOFPManager(app_manager.RyuApp):
                         handler.MAIN_DISPATCHER)
     def _stats_reply_handler(self, ev):
         msg = ev.msg
-        self._send_waited_rpc_response(msg)
 
         if msg.type == ofproto_v1_2.OFPST_FLOW:
             self._flow_stats_reply_handler(ev)
