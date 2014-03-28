@@ -96,6 +96,8 @@ class RpcOFPManager(app_manager.RyuApp):
         self._rpc_events = hub.Queue(128)
         # per 30 secs by default
         self.ofconfig = hub.Queue(128)
+        # we assume that there is only one datapath.
+        self.secure_channel_state = None
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._rpc_message_thread)
         hub.spawn(self._ofconfig_thread)
@@ -117,6 +119,9 @@ class RpcOFPManager(app_manager.RyuApp):
                         result = self._monitor_queue(msgid, params)
                     elif target_method == "ofconfig":
                         self._ofconfig(peer, msgid, params)
+                    elif target_method == 'query_secure_channel_state':
+                        result = self._query_secure_channel_state(msgid,
+                                                                  params)
                     else:
                         error = 'Unknown method %s' % (target_method)
                 elif _type == rpc.MessageType.NOTIFY:
@@ -194,9 +199,13 @@ class RpcOFPManager(app_manager.RyuApp):
                     tlv['mask'] = None
         return str(match_json)
 
+    def _get_secure_channel_state_param(self):
+        return {'secure_channel_state': self.secure_channel_state}
+
     @handler.set_ev_cls(dpset.EventDP)
     def _handler_datapath(self, ev):
         if ev.enter:
+            self.secure_channel_state = 'Up'
             dp = ev.dp
             parser = dp.ofproto_parser
             ofp = dp.ofproto
@@ -216,18 +225,18 @@ class RpcOFPManager(app_manager.RyuApp):
             dp.send_msg(m)
 
             log_msg = {"event": "dp connected", "dpid": ev.dp.id}
-            notify_param = {'secure_channel_state': 'Up'}
             for p in self.pending_rpc_requests:
                 (peer, data) = p
                 self._rpc_events.put((peer, rpc.MessageType.REQUEST, data))
         else:
+            self.secure_channel_state = 'Down'
             log_msg = {"event": "dp disconnected"}
-            notify_param = {'secure_channel_state': 'Down'}
             for peer in self._peers:
                 if ev.dp.id in peer.wait_for_ofp_resepnse:
                     del peer.wait_for_ofp_resepnse[ev.dp.id]
 
         self.logger.critical(_(log_msg))
+        notify_param = self._get_secure_channel_state_param()
         for peer in self._peers:
             peer._endpoint.send_notification("state", [notify_param])
 
@@ -758,3 +767,6 @@ class RpcOFPManager(app_manager.RyuApp):
                              self.monitored_queues,
                              self._queue_stats_generator,
                              msgid, params)
+
+    def _query_secure_channel_state(self, msgid, params):
+        return self._get_secure_channel_state_param()
