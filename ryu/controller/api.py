@@ -122,6 +122,8 @@ class RpcOFPManager(app_manager.RyuApp):
                     elif target_method == 'query_secure_channel_state':
                         result = self._query_secure_channel_state(msgid,
                                                                   params)
+                    elif target_method == 'query_port_desc_stats':
+                        result = self._query_port_desc_stats(msgid, params)
                     else:
                         error = 'Unknown method %s' % (target_method)
                 elif _type == rpc.MessageType.NOTIFY:
@@ -770,3 +772,14 @@ class RpcOFPManager(app_manager.RyuApp):
 
     def _query_secure_channel_state(self, msgid, params):
         return self._get_secure_channel_state_param()
+
+    def _query_port_desc_stats(self, msgid, params):
+        results = []
+        for k, v in self.dpset.get_all():
+            for p in self.dpset.get_ports(k):
+                d = p.to_jsondict()
+                d['OFPPort']['name'] = d['OFPPort']['name'].encode('ascii')
+                d['OFPPort']['hw_addr'] = \
+                    d['OFPPort']['hw_addr'].encode('ascii')
+                results.append(d)
+        return results
