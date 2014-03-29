@@ -774,9 +774,17 @@ class RpcOFPManager(app_manager.RyuApp):
         return self._get_secure_channel_state_param()
 
     def _query_port_desc_stats(self, msgid, params):
+        try:
+            param_dict = params[0]
+            port_no = param_dict.get('port_no')
+        except:
+            port_no = None
+
         results = []
         for k, v in self.dpset.get_all():
             for p in self.dpset.get_ports(k):
+                if port_no is not None and port_no != p.port_no:
+                    continue
                 d = p.to_jsondict()
                 d['OFPPort']['name'] = d['OFPPort']['name'].encode('ascii')
                 d['OFPPort']['hw_addr'] = \
