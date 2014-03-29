@@ -156,6 +156,7 @@ class RpcVRRPManager(app_manager.RyuApp):
             config = vrrp_event.VRRPConfig(**config_params)
         except:
             raise RPCError('parameters are invalid, %s' % (str(param_dict)))
+        config.contexts = param_dict.get('contexts')
 
         config_result = vrrp_api.vrrp_config(self, interface, config)
 
