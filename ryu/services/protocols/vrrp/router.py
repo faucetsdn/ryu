@@ -575,6 +575,8 @@ class VRRPV3StateMaster(VRRPState):
         if ev.priority is not None or ev.advertisement_interval is not None:
             vrrp_router.adver_timer.cancel()
             self._adver()
+            if ev.priority == 0:
+                vrrp_router.state_change(vrrp_event.VRRP_STATE_BACKUP)
 
 
 class VRRPV3StateBackup(VRRPState):
