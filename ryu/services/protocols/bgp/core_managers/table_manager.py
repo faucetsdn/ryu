@@ -416,7 +416,7 @@ class TableCoreManager(object):
 
         Returns assigned VPN label.
         """
-        from ryu.services.protocols.bgp.speaker.core import BgpCoreError
+        from ryu.services.protocols.bgp.core import BgpCoreError
 
         assert route_dist and prefix and next_hop
         if route_family not in (VRF_RF_IPV4, VRF_RF_IPV6):
@@ -451,7 +451,7 @@ class TableCoreManager(object):
 
         Returns assigned VPN label.
         """
-        from ryu.services.protocols.bgp.speaker.core import BgpCoreError
+        from ryu.services.protocols.bgp.core import BgpCoreError
         # Validate given
         if route_family not in (VRF_RF_IPV4, VRF_RF_IPV6):
             raise BgpCoreError(desc='Unsupported route family %s' %

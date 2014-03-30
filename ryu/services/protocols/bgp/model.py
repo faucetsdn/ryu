@@ -93,8 +93,8 @@ class FlexinetOutgoingRoute(object):
                  'next_sink_out_route', 'prev_sink_out_route', '_route_disc')
 
     def __init__(self, path, route_disc):
-        from ryu.services.protocols.bgp.speaker.info_base.vrf4 import Vrf4Path
-        from ryu.services.protocols.bgp.speaker.info_base.vrf6 import Vrf6Path
+        from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Path
+        from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Path
         assert path.route_family in (Vrf4Path.ROUTE_FAMILY,
                                      Vrf6Path.ROUTE_FAMILY)
 

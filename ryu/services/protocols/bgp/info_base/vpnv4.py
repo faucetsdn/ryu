@@ -55,5 +55,5 @@ class Vpnv4Path(VpnPath):
 
     def __init__(self, *args, **kwargs):
         super(Vpnv4Path, self).__init__(*args, **kwargs)
-        from ryu.services.protocols.bgp.speaker.info_base.vrf4 import Vrf4Path
+        from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Path
         self.VRF_PATH_CLASS = Vrf4Path

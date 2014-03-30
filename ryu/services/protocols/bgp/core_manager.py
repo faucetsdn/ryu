@@ -37,7 +37,7 @@ class _CoreManager(Activity):
         self._common_conf = kwargs.pop('common_conf')
         self._neighbors_conf = NeighborsConf()
         self._vrfs_conf = VrfsConf()
-        from ryu.services.protocols.bgp.speaker.core import CoreService
+        from ryu.services.protocols.bgp.core import CoreService
         self._core_service = CoreService(self._common_conf,
                                          self._neighbors_conf,
                                          self._vrfs_conf)

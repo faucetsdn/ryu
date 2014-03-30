@@ -74,7 +74,7 @@ class RouteTargetManager(object):
             self._add_rt_nlri_for_as(rtc_as, route_target, is_withdraw)
 
     def _add_rt_nlri_for_as(self, rtc_as, route_target, is_withdraw=False):
-        from ryu.services.protocols.bgp.speaker.core import EXPECTED_ORIGIN
+        from ryu.services.protocols.bgp.core import EXPECTED_ORIGIN
         rt_nlri = RtNlri(rtc_as, route_target)
         # Create a dictionary for path-attrs.
         pattrs = OrderedDict()

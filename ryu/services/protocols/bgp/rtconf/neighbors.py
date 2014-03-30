@@ -190,7 +190,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
         self._settings[CAP_RTC] = \
             compute_optional_conf(CAP_RTC, DEFAULT_CAP_RTC, **kwargs)
         # Default RTC_AS is local (router) AS.
-        from ryu.services.protocols.bgp.speaker.core_manager import \
+        from ryu.services.protocols.bgp.core_manager import \
             CORE_MANAGER
         default_rt_as = CORE_MANAGER.common_conf.local_as
         self._settings[RTC_AS] = \

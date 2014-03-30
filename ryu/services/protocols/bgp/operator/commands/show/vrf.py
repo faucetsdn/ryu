@@ -33,7 +33,7 @@ class Routes(Command, RouteFormatterMixin):
         if vrf_rf not in ('ipv4', 'ipv6'):
             return WrongParamResp('route-family not one of (ipv4, ipv6)')
 
-        from ryu.services.protocols.bgp.speaker.operator.internal_api import \
+        from ryu.services.protocols.bgp.operator.internal_api import \
             WrongParamError
 
         try:

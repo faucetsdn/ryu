@@ -55,5 +55,5 @@ class Vpnv6Path(VpnPath):
 
     def __init__(self, *args, **kwargs):
         super(Vpnv6Path, self).__init__(*args, **kwargs)
-        from ryu.services.protocols.bgp.speaker.info_base.vrf6 import Vrf6Path
+        from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Path
         self.VRF_PATH_CLASS = Vrf6Path

@@ -99,7 +99,7 @@ class CoreService(Factory, Activity):
         )
 
         # Register Flexinet peer sink
-        from ryu.services.protocols.bgp.speaker.net_ctrl import NET_CONTROLLER
+        from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 
         self.register_flexinet_sink(NET_CONTROLLER)
 
@@ -202,7 +202,7 @@ class CoreService(Factory, Activity):
         vrf_stats_timer.start(vrf_conf.stats_time)
 
     def _run(self, *args, **kwargs):
-        from ryu.services.protocols.bgp.speaker.processor import BgpProcessor
+        from ryu.services.protocols.bgp.processor import BgpProcessor
         # Initialize bgp processor.
         self._bgp_processor = BgpProcessor(self)
         # Start BgpProcessor in a separate thread.

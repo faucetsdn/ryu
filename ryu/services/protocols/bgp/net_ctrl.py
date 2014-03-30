@@ -201,7 +201,7 @@ class RpcSession(Activity):
         # graceful manner. Discuss this with other component developers.
         # TODO(PH): We should try not to sent routes from bgp peer that is not
         # in established state.
-        from ryu.services.protocols.bgp.speaker.model import \
+        from ryu.services.protocols.bgp.model import \
             FlexinetOutgoingRoute
         while True:
             # sink iter is Sink instance and next is blocking so this isn't

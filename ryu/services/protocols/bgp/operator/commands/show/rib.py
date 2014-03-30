@@ -26,7 +26,7 @@ class Rib(RibBase):
     def action(self, params):
         if len(params) != 1 or params[0] not in self.supported_families:
             return WrongParamResp()
-        from ryu.services.protocols.bgp.speaker.operator.internal_api \
+        from ryu.services.protocols.bgp.operator.internal_api \
             import WrongParamError
         try:
             return CommandsResponse(

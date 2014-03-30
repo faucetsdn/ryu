@@ -151,7 +151,7 @@ class BgpProtocol(Protocol, Activity):
 
         Should only be called after protocol has reached OpenConfirm state.
         """
-        from ryu.services.protocols.bgp.speaker.utils.bgp import from_inet_ptoi
+        from ryu.services.protocols.bgp.utils.bgp import from_inet_ptoi
 
         if not self.state == BGP_FSM_OPEN_CONFIRM:
             raise BgpProtocolException(desc='Can access remote router id only'

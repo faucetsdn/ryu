@@ -429,7 +429,7 @@ class Destination(object):
         Parameter:
             - `peer`: (Peer) peer to send withdraw to
         """
-        from ryu.services.protocols.bgp.speaker.peer import Peer
+        from ryu.services.protocols.bgp.peer import Peer
         if not isinstance(peer, Peer):
             raise TypeError('Currently we only support sending withdrawal'
                             ' to instance of peer')
