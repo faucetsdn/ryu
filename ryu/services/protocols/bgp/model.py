@@ -44,11 +44,11 @@ class OutgoingRoute(object):
     """Holds state about a route that is queued for being sent to a given sink.
     """
 
-    __slots__ = ('_path', '_for_route_refresh',
+    __slots__ = ('_path', '_for_route_refresh', 'bgp4_format',
                  'sink', 'next_outgoing_route', 'prev_outgoing_route',
                  'next_sink_out_route', 'prev_sink_out_route')
 
-    def __init__(self, path, for_route_refresh=False):
+    def __init__(self, path, for_route_refresh=False, bgp4_format=False):
         assert(path)
 
         self.sink = None
@@ -58,6 +58,9 @@ class OutgoingRoute(object):
         # Is this update in response for route-refresh request.
         # No sent-route is queued for the destination for this update.
         self._for_route_refresh = for_route_refresh
+
+        # Construct UPDATE msg using bgp4 format
+        self.bgp4_format = bgp4_format
 
         # Automatically generated, for list off of Destination.
         #
