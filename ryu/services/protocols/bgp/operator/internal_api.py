@@ -67,6 +67,7 @@ class InternalApi(object):
 
     def get_single_rib_routes(self, addr_family):
         rfs = {
+            'ipv4': nlri.get_rf(1, 1),
             'vpnv4': nlri.get_rf(1, 128),
             'vpnv6': nlri.get_rf(2, 128),
             'rtfilter': nlri.get_rf(1, 132)
