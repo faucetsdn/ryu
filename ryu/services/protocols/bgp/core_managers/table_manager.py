@@ -2,6 +2,8 @@ import logging
 
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp.info_base.rtc import RtcTable
+from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
+from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Table
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Table
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
@@ -146,7 +148,10 @@ class TableCoreManager(object):
             )
 
         global_table = None
-        if route_family == nlri.RF_IPv4_VPN:
+        if route_family == nlri.RF_IPv4_UC:
+            global_table = self.get_ipv4_table()
+
+        elif route_family == nlri.RF_IPv4_VPN:
             global_table = self.get_vpn4_table()
 
         elif route_family == nlri.RF_IPv6_VPN:
@@ -170,6 +175,23 @@ class TableCoreManager(object):
                 continue
             vrf_tables[(scope_id, table_id)] = table
         return vrf_tables
+
+    def get_ipv4_table(self):
+        """Returns global IPv4 table.
+
+        Creates the table if it does not exist.
+        """
+
+        vpn_table = self._global_tables.get(nlri.RF_IPv4_UC)
+        # Lazy initialize the table.
+        if not vpn_table:
+            vpn_table = Ipv4Table(self._core_service, self._signal_bus)
+            self._global_tables[nlri.RF_IPv4_UC] = vpn_table
+            self._tables[(None, nlri.RF_IPv4_UC)] = vpn_table
+
+        return vpn_table
+
+
 
     def get_vpn6_table(self):
         """Returns global VPNv6 table.

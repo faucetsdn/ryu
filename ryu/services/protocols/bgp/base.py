@@ -42,7 +42,8 @@ OrderedDict = OrderedDict
 
 
 # Currently supported address families.
-SUPPORTED_GLOBAL_RF = set([nlri.RF_IPv4_VPN,
+SUPPORTED_GLOBAL_RF = set([nlri.RF_IPv4_UC,
+                           nlri.RF_IPv4_VPN,
                            nlri.RF_RTC_UC,
                            nlri.RF_IPv6_VPN
                            ])

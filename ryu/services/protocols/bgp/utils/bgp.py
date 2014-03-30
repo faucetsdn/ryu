@@ -20,6 +20,7 @@ import logging
 import socket
 
 from ryu.services.protocols.bgp.protocols.bgp.messages import Update
+from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_UC
 from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_VPN
 from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv6_VPN
 from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_RTC_UC
@@ -27,6 +28,7 @@ from ryu.services.protocols.bgp.protocols.bgp.nlri import RtNlri
 from ryu.services.protocols.bgp.protocols.bgp import pathattr
 from ryu.services.protocols.bgp.protocols.bgp.pathattr import Med
 from ryu.services.protocols.bgp.info_base.rtc import RtcPath
+from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 
@@ -34,7 +36,8 @@ from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 LOG = logging.getLogger('utils.bgp')
 
 # RouteFmaily to path sub-class mapping.
-_ROUTE_FAMILY_TO_PATH_MAP = {RF_IPv4_VPN: Vpnv4Path,
+_ROUTE_FAMILY_TO_PATH_MAP = {RF_IPv4_UC: Ipv4Path,
+                             RF_IPv4_VPN: Vpnv4Path,
                              RF_IPv6_VPN: Vpnv6Path,
                              RF_RTC_UC: RtcPath}
 

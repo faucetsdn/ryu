@@ -888,10 +888,37 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         mp_unreach_attr = update_msg.get_path_attr(
             pathattr.MpUnreachNlri.ATTR_NAME
         )
+
+        # non-MPBGP Update msg.
         if not (mp_reach_attr or mp_unreach_attr):
-            LOG.error('Received UPDATE msg. with no MpReachNlri or '
+            LOG.info('Received UPDATE msg. with no MpReachNlri or '
                       'MpUnReachNlri attribute.')
-            raise exceptions.MalformedAttrList()
+            if not self.is_mpbgp_cap_valid(nlri.RF_IPv4_UC):
+                LOG.error('Got UPDATE message with un-available afi/safi %s' % nlri.RF_IPv4_UC)
+
+            nlri_list = update_msg.nlri_list
+            if len(nlri_list) > 0:
+                # Check for missing well-known mandatory attributes.
+                aspath = update_msg.get_path_attr(pathattr.AsPath.ATTR_NAME)
+                if not aspath:
+                    raise exceptions.MissingWellKnown(pathattr.AsPath.TYPE_CODE)
+
+                # We do not have a setting to enable/disable first-as check.
+                # We by default do first-as check below.
+                if (self.is_ebgp_peer() and
+                        not aspath.has_matching_leftmost(self.remote_as)):
+                    LOG.error('First AS check fails. Raise appropriate exception.')
+                    raise exceptions.MalformedAsPath()
+
+                origin = update_msg.get_path_attr(pathattr.Origin.ATTR_NAME)
+                if not origin:
+                    raise exceptions.MissingWellKnown(pathattr.Origin.TYPE_CODE)
+
+                nexthop = update_msg.get_path_attr(pathattr.NextHop.ATTR_NAME)
+                if not nexthop:
+                    raise exceptions.MissingWellKnown(pathattr.NextHop.TYPE_CODE)
+
+            return True
 
         # Check if received MP_UNREACH path attribute is of available afi/safi
         if mp_unreach_attr:
@@ -963,15 +990,127 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         mp_unreach_attr = update_msg.get_path_attr(
             pathattr.MpUnreachNlri.ATTR_NAME
         )
+
+        nlri_list = update_msg.nlri_list
+        withdraw_list = update_msg.withdraw_list
+
         if mp_reach_attr:
             # Extract advertised paths from given message.
-            self._extract_and_handle_new_paths(update_msg)
+            self._extract_and_handle_mpbgp_new_paths(update_msg)
 
         if mp_unreach_attr:
             # Extract withdraws from given message.
-            self._extract_and_handle_withdraws(mp_unreach_attr)
+            self._extract_and_handle_mpbgp_withdraws(mp_unreach_attr)
 
-    def _extract_and_handle_new_paths(self, update_msg):
+        if nlri_list:
+            self._extract_and_handle_bgp4_new_paths(update_msg)
+
+        if withdraw_list:
+            self._extract_and_handle_bgp4_withdraws(withdraw_list)
+
+    def _extract_and_handle_bgp4_new_paths(self, update_msg):
+        """Extracts new paths advertised in the given update message's
+         *MpReachNlri* attribute.
+
+        Assumes MPBGP capability is enabled and message was validated.
+        Parameters:
+            - update_msg: (Update) is assumed to be checked for all bgp
+            message errors.
+            - valid_rts: (iterable) current valid/configured RTs.
+
+        Extracted paths are added to appropriate *Destination* for further
+        processing.
+        """
+        umsg_pattrs = update_msg.pathattr_map
+
+        msg_rf = nlri.RF_IPv4_UC
+        # Check if this route family is among supported route families.
+        if msg_rf not in SUPPORTED_GLOBAL_RF:
+            LOG.info(('Received route for route family %s which is'
+                      ' not supported. Ignoring paths from this UPDATE: %s') %
+                     (msg_rf, update_msg))
+            return
+
+        aspath = umsg_pattrs.get(pathattr.AsPath.ATTR_NAME)
+        # Check if AS_PATH has loops.
+        if aspath.has_local_as(self._common_conf.local_as):
+            LOG.error('Update message AS_PATH has loops. Ignoring this'
+                      ' UPDATE. %s' % update_msg)
+            return
+
+        next_hop = update_msg.get_path_attr(pathattr.NextHop.ATTR_NAME)
+        # Nothing to do if we do not have any new NLRIs in this message.
+        msg_nlri_list = update_msg.nlri_list
+        if not msg_nlri_list:
+            LOG.debug('Update message did not have any new MP_REACH_NLRIs.')
+            return
+
+        # Create path instances for each NLRI from the update message.
+        for msg_nlri in msg_nlri_list:
+            LOG.debug('NLRI: %s' % msg_nlri)
+            new_path = bgp_utils.create_path(
+                self,
+                msg_nlri,
+                pattrs=umsg_pattrs,
+                nexthop=next_hop
+            )
+            LOG.debug('Extracted paths from Update msg.: %s' % new_path)
+            # Update appropriate table with new paths.
+            tm = self._core_service.table_manager
+            tm.learn_path(new_path)
+
+        # If update message had any qualifying new paths, do some book-keeping.
+        if msg_nlri_list:
+            # Update prefix statistics.
+            self.state.incr(PeerCounterNames.RECV_PREFIXES,
+                            incr_by=len(msg_nlri_list))
+            # Check if we exceed max. prefixes allowed for this neighbor.
+            if self._neigh_conf.exceeds_max_prefix_allowed(
+                    self.state.get_count(PeerCounterNames.RECV_PREFIXES)):
+                LOG.error('Max. prefix allowed for this neighbor '
+                          'exceeded.')
+
+    def _extract_and_handle_bgp4_withdraws(self, withdraw_list):
+        """Extracts withdraws advertised in the given update message's
+         *MpUnReachNlri* attribute.
+
+        Assumes MPBGP capability is enabled.
+        Parameters:
+            - update_msg: (Update) is assumed to be checked for all bgp
+            message errors.
+
+        Extracted withdraws are added to appropriate *Destination* for further
+        processing.
+        """
+        msg_rf = nlri.RF_IPv4_UC
+        # Check if this route family is among supported route families.
+        if msg_rf not in SUPPORTED_GLOBAL_RF:
+            LOG.info(
+                (
+                    'Received route for route family %s which is'
+                    ' not supported. Ignoring withdraws form this UPDATE.'
+                ) % msg_rf
+            )
+            return
+
+        w_nlris = withdraw_list
+        if not w_nlris:
+            # If this is EOR of some kind, handle it
+            self._handle_eor(msg_rf)
+
+        for w_nlri in w_nlris:
+            w_path = bgp_utils.create_path(
+                self,
+                w_nlri,
+                is_withdraw=True
+            )
+            # Update appropriate table with withdraws.
+            tm = self._core_service.table_manager
+            tm.learn_path(w_path)
+
+
+
+    def _extract_and_handle_mpbgp_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's
          *MpReachNlri* attribute.
 
@@ -1066,7 +1205,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 LOG.error('Max. prefix allowed for this neighbor '
                           'exceeded.')
 
-    def _extract_and_handle_withdraws(self, mp_unreach_attr):
+    def _extract_and_handle_mpbgp_withdraws(self, mp_unreach_attr):
         """Extracts withdraws advertised in the given update message's
          *MpUnReachNlri* attribute.
 
