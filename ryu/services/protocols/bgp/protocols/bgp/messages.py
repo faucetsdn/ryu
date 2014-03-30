@@ -462,9 +462,6 @@ class Update(BgpMessage):
             idx += plen
             recv_len += plen
 
-        # Check if length of received bytes is valid.
-        if (recv_len + Update.MIN_LENGTH) < total_msg_len:
-            raise MalformedAttrList()
 
         if d[Update.WITHDRAW_NLRI]:
             withdraw_list = nlri.parse(d[Update.WITHDRAW_NLRI])
