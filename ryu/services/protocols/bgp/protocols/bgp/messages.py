@@ -462,7 +462,6 @@ class Update(BgpMessage):
             idx += plen
             recv_len += plen
 
-
         if d[Update.WITHDRAW_NLRI]:
             withdraw_list = nlri.parse(d[Update.WITHDRAW_NLRI])
         # TODO(PH): We have to test how ipv4 nlri packed after path-attr are

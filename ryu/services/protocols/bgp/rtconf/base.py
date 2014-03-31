@@ -588,6 +588,7 @@ def validate_cap_enhanced_refresh(cer):
                               'settings: %s boolean value expected' % cer)
     return cer
 
+
 @validate(name=CAP_MBGP_IPV4)
 def validate_cap_mbgp_ipv4(cmv4):
     if cmv4 not in (True, False):

@@ -149,8 +149,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
     REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS, LOCAL_ADDRESS,
                                    LOCAL_PORT])
     OPTIONAL_SETTINGS = frozenset([CAP_REFRESH,
-                                   CAP_ENHANCED_REFRESH, CAP_MBGP_VPNV4, CAP_MBGP_IPV4,
-                                   CAP_MBGP_VPNV6, CAP_RTC, RTC_AS, HOLD_TIME,
+                                   CAP_ENHANCED_REFRESH, CAP_MBGP_VPNV4,
+                                   CAP_MBGP_IPV4, CAP_MBGP_VPNV6,
+                                   CAP_RTC, RTC_AS, HOLD_TIME,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS])
 

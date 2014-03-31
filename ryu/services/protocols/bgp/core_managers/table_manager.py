@@ -193,8 +193,6 @@ class TableCoreManager(object):
 
         return vpn_table
 
-
-
     def get_vpn6_table(self):
         """Returns global VPNv6 table.
 

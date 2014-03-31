@@ -1046,31 +1046,35 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # non-MPBGP Update msg.
         if not (mp_reach_attr or mp_unreach_attr):
             LOG.info('Received UPDATE msg. with no MpReachNlri or '
-                      'MpUnReachNlri attribute.')
+                     'MpUnReachNlri attribute.')
             if not self.is_mpbgp_cap_valid(nlri.RF_IPv4_UC):
-                LOG.error('Got UPDATE message with un-available afi/safi %s' % nlri.RF_IPv4_UC)
-
+                LOG.error('Got UPDATE message with un-available'
+                          ' afi/safi %s' % nlri.RF_IPv4_UC)
             nlri_list = update_msg.nlri_list
             if len(nlri_list) > 0:
                 # Check for missing well-known mandatory attributes.
                 aspath = update_msg.get_path_attr(pathattr.AsPath.ATTR_NAME)
                 if not aspath:
-                    raise exceptions.MissingWellKnown(pathattr.AsPath.TYPE_CODE)
+                    raise exceptions.MissingWellKnown(
+                        pathattr.AsPath.TYPE_CODE)
 
                 # We do not have a setting to enable/disable first-as check.
                 # We by default do first-as check below.
                 if (self.is_ebgp_peer() and
                         not aspath.has_matching_leftmost(self.remote_as)):
-                    LOG.error('First AS check fails. Raise appropriate exception.')
+                    LOG.error('First AS check fails. Raise appropriate'
+                              ' exception.')
                     raise exceptions.MalformedAsPath()
 
                 origin = update_msg.get_path_attr(pathattr.Origin.ATTR_NAME)
                 if not origin:
-                    raise exceptions.MissingWellKnown(pathattr.Origin.TYPE_CODE)
+                    raise exceptions.MissingWellKnown(
+                        pathattr.Origin.TYPE_CODE)
 
                 nexthop = update_msg.get_path_attr(pathattr.NextHop.ATTR_NAME)
                 if not nexthop:
-                    raise exceptions.MissingWellKnown(pathattr.NextHop.TYPE_CODE)
+                    raise exceptions.MissingWellKnown(
+                        pathattr.NextHop.TYPE_CODE)
 
             return True
 
@@ -1261,8 +1265,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Update appropriate table with withdraws.
             tm = self._core_service.table_manager
             tm.learn_path(w_path)
-
-
 
     def _extract_and_handle_mpbgp_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's

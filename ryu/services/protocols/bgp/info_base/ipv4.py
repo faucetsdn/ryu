@@ -31,6 +31,7 @@ class IPv4Dest(Destination, NonVrfPathProcessingMixin):
     def _new_best_path(self, best_path):
         NonVrfPathProcessingMixin._new_best_path(self, best_path)
 
+
 class Ipv4Table(Table):
     """Global table to store IPv4 routing information.
 
@@ -56,7 +57,6 @@ class Ipv4Table(Table):
         return '%s(scope_id: %s, rf: %s)' % (
             self.__class__.__name__, self.scope_id, self.route_family
         )
-
 
 
 class Ipv4Path(Path):

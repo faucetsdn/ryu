@@ -172,10 +172,9 @@ def get_vrfs_conf():
 # network configuration related APIs
 #==============================================================================
 
+
 @register(name='network.add')
 def add_network(prefix):
     tm = CORE_MANAGER.get_core_service().table_manager
     tm.add_to_ipv4_global_table(prefix)
     return True
-
-

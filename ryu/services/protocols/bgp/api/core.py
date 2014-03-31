@@ -40,7 +40,7 @@ def start(**kwargs):
     waiter = kwargs.pop('waiter')
     common_config = CommonConf(**kwargs)
     eventlet.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config,
-                                               'waiter' : waiter})
+                                               'waiter': waiter})
     return True
 
 
