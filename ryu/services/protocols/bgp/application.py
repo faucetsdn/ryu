@@ -176,7 +176,7 @@ class BaseApplication(object):
             try:
                 bgp_neighbor[neighbors.IP_ADDRESS] = ip
                 call('neighbor.create', **bgp_neighbor)
-                LOG.debug('Added neighbor %s' % neighbors.IP_ADDRESS)
+                LOG.debug('Added neighbor %s' % ip)
             except RuntimeConfigError as re:
                 LOG.error(re)
                 LOG.error(traceback.format_exc())
