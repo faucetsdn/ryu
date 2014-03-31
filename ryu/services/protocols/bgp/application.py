@@ -171,7 +171,7 @@ class BaseApplication(object):
         All valid neighbors are loaded. Miss-configured neighbors are ignored
         and error is logged.
         """
-        bgp_neighbors = routing_settings.get('bgp_neighbors')
+        bgp_neighbors = routing_settings.setdefault('bgp_neighbors', {})
         for ip, bgp_neighbor in bgp_neighbors.items():
             try:
                 bgp_neighbor[neighbors.IP_ADDRESS] = ip
@@ -188,7 +188,7 @@ class BaseApplication(object):
         If any of the VRFs are miss-configured errors are logged.
         All valid VRFs are loaded.
         """
-        vpns_conf = routing_settings.get('vpns')
+        vpns_conf = routing_settings.setdefault('vpns', {})
         for vrf in vpns_conf:
             try:
                 call('vrf.create', **vrf)
