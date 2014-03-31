@@ -699,7 +699,11 @@ def get_meter_config(dp, waiters):
                 elif band.type == dp.ofproto.OFPMBT_EXPERIMENTER:
                     b['experimenter'] = band.experimenter
                 bands.append(b)
-            c = {'flags': flags.get(config.flags, 0),
+            c_flags = []
+            for k, v in flags.items():
+                if k & config.flags:
+                    c_flags.append(v)
+            c = {'flags': c_flags,
                  'meter_id': config.meter_id,
                  'bands': bands}
             configs.append(c)
@@ -856,7 +860,12 @@ def mod_meter_entry(dp, flow, cmd):
                      'BURST': dp.ofproto.OFPMF_BURST,
                      'STATS': dp.ofproto.OFPMF_STATS}
 
-    flags = flags_convert.get(flow.get('flags'))
+    flow_flags = flow.get('flags')
+    if not isinstance(flow_flags, list):
+        flow_flags = [flow_flags]
+    flags = 0
+    for flag in flow_flags:
+        flags |= flags_convert.get(flag, 0)
     if not flags:
         LOG.debug('Unknown flags: %s', flow.get('flags'))
 
