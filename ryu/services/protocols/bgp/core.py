@@ -215,6 +215,8 @@ class CoreService(Factory, Activity):
         # Reactively establish bgp-session with peer by listening on
         # server port for connection requests.
         server_addr = (CORE_IP, self._common_config.bgp_server_port)
+        waiter = kwargs.pop('waiter')
+        waiter.set()
         server_thread = self._listen_tcp(server_addr, self.start_protocol)
 
         server_thread.wait()

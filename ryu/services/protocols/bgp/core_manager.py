@@ -41,7 +41,8 @@ class _CoreManager(Activity):
         self._core_service = CoreService(self._common_conf,
                                          self._neighbors_conf,
                                          self._vrfs_conf)
-        core_activity = self._spawn_activity(self._core_service)
+        waiter = kwargs.pop('waiter')
+        core_activity = self._spawn_activity(self._core_service, waiter=waiter)
         core_activity.wait()
 
     def get_core_service(self):

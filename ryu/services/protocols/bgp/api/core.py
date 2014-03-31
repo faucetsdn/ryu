@@ -37,9 +37,10 @@ def start(**kwargs):
         raise RuntimeConfigError('Current context has to be stopped to start '
                                  'a new context.')
 
+    waiter = kwargs.pop('waiter')
     common_config = CommonConf(**kwargs)
-    eventlet.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config})
-    eventlet.sleep(2)
+    eventlet.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config,
+                                               'waiter' : waiter})
     return True
 
 

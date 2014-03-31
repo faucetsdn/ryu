@@ -20,6 +20,8 @@ import imp
 import logging
 import traceback
 
+from ryu.lib import hub
+
 from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -150,11 +152,9 @@ class BaseApplication(object):
             common_settings[LABEL_RANGE] = label_range
 
         # Start BGPS core service
-        call('core.start', **common_settings)
-        # Give chance for core to start running
-
-        # TODO(Team): How to wait for core start to happen?!
-        eventlet.sleep(3)
+        waiter = hub.Event()
+        call('core.start', waiter=waiter, **common_settings)
+        waiter.wait()
 
         LOG.debug('Core started %s' % CORE_MANAGER.started)
         # Core manager started add configured neighbor and vrfs
