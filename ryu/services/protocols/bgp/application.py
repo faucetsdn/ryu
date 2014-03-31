@@ -165,6 +165,9 @@ class BaseApplication(object):
             # Add Vrfs.
             self._add_vrfs(routing_settings)
 
+            # Add Networks
+            self._add_networks(routing_settings)
+
     def _add_neighbors(self, routing_settings):
         """Add bgp peers/neighbors from given settings to BGPS runtime.
 
@@ -193,6 +196,21 @@ class BaseApplication(object):
             try:
                 call('vrf.create', **vrf)
                 LOG.debug('Added vrf  %s' % str(vrf))
+            except RuntimeConfigError as e:
+                LOG.error(e)
+                continue
+
+    def _add_networks(self, routing_settings):
+        """Add networks from given settings to BGPS runtime.
+
+        If any of the networks are miss-configured errors are logged.
+        All valid networks are loaded.
+        """
+        networks = routing_settings.setdefault('networks', [])
+        for prefix in networks:
+            try:
+                call('network.add', prefix=prefix)
+                LOG.debug('Added network %s' % str(prefix))
             except RuntimeConfigError as e:
                 LOG.error(e)
                 continue

@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp.info_base.rtc import RtcTable
@@ -13,6 +14,7 @@ from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Table
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
+from ryu.services.protocols.bgp.protocols.bgp import pathattr
 from ryu.services.protocols.bgp.protocols.bgp import nlri
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4_prefix
@@ -467,6 +469,24 @@ class TableCoreManager(object):
             prefix, next_hop=next_hop,
             gen_lbl=True
         )
+
+    def add_to_ipv4_global_table(self, prefix):
+        _nlri = nlri.Ipv4(prefix)
+        src_ver_num = 1
+        peer = None
+        # set mandatory path attributes
+        nexthop = pathattr.NextHop("0.0.0.0")
+        origin = pathattr.Origin('igp')
+        aspath = pathattr.AsPath([[]])
+
+        pathattrs = OrderedDict()
+        pathattrs[origin.ATTR_NAME] = origin
+        pathattrs[aspath.ATTR_NAME] = aspath
+
+        new_path = Ipv4Path(peer, _nlri, src_ver_num,
+                            pattrs=pathattrs, nexthop=nexthop)
+        # add to global ipv4 table and propagates to neighbors
+        self.learn_path(new_path)
 
     def remove_from_vrf(self, route_dist, prefix, route_family):
         """Removes `prefix` from VRF identified by `route_dist`.

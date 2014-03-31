@@ -167,3 +167,15 @@ def get_vrf(route_dist, route_family=VRF_RF_IPV4):
 def get_vrfs_conf():
     vrfs_conf = CORE_MANAGER.vrfs_conf
     return vrfs_conf.settings
+
+#==============================================================================
+# network configuration related APIs
+#==============================================================================
+
+@register(name='network.add')
+def add_network(prefix):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.add_to_ipv4_global_table(prefix)
+    return True
+
+
