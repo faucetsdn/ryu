@@ -25,27 +25,8 @@ import ryu.lib.of_config.classes as ofc
 import eventlet
 import sys
 
-_OFCONFIG_RETRIES = 5
-_OFCONFIG_TIMEOUT = 280
-
 _ = type('', (apgw.StructuredMessage,), {})
 _.COMPONENT_NAME = 'ofwire'
-
-CONF = cfg.CONF
-CONF.register_cli_opts([
-    cfg.StrOpt('ofconfig-address', default='127.0.0.1',
-               help='of-config switch address'),
-    cfg.IntOpt('ofconfig-port', default=1830,
-               help='of-config switch port'),
-    cfg.StrOpt('ofconfig-user', default='linc',
-               help='of-config user name'),
-    cfg.StrOpt('ofconfig-password', default='linc',
-               help='of-config password'),
-    cfg.StrOpt('ofconfig-timeout', default=_OFCONFIG_TIMEOUT,
-               help='of-config timeout per attempt'),
-    cfg.StrOpt('ofconfig-retries', default=_OFCONFIG_RETRIES,
-               help='of-config retries'),
-])
 
 
 class RPCError(Exception):
@@ -94,13 +75,10 @@ class RpcOFPManager(app_manager.RyuApp):
         self.monitored_queues = {}
         self.pending_rpc_requests = []
         self._rpc_events = hub.Queue(128)
-        # per 30 secs by default
-        self.ofconfig = hub.Queue(128)
         # we assume that there is only one datapath.
         self.secure_channel_state = None
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._rpc_message_thread)
-        hub.spawn(self._ofconfig_thread)
         apgw.update_syslog_format()
 
     def _rpc_message_thread(self):
@@ -117,8 +95,6 @@ class RpcOFPManager(app_manager.RyuApp):
                         result = self._monitor_port(msgid, params)
                     elif target_method == "monitor_queue":
                         result = self._monitor_queue(msgid, params)
-                    elif target_method == "ofconfig":
-                        self._ofconfig(peer, msgid, params)
                     elif target_method == 'query_secure_channel_state':
                         result = self._query_secure_channel_state(msgid,
                                                                   params)
@@ -542,142 +518,6 @@ class RpcOFPManager(app_manager.RyuApp):
                             'ip': param_dict['ip'],
                             'port': param_dict['port']}))
         return {}
-
-    def _ofconfig_thread(self):
-        def _handle_edit(s, o, param_dict):
-            target = 'candidate'
-            if 'port' in param_dict:
-                port_id = param_dict.pop('port')
-                config = ofc.OFPortConfigurationType(**param_dict)
-                port_type = ofc.OFPortType(resource_id=port_id,
-                                           configuration=config)
-                r = ofc.OFCapableSwitchResourcesType(port=[port_type])
-                c = ofc.OFCapableSwitchType(id=o.id, resources=r)
-                s.edit_config(target, c)
-            else:
-                queue = param_dict.pop('queue')
-                if 'experimenter' in param_dict:
-                    new_val = param_dict['experimenter']
-                    param_dict['experimenter'] = [new_val]
-                prop = ofc.OFQueuePropertiesType(**param_dict)
-                queue_type = ofc.OFQueueType(resource_id=queue,
-                                             properties=prop)
-                r = ofc.OFCapableSwitchResourcesType(queue=[queue_type])
-                c = ofc.OFCapableSwitchType(id=o.id,
-                                            resources=r)
-                if 'experimenter' in param_dict:
-                    old_val = None
-                    for q in o.resources.queue:
-                        if q.resource_id == queue:
-                            old_val = q.properties.experimenter[0]
-                            break
-                    if old_val is None:
-                        raise RPCError('cannot find queue, %s' % (queue))
-                    xml = ofc.NETCONF_Config(capable_switch=c).to_xml()
-                    key = '<of111:experimenter>'
-                    sidx = xml.find(key)
-                    eidx = xml.find('</of111:experimenter>')
-                    xml = xml[:sidx] + \
-                        '<of111:experimenter operation=\"delete\">' + \
-                        str(old_val) + xml[eidx:]
-                    key = '/of111:experimenter>\n'
-                    sidx = xml.find(key) + len(key)
-                    xml = xml[:sidx + 1] + \
-                        '<of111:experimenter operation=\"replace\">' + \
-                        str(new_val) + '</of111:experimenter>\n' + \
-                        xml[sidx + 1:]
-                    s.raw_edit_config(target, xml, None)
-                else:
-                    s.edit_config(target, c)
-            try:
-                s.commit()
-            except Exception as e:
-                s.discard_changes()
-                raise RPCError(str(e))
-            return {}
-
-        def _handle_get(o):
-            result = {}
-            ports = []
-            for p in o.resources.port:
-                config = p.configuration
-                ports.append({'name': str(p.name),
-                              'number': int(p.number),
-                              'admin-state': str(config.admin_state),
-                              'oper-state': str(p.state.oper_state)})
-                result['OFPort'] = ports
-
-                queues = []
-                for q in o.resources.queue:
-                    p = q.properties
-                    queues.append({'id': str(q.id),
-                                   'resource_id': str(q.resource_id),
-                                   'max-rate': str(p.max_rate),
-                                   'experimenter': str(p.experimenter)})
-                    result['OFQueue'] = queues
-            return result
-
-        def _handle(param_dict):
-            # TODO: don't need to create a new conneciton every time.
-            # FIXME(KK): Nice place to put a context-manager?
-            s = None
-            attempt = 0
-            while attempt < CONF.ofconfig_retries:
-                try:
-                    s = cs.OFCapableSwitch(host=CONF.ofconfig_address,
-                                           port=CONF.ofconfig_port,
-                                           username=CONF.ofconfig_user,
-                                           password=CONF.ofconfig_password,
-                                           unknown_host_cb=lambda h, f: True,
-                                           timeout=CONF.ofconfig_timeout)
-                except Exception as e:
-                    self.logger.error(
-                        _({"event": "ofconfig failed to connect",
-                           "reason": "exception: {0!s}".format(e)}))
-                else:
-                    break
-                attempt += 1
-                backoff_time = attempt ** 2
-                hub.sleep(backoff_time)
-            if not s:
-                raise RPCError('failed to connect to ofs')
-
-            o = s.get()
-            if len(param_dict) == 0:
-                return _handle_get(o)
-            elif 'port' or 'queue' in param_dict:
-                return _handle_edit(s, o, param_dict)
-            elif 'port' and 'queue' in param_dict:
-                raise RPCError('only one resource at one shot')
-            else:
-                raise RPCError('ununkown resource edit %s' % (str(param_dict)))
-
-        while True:
-            error = None
-            result = None
-            (peer, msgid, params) = self.ofconfig.get()
-            param_dict = params[0]
-
-            try:
-                result = _handle(param_dict)
-            except RPCError as e:
-                error = str(e)
-            except Exception as e:
-                error = str(e)
-            try:
-                peer._endpoint.send_response(msgid, error=error, result=result)
-            except:
-                self.logger.info(_({'RPC send error %s, %s' %
-                                    (error, result)}))
-
-    def _ofconfig(self, peer, msgid, params):
-        try:
-            param_dict = params[0]
-        except:
-            raise RPCError('parameters are missing')
-
-        self.ofconfig.put((peer, msgid, params))
-        raise NoRPCResponse()
 
     def _monitor(self, mandatory_params, resource_dict, request_generator,
                  msgid, params):
