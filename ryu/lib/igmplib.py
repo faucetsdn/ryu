@@ -353,7 +353,7 @@ class IgmpQuerier(IgmpBase):
         res_pkt.add_protocol(res_igmp)
         res_pkt.serialize()
 
-        actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
+        flood = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
 
         while True:
             # reset reply status.
@@ -363,7 +363,7 @@ class IgmpQuerier(IgmpBase):
 
             # send a general query to the host that sent this message.
             self._do_packet_out(
-                self._datapath, res_pkt.data, send_port, actions)
+                self._datapath, res_pkt.data, send_port, flood)
             hub.sleep(igmp.QUERY_RESPONSE_INTERVAL)
 
             # QUERY timeout expired.
