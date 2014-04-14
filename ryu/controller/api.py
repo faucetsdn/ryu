@@ -289,8 +289,9 @@ class RpcOFPManager(app_manager.RyuApp):
         msg = ev.msg
         dp = msg.datapath
         for stat in msg.body:
-            if stat.queue_id in self.monitored_queues:
-                contexts, interval_ = self.monitored_queues[stat.queue_id]
+            key = str(stat.queue_id) + '-' + str(stat.port_no)
+            if key in self.monitored_queues:
+                contexts, interval_ = self.monitored_queues[key]
                 stats = stat.to_jsondict()['OFPQueueStats']
                 stats = {'queue_id': stat.queue_id,
                          'port_no': stat.port_no,
@@ -542,6 +543,10 @@ class RpcOFPManager(app_manager.RyuApp):
             else:
                 raise RPCError('unknown parameters, %s' % k)
 
+        if mandatory_params:
+            for k in mandatory_params:
+                resource_id = str(resource_id) + '-' + str(param_dict[k])
+
         if contexts is None and interval > 0:
             raise RPCError('"contexts" parameter is necessary')
         if contexts is not None and not isinstance(contexts, dict):
@@ -598,7 +603,8 @@ class RpcOFPManager(app_manager.RyuApp):
                     pass
             hub.sleep(interval)
 
-    def _queue_stats_generator(self, dp, queue_id, param_dict):
+    def _queue_stats_generator(self, dp, resource_id, param_dict):
+        queue_id = param_dict['queue_id']
         port_no = param_dict['port_no']
         return dp.ofproto_parser.OFPQueueStatsRequest(datapath=dp,
                                                       port_no=port_no,

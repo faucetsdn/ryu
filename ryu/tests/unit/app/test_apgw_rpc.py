@@ -122,7 +122,8 @@ class TestRpcOFPManager(unittest.TestCase):
                                       'contexts': contents,
                                       'interval': interval}])
         eq_(r, {})
-        eq_(m.monitored_queues[queue_id], (contents, interval))
+        eq_(m.monitored_queues[str(queue_id) + '-' + str(port_no)],
+            (contents, interval))
 
     def test_register_traceroute(self):
         m = api.RpcOFPManager(dpset=None)
