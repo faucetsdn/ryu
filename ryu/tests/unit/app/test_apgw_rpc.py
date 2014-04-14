@@ -489,10 +489,13 @@ class TestRpcOFPManager(unittest.TestCase):
         m = api.RpcOFPManager(dpset=dps)
         p = dps.get_ports(dpid)
         threads = []
-        m.monitored_queues[queue_id] = ({}, 1)
+        resource_id = str(queue_id) + '-' + str(port_no)
+        m.monitored_queues[resource_id] = ({}, 1)
         with hub.Timeout(2):
-            threads.append(hub.spawn(m._monitor_thread, queue_id,
-                                     m.monitored_queues, {'port_no': port_no},
+            threads.append(hub.spawn(m._monitor_thread, resource_id,
+                                     m.monitored_queues,
+                                     {'queue_id': queue_id,
+                                      'port_no': port_no},
                                      m._queue_stats_generator))
             hub.sleep(0.5)
             for t in threads:
