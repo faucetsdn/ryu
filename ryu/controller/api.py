@@ -459,8 +459,8 @@ class RpcOFPManager(app_manager.RyuApp):
 
         result = {'xid': ofmsg.xid}
         if ofmsg.msg_type is dp.ofproto.OFPT_FLOW_MOD:
+            key = self.format_key(ofmsg.match.to_jsondict())
             if contexts is not None:
-                key = self.format_key(ofmsg.match.to_jsondict())
                 if ofmsg.command is dp.ofproto.OFPFC_ADD:
                     if key in self.monitored_flows:
                         raise RPCError('the existing flow, %s' % (str(key)))
@@ -470,12 +470,16 @@ class RpcOFPManager(app_manager.RyuApp):
                               dp, ofmsg.table_id, ofmsg.match,
                               interval, key)
 
-                elif ofmsg.command in (dp.ofproto.OFPFC_DELETE,
-                                       dp.ofproto.OFPFC_DELETE_STRICT):
-                    try:
-                        del self.monitored_flows[key]
-                    except:
-                        raise RPCError('unknown key, %s' % (str(key)))
+            if ofmsg.command in (dp.ofproto.OFPFC_DELETE,
+                                 dp.ofproto.OFPFC_DELETE_STRICT):
+                try:
+                    del self.monitored_flows[key]
+                except:
+                    # some flows are added without contexts so we hit
+                    # the following with such. For just to be safe, we
+                    # log it for debugging.
+                    self.logger.debug(_({'tried to remove an unknown flow':
+                                             str(key)}))
         elif (dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION and
               ofmsg.msg_type is dp.ofproto.OFPT_METER_MOD):
             if contexts is not None:
