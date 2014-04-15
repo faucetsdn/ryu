@@ -779,6 +779,24 @@ class OfTester(app_manager.RyuApp):
                 break
 
     def _compare_flow(self, stats1, stats2):
+
+        def __reasm_match(match):
+            """ reassemble match_fields. """
+            match_fields = list()
+            for key, united_value in match.iteritems():
+                if isinstance(united_value, tuple):
+                    (value, mask) = united_value
+                    # look up oxm_fields.TypeDescr to get mask length.
+                    for ofb in ofproto_v1_3.oxm_types:
+                        if ofb.name == key:
+                            mbytes = ofb.type.from_user(mask)
+                            # when mask is all one bits, remove mask
+                            if mbytes == '\xff' * ofb.type.size:
+                                united_value = value
+                            break
+                match_fields.append((key, united_value))
+            return match_fields
+
         attr_list = ['cookie', 'priority', 'hard_timeout', 'idle_timeout',
                      'table_id', 'instructions', 'match']
         for attr in attr_list:
@@ -787,6 +805,9 @@ class OfTester(app_manager.RyuApp):
             if attr == 'instructions':
                 value1 = sorted(value1)
                 value2 = sorted(value2)
+            elif attr == 'match':
+                value1 = __reasm_match(value1)
+                value2 = __reasm_match(value2)
             if str(value1) != str(value2):
                 flow_stats = []
                 for attr in attr_list:
