@@ -810,8 +810,8 @@ class OfTester(app_manager.RyuApp):
                 value1 = sorted(value1)
                 value2 = sorted(value2)
             elif attr == 'match':
-                value1 = __reasm_match(value1)
-                value2 = __reasm_match(value2)
+                value1 = sorted(__reasm_match(value1))
+                value2 = sorted(__reasm_match(value2))
             if str(value1) != str(value2):
                 flow_stats = []
                 for attr in attr_list:
