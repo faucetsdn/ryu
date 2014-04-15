@@ -793,8 +793,12 @@ class OfTester(app_manager.RyuApp):
                             # when mask is all one bits, remove mask
                             if mbytes == '\xff' * ofb.type.size:
                                 united_value = value
+                            # when mask is all zero bits, remove field.
+                            elif mbytes == '\x00' * ofb.type.size:
+                                united_value = None
                             break
-                match_fields.append((key, united_value))
+                if united_value is not None:
+                    match_fields.append((key, united_value))
             return match_fields
 
         attr_list = ['cookie', 'priority', 'hard_timeout', 'idle_timeout',
