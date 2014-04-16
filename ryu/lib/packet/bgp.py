@@ -25,22 +25,68 @@ RFC 4271 BGP-4
 import abc
 import six
 import struct
+import copy
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
+from ryu.lib.packet import afi
+from ryu.lib.packet import safi
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
-
-import safi
-import afi
-
 
 BGP_MSG_OPEN = 1
 BGP_MSG_UPDATE = 2
 BGP_MSG_NOTIFICATION = 3
 BGP_MSG_KEEPALIVE = 4
 BGP_MSG_ROUTE_REFRESH = 5  # RFC 2918
+
+_VERSION = 4
+_MARKER = 16 * '\xff'
+
+BGP_OPT_CAPABILITY = 2  # RFC 5492
+
+BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
+BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
+BGP_CAP_CARRYING_LABEL_INFO = 4  # RFC 3107
+BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
+BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
+# draft-ietf-idr-bgp-enhanced-route-refresh-05
+
+BGP_ATTR_FLAG_OPTIONAL = 1 << 7
+BGP_ATTR_FLAG_TRANSITIVE = 1 << 6
+BGP_ATTR_FLAG_PARTIAL = 1 << 5
+BGP_ATTR_FLAG_EXTENDED_LENGTH = 1 << 4
+
+BGP_ATTR_TYPE_ORIGIN = 1  # 0,1,2 (1 byte)
+BGP_ATTR_TYPE_AS_PATH = 2  # a list of AS_SET/AS_SEQUENCE  eg. {1 2 3} 4 5
+BGP_ATTR_TYPE_NEXT_HOP = 3  # an IPv4 address
+BGP_ATTR_TYPE_MULTI_EXIT_DISC = 4  # uint32 metric
+BGP_ATTR_TYPE_LOCAL_PREF = 5  # uint32
+BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
+BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
+BGP_ATTR_TYPE_COMMUNITIES = 8  # RFC 1997
+BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
+BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
+BGP_ATTR_TYPE_EXTENDED_COMMUNITIES = 16  # RFC 4360
+BGP_ATTR_TYPE_AS4_PATH = 17  # RFC 4893
+BGP_ATTR_TYPE_AS4_AGGREGATOR = 18  # RFC 4893
+
+BGP_ATTR_ORIGIN_IGP = 0x00
+BGP_ATTR_ORIGIN_EGP = 0x01
+BGP_ATTR_ORIGIN_INCOMPLETE = 0x02
+
+AS_TRANS = 23456  # RFC 4893
+
+# Well known commmunities  (RFC 1997)
+BGP_COMMUNITY_NO_EXPORT = 0xffffff01
+BGP_COMMUNITY_NO_ADVERTISE = 0xffffff02
+BGP_COMMUNITY_NO_EXPORT_SUBCONFED = 0xffffff03
+
+# RFC 4360
+# The low-order octet of Type field (subtype)
+BGP_EXTENDED_COMMUNITY_ROUTE_TARGET = 0x02
+BGP_EXTENDED_COMMUNITY_ROUTE_ORIGIN = 0x03
 
 # NOTIFICATION Error Code and SubCode
 # Note: 0 is a valid SubCode.  (Unspecific)
@@ -63,7 +109,7 @@ BGP_ERROR_SUB_UNSUPPORTED_VERSION_NUMBER = 1  # Data: 2 octet version number
 BGP_ERROR_SUB_BAD_PEER_AS = 2
 BGP_ERROR_SUB_BAD_BGP_IDENTIFIER = 3
 BGP_ERROR_SUB_UNSUPPORTED_OPTIONAL_PARAMETER = 4
-# 5 is deprecated RFC 1771 Authentication Failure
+BGP_ERROR_SUB_AUTHENTICATION_FAILURE = 5  # deprecated RFC 1771
 BGP_ERROR_SUB_UNACCEPTABLE_HOLD_TIME = 6
 
 # NOTIFICATION Error Subcode for BGP_ERROR_UPDATE_MESSAGE_ERROR
@@ -73,11 +119,17 @@ BGP_ERROR_SUB_MISSING_WELL_KNOWN_ATTRIBUTE = 3  # Data: ditto
 BGP_ERROR_SUB_ATTRIBUTE_FLAGS_ERROR = 4  # Data: the attr (type, len, value)
 BGP_ERROR_SUB_ATTRIBUTE_LENGTH_ERROR = 5  # Data: ditto
 BGP_ERROR_SUB_INVALID_ORIGIN_ATTRIBUTE = 6  # Data: ditto
-# 7 is deprecated RFC 1771 AS Routing Loop
+BGP_ERROR_SUB_ROUTING_LOOP = 7  # deprecated RFC 1771 AS Routing Loop
 BGP_ERROR_SUB_INVALID_NEXT_HOP_ATTRIBUTE = 8  # Data: ditto
 BGP_ERROR_SUB_OPTIONAL_ATTRIBUTE_ERROR = 9  # Data: ditto
 BGP_ERROR_SUB_INVALID_NETWORK_FIELD = 10
 BGP_ERROR_SUB_MALFORMED_AS_PATH = 11
+
+# NOTIFICATION Error Subcode for BGP_ERROR_HOLD_TIMER_EXPIRED
+BGP_ERROR_SUB_HOLD_TIMER_EXPIRED = 1
+
+# NOTIFICATION Error Subcode for BGP_ERROR_FSM_ERROR
+BGP_ERROR_SUB_FSM_ERROR = 1
 
 # NOTIFICATION Error Subcode for BGP_ERROR_CEASE  (RFC 4486)
 BGP_ERROR_SUB_MAXIMUM_NUMBER_OF_PREFIXES_REACHED = 1  # Data: optional
@@ -89,48 +141,369 @@ BGP_ERROR_SUB_OTHER_CONFIGURATION_CHANGE = 6
 BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION = 7
 BGP_ERROR_SUB_OUT_OF_RESOURCES = 8
 
-_VERSION = 4
-_MARKER = 16 * '\xff'
 
-BGP_OPT_CAPABILITY = 2  # RFC 5492
+class BgpExc(Exception):
+    """Base bgp exception."""
 
-BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
-BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
-BGP_CAP_CARRYING_LABEL_INFO = 4  # RFC 3107
-BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
-BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
-                               # draft-ietf-idr-bgp-enhanced-route-refresh-05
+    CODE = 0
+    """BGP error code."""
 
-BGP_ATTR_FLAG_OPTIONAL = 1 << 7
-BGP_ATTR_FLAG_TRANSITIVE = 1 << 6
-BGP_ATTR_FLAG_PARTIAL = 1 << 5
-BGP_ATTR_FLAG_EXTENDED_LENGTH = 1 << 4
+    SUB_CODE = 0
+    """BGP error sub-code."""
 
-BGP_ATTR_TYPE_ORIGIN = 1  # 0,1,2 (1 byte)
-BGP_ATTR_TYPE_AS_PATH = 2  # a list of AS_SET/AS_SEQUENCE  eg. {1 2 3} 4 5
-BGP_ATTR_TYPE_NEXT_HOP = 3  # an IPv4 address
-BGP_ATTR_TYPE_MULTI_EXIT_DISC = 4  # uint32 metric
-BGP_ATTR_TYPE_LOCAL_PREF = 5  # uint32
-BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
-BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
-BGP_ATTR_TYPE_COMMUNITIES = 8  # RFC 1997
-BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
-BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
-BGP_ATTR_TYPE_EXTENDED_COMMUNITIES = 16  # RFC 4360
-BGP_ATTR_TYPE_AS4_PATH = 17  # RFC 4893
-BGP_ATTR_TYPE_AS4_AGGREGATOR = 18  # RFC 4893
+    SEND_ERROR = True
+    """Flag if set indicates Notification message should be sent to peer."""
 
-AS_TRANS = 23456  # RFC 4893
+    def __init__(self, data=''):
+        self.data = data
 
-# Well known commmunities  (RFC 1997)
-BGP_COMMUNITY_NO_EXPORT = 0xffffff01
-BGP_COMMUNITY_NO_ADVERTISE = 0xffffff02
-BGP_COMMUNITY_NO_EXPORT_SUBCONFED = 0xffffff03
+    def __str__(self):
+        return '<%s %r>' % (self.__class__.__name__, self.data)
 
-# RFC 4360
-# The low-order octet of Type field (subtype)
-BGP_EXTENDED_COMMUNITY_ROUTE_TARGET = 0x02
-BGP_EXTENDED_COMMUNITY_ROUTE_ORIGIN = 0x03
+
+class BadNotification(BgpExc):
+    SEND_ERROR = False
+
+# ============================================================================
+# Message Header Errors
+# ============================================================================
+
+
+class NotSync(BgpExc):
+    CODE = BGP_ERROR_MESSAGE_HEADER_ERROR
+    SUB_CODE = BGP_ERROR_SUB_CONNECTION_NOT_SYNCHRONIZED
+
+
+class BadLen(BgpExc):
+    CODE = BGP_ERROR_MESSAGE_HEADER_ERROR
+    SUB_CODE = BGP_ERROR_SUB_BAD_MESSAGE_LENGTH
+
+    def __init__(self, msg_type_code, message_length):
+        self.msg_type_code = msg_type_code
+        self.length = message_length
+        self.data = struct.pack('!H', self.length)
+
+    def __str__(self):
+        return '<BadLen %d msgtype=%d>' % (self.length, self.msg_type_code)
+
+
+class BadMsg(BgpExc):
+    """Error to indicate un-recognized message type.
+
+    RFC says: If the Type field of the message header is not recognized, then
+    the Error Subcode MUST be set to Bad Message Type.  The Data field MUST
+    contain the erroneous Type field.
+    """
+    CODE = BGP_ERROR_MESSAGE_HEADER_ERROR
+    SUB_CODE = BGP_ERROR_SUB_BAD_MESSAGE_TYPE
+
+    def __init__(self, msg_type):
+        self.msg_type = msg_type
+        self.data = struct.pack('B', msg_type)
+
+    def __str__(self):
+        return '<BadMsg %d>' % (self.msg,)
+
+# ============================================================================
+# OPEN Message Errors
+# ============================================================================
+
+
+class MalformedOptionalParam(BgpExc):
+    """If recognized optional parameters are malformed.
+
+    RFC says: If one of the Optional Parameters in the OPEN message is
+    recognized, but is malformed, then the Error Subcode MUST be set to 0
+    (Unspecific).
+    """
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = 0
+
+
+class UnsupportedVersion(BgpExc):
+    """Error to indicate unsupport bgp version number.
+
+    RFC says: If the version number in the Version field of the received OPEN
+    message is not supported, then the Error Subcode MUST be set to Unsupported
+    Version Number.  The Data field is a 2-octet unsigned integer, which
+    indicates the largest, locally-supported version number less than the
+    version the remote BGP peer bid (as indicated in the received OPEN
+    message), or if the smallest, locally-supported version number is greater
+    than the version the remote BGP peer bid, then the smallest, locally-
+    supported version number.
+    """
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_UNSUPPORTED_VERSION_NUMBER
+
+    def __init__(self, locally_support_version):
+        self.data = struct.pack('H', locally_support_version)
+
+
+class BadPeerAs(BgpExc):
+    """Error to indicate open message has incorrect AS number.
+
+    RFC says: If the Autonomous System field of the OPEN message is
+    unacceptable, then the Error Subcode MUST be set to Bad Peer AS.  The
+    determination of acceptable Autonomous System numbers is configure peer AS.
+    """
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_BAD_PEER_AS
+
+
+class BadBgpId(BgpExc):
+    """Error to indicate incorrect BGP Identifier.
+
+    RFC says: If the BGP Identifier field of the OPEN message is syntactically
+    incorrect, then the Error Subcode MUST be set to Bad BGP Identifier.
+    Syntactic correctness means that the BGP Identifier field represents a
+    valid unicast IP host address.
+    """
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_BAD_BGP_IDENTIFIER
+
+
+class UnsupportedOptParam(BgpExc):
+    """Error to indicate unsupported optional parameters.
+
+    RFC says: If one of the Optional Parameters in the OPEN message is not
+    recognized, then the Error Subcode MUST be set to Unsupported Optional
+    Parameters.
+    """
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_UNSUPPORTED_OPTIONAL_PARAMETER
+
+
+class AuthFailure(BgpExc):
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_AUTHENTICATION_FAILURE
+
+
+class UnacceptableHoldTime(BgpExc):
+    """Error to indicate Unacceptable Hold Time in open message.
+
+    RFC says: If the Hold Time field of the OPEN message is unacceptable, then
+    the Error Subcode MUST be set to Unacceptable Hold Time.
+    """
+    CODE = BGP_ERROR_OPEN_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_UNACCEPTABLE_HOLD_TIME
+
+# ============================================================================
+# UPDATE message related errors
+# ============================================================================
+
+
+class MalformedAttrList(BgpExc):
+    """Error to indicate UPDATE message is malformed.
+
+    RFC says: Error checking of an UPDATE message begins by examining the path
+    attributes.  If the Withdrawn Routes Length or Total Attribute Length is
+    too large (i.e., if Withdrawn Routes Length + Total Attribute Length + 23
+    exceeds the message Length), then the Error Subcode MUST be set to
+    Malformed Attribute List.
+    """
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_MALFORMED_ATTRIBUTE_LIST
+
+
+class UnRegWellKnowAttr(BgpExc):
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_UNRECOGNIZED_WELL_KNOWN_ATTRIBUTE
+
+
+class MissingWellKnown(BgpExc):
+    """Error to indicate missing well-known attribute.
+
+    RFC says: If any of the well-known mandatory attributes are not present,
+    then the Error Subcode MUST be set to Missing Well-known Attribute.  The
+    Data field MUST contain the Attribute Type Code of the missing, well-known
+    attribute.
+    """
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_MISSING_WELL_KNOWN_ATTRIBUTE
+
+    def __init__(self, pattr_type_code):
+        self.pattr_type_code = pattr_type_code
+        self.data = struct.pack('B', pattr_type_code)
+
+
+class AttrFlagError(BgpExc):
+    """Error to indicate recognized path attributes have incorrect flags.
+
+    RFC says: If any recognized attribute has Attribute Flags that conflict
+    with the Attribute Type Code, then the Error Subcode MUST be set to
+    Attribute Flags Error.  The Data field MUST contain the erroneous attribute
+    (type, length, and value).
+    """
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_ATTRIBUTE_FLAGS_ERROR
+
+
+class AttrLenError(BgpExc):
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_ATTRIBUTE_LENGTH_ERROR
+
+
+class InvalidOriginError(BgpExc):
+    """Error indicates undefined Origin attribute value.
+
+    RFC says: If the ORIGIN attribute has an undefined value, then the Error
+    Sub- code MUST be set to Invalid Origin Attribute.  The Data field MUST
+    contain the unrecognized attribute (type, length, and value).
+    """
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_INVALID_ORIGIN_ATTRIBUTE
+
+
+class RoutingLoop(BgpExc):
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_ROUTING_LOOP
+
+
+class InvalidNextHop(BgpExc):
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_INVALID_NEXT_HOP_ATTRIBUTE
+
+
+class OptAttrError(BgpExc):
+    """Error indicates Optional Attribute is malformed.
+
+    RFC says: If an optional attribute is recognized, then the value of this
+    attribute MUST be checked.  If an error is detected, the attribute MUST be
+    discarded, and the Error Subcode MUST be set to Optional Attribute Error.
+    The Data field MUST contain the attribute (type, length, and value).
+    """
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_OPTIONAL_ATTRIBUTE_ERROR
+
+
+class InvalidNetworkField(BgpExc):
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_INVALID_NETWORK_FIELD
+
+
+class MalformedAsPath(BgpExc):
+    """Error to indicate if AP_PATH attribute is syntactically incorrect.
+
+    RFC says: The AS_PATH attribute is checked for syntactic correctness.  If
+    the path is syntactically incorrect, then the Error Subcode MUST be set to
+    Malformed AS_PATH.
+    """
+    CODE = BGP_ERROR_UPDATE_MESSAGE_ERROR
+    SUB_CODE = BGP_ERROR_SUB_MALFORMED_AS_PATH
+
+
+# ============================================================================
+# Hold Timer Expired
+# ============================================================================
+
+
+class HoldTimerExpired(BgpExc):
+    """Error to indicate Hold Timer expired.
+
+    RFC says: If a system does not receive successive KEEPALIVE, UPDATE, and/or
+    NOTIFICATION messages within the period specified in the Hold Time field of
+    the OPEN message, then the NOTIFICATION message with the Hold Timer Expired
+    Error Code is sent and the BGP connection is closed.
+    """
+    CODE = BGP_ERROR_HOLD_TIMER_EXPIRED
+    SUB_CODE = BGP_ERROR_SUB_HOLD_TIMER_EXPIRED
+
+# ============================================================================
+# Finite State Machine Error
+# ============================================================================
+
+
+class FiniteStateMachineError(BgpExc):
+    """Error to indicate any Finite State Machine Error.
+
+    RFC says: Any error detected by the BGP Finite State Machine (e.g., receipt
+    of an unexpected event) is indicated by sending the NOTIFICATION message
+    with the Error Code Finite State Machine Error.
+    """
+    CODE = BGP_ERROR_FSM_ERROR
+    SUB_CODE = BGP_ERROR_SUB_FSM_ERROR
+
+
+# ============================================================================
+# Cease Errors
+# ============================================================================
+
+class MaxPrefixReached(BgpExc):
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_MAXIMUM_NUMBER_OF_PREFIXES_REACHED
+
+
+class AdminShutdown(BgpExc):
+    """Error to indicate Administrative shutdown.
+
+    RFC says: If a BGP speaker decides to administratively shut down its
+    peering with a neighbor, then the speaker SHOULD send a NOTIFICATION
+    message  with the Error Code Cease and the Error Subcode 'Administrative
+    Shutdown'.
+    """
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_ADMINISTRATIVE_SHUTDOWN
+
+
+class PeerDeConfig(BgpExc):
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_PEER_DECONFIGURED
+
+
+class AdminReset(BgpExc):
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_ADMINISTRATIVE_RESET
+
+
+class ConnRejected(BgpExc):
+    """Error to indicate Connection Rejected.
+
+    RFC says: If a BGP speaker decides to disallow a BGP connection (e.g., the
+    peer is not configured locally) after the speaker accepts a transport
+    protocol connection, then the BGP speaker SHOULD send a NOTIFICATION
+    message with the Error Code Cease and the Error Subcode "Connection
+    Rejected".
+    """
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_CONNECTION_RESET
+
+
+class OtherConfChange(BgpExc):
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_OTHER_CONFIGURATION_CHANGE
+
+
+class CollisionResolution(BgpExc):
+    """Error to indicate Connection Collision Resolution.
+
+    RFC says: If a BGP speaker decides to send a NOTIFICATION message with the
+    Error Code Cease as a result of the collision resolution procedure (as
+    described in [BGP-4]), then the subcode SHOULD be set to "Connection
+    Collision Resolution".
+    """
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
+
+
+class OutOfResource(BgpExc):
+    CODE = BGP_ERROR_CEASE
+    SUB_CODE = BGP_ERROR_SUB_OUT_OF_RESOURCES
+
+
+class RouteFamily(StringifyMixin):
+    def __init__(self, afi, safi):
+        self.afi = afi
+        self.safi = safi
+
+    def __cmp__(self, other):
+        return cmp((other.afi, other.safi), (self.afi, self.safi))
+
+# Route Family Singleton
+RF_IPv4_UC = RouteFamily(afi.IP, safi.UNICAST)
+RF_IPv6_UC = RouteFamily(afi.IP6, safi.UNICAST)
+RF_IPv4_VPN = RouteFamily(afi.IP, safi.MPLS_VPN)
+RF_IPv6_VPN = RouteFamily(afi.IP6, safi.MPLS_VPN)
+RF_RTC_UC = RouteFamily(afi.IP, safi.ROUTE_TARGET_CONSTRTAINS)
 
 
 def pad(bin, len_):
@@ -288,6 +661,23 @@ class _IPAddrPrefix(_AddrPrefix):
         return (addrconv.ipv4.bin_to_text(pad(addr, 4)),)
 
 
+class _IP6AddrPrefix(_AddrPrefix):
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
+
+    @staticmethod
+    def _prefix_to_bin(addr):
+        (addr,) = addr
+        return addrconv.ipv6.text_to_bin(addr)
+
+    @staticmethod
+    def _prefix_from_bin(addr):
+        return (addrconv.ipv6.bin_to_text(pad(addr, 16)),)
+
+
 class _VPNAddrPrefix(_AddrPrefix):
     _RD_PACK_STR = '!Q'
 
@@ -321,18 +711,125 @@ class _VPNAddrPrefix(_AddrPrefix):
         return (rd,) + super(_VPNAddrPrefix, cls)._prefix_from_bin(binrest)
 
 
+class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
+    ROUTE_FAMILY = RF_IPv4_UC
+
+    @property
+    def prefix(self):
+        return self.addr
+
+
+class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
+    ROUTE_FAMILY = RF_IPv6_UC
+
+    @property
+    def prefix(self):
+        return self.addr
+
+
 class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
                               _IPAddrPrefix):
-    pass
+    ROUTE_FAMILY = RF_IPv4_VPN
 
 
-class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
-    pass
+class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
+                               _IP6AddrPrefix):
+    ROUTE_FAMILY = RF_IPv6_VPN
 
+
+class RouteTargetMembershipNLRI(StringifyMixin):
+    """Route Target Membership NLRI.
+
+    Route Target membership NLRI is advertised in BGP UPDATE messages using
+    the MP_REACH_NLRI and MP_UNREACH_NLRI attributes.
+    """
+
+    ROUTE_FAMILY = RF_RTC_UC
+    DEFAULT_AS = '0:0'
+    DEFAULT_RT = '0:0'
+
+    def __init__(self, origin_as, route_target):
+        # If given is not default_as and default_rt
+        if not (origin_as is RtNlri.DEFAULT_AS and
+                route_target is RtNlri.DEFAULT_RT):
+            # We validate them
+            if (not is_valid_old_asn(origin_as) or
+                    not is_valid_ext_comm_attr(route_target)):
+                raise ValueError('Invalid params.')
+        self.origin_as = origin_as
+        self.route_target = route_target
+
+    @property
+    def formatted_nlri_str(self):
+        return "%s:%s" % (self.origin_as, self.route_target)
+
+    def is_default_rtnlri(self):
+        if (self._origin_as is RtNlri.DEFAULT_AS and
+                self._route_target is RtNlri.DEFAULT_RT):
+            return True
+        return False
+
+    def __cmp__(self, other):
+        return cmp(
+            (self._origin_as, self._route_target),
+            (other.origin_as, other.route_target),
+        )
+
+    @classmethod
+    def parser(cls, buf):
+        idx = 0
+
+        # Extract origin AS.
+        origin_as, = struct.unpack_from('!I', buf, idx)
+        idx += 4
+
+        # Extract route target.
+        route_target = ''
+        etype, esubtype, payload = struct.unpack_from('BB6s', buf, idx)
+        # RFC says: The value of the high-order octet of the Type field for the
+        # Route Target Community can be 0x00, 0x01, or 0x02.  The value of the
+        # low-order octet of the Type field for this community is 0x02.
+        # TODO(PH): Remove this exception when it breaks something Here we make
+        # exception as Routem packs lower-order octet as 0x00
+        if etype in (0, 2) and esubtype in (0, 2):
+            # If we have route target community in AS number format.
+            asnum, i = struct.unpack('!HI', payload)
+            route_target = ('%s:%s' % (asnum, i))
+        elif etype == 1 and esubtype == 2:
+            # If we have route target community in IP address format.
+            ip_addr, i = struct.unpack('!4sH', payload)
+            ip_addr = socket.inet_ntoa(ip_addr)
+            route_target = ('%s:%s' % (ip_addr, i))
+        elif etype == 0 and esubtype == 1:
+            # TODO(PH): Parsing of RtNlri 1:1:100:1
+            asnum, i = struct.unpack('!HI', payload)
+            route_target = ('%s:%s' % (asnum, i))
+
+        return cls(origin_as, route_target)
+
+    def serialize(self):
+        rt_nlri = ''
+        if not self.is_default_rtnlri():
+            rt_nlri += struct.pack('!I', self.origin_as)
+            # Encode route target
+            first, second = self.route_target.split(':')
+            if '.' in first:
+                ip_addr = socket.inet_aton(first)
+                rt_nlri += struct.pack('!BB4sH', 1, 2, ip_addr, int(second))
+            else:
+                rt_nlri += struct.pack('!BBHI', 0, 2, int(first), int(second))
+
+        # RT Nlri is 12 octets
+        return struct.pack('B', (8 * 12)) + rt_nlri
+
+_addr_class_key = lambda x: (x.afi, x.safi)
 
 _ADDR_CLASSES = {
-    (afi.IP, safi.UNICAST): IPAddrPrefix,
-    (afi.IP, safi.MPLS_VPN): LabelledVPNIPAddrPrefix,
+    _addr_class_key(RF_IPv4_UC): IPAddrPrefix,
+    _addr_class_key(RF_IPv6_UC): IP6AddrPrefix,
+    _addr_class_key(RF_IPv4_VPN): LabelledVPNIPAddrPrefix,
+    _addr_class_key(RF_IPv6_VPN): LabelledVPNIP6AddrPrefix,
+    _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
 }
 
 
@@ -417,7 +914,7 @@ class _OptParam(StringifyMixin, _TypeDisp, _Value):
             type_ = self._rev_lookup_type(self.__class__)
         self.type = type_
         self.length = length
-        if not value is None:
+        if value is not None:
             self.value = value
 
     @classmethod
@@ -463,9 +960,9 @@ class _OptParamCapability(_OptParam, _TypeDisp):
         if cap_code is None:
             cap_code = self._rev_lookup_type(self.__class__)
         self.cap_code = cap_code
-        if not cap_value is None:
+        if cap_value is not None:
             self.cap_value = cap_value
-        if not cap_length is None:
+        if cap_length is not None:
             self.cap_length = cap_length
 
     @classmethod
@@ -513,6 +1010,11 @@ class BGPOptParamCapabilityUnknown(_OptParamCapability):
 
 @_OptParamCapability.register_type(BGP_CAP_ROUTE_REFRESH)
 class BGPOptParamCapabilityRouteRefresh(_OptParamEmptyCapability):
+    pass
+
+
+@_OptParamCapability.register_type(BGP_CAP_ENHANCED_ROUTE_REFRESH)
+class BGPOptParamCapabilityEnhancedRouteRefresh(_OptParamEmptyCapability):
     pass
 
 
@@ -586,7 +1088,7 @@ class _PathAttribute(StringifyMixin, _TypeDisp, _Value):
         self.flags = flags
         self.type = type_
         self.length = length
-        if not value is None:
+        if value is not None:
             self.value = value
 
     @classmethod
@@ -607,7 +1109,7 @@ class _PathAttribute(StringifyMixin, _TypeDisp, _Value):
 
     def serialize(self):
         # fixup
-        if not self._ATTR_FLAGS is None:
+        if self._ATTR_FLAGS is not None:
             self.flags = self.flags \
                 & ~(BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE) \
                 | self._ATTR_FLAGS
@@ -654,6 +1156,41 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
     _SEG_HDR_PACK_STR = '!BB'
     _AS_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
+
+    @property
+    def path_seg_list(self):
+        return copy.deepcopy(self.value)
+
+    def get_as_path_len(self):
+        count = 0
+        for seg in self.value:
+            if isinstance(seg, list):
+                # Segment type 2 stored in list and all AS counted.
+                count += len(seg)
+            else:
+                # Segment type 1 stored in set and count as one.
+                count += 1
+
+        return count
+
+    def has_local_as(self, local_as):
+        """Check if *local_as* is already present on path list."""
+        for as_path_seg in self.value:
+            for as_num in as_path_seg:
+                if as_num == local_as:
+                    return True
+        return False
+
+    def has_matching_leftmost(self, remote_as):
+        """Check if leftmost AS matches *remote_as*."""
+        if not self.value or not remote_as:
+            return False
+
+        leftmost_seg = self.path_seg_list[0]
+        if leftmost_seg and leftmost_seg[0] == remote_as:
+            return True
+
+        return False
 
     @classmethod
     def parse_value(cls, buf):
@@ -808,6 +1345,12 @@ class BGPPathAttributeCommunities(_PathAttribute):
     _VALUE_PACK_STR = '!I'
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
 
+    # String constants of well-known-communities
+    NO_EXPORT = int('0xFFFFFF01', 16)
+    NO_ADVERTISE = int('0xFFFFFF02', 16)
+    NO_EXPORT_SUBCONFED = int('0xFFFFFF03', 16)
+    WELL_KNOW_COMMUNITIES = (NO_EXPORT, NO_ADVERTISE, NO_EXPORT_SUBCONFED)
+
     def __init__(self, communities,
                  flags=0, type_=None, length=None):
         super(BGPPathAttributeCommunities, self).__init__(flags=flags,
@@ -835,6 +1378,36 @@ class BGPPathAttributeCommunities(_PathAttribute):
             msg_pack_into(self._VALUE_PACK_STR, bincomm, 0, comm)
             buf += bincomm
         return buf
+
+    @staticmethod
+    def is_no_export(comm_attr):
+        """Returns True if given value matches well-known community NO_EXPORT
+         attribute value.
+         """
+        return comm_attr == Community.NO_EXPORT
+
+    @staticmethod
+    def is_no_advertise(comm_attr):
+        """Returns True if given value matches well-known community
+        NO_ADVERTISE attribute value.
+        """
+        return comm_attr == Community.NO_ADVERTISE
+
+    @staticmethod
+    def is_no_export_subconfed(comm_attr):
+        """Returns True if given value matches well-known community
+         NO_EXPORT_SUBCONFED attribute value.
+         """
+        return comm_attr == Community.NO_EXPORT_SUBCONFED
+
+    def has_comm_attr(self, attr):
+        """Returns True if given community attribute is present."""
+
+        for comm_attr in self.communities:
+            if comm_attr == attr:
+                return True
+
+        return False
 
 
 # Extended Communities
@@ -1292,6 +1865,8 @@ class BGPUpdate(BGPMessage):
     ========================== ===============================================
     """
 
+    _MIN_LEN = BGPMessage._HDR_LEN
+
     def __init__(self, type_=BGP_MSG_UPDATE,
                  withdrawn_routes_len=None,
                  withdrawn_routes=[],
@@ -1304,7 +1879,17 @@ class BGPUpdate(BGPMessage):
         self.withdrawn_routes = withdrawn_routes
         self.total_path_attribute_len = total_path_attribute_len
         self.path_attributes = path_attributes
+        self._pathattr_map = {}
+        for attr in path_attributes:
+            self._pathattr_map[attr.type] = attr
         self.nlri = nlri
+
+    @property
+    def pathattr_map(self):
+        return self._pathattr_map
+
+    def get_path_attr(self, attr_name):
+        return self._pathattr_map.get(attr_name)
 
     @classmethod
     def parser(cls, buf):
@@ -1422,6 +2007,41 @@ class BGPNotification(BGPMessage):
     _PACK_STR = '!BB'
     _MIN_LEN = BGPMessage._HDR_LEN + struct.calcsize(_PACK_STR)
 
+    _REASONS = {
+        (1, 1): 'Message Header Error: not synchronised',
+        (1, 2): 'Message Header Error: bad message len',
+        (1, 3): 'Message Header Error: bad message type',
+        (2, 1): 'Open Message Error: unsupported version',
+        (2, 2): 'Open Message Error: bad peer AS',
+        (2, 3): 'Open Message Error: bad BGP identifier',
+        (2, 4): 'Open Message Error: unsupported optional param',
+        (2, 5): 'Open Message Error: authentication failure',
+        (2, 6): 'Open Message Error: unacceptable hold time',
+        (2, 7): 'Open Message Error: Unsupported Capability',
+        (2, 8): 'Open Message Error: Unassigned',
+        (3, 1): 'Update Message Error: malformed attribute list',
+        (3, 2): 'Update Message Error: unrecognized well-known attr',
+        (3, 3): 'Update Message Error: missing well-known attr',
+        (3, 4): 'Update Message Error: attribute flags error',
+        (3, 5): 'Update Message Error: attribute length error',
+        (3, 6): 'Update Message Error: invalid origin attr',
+        (3, 7): 'Update Message Error: as routing loop',
+        (3, 8): 'Update Message Error: invalid next hop attr',
+        (3, 9): 'Update Message Error: optional attribute error',
+        (3, 10): 'Update Message Error: invalid network field',
+        (3, 11): 'Update Message Error: malformed AS_PATH',
+        (4, 1): 'Hold Timer Expired',
+        (5, 1): 'Finite State Machine Error',
+        (6, 1): 'Cease: Maximum Number of Prefixes Reached',
+        (6, 2): 'Cease: Administrative Shutdown',
+        (6, 3): 'Cease: Peer De-configured',
+        (6, 4): 'Cease: Administrative Reset',
+        (6, 5): 'Cease: Connection Rejected',
+        (6, 6): 'Cease: Other Configuration Change',
+        (6, 7): 'Cease: Connection Collision Resolution',
+        (6, 8): 'Cease: Out of Resources',
+    }
+
     def __init__(self,
                  error_code,
                  error_subcode,
@@ -1449,6 +2069,10 @@ class BGPNotification(BGPMessage):
                                     self.error_subcode))
         msg += self.data
         return msg
+
+    @property
+    def reason(self):
+        return self._REASONS.get((self.error_code, self.error_subcode))
 
 
 @BGPMessage.register_type(BGP_MSG_ROUTE_REFRESH)
