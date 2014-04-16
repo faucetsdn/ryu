@@ -2687,7 +2687,7 @@ class OFPActionGroup(OFPAction):
     group_id         Group identifier
     ================ ======================================================
     """
-    def __init__(self, group_id, type_=None, len_=None):
+    def __init__(self, group_id=0, type_=None, len_=None):
         super(OFPActionGroup, self).__init__()
         self.group_id = group_id
 
@@ -3178,7 +3178,8 @@ class OFPActionExperimenter(OFPAction):
 
 
 class OFPBucket(StringifyMixin):
-    def __init__(self, weight, watch_port, watch_group, actions, len_=None):
+    def __init__(self, weight=0, watch_port=ofproto.OFPP_ANY,
+                 watch_group=ofproto.OFPG_ANY, actions=None, len_=None):
         super(OFPBucket, self).__init__()
         self.weight = weight
         self.watch_port = watch_port
@@ -3262,7 +3263,8 @@ class OFPGroupMod(MsgBase):
                                          ofp.OFPGT_SELECT, group_id, buckets)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, command, type_, group_id, buckets):
+    def __init__(self, datapath, command=ofproto.OFPGC_ADD,
+                 type_=ofproto.OFPGT_ALL, group_id=0, buckets=[]):
         super(OFPGroupMod, self).__init__(datapath)
         self.command = command
         self.type = type_
