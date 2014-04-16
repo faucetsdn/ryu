@@ -19,7 +19,7 @@
 
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_RTC_UC
+from ryu.lib.packet.bgp import RF_RTC_UC
 
 from ryu.services.protocols.bgp.info_base.base import Destination
 from ryu.services.protocols.bgp.info_base.base import NonVrfPathProcessingMixin

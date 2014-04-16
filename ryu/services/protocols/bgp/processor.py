@@ -18,12 +18,6 @@
 
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_RTC_UC
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import AsPath
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import LocalPref
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import Med
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import Origin
-
 from ryu.services.protocols.bgp.base import Activity
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGP_PROCESSOR_ERROR_CODE
@@ -31,6 +25,14 @@ from ryu.services.protocols.bgp.base import BGPSException
 from ryu.services.protocols.bgp.utils import circlist
 from ryu.services.protocols.bgp.utils.evtlet import EventletIOFactory
 
+from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_LOCAL_PREF
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_INCOMPLETE
 
 LOG = logging.getLogger('bgpspeaker.processor')
 
@@ -150,9 +152,9 @@ class BgpProcessor(Activity):
         # Wake-up processing thread if sleeping.
         self.dest_que_evt.set()
 
-#==============================================================================
+# =============================================================================
 # Best path computation related utilities.
-#==============================================================================
+# =============================================================================
 
 # Various reasons a path is chosen as best path.
 BPR_UNKNOWN = 'Unknown'
@@ -289,8 +291,8 @@ def _cmp_by_local_pref(path1, path2):
     # TODO(PH): Revisit this when BGPS has concept of policy to be applied to
     # in-bound NLRIs.
     # Default local-pref values is 100
-    lp1 = path1.get_pattr(LocalPref.ATTR_NAME)
-    lp2 = path2.get_pattr(LocalPref.ATTR_NAME)
+    lp1 = path1.get_pattr(BGP_ATTR_TYPE_LOCAL_PREF)
+    lp2 = path2.get_pattr(BGP_ATTR_TYPE_LOCAL_PREF)
     if not (lp1 and lp2):
         return None
 
@@ -335,8 +337,8 @@ def _cmp_by_aspath(path1, path2):
     Shortest as-path length is preferred. If both path have same lengths,
     we return None.
     """
-    as_path1 = path1.get_pattr(AsPath.ATTR_NAME)
-    as_path2 = path2.get_pattr(AsPath.ATTR_NAME)
+    as_path1 = path1.get_pattr(BGP_ATTR_TYPE_AS_PATH)
+    as_path2 = path2.get_pattr(BGP_ATTR_TYPE_AS_PATH)
     assert as_path1 and as_path2
     l1 = as_path1.get_as_path_len()
     l2 = as_path2.get_as_path_len()
@@ -356,18 +358,18 @@ def _cmp_by_origin(path1, path2):
     If both paths have same origin, we return None.
     """
     def get_origin_pref(origin):
-        if origin.value == Origin.IGP:
+        if origin.value == BGP_ATTR_ORIGIN_IGP:
             return 3
-        elif origin.value == Origin.EGP:
+        elif origin.value == BGP_ATTR_ORIGIN_EGP:
             return 2
-        elif origin.value == Origin.INCOMPLETE:
+        elif origin.value == BGP_ATTR_ORIGIN_INCOMPLETE:
             return 1
         else:
             LOG.error('Invalid origin value encountered %s.' % origin)
             return 0
 
-    origin1 = path1.get_pattr(Origin.ATTR_NAME)
-    origin2 = path2.get_pattr(Origin.ATTR_NAME)
+    origin1 = path1.get_pattr(BGP_ATTR_TYPE_ORIGIN)
+    origin2 = path2.get_pattr(BGP_ATTR_TYPE_ORIGIN)
     assert origin1 is not None and origin2 is not None
 
     # If both paths have same origins
@@ -394,7 +396,7 @@ def _cmp_by_med(path1, path2):
     RFC says lower MED is preferred over higher MED value.
     """
     def get_path_med(path):
-        med = path.get_pattr(Med.ATTR_NAME)
+        med = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
         if not med:
             return 0
         return med.value

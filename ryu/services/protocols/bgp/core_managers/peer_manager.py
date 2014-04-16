@@ -3,11 +3,15 @@ import logging
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp.model import OutgoingRoute
 from ryu.services.protocols.bgp.peer import Peer
-from ryu.services.protocols.bgp.protocols.bgp import pathattr
-from ryu.services.protocols.bgp.protocols.bgp import nlri
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv6_UC
+from ryu.lib.packet.bgp import RF_IPv4_VPN
+from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.services.protocols.bgp.utils.bgp \
     import clone_path_and_update_med_for_target_neighbor
-
 LOG = logging.getLogger('bgpspeaker.core_managers.peer_manager')
 
 
@@ -64,7 +68,7 @@ class PeerManager(object):
         non_rtc_peer_list = set()
         for peer in self._peers.itervalues():
             if (peer.in_established() and
-                    not peer.is_mpbgp_cap_valid(nlri.RF_RTC_UC)):
+                    not peer.is_mpbgp_cap_valid(RF_RTC_UC)):
                 non_rtc_peer_list.add(peer)
         return non_rtc_peer_list
 
@@ -115,8 +119,8 @@ class PeerManager(object):
                     # wasn't set at all now it could have changed and we may
                     # need to set new value there
                     p = sent_route.path
-                    if p.med_set_by_target_neighbor\
-                            or p.get_pattr(pathattr.Med.ATTR_NAME) is None:
+                    if p.med_set_by_target_neighbor or p.get_pattr(
+                            BGP_ATTR_TYPE_MULTI_EXIT_DISC) is None:
                         sent_route.path = \
                             clone_path_and_update_med_for_target_neighbor(
                                 sent_route.path, peer.med
@@ -131,7 +135,7 @@ class PeerManager(object):
 
         Skips making request to peer that have valid RTC capability.
         """
-        assert route_family != nlri.RF_RTC_UC
+        assert route_family != RF_RTC_UC
         for peer in self._peers.itervalues():
             # First check if peer is in established state
             if (peer.in_established and
@@ -139,7 +143,7 @@ class PeerManager(object):
                 # family
                     peer.is_mbgp_cap_valid(route_family) and
                 # Check if peer has valid capability for RTC
-                    not peer.is_mbgp_cap_valid(nlri.RF_RTC_UC)):
+                    not peer.is_mbgp_cap_valid(RF_RTC_UC)):
                 peer.request_route_refresh(route_family)
 
     def make_route_refresh_request(self, peer_ip, *route_families):
@@ -185,7 +189,7 @@ class PeerManager(object):
         match this setting.
         """
         # First check if for this peer mpbgp-rtc is valid.
-        if not peer.is_mbgp_cap_valid(nlri.RF_RTC_UC):
+        if not peer.is_mbgp_cap_valid(RF_RTC_UC):
             return
 
         neigh_conf = self._neighbors_conf.get_neighbor_conf(peer.ip_address)
@@ -209,7 +213,7 @@ class PeerManager(object):
                 peer.communicate_path(best_path)
 
         # Also communicate EOR as per RFC
-        peer.enque_end_of_rib(nlri.RF_RTC_UC)
+        peer.enque_end_of_rib(RF_RTC_UC)
 
     def comm_all_best_paths(self, peer):
         """Shares/communicates current best paths with this peers.
@@ -221,7 +225,7 @@ class PeerManager(object):
                   ' 1/132')
         # We will enqueue best path from all global destination.
         for route_family, table in self._table_manager.iter:
-            if route_family == nlri.RF_RTC_UC:
+            if route_family == RF_RTC_UC:
                 continue
             if peer.is_mbgp_cap_valid(route_family):
                 for dest in table.itervalues():
@@ -240,10 +244,10 @@ class PeerManager(object):
         # Filter based on standard community
         # If new best path has community attribute, it should be taken into
         # account when sending UPDATE to peers.
-        comm_attr = new_best_path.get_pattr(pathattr.Community.ATTR_NAME)
+        comm_attr = new_best_path.get_pattr(BGP_ATTR_TYPE_COMMUNITIES)
         if comm_attr:
             comm_attr_na = comm_attr.has_comm_attr(
-                pathattr.Community.NO_ADVERTISE
+                BGPPathAttributeCommunities.NO_ADVERTISE
             )
             # If we have NO_ADVERTISE attribute is present, we do not send
             # UPDATE to any peers
@@ -277,7 +281,7 @@ class PeerManager(object):
         if path_rts:
             # We add Default_RTC_NLRI to path RTs so that we can send it to
             # peers that have expressed interest in all paths
-            path_rts.append(nlri.RtNlri.DEFAULT_RT)
+            path_rts.append(RouteTargetMembershipNLRI.DEFAULT_RT)
             # All peers that do not have RTC capability qualify
             qualified_peers = set(self._get_non_rtc_peers())
             # Peers that have RTC capability and have common RT with the path
@@ -299,7 +303,7 @@ class PeerManager(object):
         for route_family in SUPPORTED_GLOBAL_RF:
             # Since we are dealing with peers that do not support RTC,
             # ignore this address family
-            if route_family == nlri.RF_RTC_UC:
+            if route_family == RF_RTC_UC:
                 continue
 
             self.req_rr_to_non_rtc_peers(route_family)

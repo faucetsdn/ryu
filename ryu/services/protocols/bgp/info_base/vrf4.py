@@ -21,10 +21,10 @@
 
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp.nlri import Ipv4
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_UC
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_VPN
-from ryu.services.protocols.bgp.protocols.bgp.nlri import Vpnv4
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv4_VPN
+from ryu.lib.packet.bgp import IPAddrPrefix
+from ryu.lib.packet.bgp import LabelledVPNIPAddrPrefix
 
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vrf import VrfDest
@@ -39,7 +39,7 @@ class Vrf4Path(VrfPath):
     """Represents a way of reaching an IP destination with a VPN."""
     ROUTE_FAMILY = RF_IPv4_UC
     VPN_PATH_CLASS = Vpnv4Path
-    VPN_NLRI_CLASS = Vpnv4
+    VPN_NLRI_CLASS = LabelledVPNIPAddrPrefix
 
 
 class Vrf4Dest(VrfDest):
@@ -50,11 +50,11 @@ class Vrf4Table(VrfTable):
     """Virtual Routing and Forwarding information base for IPv4."""
     ROUTE_FAMILY = RF_IPv4_UC
     VPN_ROUTE_FAMILY = RF_IPv4_VPN
-    NLRI_CLASS = Ipv4
+    NLRI_CLASS = IPAddrPrefix
     VRF_PATH_CLASS = Vrf4Path
     VRF_DEST_CLASS = Vrf4Dest
 
 
 class Vrf4NlriImportMap(VrfNlriImportMap):
     VRF_PATH_CLASS = Vrf4Path
-    NLRI_CLASS = Ipv4
+    NLRI_CLASS = IPAddrPrefix

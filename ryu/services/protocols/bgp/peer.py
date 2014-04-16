@@ -36,11 +36,39 @@ from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.utils import bgp as bgp_utils
 from ryu.services.protocols.bgp.utils.evtlet import EventletIOFactory
 from ryu.services.protocols.bgp.utils import stats
-from ryu.services.protocols.bgp.protocols.bgp import exceptions
-from ryu.services.protocols.bgp.protocols.bgp import messages
-from ryu.services.protocols.bgp.protocols.bgp import nlri
-from ryu.services.protocols.bgp.protocols.bgp import pathattr
 
+from ryu.lib.packet import bgp
+
+from ryu.lib.packet.bgp import RouteFamily
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv6_UC
+from ryu.lib.packet.bgp import RF_IPv4_VPN
+from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_RTC_UC
+
+from ryu.lib.packet.bgp import BGPOpen
+from ryu.lib.packet.bgp import BGPUpdate
+from ryu.lib.packet.bgp import BGPRouteRefresh
+
+from ryu.lib.packet.bgp import BGP_MSG_UPDATE
+from ryu.lib.packet.bgp import BGP_MSG_KEEPALIVE
+from ryu.lib.packet.bgp import BGP_MSG_ROUTE_REFRESH
+
+from ryu.lib.packet.bgp import BGPPathAttributeNextHop
+from ryu.lib.packet.bgp import BGPPathAttributeAsPath
+from ryu.lib.packet.bgp import BGPPathAttributeLocalPref
+from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
+from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
+from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
+
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_NEXT_HOP
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MP_REACH_NLRI
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MP_UNREACH_NLRI
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 
 LOG = logging.getLogger('bgpspeaker.peer')
 
@@ -110,7 +138,7 @@ class PeerState(object):
         }
         self._signal_bus = signal_bus
 
-        #TODO(JK): refactor other counters to use signals also
+        # TODO(JK): refactor other counters to use signals also
         self._signal_bus.register_listener(
             ('error', 'bgp', self.peer),
             self._remember_last_bgp_error
@@ -264,12 +292,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # State per route family, {RouteFamily: PeerRf,}.
         self.rf_state = {}
         # Get vpnv4 route family settings.
-        prf = PeerRf(self, nlri.RF_IPv4_VPN,
+        prf = PeerRf(self, RF_IPv4_VPN,
                      enabled=self._neigh_conf.cap_mbgp_vpnv4)
-        self.rf_state[nlri.RF_IPv4_VPN] = prf
+        self.rf_state[RF_IPv4_VPN] = prf
         # Get vpnv6 route family settings.
-        prf = PeerRf(self, nlri.RF_IPv6_VPN, self._neigh_conf.cap_mbgp_vpnv6)
-        self.rf_state[nlri.RF_IPv6_VPN] = prf
+        prf = PeerRf(self, RF_IPv6_VPN, self._neigh_conf.cap_mbgp_vpnv6)
+        self.rf_state[RF_IPv6_VPN] = prf
 
         # Bound protocol instance
         self._protocol = None
@@ -378,8 +406,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # when we stop the protocol, hence we call connection_lost
                 # here as we triggered socket to close.
                 self._protocol.send_notification(
-                    exceptions.AdminShutdown.CODE,
-                    exceptions.AdminShutdown.SUB_CODE
+                    BGP_ERROR_CEASE,
+                    BGP_ERROR_SUB_ADMINISTRATIVE_SHUTDOWN
                 )
                 self._protocol.stop()
             # If this peer is not enabled any-more we stop trying to make any
@@ -415,7 +443,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         Update appropriate counters and set appropriate timers.
         """
-        assert rr_msg.TYPE_CODE == messages.RouteRefresh.TYPE_CODE
+        assert rr_msg.TYPE_CODE == BGP_MSG_ROUTE_REFRESH
         self._protocol.send(rr_msg)
         LOG.debug('RouteRefresh %s>> %s' %
                   (self._neigh_conf.ip_address, rr_msg))
@@ -471,18 +499,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Check currently supported out-going msgs.
             assert isinstance(
                 outgoing_msg,
-                (messages.RouteRefresh, messages.Update, OutgoingRoute)
+                (BGPRouteRefresh, BGPUpdate, OutgoingRoute)
             ), ('Peer cannot process object: %s in its outgoing queue'
                 % outgoing_msg)
 
             # Send msg. to peer.
-            if isinstance(outgoing_msg, messages.RouteRefresh):
+            if isinstance(outgoing_msg, BGPRouteRefresh):
                 self._send_outgoing_route_refresh_msg(outgoing_msg)
             elif isinstance(outgoing_msg, OutgoingRoute):
                 self._send_outgoing_route(outgoing_msg)
 
             # EOR are enqueued as plain Update messages.
-            elif isinstance(outgoing_msg, messages.Update):
+            elif isinstance(outgoing_msg, BGPUpdate):
                 self._protocol.send(outgoing_msg)
                 LOG.debug('Update %s>> %s' % (self._neigh_conf.ip_address,
                                               outgoing_msg))
@@ -523,17 +551,17 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                      # We ignore request for route_family not valid
                      # for current session.
                      self._protocol.is_mbgp_cap_valid(route_family))):
-                rr_req = messages.RouteRefresh(route_family)
+                rr_req = BGPRouteRefresh(route_family.afi, route_family.safi)
                 self.enque_outgoing_msg(rr_req)
                 LOG.debug('Enqueued Route Refresh message to '
                           'peer %s for rf: %s' % (self, route_family))
 
     def enque_end_of_rib(self, route_family):
-        pattr_map = {}
         # MP_UNREACH_NLRI Attribute.
-        mpunreach_attr = pathattr.MpUnreachNlri(route_family, [])
-        pattr_map[pathattr.MpUnreachNlri.ATTR_NAME] = mpunreach_attr
-        update = messages.Update(pathattr_map=pattr_map)
+        mpunreach_attr = BGPPathAttributeMpUnreachNLRI(route_family.afi,
+                                                       route_family.safi,
+                                                       [])
+        update = BGPUpdate(path_attributes=[mpunreach_attr])
         self.enque_outgoing_msg(update)
 
     def _session_next_hop(self, route_family):
@@ -546,9 +574,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         """
         # By default we use BGPS's interface IP with this peer as next_hop.
         next_hop = self._neigh_conf.host_bind_ip
-        if route_family == nlri.RF_IPv6_VPN:
+        if route_family == RF_IPv6_VPN:
             # Next hop ipv4_mapped ipv6
-            next_hop = nlri.ipv4_mapped_ipv6(next_hop)
+            def _ipv4_mapped_ipv6(ipv4):
+                from netaddr import IPAddress
+                return str(IPAddress(ipv4).ipv6())
+
+            next_hop = _ipv4_mapped_ipv6(next_hop)
 
         return next_hop
 
@@ -556,8 +588,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         """Construct update message with Outgoing-routes path attribute
         appropriately cloned/copied/updated.
         """
-        is_bgp4_format = outgoing_route.bgp4_format
-        if is_bgp4_format:
+        if self._neigh_conf.cap_mbgp_ipv4:
             update = self._construct_bgp4_update(outgoing_route)
         else:
             update = self._construct_mpbgp_update(outgoing_route)
@@ -569,10 +600,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         path = outgoing_route.path
         # Get copy of path's path attributes.
         pathattr_map = path.pathattr_map
-        new_pathattr_map = OrderedDict()
+        new_pathattr = []
 
         if path.is_withdraw:
-            update = messages.Update(withdraw_list=path.nlri)
+            update = BGPUpdate(withdrawn_routes=[path.nlri])
             return update
         else:
             # Supported and un-supported/unknown attributes.
@@ -595,19 +626,19 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # If the path came from a bgp peer and not from NC, according
                 # to RFC 4271 we should not modify next_hop.
                 next_hop = path.nexthop
-            nexthop_attr = pathattr.NextHop(next_hop)
+            nexthop_attr = BGPPathAttributeNextHop(next_hop)
             assert nexthop_attr, 'Missing NEXTHOP mandatory attribute.'
 
             # ORIGIN Attribute.
             # According to RFC this attribute value SHOULD NOT be changed by
             # any other speaker.
-            origin_attr = pathattr_map.get(pathattr.Origin.ATTR_NAME)
+            origin_attr = pathattr_map.get(BGP_ATTR_TYPE_ORIGIN)
             assert origin_attr, 'Missing ORIGIN mandatory attribute.'
 
             # AS_PATH Attribute.
             # Construct AS-path-attr using paths aspath attr. with local AS as
             # first item.
-            path_aspath = pathattr_map.get(pathattr.AsPath.ATTR_NAME)
+            path_aspath = pathattr_map.get(BGP_ATTR_TYPE_AS_PATH)
             assert path_aspath, 'Missing AS_PATH mandatory attribute.'
             # Deep copy aspath_attr value
             path_seg_list = path_aspath.path_seg_list
@@ -616,7 +647,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # When a given BGP speaker advertises the route to an internal
                 # peer, the advertising speaker SHALL NOT modify the AS_PATH
                 # attribute associated with the route.
-                aspath_attr = pathattr.AsPath(path_seg_list)
+                aspath_attr = BGPPathAttributeAsPath(path_seg_list)
             else:
                 # When a given BGP speaker advertises the route to an external
                 # peer, the advertising speaker updates the AS_PATH attribute
@@ -644,15 +675,16 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     path_seg_list[0].insert(0, self._core_service.asn)
                 else:
                     path_seg_list.insert(0, [self._core_service.asn])
-                aspath_attr = pathattr.AsPath(path_seg_list)
+                aspath_attr = BGPPathAttributeAsPath(path_seg_list)
 
             # MULTI_EXIT_DISC Attribute.
             # For eBGP session we can send multi-exit-disc if configured.
             multi_exit_disc = None
             if self.is_ebgp_peer():
-                multi_exit_disc = pathattr_map.get(pathattr.Med.ATTR_NAME)
+                multi_exit_disc = pathattr_map.get(
+                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
                 if not multi_exit_disc and self._neigh_conf.multi_exit_disc:
-                    multi_exit_disc = pathattr.Med(
+                    multi_exit_disc = BGPPathAttributeMultiExitDisc(
                         self._neigh_conf.multi_exit_disc
                     )
 
@@ -660,15 +692,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not self.is_ebgp_peer():
                 # For iBGP peers we are required to send local-pref attribute
                 # for connected or local prefixes. We send default local-pref.
-                localpref_attr = pathattr.LocalPref(100)
+                localpref_attr = BGPPathAttributeLocalPref(100)
 
             # COMMUNITY Attribute.
-            community_attr = pathattr_map.get(pathattr.Community.ATTR_NAME)
+            community_attr = pathattr_map.get(BGP_ATTR_TYPE_COMMUNITIES)
 
             # EXTENDED COMMUNITY Attribute.
             # Construct ExtCommunity path-attr based on given.
             path_extcomm_attr = pathattr_map.get(
-                pathattr.ExtCommunity.ATTR_NAME
+                BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
             )
             if path_extcomm_attr:
                 # SOO list can be configured per VRF and/or per Neighbor.
@@ -676,7 +708,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 soo_list = path_extcomm_attr.soo_list
                 if self._neigh_conf.soo_list:
                     soo_list.extend(self._neigh_conf.soo_list)
-                extcomm_attr = pathattr.ExtCommunity(
+                extcomm_attr = BGPPathAttributeExtendedCommunities(
                     path_extcomm_attr.rt_list,
                     soo_list
                 )
@@ -688,22 +720,22 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Ordering path attributes according to type as RFC says. We set
             # MPReachNLRI first as advised by experts as a new trend in BGP
             # implementation.
-            new_pathattr_map[pathattr.NextHop.ATTR_NAME] = nexthop_attr
-            new_pathattr_map[pathattr.Origin.ATTR_NAME] = origin_attr
-            new_pathattr_map[pathattr.AsPath.ATTR_NAME] = aspath_attr
+            new_pathattr.append(nexthop_attr)
+            new_pathattr.append(origin_attr)
+            new_pathattr.append(aspath_attr)
             if multi_exit_disc:
-                new_pathattr_map[pathattr.Med.ATTR_NAME] = multi_exit_disc
+                new_pathattr.append(multi_exit_disc)
             if localpref_attr:
-                new_pathattr_map[pathattr.LocalPref.ATTR_NAME] = localpref_attr
+                new_pathattr.append(localpref_attr)
             if community_attr:
-                new_pathattr_map[pathattr.Community.ATTR_NAME] = community_attr
+                new_pathattr.append(community_attr)
             if extcomm_attr:
-                new_pathattr_map[pathattr.ExtCommunity.ATTR_NAME] =\
-                    extcomm_attr
+                new_pathattr.append(extcomm_attr)
             if unkown_opttrans_attrs:
-                new_pathattr_map.update(unkown_opttrans_attrs)
-            update = messages.Update(pathattr_map=new_pathattr_map,
-                                     nlri_list=nlri_list)
+                new_pathattr.extend(unkown_opttrans_attrs.values())
+
+            update = BGPUpdate(path_attributes=new_pathattr,
+                               nlri=nlri_list)
             return update
 
     def _construct_mpbgp_update(self, outgoing_route):
@@ -715,16 +747,16 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         path = outgoing_route.path
         # Get copy of path's path attributes.
         pathattr_map = path.pathattr_map
-        new_pathattr_map = OrderedDict()
+        new_pathattr = []
 
         # If this is withdraw update we copy MpUnReach path-attribute and
         # create new Update message.
         if path.is_withdraw:
             # MP_UNREACH_NLRI Attribute.
-            mpunreach_attr = pathattr.MpUnreachNlri(
-                path.route_family, [path.nlri]
+            mpunreach_attr = BGPPathAttributeMpUnreachNLRI(
+                path.route_family.afi, path.route_family.safi, [path.nlri]
             )
-            new_pathattr_map[pathattr.MpUnreachNlri.ATTR_NAME] = mpunreach_attr
+            new_pathattr.append(mpunreach_attr)
         else:
             # Supported and un-supported/unknown attributes.
             origin_attr = None
@@ -746,20 +778,23 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # to RFC 4271 we should not modify next_hop.
                 next_hop = path.nexthop
             # We construct mpreach-nlri attribute.
-            mpnlri_attr = pathattr.MpReachNlri(
-                path.route_family, next_hop, [path.nlri]
+            mpnlri_attr = BGPPathAttributeMpReachNLRI(
+                path.route_family.afi,
+                path.route_family.safi,
+                next_hop,
+                [path.nlri]
             )
 
             # ORIGIN Attribute.
             # According to RFC this attribute value SHOULD NOT be changed by
             # any other speaker.
-            origin_attr = pathattr_map.get(pathattr.Origin.ATTR_NAME)
+            origin_attr = pathattr_map.get(BGP_ATTR_TYPE_ORIGIN)
             assert origin_attr, 'Missing ORIGIN mandatory attribute.'
 
             # AS_PATH Attribute.
             # Construct AS-path-attr using paths aspath attr. with local AS as
             # first item.
-            path_aspath = pathattr_map.get(pathattr.AsPath.ATTR_NAME)
+            path_aspath = pathattr_map.get(BGP_ATTR_TYPE_AS_PATH)
             assert path_aspath, 'Missing AS_PATH mandatory attribute.'
             # Deep copy aspath_attr value
             path_seg_list = path_aspath.path_seg_list
@@ -768,7 +803,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # When a given BGP speaker advertises the route to an internal
                 # peer, the advertising speaker SHALL NOT modify the AS_PATH
                 # attribute associated with the route.
-                aspath_attr = pathattr.AsPath(path_seg_list)
+                aspath_attr = BGPPathAttributeAsPath(path_seg_list)
             else:
                 # When a given BGP speaker advertises the route to an external
                 # peer, the advertising speaker updates the AS_PATH attribute
@@ -796,13 +831,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     path_seg_list[0].insert(0, self._core_service.asn)
                 else:
                     path_seg_list.insert(0, [self._core_service.asn])
-                aspath_attr = pathattr.AsPath(path_seg_list)
+                aspath_attr = BGPPathAttributeAsPath(path_seg_list)
 
             # MULTI_EXIT_DISC Attribute.
             # For eBGP session we can send multi-exit-disc if configured.
             multi_exit_disc = None
             if self.is_ebgp_peer():
-                multi_exit_disc = pathattr_map.get(pathattr.Med.ATTR_NAME)
+                multi_exit_disc = pathattr_map.get(
+                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
 
             # LOCAL_PREF Attribute.
             if not self.is_ebgp_peer():
@@ -811,12 +847,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 localpref_attr = pathattr.LocalPref(100)
 
             # COMMUNITY Attribute.
-            community_attr = pathattr_map.get(pathattr.Community.ATTR_NAME)
+            community_attr = pathattr_map.get(BGP_ATTR_TYPE_COMMUNITIES)
 
             # EXTENDED COMMUNITY Attribute.
             # Construct ExtCommunity path-attr based on given.
             path_extcomm_attr = pathattr_map.get(
-                pathattr.ExtCommunity.ATTR_NAME
+                BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
             )
             if path_extcomm_attr:
                 # SOO list can be configured per VRF and/or per Neighbor.
@@ -824,9 +860,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 soo_list = path_extcomm_attr.soo_list
                 if self._neigh_conf.soo_list:
                     soo_list.extend(self._neigh_conf.soo_list)
-                extcomm_attr = pathattr.ExtCommunity(
-                    path_extcomm_attr.rt_list,
-                    soo_list
+                extcomm_attr = BGPPathAttributeExtendedCommunities(
+                    path_extcomm_attr.rt_list+soo_list
                 )
 
             # UNKOWN Attributes.
@@ -836,22 +871,21 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Ordering path attributes according to type as RFC says. We set
             # MPReachNLRI first as advised by experts as a new trend in BGP
             # implementation.
-            new_pathattr_map[pathattr.MpReachNlri.ATTR_NAME] = mpnlri_attr
-            new_pathattr_map[pathattr.Origin.ATTR_NAME] = origin_attr
-            new_pathattr_map[pathattr.AsPath.ATTR_NAME] = aspath_attr
+            new_pathattr.append(mpnlri_attr)
+            new_pathattr.append(origin_attr)
+            new_pathattr.append(aspath_attr)
             if multi_exit_disc:
-                new_pathattr_map[pathattr.Med.ATTR_NAME] = multi_exit_disc
+                new_pathattr.append(multi_exit_disc)
             if localpref_attr:
-                new_pathattr_map[pathattr.LocalPref.ATTR_NAME] = localpref_attr
+                new_pathattr.append(localpref_attr)
             if community_attr:
-                new_pathattr_map[pathattr.Community.ATTR_NAME] = community_attr
+                new_pathattr.append(community_attr)
             if extcomm_attr:
-                new_pathattr_map[pathattr.ExtCommunity.ATTR_NAME] =\
-                    extcomm_attr
+                new_pathattr.append(extcomm_attr)
             if unkown_opttrans_attrs:
-                new_pathattr_map.update(unkown_opttrans_attrs)
+                new_pathattr.extend(unkown_opttrans_attrs.values())
 
-        update = messages.Update(pathattr_map=new_pathattr_map)
+        update = BGPUpdate(path_attributes=new_pathattr)
         return update
 
     def _connect_loop(self, client_factory):
@@ -923,8 +957,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             LOG.debug('Processing of outgoing msg. started for %s.' % self)
 
     def _send_collision_err_and_stop(self, protocol):
-        code = exceptions.CollisionResolution.CODE
-        subcode = exceptions.CollisionResolution.SUB_CODE
+        code = BGP_ERROR_CEASE
+        subcode = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
         self._signal_bus.bgp_error(self, code, subcode, None)
         protocol.send_notification(code, subcode)
         protocol.stop()
@@ -1011,12 +1045,22 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         asnum = self._common_conf.local_as
         bgpid = self._common_conf.router_id
         holdtime = self._neigh_conf.hold_time
-        open_msg = messages.Open(
-            const.BGP_VERSION_NUM,
-            asnum,
-            holdtime,
-            bgpid,
-            self._neigh_conf.get_configured_capabilites()
+
+        def flatten(L):
+            if isinstance(L, list):
+                for i in xrange(len(L)):
+                    for e in flatten(L[i]):
+                        yield e
+            else:
+                yield L
+        opts = list(flatten(
+            self._neigh_conf.get_configured_capabilites().values()))
+        open_msg = BGPOpen(
+            my_as=asnum,
+            bgp_identifier=bgpid,
+            version=const.BGP_VERSION_NUM,
+            hold_time=holdtime,
+            opt_param=opts
         )
         return open_msg
 
@@ -1028,35 +1072,35 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         library.
         """
         # TODO(PH): finish providing implementation, currently low priority
-        assert update_msg.TYPE_CODE == messages.Update.TYPE_CODE
+        assert update_msg.type == BGP_MSG_UPDATE
         # An UPDATE message may be received only in the Established state.
         # Receiving an UPDATE message in any other state is an error.
         if self.state.bgp_state != const.BGP_FSM_ESTABLISHED:
             LOG.error('Received UPDATE message when not in ESTABLISHED'
                       ' state.')
-            raise exceptions.FiniteStateMachineError()
+            raise bgp.FiniteStateMachineError()
 
         mp_reach_attr = update_msg.get_path_attr(
-            pathattr.MpReachNlri.ATTR_NAME
+            BGP_ATTR_TYPE_MP_REACH_NLRI
         )
         mp_unreach_attr = update_msg.get_path_attr(
-            pathattr.MpUnreachNlri.ATTR_NAME
+            BGP_ATTR_TYPE_MP_UNREACH_NLRI
         )
 
         # non-MPBGP Update msg.
         if not (mp_reach_attr or mp_unreach_attr):
             LOG.info('Received UPDATE msg. with no MpReachNlri or '
                      'MpUnReachNlri attribute.')
-            if not self.is_mpbgp_cap_valid(nlri.RF_IPv4_UC):
+            if not self.is_mpbgp_cap_valid(RF_IPv4_UC):
                 LOG.error('Got UPDATE message with un-available'
-                          ' afi/safi %s' % nlri.RF_IPv4_UC)
-            nlri_list = update_msg.nlri_list
+                          ' afi/safi %s' % RF_IPv4_UC)
+            nlri_list = update_msg.nlri
             if len(nlri_list) > 0:
                 # Check for missing well-known mandatory attributes.
-                aspath = update_msg.get_path_attr(pathattr.AsPath.ATTR_NAME)
+                aspath = update_msg.get_path_attr(BGP_ATTR_TYPE_AS_PATH)
                 if not aspath:
-                    raise exceptions.MissingWellKnown(
-                        pathattr.AsPath.TYPE_CODE)
+                    raise bgp.MissingWellKnown(
+                        BGP_ATTR_TYPE_AS_PATH)
 
                 # We do not have a setting to enable/disable first-as check.
                 # We by default do first-as check below.
@@ -1064,17 +1108,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                         not aspath.has_matching_leftmost(self.remote_as)):
                     LOG.error('First AS check fails. Raise appropriate'
                               ' exception.')
-                    raise exceptions.MalformedAsPath()
+                    raise bgp.MalformedAsPath()
 
-                origin = update_msg.get_path_attr(pathattr.Origin.ATTR_NAME)
+                origin = update_msg.get_path_attr(BGP_ATTR_TYPE_ORIGIN)
                 if not origin:
-                    raise exceptions.MissingWellKnown(
-                        pathattr.Origin.TYPE_CODE)
+                    raise bgp.MissingWellKnown(BGP_ATTR_TYPE_ORIGIN)
 
-                nexthop = update_msg.get_path_attr(pathattr.NextHop.ATTR_NAME)
+                nexthop = update_msg.get_path_attr(BGP_ATTR_TYPE_NEXT_HOP)
                 if not nexthop:
-                    raise exceptions.MissingWellKnown(
-                        pathattr.NextHop.TYPE_CODE)
+                    raise bgp.MissingWellKnown(BGP_ATTR_TYPE_NEXT_HOP)
 
             return True
 
@@ -1084,7 +1126,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 LOG.error('Got UPDATE message with un-available afi/safi for'
                           ' MP_UNREACH path attribute (non-negotiated'
                           ' afi/safi) %s' % mp_unreach_attr.route_family)
-                # raise exceptions.OptAttrError()
+                # raise bgp.OptAttrError()
 
         if mp_reach_attr:
             # Check if received MP_REACH path attribute is of available
@@ -1093,23 +1135,23 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 LOG.error('Got UPDATE message with un-available afi/safi for'
                           ' MP_UNREACH path attribute (non-negotiated'
                           ' afi/safi) %s' % mp_reach_attr.route_family)
-                # raise exceptions.OptAttrError()
+                # raise bgp.OptAttrError()
 
             # Check for missing well-known mandatory attributes.
-            aspath = update_msg.get_path_attr(pathattr.AsPath.ATTR_NAME)
+            aspath = update_msg.get_path_attr(BGP_ATTR_TYPE_AS_PATH)
             if not aspath:
-                raise exceptions.MissingWellKnown(pathattr.AsPath.TYPE_CODE)
+                raise bgp.MissingWellKnown(BGP_ATTR_TYPE_AS_PATH)
 
             # We do not have a setting to enable/disable first-as check.
             # We by default do first-as check below.
             if (self.is_ebgp_peer() and
                     not aspath.has_matching_leftmost(self.remote_as)):
                 LOG.error('First AS check fails. Raise appropriate exception.')
-                raise exceptions.MalformedAsPath()
+                raise bgp.MalformedAsPath()
 
-            origin = update_msg.get_path_attr(pathattr.Origin.ATTR_NAME)
+            origin = update_msg.get_path_attr(BGP_ATTR_TYPE_ORIGIN)
             if not origin:
-                raise exceptions.MissingWellKnown(pathattr.Origin.TYPE_CODE)
+                raise bgp.MissingWellKnown(BGP_ATTR_TYPE_ORIGIN)
 
             # Validate Next hop.
             # TODO(PH): Currently ignore other cases.
@@ -1142,15 +1184,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             return
 
         # Increment count of update received.
-        mp_reach_attr = update_msg.get_path_attr(
-            pathattr.MpReachNlri.ATTR_NAME
-        )
+        mp_reach_attr = update_msg.get_path_attr(BGP_ATTR_TYPE_MP_REACH_NLRI)
         mp_unreach_attr = update_msg.get_path_attr(
-            pathattr.MpUnreachNlri.ATTR_NAME
+            BGP_ATTR_TYPE_MP_UNREACH_NLRI
         )
 
-        nlri_list = update_msg.nlri_list
-        withdraw_list = update_msg.withdraw_list
+        nlri_list = update_msg.nlri
+        withdraw_list = update_msg.withdrawn_routes
 
         if mp_reach_attr:
             # Extract advertised paths from given message.
@@ -1181,7 +1221,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         """
         umsg_pattrs = update_msg.pathattr_map
 
-        msg_rf = nlri.RF_IPv4_UC
+        msg_rf = RF_IPv4_UC
         # Check if this route family is among supported route families.
         if msg_rf not in SUPPORTED_GLOBAL_RF:
             LOG.info(('Received route for route family %s which is'
@@ -1189,16 +1229,16 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                      (msg_rf, update_msg))
             return
 
-        aspath = umsg_pattrs.get(pathattr.AsPath.ATTR_NAME)
+        aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
         # Check if AS_PATH has loops.
         if aspath.has_local_as(self._common_conf.local_as):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
                       ' UPDATE. %s' % update_msg)
             return
 
-        next_hop = update_msg.get_path_attr(pathattr.NextHop.ATTR_NAME)
+        next_hop = update_msg.get_path_attr(BGP_ATTR_TYPE_NEXT_HOP)
         # Nothing to do if we do not have any new NLRIs in this message.
-        msg_nlri_list = update_msg.nlri_list
+        msg_nlri_list = update_msg.nlri
         if not msg_nlri_list:
             LOG.debug('Update message did not have any new MP_REACH_NLRIs.')
             return
@@ -1240,7 +1280,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         Extracted withdraws are added to appropriate *Destination* for further
         processing.
         """
-        msg_rf = nlri.RF_IPv4_UC
+        msg_rf = RF_IPv4_UC
         # Check if this route family is among supported route families.
         if msg_rf not in SUPPORTED_GLOBAL_RF:
             LOG.info(
@@ -1280,7 +1320,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         processing.
         """
         umsg_pattrs = update_msg.pathattr_map
-        mpreach_nlri_attr = umsg_pattrs.pop(pathattr.MpReachNlri.ATTR_NAME)
+        mpreach_nlri_attr = umsg_pattrs.pop(BGP_ATTR_TYPE_MP_REACH_NLRI)
         assert mpreach_nlri_attr
 
         msg_rf = mpreach_nlri_attr.route_family
@@ -1291,17 +1331,17 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                      (msg_rf, update_msg))
             return
 
-        aspath = umsg_pattrs.get(pathattr.AsPath.ATTR_NAME)
+        aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
         # Check if AS_PATH has loops.
         if aspath.has_local_as(self._common_conf.local_as):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
                       ' UPDATE. %s' % update_msg)
             return
 
-        if msg_rf in (nlri.RF_IPv4_VPN, nlri.RF_IPv6_UC):
+        if msg_rf in (RF_IPv4_VPN, RF_IPv6_UC):
             # Check if we have Extended Communities Attribute.
             # TODO(PH): Check if RT_NLRI afi/safi will ever have this attribute
-            ext_comm_attr = umsg_pattrs.get(pathattr.ExtCommunity.ATTR_NAME)
+            ext_comm_attr = umsg_pattrs.get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
             # Check if we have at-least one RT is of interest to us.
             if not ext_comm_attr:
                 LOG.info('Missing Extended Communities Attribute. '
@@ -1328,7 +1368,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         next_hop = mpreach_nlri_attr.next_hop
         # Nothing to do if we do not have any new NLRIs in this message.
-        msg_nlri_list = mpreach_nlri_attr.nlri_list
+        msg_nlri_list = mpreach_nlri_attr.nlri
         if not msg_nlri_list:
             LOG.debug('Update message did not have any new MP_REACH_NLRIs.')
             return
@@ -1342,7 +1382,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 nexthop=next_hop
             )
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
-            if msg_rf == nlri.RF_RTC_UC \
+            if msg_rf == RF_RTC_UC \
                     and self._init_rtc_nlri_path is not None:
                 self._init_rtc_nlri_path.append(new_path)
             else:
@@ -1408,7 +1448,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 #         assert (route_family in SUPPORTED_GLOBAL_RF)
 #         assert self.is_mbgp_cap_valid(route_family)
 
-        if route_family == nlri.RF_RTC_UC:
+        if route_family == RF_RTC_UC:
             self._unschedule_sending_init_updates()
 
             # Learn all rt_nlri at the same time As RT are learned and RT
@@ -1434,19 +1474,19 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         KEEPALIVE, UPDATE and ROUTE_REFRESH messages. UPDATE and ROUTE_REFRESH
         messages are handled only after session is established.
         """
-        if msg.MSG_NAME == messages.Keepalive.MSG_NAME:
+        if msg.type == BGP_MSG_KEEPALIVE:
             # If we receive a Keep Alive message in open_confirm state, we
             # transition to established state.
             if self.state.bgp_state == const.BGP_FSM_OPEN_CONFIRM:
                 self.state.bgp_state = const.BGP_FSM_ESTABLISHED
                 self._enqueue_init_updates()
 
-        elif msg.MSG_NAME == messages.Update.MSG_NAME:
+        elif msg.type == BGP_MSG_UPDATE:
             assert self.state.bgp_state == const.BGP_FSM_ESTABLISHED
             # Will try to process this UDPATE message further
             self._handle_update_msg(msg)
 
-        elif msg.MSG_NAME == messages.RouteRefresh.MSG_NAME:
+        elif msg.type == BGP_MSG_ROUTE_REFRESH:
             # If its route-refresh message
             assert self.state.bgp_state == const.BGP_FSM_ESTABLISHED
             self._handle_route_refresh_msg(msg)
@@ -1456,7 +1496,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # nothing is done inside peer, so should not see them here.
             raise ValueError('Peer does not support handling of %s'
                              ' message during % state' %
-                             (msg.MSG_NAME, self.state.bgp_state()))
+                             (msg, self.state.bgp_state()))
 
     def _handle_err_sor_msg(self, afi, safi):
         # Check if ERR capability is enabled for this peer.
@@ -1474,7 +1514,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         if rst != 0:
             # Set a timer to clean the stale paths at configured time.
             # Clean/track inconsistent/stale routes.
-            route_family = nlri.get_rf(afi, safi)
+            route_family = RouteFamily(afi, safi)
             if route_family in SUPPORTED_GLOBAL_RF:
                 self._refresh_stalepath_timer = self._spawn_after(
                     'err-refresh-stale-path-timer', rst,
@@ -1498,7 +1538,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # If this is end of RIB (EOR) message.
         elif demarcation == 2:
             # Clean/track inconsistent/stale routes.
-            route_family = nlri.get_rf(afi, safi)
+            route_family = RouteFamily(afi, safi)
             if route_family in SUPPORTED_GLOBAL_RF:
                 tm = self._core_service.table_manager
                 tm.clean_stale_routes(self, route_family)
@@ -1508,7 +1548,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       demarcation)
 
     def _handle_route_refresh_req(self, afi, safi):
-        rr_af = nlri.get_rf(afi, safi)
+        rr_af = RouteFamily(afi, safi)
         self.state.incr(PeerCounterNames.RECV_REFRESH)
 
         # Check if peer has asked for route-refresh for af that was advertised
@@ -1524,7 +1564,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         sor = None
         if self._protocol.is_enhanced_rr_cap_valid():
             # If enhanced route-refresh is valid/enabled, enqueue SOR.
-            sor = messages.RouteRefresh(af, demarcation=1)
+            afi = af.afi
+            safi = af.safi
+            sor = BGPRouteRefresh(afi, safi, reserved=1)
             self.enque_first_outgoing_msg(sor)
 
         # Ask core to re-send sent routes
@@ -1539,7 +1581,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         sent.
         """
         if self._protocol.is_enhanced_rr_cap_valid() and not sor.eor_sent:
-            eor = messages.RouteRefresh(sor.route_family, demarcation=2)
+            afi = sor.route_family.afi
+            safi = sor.route_family.safi
+            eor = BGPRouteRefresh(afi, safi, reserved=2)
             self.enque_outgoing_msg(eor)
             sor.eor_sent = True
 
@@ -1589,7 +1633,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def _enqueue_init_updates(self):
         """Enqueues current routes to be shared with this peer."""
         assert self.state.bgp_state == const.BGP_FSM_ESTABLISHED
-        if self.is_mbgp_cap_valid(nlri.RF_RTC_UC):
+        if self.is_mbgp_cap_valid(RF_RTC_UC):
             # Enqueues all best-RTC_NLRIs to be sent as initial update to this
             # peer.
             self._peer_manager.comm_all_rt_nlris(self)
@@ -1610,7 +1654,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                   ' 1/132')
         # We will enqueue best path from all global destination.
         for route_family, table in global_tables.iteritems():
-            if route_family == nlri.RF_RTC_UC:
+            if route_family == RF_RTC_UC:
                 continue
             if self.is_mbgp_cap_valid(route_family):
                 for dest in table.itervalues():
@@ -1643,8 +1687,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # If RTC capability is available and path afi/saif is other than  RT
         # nlri
-        if path_rf != nlri.RF_RTC_UC and \
-                self.is_mpbgp_cap_valid(nlri.RF_RTC_UC):
+        if path_rf != RF_RTC_UC and \
+                self.is_mpbgp_cap_valid(RF_RTC_UC):
             rtfilter = self._peer_manager.curr_peer_rtfilter(self)
             # If peer does not have any rtfilter or if rtfilter does not have
             # any RTs common with path RTs we do not share this path with the
@@ -1657,14 +1701,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # Transmit side loop detection: We check if leftmost AS matches
         # peers AS, if so we do not send UPDATE message to this peer.
-        as_path = path.get_pattr(pathattr.AsPath.ATTR_NAME)
+        as_path = path.get_pattr(BGP_ATTR_TYPE_AS_PATH)
         if as_path and as_path.has_matching_leftmost(self.remote_as):
             LOG.debug('Skipping sending path as AS_PATH has peer AS %s' %
                       self.remote_as)
             return
 
         if self._neigh_conf.multi_exit_disc:
-            med_attr = path.get_pattr(pathattr.Med.ATTR_NAME)
+            med_attr = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
             if not med_attr:
                 path = bgp_utils.clone_path_and_update_med_for_target_neighbor(
                     path,
@@ -1675,10 +1719,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         if path.source is None:
             # Construct OutgoingRoute specific for this peer and put it in
             # its sink.
-            bgp4_format = False
-            if self._neigh_conf.cap_mbgp_ipv4:
-                bgp4_format = True
-            outgoing_route = OutgoingRoute(path, bgp4_format=bgp4_format)
+            outgoing_route = OutgoingRoute(path)
             self.enque_outgoing_msg(outgoing_route)
 
         # If path from a bgp-peer is new best path, we share it with
@@ -1698,10 +1739,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
             # If new best path has community attribute, it should be taken into
             # account when sending UPDATE to peers.
-            comm_attr = path.get_pattr(pathattr.Community.ATTR_NAME)
+            comm_attr = path.get_pattr(BGP_ATTR_TYPE_COMMUNITIES)
             if comm_attr:
                 comm_attr_na = comm_attr.has_comm_attr(
-                    pathattr.Community.NO_ADVERTISE
+                    BGPPathAttributeCommunities.NO_ADVERTISE
                 )
                 # If we have NO_ADVERTISE attribute present, we do not send
                 # UPDATE to any peers
@@ -1712,10 +1753,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     return
 
                 comm_attr_ne = comm_attr.has_comm_attr(
-                    pathattr.Community.NO_EXPORT
+                    BGPPathAttributeCommunities.NO_EXPORT
                 )
                 comm_attr_nes = comm_attr.has_comm_attr(
-                    pathattr.Community.NO_EXPORT_SUBCONFED)
+                    BGPPathAttributeCommunities.NO_EXPORT_SUBCONFED
+                )
                 # If NO_EXPORT_SUBCONFED/NO_EXPORT is one of the attribute, we
                 # do not advertise to eBGP peers as we do not have any
                 # confederation feature at this time.

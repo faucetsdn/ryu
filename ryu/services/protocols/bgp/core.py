@@ -21,9 +21,12 @@
 """
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp import exceptions
-from ryu.services.protocols.bgp.protocols.bgp import nlri
-from ryu.services.protocols.bgp.protocols.bgp import pathattr
+from ryu.lib.packet.bgp import BGP_ERROR_CEASE
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_RESET
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
+from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_INCOMPLETE
+
 from ryu.services.protocols.bgp.base import Activity
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -45,7 +48,7 @@ LOG = logging.getLogger('bgpspeaker.core')
 CORE_IP = '0.0.0.0'
 
 # Required dictates that Origin attribute be incomplete
-EXPECTED_ORIGIN = pathattr.Origin.INCOMPLETE
+EXPECTED_ORIGIN = BGP_ATTR_ORIGIN_INCOMPLETE
 
 
 @add_bgp_error_metadata(code=CORE_ERROR_CODE, sub_code=1,
@@ -222,9 +225,9 @@ class CoreService(Factory, Activity):
         server_thread.wait()
         processor_thread.wait()
 
-    #=========================================================================
+    # ========================================================================
     # RTC address family related utilities
-    #=========================================================================
+    # ========================================================================
 
     def update_rtfilters(self):
         """Updates RT filters for each peer.
@@ -271,7 +274,7 @@ class CoreService(Factory, Activity):
             - `old_rts`: (set) of RTs that peers is no longer interested in.
         """
         for table in self._table_manager._global_tables.itervalues():
-            if table.route_family == nlri.RF_RTC_UC:
+            if table.route_family == RF_RTC_UC:
                 continue
             self._spawn('rt_filter_chg_%s' % peer,
                         self._rt_mgr.on_rt_filter_chg_sync_peer,
@@ -340,9 +343,9 @@ class CoreService(Factory, Activity):
 
         return rtfilter_map
 
-    #=========================================================================
+    # ========================================================================
     # Peer or Neighbor related handles/utilities.
-    #=========================================================================
+    # ========================================================================
     def register_flexinet_sink(self, sink):
         self._sinks.add(sink)
 
@@ -408,8 +411,8 @@ class CoreService(Factory, Activity):
             LOG.debug('Closed connection to %s:%s as it is not a recognized'
                       ' peer.' % (peer_addr, peer_port))
             # Send connection rejected notification as per RFC
-            code = exceptions.ConnRejected.CODE
-            subcode = exceptions.ConnRejected.SUB_CODE
+            code = BGP_ERROR_CEASE
+            subcode = BGP_ERROR_SUB_CONNECTION_RESET
             bgp_proto.send_notification(code, subcode)
         elif not (peer.in_idle() or peer.in_active() or peer.in_connect()):
             LOG.debug('Closing connection to %s:%s as we have connection'
@@ -417,8 +420,8 @@ class CoreService(Factory, Activity):
                       ' i.e. connection resolution' %
                       (peer_addr, peer_port))
             # Send Connection Collision Resolution notification as per RFC.
-            code = exceptions.CollisionResolution.CODE
-            subcode = exceptions.CollisionResolution.SUB_CODE
+            code = BGP_ERROR_CEASE
+            subcode = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
             bgp_proto.send_notification(code, subcode)
         else:
             self._spawn_activity(bgp_proto, peer)

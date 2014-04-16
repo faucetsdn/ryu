@@ -19,6 +19,18 @@
 from abc import abstractmethod
 import logging
 
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv6_UC
+from ryu.lib.packet.bgp import RF_IPv4_VPN
+from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import BGPOptParamCapabilityEnhancedRouteRefresh
+from ryu.lib.packet.bgp import BGPOptParamCapabilityMultiprotocol
+from ryu.lib.packet.bgp import BGPOptParamCapabilityRouteRefresh
+from ryu.lib.packet.bgp import BGP_CAP_ENHANCED_ROUTE_REFRESH
+from ryu.lib.packet.bgp import BGP_CAP_MULTIPROTOCOL
+from ryu.lib.packet.bgp import BGP_CAP_ROUTE_REFRESH
+
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.rtconf.base import ADVERTISE_PEER_AS
 from ryu.services.protocols.bgp.rtconf.base import BaseConf
@@ -45,17 +57,6 @@ from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.base import validate
 from ryu.services.protocols.bgp.rtconf.base import validate_med
 from ryu.services.protocols.bgp.rtconf.base import validate_soo_list
-
-from ryu.services.protocols.bgp.protocols.bgp.capabilities import \
-    EnhancedRouteRefreshCap
-from ryu.services.protocols.bgp.protocols.bgp.capabilities import \
-    MultiprotocolExtentionCap
-from ryu.services.protocols.bgp.protocols.bgp.capabilities import \
-    RouteRefreshCap
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_UC
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_VPN
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv6_VPN
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_RTC_UC
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
 
@@ -224,9 +225,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
         self_valid_evts.update(NeighborConf.VALID_EVT)
         return self_valid_evts
 
-    #==========================================================================
+    # =========================================================================
     # Required attributes
-    #==========================================================================
+    # =========================================================================
 
     @property
     def remote_as(self):
@@ -244,9 +245,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
     def host_bind_port(self):
         return self._settings[LOCAL_PORT]
 
-    #==========================================================================
+    # =========================================================================
     # Optional attributes with valid defaults.
-    #==========================================================================
+    # =========================================================================
 
     @property
     def hold_time(self):
@@ -288,9 +289,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
             self._notify_listeners(NeighborConf.UPDATE_ENABLED_EVT,
                                    enable)
 
-    #==========================================================================
+    # =========================================================================
     # Optional attributes with no valid defaults.
-    #==========================================================================
+    # =========================================================================
 
     @property
     def multi_exit_disc(self):
@@ -334,27 +335,35 @@ class NeighborConf(ConfWithId, ConfWithStats):
         capabilities = OrderedDict()
         mbgp_caps = []
         if self.cap_mbgp_ipv4:
-            mbgp_caps.append(MultiprotocolExtentionCap(RF_IPv4_UC))
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_IPv4_UC.afi, RF_IPv4_UC.safi))
 
         if self.cap_mbgp_vpnv4:
-            mbgp_caps.append(MultiprotocolExtentionCap(RF_IPv4_VPN))
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_IPv4_VPN.afi, RF_IPv4_VPN.safi))
 
         if self.cap_mbgp_vpnv6:
-            mbgp_caps.append(MultiprotocolExtentionCap(RF_IPv6_VPN))
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_IPv6_VPN.afi, RF_IPv6_VPN.safi))
 
         if self.cap_rtc:
-            mbgp_caps.append(MultiprotocolExtentionCap(RF_RTC_UC))
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_RTC_UC.afi, RF_RTC_UC.safi))
 
         if mbgp_caps:
-            capabilities[MultiprotocolExtentionCap.CODE] = mbgp_caps
+            capabilities[BGP_CAP_MULTIPROTOCOL] = mbgp_caps
 
         if self.cap_refresh:
-            capabilities[RouteRefreshCap.CODE] = [
-                RouteRefreshCap.get_singleton()]
+            capabilities[BGP_CAP_ROUTE_REFRESH] = [
+                BGPOptParamCapabilityRouteRefresh()]
 
         if self.cap_enhanced_refresh:
-            capabilities[EnhancedRouteRefreshCap.CODE] = [
-                EnhancedRouteRefreshCap.get_singleton()]
+            capabilities[BGP_CAP_ENHANCED_ROUTE_REFRESH] = [
+                BGPOptParamCapabilityEnhancedRouteRefresh()]
 
         return capabilities
 

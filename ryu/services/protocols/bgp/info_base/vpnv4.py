@@ -19,8 +19,8 @@
 
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp.nlri import Ipv4
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_VPN
+from ryu.lib.packet.bgp import IPAddrPrefix
+from ryu.lib.packet.bgp import RF_IPv4_VPN
 
 from ryu.services.protocols.bgp.info_base.vpn import VpnDest
 from ryu.services.protocols.bgp.info_base.vpn import VpnPath
@@ -51,7 +51,7 @@ class Vpnv4Path(VpnPath):
     """Represents a way of reaching an VPNv4 destination."""
     ROUTE_FAMILY = RF_IPv4_VPN
     VRF_PATH_CLASS = None  # defined in init - anti cyclic import hack
-    NLRI_CLASS = Ipv4
+    NLRI_CLASS = IPAddrPrefix
 
     def __init__(self, *args, **kwargs):
         super(Vpnv4Path, self).__init__(*args, **kwargs)

@@ -24,9 +24,9 @@ from abc import abstractmethod
 from copy import copy
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_UC
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RtNlri
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import ExtCommunity
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.constants import VPN_TABLE
@@ -169,7 +169,7 @@ class Table(object):
     def _validate_nlri(self, nlri):
         """Validated *nlri* is the type that this table stores/supports.
         """
-        if not nlri or not (nlri.route_family == self.route_family):
+        if not nlri or not (nlri.ROUTE_FAMILY == self.route_family):
             raise ValueError('Invalid Vpnv4 prefix given.')
 
     def _validate_path(self, path):
@@ -661,10 +661,10 @@ class Path(object):
             - `is_withdraw`: (bool) True if this represents a withdrawal.
         """
         self.med_set_by_target_neighbor = med_set_by_target_neighbor
-        if nlri.route_family != self.__class__.ROUTE_FAMILY:
+        if nlri.ROUTE_FAMILY != self.__class__.ROUTE_FAMILY:
             raise ValueError('NLRI and Path route families do not'
                              ' match (%s, %s).' %
-                             (nlri.route_family, self.__class__.ROUTE_FAMILY))
+                             (nlri.ROUTE_FAMILY, self.__class__.ROUTE_FAMILY))
 
         # Currently paths injected directly into VRF has only one source
         # src_peer can be None to denote NC else has to be instance of Peer.
@@ -760,7 +760,8 @@ class Path(object):
         return clone
 
     def get_rts(self):
-        extcomm_attr = self._path_attr_map.get(ExtCommunity.ATTR_NAME)
+        extcomm_attr = self._path_attr_map.get(
+            BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
         if extcomm_attr is None:
             rts = []
         else:
@@ -775,7 +776,7 @@ class Path(object):
         curr_rts = self.get_rts()
         # Add default RT to path RTs so that we match interest for peers who
         # advertised default RT
-        curr_rts.append(RtNlri.DEFAULT_RT)
+        curr_rts.append(RouteTargetMembershipNLRI.DEFAULT_RT)
 
         return not interested_rts.isdisjoint(curr_rts)
 

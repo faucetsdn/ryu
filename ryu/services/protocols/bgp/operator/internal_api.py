@@ -1,9 +1,13 @@
 import logging
 import traceback
 
-from ryu.services.protocols.bgp.protocols.bgp import nlri
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import AsPath
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import Med
+from ryu.lib.packet.bgp import RouteFamily
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv6_UC
+from ryu.lib.packet.bgp import RF_IPv4_VPN
+from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_RTC_UC
+
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
@@ -67,10 +71,11 @@ class InternalApi(object):
 
     def get_single_rib_routes(self, addr_family):
         rfs = {
-            'ipv4': nlri.get_rf(1, 1),
-            'vpnv4': nlri.get_rf(1, 128),
-            'vpnv6': nlri.get_rf(2, 128),
-            'rtfilter': nlri.get_rf(1, 132)
+            'ipv4': RF_IPv4_UC,
+            'ipv6': RF_IPv6_UC,
+            'vpnv4': RF_IPv4_VPN,
+            'vpnv6': RF_IPv6_VPN,
+            'rtfilter': RF_RTC_UC
         }
         if addr_family not in rfs:
             raise WrongParamError('Unknown or unsupported family')
@@ -89,13 +94,13 @@ class InternalApi(object):
                'prefix': dst.nlri.formatted_nlri_str}
 
         def _path_to_dict(dst, path):
-            aspath = path.get_pattr(AsPath.ATTR_NAME).path_seg_list
+            aspath = path.get_pattr(BGP_ATTR_TYPE_AS_PATH).path_seg_list
             if aspath is None or len(aspath) == 0:
                 aspath = ''
 
             nexthop = path.nexthop
             # Get the MED path attribute
-            med = path.get_pattr(Med.ATTR_NAME)
+            med = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
             med = med.value if med else ''
             # Get best path reason
             bpr = dst.best_path_reason if path == dst.best_path else ''
@@ -134,7 +139,7 @@ class InternalApi(object):
             if afi is None and safi is None:
                 route_families.extend(SUPPORTED_GLOBAL_RF)
             else:
-                route_family = nlri.get_rf(afi, safi)
+                route_family = RouteFamily(afi, safi)
                 if (route_family not in SUPPORTED_GLOBAL_RF):
                     raise WrongParamError('Not supported address-family'
                                           ' %s, %s' % (afi, safi))

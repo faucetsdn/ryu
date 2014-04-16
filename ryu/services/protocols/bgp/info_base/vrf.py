@@ -20,6 +20,15 @@
 import abc
 import logging
 
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGPPathAttributeOrigin
+from ryu.lib.packet.bgp import BGPPathAttributeAsPath
+from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
+from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
+
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.constants import VPN_TABLE
 from ryu.services.protocols.bgp.constants import VRF_TABLE
@@ -30,7 +39,6 @@ from ryu.services.protocols.bgp.utils.stats import LOCAL_ROUTES
 from ryu.services.protocols.bgp.utils.stats import REMOTE_ROUTES
 from ryu.services.protocols.bgp.utils.stats import RESOURCE_ID
 from ryu.services.protocols.bgp.utils.stats import RESOURCE_NAME
-from ryu.services.protocols.bgp.protocols.bgp import pathattr
 
 LOG = logging.getLogger('bgpspeaker.info_base.vrf')
 
@@ -201,15 +209,15 @@ class VrfTable(Table):
             # in the path. Hence we do not add these attributes here.
             from ryu.services.protocols.bgp.core import EXPECTED_ORIGIN
 
-            pattrs[pathattr.Origin.ATTR_NAME] = \
-                pathattr.Origin(EXPECTED_ORIGIN)
-            pattrs[pathattr.AsPath.ATTR_NAME] = pathattr.AsPath([])
-            pattrs[pathattr.ExtCommunity.ATTR_NAME] = pathattr.ExtCommunity(
+            pattrs[BGP_ATTR_TYPE_ORIGIN] = BGPPathAttributeOrigin(
+                EXPECTED_ORIGIN)
+            pattrs[BGP_ATTR_TYPE_AS_PATH] = BGPPathAttributeAsPath([])
+            pattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = \
+                BGPPathAttributeExtendedCommunities(
                 rt_list=vrf_conf.export_rts, soo_list=vrf_conf.soo_list)
             if vrf_conf.multi_exit_disc:
-                pattrs[pathattr.Med.ATTR_NAME] = pathattr.Med(
-                    vrf_conf.multi_exit_disc
-                )
+                pattrs[BGP_ATTR_TYPE_MULTI_EXIT_DISC] = \
+                    BGPPathAttributeMultiExitDisc(vrf_conf.multi_exit_disc)
 
             table_manager = self._core_service.table_manager
             if gen_lbl and next_hop:
@@ -526,5 +534,5 @@ class VrfRtImportMap(ImportMap):
         self._rt = rt
 
     def match(self, vrf_path):
-        extcomm = vrf_path.pathattr_map.get('extcommunity')
+        extcomm = vrf_path.pathattr_map.get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
         return extcomm is not None and self._rt in extcomm.rt_list

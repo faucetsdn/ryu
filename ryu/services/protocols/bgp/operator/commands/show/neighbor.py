@@ -8,10 +8,10 @@ from ryu.services.protocols.bgp.operator.command import STATUS_OK
 from ryu.services.protocols.bgp.operator.commands.responses import \
     WrongParamResp
 from ryu.services.protocols.bgp.operator.views.bgp import CoreServiceDetailView
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_UC
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv4_VPN
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv6_UC
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv6_UC
+from ryu.lib.packet.bgp import RF_IPv4_VPN
+from ryu.lib.packet.bgp import RF_IPv6_VPN
 
 LOG = logging.getLogger('bgpspeaker.operator.commands.show.summary')
 

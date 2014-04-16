@@ -5,8 +5,11 @@ from ryu.services.protocols.bgp.operator.views.base import \
 from ryu.services.protocols.bgp.operator.views.base import OperatorDetailView
 from ryu.services.protocols.bgp.operator.views import fields
 
-from ryu.services.protocols.bgp.protocols.bgp import pathattr
-
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_LOCAL_PREF
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 
 class CoreServiceDetailView(OperatorDetailView):
     rf_state = fields.RelatedViewField(
@@ -144,18 +147,19 @@ class PathDetailView(OperatorDetailView):
         ret = super(PathDetailView, self).encode()
         ret['nlri'] = self.rel('nlri').encode()
         ret['route_family'] = self.rel('route_family').encode()
-        as_path = self.get_field('pathattr_map').get(pathattr.AsPath.ATTR_NAME)
-        origin = self.get_field('pathattr_map').get(pathattr.Origin.ATTR_NAME)
-        metric = self.get_field('pathattr_map').get(pathattr.Med.ATTR_NAME)
+        as_path = self.get_field('pathattr_map').get(BGP_ATTR_TYPE_AS_PATH)
+        origin = self.get_field('pathattr_map').get(BGP_ATTR_TYPE_ORIGIN)
+        metric = self.get_field('pathattr_map').get(
+            BGP_ATTR_TYPE_MULTI_EXIT_DISC)
         local_pref = self.get_field('pathattr_map').get(
-            pathattr.LocalPref.ATTR_NAME
+            BGP_ATTR_TYPE_LOCAL_PREF
         )
 
         ret['as_path'] = as_path.value if as_path else None
         ret['origin'] = origin.value if origin else None
         ret['metric'] = metric.value if metric else None
         ret['local_pref'] = local_pref.value if local_pref else None
-        ext = ret['pathattr_map'].get(pathattr.ExtCommunity.ATTR_NAME)
+        ext = ret['pathattr_map'].get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
         del ret['pathattr_map']
         if ext:
             ret['rt_list'] = ext.rt_list
@@ -215,11 +219,13 @@ class VpnNlriDetailView(IpNlriDetailView):
 
 class NlriDetailView(OperatorDetailView):
     def __new__(cls, obj, filter_func=None):
-        from ryu.services.protocols.bgp.protocols.bgp.nlri import Vpnv4, Vpnv6
-        from ryu.services.protocols.bgp.protocols.bgp.nlri import Ipv4, Ipv6
-        if isinstance(obj, (Vpnv4, Vpnv6)):
+        from ryu.lib.packet.bgp import LabelledVPNIPAddrPrefix
+        from ryu.lib.packet.bgp import LabelledVPNIP6AddrPrefix
+        from ryu.lib.packet.bgp import IPAddrPrefix, IP6AddrPrefix
+        if isinstance(obj, (LabelledVPNIPAddrPrefix,
+                            LabelledVPNIP6AddrPrefix)):
             return VpnNlriDetailView(obj)
-        elif isinstance(obj, (Ipv4, Ipv6)):
+        elif isinstance(obj, (IPAddrPrefix, IP6AddrPrefix)):
             return IpNlriDetailView(obj)
         else:
             return OperatorDetailView(obj, filter_func)

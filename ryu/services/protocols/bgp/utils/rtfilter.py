@@ -18,10 +18,12 @@
 """
 import logging
 
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RF_RTC_UC
-from ryu.services.protocols.bgp.protocols.bgp.nlri import RtNlri
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import AsPath
-from ryu.services.protocols.bgp.protocols.bgp.pathattr import Origin
+from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGPPathAttributeAsPath
+from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.info_base.rtc import RtcPath
 
@@ -75,14 +77,15 @@ class RouteTargetManager(object):
 
     def _add_rt_nlri_for_as(self, rtc_as, route_target, is_withdraw=False):
         from ryu.services.protocols.bgp.core import EXPECTED_ORIGIN
-        rt_nlri = RtNlri(rtc_as, route_target)
+        rt_nlri = RouteTargetMembershipNLRI(rtc_as, route_target)
         # Create a dictionary for path-attrs.
         pattrs = OrderedDict()
         if not is_withdraw:
             # MpReachNlri and/or MpUnReachNlri attribute info. is contained
             # in the path. Hence we do not add these attributes here.
-            pattrs[Origin.ATTR_NAME] = Origin(EXPECTED_ORIGIN)
-            pattrs[AsPath.ATTR_NAME] = AsPath([])
+            pattrs[BGP_ATTR_TYPE_ORIGIN] = BGPPathAttributeOrigin(
+                EXPECTED_ORIGIN)
+            pattrs[BGP_ATTR_TYPE_AS_PATH] = BGPPathAttributeAsPath([])
 
         # Create Path instance and initialize appropriately.
         path = RtcPath(None, rt_nlri, 0, is_withdraw=is_withdraw,
@@ -152,7 +155,7 @@ class RouteTargetManager(object):
             else:
                 # New RT could be Default RT, which means we need to share this
                 # path
-                desired_rts.add(RtNlri.DEFAULT_RT)
+                desired_rts.add(RouteTargetMembershipNLRI.DEFAULT_RT)
                 # If we have RT filter has new RTs that are common with path
                 # RTs, then we send this path to peer
                 if desired_rts.intersection(new_rts):
@@ -172,8 +175,8 @@ class RouteTargetManager(object):
         interested_rts.update(self._vrfs_conf.vrf_interested_rts)
         # Remove default RT as it is not a valid RT for paths
         # TODO(PH): Check if we have better alternative than add and remove
-        interested_rts.add(RtNlri.DEFAULT_RT)
-        interested_rts.remove(RtNlri.DEFAULT_RT)
+        interested_rts.add(RouteTargetMembershipNLRI.DEFAULT_RT)
+        interested_rts.remove(RouteTargetMembershipNLRI.DEFAULT_RT)
         return interested_rts
 
     def update_interested_rts(self):
