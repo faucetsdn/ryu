@@ -588,14 +588,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         """Construct update message with Outgoing-routes path attribute
         appropriately cloned/copied/updated.
         """
-        if self._neigh_conf.cap_mbgp_ipv4:
-            update = self._construct_bgp4_update(outgoing_route)
-        else:
-            update = self._construct_mpbgp_update(outgoing_route)
-
-        return update
-
-    def _construct_bgp4_update(self, outgoing_route):
         update = None
         path = outgoing_route.path
         # Get copy of path's path attributes.
@@ -603,8 +595,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         new_pathattr = []
 
         if path.is_withdraw:
-            update = BGPUpdate(withdrawn_routes=[path.nlri])
-            return update
+            if self._neigh_conf.cap_mbgp_ipv4:
+                update = BGPUpdate(withdrawn_routes=[path.nlri])
+                return update
+            else:
+                mpunreach_attr = BGPPathAttributeMpUnreachNLRI(
+                    path.route_family.afi, path.route_family.safi, [path.nlri]
+                )
+                new_pathattr.append(mpunreach_attr)
         else:
             # Supported and un-supported/unknown attributes.
             origin_attr = None
@@ -628,6 +626,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 next_hop = path.nexthop
             nexthop_attr = BGPPathAttributeNextHop(next_hop)
             assert nexthop_attr, 'Missing NEXTHOP mandatory attribute.'
+
+            if not self._neigh_conf.cap_mbgp_ipv4:
+                # We construct mpreach-nlri attribute.
+                mpnlri_attr = BGPPathAttributeMpReachNLRI(
+                    path.route_family.afi,
+                    path.route_family.safi,
+                    next_hop,
+                    nlri_list
+                )
 
             # ORIGIN Attribute.
             # According to RFC this attribute value SHOULD NOT be changed by
@@ -705,12 +712,27 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if path_extcomm_attr:
                 # SOO list can be configured per VRF and/or per Neighbor.
                 # NeighborConf has this setting we add this to existing list.
-                soo_list = path_extcomm_attr.soo_list
+                communities = path_extcomm_attr.communities
                 if self._neigh_conf.soo_list:
-                    soo_list.extend(self._neigh_conf.soo_list)
+                    #construct extended community
+                    soo_list = self._neigh_conf.soo_list
+                    subtype = 0x03
+                    for soo in soo_list:
+                        first, second = soo.split(':')
+                        if '.' in first:
+                            c = BGPIPv4AddressSpecificExtendedCommunity(
+                                subtype=subtype,
+                                ipv4_address=first,
+                                local_administrator=int(second))
+                        else:
+                            c = BGPTwoOctetAsSpecificExtendedCommunity(
+                                subtype=subtype,
+                                as_number=int(first),
+                                local_administrator=int(second))
+                        communities.append(c)
+
                 extcomm_attr = BGPPathAttributeExtendedCommunities(
-                    path_extcomm_attr.rt_list,
-                    soo_list
+                    communities=communities
                 )
 
             # UNKOWN Attributes.
@@ -720,158 +742,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Ordering path attributes according to type as RFC says. We set
             # MPReachNLRI first as advised by experts as a new trend in BGP
             # implementation.
-            new_pathattr.append(nexthop_attr)
-            new_pathattr.append(origin_attr)
-            new_pathattr.append(aspath_attr)
-            if multi_exit_disc:
-                new_pathattr.append(multi_exit_disc)
-            if localpref_attr:
-                new_pathattr.append(localpref_attr)
-            if community_attr:
-                new_pathattr.append(community_attr)
-            if extcomm_attr:
-                new_pathattr.append(extcomm_attr)
-            if unkown_opttrans_attrs:
-                new_pathattr.extend(unkown_opttrans_attrs.values())
-
-            update = BGPUpdate(path_attributes=new_pathattr,
-                               nlri=nlri_list)
-            return update
-
-    def _construct_mpbgp_update(self, outgoing_route):
-        """Construct update message with Outgoing-routes path attribute
-        appropriately cloned/copied/updated.
-        """
-        # TODO(PH): Investigate how this case needs to be handled for iBGP.
-        update = None
-        path = outgoing_route.path
-        # Get copy of path's path attributes.
-        pathattr_map = path.pathattr_map
-        new_pathattr = []
-
-        # If this is withdraw update we copy MpUnReach path-attribute and
-        # create new Update message.
-        if path.is_withdraw:
-            # MP_UNREACH_NLRI Attribute.
-            mpunreach_attr = BGPPathAttributeMpUnreachNLRI(
-                path.route_family.afi, path.route_family.safi, [path.nlri]
-            )
-            new_pathattr.append(mpunreach_attr)
-        else:
-            # Supported and un-supported/unknown attributes.
-            origin_attr = None
-            aspath_attr = None
-            mpnlri_attr = None
-            extcomm_attr = None
-            community_attr = None
-            localpref_attr = None
-            unkown_opttrans_attrs = None
-
-            # MP_REACH_NLRI Attribute.
-            # By default we use BGPS's interface IP with this peer as next_hop.
-            # TODO(PH): change to use protocol's local address.
-            # next_hop = self._neigh_conf.host_bind_ip
-            next_hop = self._session_next_hop(path.route_family)
-            # If this is a iBGP peer.
-            if not self.is_ebgp_peer() and path.source is not None:
-                # If the path came from a bgp peer and not from NC, according
-                # to RFC 4271 we should not modify next_hop.
-                next_hop = path.nexthop
-            # We construct mpreach-nlri attribute.
-            mpnlri_attr = BGPPathAttributeMpReachNLRI(
-                path.route_family.afi,
-                path.route_family.safi,
-                next_hop,
-                [path.nlri]
-            )
-
-            # ORIGIN Attribute.
-            # According to RFC this attribute value SHOULD NOT be changed by
-            # any other speaker.
-            origin_attr = pathattr_map.get(BGP_ATTR_TYPE_ORIGIN)
-            assert origin_attr, 'Missing ORIGIN mandatory attribute.'
-
-            # AS_PATH Attribute.
-            # Construct AS-path-attr using paths aspath attr. with local AS as
-            # first item.
-            path_aspath = pathattr_map.get(BGP_ATTR_TYPE_AS_PATH)
-            assert path_aspath, 'Missing AS_PATH mandatory attribute.'
-            # Deep copy aspath_attr value
-            path_seg_list = path_aspath.path_seg_list
-            # If this is a iBGP peer.
-            if not self.is_ebgp_peer():
-                # When a given BGP speaker advertises the route to an internal
-                # peer, the advertising speaker SHALL NOT modify the AS_PATH
-                # attribute associated with the route.
-                aspath_attr = BGPPathAttributeAsPath(path_seg_list)
+            if self._neigh_conf.cap_mbgp_ipv4:
+                new_pathattr.append(nexthop_attr)
             else:
-                # When a given BGP speaker advertises the route to an external
-                # peer, the advertising speaker updates the AS_PATH attribute
-                # as follows:
-                # 1) if the first path segment of the AS_PATH is of type
-                #    AS_SEQUENCE, the local system prepends its own AS num as
-                #    the last element of the sequence (put it in the left-most
-                #    position with respect to the position of  octets in the
-                #    protocol message).  If the act of prepending will cause an
-                #    overflow in the AS_PATH segment (i.e.,  more than 255
-                #    ASes), it SHOULD prepend a new segment of type AS_SEQUENCE
-                #    and prepend its own AS number to this new segment.
-                #
-                # 2) if the first path segment of the AS_PATH is of type AS_SET
-                #    , the local system prepends a new path segment of type
-                #    AS_SEQUENCE to the AS_PATH, including its own AS number in
-                #    that segment.
-                #
-                # 3) if the AS_PATH is empty, the local system creates a path
-                #    segment of type AS_SEQUENCE, places its own AS into that
-                #    segment, and places that segment into the AS_PATH.
-                if (len(path_seg_list) > 0 and
-                        isinstance(path_seg_list[0], list) and
-                        len(path_seg_list[0]) < 255):
-                    path_seg_list[0].insert(0, self._core_service.asn)
-                else:
-                    path_seg_list.insert(0, [self._core_service.asn])
-                aspath_attr = BGPPathAttributeAsPath(path_seg_list)
+                new_pathattr.append(mpnlri_attr)
 
-            # MULTI_EXIT_DISC Attribute.
-            # For eBGP session we can send multi-exit-disc if configured.
-            multi_exit_disc = None
-            if self.is_ebgp_peer():
-                multi_exit_disc = pathattr_map.get(
-                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
-
-            # LOCAL_PREF Attribute.
-            if not self.is_ebgp_peer():
-                # For iBGP peers we are required to send local-pref attribute
-                # for connected or local prefixes. We send default local-pref.
-                localpref_attr = pathattr.LocalPref(100)
-
-            # COMMUNITY Attribute.
-            community_attr = pathattr_map.get(BGP_ATTR_TYPE_COMMUNITIES)
-
-            # EXTENDED COMMUNITY Attribute.
-            # Construct ExtCommunity path-attr based on given.
-            path_extcomm_attr = pathattr_map.get(
-                BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
-            )
-            if path_extcomm_attr:
-                # SOO list can be configured per VRF and/or per Neighbor.
-                # NeighborConf has this setting we add this to existing list.
-                soo_list = path_extcomm_attr.soo_list
-                if self._neigh_conf.soo_list:
-                    soo_list.extend(self._neigh_conf.soo_list)
-                extcomm_attr = BGPPathAttributeExtendedCommunities(
-                    path_extcomm_attr.rt_list+soo_list
-                )
-
-            # UNKOWN Attributes.
-            # Get optional transitive path attributes
-            unkown_opttrans_attrs = bgp_utils.get_unknow_opttrans_attr(path)
-
-            # Ordering path attributes according to type as RFC says. We set
-            # MPReachNLRI first as advised by experts as a new trend in BGP
-            # implementation.
-            new_pathattr.append(mpnlri_attr)
             new_pathattr.append(origin_attr)
             new_pathattr.append(aspath_attr)
             if multi_exit_disc:
@@ -885,8 +760,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if unkown_opttrans_attrs:
                 new_pathattr.extend(unkown_opttrans_attrs.values())
 
-        update = BGPUpdate(path_attributes=new_pathattr)
-        return update
+            if self._neigh_conf.cap_mbgp_ipv4:
+                update = BGPUpdate(path_attributes=new_pathattr,
+                                   nlri=nlri_list)
+            else:
+                update = BGPUpdate(path_attributes=new_pathattr)
+            return update
 
     def _connect_loop(self, client_factory):
         """In the current greeenlet we try to establish connection with peer.
