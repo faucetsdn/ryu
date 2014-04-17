@@ -1384,21 +1384,21 @@ class BGPPathAttributeCommunities(_PathAttribute):
         """Returns True if given value matches well-known community NO_EXPORT
          attribute value.
          """
-        return comm_attr == Community.NO_EXPORT
+        return comm_attr == BGPPathAttributeCommunities.NO_EXPORT
 
     @staticmethod
     def is_no_advertise(comm_attr):
         """Returns True if given value matches well-known community
         NO_ADVERTISE attribute value.
         """
-        return comm_attr == Community.NO_ADVERTISE
+        return comm_attr == BGPPathAttributeCommunities.NO_ADVERTISE
 
     @staticmethod
     def is_no_export_subconfed(comm_attr):
         """Returns True if given value matches well-known community
          NO_EXPORT_SUBCONFED attribute value.
          """
-        return comm_attr == Community.NO_EXPORT_SUBCONFED
+        return comm_attr == BGPPathAttributeCommunities.NO_EXPORT_SUBCONFED
 
     def has_comm_attr(self, attr):
         """Returns True if given community attribute is present."""
