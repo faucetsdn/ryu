@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import binascii
 import inspect
 import json
 import logging
@@ -782,6 +783,8 @@ class OfTester(app_manager.RyuApp):
 
         def __reasm_match(match):
             """ reassemble match_fields. """
+            mask_lengths = {'vlan_vid': 12 + 1,
+                            'ipv6_exthdr': 9}
             match_fields = list()
             for key, united_value in match.iteritems():
                 if isinstance(united_value, tuple):
@@ -789,12 +792,18 @@ class OfTester(app_manager.RyuApp):
                     # look up oxm_fields.TypeDescr to get mask length.
                     for ofb in ofproto_v1_3.oxm_types:
                         if ofb.name == key:
-                            mbytes = ofb.type.from_user(mask)
+                            # create all one bits mask
+                            mask_len = mask_lengths.get(
+                                key, ofb.type.size * 8)
+                            all_one_bits = 2 ** mask_len - 1
+                            # convert mask to integer
+                            mask_bytes = ofb.type.from_user(mask)
+                            oxm_mask = int(binascii.hexlify(mask_bytes), 16)
                             # when mask is all one bits, remove mask
-                            if mbytes == '\xff' * ofb.type.size:
+                            if oxm_mask & all_one_bits == all_one_bits:
                                 united_value = value
                             # when mask is all zero bits, remove field.
-                            elif mbytes == '\x00' * ofb.type.size:
+                            elif oxm_mask & all_one_bits == 0:
                                 united_value = None
                             break
                 if united_value is not None:
