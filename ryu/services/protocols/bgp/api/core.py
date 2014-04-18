@@ -16,7 +16,7 @@
 """
  Defines APIs related to Core/CoreManager.
 """
-import eventlet
+from ryu.lib import hub
 
 from ryu.services.protocols.bgp.api.base import register
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
@@ -39,7 +39,7 @@ def start(**kwargs):
 
     waiter = kwargs.pop('waiter')
     common_config = CommonConf(**kwargs)
-    eventlet.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config,
+    hub.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config,
                                                'waiter': waiter})
     return True
 
@@ -70,7 +70,7 @@ def reset_neighor(ip_address):
         # Disable neighbor to close existing session.
         neigh_conf.enabled = False
         # Yield here so that we give chance for neighbor to be disabled.
-        eventlet.sleep(NEIGHBOR_RESET_WAIT_TIME)
+        hub.sleep(NEIGHBOR_RESET_WAIT_TIME)
         # Enable neighbor, so that we have a new session with it.
         neigh_conf.enabled = True
     else:

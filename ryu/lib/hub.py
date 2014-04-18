@@ -39,6 +39,8 @@ if HUB_TYPE == 'eventlet':
     getcurrent = eventlet.getcurrent
     patch = eventlet.monkey_patch
     sleep = eventlet.sleep
+    listen = eventlet.listen
+    connect = eventlet.connect
 
     def spawn(*args, **kwargs):
         def _launch(func, *args, **kwargs):
@@ -56,6 +58,23 @@ if HUB_TYPE == 'eventlet':
                           traceback.format_exc())
 
         return eventlet.spawn(_launch, *args, **kwargs)
+
+    def spawn_after(seconds, *args, **kwargs):
+        def _launch(func, *args, **kwargs):
+            # mimic gevent's default raise_error=False behaviour
+            # by not propergating an exception to the joiner.
+            try:
+                func(*args, **kwargs)
+            except greenlet.GreenletExit:
+                pass
+            except:
+                # log uncaught exception.
+                # note: this is an intentional divergence from gevent
+                # behaviour.  gevent silently ignores such exceptions.
+                LOG.error('hub: uncaught exception: %s',
+                          traceback.format_exc())
+
+        return eventlet.spawn_after(seconds, _launch, *args, **kwargs)
 
     def kill(thread):
         thread.kill()
@@ -118,6 +137,9 @@ if HUB_TYPE == 'eventlet':
             # re-create the underlying event.
             # note: _ev.reset() is obsolete.
             self._ev = eventlet.event.Event()
+
+        def is_set(self):
+            return self._cond
 
         def set(self):
             self._cond = True
