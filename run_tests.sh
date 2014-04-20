@@ -90,7 +90,7 @@ run_tests() {
 run_pylint() {
   echo "Running pylint ..."
   PYLINT_OPTIONS="--rcfile=.pylintrc --output-format=parseable"
-  PYLINT_INCLUDE="ryu bin/ryu bin/ryu-manager bin/neutron-ofagent-agent ryu/tests/bin/ryu-client ryu/tests/bin/of-config-cli"
+  PYLINT_INCLUDE="ryu bin/ryu bin/ryu-manager bin/neutron-ofagent-agent ryu/tests/bin/ryu-client"
   export PYTHONPATH=$PYTHONPATH:.ryu
   PYLINT_LOG=pylint.log
 
