@@ -15,12 +15,14 @@
 """
   Defines bases classes to create a BGP application.
 """
-import eventlet
 import imp
 import logging
 import traceback
+from os import path
+from oslo.config import cfg
 
 from ryu.lib import hub
+from ryu.base.app_manager import RyuApp
 
 from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
@@ -45,26 +47,37 @@ from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 
 LOG = logging.getLogger('bgpspeaker.application')
+CONF = cfg.CONF
+
+DEFAULT_CONFIG_PATH = path.dirname(path.abspath(__file__)) + \
+    '/bgp_sample_conf.py'
+
+CONF.register_opts([
+    cfg.IntOpt('bind-port', default=50002, help='rpc-port'),
+    cfg.StrOpt('bind-ip', default='0.0.0.0', help='rpc-bind-ip'),
+    cfg.StrOpt('bgp-config-file', default=DEFAULT_CONFIG_PATH,
+               help='bgp-config-file')
+    ])
 
 
 @add_bgp_error_metadata(code=BIN_ERROR,
                         sub_code=1,
                         def_desc='Unknown bootstrap exception.')
 class ApplicationException(BGPSException):
-    """Specific Base exception related to `BaseApplication`."""
+    """Specific Base exception related to `BSPSpeaker`."""
     pass
 
 
-class BaseApplication(object):
-    def __init__(self, bind_ip, bind_port, config_file=None):
-        self.bind_ip = BaseApplication.validate_rpc_ip(bind_ip)
-        self.bind_port = BaseApplication.validate_rpc_port(bind_port)
-        self.config_file = config_file
+class BGPSpeaker(RyuApp):
+    def __init__(self, *args, **kwargs):
+        self.bind_ip = BGPSpeaker.validate_rpc_ip(CONF.bind_ip)
+        self.bind_port = BGPSpeaker.validate_rpc_port(CONF.bind_port)
+        self.config_file = CONF.bgp_config_file
+        super(BGPSpeaker, self).__init__(*args, **kwargs)
 
     def start(self):
         # Only two main green threads are required for APGW bgp-agent.
         # One for NetworkController, another for BGPS core.
-        pool = eventlet.GreenPool()
 
         # If configuration file was provided and loaded successfully. We start
         # BGPS core using these settings. If no configuration file is provided
@@ -81,13 +94,14 @@ class BaseApplication(object):
                 self._start_core(settings)
 
         # Start Network Controller to server RPC peers.
-        pool.spawn(net_ctrl.NET_CONTROLLER.start, *[],
-                   **{net_ctrl.NC_RPC_BIND_IP: self.bind_ip,
+        t = hub.spawn(net_ctrl.NET_CONTROLLER.start, *[],
+                      **{net_ctrl.NC_RPC_BIND_IP: self.bind_ip,
                       net_ctrl.NC_RPC_BIND_PORT: self.bind_port})
         LOG.debug('Started Network Controller')
 
-        # Wait for Network Controller and/or BGPS to finish
-        pool.waitall()
+        super(BGPSpeaker, self).start()
+
+        t.wait()
 
     @classmethod
     def validate_rpc_ip(cls, ip):
