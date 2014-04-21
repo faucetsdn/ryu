@@ -786,7 +786,14 @@ class Test_auth(unittest.TestCase):
         eq_(self.data, res[4])
 
     def test_len(self):
-        eq_((4 - 1) * 8, len(self.auth))
+        eq_((4 + 2) * 4, len(self.auth))
+
+    def test_len_re(self):
+        size = 5
+        auth = ipv6.auth(
+            0, size, 256, 1,
+            '\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8\xf8\xf8\xf8\xf8')
+        eq_((size + 2) * 4, len(auth))
 
     def test_default_args(self):
         hdr = ipv6.auth()
@@ -796,7 +803,7 @@ class Test_auth(unittest.TestCase):
         LOG.info(res)
 
         eq_(res[0], 6)
-        eq_(res[1], 3)
+        eq_(res[1], 2)
         eq_(res[2], 0)
         eq_(res[3], 0)
         eq_(buf[ipv6.auth._MIN_LEN:], '\x00\x00\x00\x00')

@@ -409,7 +409,7 @@ class auth(header):
     _PACK_STR = '!BB2xII'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, nxt=inet.IPPROTO_TCP, size=3, spi=0, seq=0,
+    def __init__(self, nxt=inet.IPPROTO_TCP, size=2, spi=0, seq=0,
                  data='\x00\x00\x00\x00'):
         super(auth, self).__init__(nxt)
         assert data is not None
@@ -420,7 +420,7 @@ class auth(header):
 
     @classmethod
     def _get_size(cls, size):
-        return (int(size) - 1) * 8
+        return (int(size) + 2) * 4
 
     @classmethod
     def parser(cls, buf):
