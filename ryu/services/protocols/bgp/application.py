@@ -37,6 +37,7 @@ from ryu.services.protocols.bgp.rtconf.common import \
     DEFAULT_REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import \
     DEFAULT_REFRESH_STALEPATH_TIME
+from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
@@ -161,9 +162,8 @@ class BGPSpeaker(RyuApp):
         common_settings[REFRESH_MAX_EOR_TIME] = \
             routing_settings.get(REFRESH_MAX_EOR_TIME,
                                  DEFAULT_REFRESH_MAX_EOR_TIME)
-        label_range = routing_settings[LABEL_RANGE]
-        if label_range:
-            common_settings[LABEL_RANGE] = label_range
+        common_settings[LABEL_RANGE] = \
+            routing_settings.get(LABEL_RANGE, DEFAULT_LABEL_RANGE)
 
         # Start BGPS core service
         waiter = hub.Event()
