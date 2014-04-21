@@ -147,14 +147,14 @@ class NeighborConf(ConfWithId, ConfWithStats):
     UPDATE_MED_EVT = 'update_med_evt'
 
     VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT])
-    REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS, LOCAL_ADDRESS,
-                                   LOCAL_PORT])
+    REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS])
     OPTIONAL_SETTINGS = frozenset([CAP_REFRESH,
                                    CAP_ENHANCED_REFRESH, CAP_MBGP_VPNV4,
                                    CAP_MBGP_IPV4, CAP_MBGP_VPNV6,
                                    CAP_RTC, RTC_AS, HOLD_TIME,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
-                                   ADVERTISE_PEER_AS, SITE_OF_ORIGINS])
+                                   ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
+                                   LOCAL_ADDRESS, LOCAL_PORT])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -192,6 +192,14 @@ class NeighborConf(ConfWithId, ConfWithStats):
         soos = kwargs.pop(SITE_OF_ORIGINS, None)
         if soos and validate_soo_list(soos):
             self._settings[SITE_OF_ORIGINS] = soos
+
+        # We do not have valid default LOCAL_ADDRESS and LOCAL_PORT value.
+        # If no LOCAL_ADDRESS/PORT is provided then we will bind to system
+        # default.
+        self._settings[LOCAL_ADDRESS] = compute_optional_conf(
+            LOCAL_ADDRESS, None, **kwargs)
+        self._settings[LOCAL_PORT] = compute_optional_conf(
+            LOCAL_PORT, None, **kwargs)
 
         # RTC configurations.
         self._settings[CAP_RTC] = \
@@ -416,13 +424,6 @@ class NeighborsConf(BaseConf):
         if neigh_conf.ip_address in self._neighbors.keys():
             message = 'Neighbor with given ip address already exists'
             raise RuntimeConfigError(desc=message)
-
-        # Check if this neighbor's host address overlaps with other neighbors
-        for nconf in self._neighbors.itervalues():
-            if ((neigh_conf.host_bind_ip, neigh_conf.host_bind_port) ==
-                    (nconf.host_bind_ip, nconf.host_bind_port)):
-                raise RuntimeConfigError(desc='Given host_bind_ip and '
-                                         'host_bind_port already taken')
 
         # Add this neighbor to known configured neighbors and generate update
         # event

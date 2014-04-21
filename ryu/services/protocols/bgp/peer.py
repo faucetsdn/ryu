@@ -278,6 +278,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         self._signal_bus = signal_bus
         self._peer_manager = peer_manager
 
+        # Host Bind IP
+        self._host_bind_ip = None
+        self._host_bind_port = None
+
         # TODO(PH): revisit maintaining state/stats information.
         # Peer state.
         self.state = PeerState(self, self._signal_bus)
@@ -329,6 +333,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     @property
     def ip_address(self):
         return self._neigh_conf.ip_address
+
+    @property
+    def host_bind_ip(self):
+        return self._host_bind_ip
+
+    @property
+    def host_bind_port(self):
+        return self._host_bind_port
 
     @property
     def enabled(self):
@@ -573,7 +585,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         point/local ip address.
         """
         # By default we use BGPS's interface IP with this peer as next_hop.
-        next_hop = self._neigh_conf.host_bind_ip
+        next_hop = self.host_bind_ip
         if route_family == RF_IPv6_VPN:
             # Next hop ipv4_mapped ipv6
             def _ipv4_mapped_ipv6(ipv4):
@@ -617,7 +629,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # MP_REACH_NLRI Attribute.
             # By default we use BGPS's interface IP with this peer as next_hop.
             # TODO(PH): change to use protocol's local address.
-            # next_hop = self._neigh_conf.host_bind_ip
+            # next_hop = self.host_bind_ip
             next_hop = self._session_next_hop(path.route_family)
             # If this is a iBGP peer.
             if not self.is_ebgp_peer() and path.source is not None:
@@ -790,19 +802,25 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 self.state.bgp_state = const.BGP_FSM_CONNECT
                 # If we have specific host interface to bind to, we will do so
                 # else we will bind to system default.
-                # Use current values.
-                bind_addr = (self._neigh_conf.host_bind_ip,
-                             self._neigh_conf.host_bind_port)
+                if self._neigh_conf.host_bind_ip and \
+                        self._neigh_conf.host_bind_port:
+                    bind_addr = (self._neigh_conf.host_bind_ip,
+                                 self._neigh_conf.host_bind_port)
+                else:
+                    bind_addr = None
                 peer_address = (self._neigh_conf.ip_address,
                                 const.STD_BGP_SERVER_PORT_NUM)
 
                 LOG.debug('%s trying to connect to %s' % (self, peer_address))
                 tcp_conn_timeout = self._common_conf.tcp_conn_timeout
                 try:
-                    self._connect_tcp(peer_address,
-                                      client_factory,
-                                      time_out=tcp_conn_timeout,
-                                      bind_address=bind_addr)
+                    sock = self._connect_tcp(peer_address,
+                                             client_factory,
+                                             time_out=tcp_conn_timeout,
+                                             bind_address=bind_addr)
+                    bind_ip, bind_port = sock.getpeername()
+                    self._host_bind_ip = bind_ip
+                    self._host_bind_port = bind_port
                 except socket.error:
                     self.state.bgp_state = const.BGP_FSM_ACTIVE
                     LOG.debug('Socket could not be created in time (%s secs),'
@@ -1035,11 +1053,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Validate Next hop.
             # TODO(PH): Currently ignore other cases.
             if (not mp_reach_attr.next_hop or
-                    (mp_reach_attr.next_hop == self._neigh_conf.host_bind_ip)):
+                    (mp_reach_attr.next_hop == self.host_bind_ip)):
                 LOG.error('Nexthop of received UPDATE msg. (%s) same as local'
                           ' interface address %s.' %
                           (mp_reach_attr.next_hop,
-                           self._neigh_conf.host_bind_ip))
+                           self.host_bind_ip))
                 return False
 
         return True

@@ -351,7 +351,7 @@ class Activity(object):
                 # If connection is established, we call connection handler
                 # in a new thread.
                 self._spawn(conn_name, conn_handler, sock)
-
+        return sock
 
 #
 # Sink
