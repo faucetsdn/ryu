@@ -361,7 +361,7 @@ class BgpProtocol(Protocol, Activity):
         self._socket.sendall(notification.serialize())
         self._signal_bus.bgp_error(self._peer, code, subcode, reason)
         LOG.error(
-            'Sent notification to %r>> %s' %
+            'Sent notification to %r >> %s' %
             (self._socket.getpeername(), notification)
         )
         self._socket.close()
@@ -373,14 +373,13 @@ class BgpProtocol(Protocol, Activity):
                                        ' or is no longer is started state.')
         self._socket.sendall(msg.serialize())
         if msg.type == BGP_MSG_NOTIFICATION:
-            LOG.error('Sent notification to %s>> %s' %
+            LOG.error('Sent notification to %s >> %s' %
                       (self.get_peername(), msg))
 
             self._signal_bus.bgp_notification_sent(self._peer, msg)
 
         else:
-            LOG.debug('Sent msg. %s to %s>> %s' %
-                      (msg.__class__, self.get_peername(), msg))
+            LOG.debug('Sent msg to %s >> %s' % (self.get_peername(), msg))
 
     def stop(self):
         Activity.stop(self)
@@ -426,8 +425,8 @@ class BgpProtocol(Protocol, Activity):
         message except for *Open* and *Notification* message. On receiving
         *Notification* message we close connection with peer.
         """
-        LOG.debug('Received %s msg. from %s<< \n%s' %
-                  (msg.__class__, str(self.get_peername()), msg))
+        LOG.debug('Received msg from %s << %s' % \
+                (str(self.get_peername()), msg))
 
         # If we receive open message we try to bind to protocol
         if (msg.type == BGP_MSG_OPEN):
