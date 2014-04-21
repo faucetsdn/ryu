@@ -181,7 +181,7 @@ class Activity(object):
 
         # Schedule to spawn a new greenthread after requested delay
         greenthread = hub.spawn_after(seconds, activity.start, *args,
-                                           **kwargs)
+                                      **kwargs)
         self._child_thread_map[activity.name] = greenthread
         self._child_activity_map[activity.name] = activity
         return greenthread
@@ -352,6 +352,7 @@ class Activity(object):
                 # in a new thread.
                 self._spawn(conn_name, conn_handler, sock)
         return sock
+
 
 #
 # Sink

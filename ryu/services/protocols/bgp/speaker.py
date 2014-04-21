@@ -425,8 +425,8 @@ class BgpProtocol(Protocol, Activity):
         message except for *Open* and *Notification* message. On receiving
         *Notification* message we close connection with peer.
         """
-        LOG.debug('Received msg from %s << %s' % \
-                (str(self.get_peername()), msg))
+        LOG.debug('Received msg from %s << %s' % (str(self.get_peername()),
+                                                  msg))
 
         # If we receive open message we try to bind to protocol
         if (msg.type == BGP_MSG_OPEN):

@@ -34,6 +34,7 @@ class EventletIOFactory(object):
         LOG.debug('create_looping_call called')
         return LoopingCall(funct, *args, **kwargs)
 
+
 # TODO: improve Timer service and move it into framework
 class LoopingCall(object):
     """Call a function repeatedly.

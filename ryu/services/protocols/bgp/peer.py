@@ -726,7 +726,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # NeighborConf has this setting we add this to existing list.
                 communities = path_extcomm_attr.communities
                 if self._neigh_conf.soo_list:
-                    #construct extended community
+                    # construct extended community
                     soo_list = self._neigh_conf.soo_list
                     subtype = 0x03
                     for soo in soo_list:
