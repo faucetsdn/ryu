@@ -19,6 +19,7 @@
 from abc import ABCMeta
 from abc import abstractmethod
 import logging
+import uuid
 from types import BooleanType
 from types import IntType
 from types import LongType
@@ -263,8 +264,7 @@ class ConfWithId(BaseConf):
     UPDATE_DESCRIPTION_EVT = 'update_description_evt'
 
     VALID_EVT = frozenset([UPDATE_NAME_EVT, UPDATE_DESCRIPTION_EVT])
-    REQUIRED_SETTINGS = frozenset([ID])
-    OPTIONAL_SETTINGS = frozenset([NAME, DESCRIPTION])
+    OPTIONAL_SETTINGS = frozenset([ID, NAME, DESCRIPTION])
 
     def __init__(self, **kwargs):
         super(ConfWithId, self).__init__(**kwargs)
@@ -278,7 +278,6 @@ class ConfWithId(BaseConf):
     @classmethod
     def get_req_settings(cls):
         self_confs = super(ConfWithId, cls).get_req_settings()
-        self_confs.update(ConfWithId.REQUIRED_SETTINGS)
         return self_confs
 
     @classmethod
@@ -289,6 +288,8 @@ class ConfWithId(BaseConf):
 
     def _init_opt_settings(self, **kwargs):
         super(ConfWithId, self)._init_opt_settings(**kwargs)
+        self._settings[ConfWithId.ID] = \
+            compute_optional_conf(ConfWithId.ID, str(uuid.uuid4()), **kwargs)
         self._settings[ConfWithId.NAME] = \
             compute_optional_conf(ConfWithId.NAME, str(self), **kwargs)
         self._settings[ConfWithId.DESCRIPTION] = \
