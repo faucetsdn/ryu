@@ -17,6 +17,7 @@
 """
 import abc
 import logging
+import socket
 import time
 import traceback
 import weakref
@@ -340,7 +341,7 @@ class Activity(object):
         """
         LOG.debug('Connect TCP called for %s:%s' % (peer_addr[0],
                                                     peer_addr[1]))
-        with Timeout(time_out, False):
+        with Timeout(time_out, socket.error):
             sock = hub.connect(peer_addr, bind=bind_address)
             if sock:
                 # Connection name for pro-active connection is made up
