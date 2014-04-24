@@ -113,6 +113,34 @@ class Test_ipv6(unittest.TestCase):
             addrconv.ipv6.text_to_bin(self.dst))
         self.buf += self.dst_opts.serialize()
 
+    def setUp_with_routing_type3(self):
+        self.routing_nxt = 6
+        self.routing_size = 6
+        self.routing_type = 3
+        self.routing_seg = 2
+        self.routing_cmpi = 0
+        self.routing_cmpe = 0
+        self.routing_adrs = ["2001:db8:dead::1", "2001:db8:dead::2",
+                             "2001:db8:dead::3"]
+        self.routing = ipv6.routing_type3(
+            self.routing_nxt, self.routing_size,
+            self.routing_type, self.routing_seg,
+            self.routing_cmpi, self.routing_cmpe,
+            self.routing_adrs)
+        self.ext_hdrs = [self.routing]
+        self.payload_length += len(self.routing)
+        self.nxt = ipv6.routing.TYPE
+        self.ip = ipv6.ipv6(
+            self.version, self.traffic_class, self.flow_label,
+            self.payload_length, self.nxt, self.hop_limit, self.src,
+            self.dst, self.ext_hdrs)
+        self.buf = struct.pack(
+            ipv6.ipv6._PACK_STR, self.v_tc_flow,
+            self.payload_length, self.nxt, self.hop_limit,
+            addrconv.ipv6.text_to_bin(self.src),
+            addrconv.ipv6.text_to_bin(self.dst))
+        self.buf += self.routing.serialize()
+
     def setUp_with_fragment(self):
         self.fragment_nxt = 6
         self.fragment_offset = 50
@@ -218,6 +246,10 @@ class Test_ipv6(unittest.TestCase):
         self.setUp_with_dst_opts()
         self.test_init()
 
+    def test_init_with_routing_type3(self):
+        self.setUp_with_routing_type3()
+        self.test_init()
+
     def test_init_with_fragment(self):
         self.setUp_with_fragment()
         self.test_init()
@@ -253,6 +285,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_parser_with_dst_opts(self):
         self.setUp_with_dst_opts()
+        self.test_parser()
+
+    def test_parser_with_routing_type3(self):
+        self.setUp_with_routing_type3()
         self.test_parser()
 
     def test_parser_with_fragment(self):
@@ -300,6 +336,16 @@ class Test_ipv6(unittest.TestCase):
         buf = self.ip.serialize(data, prev)
         dst_opts = ipv6.dst_opts.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
         eq_(repr(self.dst_opts), repr(dst_opts))
+
+    def test_serialize_with_routing_type3(self):
+        self.setUp_with_routing_type3()
+        self.test_serialize()
+
+        data = bytearray()
+        prev = None
+        buf = self.ip.serialize(data, prev)
+        routing = ipv6.routing.parser(str(buf[ipv6.ipv6._MIN_LEN:]))
+        eq_(repr(self.routing), repr(routing))
 
     def test_serialize_with_fragment(self):
         self.setUp_with_fragment()
@@ -384,6 +430,10 @@ class Test_ipv6(unittest.TestCase):
         self.setUp_with_dst_opts()
         eq_(len(self.ip), 40 + len(self.dst_opts))
 
+    def test_len_with_routing_type3(self):
+        self.setUp_with_routing_type3()
+        eq_(len(self.ip), 40 + len(self.routing))
+
     def test_len_with_fragment(self):
         self.setUp_with_fragment()
         eq_(len(self.ip), 40 + len(self.fragment))
@@ -436,6 +486,10 @@ class Test_ipv6(unittest.TestCase):
 
     def test_json_with_dst_opts(self):
         self.setUp_with_dst_opts()
+        self.test_json()
+
+    def test_json_with_routing_type3(self):
+        self.setUp_with_routing_type3()
         self.test_json()
 
     def test_json_with_fragment(self):
@@ -690,6 +744,271 @@ class Test_option_padN(Test_option):
         res = struct.unpack_from(self.form, buf)
         eq_(self.type_, res[0])
         eq_(self.len_, res[1])
+
+
+class Test_routing(unittest.TestCase):
+
+    def setUp(self):
+        self.nxt = 0
+        self.size = 6
+        self.type_ = ipv6.routing.ROUTING_TYPE_3
+        self.seg = 0
+        self.cmpi = 0
+        self.cmpe = 0
+        self.adrs = ["2001:db8:dead::1",
+                     "2001:db8:dead::2",
+                     "2001:db8:dead::3"]
+        # calculate pad
+        self.pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
+                   (16 - self.cmpe) % 8)) % 8
+        # create buf
+        self.form = '!BBBBBB2x16s16s16s'
+        self.buf = struct.pack(self.form, self.nxt, self.size,
+                               self.type_, self.seg,
+                               (self.cmpi << 4) | self.cmpe,
+                               self.pad << 4,
+                               addrconv.ipv6.text_to_bin(self.adrs[0]),
+                               addrconv.ipv6.text_to_bin(self.adrs[1]),
+                               addrconv.ipv6.text_to_bin(self.adrs[2]))
+
+    def tearDown(self):
+        pass
+
+    def test_parser(self):
+        _res = ipv6.routing.parser(self.buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(self.nxt, res.nxt)
+        eq_(self.size, res.size)
+        eq_(self.type_, res.type_)
+        eq_(self.seg, res.seg)
+        eq_(self.cmpi, res.cmpi)
+        eq_(self.cmpe, res.cmpe)
+        eq_(self.pad, res._pad)
+        eq_(self.adrs[0], res.adrs[0])
+        eq_(self.adrs[1], res.adrs[1])
+        eq_(self.adrs[2], res.adrs[2])
+
+    def test_not_implemented_type(self):
+        not_implemented_buf = struct.pack(
+            '!BBBBBB2x', 0, 6, ipv6.routing.ROUTING_TYPE_2, 0, 0, 0)
+        instance = ipv6.routing.parser(not_implemented_buf)
+        assert None == instance
+
+    def test_invalid_type(self):
+        invalid_type = 99
+        invalid_buf = struct.pack('!BBBBBB2x', 0, 6, invalid_type, 0, 0, 0)
+        instance = ipv6.routing.parser(invalid_buf)
+        assert None == instance
+
+
+class Test_routing_type3(unittest.TestCase):
+
+    def setUp(self):
+        self.nxt = 0
+        self.size = 6
+        self.type_ = 3
+        self.seg = 0
+        self.cmpi = 0
+        self.cmpe = 0
+        self.adrs = ["2001:db8:dead::1",
+                     "2001:db8:dead::2",
+                     "2001:db8:dead::3"]
+        # calculate pad
+        self.pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
+                   (16 - self.cmpe) % 8)) % 8
+
+        self.routing = ipv6.routing_type3(
+            self.nxt, self.size, self.type_, self.seg, self.cmpi,
+            self.cmpe, self.adrs)
+        self.form = '!BBBBBB2x16s16s16s'
+        self.buf = struct.pack(self.form, self.nxt, self.size,
+                               self.type_, self.seg,
+                               (self.cmpi << 4) | self.cmpe,
+                               self.pad << 4,
+                               addrconv.ipv6.text_to_bin(self.adrs[0]),
+                               addrconv.ipv6.text_to_bin(self.adrs[1]),
+                               addrconv.ipv6.text_to_bin(self.adrs[2]))
+
+    def test_init(self):
+        eq_(self.nxt, self.routing.nxt)
+        eq_(self.size, self.routing.size)
+        eq_(self.type_, self.routing.type_)
+        eq_(self.seg, self.routing.seg)
+        eq_(self.cmpi, self.routing.cmpi)
+        eq_(self.cmpe, self.routing.cmpe)
+        eq_(self.pad, self.routing._pad)
+        eq_(self.adrs[0], self.routing.adrs[0])
+        eq_(self.adrs[1], self.routing.adrs[1])
+        eq_(self.adrs[2], self.routing.adrs[2])
+
+    def test_parser(self):
+        _res = ipv6.routing.parser(self.buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(self.nxt, res.nxt)
+        eq_(self.size, res.size)
+        eq_(self.type_, res.type_)
+        eq_(self.seg, res.seg)
+        eq_(self.cmpi, res.cmpi)
+        eq_(self.cmpe, res.cmpe)
+        eq_(self.pad, res._pad)
+        eq_(self.adrs[0], res.adrs[0])
+        eq_(self.adrs[1], res.adrs[1])
+        eq_(self.adrs[2], res.adrs[2])
+
+    def test_serialize(self):
+        buf = self.routing.serialize()
+        res = struct.unpack_from(self.form, str(buf))
+        eq_(self.nxt, res[0])
+        eq_(self.size, res[1])
+        eq_(self.type_, res[2])
+        eq_(self.seg, res[3])
+        eq_(self.cmpi, res[4] >> 4)
+        eq_(self.cmpe, res[4] & 0xf)
+        eq_(self.pad, res[5])
+        eq_(addrconv.ipv6.text_to_bin(self.adrs[0]), res[6])
+        eq_(addrconv.ipv6.text_to_bin(self.adrs[1]), res[7])
+        eq_(addrconv.ipv6.text_to_bin(self.adrs[2]), res[8])
+
+    def test_parser_with_adrs_zero(self):
+        nxt = 0
+        size = 0
+        type_ = 3
+        seg = 0
+        cmpi = 0
+        cmpe = 0
+        adrs = []
+        # calculate pad
+        pad = (8 - ((len(adrs) - 1) * (16 - cmpi) + (16 - cmpe) % 8)) % 8
+
+        form = '!BBBBBB2x'
+        buf = struct.pack(form, nxt, size, type_, seg,
+                          (cmpi << 4) | cmpe, pad << 4)
+        _res = ipv6.routing.parser(buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(nxt, res.nxt)
+        eq_(size, res.size)
+        eq_(type_, res.type_)
+        eq_(seg, res.seg)
+        eq_(cmpi, res.cmpi)
+        eq_(cmpe, res.cmpe)
+        eq_(pad, res._pad)
+
+    def test_serialize_with_adrs_zero(self):
+        nxt = 0
+        size = 0
+        type_ = 3
+        seg = 0
+        cmpi = 0
+        cmpe = 0
+        adrs = []
+        # calculate pad
+        pad = (8 - ((len(adrs) - 1) * (16 - cmpi) + (16 - cmpe) % 8)) % 8
+        routing = ipv6.routing_type3(
+            nxt, size, type_, seg, cmpi,
+            cmpe, pad)
+        buf = routing.serialize()
+        form = '!BBBBBB2x'
+        res = struct.unpack_from(form, str(buf))
+        eq_(nxt, res[0])
+        eq_(size, res[1])
+        eq_(type_, res[2])
+        eq_(seg, res[3])
+        eq_(cmpi, res[4] >> 4)
+        eq_(cmpe, res[4] & 0xf)
+        eq_(pad, res[5])
+
+    def test_parser_with_compression(self):
+        pass
+        nxt = 0
+        size = 3
+        type_ = 3
+        seg = 0
+        cmpi = 8
+        cmpe = 12
+        adrs = ["2001:0db8:dead:0123:4567:89ab:cdef:0001",
+                "2001:0db8:dead:0123:4567:89ab:cdef:0002",
+                "2001:0db8:dead:0123:4567:89ab:cdef:0003"]
+        # calculate pad
+        pad = (8 - ((len(adrs) - 1) * (16 - cmpi) + (16 - cmpe) % 8)) % 8
+        form = '!BBBBBB2x%ds%ds%ds' % (16-cmpi, 16-cmpi, 16-cmpe)
+        slice_i = slice(cmpi, 16)
+        slice_e = slice(cmpe, 16)
+        buf = struct.pack(form, nxt, size, type_, seg,
+                          (cmpi << 4) | cmpe, pad << 4,
+                          addrconv.ipv6.text_to_bin(adrs[0])[slice_i],
+                          addrconv.ipv6.text_to_bin(adrs[1])[slice_i],
+                          addrconv.ipv6.text_to_bin(adrs[2])[slice_e])
+        _res = ipv6.routing.parser(buf)
+        if type(_res) is tuple:
+            res = _res[0]
+        else:
+            res = _res
+        eq_(nxt, res.nxt)
+        eq_(size, res.size)
+        eq_(type_, res.type_)
+        eq_(seg, res.seg)
+        eq_(cmpi, res.cmpi)
+        eq_(cmpe, res.cmpe)
+        eq_(pad, res._pad)
+        eq_("::4567:89ab:cdef:1", res.adrs[0])
+        eq_("::4567:89ab:cdef:2", res.adrs[1])
+        eq_("::205.239.0.3", res.adrs[2])
+
+    def test_serialize_with_compression(self):
+        nxt = 0
+        size = 3
+        type_ = 3
+        seg = 0
+        cmpi = 8
+        cmpe = 8
+        adrs = ["2001:db8:dead::1",
+                "2001:db8:dead::2",
+                "2001:db8:dead::3"]
+        # calculate pad
+        pad = (8 - ((len(adrs) - 1) * (16 - cmpi) + (16 - cmpe) % 8)) % 8
+        slice_i = slice(cmpi, 16)
+        slice_e = slice(cmpe, 16)
+        routing = ipv6.routing_type3(
+            nxt, size, type_, seg, cmpi, cmpe, adrs)
+        buf = routing.serialize()
+        form = '!BBBBBB2x8s8s8s'
+        res = struct.unpack_from(form, str(buf))
+        eq_(nxt, res[0])
+        eq_(size, res[1])
+        eq_(type_, res[2])
+        eq_(seg, res[3])
+        eq_(cmpi, res[4] >> 4)
+        eq_(cmpe, res[4] & 0xf)
+        eq_(pad, res[5])
+        eq_(addrconv.ipv6.text_to_bin(adrs[0])[slice_i], res[6])
+        eq_(addrconv.ipv6.text_to_bin(adrs[1])[slice_i], res[7])
+        eq_(addrconv.ipv6.text_to_bin(adrs[2])[slice_e], res[8])
+
+    def test_len(self):
+        eq_((6 + 1) * 8, len(self.routing))
+
+    def test_default_args(self):
+        hdr = ipv6.routing_type3()
+        buf = hdr.serialize()
+        LOG.info(repr(buf))
+        res = struct.unpack_from(ipv6.routing_type3._PACK_STR, str(buf))
+        LOG.info(res)
+
+        eq_(res[0], 6)
+        eq_(res[1], 0)
+        eq_(res[2], 3)
+        eq_(res[3], 0)
+        eq_(res[4], (0 << 4) | 0)
+        eq_(res[5], 0)
 
 
 class Test_fragment(unittest.TestCase):
