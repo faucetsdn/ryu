@@ -444,8 +444,7 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34984)",
                     "svlan(ethertype=33024, vid=10)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
-                    "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34984)",
@@ -454,8 +453,7 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34984)",
                     "svlan(ethertype=33024, vid=10)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
-                    "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')"
                 ]
             }
         ]
@@ -511,8 +509,7 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34984)",
                     "svlan(ethertype=33024, vid=10)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
-                    "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')"
                 ],
                 "PACKET_IN":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34984)",
@@ -521,8 +518,7 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34984)",
                     "svlan(ethertype=33024, vid=10)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
-                    "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')"
                 ]
             }
         ]
@@ -577,8 +573,7 @@
                     "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34984)",
                     "svlan(ethertype=33024, vid=10)",
                     "vlan(pcp=5, cfi=0, vid=203, ethertype=2054)",
-                    "arp(dst_ip='10.10.20.20',dst_mac='ba:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
-                    "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+                    "arp(dst_ip='10.10.20.20',dst_mac='ba:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')"
                 ],
                 "table-miss":[
                     0
