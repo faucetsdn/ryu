@@ -506,8 +506,9 @@ class RunTest(tester.TestFlowBase):
 
         cookie = 0xff00
         cookie_mask = 0xffff
+        table_id = 1
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY,
-                      actions=[action], table_id=dp.ofproto.OFPTT_ALL,
+                      actions=[action], table_id=table_id,
                       cookie=cookie, cookie_mask=cookie_mask)
 
         dp.send_barrier()
@@ -526,9 +527,10 @@ class RunTest(tester.TestFlowBase):
 
         cookie = 0xffff
         cookie_mask = 0xff00
-        self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY,
-                      actions=[action], table_id=dp.ofproto.OFPTT_ALL,
-                      cookie=cookie, cookie_mask=cookie_mask)
+        for table_id in range(2):
+            self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY,
+                          actions=[action], table_id=table_id,
+                          cookie=cookie, cookie_mask=cookie_mask)
 
         dp.send_barrier()
         self.send_flow_stats(dp)
@@ -545,9 +547,9 @@ class RunTest(tester.TestFlowBase):
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst('\xff' * 6)
+        table_id=3
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY,
-                      actions=[action], table_id=dp.ofproto.OFPTT_ALL,
-                      match=match)
+                      actions=[action], table_id=table_id, match=match)
 
         dp.send_barrier()
         self.send_flow_stats(dp)
@@ -565,8 +567,9 @@ class RunTest(tester.TestFlowBase):
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst('\xee' * 6)
         priority = 100
+        table_id=2
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY_STRICT,
-                      actions=[action], table_id=dp.ofproto.OFPTT_ALL,
+                      actions=[action], table_id=table_id,
                       match=match, priority=priority)
 
         dp.send_barrier()
