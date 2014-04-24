@@ -924,7 +924,6 @@ class RunTest(tester.TestFlowBase):
         if output is None:
             output = dp.ofproto.OFPP_CONTROLLER
 
-        self._verify['buffer_id'] = buffer_id
         self._verify['in_port'] = in_port
         self._verify['data'] = data
 
