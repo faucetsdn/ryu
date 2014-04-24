@@ -434,7 +434,7 @@ class RunTest(tester.TestFlowBase):
     def test_flow_add_goto_table(self, dp):
         self._verify = dp.ofproto.OFPIT_GOTO_TABLE
 
-        inst = [dp.ofproto_parser.OFPInstructionGotoTable(0), ]
+        inst = [dp.ofproto_parser.OFPInstructionGotoTable(1), ]
         self.mod_flow(dp, inst=inst)
         self.send_flow_stats(dp)
 
