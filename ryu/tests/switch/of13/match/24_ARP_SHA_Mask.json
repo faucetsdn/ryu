@@ -1,7 +1,7 @@
 [
     "match: 24_ARP_SHA (Mask)",
     {
-        "description":"ethernet/arp(src_mac='11:11:11:11:11:11')-->'arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -19,7 +19,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -45,20 +45,20 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/arp(src_mac='11:11:11:11:11:11')-->'arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -76,7 +76,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -103,20 +103,20 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -134,7 +134,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -160,8 +160,8 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2054)",
-                    "arp(dst_ip='10.10.20.20',dst_mac='bb:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2054)",
+                    "arp(dst_ip='10.10.20.20',dst_mac='ba:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "table-miss":[
@@ -171,7 +171,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(src_mac='11:11:11:11:11:11')-->'arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/vlan/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -189,7 +189,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -215,22 +215,22 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/vlan/arp(src_mac='11:11:11:11:11:11')-->'arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/vlan/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -248,7 +248,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -275,22 +275,22 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/vlan/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/vlan/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -308,7 +308,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -334,9 +334,9 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
                     "vlan(pcp=5, cfi=0, vid=203, ethertype=2054)",
-                    "arp(dst_ip='10.10.20.20',dst_mac='bb:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
+                    "arp(dst_ip='10.10.20.20',dst_mac='ba:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "table-miss":[
@@ -346,7 +346,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(src_mac='11:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/mpls/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -400,7 +400,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -426,21 +426,21 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34887)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/mpls/arp(src_mac='11:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/mpls/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -494,7 +494,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -521,21 +521,21 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34887)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/mpls/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/mpls/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -589,7 +589,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -615,9 +615,9 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34887)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34887)",
                     "mpls(bsb=1, label=203, exp=5, ttl=127)",
-                    "arp(dst_ip='10.10.20.20',dst_mac='bb:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
+                    "arp(dst_ip='10.10.20.20',dst_mac='ba:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "table-miss":[
@@ -627,7 +627,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(src_mac='11:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -679,7 +679,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -705,22 +705,22 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(src_mac='11:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/itag/ethernet/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -772,7 +772,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -799,22 +799,22 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=2054)",
-                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='11:11:11:11:11:11')",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ]
             }
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=11:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -866,7 +866,7 @@
                                     "OXMTlv":{
                                         "field":"arp_sha",
                                         "mask":281474959998975,
-                                        "value":"11:11:11:00:11:11"
+                                        "value":"12:11:11:00:11:11"
                                     }
                                 }
                             ]
@@ -892,10 +892,10 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=35047)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=35047)",
                     "itag(sid=203)",
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2054)",
-                    "arp(dst_ip='10.10.20.20',dst_mac='bb:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2054)",
+                    "arp(dst_ip='10.10.20.20',dst_mac='ba:bb:bb:bb:bb:bb', opcode=2, src_ip='10.10.10.10',src_mac='aa:aa:aa:aa:aa:aa')",
                     "'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
                 ],
                 "table-miss":[

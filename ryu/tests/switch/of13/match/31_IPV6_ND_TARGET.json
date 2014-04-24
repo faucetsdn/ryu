@@ -56,14 +56,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -125,14 +125,14 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -193,7 +193,7 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34525)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34525)",
                     "ipv6(dst='b0::b0', flow_label=203, src='a0::a0', nxt=58, hop_limit=127, traffic_class=65)",
                     "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='aa:aa:aa:aa:aa:aa'),dst='b0::b0'),type_=135)"
                 ],
@@ -259,16 +259,16 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -330,16 +330,16 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=33024)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -400,7 +400,7 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
                     "vlan(pcp=5, cfi=0, vid=203, ethertype=34525)",
                     "ipv6(dst='b0::b0', flow_label=203, src='a0::a0', nxt=58, hop_limit=127, traffic_class=65)",
                     "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='aa:aa:aa:aa:aa:aa'),dst='b0::b0'),type_=135)"
@@ -503,15 +503,15 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34887)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -609,15 +609,15 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34887)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -714,7 +714,7 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34887)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34887)",
                     "mpls(bsb=1, label=203, exp=5, ttl=127)",
                     "ipv6(dst='b0::b0', flow_label=203, src='a0::a0', nxt=58, hop_limit=127, traffic_class=65)",
                     "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='aa:aa:aa:aa:aa:aa'),dst='b0::b0'),type_=135)"
@@ -815,16 +815,16 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "egress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -920,16 +920,16 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=35047)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=35047)",
                     "itag(sid=100)",
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ],
                 "PACKET_IN":[
-                    "ethernet(dst='22:22:22:22:22:22', src='11:11:11:11:11:11', ethertype=34525)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
                     "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=58, hop_limit=64, traffic_class=32)",
-                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='11:11:11:11:11:11'),dst='20::20'),type_=135)"
+                    "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='12:11:11:11:11:11'),dst='20::20'),type_=135)"
                 ]
             }
         ]
@@ -1024,9 +1024,9 @@
         "tests":[
             {
                 "ingress":[
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=35047)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=35047)",
                     "itag(sid=203)",
-                    "ethernet(dst='bb:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34525)",
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34525)",
                     "ipv6(dst='b0::b0', flow_label=203, src='a0::a0', nxt=58, hop_limit=127, traffic_class=65)",
                     "icmpv6(code=0,data=nd_neighbor(option=nd_option_sla(hw_src='aa:aa:aa:aa:aa:aa'),dst='b0::b0'),type_=135)"
                 ],
