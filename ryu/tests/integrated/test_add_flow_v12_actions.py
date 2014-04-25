@@ -486,10 +486,7 @@ class RunTest(tester.TestFlowBase):
             'test_action_set_field_ipv6_nd_target',
             'test_action_set_field_ipv6_nd_tll',
             'test_action_copy_ttl_in',
-            'test_action_copy_ttl_out',
-            'test_action_push_mpls',
-            'test_action_set_field_mpls_label',
-            'test_action_set_field_mpls_tc'
+            'test_action_copy_ttl_out'
         ]
         for u in unsupported:
             if t.find(u) != -1:
