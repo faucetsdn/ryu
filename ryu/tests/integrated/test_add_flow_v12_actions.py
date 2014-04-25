@@ -340,14 +340,20 @@ class RunTest(tester.TestFlowBase):
         ipv6_src = '7527:c798:c772:4a18:117a:14ff:c1b6:e4ef'
         value = self.ipv6_to_int(ipv6_src)
 
-        self.add_set_field_action(dp, field, value)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(0x86dd)
+
+        self.add_set_field_action(dp, field, value, match)
 
     def test_action_set_field_ipv6_dst(self, dp):
         field = dp.ofproto.OXM_OF_IPV6_DST
         ipv6_dst = '8893:65b3:6b49:3bdb:3d2:9401:866c:c96'
         value = self.ipv6_to_int(ipv6_dst)
 
-        self.add_set_field_action(dp, field, value)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(0x86dd)
+
+        self.add_set_field_action(dp, field, value, match)
 
     def test_action_set_field_ipv6_flabel(self, dp):
         field = dp.ofproto.OXM_OF_IPV6_FLABEL
@@ -466,8 +472,13 @@ class RunTest(tester.TestFlowBase):
         unsupported = [
             'test_action_set_field_ip_proto',
             'test_action_set_field_dl_type',
-            'test_action_set_field_ipv6',
             'test_action_set_field_icmp',
+            'test_action_set_field_icmpv6_code',
+            'test_action_set_field_icmpv6_type',
+            'test_action_set_field_ipv6_flabel',
+            'test_action_set_field_ipv6_nd_sll',
+            'test_action_set_field_ipv6_nd_target',
+            'test_action_set_field_ipv6_nd_tll',
             'test_action_copy_ttl_in',
             'test_action_copy_ttl_out',
             'test_action_dec_mpls_ttl',
