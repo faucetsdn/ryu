@@ -145,7 +145,9 @@ class RunTest(tester.TestFlowBase):
         self._verify = [dp.ofproto.OFPAT_POP_MPLS,
                         'ethertype', ethertype]
         actions = [dp.ofproto_parser.OFPActionPopMpls(ethertype), ]
-        self.add_apply_actions(dp, actions)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(ether.ETH_TYPE_MPLS)
+        self.add_apply_actions(dp, actions, match)
 
     # Test of Set-Filed Actions
     def test_action_set_field_dl_dst(self, dp):
@@ -482,7 +484,6 @@ class RunTest(tester.TestFlowBase):
             'test_action_copy_ttl_in',
             'test_action_copy_ttl_out',
             'test_action_dec_mpls_ttl',
-            'test_action_pop_mpls',
             'test_action_push_mpls',
             'test_action_set_field_mpls_label',
             'test_action_set_field_mpls_tc',
