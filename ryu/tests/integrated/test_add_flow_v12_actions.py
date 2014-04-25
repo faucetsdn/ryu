@@ -172,7 +172,10 @@ class RunTest(tester.TestFlowBase):
         field = dp.ofproto.OXM_OF_VLAN_VID
         value = 0x1e4
 
-        self.add_set_field_action(dp, field, value)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_vlan_vid(1)
+
+        self.add_set_field_action(dp, field, value, match)
 
     def test_action_set_field_vlan_pcp(self, dp):
         field = dp.ofproto.OXM_OF_VLAN_PCP
