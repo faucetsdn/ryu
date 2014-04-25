@@ -466,7 +466,6 @@ class RunTest(tester.TestFlowBase):
         unsupported = [
             'test_action_set_field_ip_proto',
             'test_action_set_field_dl_type',
-            'test_action_set_field_arp',
             'test_action_set_field_ipv6',
             'test_action_set_field_icmp',
             'test_action_copy_ttl_in',
