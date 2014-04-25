@@ -420,12 +420,16 @@ class RunTest(tester.TestFlowBase):
         self._verify = [dp.ofproto.OFPAT_SET_MPLS_TTL,
                         'mpls_ttl', mpls_ttl]
         actions = [dp.ofproto_parser.OFPActionSetMplsTtl(mpls_ttl), ]
-        self.add_apply_actions(dp, actions)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(ether.ETH_TYPE_MPLS)
+        self.add_apply_actions(dp, actions, match)
 
     def test_action_dec_mpls_ttl(self, dp):
         self._verify = [dp.ofproto.OFPAT_DEC_MPLS_TTL]
         actions = [dp.ofproto_parser.OFPActionDecMplsTtl(), ]
-        self.add_apply_actions(dp, actions)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(ether.ETH_TYPE_MPLS)
+        self.add_apply_actions(dp, actions, match)
 
     def test_action_set_nw_ttl_ipv4(self, dp):
         nw_ttl = 64
@@ -483,11 +487,9 @@ class RunTest(tester.TestFlowBase):
             'test_action_set_field_ipv6_nd_tll',
             'test_action_copy_ttl_in',
             'test_action_copy_ttl_out',
-            'test_action_dec_mpls_ttl',
             'test_action_push_mpls',
             'test_action_set_field_mpls_label',
-            'test_action_set_field_mpls_tc',
-            'test_action_set_mpls_ttl'
+            'test_action_set_field_mpls_tc'
         ]
         for u in unsupported:
             if t.find(u) != -1:
