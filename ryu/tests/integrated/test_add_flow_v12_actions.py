@@ -421,10 +421,19 @@ class RunTest(tester.TestFlowBase):
         actions = [dp.ofproto_parser.OFPActionSetNwTtl(nw_ttl), ]
         self.add_apply_actions(dp, actions)
 
-    def test_action_dec_nw_ttl(self, dp):
+    def test_action_dec_nw_ttl_ipv4(self, dp):
         self._verify = [dp.ofproto.OFPAT_DEC_NW_TTL]
         actions = [dp.ofproto_parser.OFPActionDecNwTtl(), ]
-        self.add_apply_actions(dp, actions)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(0x0800)
+        self.add_apply_actions(dp, actions, match)
+
+    def test_action_dec_nw_ttl_ipv6(self, dp):
+        self._verify = [dp.ofproto.OFPAT_DEC_NW_TTL]
+        actions = [dp.ofproto_parser.OFPActionDecNwTtl(), ]
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_dl_type(0x86dd)
+        self.add_apply_actions(dp, actions, match)
 
     def test_action_copy_ttl_out(self, dp):
         self._verify = [dp.ofproto.OFPAT_COPY_TTL_OUT]
