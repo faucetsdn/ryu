@@ -128,7 +128,9 @@ class RunTest(tester.TestFlowBase):
         self._verify = [dp.ofproto.OFPAT_POP_VLAN, ]
 
         actions = [dp.ofproto_parser.OFPActionPopVlan(), ]
-        self.add_apply_actions(dp, actions)
+        match = dp.ofproto_parser.OFPMatch()
+        match.set_vlan_vid(1)
+        self.add_apply_actions(dp, actions, match)
 
     def test_action_push_mpls(self, dp):
         ethertype = ether.ETH_TYPE_MPLS
