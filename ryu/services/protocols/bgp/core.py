@@ -400,7 +400,10 @@ class CoreService(Factory, Activity):
         """
         assert socket
         peer_addr, peer_port = socket.getpeername()
+        bind_ip, bind_port = socket.getsockname()
         peer = self._peer_manager.get_by_addr(peer_addr)
+        peer._host_bind_ip = bind_ip
+        peer._host_bind_port = bind_port
         bgp_proto = self.build_protocol(socket)
 
         # We reject this connection request from peer:

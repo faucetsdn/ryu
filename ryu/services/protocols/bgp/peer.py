@@ -818,9 +818,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                                              client_factory,
                                              time_out=tcp_conn_timeout,
                                              bind_address=bind_addr)
-                    bind_ip, bind_port = sock.getpeername()
-                    self._host_bind_ip = bind_ip
-                    self._host_bind_port = bind_port
                 except socket.error:
                     self.state.bgp_state = const.BGP_FSM_ACTIVE
                     LOG.debug('Socket could not be created in time (%s secs),'
