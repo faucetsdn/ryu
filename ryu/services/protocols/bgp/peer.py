@@ -986,8 +986,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # non-MPBGP Update msg.
         if not (mp_reach_attr or mp_unreach_attr):
-            LOG.info('Received UPDATE msg. with no MpReachNlri or '
-                     'MpUnReachNlri attribute.')
             if not self.is_mpbgp_cap_valid(RF_IPv4_UC):
                 LOG.error('Got UPDATE message with un-available'
                           ' afi/safi %s' % RF_IPv4_UC)
