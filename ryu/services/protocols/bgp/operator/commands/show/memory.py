@@ -48,7 +48,7 @@ class Memory(Command):
                 'summary': []}
 
             for class_name, s in size.items():
-            # Calculate size in MB
+                # Calculate size in MB
                 size_mb = s / 1000000
                 # We are only interested in class which take-up more than a MB
                 if size_mb > 0:

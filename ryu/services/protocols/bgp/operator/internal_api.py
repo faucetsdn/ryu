@@ -7,6 +7,11 @@ from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
 
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -94,11 +99,27 @@ class InternalApi(object):
                'prefix': dst.nlri.formatted_nlri_str}
 
         def _path_to_dict(dst, path):
-            aspath = path.get_pattr(BGP_ATTR_TYPE_AS_PATH).path_seg_list
-            if aspath is None or len(aspath) == 0:
+
+            path_seg_list = path.get_pattr(BGP_ATTR_TYPE_AS_PATH).path_seg_list
+
+            if type(path_seg_list) == list:
+                aspath = []
+                for as_path_seg in path_seg_list:
+                    for as_num in as_path_seg:
+                        aspath.append(as_num)
+            else:
                 aspath = ''
 
-            nexthop = path.nexthop
+            origin = path.get_pattr(BGP_ATTR_TYPE_ORIGIN).value
+
+            if origin == BGP_ATTR_ORIGIN_IGP:
+                origin = 'i'
+            elif origin == BGP_ATTR_ORIGIN_EGP:
+                origin = 'e'
+            else:
+                origin = None
+
+            nexthop = path.nexthop.value
             # Get the MED path attribute
             med = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
             med = med.value if med else ''
@@ -109,7 +130,8 @@ class InternalApi(object):
                     'prefix': path.nlri.formatted_nlri_str,
                     'nexthop': nexthop,
                     'metric': med,
-                    'aspath': aspath}
+                    'aspath': aspath,
+                    'origin': origin}
 
         for path in dst.known_path_list:
             ret['paths'].append(_path_to_dict(dst, path))

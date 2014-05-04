@@ -42,7 +42,7 @@ class Command(object):
     help_msg = ''
     param_help_msg = None
     command = ''
-    cli_resp_line_template = '{0}: {1}\n\n'
+    cli_resp_line_template = '{0}: {1}\n'
 
     def __init__(self, api=None, parent=None,
                  help_formatter=default_help_formatter,

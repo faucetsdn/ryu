@@ -5,6 +5,7 @@ from ryu.services.protocols.bgp.operator.command import CommandsResponse
 from ryu.services.protocols.bgp.operator.command import STATUS_ERROR
 from ryu.services.protocols.bgp.operator.command import STATUS_OK
 
+from ryu.services.protocols.bgp.base import ActivityException
 from ryu.services.protocols.bgp.operator.commands.responses import \
     WrongParamResp
 
@@ -50,9 +51,12 @@ class Rib(RibBase):
             if len(params) != 0:
                 return WrongParamResp()
             ret = {}
-            for family in self.supported_families:
-                ret[family] = self.api.get_single_rib_routes(family)
-            return CommandsResponse(STATUS_OK, ret)
+            try:
+                for family in self.supported_families:
+                    ret[family] = self.api.get_single_rib_routes(family)
+                return CommandsResponse(STATUS_OK, ret)
+            except ActivityException, e:
+                return CommandsResponse(STATUS_ERROR, e)
 
         @classmethod
         def cli_resp_formatter(cls, resp):

@@ -3,6 +3,7 @@ import logging
 from ryu.services.protocols.bgp.operator.command import Command
 from ryu.services.protocols.bgp.operator.command import CommandsResponse
 from ryu.services.protocols.bgp.operator.command import STATUS_OK
+from ryu.services.protocols.bgp.operator.command import STATUS_ERROR
 from ryu.services.protocols.bgp.operator.commands.responses import \
     WrongParamResp
 
@@ -18,6 +19,9 @@ class LoggingCmd(Command):
             'off': self.Off,
             'level': self.Level
         }
+
+    def action(self, params):
+        return CommandsResponse(STATUS_ERROR, 'Command incomplete')
 
     class On(Command):
         command = 'on'
@@ -56,10 +60,10 @@ class LoggingCmd(Command):
 
 
 class SetCmd(Command):
-    help_msg = 'allows to set runtime settings'
+    help_msg = 'set runtime settings'
     command = 'set'
 
     subcommands = {'logging': LoggingCmd}
 
     def action(self, params):
-        return CommandsResponse(STATUS_OK, True)
+        return CommandsResponse(STATUS_ERROR, 'Command incomplete')

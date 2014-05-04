@@ -17,6 +17,10 @@ class RouteFormatterMixin(object):
 
         def _append_path_info(buff, path, is_best, show_prefix):
             aspath = path.get('aspath')
+            origin = path.get('origin')
+            if origin:
+                aspath.append(origin)
+
             bpr = path.get('bpr')
             next_hop = path.get('nexthop')
             med = path.get('metric')
@@ -31,9 +35,10 @@ class RouteFormatterMixin(object):
                 prefix = path.get('prefix')
 
             # Append path info to String buffer.
-            buff.write(' {0:<3s} {1:<32s} {2:<20s} {3:<20s} {4:<10s} {5:<}\n'.
-                       format(path_status, prefix, next_hop, bpr, str(med),
-                              ', '.join(map(str, aspath))))
+            buff.write(
+                ' {0:<3s} {1:<32s} {2:<20s} {3:<20s} {4:<10s} {5:<}\n'.
+                format(path_status, prefix, next_hop, bpr, str(med),
+                       ' '.join(map(str, aspath))))
 
         for dist in dest_list:
             for idx, path in enumerate(dist.get('paths')):
