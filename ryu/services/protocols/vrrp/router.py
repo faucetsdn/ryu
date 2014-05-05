@@ -21,20 +21,20 @@ VRRPManager creates/deletes VRRPRounter instances dynamically.
 """
 
 import abc
+import logging
 
 from ryu.base import app_manager
 from ryu.controller import event
 from ryu.controller import handler
 from ryu.lib import hub
-from ryu.lib import apgw
+from ryu.lib import apgw_log
 from ryu.lib.packet import vrrp
 from ryu.services.protocols.vrrp import event as vrrp_event
 from ryu.services.protocols.vrrp import api as vrrp_api
 
-
-_ = type('', (apgw.StructuredMessage,), {})
-_.COMPONENT_NAME = 'vrrp'
-
+stats_log = logging.getLogger('vrrp')
+stats_log = apgw_log.DictAndLogTypeAdapter(stats_log,
+                                           log_type='stats')
 
 # TODO: improve Timer service and move it into framework
 class Timer(object):
@@ -200,6 +200,7 @@ class VRRPRouter(app_manager.RyuApp):
         self.stats_out_timer = TimerEventSender(self,
                                                 self._EventStatisticsOut)
         self.register_observer(self._EventStatisticsOut, self.name)
+        #apgw_log.configure_logging(self.logger, 'vrrp')
 
     def send_advertisement(self, release=False):
         if self.vrrp is None:
@@ -279,7 +280,7 @@ class VRRPRouter(app_manager.RyuApp):
     def statistics_handler(self, ev):
         stats = self.statistics.get_stats()
         stats.update(self.config.contexts)
-        self.logger.info(_(msg=stats, log_type='stats'))
+        stats_log.info(stats)
         self.stats_out_timer.start(self.statistics.statistics_interval)
 
 # RFC defines that start timer, then change the state.

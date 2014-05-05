@@ -17,6 +17,7 @@ from oslo.config import cfg
 import socket
 
 import netaddr
+import logging
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.services.protocols.vrrp import event as vrrp_event
@@ -24,12 +25,10 @@ from ryu.services.protocols.vrrp import api as vrrp_api
 from ryu.lib import rpc
 from ryu.lib import hub
 from ryu.lib import mac
-from ryu.lib import apgw
+from ryu.lib import apgw_log
 
 CONF = cfg.CONF
-
-_ = type('', (apgw.StructuredMessage,), {})
-_.COMPONENT_NAME = 'vrrp'
+logging.setLoggerClass(apgw_log.ApgwLogger)
 
 
 class RPCError(Exception):
@@ -56,7 +55,10 @@ class RpcVRRPManager(app_manager.RyuApp):
         self._rpc_events = hub.Queue(128)
         self.server_thread = hub.spawn(self._peer_accept_thread)
         self.event_thread = hub.spawn(self._rpc_request_loop_thread)
-        apgw.update_syslog_format()
+        self.log = logging.getLogger('vrrp')
+        apgw_log.configure_logging(self.log, 'vrrp')
+        self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
+                                                         log_type='states')
 
     def _rpc_request_loop_thread(self):
         while True:
@@ -65,9 +67,9 @@ class RpcVRRPManager(app_manager.RyuApp):
             error = None
             result = None
             try:
-                self.logger.info(_(msg={'msgid': msgid,
-                                        'target_method': target_method,
-                                        'params': params}))
+                self.log.info({'msgid': msgid,
+                               'target_method': target_method,
+                               'params': params})
                 if target_method == "vrrp_config":
                     result = self._config(msgid, params)
                 elif target_method == "vrrp_list":
@@ -80,9 +82,8 @@ class RpcVRRPManager(app_manager.RyuApp):
                     error = 'Unknown method %s' % (target_method)
             except RPCError as e:
                 error = str(e)
-            self.logger.info(_(msg={'msgid': msgid,
-                                    'error': error,
-                                    'result': result}))
+            params = {'msgid': msgid, 'error': error, 'result': result}
+            self.log.info(params)
             peer._endpoint.send_response(msgid, error=error, result=result)
 
     def _peer_loop_thread(self, peer):
@@ -226,6 +227,6 @@ class RpcVRRPManager(app_manager.RyuApp):
         new_state = ev.new_state
         vrid = ev.config.vrid
         params = {'vrid': vrid, 'old_state': old_state, 'new_state': new_state}
-        self.logger.critical(_(msg=params))
+        self.states_log.critical(params)
         for peer in self._peers:
             peer._endpoint.send_notification("notify_status", [params])
