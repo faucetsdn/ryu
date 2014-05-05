@@ -716,7 +716,11 @@ class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
 
     @property
     def prefix(self):
-        return self.addr
+        return self.addr+'/{0}'.format(self.length)
+
+    @property
+    def formatted_nlri_str(self):
+        return self.prefix
 
 
 class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
@@ -724,17 +728,53 @@ class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
 
     @property
     def prefix(self):
-        return self.addr
+        return self.addr+'/{0}'.format(self.length)
+
+    @property
+    def formatted_nlri_str(self):
+        return self.prefix
 
 
 class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
                               _IPAddrPrefix):
     ROUTE_FAMILY = RF_IPv4_VPN
 
+    @property
+    def prefix(self):
+        return self.addr[-1]+'/{0}'.format(self.length)
+
+    @property
+    def route_disc(self):
+        return self.addr[-2]
+
+    @property
+    def label_list(self):
+        return self.addr[:-2]
+
+    @property
+    def formatted_nlri_str(self):
+        return "%s:%s" % (self.route_disc, self.prefix)
+
 
 class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
                                _IP6AddrPrefix):
     ROUTE_FAMILY = RF_IPv6_VPN
+
+    @property
+    def prefix(self):
+        return self.addr[-1]+'/{0}'.format(self.length)
+
+    @property
+    def route_disc(self):
+        return self.addr[-2]
+
+    @property
+    def label_list(self):
+        return self.addr[:-2]
+
+    @property
+    def formatted_nlri_str(self):
+        return "%s:%s" % (self.route_disc, self.prefix)
 
 
 class RouteTargetMembershipNLRI(StringifyMixin):
