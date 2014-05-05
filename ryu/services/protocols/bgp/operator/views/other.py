@@ -7,7 +7,7 @@ from ryu.services.protocols.bgp.operator.views import fields
 class ImportmapManagerDetailView(OperatorDetailView):
     importmaps = fields.RelatedDictViewField(
         '_import_maps_by_name',
-        'bgpspeaker.operator.views.other.ImportmapDictView'
+        'ryu.services.protocols.bgp.operator.views.other.ImportmapDictView'
     )
 
 
