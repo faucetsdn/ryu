@@ -102,7 +102,7 @@ class BGPSpeaker(RyuApp):
 
         super(BGPSpeaker, self).start()
 
-        t.wait()
+        return t
 
     @classmethod
     def validate_rpc_ip(cls, ip):
