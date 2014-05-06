@@ -455,7 +455,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         Update appropriate counters and set appropriate timers.
         """
-        assert rr_msg.TYPE_CODE == BGP_MSG_ROUTE_REFRESH
+        assert rr_msg.type == BGP_MSG_ROUTE_REFRESH
         self._protocol.send(rr_msg)
         LOG.debug('RouteRefresh %s>> %s' %
                   (self._neigh_conf.ip_address, rr_msg))
