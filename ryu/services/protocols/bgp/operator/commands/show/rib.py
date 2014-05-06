@@ -15,7 +15,7 @@ class RibBase(Command, RouteFormatterMixin):
 
 
 class Rib(RibBase):
-    help_msg = 'show all routes for address family (only vpnv4 supported)'
+    help_msg = 'show all routes for address family'
     param_help_msg = '<address-family>'
     command = 'rib'
 

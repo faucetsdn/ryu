@@ -3,12 +3,14 @@ import StringIO
 
 class RouteFormatterMixin(object):
 
+    fmtstr = ' {0:<3s} {1:<32s} {2:<20s} {3:<15s} {4:<6s} {5:<6s} {6:<}\n'
+
     @classmethod
     def _format_family_header(cls):
         ret = ''
         ret += ('Status codes: * valid, > best\n')
-        ret += ' {0:<3s} {1:<32s} {2:<20s} {3:<10s} {4:<20s} {5:<}\n'.format(
-            '', 'Network', 'Next Hop', 'Reason', 'Metric', 'Path')
+        ret += cls.fmtstr.format('', 'Network', 'Next Hop', 'Reason', 'Metric',
+                                 'LocPrf', 'Path')
         return ret
 
     @classmethod
@@ -24,6 +26,7 @@ class RouteFormatterMixin(object):
             bpr = path.get('bpr')
             next_hop = path.get('nexthop')
             med = path.get('metric')
+            localpref = path.get('localpref')
             # Construct path status string.
             path_status = '*'
             if is_best:
@@ -35,10 +38,10 @@ class RouteFormatterMixin(object):
                 prefix = path.get('prefix')
 
             # Append path info to String buffer.
-            buff.write(
-                ' {0:<3s} {1:<32s} {2:<20s} {3:<20s} {4:<10s} {5:<}\n'.
-                format(path_status, prefix, next_hop, bpr, str(med),
-                       ' '.join(map(str, aspath))))
+            buff.write(cls.fmtstr.format(path_status, prefix,
+                                         next_hop, bpr, str(med),
+                                         str(localpref),
+                                         ' '.join(map(str, aspath))))
 
         for dist in dest_list:
             for idx, path in enumerate(dist.get('paths')):

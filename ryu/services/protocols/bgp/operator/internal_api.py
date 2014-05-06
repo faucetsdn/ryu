@@ -10,6 +10,7 @@ from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_LOCAL_PREF
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
 
@@ -110,14 +111,13 @@ class InternalApi(object):
             else:
                 aspath = ''
 
-            origin = path.get_pattr(BGP_ATTR_TYPE_ORIGIN).value
+            origin = path.get_pattr(BGP_ATTR_TYPE_ORIGIN)
+            origin = origin.value if origin else None
 
             if origin == BGP_ATTR_ORIGIN_IGP:
                 origin = 'i'
             elif origin == BGP_ATTR_ORIGIN_EGP:
                 origin = 'e'
-            else:
-                origin = None
 
             nexthop = path.nexthop.value
             # Get the MED path attribute
@@ -125,13 +125,19 @@ class InternalApi(object):
             med = med.value if med else ''
             # Get best path reason
             bpr = dst.best_path_reason if path == dst.best_path else ''
+
+            # Get local preference
+            localpref = path.get_pattr(BGP_ATTR_TYPE_LOCAL_PREF)
+            localpref = localpref.value if localpref else ''
+
             return {'best': (path == dst.best_path),
                     'bpr': bpr,
                     'prefix': path.nlri.formatted_nlri_str,
                     'nexthop': nexthop,
                     'metric': med,
                     'aspath': aspath,
-                    'origin': origin}
+                    'origin': origin,
+                    'localpref': localpref}
 
         for path in dst.known_path_list:
             ret['paths'].append(_path_to_dict(dst, path))
