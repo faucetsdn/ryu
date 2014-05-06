@@ -790,22 +790,59 @@ class RouteTargetMembershipNLRI(StringifyMixin):
 
     def __init__(self, origin_as, route_target):
         # If given is not default_as and default_rt
-        if not (origin_as is RtNlri.DEFAULT_AS and
-                route_target is RtNlri.DEFAULT_RT):
+        if not (origin_as is self.DEFAULT_AS and
+                route_target is self.DEFAULT_RT):
             # We validate them
-            if (not is_valid_old_asn(origin_as) or
-                    not is_valid_ext_comm_attr(route_target)):
+            if (not self._is_valid_old_asn(origin_as) or
+                    not self._is_valid_ext_comm_attr(route_target)):
                 raise ValueError('Invalid params.')
         self.origin_as = origin_as
         self.route_target = route_target
+
+    def _is_valid_old_asn(self, asn):
+        """Returns true if given asn is a 16 bit number.
+
+        Old AS numbers are 16 but unsigned number.
+        """
+        valid = True
+        # AS number should be a 16 bit number
+        if (not isinstance(asn, (int, long)) or (asn < 0) or
+                (asn > ((2 ** 16) - 1))):
+            valid = False
+
+        return valid
+
+    def _is_valid_ext_comm_attr(self, attr):
+        """Validates *attr* as string representation of RT or SOO.
+
+        Returns True if *attr* is as per our convention of RT or SOO, else
+        False. Our convention is to represent RT/SOO is a string with format:
+        *global_admin_part:local_admin_path*
+        """
+        is_valid = True
+
+        if not isinstance(attr, str):
+            is_valid = False
+        else:
+            first, second = attr.split(':')
+            try:
+                if '.' in first:
+                    socket.inet_aton(first)
+                else:
+                    int(first)
+                    int(second)
+            except (ValueError, socket.error):
+                is_valid = False
+
+        return is_valid
 
     @property
     def formatted_nlri_str(self):
         return "%s:%s" % (self.origin_as, self.route_target)
 
     def is_default_rtnlri(self):
-        if (self._origin_as is RtNlri.DEFAULT_AS and
-                self._route_target is RtNlri.DEFAULT_RT):
+        if (self._origin_as is self.DEFAULT_AS and
+                self._route_target is self.DEFAULT_RT):
             return True
         return False
 
