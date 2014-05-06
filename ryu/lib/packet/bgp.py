@@ -1265,6 +1265,8 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
                 type_ = self._AS_SEQUENCE
             l = list(e)
             num_as = len(l)
+            if num_as == 0:
+                continue
             msg_pack_into(self._SEG_HDR_PACK_STR, buf, offset, type_, num_as)
             offset += struct.calcsize(self._SEG_HDR_PACK_STR)
             for i in l:
