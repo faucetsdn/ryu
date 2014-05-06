@@ -2142,30 +2142,27 @@ class BGPRouteRefresh(BGPMessage):
     _MIN_LEN = BGPMessage._HDR_LEN + struct.calcsize(_PACK_STR)
 
     def __init__(self,
-                 afi, safi, reserved=0,
+                 afi, safi, demarcation=0,
                  type_=BGP_MSG_ROUTE_REFRESH, len_=None, marker=None):
         super(BGPRouteRefresh, self).__init__(marker=marker, len_=len_,
                                               type_=type_)
         self.afi = afi
         self.safi = safi
-        self.reserved = reserved
+        self.demarcation = demarcation
 
     @classmethod
     def parser(cls, buf):
-        (afi, reserved, safi,) = struct.unpack_from(cls._PACK_STR,
+        (afi, demarcation, safi,) = struct.unpack_from(cls._PACK_STR,
                                                     buffer(buf))
         return {
             "afi": afi,
-            "reserved": reserved,
             "safi": safi,
+            "demarcation": demarcation,
         }
 
     def serialize_tail(self):
-        # fixup
-        self.reserved = 0
-
         return bytearray(struct.pack(self._PACK_STR, self.afi,
-                                     self.reserved, self.safi))
+                                     self.demarcation, self.safi))
 
 
 class StreamParser(stream_parser.StreamParser):
