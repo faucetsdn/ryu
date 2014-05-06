@@ -371,15 +371,18 @@ class BgpProtocol(Protocol, Activity):
             raise BgpProtocolException('Tried to send message to peer when '
                                        'this protocol instance is not started'
                                        ' or is no longer is started state.')
+        # get peername before senging msg because sending msg can occur
+        # conncetion lost
+        peername = self.get_peername()
         self._socket.sendall(msg.serialize())
+
         if msg.type == BGP_MSG_NOTIFICATION:
             LOG.error('Sent notification to %s >> %s' %
-                      (self.get_peername(), msg))
+                      (peername, msg))
 
             self._signal_bus.bgp_notification_sent(self._peer, msg)
-
         else:
-            LOG.debug('Sent msg to %s >> %s' % (self.get_peername(), msg))
+            LOG.debug('Sent msg to %s >> %s' % (peername, msg))
 
     def stop(self):
         Activity.stop(self)
