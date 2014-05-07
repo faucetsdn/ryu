@@ -504,6 +504,28 @@ def get_desc_stats(dp, waiters):
     return desc
 
 
+def get_queue_stats(dp, waiters):
+    ofp = dp.ofproto
+    stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, 0, ofp.OFPP_ANY,
+                                                   ofp.OFPQ_ALL)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    s = []
+    for msg in msgs:
+        stats = msg.body
+        for stat in stats:
+            s.append({'duration_nsec': stat.duration_nsec,
+                      'duration_sec': stat.duration_sec,
+                      'port_no': stat.port_no,
+                      'queue_id': stat.queue_id,
+                      'tx_bytes': stat.tx_bytes,
+                      'tx_errors': stat.tx_errors,
+                      'tx_packets': stat.tx_packets})
+    desc = {str(dp.id): s}
+    return desc
+
+
 def get_flow_stats(dp, waiters):
     table_id = dp.ofproto.OFPTT_ALL
     out_port = dp.ofproto.OFPP_ANY
