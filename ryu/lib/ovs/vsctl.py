@@ -133,12 +133,12 @@ def vsctl_fatal(msg):
 
 
 class VSCtlBridge(object):
+
     def __init__(self, ovsrec_bridge, name, parent, vlan):
         super(VSCtlBridge, self).__init__()
         self.br_cfg = ovsrec_bridge
         self.name = name
         self.ports = set()
-
         self.parent = parent
         self.vlan = vlan
         self.children = set()   # WeakSet is needed?
@@ -148,22 +148,43 @@ class VSCtlBridge(object):
 
 
 class VSCtlPort(object):
+
     def __init__(self, vsctl_bridge_parent, ovsrec_port):
         super(VSCtlPort, self).__init__()
         self.bridge = weakref.ref(vsctl_bridge_parent)  # backpointer
         self.port_cfg = ovsrec_port
 
         self.ifaces = set()
+        self.qos = None
 
 
 class VSCtlIface(object):
+
     def __init__(self, vsctl_port_parent, ovsrec_iface):
         super(VSCtlIface, self).__init__()
         self.port = weakref.ref(vsctl_port_parent)      # backpointer
         self.iface_cfg = ovsrec_iface
 
 
+class VSCtlQoS(object):
+
+    def __init__(self, vsctl_port_parent, ovsrec_qos):
+        super(VSCtlQoS, self).__init__()
+        self.port = weakref.ref(vsctl_port_parent)
+        self.qos_cfg = ovsrec_qos
+        self.queues = set()
+
+
+class VSCtlQueue(object):
+
+    def __init__(self, vsctl_qos_parent, ovsrec_queue):
+        super(VSCtlQueue, self).__init__()
+        self.qos = weakref.ref(vsctl_qos_parent)
+        self.queue_cfg = ovsrec_queue
+
+
 class VSCtlContext(object):
+
     def _invalidate_cache(self):
         self.cache_valid = False
         self.bridges.clear()
@@ -230,6 +251,11 @@ class VSCtlContext(object):
 
         del self.bridges[vsctl_bridge.name]
 
+    def del_cached_qos(self, vsctl_qos):
+        vsctl_qos.port().qos = None
+        vsctl_qos.port = None
+        vsctl_qos.queues = None
+
     def add_port_to_cache(self, vsctl_bridge_parent, ovsrec_port):
         tag = getattr(ovsrec_port, vswitch_idl.OVSREC_PORT_COL_TAG, None)
         if (tag is not None and tag >= 0 and tag < 4096):
@@ -254,6 +280,15 @@ class VSCtlContext(object):
         vsctl_iface = VSCtlIface(vsctl_port_parent, ovsrec_iface)
         vsctl_port_parent.ifaces.add(vsctl_iface)
         self.ifaces[ovsrec_iface.name] = vsctl_iface
+
+    def add_qos_to_cache(self, vsctl_port_parent, ovsrec_qos):
+        vsctl_qos = VSCtlQoS(vsctl_port_parent, ovsrec_qos)
+        vsctl_port_parent.qos = vsctl_qos
+        return vsctl_qos
+
+    def add_queue_to_cache(self, vsctl_qos_parent, ovsrec_queue):
+        vsctl_queue = VSCtlQueue(vsctl_qos_parent, ovsrec_queue)
+        vsctl_qos_parent.queues.add(vsctl_queue)
 
     def del_cached_iface(self, vsctl_iface):
         vsctl_iface.port().ifaces.remove(vsctl_iface)
@@ -350,6 +385,11 @@ class VSCtlContext(object):
                                 ovsrec_iface.name)
                         continue
                     self.add_iface_to_cache(vsctl_port, ovsrec_iface)
+                ovsrec_qos = ovsrec_port.qos
+                vsctl_qos = self.add_qos_to_cache(vsctl_port, ovsrec_qos)
+                if len(ovsrec_qos):
+                    for ovsrec_queue in ovsrec_qos[0].queues:
+                        self.add_queue_to_cache(vsctl_qos, ovsrec_queue)
 
     def check_conflicts(self, name, msg):
         self.verify_ports()
@@ -409,6 +449,40 @@ class VSCtlContext(object):
         self.verify_ports()
         return vsctl_iface
 
+    def set_qos(self, vsctl_port, type, max_rate):
+        qos = vsctl_port.qos.qos_cfg
+        if not len(qos):
+            ovsrec_qos = self.txn.insert(
+                self.txn.idl.tables[vswitch_idl.OVSREC_TABLE_QOS])
+            vsctl_port.port_cfg.qos = [ovsrec_qos]
+        else:
+            ovsrec_qos = qos[0]
+        ovsrec_qos.type = type
+        if max_rate is not None:
+            self.set_column(ovsrec_qos, 'other_config', 'max-rate', max_rate)
+        self.add_qos_to_cache(vsctl_port, [ovsrec_qos])
+        return ovsrec_qos
+
+    def set_queue(self, vsctl_qos, max_rate, min_rate,
+                  queue_id):
+
+        ovsrec_qos = vsctl_qos.qos_cfg[0]
+        try:
+            ovsrec_queue = ovsrec_qos.queues[queue_id]
+        except (AttributeError, KeyError):
+            ovsrec_queue = self.txn.insert(
+                self.txn.idl.tables[vswitch_idl.OVSREC_TABLE_QUEUE])
+        if max_rate is not None:
+            self.set_column(ovsrec_queue, 'other_config',
+                            'max-rate', max_rate)
+        if min_rate is not None:
+            self.set_column(ovsrec_queue, 'other_config',
+                            'min-rate', min_rate)
+        self.set_column(ovsrec_qos, 'queues', queue_id,
+                        ['uuid', str(ovsrec_queue.uuid)])
+        self.add_queue_to_cache(vsctl_qos, ovsrec_queue)
+        return ovsrec_queue
+
     @staticmethod
     def _column_set(ovsrec_row, column, ovsrec_value):
         # need to trigger Row.__setattr__()
@@ -445,6 +519,12 @@ class VSCtlContext(object):
                                     vswitch_idl.OVSREC_BRIDGE_COL_PORTS,
                                     ovsrec_port)
 
+    @staticmethod
+    def port_delete_qos(ovsrec_port, ovsrec_qos):
+        VSCtlContext._column_delete(ovsrec_port,
+                                    vswitch_idl.OVSREC_PORT_COL_QOS,
+                                    ovsrec_qos)
+
     def ovs_insert_bridge(self, ovsrec_bridge):
         self._column_insert(self.ovs,
                             vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES,
@@ -472,6 +552,13 @@ class VSCtlContext(object):
         for vsctl_port in vsctl_bridge.ports.copy():
             self.del_port(vsctl_port)
         self.del_cached_bridge(vsctl_bridge)
+
+    def del_qos(self, vsctl_qos):
+        ovsrec_port = vsctl_qos.port().port_cfg
+        ovsrec_qos = vsctl_qos.qos_cfg
+        if len(ovsrec_qos):
+            self.port_delete_qos(ovsrec_port, ovsrec_qos[0])
+            self.del_cached_qos(vsctl_qos)
 
     def add_port(self, br_name, port_name, may_exist, fake_iface,
                  iface_names, settings=None):
@@ -721,6 +808,7 @@ class VSCtlContext(object):
 
 
 class _CmdShowTable(object):
+
     def __init__(self, table, name_column, columns, recurse):
         super(_CmdShowTable, self).__init__()
         self.table = table
@@ -730,6 +818,7 @@ class _CmdShowTable(object):
 
 
 class _VSCtlRowID(object):
+
     def __init__(self, table, name_column, uuid_column):
         super(_VSCtlRowID, self).__init__()
         self.table = table
@@ -738,6 +827,7 @@ class _VSCtlRowID(object):
 
 
 class _VSCtlTable(object):
+
     def __init__(self, table_name, vsctl_row_id_list):
         super(_VSCtlTable, self).__init__()
         self.table_name = table_name
@@ -745,6 +835,7 @@ class _VSCtlTable(object):
 
 
 class VSCtlCommand(object):
+
     def __init__(self, command, args=None, options=None):
         super(VSCtlCommand, self).__init__()
         self.command = command
@@ -763,6 +854,7 @@ class VSCtlCommand(object):
 
 
 class VSCtl(object):
+
     def _reset(self):
         self.schema_helper = None
         self.ovs = None
@@ -890,8 +982,10 @@ class VSCtl(object):
             not_reached()
         elif status == idl.Transaction.ABORTED:
             vsctl_fatal('transaction aborted')
-        elif status in (idl.Transaction.UNCHANGED, idl.Transaction.SUCCESS):
-            pass
+        elif status == idl.Transaction.UNCHANGED:
+            LOG.info('unchanged')
+        elif status == idl.Transaction.SUCCESS:
+            LOG.info('success')
         elif status == idl.Transaction.TRY_AGAIN:
             return False
         elif status == idl.Transaction.ERROR:
@@ -988,6 +1082,9 @@ class VSCtl(object):
             # 'destroy':
             # 'wait-until':
 
+            'set-qos': (self._pre_cmd_set_qos, self._cmd_set_qos),
+            'set-queue': (self._pre_cmd_set_queue, self._cmd_set_queue),
+            'del-qos': (self._pre_get_info, self._cmd_del_qos),
             # for quantum_adapter
             'list-ifaces-verbose': (self._pre_cmd_list_ifaces_verbose,
                                     self._cmd_list_ifaces_verbose),
@@ -1128,10 +1225,17 @@ class VSCtl(object):
             [vswitch_idl.OVSREC_PORT_COL_NAME,
              vswitch_idl.OVSREC_PORT_COL_FAKE_BRIDGE,
              vswitch_idl.OVSREC_PORT_COL_TAG,
-             vswitch_idl.OVSREC_PORT_COL_INTERFACES])
+             vswitch_idl.OVSREC_PORT_COL_INTERFACES,
+             vswitch_idl.OVSREC_PORT_COL_QOS])
         schema_helper.register_columns(
             vswitch_idl.OVSREC_TABLE_INTERFACE,
             [vswitch_idl.OVSREC_INTERFACE_COL_NAME])
+        schema_helper.register_columns(
+            vswitch_idl.OVSREC_TABLE_QOS,
+            [vswitch_idl.OVSREC_QOS_COL_QUEUES])
+        schema_helper.register_columns(
+            vswitch_idl.OVSREC_TABLE_QUEUE,
+            [])
 
     def _cmd_list_br(self, ctx, command):
         ctx.populate_cache()
@@ -1375,6 +1479,12 @@ class VSCtl(object):
             ovsrec_controllers.append(ovsrec_controller)
         return ovsrec_controllers
 
+    def _insert_qos(self):
+        ovsrec_qos = self.txn.insert(
+            self.txn.idl.tables[vswitch_idl.OVSREC_TABLE_QOS])
+
+        return ovsrec_qos
+
     def _set_controller(self, ctx, br_name, controller_names):
         ctx.populate_cache()
         ovsrec_bridge = ctx.find_real_bridge(br_name, True).br_cfg
@@ -1387,6 +1497,67 @@ class VSCtl(object):
         br_name = command.args[0]
         controller_names = command.args[1:]
         self._set_controller(ctx, br_name, controller_names)
+
+    def _del_qos(self, ctx, port_name):
+        assert port_name is not None
+
+        ctx.populate_cache()
+        vsctl_port = ctx.find_port(port_name, True)
+        vsctl_qos = vsctl_port.qos
+        ctx.del_qos(vsctl_qos)
+
+    def _cmd_del_qos(self, ctx, command):
+        port_name = command.args[0]
+        self._del_qos(ctx, port_name)
+
+    def _set_qos(self, ctx, port_name, type, max_rate):
+        ctx.populate_cache()
+        vsctl_port = ctx.find_port(port_name, True)
+        ovsrec_qos = ctx.set_qos(vsctl_port, type, max_rate)
+        return ovsrec_qos
+
+    def _cmd_set_qos(self, ctx, command):
+        port_name = command.args[0]
+        type = command.args[1]
+        max_rate = command.args[2]
+        result = self._set_qos(ctx, port_name, type, max_rate)
+        command.result = [result]
+
+    def _pre_cmd_set_qos(self, ctx, command):
+        self._pre_get_info(ctx, command)
+        schema_helper = self.schema_helper
+        schema_helper.register_columns(
+            vswitch_idl.OVSREC_TABLE_QOS,
+            [vswitch_idl.OVSREC_QOS_COL_EXTERNAL_IDS,
+             vswitch_idl.OVSREC_QOS_COL_OTHER_CONFIG,
+             vswitch_idl.OVSREC_QOS_COL_QUEUES,
+             vswitch_idl.OVSREC_QOS_COL_TYPE])
+
+    def _cmd_set_queue(self, ctx, command):
+        ctx.populate_cache()
+        port_name = command.args[0]
+        queues = command.args[1]
+        vsctl_port = ctx.find_port(port_name, True)
+        vsctl_qos = vsctl_port.qos
+        queue_id = 0
+        results = []
+        for queue in queues:
+            max_rate = queue.get('max-rate', None)
+            min_rate = queue.get('min-rate', None)
+            ovsrec_queue = ctx.set_queue(
+                vsctl_qos, max_rate, min_rate, queue_id)
+            results.append(ovsrec_queue)
+            queue_id += 1
+        command.result = results
+
+    def _pre_cmd_set_queue(self, ctx, command):
+        self._pre_get_info(ctx, command)
+        schema_helper = self.schema_helper
+        schema_helper.register_columns(
+            vswitch_idl.OVSREC_TABLE_QUEUE,
+            [vswitch_idl.OVSREC_QUEUE_COL_DSCP,
+             vswitch_idl.OVSREC_QUEUE_COL_EXTERNAL_IDS,
+             vswitch_idl.OVSREC_QUEUE_COL_OTHER_CONFIG])
 
     _TABLES = [
         _VSCtlTable(vswitch_idl.OVSREC_TABLE_BRIDGE,
@@ -1425,7 +1596,10 @@ class VSCtl(object):
                     [_VSCtlRowID(vswitch_idl.OVSREC_TABLE_PORT,
                                  vswitch_idl.OVSREC_PORT_COL_NAME,
                                  vswitch_idl.OVSREC_PORT_COL_QOS)]),
-        _VSCtlTable(vswitch_idl.OVSREC_TABLE_QUEUE, []),
+        _VSCtlTable(vswitch_idl.OVSREC_TABLE_QUEUE,
+                    [_VSCtlRowID(vswitch_idl.OVSREC_TABLE_QOS,
+                                 None,
+                                 vswitch_idl.OVSREC_QOS_COL_QUEUES)]),
         _VSCtlTable(vswitch_idl.OVSREC_TABLE_SSL,
                     [_VSCtlRowID(vswitch_idl.OVSREC_TABLE_OPEN_VSWITCH,
                                  None,
