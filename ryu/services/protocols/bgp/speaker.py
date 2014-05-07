@@ -38,6 +38,8 @@ from ryu.lib.packet.bgp import BGP_MSG_ROUTE_REFRESH
 from ryu.lib.packet.bgp import BGP_CAP_ENHANCED_ROUTE_REFRESH
 from ryu.lib.packet.bgp import BGP_CAP_MULTIPROTOCOL
 from ryu.lib.packet.bgp import BGP_CAP_ROUTE_REFRESH
+from ryu.lib.packet.bgp import BGP_ERROR_HOLD_TIMER_EXPIRED
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_HOLD_TIMER_EXPIRED
 
 from ryu.services.protocols.bgp.base import Activity
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
