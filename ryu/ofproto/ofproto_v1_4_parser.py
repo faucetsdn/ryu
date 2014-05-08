@@ -5541,13 +5541,14 @@ class OFPPortMod(MsgBase):
         ]
     }
 
-    def __init__(self, datapath, port_no, hw_addr, config, mask, properties):
+    def __init__(self, datapath, port_no=0, hw_addr='00:00:00:00:00:00',
+                 config=0, mask=0, properties=None):
         super(OFPPortMod, self).__init__(datapath)
         self.port_no = port_no
         self.hw_addr = hw_addr
         self.config = config
         self.mask = mask
-        self.properties = properties
+        self.properties = properties or []
 
     def _serialize_body(self):
         bin_props = bytearray()
