@@ -389,7 +389,7 @@ class OfTester(app_manager.RyuApp):
                     self._test(STATE_FLOW_INSTALL, self.target_sw, flow)
                     self._test(STATE_FLOW_EXIST_CHK, self.target_sw, flow)
                 elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
-                    self._test(STATE_METER_INSTALL, flow)
+                    self._test(STATE_METER_INSTALL, self.target_sw, flow)
                     self._test(STATE_METER_EXIST_CHK, flow)
             # Do tests.
             for pkt in test.tests:
@@ -493,9 +493,9 @@ class OfTester(app_manager.RyuApp):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
                 STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow_tester,
                 STATE_INIT_METER: self._test_initialize_meter,
-                STATE_FLOW_INSTALL: self._test_flow_install,
-                STATE_THROUGHPUT_FLOW_INSTALL: self._test_flow_install,
-                STATE_METER_INSTALL: self._test_meter_install,
+                STATE_FLOW_INSTALL: self._test_msg_install,
+                STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
+                STATE_METER_INSTALL: self._test_msg_install,
                 STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
                 STATE_THROUGHPUT_FLOW_EXIST_CHK: self._test_flow_exist_check,
                 STATE_METER_EXIST_CHK: self._test_meter_exist_check,
@@ -542,23 +542,11 @@ class OfTester(app_manager.RyuApp):
     def _test_initialize_meter(self):
         self.target_sw.del_test_meter()
 
-    def _test_flow_install(self, datapath, flow):
-        xid = datapath.add_flow(flow_mod=flow)
+    def _test_msg_install(self, datapath, message):
+        xid = datapath._send_msg(message)
         self.send_msg_xids.append(xid)
 
         xid = datapath.send_barrier_request()
-        self.send_msg_xids.append(xid)
-
-        self._wait()
-        assert len(self.rcv_msgs) == 1
-        msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
-
-    def _test_meter_install(self, meter):
-        xid = self.target_sw._send_msg(meter)
-        self.send_msg_xids.append(xid)
-
-        xid = self.target_sw.send_barrier_request()
         self.send_msg_xids.append(xid)
 
         self._wait()
