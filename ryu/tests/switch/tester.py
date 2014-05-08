@@ -1048,23 +1048,20 @@ class OpenFlowSw(object):
         self.dp.send_msg(msg)
         return msg.xid
 
-    def add_flow(self, flow_mod=None, in_port=None, out_port=None):
+    def add_flow(self, in_port=None, out_port=None):
         """ Add flow. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
 
-        if flow_mod:
-            mod = flow_mod
-        else:
-            match = parser.OFPMatch(in_port=in_port)
-            max_len = (0 if out_port != ofp.OFPP_CONTROLLER
-                       else ofp.OFPCML_MAX)
-            actions = [parser.OFPActionOutput(out_port, max_len)]
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
-                                                 actions)]
-            mod = parser.OFPFlowMod(self.dp, cookie=0,
-                                    command=ofp.OFPFC_ADD,
-                                    match=match, instructions=inst)
+        match = parser.OFPMatch(in_port=in_port)
+        max_len = (0 if out_port != ofp.OFPP_CONTROLLER
+                   else ofp.OFPCML_MAX)
+        actions = [parser.OFPActionOutput(out_port, max_len)]
+        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
+                                             actions)]
+        mod = parser.OFPFlowMod(self.dp, cookie=0,
+                                command=ofp.OFPFC_ADD,
+                                match=match, instructions=inst)
         return self._send_msg(mod)
 
     def send_barrier_request(self):
