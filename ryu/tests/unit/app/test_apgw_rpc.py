@@ -265,7 +265,7 @@ class TestRpcOFPManager(unittest.TestCase):
         eq_(r, {'xid': 1})
         eq_(len(dp.sent), nr_sent)
         eq_(len(m.monitored_meters), 1)
-        eq_(m.monitored_meters[meter_id], contexts)
+        eq_(m.monitored_meters[meter_id], (contexts, 60))
 
         ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_DELETE, ofp.OFPMF_KBPS,
                                  meter_id)
@@ -471,6 +471,9 @@ class TestRpcOFPManager(unittest.TestCase):
 
         assert len(dp.sent)
         for m in dp.sent:
+            if ofp == ofproto_v1_3 and \
+                    m.__class__ in (ofpp.OFPMeterStatsRequest,):
+                continue
             eq_(m.__class__, ofpp.OFPPortStatsRequest)
             eq_(m.port_no, port_no)
 
@@ -504,6 +507,9 @@ class TestRpcOFPManager(unittest.TestCase):
 
         assert len(dp.sent)
         for m in dp.sent:
+            if ofp == ofproto_v1_3 and \
+                    m.__class__ in (ofpp.OFPMeterStatsRequest,):
+                continue
             eq_(m.__class__, ofpp.OFPQueueStatsRequest)
             eq_(m.port_no, port_no)
             eq_(m.queue_id, queue_id)
@@ -574,9 +580,6 @@ class TestRpcOFPManager(unittest.TestCase):
                                           'contexts': contexts}])
         threads = []
         with hub.Timeout(5):
-            threads.append(hub.spawn(m._meter_stats_loop,
-                                     dp, 0.1, meter_id))
-            hub.sleep(0.5)
             ofmsg = ofpp.OFPMeterMod(dp, ofp.OFPMC_DELETE, ofp.OFPMF_KBPS,
                                      meter_id)
             r = m._handle_ofprotocol(msgid, [{'dpid': dpid,
@@ -615,6 +618,9 @@ class TestRpcOFPManager(unittest.TestCase):
 
         for s in dp.sent:
             if s.__class__ in (ofpp.OFPPortStatsRequest,):
+                continue
+            if ofp == ofproto_v1_3 and \
+                    s.__class__ in (ofpp.OFPMeterStatsRequest,):
                 continue
             eq_(s.__class__, ofpp.OFPBarrierRequest)
 

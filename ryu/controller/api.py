@@ -71,6 +71,8 @@ class RpcOFPManager(app_manager.RyuApp):
         self.monitored_ports = {}
         self.monitored_flows = {}
         self.monitored_meters = {}
+        self.flow_stats_interval = 30
+        self.meter_stats_epoch = 0
         self.monitored_queues = {}
         self.pending_rpc_requests = []
         self._rpc_events = hub.Queue(128)
@@ -78,12 +80,27 @@ class RpcOFPManager(app_manager.RyuApp):
         self.secure_channel_state = None
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._rpc_message_thread)
+        hub.spawn(self._meter_stats_thread)
         self.log = logging.getLogger('ofwire')
         apgw_log.configure_logging(self.log, 'ofwire')
         self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
                                                          log_type='states')
         self.stats_log = apgw_log.DictAndLogTypeAdapter(self.log,
                                                         log_type='stats')
+
+    def _first_datapath(self):
+        # use the first datapath
+        for k, v in self.dpset.get_all():
+            return v
+        return None
+
+    def _meter_stats_thread(self):
+        while True:
+            dp = self._first_datapath()
+            if dp:
+                msg = dp.ofproto_parser.OFPMeterStatsRequest(datapath=dp)
+                dp.send_msg(msg)
+            hub.sleep(self.flow_stats_interval)
 
     def _rpc_message_thread(self):
         while True:
@@ -281,11 +298,14 @@ class RpcOFPManager(app_manager.RyuApp):
         dp = msg.datapath
         for stat in msg.body:
             if stat.meter_id in self.monitored_meters:
-                contexts = self.monitored_meters[stat.meter_id]
+                contexts, interval = self.monitored_meters[stat.meter_id]
+                if (self.meter_stats_epoch % interval) != 0:
+                    continue
                 stats = stat.to_jsondict()['OFPMeterStats']
                 stats['band_stats'] = self._add_band_name(stats['band_stats'])
                 stats.update(contexts)
                 self.stats_log.info(stats)
+        self.meter_stats_epoch += self.flow_stats_interval
 
     @handler.set_ev_cls(ofp_event.EventOFPQueueStatsReply,
                         handler.MAIN_DISPATCHER)
@@ -390,15 +410,6 @@ class RpcOFPManager(app_manager.RyuApp):
             dp.send_msg(msg)
             hub.sleep(interval)
 
-    def _meter_stats_loop(self, dp, interval, meter_id):
-        while True:
-            if not meter_id in self.monitored_meters:
-                break
-            msg = dp.ofproto_parser.OFPMeterStatsRequest(datapath=dp,
-                                                         meter_id=meter_id)
-            dp.send_msg(msg)
-            hub.sleep(interval)
-
     def _handle_ofprotocol(self, msgid, params):
         try:
             param_dict = params[0]
@@ -443,9 +454,17 @@ class RpcOFPManager(app_manager.RyuApp):
         if contexts is not None and not isinstance(contexts, dict):
             raise RPCError('"contexts" must be dictionary, %s' %
                            (str(param_dict)))
-        if contexts is not None and interval == 0:
-            raise RPCError('"interval" must be non zero with "contexts", %s' %
-                           (str(param_dict)))
+        if contexts is not None:
+            if interval == 0:
+                raise RPCError('"interval" must be non zero with'
+                               ' "contexts", %s' % (str(param_dict)))
+            if interval % self.flow_stats_interval != 0 or \
+                    interval < self.flow_stats_interval:
+                self.logger.warning('"interval" must be a multiple of %d' %
+                                    self.flow_stats_interval)
+                interval = ((interval + (self.flow_stats_interval - 1)) /
+                            self.flow_stats_interval *
+                            self.flow_stats_interval)
 
         dp.set_xid(ofmsg)
         ofmsg.serialize()
@@ -490,9 +509,8 @@ class RpcOFPManager(app_manager.RyuApp):
                     if ofmsg.meter_id in self.monitored_meters:
                         raise RPCError('meter already exitsts %d' %
                                        (ofmsg.meter_id))
-                    self.monitored_meters[ofmsg.meter_id] = contexts
-                    hub.spawn(self._meter_stats_loop,
-                              dp, interval, ofmsg.meter_id)
+                    self.monitored_meters[ofmsg.meter_id] = (contexts,
+                                                             interval)
                 elif ofmsg.command is dp.ofproto.OFPMC_DELETE:
                     try:
                         del self.monitored_meters[ofmsg.meter_id]
