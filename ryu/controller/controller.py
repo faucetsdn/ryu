@@ -53,7 +53,9 @@ CONF.register_cli_opts([
                help='openflow ssl listen port'),
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
     cfg.StrOpt('ctl-cert', default=None, help='controller certificate'),
-    cfg.StrOpt('ca-certs', default=None, help='CA certificates')
+    cfg.StrOpt('ca-certs', default=None, help='CA certificates'),
+    cfg.IntOpt('ofp-max-rx', default=4,
+               help='limit the max number of reading OF messages'),
 ])
 
 
@@ -186,7 +188,7 @@ class Datapath(object):
                 # switches. The limit is arbitrary. We need the better
                 # approach in the future.
                 count += 1
-                if count > 2048:
+                if count > CONF.ofp_max_rx:
                     count = 0
                     hub.sleep(0)
 
