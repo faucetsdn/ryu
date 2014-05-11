@@ -12,7 +12,7 @@ from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.lib import hub
-from ryu.lib import apgw
+from ryu.lib import apgw_log
 from ryu.lib import rpc
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
@@ -25,9 +25,8 @@ import ryu.lib.of_config.classes as ofc
 import eventlet
 import sys
 
-_ = type('', (apgw.StructuredMessage,), {})
-_.COMPONENT_NAME = 'ofwire'
 
+logging.setLoggerClass(apgw_log.ApgwLogger)
 
 class RPCError(Exception):
     pass
@@ -79,7 +78,12 @@ class RpcOFPManager(app_manager.RyuApp):
         self.secure_channel_state = None
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._rpc_message_thread)
-        apgw.update_syslog_format()
+        self.log = logging.getLogger('ofwire')
+        apgw_log.configure_logging(self.log, 'ofwire')
+        self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
+                                                         log_type='states')
+        self.stats_log = apgw_log.DictAndLogTypeAdapter(self.log,
+                                                        log_type='stats')
 
     def _rpc_message_thread(self):
         while True:
@@ -108,9 +112,9 @@ class RpcOFPManager(app_manager.RyuApp):
                         try:
                             self._register_traceroute(params)
                         except RPCError as e:
-                            self.logger.error(_({'error': str(e)}))
+                            self.log.error({'error': str(e)})
                     else:
-                        self.logger.error(_({'unknown method': target_method}))
+                        self.log.error({'unknown method': target_method})
                     continue
             except RPCError as e:
                 error = str(e)
@@ -126,7 +130,7 @@ class RpcOFPManager(app_manager.RyuApp):
                     d[e.xid] = e.msgid
                 continue
             except:
-                self.logger.info(_({'bogus RPC': data}))
+                self.log.info({'bogus RPC': data})
 
             peer._endpoint.send_response(msgid, error=error, result=result)
 
@@ -213,7 +217,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 if ev.dp.id in peer.wait_for_ofp_resepnse:
                     del peer.wait_for_ofp_resepnse[ev.dp.id]
 
-        self.logger.critical(_(log_msg))
+        self.states_log.critical(log_msg)
         notify_param = self._get_secure_channel_state_param()
         for peer in self._peers:
             peer._endpoint.send_notification("state", [notify_param])
@@ -221,7 +225,7 @@ class RpcOFPManager(app_manager.RyuApp):
     @handler.set_ev_cls(ofp_event.EventOFPErrorMsg,
                         handler.MAIN_DISPATCHER)
     def _error_msg_handler(self, ev):
-        self.logger.info(_(ev.msg.to_jsondict()))
+        self.log.info(ev.msg.to_jsondict())
 
     @handler.set_ev_cls(ofp_event.EventOFPBarrierReply,
                         handler.MAIN_DISPATCHER)
@@ -243,7 +247,7 @@ class RpcOFPManager(app_manager.RyuApp):
             if contexts is not None:
                 stats = body.to_jsondict()['OFPFlowStats']
                 stats.update(contexts)
-                self.logger.info(_(msg=stats, log_type='stats'))
+                self.stats_log.info(stats)
 
     @handler.set_ev_cls(ofp_event.EventOFPPortStatsReply,
                         handler.MAIN_DISPATCHER)
@@ -261,7 +265,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 stats.update(stat.to_jsondict()['OFPPortStats'])
                 contexts, interval_ = self.monitored_ports[port.name]
                 stats.update(contexts)
-                self.logger.info(_(msg=stats, log_type='stats'))
+                self.stats_log.info(stats)
 
     def _add_band_name(self, stats):
         new_stats = [
@@ -281,7 +285,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 stats = stat.to_jsondict()['OFPMeterStats']
                 stats['band_stats'] = self._add_band_name(stats['band_stats'])
                 stats.update(contexts)
-                self.logger.info(_(msg=stats, log_type='stats'))
+                self.stats_log.info(stats)
 
     @handler.set_ev_cls(ofp_event.EventOFPQueueStatsReply,
                         handler.MAIN_DISPATCHER)
@@ -299,7 +303,7 @@ class RpcOFPManager(app_manager.RyuApp):
                          'tx_packets': stat.tx_packets,
                          'tx_errors': stat.tx_errors}
                 stats.update(contexts)
-                self.logger.info(_(msg=stats, log_type='stats'))
+                self.stats_log.info(stats)
 
     @handler.set_ev_cls(ofp_event.EventOFPStatsReply,
                         handler.MAIN_DISPATCHER)
@@ -315,7 +319,7 @@ class RpcOFPManager(app_manager.RyuApp):
     def _packet_in_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
-        self.logger.info(_({"event": "packet_in", "reason": msg.reason}))
+        self.log.info({"event": "packet_in", "reason": msg.reason})
         if dp.ofproto.OFPR_INVALID_TTL != msg.reason:
             return
 
@@ -342,8 +346,8 @@ class RpcOFPManager(app_manager.RyuApp):
             src_ip = self.traceroute_source[o_vlan.vid]['ip']
             in_port = self.traceroute_source[o_vlan.vid]['port']
         except:
-            self.logger.info(_({"event": "traceroute error",
-                                "reason": "can't find ip", "vid": o_vlan.vid}))
+            self.log.info({"event": "traceroute error",
+                           "reason": "can't find ip", "vid": o_vlan.vid})
             return
         ip = ipv4.ipv4(src=src_ip, dst=o_ip.src, proto=1)
         ip_offset = 14 + 4
@@ -367,10 +371,9 @@ class RpcOFPManager(app_manager.RyuApp):
             datapath = msg.datapath
             port = msg.desc
             ofproto = datapath.ofproto
-            self.logger.info(_({"event": "port status change",
-                                "reason": reason,
-                                "port_no": port.port_no, "state": port.state},
-                               log_type='states'))
+            self.states_log.info({"event": "port status change",
+                                  "reason": reason,
+                                  "port_no": port.port_no, "state": port.state})
             # For now just port modifications are reported
             if reason == ofproto.OFPPR_MODIFY:
                 params = {'port_no': port.port_no, 'port_state': port.state}
@@ -415,8 +418,8 @@ class RpcOFPManager(app_manager.RyuApp):
                 break
 
         if dp is None:
-            self.logger.info(_({"event": "no datapath, queued",
-                                "msg": str(param_dict)}))
+            self.log.info({"event": "no datapath, queued",
+                           "msg": str(param_dict)})
             raise PendingRPC()
 
         contexts = None
@@ -478,8 +481,8 @@ class RpcOFPManager(app_manager.RyuApp):
                     # some flows are added without contexts so we hit
                     # the following with such. For just to be safe, we
                     # log it for debugging.
-                    self.logger.debug(_({'tried to remove an unknown flow':
-                                             str(key)}))
+                    self.log.debug({'tried to remove an unknown flow':
+                                        str(key)})
         elif (dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION and
               ofmsg.msg_type is dp.ofproto.OFPT_METER_MOD):
             if contexts is not None:
@@ -518,10 +521,10 @@ class RpcOFPManager(app_manager.RyuApp):
         except Exception as e:
             raise RPCError('parameters are invalid, %s' % (str(param_dict)))
 
-        self.logger.info(_({'event': 'register traceroute source',
-                            'vlan': param_dict['vlan'],
-                            'ip': param_dict['ip'],
-                            'port': param_dict['port']}))
+        self.log.info({'event': 'register traceroute source',
+                       'vlan': param_dict['vlan'],
+                       'ip': param_dict['ip'],
+                       'port': param_dict['port']})
         return {}
 
     def _monitor(self, mandatory_params, resource_dict, request_generator,
