@@ -4,5 +4,5 @@ webob>=1.0.8
 paramiko
 lxml
 netaddr
-oslo.config==1.1.1
+oslo.config>=1.2.0
 msgpack-python>=0.4.0
