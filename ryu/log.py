@@ -32,7 +32,7 @@ CONF.register_cli_opts([
     cfg.IntOpt('default-log-level', default=None, help='default log level'),
     cfg.BoolOpt('verbose', default=False, help='show debug output'),
     cfg.BoolOpt('use-stderr', default=True, help='log to standard error'),
-    cfg.BoolOpt('use-syslog', default=True, help='output to syslog'),
+    cfg.BoolOpt('use-syslog', default=False, help='output to syslog'),
     cfg.StrOpt('log-dir', default=None, help='log file directory'),
     cfg.StrOpt('log-file', default=None, help='log file name'),
     cfg.StrOpt('log-file-mode', default='0644',
