@@ -47,7 +47,7 @@ def _lookup_service_brick_by_mod_name(mod_name):
 
 def register_app(app):
     assert isinstance(app, RyuApp)
-    assert not app.name in SERVICE_BRICKS
+    assert app.name not in SERVICE_BRICKS
     SERVICE_BRICKS[app.name] = app
     register_instance(app)
 
@@ -211,7 +211,7 @@ class RyuApp(object):
             return handlers
 
         def test(h):
-            if not ev_cls in h.callers:
+            if ev_cls not in h.callers:
                 # this handler does not listen the event.
                 return False
             states = h.callers[ev_cls].dispatchers
@@ -356,7 +356,7 @@ class AppManager(object):
             context_modules = map(lambda x: x.__module__,
                                   self.contexts_cls.values())
             for i in get_dependent_services(cls):
-                if not i in context_modules:
+                if i not in context_modules:
                     services.append(i)
             if services:
                 app_lists.extend(services)
@@ -369,7 +369,7 @@ class AppManager(object):
             else:
                 context = cls()
             LOG.info('creating context %s', key)
-            assert not key in self.contexts
+            assert key not in self.contexts
             self.contexts[key] = context
         return self.contexts
 
@@ -412,7 +412,7 @@ class AppManager(object):
         # Yes, maybe for slicing.
         LOG.info('instantiating app %s of %s', app_name, cls.__name__)
 
-        if hasattr(cls, 'OFP_VERSIONS') and not cls.OFP_VERSIONS is None:
+        if hasattr(cls, 'OFP_VERSIONS') and cls.OFP_VERSIONS is not None:
             ofproto_protocol.set_app_supported_versions(cls.OFP_VERSIONS)
 
         if app_name is not None:
