@@ -431,14 +431,14 @@ class lacp(packet_base.PacketBase):
         assert (1 == partner_state_distributing | 1)
         assert (1 == partner_state_defaulted | 1)
         assert (1 == partner_state_expired | 1)
-        #------------------------------
+        # ------------------------------
         # Header
-        #------------------------------
+        # ------------------------------
         self._subtype = SLOW_SUBTYPE_LACP
         self.version = version
-        #------------------------------
+        # ------------------------------
         # Actor Information
-        #------------------------------
+        # ------------------------------
         self._actor_tag = self.LACP_TLV_TYPE_ACTOR
         self._actor_length = self._ACTPRT_INFO_PACK_LEN
         self.actor_system_priority = actor_system_priority
@@ -463,9 +463,9 @@ class lacp(packet_base.PacketBase):
             (self.actor_state_distributing << 5) |
             (self.actor_state_defaulted << 6) |
             (self.actor_state_expired << 7))
-        #------------------------------
+        # ------------------------------
         # Partner Information
-        #------------------------------
+        # ------------------------------
         self._partner_tag = self.LACP_TLV_TYPE_PARTNER
         self._partner_length = self._ACTPRT_INFO_PACK_LEN
         self.partner_system_priority = partner_system_priority
@@ -491,15 +491,15 @@ class lacp(packet_base.PacketBase):
             (self.partner_state_distributing << 5) |
             (self.partner_state_defaulted << 6) |
             (self.partner_state_expired << 7))
-        #------------------------------
+        # ------------------------------
         # Collector Information
-        #------------------------------
+        # ------------------------------
         self._collector_tag = self.LACP_TLV_TYPE_COLLECTOR
         self._collector_length = self._COL_INFO_PACK_LEN
         self.collector_max_delay = collector_max_delay
-        #------------------------------
+        # ------------------------------
         # Terminator
-        #------------------------------
+        # ------------------------------
         self._terminator_tag = self.LACP_TLV_TYPE_TERMINATOR
         self._terminator_length = 0
 
@@ -507,17 +507,17 @@ class lacp(packet_base.PacketBase):
     def parser(cls, buf):
         assert cls._ALL_PACK_LEN == len(buf)
         offset = 0
-        #------------------------------
+        # ------------------------------
         # Header
-        #------------------------------
+        # ------------------------------
         (subtype, version
          ) = struct.unpack_from(cls._HLEN_PACK_STR, buf, offset)
         assert SLOW_SUBTYPE_LACP == subtype
         assert cls.LACP_VERSION_NUMBER == version
         offset += cls._HLEN_PACK_LEN
-        #------------------------------
+        # ------------------------------
         # Actor Information
-        #------------------------------
+        # ------------------------------
         (actor_tag, actor_length, actor_system_priority, actor_system,
          actor_key, actor_port_priority, actor_port, actor_state
          ) = struct.unpack_from(cls._ACTPRT_INFO_PACK_STR, buf, offset)
@@ -532,9 +532,9 @@ class lacp(packet_base.PacketBase):
         actor_state_distributing = (actor_state >> 5) & 1
         actor_state_defaulted = (actor_state >> 6) & 1
         actor_state_expired = (actor_state >> 7) & 1
-        #------------------------------
+        # ------------------------------
         # Partner Information
-        #------------------------------
+        # ------------------------------
         (partner_tag, partner_length, partner_system_priority,
          partner_system, partner_key, partner_port_priority,
          partner_port, partner_state
@@ -550,17 +550,17 @@ class lacp(packet_base.PacketBase):
         partner_state_distributing = (partner_state >> 5) & 1
         partner_state_defaulted = (partner_state >> 6) & 1
         partner_state_expired = (partner_state >> 7) & 1
-        #------------------------------
+        # ------------------------------
         # Collector Information
-        #------------------------------
+        # ------------------------------
         (collector_tag, collector_length, collector_max_delay
          ) = struct.unpack_from(cls._COL_INFO_PACK_STR, buf, offset)
         assert cls.LACP_TLV_TYPE_COLLECTOR == collector_tag
         assert cls._COL_INFO_PACK_LEN == collector_length
         offset += cls._COL_INFO_PACK_LEN
-        #------------------------------
+        # ------------------------------
         # Terminator Information
-        #------------------------------
+        # ------------------------------
         (terminator_tag, terminator_length
          ) = struct.unpack_from(cls._TRM_PACK_STR, buf, offset)
         assert cls.LACP_TLV_TYPE_TERMINATOR == terminator_tag

@@ -113,11 +113,11 @@ def fletcher_checksum(data, offset):
     pos = 0
     length = len(data)
     data = bytearray(data)
-    data[offset:offset+2] = [0]*2
+    data[offset:offset + 2] = [0] * 2
 
     while pos < length:
         tlen = min(length - pos, _MODX)
-        for d in data[pos:pos+tlen]:
+        for d in data[pos:pos + tlen]:
             c0 += d
             c1 += c0
         c0 %= 255
@@ -132,5 +132,5 @@ def fletcher_checksum(data, offset):
         y -= 255
 
     data[offset] = x
-    data[offset+1] = y
+    data[offset + 1] = y
     return (x << 8) | (y & 0xff)

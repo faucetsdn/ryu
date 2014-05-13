@@ -145,7 +145,7 @@ class LSAHeader(StringifyMixin):
             "ls_seqnum": ls_seqnum,
             "checksum": checksum,
             "length": length,
-            }, rest
+        }, rest
 
     def serialize(self):
         id_ = addrconv.ipv4.text_to_bin(self.id_)
@@ -173,14 +173,14 @@ class LSA(_TypeDisp, StringifyMixin):
     @classmethod
     def parser(cls, buf):
         hdr, rest = LSAHeader.parser(buf)
-        #exclude ls_age for checksum calculation
+        # exclude ls_age for checksum calculation
         csum = packet_utils.fletcher_checksum(buf[2:hdr['length']], 14)
         if csum != hdr['checksum']:
             raise InvalidChecksum("header has %d, but calculated value is %d"
                                   % (hdr['checksum'], csum))
         subcls = cls._lookup_type(hdr['type_'])
-        body = rest[:hdr['length']-LSAHeader._HDR_LEN]
-        rest = rest[hdr['length']-LSAHeader._HDR_LEN:]
+        body = rest[:hdr['length'] - LSAHeader._HDR_LEN]
+        rest = rest[hdr['length'] - LSAHeader._HDR_LEN:]
         kwargs = subcls.parser(body)
         kwargs.update(hdr)
         return subcls(**kwargs), subcls, rest
@@ -189,8 +189,8 @@ class LSA(_TypeDisp, StringifyMixin):
         tail = self.serialize_tail()
         self.header.length = self.header._HDR_LEN + len(tail)
         head = self.header.serialize()
-        #exclude ls_age for checksum calculation
-        csum = packet_utils.fletcher_checksum(head[2:]+tail, 14)
+        # exclude ls_age for checksum calculation
+        csum = packet_utils.fletcher_checksum(head[2:] + tail, 14)
         self.header.checksum = csum
         struct.pack_into("!H", head, 16, csum)
         return head + tail
@@ -260,7 +260,7 @@ class RouterLSA(LSA):
         head = bytearray(struct.pack(self._PACK_STR, self.flags, 0,
                          len(self.links)))
         try:
-            return head + reduce(lambda a, b: a+b,
+            return head + reduce(lambda a, b: a + b,
                                  (link.serialize() for link in self.links))
         except TypeError:
             return head
@@ -305,7 +305,7 @@ class NetworkLSA(LSA):
         mask = addrconv.ipv4.text_to_bin(self.mask)
         routers = [addrconv.ipv4.text_to_bin(
                    router) for router in self.routers]
-        return bytearray(struct.pack("!"+"4s"*(1+len(routers)), mask,
+        return bytearray(struct.pack("!" + "4s" * (1 + len(routers)), mask,
                                      *routers))
 
 
@@ -375,7 +375,7 @@ class ASExternalLSA(LSA):
         }
 
     def serialize_tail(self):
-        return reduce(lambda a, b: a+b,
+        return reduce(lambda a, b: a + b,
                       (extnw.serialize() for extnw in self.extnws))
 
 
@@ -426,8 +426,8 @@ class OSPFMessage(packet_base.PacketBase, _TypeDisp):
         (version, type_, length, router_id, area_id, checksum, au_type,
          authentication) = struct.unpack_from(cls._HDR_PACK_STR, buffer(buf))
 
-        #Exclude checksum and authentication field for checksum validation.
-        if packet_utils.checksum(buf[:12]+buf[14:16]+buf[cls._HDR_LEN:]) \
+        # Exclude checksum and authentication field for checksum validation.
+        if packet_utils.checksum(buf[:12] + buf[14:16] + buf[cls._HDR_LEN:]) \
                 != checksum:
             raise InvalidChecksum
 
@@ -453,12 +453,13 @@ class OSPFMessage(packet_base.PacketBase, _TypeDisp):
                          addrconv.ipv4.text_to_bin(self.area_id), 0,
                          self.au_type, self.authentication))
         buf = head + tail
-        csum = packet_utils.checksum(buf[:12]+buf[14:16]+buf[self._HDR_LEN:])
+        csum = packet_utils.checksum(buf[:12] + buf[14:16] +
+                                     buf[self._HDR_LEN:])
         self.checksum = csum
         struct.pack_into("!H", buf, 12, csum)
         return buf
 
-#alias
+# alias
 ospf = OSPFMessage
 
 
@@ -520,7 +521,7 @@ class OSPFHello(OSPFMessage):
                          addrconv.ipv4.text_to_bin(self.designated_router),
                          addrconv.ipv4.text_to_bin(self.backup_router)))
         try:
-            return head + reduce(lambda a, b: a+b,
+            return head + reduce(lambda a, b: a + b,
                                  (addrconv.ipv4.text_to_bin(
                                   n) for n in self.neighbors))
         except TypeError:
@@ -579,7 +580,7 @@ class OSPFDBDesc(OSPFMessage):
                                      self.options, flags,
                                      self.sequence_number))
         try:
-            return head + reduce(lambda a, b: a+b,
+            return head + reduce(lambda a, b: a + b,
                                  (hdr.serialize() for hdr in self.lsa_headers))
         except TypeError:
             return head
@@ -637,7 +638,7 @@ class OSPFLSReq(OSPFMessage):
         }
 
     def serialize_tail(self):
-        return reduce(lambda a, b: a+b,
+        return reduce(lambda a, b: a + b,
                       (req.serialize() for req in self.lsa_requests))
 
 
@@ -673,7 +674,7 @@ class OSPFLSUpd(OSPFMessage):
     def serialize_tail(self):
         head = bytearray(struct.pack(self._PACK_STR, len(self.lsas)))
         try:
-            return head + reduce(lambda a, b: a+b,
+            return head + reduce(lambda a, b: a + b,
                                  (lsa.serialize() for lsa in self.lsas))
         except TypeError:
             return head
@@ -702,5 +703,5 @@ class OSPFLSAck(OSPFMessage):
         }
 
     def serialize_tail(self):
-        return reduce(lambda a, b: a+b,
+        return reduce(lambda a, b: a + b,
                       (hdr.serialize() for hdr in self.lsa_headers))

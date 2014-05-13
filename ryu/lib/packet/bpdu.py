@@ -255,7 +255,7 @@ class ConfigurationBPDUs(bpdu):
 
     _BRIDGE_PRIORITY_STEP = 4096
     _PORT_PRIORITY_STEP = 16
-    _TIMER_STEP = float(1)/256
+    _TIMER_STEP = float(1) / 256
 
     def __init__(self, flags=0, root_priority=DEFAULT_BRIDGE_PRIORITY,
                  root_system_id_extension=0,

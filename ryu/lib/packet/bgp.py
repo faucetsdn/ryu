@@ -716,7 +716,7 @@ class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
 
     @property
     def prefix(self):
-        return self.addr+'/{0}'.format(self.length)
+        return self.addr + '/{0}'.format(self.length)
 
     @property
     def formatted_nlri_str(self):
@@ -728,7 +728,7 @@ class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
 
     @property
     def prefix(self):
-        return self.addr+'/{0}'.format(self.length)
+        return self.addr + '/{0}'.format(self.length)
 
     @property
     def formatted_nlri_str(self):
@@ -741,7 +741,7 @@ class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def prefix(self):
-        return self.addr[-1]+'/{0}'.format(self.length)
+        return self.addr[-1] + '/{0}'.format(self.length)
 
     @property
     def route_disc(self):
@@ -762,7 +762,7 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def prefix(self):
-        return self.addr[-1]+'/{0}'.format(self.length)
+        return self.addr[-1] + '/{0}'.format(self.length)
 
     @property
     def route_disc(self):
@@ -2190,7 +2190,7 @@ class BGPRouteRefresh(BGPMessage):
     @classmethod
     def parser(cls, buf):
         (afi, demarcation, safi,) = struct.unpack_from(cls._PACK_STR,
-                                                    buffer(buf))
+                                                       buffer(buf))
         return {
             "afi": afi,
             "safi": safi,
