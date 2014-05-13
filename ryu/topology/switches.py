@@ -473,7 +473,7 @@ class Switches(app_manager.RyuApp):
         assert dp.id is not None
 
         self.dps[dp.id] = dp
-        if not dp.id in self.port_state:
+        if dp.id not in self.port_state:
             self.port_state[dp.id] = PortState()
             for port in dp.ports.values():
                 self.port_state[dp.id].add(port.port_no, port)
@@ -613,9 +613,9 @@ class Switches(app_manager.RyuApp):
         ofpport = msg.desc
 
         if reason == dp.ofproto.OFPPR_ADD:
-            #LOG.debug('A port was added.' +
-            #          '(datapath id = %s, port number = %s)',
-            #          dp.id, ofpport.port_no)
+            # LOG.debug('A port was added.' +
+            #           '(datapath id = %s, port number = %s)',
+            #           dp.id, ofpport.port_no)
             self.port_state[dp.id].add(ofpport.port_no, ofpport)
             self.send_event_to_observers(
                 event.EventPortAdd(Port(dp.id, dp.ofproto, ofpport)))
@@ -629,9 +629,9 @@ class Switches(app_manager.RyuApp):
                 self.lldp_event.set()
 
         elif reason == dp.ofproto.OFPPR_DELETE:
-            #LOG.debug('A port was deleted.' +
-            #          '(datapath id = %s, port number = %s)',
-            #          dp.id, ofpport.port_no)
+            # LOG.debug('A port was deleted.' +
+            #           '(datapath id = %s, port number = %s)',
+            #           dp.id, ofpport.port_no)
             self.port_state[dp.id].remove(ofpport.port_no)
             self.send_event_to_observers(
                 event.EventPortDelete(Port(dp.id, dp.ofproto, ofpport)))
@@ -647,9 +647,9 @@ class Switches(app_manager.RyuApp):
 
         else:
             assert reason == dp.ofproto.OFPPR_MODIFY
-            #LOG.debug('A port was modified.' +
-            #          '(datapath id = %s, port number = %s)',
-            #          dp.id, ofpport.port_no)
+            # LOG.debug('A port was modified.' +
+            #           '(datapath id = %s, port number = %s)',
+            #           dp.id, ofpport.port_no)
             self.port_state[dp.id].modify(ofpport.port_no, ofpport)
             self.send_event_to_observers(
                 event.EventPortModify(Port(dp.id, dp.ofproto, ofpport)))
@@ -725,7 +725,7 @@ class Switches(app_manager.RyuApp):
             self.send_event_to_observers(event.EventLinkDelete(old_link))
 
         link = Link(src, dst)
-        if not link in self.links:
+        if link not in self.links:
             self.send_event_to_observers(event.EventLinkAdd(link))
 
         if not self.links.update_link(src, dst):
