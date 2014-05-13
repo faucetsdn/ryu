@@ -459,7 +459,7 @@ class Bridge(object):
                 if match_field.header == dp.ofproto.OXM_OF_IN_PORT:
                     in_port_no = match_field.value
                     break
-        if not in_port_no in self.ports:
+        if in_port_no not in self.ports:
             return
 
         in_port = self.ports[in_port_no]
@@ -506,7 +506,7 @@ class Bridge(object):
 
         elif bpdu.RstBPDUs in pkt:
             """ Receive Rst BPDU. """
-            #TODO: RSTP
+            # TODO: RSTP
             pass
 
         else:
@@ -1029,12 +1029,12 @@ class Port(object):
             flags=flags,
             root_priority=self.port_priority.root_id.priority,
             root_mac_address=self.port_priority.root_id.mac_addr,
-            root_path_cost=self.port_priority.root_path_cost+self.path_cost,
+            root_path_cost=self.port_priority.root_path_cost + self.path_cost,
             bridge_priority=self.bridge_id.priority,
             bridge_mac_address=self.bridge_id.mac_addr,
             port_priority=self.port_id.priority,
             port_number=self.ofport.port_no,
-            message_age=self.port_times.message_age+1,
+            message_age=self.port_times.message_age + 1,
             max_age=self.port_times.max_age,
             hello_time=self.port_times.hello_time,
             forward_delay=self.port_times.forward_delay)

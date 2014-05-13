@@ -74,9 +74,9 @@ class EventMulticastGroupStateChanged(event.EventBase):
 class IgmpLib(app_manager.RyuApp):
     """IGMP snooping library."""
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def __init__(self):
         """initialization."""
         super(IgmpLib, self).__init__()
@@ -97,9 +97,9 @@ class IgmpLib(app_manager.RyuApp):
         """
         self._querier.set_querier_mode(dpid, server_port)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS ( EVENT HANDLERS )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, evt):
         """PacketIn event handler. when the received packet was IGMP,
@@ -133,9 +133,9 @@ class IgmpLib(app_manager.RyuApp):
 class IgmpBase(object):
     """IGMP abstract class library."""
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def __init__(self):
         self._set_flow_func = {
             ofproto_v1_0.OFP_VERSION: self._set_flow_entry_v1_0,
@@ -148,9 +148,9 @@ class IgmpBase(object):
             ofproto_v1_3.OFP_VERSION: self._del_flow_entry_v1_2,
         }
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PROTECTED METHODS ( RELATED TO OPEN FLOW PROTOCOL )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _set_flow_entry_v1_0(self, datapath, actions, in_port, dst,
                              src=None):
         ofproto = datapath.ofproto
@@ -230,9 +230,9 @@ class IgmpBase(object):
             data=data, in_port=in_port, actions=actions)
         datapath.send_msg(out)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PROTECTED METHODS ( OTHERS )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _ipv4_text_to_int(self, ip_text):
         """convert ip v4 string to integer."""
         if ip_text is None:
@@ -251,9 +251,9 @@ class IgmpQuerier(IgmpBase):
     - and so on
     """
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def __init__(self):
         """initialization."""
         super(IgmpQuerier, self).__init__()
@@ -319,9 +319,9 @@ class IgmpQuerier(IgmpBase):
         self._datapath = None
         self.logger.info("stopped a querier.")
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( RELATED TO IGMP )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _send_query(self):
         """ send a QUERY message periodically."""
         timeout = 60
@@ -407,7 +407,7 @@ class IgmpQuerier(IgmpBase):
 
         update = False
         self._mcast.setdefault(report.address, {})
-        if not in_port in self._mcast[report.address]:
+        if in_port not in self._mcast[report.address]:
             update = True
         self._mcast[report.address][in_port] = True
 
@@ -442,9 +442,9 @@ class IgmpQuerier(IgmpBase):
                 self._del_flow_entry(
                     datapath, self.server_port, leave.address)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( OTHERS )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _set_logger(self):
         """change log format."""
         self.logger.propagate = False
@@ -457,9 +457,9 @@ class IgmpQuerier(IgmpBase):
 class IgmpSnooper(IgmpBase):
     """IGMP snooping class library."""
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def __init__(self, send_event):
         """initialization."""
         super(IgmpSnooper, self).__init__()
@@ -550,9 +550,9 @@ class IgmpSnooper(IgmpBase):
                              req_igmp.msgtype)
             self._do_flood(in_port, msg)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( RELATED TO IGMP )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _do_query(self, query, iph, eth, in_port, msg):
         """the process when the snooper received a QUERY message."""
         datapath = msg.datapath
@@ -798,9 +798,9 @@ class IgmpSnooper(IgmpBase):
             self._do_packet_out(
                 datapath, leave.data, in_port, actions)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( OTHERS )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _set_logger(self):
         """change log format."""
         self.logger.propagate = False

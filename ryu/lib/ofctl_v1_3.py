@@ -309,10 +309,10 @@ def to_match(dp, attrs):
 
     if attrs.get('dl_type') == ether.ETH_TYPE_ARP or \
             attrs.get('eth_type') == ether.ETH_TYPE_ARP:
-        if 'nw_src' in attrs and not 'arp_spa' in attrs:
+        if 'nw_src' in attrs and 'arp_spa' not in attrs:
             attrs['arp_spa'] = attrs['nw_src']
             del attrs['nw_src']
-        if 'nw_dst' in attrs and not 'arp_tpa' in attrs:
+        if 'nw_dst' in attrs and 'arp_tpa' not in attrs:
             attrs['arp_tpa'] = attrs['nw_dst']
             del attrs['nw_dst']
 

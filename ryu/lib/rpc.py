@@ -202,7 +202,7 @@ class EndPoint(object):
             # bogus msgid
             # XXXwarn
             return
-        assert not msgid in self._responses
+        assert msgid not in self._responses
         self._responses[msgid] = (error, result)
         self._incoming += 1
 

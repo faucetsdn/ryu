@@ -53,9 +53,9 @@ class EventSlaveStateChanged(event.EventBase):
 class LacpLib(app_manager.RyuApp):
     """LACP exchange library. this works only in a PASSIVE mode."""
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def __init__(self):
         """initialization."""
         super(LacpLib, self).__init__()
@@ -92,9 +92,9 @@ class LacpLib(app_manager.RyuApp):
         bond[dpid] = ifs
         self._bonds.append(bond)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PUBLIC METHODS ( EVENT HANDLERS )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, evt):
         """PacketIn event handler. when the received packet was LACP,
@@ -133,9 +133,9 @@ class LacpLib(app_manager.RyuApp):
         self.send_event_to_observers(
             EventSlaveStateChanged(datapath, port, False))
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( RELATED TO LACP )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _do_lacp(self, req_lacp, src, msg):
         """packet-in process when the received packet is LACP."""
         datapath = msg.datapath
@@ -280,9 +280,9 @@ class LacpLib(app_manager.RyuApp):
                     break
         return result
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( RELATED TO OPEN FLOW PROTOCOL )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _add_flow_v1_0(self, src, port, timeout, datapath):
         """enter a flow entry for the packet from the slave i/f
         with idle_timeout. for OpenFlow ver1.0."""
@@ -320,9 +320,9 @@ class LacpLib(app_manager.RyuApp):
             instructions=inst)
         datapath.send_msg(mod)
 
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # PRIVATE METHODS ( OTHERS )
-    #-------------------------------------------------------------------
+    # -------------------------------------------------------------------
     def _set_logger(self):
         """change log format."""
         self.logger.propagate = False

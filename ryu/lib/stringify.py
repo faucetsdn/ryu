@@ -294,7 +294,7 @@ class StringifyMixin(object):
         try:
             return cls(**dict(kwargs, **additional_args))
         except TypeError:
-            #debug
+            # debug
             print "CLS", cls
             print "ARG", dict_
             print "KWARG", kwargs
