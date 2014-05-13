@@ -106,8 +106,7 @@ run_pylint() {
 run_pep8() {
   echo "Running pep8 ..."
 
-  PEP8_EXCLUDE="vcsversion.py,*.pyc,contrib,dictconfig.py"
-  PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat --show-source"
+  PEP8_OPTIONS="--repeat --show-source"
   PEP8_INCLUDE="ryu setup*.py"
   PEP8_LOG=pep8.log
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE | tee $PEP8_LOG
