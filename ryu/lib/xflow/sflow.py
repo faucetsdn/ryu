@@ -134,7 +134,7 @@ class sFlowV5Sample(object):
             # Counter Sample
             sample = sFlowV5CounterSample.parser(buf, offset)
         else:
-            #TODO:
+            # TODO:
             # sample_format == 3    : Expanded Flow Sample
             # sample_format == 4    : Expanded Counter Sample
             LOG.info("Unknown format. sFlowV5Sample.sample_format=%d"
@@ -225,7 +225,7 @@ class sFlowV5FlowRecord(object):
             # Extended Switch Data
             flow_data = sFlowV5ExtendedSwitchData.parser(buf, offset)
         else:
-            #TODO:
+            # TODO:
             # flow_data_format == 2    : Ethernet Frame Data
             # flow_data_format == 3    : IPv4 Data
             # flow_data_format == 4    : IPv6 Data
@@ -363,7 +363,7 @@ class sFlowV5CounterRecord(object):
             # Generic Interface Counters
             counter_data = sFlowV5GenericInterfaceCounters.parser(buf, offset)
         else:
-            #TODO:
+            # TODO:
             # counter_data_format == 2    : Ethernet Interface Counters
             # counter_data_format == 3    : Token Ring Counters
             # counter_data_format == 4    : 100 BaseVG Interface Counters
