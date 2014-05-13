@@ -245,11 +245,12 @@ class TunnelDP(object):
 
     # serialize requests to this OVS DP
     _RequestUpdateRemote = collections.namedtuple('_RequestUpdateRemote',
-                                                 ('remote_dpid', 'remote_ip'))
-    _RequestAddTunnelPort = collections.namedtuple('_RequestAddTunnelPort',
                                                   ('remote_dpid', 'remote_ip'))
+    _RequestAddTunnelPort = collections.namedtuple('_RequestAddTunnelPort',
+                                                   ('remote_dpid',
+                                                    'remote_ip'))
     _RequestDelTunnelPort = collections.namedtuple('_RequestDelTunnelPort',
-                                                  ('remote_ip'))
+                                                   ('remote_ip'))
 
     class _RequestClose(object):
         pass
@@ -325,8 +326,8 @@ class TunnelDPSet(dict):
     pass
 
 
-#import collections
-#class TunnelRequests(collections.defaultdict(set)):
+# import collections
+# class TunnelRequests(collections.defaultdict(set)):
 class TunnelRequests(dict):
     def add(self, dpid0, dpid1):
         self.setdefault(dpid0, set()).add(dpid1)

@@ -49,16 +49,16 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 
 
-#=============================
+# =============================
 #          REST API
-#=============================
+# =============================
 #
 #  Note: specify switch and vlan group, as follows.
 #   {switch_id} : 'all' or switchID
 #   {vlan_id}   : 'all' or vlanID
 #
-#
-## 1. get address data and routing data.
+
+# 1. get address data and routing data.
 #
 # * get data of no vlan
 # GET /router/{switch_id}
@@ -66,8 +66,8 @@ from ryu.ofproto import ofproto_v1_3
 # * get data of specific vlan group
 # GET /router/{switch_id}/{vlan_id}
 #
-#
-## 2. set address data or routing data.
+
+# 2. set address data or routing data.
 #
 # * set data of no vlan
 # POST /router/{switch_id}
@@ -82,8 +82,8 @@ from ryu.ofproto import ofproto_v1_3
 #  case2-2: set default route.
 #    parameter = {"gateway": "E.F.G.H"}
 #
-#
-## 3. delete address data or routing data.
+
+# 3. delete address data or routing data.
 #
 # * delete data of no vlan
 # DELETE /router/{switch_id}
@@ -297,7 +297,7 @@ class RestRouterAPI(app_manager.RyuApp):
     def stats_reply_handler_v1_2(self, ev):
         self._stats_reply_handler(ev)
 
-    #TODO: Update routing table when port status is changed.
+    # TODO: Update routing table when port status is changed.
 
 
 # REST command template
@@ -562,8 +562,8 @@ class Router(dict):
 
     def packet_in_handler(self, msg):
         pkt = packet.Packet(msg.data)
-        #TODO: Packet library convert to string
-        #self.logger.debug('Packet in = %s', str(pkt), self.sw_id)
+        # TODO: Packet library convert to string
+        # self.logger.debug('Packet in = %s', str(pkt), self.sw_id)
         header_list = dict((p.protocol_name, p)
                            for p in pkt.protocols if type(p) != str)
         if header_list:
@@ -1562,10 +1562,10 @@ class OfCtl(object):
         actions = [self.dp.ofproto_parser.OFPActionOutput(output, 0)]
         self.dp.send_packet_out(buffer_id=UINT32_MAX, in_port=in_port,
                                 actions=actions, data=data)
-        #TODO: Packet library convert to string
-        #if data_str is None:
-        #    data_str = str(packet.Packet(data))
-        #self.logger.debug('Packet out = %s', data_str, extra=self.sw_id)
+        # TODO: Packet library convert to string
+        # if data_str is None:
+        #     data_str = str(packet.Packet(data))
+        # self.logger.debug('Packet out = %s', data_str, extra=self.sw_id)
 
     def set_normal_flow(self, cookie, priority):
         out_port = self.dp.ofproto.OFPP_NORMAL

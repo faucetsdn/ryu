@@ -107,7 +107,7 @@ class OfctlService(app_manager.RyuApp):
 
     @set_ev_cls(event.SendMsgRequest, MAIN_DISPATCHER)
     def _handle_send_msg(self, req):
-        if not req.reply_cls is None:
+        if req.reply_cls is not None:
             self._observe_msg(req.reply_cls)
 
         msg = req.msg
@@ -119,9 +119,9 @@ class OfctlService(app_manager.RyuApp):
         barrier_xid = barrier.xid
 
         si = self._switches[datapath.id]
-        assert not xid in si.results
-        assert not xid in si.xids
-        assert not barrier_xid in si.barriers
+        assert xid not in si.results
+        assert xid not in si.xids
+        assert barrier_xid not in si.barriers
         si.results[xid] = []
         si.xids[xid] = req
         si.barriers[barrier_xid] = xid
@@ -145,7 +145,7 @@ class OfctlService(app_manager.RyuApp):
             return
         result = si.results.pop(xid)
         req = si.xids.pop(xid)
-        if not req.reply_cls is None:
+        if req.reply_cls is not None:
             self._unobserve_msg(req.reply_cls)
         if any(self._is_error(r) for r in result):
             rep = event.Reply(exception=exception.OFError(result=result))

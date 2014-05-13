@@ -34,8 +34,8 @@ from ryu.exception import PortNotFound, PortAlreadyExist
 from ryu.lib import dpid as dpid_lib
 from ryu.lib import mac as mac_lib
 
-## TODO:XXX
-## define db interface and store those information into db
+# TODO:XXX
+# define db interface and store those information into db
 
 # REST API
 

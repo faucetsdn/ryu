@@ -36,7 +36,8 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 
 # REST API
 #
-## Retrieve the switch stats
+
+# Retrieve the switch stats
 #
 # get the list of all switches
 # GET /stats/switches
@@ -67,9 +68,8 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # get groups stats of the switch
 # GET /stats/group/<dpid>
-#
-#
-## Update the switch stats
+
+# Update the switch stats
 #
 # add a flow entry
 # POST /stats/flowentry/add
