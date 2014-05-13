@@ -100,8 +100,8 @@ class VRRPManager(app_manager.RyuApp):
 
         instance = VRRPInstance(name, monitor.name, config, interface)
         self._instances[name] = instance
-        #self.logger.debug('report_bricks')
-        #app_manager.AppManager.get_instance().report_bricks()   # debug
+        # self.logger.debug('report_bricks')
+        # app_manager.AppManager.get_instance().report_bricks()   # debug
         monitor.start()
         router.start()
 

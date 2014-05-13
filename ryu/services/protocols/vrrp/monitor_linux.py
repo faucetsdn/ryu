@@ -148,7 +148,7 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
             #     unsigned char   s6_addr[16];   /* IPv6 address */
             # };
             family = socket.IPPROTO_IPV6
-            sockaddr = struct.pack('H',  socket.AF_INET6)
+            sockaddr = struct.pack('H', socket.AF_INET6)
             sockaddr += struct.pack('!H', 0)
             sockaddr += struct.pack('!I', 0)
             sockaddr += addrconv.ipv6.text_to_bin(vrrp.VRRP_IPV6_DST_ADDRESS)

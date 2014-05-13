@@ -77,11 +77,11 @@ class RouterBase(app_manager.RyuApp):
         # or
         #
         # RFC 5795 6.4.1
-        #(115)+ If the protected IPvX address is an IPv4 address, then:
+        # (115)+ If the protected IPvX address is an IPv4 address, then:
         #   (120) * Broadcast a gratuitous ARP request containing the
         #   virtual router MAC address for each IP address associated
         #   with the virtual router.
-        #(125) + else // IPv6
+        # (125) + else // IPv6
         #   (130) * For each IPv6 address associated with the virtual
         #   router, send an unsolicited ND Neighbor Advertisement with
         #   the Router Flag (R) set, the Solicited Flag (S) unset, the
@@ -99,11 +99,11 @@ class RouterBase(app_manager.RyuApp):
         # or
         #
         # RFC 5795 6.4.2
-        #(375)+ If the protected IPvX address is an IPv4 address, then:
+        # (375)+ If the protected IPvX address is an IPv4 address, then:
         #   (380)* Broadcast a gratuitous ARP request on that interface
         #   containing the virtual router MAC address for each IPv4
         #   address associated with the virtual router.
-        #(385) + else // ipv6
+        # (385) + else // ipv6
         #   (390) * Compute and join the Solicited-Node multicast
         #   address [RFC4291] for the IPv6 address(es) associated with
         #   the virtual router.
@@ -127,19 +127,19 @@ class RouterBase(app_manager.RyuApp):
         # or
         #
         # RFC 5798 6.4.2 Backup
-        #(305) - If the protected IPvX address is an IPv4 address, then:
+        # (305) - If the protected IPvX address is an IPv4 address, then:
         #   (310) + MUST NOT respond to ARP requests for the IPv4
         #   address(es) associated with the virtual router.
-        #(315) - else // protected addr is IPv6
+        # (315) - else // protected addr is IPv6
         #   (320) + MUST NOT respond to ND Neighbor Solicitation messages
         #   for the IPv6 address(es) associated with the virtual router.
         #   (325) + MUST NOT send ND Router Advertisement messages for the
         #   virtual router.
-        #(330) -endif // was protected addr IPv4?
-        #(335) - MUST discard packets with a destination link-layer MAC
-        #address equal to the virtual router MAC address.
-        #(340) - MUST NOT accept packets addressed to the IPvX address(es)
-        #associated with the virtual router.
+        # (330) -endif // was protected addr IPv4?
+        # (335) - MUST discard packets with a destination link-layer MAC
+        # address equal to the virtual router MAC address.
+        # (340) - MUST NOT accept packets addressed to the IPvX address(es)
+        # associated with the virtual router.
 
     def _shutdowned(self):
         self.logger.debug('shutdowned')
@@ -169,10 +169,10 @@ class RouterBase(app_manager.RyuApp):
             # or
             #
             # RFC5798 6.4.3
-            #(605) - If the protected IPvX address is an IPv4 address, then:
+            # (605) - If the protected IPvX address is an IPv4 address, then:
             #   (610) + MUST respond to ARP requests for the IPv4 address(es)
             #   associated with the virtual router.
-            #(615) - else // ipv6
+            # (615) - else // ipv6
             #   (620) + MUST be a member of the Solicited-Node multicast
             #   address for the IPv6 address(es) associated with the virtual
             #   router.
@@ -182,13 +182,13 @@ class RouterBase(app_manager.RyuApp):
             #   router.
             #   (635) ++ If Accept_Mode is False:  MUST NOT drop IPv6 Neighbor
             #   Solicitations and Neighbor Advertisements.
-            #(640) +-endif // ipv4?
-            #(645) - MUST forward packets with a destination link-layer MAC
-            #address equal to the virtual router MAC address.
-            #(650) - MUST accept packets addressed to the IPvX address(es)
-            #associated with the virtual router if it is the IPvX address owner
-            #or if Accept_Mode is True.  Otherwise, MUST NOT accept these
-            #packets.
+            # (640) +-endif // ipv4?
+            # (645) - MUST forward packets with a destination link-layer MAC
+            # address equal to the virtual router MAC address.
+            # (650) - MUST accept packets addressed to the IPvX address(es)
+            # associated with the virtual router if it is the IPvX address
+            # owner or if Accept_Mode is True.  Otherwise, MUST NOT accept
+            # these packets.
 
         elif new_state == vrrp_event.VRRP_STATE_BACKUP:
             self._become_backup()

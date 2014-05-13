@@ -579,11 +579,11 @@ class VRRPV3StateBackup(VRRPState):
         # EventStateChange(VRRP_SATE_BACKUP -> VRRP_STATE_MASTER)
         #
         # RFC 5795 6.4.2
-        #(375) + If the protected IPvX address is an IPv4 address, then:
+        # (375) + If the protected IPvX address is an IPv4 address, then:
         #   (380) * Broadcast a gratuitous ARP request on that interface
         #   containing the virtual router MAC address for each IPv4
         #   address associated with the virtual router.
-        #(385) + else // ipv6
+        # (385) + else // ipv6
         #   (390) * Compute and join the Solicited-Node multicast
         #   address [RFC4291] for the IPv6 address(es) associated with
         #   the virtual router.
@@ -684,11 +684,11 @@ class VRRPRouterV3(VRRPRouter):
             # EventVRRPStateChanged(None->VRRP_STATE_MASTER)
             #
             # RFC 5795 6.4.1
-            #(115) + If the protected IPvX address is an IPv4 address, then:
+            # (115) + If the protected IPvX address is an IPv4 address, then:
             #   (120) * Broadcast a gratuitous ARP request containing the
             #   virtual router MAC address for each IP address associated
             #   with the virtual router.
-            #(125) + else // IPv6
+            # (125) + else // IPv6
             #   (130) * For each IPv6 address associated with the virtual
             #   router, send an unsolicited ND Neighbor Advertisement with
             #   the Router Flag (R) set, the Solicited Flag (S) unset, the

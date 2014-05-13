@@ -146,9 +146,9 @@ Hello, this is Ryu BGP speaker (version %s).
         elif c == 'B':
             self._lookup_hist_down()
         elif c == 'C':
-            self._movcursor(self.curpos+1)
+            self._movcursor(self.curpos + 1)
         elif c == 'D':
-            self._movcursor(self.curpos-1)
+            self._movcursor(self.curpos - 1)
         else:
             LOG.error("unknown CSI sequence. do nothing: %c" % c)
 
@@ -267,7 +267,7 @@ Hello, this is Ryu BGP speaker (version %s).
                     ret.append(cmpled_cmd)
                     continue
 
-                if (i+1) == len(cmds):
+                if (i + 1) == len(cmds):
                     if is_spaced:
                         result, cmd = cmpleter('?')
                         result = result.value.replace('\n', '\n\r').rstrip()
@@ -292,7 +292,7 @@ Hello, this is Ryu BGP speaker (version %s).
                     else:
                         self._startnewline(buf='Error: Not implemented')
                 else:
-                    if (i+1) < len(cmds):
+                    if (i + 1) < len(cmds):
                         self._startnewline(buf='Error: Ambiguous command')
                     else:
                         self._startnewline(buf=', '.join(matches))
@@ -374,13 +374,13 @@ Hello, this is Ryu BGP speaker (version %s).
                     self._movcursor(self.promptlen)
                 # <C-b>
                 elif c == chr(0x02):
-                    self._movcursor(self.curpos-1)
+                    self._movcursor(self.curpos - 1)
                 # <C-e>
                 elif c == chr(0x05):
-                    self._movcursor(self.promptlen+len(self.buf))
+                    self._movcursor(self.promptlen + len(self.buf))
                 # <C-f>
                 elif c == chr(0x06):
-                    self._movcursor(self.curpos+1)
+                    self._movcursor(self.curpos + 1)
                 else:
                     LOG.error("unknown cursor move cmd.")
                     continue

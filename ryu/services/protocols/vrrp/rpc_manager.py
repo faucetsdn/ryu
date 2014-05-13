@@ -83,7 +83,7 @@ class RpcVRRPManager(app_manager.RyuApp):
         peer = Peer(self._rpc_events)
         table = {
             rpc.MessageType.REQUEST: peer._handle_vrrp_request,
-            }
+        }
         peer._endpoint = rpc.EndPoint(new_sock, disp_table=table)
         self._peers.append(peer)
         hub.spawn(self._peer_loop_thread, peer)
@@ -179,7 +179,7 @@ class RpcVRRPManager(app_manager.RyuApp):
                 "advertisement_interval": c.advertisement_interval,
                 "priority": c.priority,
                 "virtual_ip_address": str(netaddr.IPAddress(c.ip_addresses[0]))
-                }
+            }
             ret_list.append(info_dict)
         return ret_list
 

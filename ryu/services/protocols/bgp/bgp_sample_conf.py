@@ -20,10 +20,10 @@ BGP = {
             '10.0.0.1': {
                 'remote_as': 64513,
                 'multi_exit_disc': 100
-                },
+            },
             '10.10.0.2': {
                 'remote_as': 64514,
-                },
+            },
         },
 
         'networks': [
