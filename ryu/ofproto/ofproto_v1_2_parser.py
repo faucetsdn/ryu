@@ -3308,7 +3308,7 @@ class OFPMatch(StringifyMixin):
         self.type = ofproto.OFPMT_OXM
         self.length = length
 
-        if not _ordered_fields is None:
+        if _ordered_fields is not None:
             assert not kwargs
             self._fields2 = _ordered_fields
         else:

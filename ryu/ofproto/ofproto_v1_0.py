@@ -714,10 +714,10 @@ NXM_OF_IP_TOS = nxm_header(0x0000, 5, 1)
 
 NXM_OF_IP_PROTO = nxm_header(0x0000, 6, 1)
 
-NXM_OF_IP_SRC = nxm_header(0x0000,  7, 4)
-NXM_OF_IP_SRC_W = nxm_header_w(0x0000,  7, 4)
-NXM_OF_IP_DST = nxm_header(0x0000,  8, 4)
-NXM_OF_IP_DST_W = nxm_header_w(0x0000,  8, 4)
+NXM_OF_IP_SRC = nxm_header(0x0000, 7, 4)
+NXM_OF_IP_SRC_W = nxm_header_w(0x0000, 7, 4)
+NXM_OF_IP_DST = nxm_header(0x0000, 8, 4)
+NXM_OF_IP_DST_W = nxm_header_w(0x0000, 8, 4)
 
 NXM_OF_TCP_SRC = nxm_header(0x0000, 9, 2)
 NXM_OF_TCP_SRC_W = nxm_header_w(0x0000, 9, 2)

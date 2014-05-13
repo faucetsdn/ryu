@@ -172,9 +172,9 @@ def from_user(name_to_field, name, user_value):
     else:
         value = user_value
         mask = None
-    if not value is None:
+    if value is not None:
         value = t.from_user(value)
-    if not mask is None:
+    if mask is not None:
         mask = t.from_user(mask)
     return num, value, mask
 
@@ -187,7 +187,7 @@ def to_user(num_to_field, n, v, m):
     except KeyError:
         t = UnknownType
         name = 'field_%d' % n
-    if not v is None:
+    if v is not None:
         if hasattr(t, 'size') and t.size != len(v):
             raise Exception(
                 'Unexpected OXM payload length %d for %s (expected %d)'
@@ -209,9 +209,8 @@ def _field_desc(num_to_field, n):
 def normalize_user(mod, k, uv):
     (n, v, m) = mod.oxm_from_user(k, uv)
     # apply mask
-    if not m is None:
-        v = ''.join(chr(ord(x) & ord(y)) for (x, y)
-            in itertools.izip(v, m))
+    if m is not None:
+        v = ''.join(chr(ord(x) & ord(y)) for (x, y) in itertools.izip(v, m))
     (k2, uv2) = mod.oxm_to_user(n, v, m)
     assert k2 == k
     return (k2, uv2)

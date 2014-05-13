@@ -643,7 +643,7 @@ class OFPMatch(StringifyMixin):
         self.type = ofproto.OFPMT_OXM
         self.length = length
 
-        if not _ordered_fields is None:
+        if _ordered_fields is not None:
             assert not kwargs
             self._fields2 = _ordered_fields
         else:
@@ -802,7 +802,7 @@ class OFPPropCommonExperimenter4ByteData(StringifyMixin):
         return cls(type_, length, experimenter, exp_type, data)
 
     def serialize(self):
-        #fixup
+        # fixup
         self.length = struct.calcsize(self._PACK_STR)
         self.length += len(self.data)
 

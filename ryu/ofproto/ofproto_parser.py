@@ -32,7 +32,7 @@ LOG = logging.getLogger('ryu.ofproto.ofproto_parser')
 
 def header(buf):
     assert len(buf) >= ofproto_common.OFP_HEADER_SIZE
-    #LOG.debug('len %d bufsize %d', len(buf), ofproto.OFP_HEADER_SIZE)
+    # LOG.debug('len %d bufsize %d', len(buf), ofproto.OFP_HEADER_SIZE)
     return struct.unpack_from(ofproto_common.OFP_HEADER_PACK_STR, buffer(buf))
 
 
