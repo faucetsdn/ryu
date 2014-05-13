@@ -58,7 +58,7 @@ class OpenFlowController(object):
 
     # entry point
     def __call__(self):
-        #LOG.debug('call')
+        # LOG.debug('call')
         self.server_loop()
 
     def server_loop(self):
@@ -84,7 +84,7 @@ class OpenFlowController(object):
                                    CONF.ofp_tcp_listen_port),
                                   datapath_connection_factory)
 
-        #LOG.debug('loop')
+        # LOG.debug('loop')
         server.serve_forever()
 
 
@@ -147,7 +147,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
 
                 msg = ofproto_parser.msg(self,
                                          version, msg_type, msg_len, xid, buf)
-                #LOG.debug('queue msg %s cls %s', msg, msg.__class__)
+                # LOG.debug('queue msg %s cls %s', msg, msg.__class__)
                 if msg:
                     ev = ofp_event.ofp_msg_to_ev(msg)
                     self.ofp_brick.send_event_to_observers(ev, self.state)
