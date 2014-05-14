@@ -67,6 +67,16 @@ class ControllerBase(object):
 
         return getattr(self, action)(req, **kwargs)
 
+    def websocket_handshake(self, req, handler):
+        ws_wsgi = hub.WebSocketWSGI(handler)
+        return ws_wsgi(req.environ, req.start_response)
+
+
+class wsgify_hack(webob.dec.wsgify):
+    def __call__(self, environ, start_response):
+        self.kwargs['start_response'] = start_response
+        return super(wsgify_hack, self).__call__(environ, start_response)
+
 
 class WSGIApplication(object):
     def __init__(self, **config):
@@ -92,13 +102,14 @@ class WSGIApplication(object):
         match = self.mapper.match(req.path_info)
         return match
 
-    @webob.dec.wsgify
-    def __call__(self, req):
+    @wsgify_hack
+    def __call__(self, req, start_response):
         match = self._match(req)
 
         if not match:
             return webob.exc.HTTPNotFound()
 
+        req.start_response = start_response
         req.urlvars = match
         link = URLGenerator(self.mapper, req.environ)
 
