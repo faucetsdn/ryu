@@ -43,9 +43,9 @@ from ryu.ofproto import ether
 from ryu.ofproto import inet
 
 
-#=============================
+# =============================
 #          REST API
-#=============================
+# =============================
 #
 #  Note: specify switch and vlan group, as follows.
 #   {switch-id} : 'all' or switchID
