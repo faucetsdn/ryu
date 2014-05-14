@@ -32,6 +32,7 @@ if HUB_TYPE == 'eventlet':
     import eventlet.semaphore
     import eventlet.timeout
     import eventlet.wsgi
+    from ryu.contrib._eventlet import websocket
     import greenlet
     import ssl
     import socket
@@ -122,6 +123,8 @@ if HUB_TYPE == 'eventlet':
     class WSGIServer(StreamServer):
         def serve_forever(self):
             eventlet.wsgi.server(self.server, self.handle)
+
+    WebSocketWSGI = websocket.WebSocketWSGI
 
     Timeout = eventlet.timeout.Timeout
 
