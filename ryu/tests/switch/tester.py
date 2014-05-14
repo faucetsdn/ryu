@@ -86,7 +86,7 @@ INTERVAL = 1  # sec
 WAIT_TIMER = 3  # sec
 CONTINUOUS_THREAD_INTVL = float(0.01)  # sec
 CONTINUOUS_PROGRESS_SPAN = 3  # sec
-THROUGHPUT_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY+1
+THROUGHPUT_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY + 1
 THROUGHPUT_COOKIE = THROUGHPUT_PRIORITY
 THROUGHPUT_THRESHOLD = float(0.10)  # expected throughput plus/minus 10 %
 
@@ -1224,7 +1224,7 @@ class Test(stringify.StringifyMixin):
 
         # parse 'prerequisite'
         prerequisite = []
-        if not KEY_PREREQ in buf:
+        if KEY_PREREQ not in buf:
             raise ValueError('a test requires a "%s" block' % KEY_PREREQ)
         allowed_mod = [KEY_FLOW, KEY_METER]
         for flow in buf[KEY_PREREQ]:
@@ -1242,7 +1242,7 @@ class Test(stringify.StringifyMixin):
 
         # parse 'tests'
         tests = []
-        if not KEY_TESTS in buf:
+        if KEY_TESTS not in buf:
             raise ValueError('a test requires a "%s" block.' % KEY_TESTS)
 
         for test in buf[KEY_TESTS]:
@@ -1253,7 +1253,7 @@ class Test(stringify.StringifyMixin):
                                          KEY_PKT_IN, KEY_TBL_MISS))
             test_pkt = {}
             # parse 'ingress'
-            if not KEY_INGRESS in test:
+            if KEY_INGRESS not in test:
                 raise ValueError('a test requires "%s" field.' % KEY_INGRESS)
             if isinstance(test[KEY_INGRESS], list):
                 test_pkt[KEY_INGRESS] = __test_pkt_from_json(test[KEY_INGRESS])

@@ -547,7 +547,7 @@ class RunTest(tester.TestFlowBase):
 
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst('\xff' * 6)
-        table_id=3
+        table_id = 3
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY,
                       actions=[action], table_id=table_id, match=match)
 
@@ -567,7 +567,7 @@ class RunTest(tester.TestFlowBase):
         match = dp.ofproto_parser.OFPMatch()
         match.set_dl_dst('\xee' * 6)
         priority = 100
-        table_id=2
+        table_id = 2
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY_STRICT,
                       actions=[action], table_id=table_id,
                       match=match, priority=priority)

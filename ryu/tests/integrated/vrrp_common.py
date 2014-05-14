@@ -125,7 +125,7 @@ class VRRPCommon(app_manager.RyuApp):
                                                _PRIMARY_IP_ADDRESS0,
                                                self._IFNAME0,
                                                vrid)
-            assert not rep0.instance_name is None
+            assert rep0.instance_name is not None
             l[0] = rep0
             prio = max(vrrp.VRRP_PRIORITY_BACKUP_MIN,
                        min(vrrp.VRRP_PRIORITY_BACKUP_MAX, 256 - vrid))
@@ -134,7 +134,7 @@ class VRRPCommon(app_manager.RyuApp):
                                                _PRIMARY_IP_ADDRESS1,
                                                self._IFNAME1,
                                                vrid)
-            assert not rep1.instance_name is None
+            assert rep1.instance_name is not None
             l[1] = rep1
             instances[vrid] = l
 
@@ -143,12 +143,12 @@ class VRRPCommon(app_manager.RyuApp):
         rep0 = self._configure_vrrp_router(vrrp_version, priority,
                                            _PRIMARY_IP_ADDRESS0,
                                            self._IFNAME0, _VRID)
-        assert not rep0.instance_name is None
+        assert rep0.instance_name is not None
         l[0] = rep0
         rep1 = self._configure_vrrp_router(
             vrrp_version, vrrp.VRRP_PRIORITY_BACKUP_DEFAULT,
             _PRIMARY_IP_ADDRESS1, self._IFNAME1, _VRID)
-        assert not rep1.instance_name is None
+        assert rep1.instance_name is not None
         l[1] = rep1
         instances[_VRID] = l
 
