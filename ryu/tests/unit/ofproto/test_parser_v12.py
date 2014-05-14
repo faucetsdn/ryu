@@ -83,7 +83,7 @@ class TestMsgParser(unittest.TestCase):
         msg_type = ofproto.OFPT_HELLO
 
         fmt = ofproto.OFP_HEADER_PACK_STR
-        buf = pack(fmt, version,  msg_type, msg_len, xid)
+        buf = pack(fmt, version, msg_type, msg_len, xid)
 
         c = msg_parser(_Datapath, version, msg_type, msg_len, xid, buf)
 
@@ -1454,7 +1454,7 @@ class TestOFPExperimenter(unittest.TestCase):
         msg_len = ofproto.OFP_EXPERIMENTER_HEADER_SIZE
 
         fmt = ofproto.OFP_HEADER_PACK_STR
-        buf = pack(fmt, version,  msg_type, msg_len, xid)
+        buf = pack(fmt, version, msg_type, msg_len, xid)
 
         # OFP_EXPERIMENTER_HEADER_PACK_STR
         # '!II'...experimenter, exp_type
@@ -6505,7 +6505,7 @@ class TestOFPRoleReply(unittest.TestCase):
 
     # OFP_ROLE_REQUEST_PACK_STR
     # '!I4xQ'...role, pad(4), generation_id
-    #role = ofproto.OFPCR_ROLE_NOCHANGE
+    # role = ofproto.OFPCR_ROLE_NOCHANGE
     role = 2147483648
     generation_id = 1270985291017894273
 

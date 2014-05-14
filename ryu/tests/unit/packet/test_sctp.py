@@ -673,7 +673,7 @@ class Test_sctp(unittest.TestCase):
         eq_(self.dst_port, res[1])
         eq_(self.vtag, res[2])
         # skip compare checksum
-        #eq_(self.csum, res[3])
+        # eq_(self.csum, res[3])
 
         return buf[sctp.sctp._MIN_LEN:]
 
@@ -1227,7 +1227,7 @@ class Test_sctp(unittest.TestCase):
                                 ether.ETH_TYPE_IP)
         ip4 = ipv4.ipv4(4, 5, 16, 0, 0, 2, 0, 64, inet.IPPROTO_SCTP, 0,
                         '192.168.1.1', '10.144.1.1')
-        pkt = eth/ip4/self.sc
+        pkt = eth / ip4 / self.sc
 
         eth = pkt.get_protocol(ethernet.ethernet)
         ok_(eth)

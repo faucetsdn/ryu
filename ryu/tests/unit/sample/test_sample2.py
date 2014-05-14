@@ -2,7 +2,7 @@
 
 import unittest
 from nose.tools import ok_, eq_
-#from ryu.app.simple_switch import SimpleSwitch
+# from ryu.app.simple_switch import SimpleSwitch
 
 
 class TestSample2(unittest.TestCase):

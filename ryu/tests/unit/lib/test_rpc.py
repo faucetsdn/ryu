@@ -249,7 +249,7 @@ class Test_rpc(unittest.TestCase):
         c.receive_notification()
         assert len(l) == 1
         n = l.pop(0)
-        assert not n is None
+        assert n is not None
         method, params = n
         assert method == "notify_hoge"
         assert params[0] == obj
@@ -265,7 +265,7 @@ class Test_rpc(unittest.TestCase):
         c.receive_notification()
         assert len(l) == 1
         n = l.pop(0)
-        assert not n is None
+        assert n is not None
         method, params = n
         assert method == "notify_hoge"
         assert params[0] == obj
@@ -355,14 +355,14 @@ class Test_rpc(unittest.TestCase):
                 assert done.issubset(s)
                 s -= done
                 r = e.get_request()
-                if not r is None:
+                if r is not None:
                     msgid, method, params = r
                     assert method == "ourcallback"
                     omsgid, n, cb, v = params
                     assert omsgid in s
                     assert cb == "ourcallback"
                     assert n > 0
-                    e.send_response(msgid, result=[omsgid, n-1, cb, v+1])
+                    e.send_response(msgid, result=[omsgid, n - 1, cb, v + 1])
             assert sum == (1 + num_calls) * num_calls / 2
         finally:
             self._client_sock.setblocking(old_blocking)

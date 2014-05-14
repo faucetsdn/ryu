@@ -91,19 +91,13 @@ class Test_bgp(unittest.TestCase):
             bgp.BGP_COMMUNITY_NO_ADVERTISE,
         ]
         ecommunities = [
-            bgp.BGPTwoOctetAsSpecificExtendedCommunity(subtype=1,
-                                                       as_number=65500,
-                                                       local_administrator=
-                                                       3908876543),
-            bgp.BGPFourOctetAsSpecificExtendedCommunity(subtype=2,
-                                                        as_number=10000000,
-                                                        local_administrator=
-                                                        59876),
-            bgp.BGPIPv4AddressSpecificExtendedCommunity(subtype=3,
-                                                        ipv4_address=
-                                                        '192.0.2.1',
-                                                        local_administrator=
-                                                        65432),
+            bgp.BGPTwoOctetAsSpecificExtendedCommunity(
+                subtype=1, as_number=65500, local_administrator=3908876543),
+            bgp.BGPFourOctetAsSpecificExtendedCommunity(
+                subtype=2, as_number=10000000, local_administrator=59876),
+            bgp.BGPIPv4AddressSpecificExtendedCommunity(
+                subtype=3, ipv4_address='192.0.2.1',
+                local_administrator=65432),
             bgp.BGPOpaqueExtendedCommunity(opaque='abcdefg'),
             bgp.BGPUnknownExtendedCommunity(type_=99, value='abcdefg'),
         ]
@@ -128,7 +122,7 @@ class Test_bgp(unittest.TestCase):
                                             nlri=mp_nlri),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
-            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300*'bar')
+            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * 'bar')
         ]
         nlri = [
             bgp.BGPNLRI(length=24, addr='203.0.113.1'),
@@ -240,19 +234,13 @@ class Test_bgp(unittest.TestCase):
             bgp.BGP_COMMUNITY_NO_ADVERTISE,
         ]
         ecommunities = [
-            bgp.BGPTwoOctetAsSpecificExtendedCommunity(subtype=1,
-                                                       as_number=65500,
-                                                       local_administrator=
-                                                       3908876543),
-            bgp.BGPFourOctetAsSpecificExtendedCommunity(subtype=2,
-                                                        as_number=10000000,
-                                                        local_administrator=
-                                                        59876),
-            bgp.BGPIPv4AddressSpecificExtendedCommunity(subtype=3,
-                                                        ipv4_address=
-                                                        '192.0.2.1',
-                                                        local_administrator=
-                                                        65432),
+            bgp.BGPTwoOctetAsSpecificExtendedCommunity(
+                subtype=1, as_number=65500, local_administrator=3908876543),
+            bgp.BGPFourOctetAsSpecificExtendedCommunity(
+                subtype=2, as_number=10000000, local_administrator=59876),
+            bgp.BGPIPv4AddressSpecificExtendedCommunity(
+                subtype=3, ipv4_address='192.0.2.1',
+                local_administrator=65432),
             bgp.BGPOpaqueExtendedCommunity(opaque='abcdefg'),
             bgp.BGPUnknownExtendedCommunity(type_=99, value='abcdefg'),
         ]
@@ -277,7 +265,7 @@ class Test_bgp(unittest.TestCase):
                                             nlri=mp_nlri),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
-            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300*'bar')
+            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * 'bar')
         ]
         nlri = [
             bgp.BGPNLRI(length=24, addr='203.0.113.1'),

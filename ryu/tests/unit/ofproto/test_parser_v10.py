@@ -1444,8 +1444,8 @@ class TestNXActionRegLoad(unittest.TestCase):
     len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
     vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
     subtype = {'buf': '\x00\x07', 'val': ofproto.NXAST_REG_LOAD}
-    ofs_nbits = {'buf': '\x3d\x98',  'val': 15768}
-    dst = {'buf': '\x9f\x9f\x88\x26',  'val': 2678032422}
+    ofs_nbits = {'buf': '\x3d\x98', 'val': 15768}
+    dst = {'buf': '\x9f\x9f\x88\x26', 'val': 2678032422}
     value = {'buf': '\x33\x51\xcd\x43\x25\x28\x18\x99',
              'val': 3697962457317775513}
 
@@ -2992,7 +2992,7 @@ class TestOFPVendor(unittest.TestCase):
         eq_(data, res[5])
 
 
-#class TestNXTRequest(unittest.TestCase):
+# class TestNXTRequest(unittest.TestCase):
 class TestNiciraHeader(unittest.TestCase):
     """ Test case for ofproto_v1_0_parser.NiciraHeader
     """

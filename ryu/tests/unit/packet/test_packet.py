@@ -568,7 +568,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv4.ipv4(proto=inet.IPPROTO_SCTP)
         s = sctp.sctp(chunks=[sctp.chunk_data(payload_data=self.payload)])
 
-        p = e/ip/s
+        p = e / ip / s
         p.serialize()
 
         ipaddr = addrconv.ipv4.text_to_bin('0.0.0.0')
@@ -724,7 +724,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv4.ipv4(proto=inet.IPPROTO_ICMP)
         ic = icmp.icmp()
 
-        p = e/ip/ic
+        p = e / ip / ic
         p.serialize()
 
         ipaddr = addrconv.ipv4.text_to_bin('0.0.0.0')
@@ -858,7 +858,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv6.ipv6(nxt=inet.IPPROTO_UDP)
         u = udp.udp()
 
-        p = e/ip/u/self.payload
+        p = e / ip / u / self.payload
         p.serialize()
 
         ipaddr = addrconv.ipv6.text_to_bin('::')
@@ -979,7 +979,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv6.ipv6()
         t = tcp.tcp(option='\x01\x02')
 
-        p = e/ip/t/self.payload
+        p = e / ip / t / self.payload
         p.serialize()
 
         ipaddr = addrconv.ipv6.text_to_bin('::')
@@ -1117,7 +1117,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv6.ipv6(nxt=inet.IPPROTO_SCTP)
         s = sctp.sctp(chunks=[sctp.chunk_data(payload_data=self.payload)])
 
-        p = e/ip/s
+        p = e / ip / s
         p.serialize()
 
         ipaddr = addrconv.ipv6.text_to_bin('::')
@@ -1260,7 +1260,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv6.ipv6(nxt=inet.IPPROTO_ICMPV6)
         ic = icmpv6.icmpv6()
 
-        p = e/ip/ic
+        p = e / ip / ic
         p.serialize()
 
         ipaddr = addrconv.ipv6.text_to_bin('::')
@@ -1521,7 +1521,7 @@ class TestPacket(unittest.TestCase):
         e = ethernet.ethernet(self.dst_mac, self.src_mac, ether.ETH_TYPE_IP)
         i = ipv4.ipv4()
         u = udp.udp(self.src_port, self.dst_port)
-        pkt = e/i/u
+        pkt = e / i / u
         ok_(isinstance(pkt, packet.Packet))
         ok_(isinstance(pkt.protocols[0], ethernet.ethernet))
         ok_(isinstance(pkt.protocols[1], ipv4.ipv4))

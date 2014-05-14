@@ -1246,7 +1246,7 @@ class Test_mldv2_query(unittest.TestCase):
         i = ipv6(nxt=inet.IPPROTO_ICMPV6)
         ic = icmpv6.icmpv6(type_=icmpv6.MLD_LISTENER_QUERY,
                            data=self.mld)
-        p = e/i/ic
+        p = e / i / ic
         return p
 
     def test_build_mldv2_query(self):
@@ -1520,7 +1520,7 @@ class Test_mldv2_report(unittest.TestCase):
         i = ipv6(nxt=inet.IPPROTO_ICMPV6)
         ic = icmpv6.icmpv6(type_=icmpv6.MLDV2_LISTENER_REPORT,
                            data=self.mld)
-        p = e/i/ic
+        p = e / i / ic
         return p
 
     def test_build_mldv2_report(self):
