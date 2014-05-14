@@ -828,7 +828,7 @@ class OfTester(app_manager.RyuApp):
                 for attr in attr_list:
                     meter_stats.append('%s=%s' % (attr, getattr(stats1, attr)))
                 return False, 'meter_stats(%s)' % ','.join(meter_stats)
-            return True, None
+        return True, None
 
     def _diff_packets(self, model_pkt, rcv_pkt):
         msg = []
