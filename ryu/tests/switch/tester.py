@@ -476,18 +476,18 @@ class OfTester(app_manager.RyuApp):
 
     def _output_test_report(self, report):
         self.logger.info('%s--- Test report ---', os.linesep)
-        ok_count = error_count = 0
+        error_count = 0
         for result_type in sorted(report.keys()):
             test_descriptions = report[result_type]
             if result_type == TEST_OK:
-                ok_count = len(test_descriptions)
                 continue
             error_count += len(test_descriptions)
             self.logger.info('%s(%d)', result_type, len(test_descriptions))
             for file_desc, test_desc in test_descriptions:
                 self.logger.info('    %-40s %s', file_desc, test_desc)
         self.logger.info('%s%s(%d) / %s(%d)', os.linesep,
-                         TEST_OK, ok_count, TEST_ERROR, error_count)
+                         TEST_OK, len(report.get(TEST_OK, [])),
+                         TEST_ERROR, error_count)
 
     def _test(self, state, *args):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
