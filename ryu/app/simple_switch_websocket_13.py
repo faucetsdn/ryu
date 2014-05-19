@@ -25,10 +25,10 @@ $ wsdump.py ws://127.0.0.1:8080/simpleswitch/ws
 """
 
 import json
-from webob import Response
 
+from webob import Response
 from ryu.app import simple_switch_13
-from ryu.app.wsgi import route, ControllerBase, WSGIApplication
+from ryu.app.wsgi import route, websocket, ControllerBase, WSGIApplication
 from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
@@ -47,21 +47,19 @@ class SimpleSwitchWebSocket13(simple_switch_13.SimpleSwitch13):
     def __init__(self, *args, **kwargs):
         super(SimpleSwitchWebSocket13, self).__init__(*args, **kwargs)
 
-        self.ws_send_queue = hub.Queue()
-        self.ws_lock = hub.BoundedSemaphore()
-
         wsgi = kwargs['wsgi']
         wsgi.register(
             SimpleSwitchWebSocketController,
             data={simple_switch_instance_name: self},
         )
+        self._ws_manager = wsgi.websocketmanager
 
     @set_ev_cls(ofp_event.EventOFPPacketIn)
     def _packet_in_handler(self, ev):
         super(SimpleSwitchWebSocket13, self)._packet_in_handler(ev)
 
         pkt = packet.Packet(ev.msg.data)
-        self.ws_send_queue.put(str(pkt))
+        self._ws_manager.broadcast(str(pkt))
 
 
 class SimpleSwitchWebSocketController(ControllerBase):
@@ -70,22 +68,12 @@ class SimpleSwitchWebSocketController(ControllerBase):
             req, link, data, **config)
         self.simpl_switch_spp = data[simple_switch_instance_name]
 
+    @websocket('simpleswitch', url)
     def _websocket_handler(self, ws):
         simple_switch = self.simpl_switch_spp
         simple_switch.logger.debug('WebSocket connected: %s', ws)
         while True:
-            data = simple_switch.ws_send_queue.get()
-            ws.send(unicode(json.dumps(data)))
-
-    @route('simpleswitch', url)
-    def websocket(self, req, **kwargs):
-        simple_switch = self.simpl_switch_spp
-        if simple_switch.ws_lock.acquire(blocking=False):
-            try:
-                self.websocket_handshake(req, self._websocket_handler)
-                return
-            finally:
-                simple_switch.logger.debug('WebSocket disconnected')
-                simple_switch.ws_lock.release()
-        else:
-            return Response(status=503)
+            msg = ws.wait()
+            if msg is None:
+                break
+        simple_switch.logger.debug('WebSocket disconnected')
