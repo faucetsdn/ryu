@@ -7,3 +7,4 @@ paramiko
 routes
 six>=1.4.0
 webob>=1.0.8
+tinyrpc
