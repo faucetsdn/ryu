@@ -492,7 +492,7 @@ class OfTester(app_manager.RyuApp):
     def _test(self, state, *args):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
                 STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow_tester,
-                STATE_INIT_METER: self.target_sw.del_test_meter,
+                STATE_INIT_METER: self.target_sw.del_meters,
                 STATE_FLOW_INSTALL: self._test_msg_install,
                 STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
                 STATE_METER_INSTALL: self._test_msg_install,
@@ -516,7 +516,7 @@ class OfTester(app_manager.RyuApp):
         return test[state](*args)
 
     def _test_initialize_flow(self):
-        xid = self.target_sw.del_test_flow()
+        xid = self.target_sw.del_flows()
         self.send_msg_xids.append(xid)
 
         xid = self.target_sw.send_barrier_request()
@@ -528,7 +528,7 @@ class OfTester(app_manager.RyuApp):
         assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
 
     def _test_initialize_flow_tester(self):
-        xid = self.tester_sw.del_flows_for_throughput_analysis()
+        xid = self.tester_sw.del_flows(THROUGHPUT_COOKIE)
         self.send_msg_xids.append(xid)
 
         xid = self.tester_sw.send_barrier_request()
@@ -1061,31 +1061,23 @@ class OpenFlowSw(object):
                                 match=match, instructions=inst)
         return self.send_msg(mod)
 
-    def del_test_flow(self):
+    def del_flows(self, cookie=0):
         """ Delete all flow except default flow. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
+        cookie_mask = 0
+        if cookie:
+            cookie_mask = 0xffffffffffffffff
         mod = parser.OFPFlowMod(self.dp,
+                                cookie=cookie,
+                                cookie_mask=cookie_mask,
                                 table_id=ofp.OFPTT_ALL,
                                 command=ofp.OFPFC_DELETE,
                                 out_port=ofp.OFPP_ANY,
                                 out_group=ofp.OFPG_ANY)
         return self.send_msg(mod)
 
-    def del_flows_for_throughput_analysis(self):
-        """ Delete all flow except default flow. """
-        ofp = self.dp.ofproto
-        parser = self.dp.ofproto_parser
-        mod = parser.OFPFlowMod(self.dp,
-                                cookie=THROUGHPUT_COOKIE,
-                                cookie_mask=0xffffffffffffffff,
-                                table_id=ofp.OFPTT_ALL,
-                                command=ofp.OFPFC_DELETE,
-                                out_port=ofp.OFPP_ANY,
-                                out_group=ofp.OFPG_ANY)
-        return self.send_msg(mod)
-
-    def del_test_meter(self):
+    def del_meters(self):
         """ Delete all meter entries. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
