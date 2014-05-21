@@ -492,7 +492,7 @@ class OfTester(app_manager.RyuApp):
     def _test(self, state, *args):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
                 STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow_tester,
-                STATE_INIT_METER: self._test_initialize_meter,
+                STATE_INIT_METER: self.target_sw.del_test_meter,
                 STATE_FLOW_INSTALL: self._test_msg_install,
                 STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
                 STATE_METER_INSTALL: self._test_msg_install,
@@ -538,9 +538,6 @@ class OfTester(app_manager.RyuApp):
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
         assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
-
-    def _test_initialize_meter(self):
-        self.target_sw.del_test_meter()
 
     def _test_msg_install(self, datapath, message):
         xid = datapath.send_msg(message)
