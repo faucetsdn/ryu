@@ -257,8 +257,8 @@ class OfTester(app_manager.RyuApp):
         test_dir = CONF['test-switch']['dir']
         self.logger.info('Test files directory = %s', test_dir)
 
-        self.target_sw = TargetSw(DummyDatapath(), self.logger)
-        self.tester_sw = TesterSw(DummyDatapath(), self.logger)
+        self.target_sw = OpenFlowSw(DummyDatapath(), self.logger)
+        self.tester_sw = OpenFlowSw(DummyDatapath(), self.logger)
         self.state = STATE_INIT_FLOW
         self.sw_waiter = None
         self.waiter = None
@@ -1061,6 +1061,40 @@ class OpenFlowSw(object):
                                 match=match, instructions=inst)
         return self.send_msg(mod)
 
+    def del_test_flow(self):
+        """ Delete all flow except default flow. """
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        mod = parser.OFPFlowMod(self.dp,
+                                table_id=ofp.OFPTT_ALL,
+                                command=ofp.OFPFC_DELETE,
+                                out_port=ofp.OFPP_ANY,
+                                out_group=ofp.OFPG_ANY)
+        return self.send_msg(mod)
+
+    def del_flows_for_throughput_analysis(self):
+        """ Delete all flow except default flow. """
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        mod = parser.OFPFlowMod(self.dp,
+                                cookie=THROUGHPUT_COOKIE,
+                                cookie_mask=0xffffffffffffffff,
+                                table_id=ofp.OFPTT_ALL,
+                                command=ofp.OFPFC_DELETE,
+                                out_port=ofp.OFPP_ANY,
+                                out_group=ofp.OFPG_ANY)
+        return self.send_msg(mod)
+
+    def del_test_meter(self):
+        """ Delete all meter entries. """
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        mod = parser.OFPMeterMod(self.dp,
+                                 command=ofp.OFPMC_DELETE,
+                                 flags=0,
+                                 meter_id=ofp.OFPM_ALL)
+        return self.send_msg(mod)
+
     def send_barrier_request(self):
         """ send a BARRIER_REQUEST message."""
         parser = self.dp.ofproto_parser
@@ -1084,32 +1118,6 @@ class OpenFlowSw(object):
                                          0, 0, parser.OFPMatch())
         return self.send_msg(req)
 
-
-class TargetSw(OpenFlowSw):
-    def __init__(self, dp, logger):
-        super(TargetSw, self).__init__(dp, logger)
-
-    def del_test_flow(self):
-        """ Delete all flow except default flow. """
-        ofp = self.dp.ofproto
-        parser = self.dp.ofproto_parser
-        mod = parser.OFPFlowMod(self.dp,
-                                table_id=ofp.OFPTT_ALL,
-                                command=ofp.OFPFC_DELETE,
-                                out_port=ofp.OFPP_ANY,
-                                out_group=ofp.OFPG_ANY)
-        return self.send_msg(mod)
-
-    def del_test_meter(self):
-        """ Delete all meter entries. """
-        ofp = self.dp.ofproto
-        parser = self.dp.ofproto_parser
-        mod = parser.OFPMeterMod(self.dp,
-                                 command=ofp.OFPMC_DELETE,
-                                 flags=0,
-                                 meter_id=ofp.OFPM_ALL)
-        return self.send_msg(mod)
-
     def send_meter_config_stats(self):
         """ Get all meter. """
         parser = self.dp.ofproto_parser
@@ -1121,24 +1129,6 @@ class TargetSw(OpenFlowSw):
         parser = self.dp.ofproto_parser
         req = parser.OFPTableStatsRequest(self.dp, 0)
         return self.send_msg(req)
-
-
-class TesterSw(OpenFlowSw):
-    def __init__(self, dp, logger):
-        super(TesterSw, self).__init__(dp, logger)
-
-    def del_flows_for_throughput_analysis(self):
-        """ Delete all flow except default flow. """
-        ofp = self.dp.ofproto
-        parser = self.dp.ofproto_parser
-        mod = parser.OFPFlowMod(self.dp,
-                                cookie=THROUGHPUT_COOKIE,
-                                cookie_mask=0xffffffffffffffff,
-                                table_id=ofp.OFPTT_ALL,
-                                command=ofp.OFPFC_DELETE,
-                                out_port=ofp.OFPP_ANY,
-                                out_group=ofp.OFPG_ANY)
-        return self.send_msg(mod)
 
     def send_packet_out(self, data):
         """ send a PacketOut message."""
