@@ -381,8 +381,9 @@ class OfTester(app_manager.RyuApp):
         try:
             # Initialize.
             self._test(STATE_INIT_METER)
-            self._test(STATE_INIT_FLOW)
-            self._test(STATE_INIT_THROUGHPUT_FLOW)
+            self._test(STATE_INIT_FLOW, self.target_sw)
+            self._test(STATE_INIT_THROUGHPUT_FLOW, self.tester_sw,
+                       THROUGHPUT_COOKIE)
             # Install flows.
             for flow in test.prerequisite:
                 if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
@@ -491,7 +492,7 @@ class OfTester(app_manager.RyuApp):
 
     def _test(self, state, *args):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
-                STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow_tester,
+                STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow,
                 STATE_INIT_METER: self.target_sw.del_meters,
                 STATE_FLOW_INSTALL: self._test_msg_install,
                 STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
@@ -515,23 +516,11 @@ class OfTester(app_manager.RyuApp):
         self.state = state
         return test[state](*args)
 
-    def _test_initialize_flow(self):
-        xid = self.target_sw.del_flows()
+    def _test_initialize_flow(self, datapath, cookie=0):
+        xid = datapath.del_flows(cookie)
         self.send_msg_xids.append(xid)
 
-        xid = self.target_sw.send_barrier_request()
-        self.send_msg_xids.append(xid)
-
-        self._wait()
-        assert len(self.rcv_msgs) == 1
-        msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
-
-    def _test_initialize_flow_tester(self):
-        xid = self.tester_sw.del_flows(THROUGHPUT_COOKIE)
-        self.send_msg_xids.append(xid)
-
-        xid = self.tester_sw.send_barrier_request()
+        xid = datapath.send_barrier_request()
         self.send_msg_xids.append(xid)
 
         self._wait()
