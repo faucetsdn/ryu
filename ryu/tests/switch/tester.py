@@ -940,45 +940,28 @@ class OfTester(app_manager.RyuApp):
                 self.rcv_msgs[0], ofproto_v1_3_parser.OFPErrorMsg)):
             raise TestReceiveError(self.state, self.rcv_msgs[0])
 
-    @set_ev_cls(ofp_event.EventOFPFlowStatsReply, handler.MAIN_DISPATCHER)
-    def flow_stats_reply_handler(self, ev):
-        state_list = [STATE_FLOW_EXIST_CHK,
-                      STATE_THROUGHPUT_FLOW_EXIST_CHK,
-                      STATE_GET_THROUGHPUT]
-        if self.state in state_list:
-            if self.waiter and ev.msg.xid in self.send_msg_xids:
-                self.rcv_msgs.append(ev.msg)
-                if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
-                    self.waiter.set()
-                    hub.sleep(0)
-
-    @set_ev_cls(ofp_event.EventOFPMeterConfigStatsReply,
-                handler.MAIN_DISPATCHER)
-    def meter_config_stats_reply_handler(self, ev):
-        state_list = [STATE_METER_EXIST_CHK]
-        if self.state in state_list:
-            if self.waiter and ev.msg.xid in self.send_msg_xids:
-                self.rcv_msgs.append(ev.msg)
-                if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
-                    self.waiter.set()
-                    hub.sleep(0)
-
-    @set_ev_cls(ofp_event.EventOFPTableStatsReply, handler.MAIN_DISPATCHER)
-    def table_stats_reply_handler(self, ev):
-        state_list = [STATE_GET_MATCH_COUNT,
-                      STATE_FLOW_UNMATCH_CHK]
-        if self.state in state_list:
-            if self.waiter and ev.msg.xid in self.send_msg_xids:
-                self.rcv_msgs.append(ev.msg)
-                if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
-                    self.waiter.set()
-                    hub.sleep(0)
-
-    @set_ev_cls(ofp_event.EventOFPPortStatsReply, handler.MAIN_DISPATCHER)
-    def port_stats_reply_handler(self, ev):
-        state_list = [STATE_TARGET_PKT_COUNT,
-                      STATE_TESTER_PKT_COUNT]
-        if self.state in state_list:
+    @set_ev_cls([ofp_event.EventOFPFlowStatsReply,
+                 ofp_event.EventOFPMeterConfigStatsReply,
+                 ofp_event.EventOFPTableStatsReply,
+                 ofp_event.EventOFPPortStatsReply], handler.MAIN_DISPATCHER)
+    def stats_reply_handler(self, ev):
+        # keys: stats reply event classes
+        # values: states in which the events should be processed
+        event_states = {
+            ofp_event.EventOFPFlowStatsReply:
+                [STATE_FLOW_EXIST_CHK,
+                 STATE_THROUGHPUT_FLOW_EXIST_CHK,
+                 STATE_GET_THROUGHPUT],
+            ofp_event.EventOFPMeterConfigStatsReply:
+                [STATE_METER_EXIST_CHK],
+            ofp_event.EventOFPTableStatsReply:
+                [STATE_GET_MATCH_COUNT,
+                 STATE_FLOW_UNMATCH_CHK],
+            ofp_event.EventOFPPortStatsReply:
+                [STATE_TARGET_PKT_COUNT,
+                 STATE_TESTER_PKT_COUNT]
+        }
+        if self.state in event_states[ev.__class__]:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
                 if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
