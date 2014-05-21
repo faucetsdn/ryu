@@ -388,10 +388,12 @@ class OfTester(app_manager.RyuApp):
             for flow in test.prerequisite:
                 if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
                     self._test(STATE_FLOW_INSTALL, self.target_sw, flow)
-                    self._test(STATE_FLOW_EXIST_CHK, self.target_sw, flow)
+                    self._test(STATE_FLOW_EXIST_CHK,
+                               self.target_sw.send_flow_stats, flow)
                 elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
                     self._test(STATE_METER_INSTALL, self.target_sw, flow)
-                    self._test(STATE_METER_EXIST_CHK, flow)
+                    self._test(STATE_METER_EXIST_CHK,
+                               self.target_sw.send_meter_config_stats, flow)
             # Do tests.
             for pkt in test.tests:
 
@@ -408,7 +410,7 @@ class OfTester(app_manager.RyuApp):
                         self._test(STATE_THROUGHPUT_FLOW_INSTALL,
                                    self.tester_sw, flow)
                         self._test(STATE_THROUGHPUT_FLOW_EXIST_CHK,
-                                   self.tester_sw, flow)
+                                   self.tester_sw.send_flow_stats, flow)
                     start = self._test(STATE_GET_THROUGHPUT)
                 elif KEY_TBL_MISS in pkt:
                     before_stats = self._test(STATE_GET_MATCH_COUNT)
@@ -497,9 +499,9 @@ class OfTester(app_manager.RyuApp):
                 STATE_FLOW_INSTALL: self._test_msg_install,
                 STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
                 STATE_METER_INSTALL: self._test_msg_install,
-                STATE_FLOW_EXIST_CHK: self._test_flow_exist_check,
-                STATE_THROUGHPUT_FLOW_EXIST_CHK: self._test_flow_exist_check,
-                STATE_METER_EXIST_CHK: self._test_meter_exist_check,
+                STATE_FLOW_EXIST_CHK: self._test_exist_check,
+                STATE_THROUGHPUT_FLOW_EXIST_CHK: self._test_exist_check,
+                STATE_METER_EXIST_CHK: self._test_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
                 STATE_TESTER_PKT_COUNT: self._test_get_packet_count,
                 STATE_FLOW_MATCH_CHK: self._test_flow_matching_check,
@@ -540,38 +542,39 @@ class OfTester(app_manager.RyuApp):
         msg = self.rcv_msgs[0]
         assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
 
-    def _test_flow_exist_check(self, datapath, flow_mod):
-        xid = datapath.send_flow_stats()
+    def _test_exist_check(self, method, message):
+        method_dict = {
+            OpenFlowSw.send_flow_stats.__name__: {
+                'reply': ofproto_v1_3_parser.OFPFlowStatsReply,
+                'compare': self._compare_flow
+            },
+            OpenFlowSw.send_meter_config_stats.__name__: {
+                'reply': ofproto_v1_3_parser.OFPMeterConfigStatsReply,
+                'compare': self._compare_meter
+            }
+        }
+        xid = method()
         self.send_msg_xids.append(xid)
         self._wait()
 
         ng_stats = []
         for msg in self.rcv_msgs:
-            assert isinstance(msg, ofproto_v1_3_parser.OFPFlowStatsReply)
+            assert isinstance(msg, method_dict[method.__name__]['reply'])
             for stats in msg.body:
-                result, stats = self._compare_flow(stats, flow_mod)
+                result, stats = method_dict[method.__name__]['compare'](
+                    stats, message)
                 if result:
                     return
                 else:
                     ng_stats.append(stats)
-        raise TestFailure(self.state, flows=', '.join(ng_stats))
 
-    def _test_meter_exist_check(self, meter_mod):
-        xid = self.target_sw.send_meter_config_stats()
-        self.send_msg_xids.append(xid)
-        self._wait()
-
-        ng_stats = []
-        for msg in self.rcv_msgs:
-            assert isinstance(
-                msg, ofproto_v1_3_parser.OFPMeterConfigStatsReply)
-            for stats in msg.body:
-                result, stats = self._compare_meter(stats, meter_mod)
-                if result:
-                    return
-                else:
-                    ng_stats.append(stats)
-        raise TestFailure(self.state, meters=', '.join(ng_stats))
+        error_dict = {
+            OpenFlowSw.send_flow_stats.__name__:
+                {'flows': ', '.join(ng_stats)},
+            OpenFlowSw.send_meter_config_stats.__name__:
+                {'meters': ', '.join(ng_stats)}
+        }
+        raise TestFailure(self.state, **error_dict[method.__name__])
 
     def _test_get_packet_count(self, is_target):
         sw = self.target_sw if is_target else self.tester_sw
