@@ -1261,3 +1261,9 @@ class DummyDatapath(object):
     def __init__(self):
         self.ofproto = ofproto_v1_3
         self.ofproto_parser = ofproto_v1_3_parser
+
+    def set_xid(self, _):
+        pass
+
+    def send_msg(self, _):
+        pass
