@@ -27,7 +27,8 @@ from tinyrpc.server import RPCServer
 from tinyrpc.dispatch import RPCDispatcher
 from tinyrpc.dispatch import public as rpc_public
 from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
-from tinyrpc.transports import ServerTransport
+from tinyrpc.transports import ServerTransport, ClientTransport
+from tinyrpc.client import RPCClient
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
@@ -157,6 +158,37 @@ class WebSocketRPCServer(RPCServer):
 
     def _spawn(self, func, *args, **kwargs):
         hub.spawn(func, *args, **kwargs)
+
+
+class WebSocketClientTransport(ClientTransport):
+
+    def __init__(self, ws, queue):
+        self.ws = ws
+        self.queue = queue
+
+    def send_message(self, message, expect_reply=True):
+        self.ws.send(unicode(message))
+
+        if expect_reply:
+            return self.queue.get()
+
+
+class WebSocketRPCClient(RPCClient):
+
+    def __init__(self, ws):
+        self.ws = ws
+        self.queue = hub.Queue()
+        super(WebSocketRPCClient, self).__init__(
+            JSONRPCProtocol(),
+            WebSocketClientTransport(ws, self.queue),
+        )
+
+    def serve_forever(self):
+        while True:
+            msg = self.ws.wait()
+            if msg is None:
+                break
+            self.queue.put(msg)
 
 
 class wsgify_hack(webob.dec.wsgify):
