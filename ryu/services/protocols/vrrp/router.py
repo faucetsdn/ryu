@@ -342,8 +342,9 @@ class VRRPV2StateMaster(VRRPState):
         ip, vrrp_ = vrrp.vrrp.get_payload(ev.packet)
         config = vrrp_router.config
         if vrrp_.priority == 0:
-            vrrp_router.send_advertisement()
-            vrrp_router.adver_timer.start(config.advertisement_interval)
+            if config.priority != 0:
+                vrrp_router.send_advertisement()
+                vrrp_router.adver_timer.start(config.advertisement_interval)
         else:
             params = vrrp_router.params
             if (config.priority < vrrp_.priority or
@@ -418,11 +419,12 @@ class VRRPV2StateBackup(VRRPState):
         vrrp_router = self.vrrp_router
         vrrp_router.logger.debug('%s vrrp_received', self.__class__.__name__)
 
+        config = vrrp_router.config
         _ip, vrrp_ = vrrp.vrrp.get_payload(ev.packet)
         if vrrp_.priority == 0:
-            vrrp_router.master_down_timer.start(vrrp_router.params.skew_time)
+            if config.priority != 0:
+                vrrp_router.master_down_timer.start(vrrp_router.params.skew_time)
         else:
-            config = vrrp_router.config
             params = vrrp_router.params
             if (not config.preempt_mode or config.priority <= vrrp_.priority):
                 vrrp_router.preempt_delay_timer.cancel()
@@ -545,8 +547,9 @@ class VRRPV3StateMaster(VRRPState):
         ip, vrrp_ = vrrp.vrrp.get_payload(ev.packet)
         config = vrrp_router.config
         if vrrp_.priority == 0:
-            vrrp_router.send_advertisement()
-            vrrp_router.adver_timer.start(config.advertisement_interval)
+            if vrrp_.priority != 0:
+                vrrp_router.send_advertisement()
+                vrrp_router.adver_timer.start(config.advertisement_interval)
         else:
             params = vrrp_router.params
             if (config.priority < vrrp_.priority or
@@ -635,9 +638,11 @@ class VRRPV3StateBackup(VRRPState):
         vrrp_router = self.vrrp_router
         vrrp_router.logger.debug('%s vrrp_received', self.__class__.__name__)
 
+        config = vrrp_router.config
         _ip, vrrp_ = vrrp.vrrp.get_payload(ev.packet)
         if vrrp_.priority == 0:
-            vrrp_router.master_down_timer.start(vrrp_router.params.skew_time)
+            if config.priority != 0:
+                vrrp_router.master_down_timer.start(vrrp_router.params.skew_time)
         else:
             params = vrrp_router.params
             config = vrrp_router.config
