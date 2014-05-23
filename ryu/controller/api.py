@@ -339,7 +339,7 @@ class RpcOFPManager(app_manager.RyuApp):
     def _packet_in_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
-        self.log.info({"event": "packet_in", "reason": msg.reason})
+        self.log.debug({"event": "packet_in", "reason": msg.reason})
         if dp.ofproto.OFPR_INVALID_TTL != msg.reason:
             return
 
