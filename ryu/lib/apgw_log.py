@@ -1,3 +1,4 @@
+from oslo.config import cfg
 import platform
 import datetime
 import json
@@ -9,6 +10,8 @@ _TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 APGW_KEYS = [
     'log_type',
 ]
+
+CONF = cfg.CONF
 
 
 def convert_str_to_log_level(log_level):
@@ -102,6 +105,8 @@ def configure_logging(log, component_name):
     log_level = logging.getLevelName(log.level)
     if log_level == 'NOTSET':
         log_level = logging.INFO
+    if CONF.apgw_debug:
+        log_level = logging.DEBUG
     log.setLevel(log_level)
 
     # we don't write to stdout unless the level is 'debug'.

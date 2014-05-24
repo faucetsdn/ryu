@@ -52,7 +52,8 @@ CONF.register_cli_opts([
     cfg.IntOpt('vrrp-rpc-port', default=50004,
                help='port for vrrp rpc interface'),
     cfg.BoolOpt('vrrp-use-vmac', default=False,
-                help='use virtual mac')
+                help='use virtual mac'),
+    cfg.BoolOpt('apgw-debug', default=False, help='use debug level'),
 ])
 
 CONF.register_cli_opts([
