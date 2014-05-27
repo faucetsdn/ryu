@@ -99,6 +99,7 @@ KEY_DESC = 'description'
 KEY_PREREQ = 'prerequisite'
 KEY_FLOW = 'OFPFlowMod'
 KEY_METER = 'OFPMeterMod'
+KEY_GROUP = 'OFPGroupMod'
 KEY_TESTS = 'tests'
 KEY_INGRESS = 'ingress'
 KEY_EGRESS = 'egress'
@@ -1236,7 +1237,7 @@ class Test(stringify.StringifyMixin):
         prerequisite = []
         if KEY_PREREQ not in buf:
             raise ValueError('a test requires a "%s" block' % KEY_PREREQ)
-        allowed_mod = [KEY_FLOW, KEY_METER]
+        allowed_mod = [KEY_FLOW, KEY_METER, KEY_GROUP]
         for flow in buf[KEY_PREREQ]:
             key, value = flow.popitem()
             if key not in allowed_mod:
