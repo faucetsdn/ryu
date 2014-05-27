@@ -133,6 +133,7 @@ STATE_GET_THROUGHPUT = 16
 STATE_THROUGHPUT_CHK = 17
 STATE_INIT_GROUP = 18
 STATE_GROUP_INSTALL = 19
+STATE_GROUP_EXIST_CHK = 20
 
 STATE_DISCONNECTED = 99
 
@@ -178,6 +179,10 @@ MSG = {STATE_INIT_FLOW:
        {FAILURE: 'Added incorrect meters: %(meters)s',
         TIMEOUT: 'Failed to add meters: meter config stats request timeout.',
         RCV_ERR: 'Failed to add meters: %(err_msg)s'},
+       STATE_GROUP_EXIST_CHK:
+       {FAILURE: 'Added incorrect groups: %(groups)s',
+        TIMEOUT: 'Failed to add groups: group desc stats request timeout.',
+        RCV_ERR: 'Failed to add groups: %(err_msg)s'},
        STATE_TARGET_PKT_COUNT:
        {TIMEOUT: 'Failed to request port stats from target: request timeout.',
         RCV_ERR: 'Failed to request port stats from target: %(err_msg)s'},
@@ -402,6 +407,8 @@ class OfTester(app_manager.RyuApp):
                                self.target_sw.send_meter_config_stats, flow)
                 elif isinstance(flow, ofproto_v1_3_parser.OFPGroupMod):
                     self._test(STATE_GROUP_INSTALL, self.target_sw, flow)
+                    self._test(STATE_GROUP_EXIST_CHK,
+                               self.target_sw.send_group_desc_stats, flow)
             # Do tests.
             for pkt in test.tests:
 
@@ -512,6 +519,7 @@ class OfTester(app_manager.RyuApp):
                 STATE_FLOW_EXIST_CHK: self._test_exist_check,
                 STATE_THROUGHPUT_FLOW_EXIST_CHK: self._test_exist_check,
                 STATE_METER_EXIST_CHK: self._test_exist_check,
+                STATE_GROUP_EXIST_CHK: self._test_exist_check,
                 STATE_TARGET_PKT_COUNT: self._test_get_packet_count,
                 STATE_TESTER_PKT_COUNT: self._test_get_packet_count,
                 STATE_FLOW_MATCH_CHK: self._test_flow_matching_check,
@@ -561,6 +569,10 @@ class OfTester(app_manager.RyuApp):
             OpenFlowSw.send_meter_config_stats.__name__: {
                 'reply': ofproto_v1_3_parser.OFPMeterConfigStatsReply,
                 'compare': self._compare_meter
+            },
+            OpenFlowSw.send_group_desc_stats.__name__: {
+                'reply': ofproto_v1_3_parser.OFPGroupDescStatsReply,
+                'compare': self._compare_group
             }
         }
         xid = method()
@@ -582,7 +594,9 @@ class OfTester(app_manager.RyuApp):
             OpenFlowSw.send_flow_stats.__name__:
                 {'flows': ', '.join(ng_stats)},
             OpenFlowSw.send_meter_config_stats.__name__:
-                {'meters': ', '.join(ng_stats)}
+                {'meters': ', '.join(ng_stats)},
+            OpenFlowSw.send_group_desc_stats.__name__:
+                {'groups': ', '.join(ng_stats)}
         }
         raise TestFailure(self.state, **error_dict[method.__name__])
 
@@ -829,6 +843,18 @@ class OfTester(app_manager.RyuApp):
                 return False, 'meter_stats(%s)' % ','.join(meter_stats)
         return True, None
 
+    def _compare_group(self, stats1, stats2):
+        attr_list = ['type', 'group_id', 'buckets']
+        for attr in attr_list:
+            value1 = getattr(stats1, attr)
+            value2 = getattr(stats2, attr)
+            if str(value1) != str(value2):
+                group_stats = []
+                for attr in attr_list:
+                    group_stats.append('%s=%s' % (attr, getattr(stats1, attr)))
+                return False, 'group_stats(%s)' % ','.join(group_stats)
+            return True, None
+
     def _diff_packets(self, model_pkt, rcv_pkt):
         msg = []
         for rcv_p in rcv_pkt.protocols:
@@ -956,7 +982,9 @@ class OfTester(app_manager.RyuApp):
     @set_ev_cls([ofp_event.EventOFPFlowStatsReply,
                  ofp_event.EventOFPMeterConfigStatsReply,
                  ofp_event.EventOFPTableStatsReply,
-                 ofp_event.EventOFPPortStatsReply], handler.MAIN_DISPATCHER)
+                 ofp_event.EventOFPPortStatsReply,
+                 ofp_event.EventOFPGroupDescStatsReply],
+                handler.MAIN_DISPATCHER)
     def stats_reply_handler(self, ev):
         # keys: stats reply event classes
         # values: states in which the events should be processed
@@ -972,7 +1000,9 @@ class OfTester(app_manager.RyuApp):
                  STATE_FLOW_UNMATCH_CHK],
             ofp_event.EventOFPPortStatsReply:
                 [STATE_TARGET_PKT_COUNT,
-                 STATE_TESTER_PKT_COUNT]
+                 STATE_TESTER_PKT_COUNT],
+            ofp_event.EventOFPGroupDescStatsReply:
+                [STATE_GROUP_EXIST_CHK]
         }
         if self.state in event_states[ev.__class__]:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
@@ -1110,6 +1140,11 @@ class OpenFlowSw(object):
         """ Get all meter. """
         parser = self.dp.ofproto_parser
         stats = parser.OFPMeterConfigStatsRequest(self.dp)
+        return self.send_msg(stats)
+
+    def send_group_desc_stats(self):
+        parser = self.dp.ofproto_parser
+        stats = parser.OFPGroupDescStatsRequest(self.dp)
         return self.send_msg(stats)
 
     def send_table_stats(self):
