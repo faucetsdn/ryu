@@ -21,6 +21,7 @@ import paramiko
 import sys
 from copy import copy
 from oslo.config import cfg
+import os.path
 
 from ryu.lib import hub
 from ryu import version
@@ -79,10 +80,24 @@ Hello, this is Ryu BGP speaker (version %s).
 
         transport = paramiko.Transport(sock)
         transport.load_server_moduli()
-        host_key = paramiko.RSAKey.from_private_key_file(CONF.cli_ssh_hostkey)
+        host_key = self._find_ssh_server_key()
         transport.add_server_key(host_key)
         self.transport = transport
         transport.start_server(server=self)
+
+    def _find_ssh_server_key(self):
+        if CONF.cli_ssh_hostkey:
+            return paramiko.RSAKey.from_private_key_file(CONF.cli_ssh_hostkey)
+        elif os.path.exists("/etc/ssh_host_rsa_key"):
+            # OSX
+            return paramiko.RSAKey.from_private_key_file(
+                "/etc/ssh_host_rsa_key")
+        elif os.path.exists("/etc/ssh/ssh_host_rsa_key"):
+            # Linux
+            return paramiko.RSAKey.from_private_key_file(
+                "/etc/ssh/ssh_host_rsa_key")
+        else:
+            return paramiko.RSAKey.generate(1024)
 
     def check_auth_none(self, username):
         return paramiko.AUTH_SUCCESSFUL
