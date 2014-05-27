@@ -51,15 +51,15 @@ from ryu.ofproto import ofproto_v1_3_parser
 
 """ Required test network:
 
-                      +-----------+
-           +----------| target sw | The switch to be tested
-           |          +-----------+
-    +------------+      (1)   (2)
-    | controller |       |     |
-    +------------+      (1)   (2)
-           |          +-----------+
-           +----------| tester sw | OpenFlow Switch
-                      +-----------+
+                      +-------------------+
+           +----------|     target sw     | The switch to be tested
+           |          +-------------------+
+    +------------+      (1)   (2)   (3)
+    | controller |       |     |     |
+    +------------+      (1)   (2)   (3)
+           |          +-------------------+
+           +----------|     tester sw     | OpenFlow Switch
+                      +-------------------+
 
       (X) : port number
 

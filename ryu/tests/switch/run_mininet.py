@@ -36,6 +36,7 @@ if '__main__' == __name__:
 
     Link(s1, s2)
     Link(s1, s2)
+    Link(s1, s2)
 
     net.build()
     c0.start()
