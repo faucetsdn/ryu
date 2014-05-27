@@ -14,6 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The central management of Ryu applications.
+
+- Load Ryu applications
+- Provide `contexts` to Ryu applications
+- Route messages among Ryu applications
+
+"""
+
 import inspect
 import itertools
 import logging

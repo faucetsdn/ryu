@@ -14,6 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Provide a set of REST API for tunnel key management. Used by OpenStack
+Ryu plug-in.
+
+- Tunnel key registration for a network
+- Manage switches and their ports which are used to establish a tunnel
+"""
+
 import json
 from webob import Response
 

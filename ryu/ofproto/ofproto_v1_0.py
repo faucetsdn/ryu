@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+OpenFlow 1.0 definitions.
+"""
+
 from struct import calcsize
 
 

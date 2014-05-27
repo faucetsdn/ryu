@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Decoder/Encoder implementations of OpenFlow 1.0.
+"""
+
 import struct
 import binascii
 

@@ -18,6 +18,11 @@
 # Despite of the name, this module isn't GRE specific and
 # should work for VXLAN etc as well.
 
+"""
+Flow table updater for OpenStack integration. Despite of the name, this
+isn't GRE specific.
+"""
+
 import collections
 
 from ryu import exception as ryu_exc

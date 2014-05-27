@@ -14,6 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The main component of OpenFlow controller.
+
+- Handle connections from switches
+- Generate and route events to appropriate entities like Ryu applications
+
+"""
+
 import contextlib
 from ryu import cfg
 import logging

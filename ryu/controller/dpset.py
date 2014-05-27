@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Manage switches.
+
+Planned to be replaced by ryu/topology.
+"""
+
 import logging
 
 from ryu.base import app_manager

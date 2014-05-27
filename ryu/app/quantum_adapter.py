@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Listen OpenFlow port status change notifications from switches. Consult
+ovsdb to retrieve the corresponding port uuid. Notify relevant parties,
+including quantum (via Ryu plug-in) and Ryu applications. (via Ryu Events)
+"""
+
 import traceback
 
 try:

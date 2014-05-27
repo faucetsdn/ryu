@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+An OpenFlow 1.0 L2 learning switch implementation.
+"""
+
 import logging
 import struct
 

@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+OpenFlow 1.3 definitions.
+"""
+
 from ryu.ofproto import oxm_fields
 
 from struct import calcsize
