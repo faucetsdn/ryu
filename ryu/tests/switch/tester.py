@@ -18,11 +18,13 @@ import inspect
 import json
 import logging
 import math
+import netaddr
 import os
 import signal
 import sys
 import time
 import traceback
+from random import randint
 
 from ryu import cfg
 
@@ -724,20 +726,24 @@ class OfTester(app_manager.RyuApp):
     def _continuous_packet_send(self, pkt):
         assert self.ingress_event is None
 
-        pkt_data = pkt[KEY_PACKETS][KEY_DATA]
+        pkt_text = pkt[KEY_PACKETS]['packet_text']
+        pkt_bin = pkt[KEY_PACKETS]['packet_binary']
         pktps = pkt[KEY_PACKETS][KEY_PKTPS]
         duration_time = pkt[KEY_PACKETS][KEY_DURATION_TIME]
+        randomize = pkt[KEY_PACKETS]['randomize']
 
-        self.logger.debug("send_packet:[%s]", packet.Packet(pkt_data))
+        self.logger.debug("send_packet:[%s]", packet.Packet(pkt_bin))
         self.logger.debug("pktps:[%d]", pktps)
         self.logger.debug("duration_time:[%d]", duration_time)
 
-        arg = {'pkt_data': pkt_data,
+        arg = {'packet_text': pkt_text,
+               'packet_binary': pkt_bin,
                'thread_counter': 0,
                'dot_span': int(CONTINUOUS_PROGRESS_SPAN /
                                CONTINUOUS_THREAD_INTVL),
                'packet_counter': float(0),
-               'packet_counter_inc': pktps * CONTINUOUS_THREAD_INTVL}
+               'packet_counter_inc': pktps * CONTINUOUS_THREAD_INTVL,
+               'randomize': randomize}
 
         try:
             self.ingress_event = hub.Event()
@@ -774,8 +780,14 @@ class OfTester(app_manager.RyuApp):
         self.ingress_threads.append(tid)
         hub.sleep(0)
         for _ in range(count):
+            if arg['randomize']:
+                msg = eval('/'.join(arg['packet_text']))
+                msg.serialize()
+                data = msg.data
+            else:
+                data = arg['packet_binary']
             try:
-                self.tester_sw.send_packet_out(arg['pkt_data'])
+                self.tester_sw.send_packet_out(data)
             except Exception as err:
                 self.thread_msg = err
                 self.ingress_event.set()
@@ -1270,12 +1282,16 @@ class Test(stringify.StringifyMixin):
                 test_pkt[KEY_INGRESS] = __test_pkt_from_json(test[KEY_INGRESS])
             elif isinstance(test[KEY_INGRESS], dict):
                 test_pkt[KEY_PACKETS] = {
-                    KEY_DATA: __test_pkt_from_json(
+                    'packet_text': test[KEY_INGRESS][KEY_PACKETS][KEY_DATA],
+                    'packet_binary': __test_pkt_from_json(
                         test[KEY_INGRESS][KEY_PACKETS][KEY_DATA]),
                     KEY_DURATION_TIME: test[KEY_INGRESS][KEY_PACKETS].get(
                         KEY_DURATION_TIME, DEFAULT_DURATION_TIME),
                     KEY_PKTPS: test[KEY_INGRESS][KEY_PACKETS].get(
-                        KEY_PKTPS, DEFAULT_PKTPS)}
+                        KEY_PKTPS, DEFAULT_PKTPS),
+                    'randomize': True in [
+                        line.find('randint') != -1
+                        for line in test[KEY_INGRESS][KEY_PACKETS][KEY_DATA]]}
             else:
                 raise ValueError('invalid format: "%s" field' % KEY_INGRESS)
             # parse 'egress' or 'PACKET_IN' or 'table-miss'
