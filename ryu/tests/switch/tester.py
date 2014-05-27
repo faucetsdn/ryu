@@ -131,6 +131,7 @@ STATE_THROUGHPUT_FLOW_INSTALL = 14
 STATE_THROUGHPUT_FLOW_EXIST_CHK = 15
 STATE_GET_THROUGHPUT = 16
 STATE_THROUGHPUT_CHK = 17
+STATE_INIT_GROUP = 18
 
 STATE_DISCONNECTED = 99
 
@@ -381,6 +382,7 @@ class OfTester(app_manager.RyuApp):
         try:
             # Initialize.
             self._test(STATE_INIT_METER)
+            self._test(STATE_INIT_GROUP)
             self._test(STATE_INIT_FLOW, self.target_sw)
             self._test(STATE_INIT_THROUGHPUT_FLOW, self.tester_sw,
                        THROUGHPUT_COOKIE)
@@ -496,6 +498,7 @@ class OfTester(app_manager.RyuApp):
         test = {STATE_INIT_FLOW: self._test_initialize_flow,
                 STATE_INIT_THROUGHPUT_FLOW: self._test_initialize_flow,
                 STATE_INIT_METER: self.target_sw.del_meters,
+                STATE_INIT_GROUP: self.target_sw.del_groups,
                 STATE_FLOW_INSTALL: self._test_msg_install,
                 STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
                 STATE_METER_INSTALL: self._test_msg_install,
@@ -976,6 +979,7 @@ class OfTester(app_manager.RyuApp):
         state_list = [STATE_INIT_FLOW,
                       STATE_INIT_THROUGHPUT_FLOW,
                       STATE_INIT_METER,
+                      STATE_INIT_GROUP,
                       STATE_FLOW_INSTALL,
                       STATE_THROUGHPUT_FLOW_INSTALL,
                       STATE_METER_INSTALL,
@@ -1060,6 +1064,15 @@ class OpenFlowSw(object):
                                  command=ofp.OFPMC_DELETE,
                                  flags=0,
                                  meter_id=ofp.OFPM_ALL)
+        return self.send_msg(mod)
+
+    def del_groups(self):
+        ofp = self.dp.ofproto
+        parser = self.dp.ofproto_parser
+        mod = parser.OFPGroupMod(self.dp,
+                                 command=ofp.OFPGC_DELETE,
+                                 type_=0,
+                                 group_id=ofp.OFPG_ALL)
         return self.send_msg(mod)
 
     def send_barrier_request(self):
