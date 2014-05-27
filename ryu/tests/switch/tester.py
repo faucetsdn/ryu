@@ -132,6 +132,7 @@ STATE_THROUGHPUT_FLOW_EXIST_CHK = 15
 STATE_GET_THROUGHPUT = 16
 STATE_THROUGHPUT_CHK = 17
 STATE_INIT_GROUP = 18
+STATE_GROUP_INSTALL = 19
 
 STATE_DISCONNECTED = 99
 
@@ -166,6 +167,9 @@ MSG = {STATE_INIT_FLOW:
        STATE_METER_INSTALL:
        {TIMEOUT: 'Failed to add meters: barrier request timeout.',
         RCV_ERR: 'Failed to add meters: %(err_msg)s'},
+       STATE_GROUP_INSTALL:
+       {TIMEOUT: 'Failed to add groups: barrier request timeout.',
+        RCV_ERR: 'Failed to add groups: %(err_msg)s'},
        STATE_FLOW_EXIST_CHK:
        {FAILURE: 'Added incorrect flows: %(flows)s',
         TIMEOUT: 'Failed to add flows: flow stats request timeout.',
@@ -396,6 +400,8 @@ class OfTester(app_manager.RyuApp):
                     self._test(STATE_METER_INSTALL, self.target_sw, flow)
                     self._test(STATE_METER_EXIST_CHK,
                                self.target_sw.send_meter_config_stats, flow)
+                elif isinstance(flow, ofproto_v1_3_parser.OFPGroupMod):
+                    self._test(STATE_GROUP_INSTALL, self.target_sw, flow)
             # Do tests.
             for pkt in test.tests:
 
@@ -502,6 +508,7 @@ class OfTester(app_manager.RyuApp):
                 STATE_FLOW_INSTALL: self._test_msg_install,
                 STATE_THROUGHPUT_FLOW_INSTALL: self._test_msg_install,
                 STATE_METER_INSTALL: self._test_msg_install,
+                STATE_GROUP_INSTALL: self._test_msg_install,
                 STATE_FLOW_EXIST_CHK: self._test_exist_check,
                 STATE_THROUGHPUT_FLOW_EXIST_CHK: self._test_exist_check,
                 STATE_METER_EXIST_CHK: self._test_exist_check,
@@ -983,6 +990,7 @@ class OfTester(app_manager.RyuApp):
                       STATE_FLOW_INSTALL,
                       STATE_THROUGHPUT_FLOW_INSTALL,
                       STATE_METER_INSTALL,
+                      STATE_GROUP_INSTALL,
                       STATE_SEND_BARRIER]
         if self.state in state_list:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
