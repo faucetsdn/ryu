@@ -50,13 +50,10 @@ from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 LOG = logging.getLogger('bgpspeaker.application')
 CONF = cfg.CONF
 
-DEFAULT_CONFIG_PATH = path.dirname(path.abspath(__file__)) + \
-    '/bgp_sample_conf.py'
-
 CONF.register_opts([
     cfg.IntOpt('bind-port', default=50002, help='rpc-port'),
     cfg.StrOpt('bind-ip', default='0.0.0.0', help='rpc-bind-ip'),
-    cfg.StrOpt('bgp-config-file', default=DEFAULT_CONFIG_PATH,
+    cfg.StrOpt('bgp-config-file', default=None,
                help='bgp-config-file')
 ])
 
