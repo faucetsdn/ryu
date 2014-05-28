@@ -71,6 +71,16 @@ class BgpWSJsonRpc(app_manager.RyuApp):
         call('network.add', **networks)
         return {}
 
+    @rpc_public('neighbors.get')
+    def _neighbors_get(self):
+        return call('neighbors.get')
+
+    @rpc_public('show.rib')
+    def _show_rib(self, family='ipv4'):
+        show = {}
+        show['params'] = ['rib', family]
+        return call('operator.show', **show)
+
 
 class BgpWSJsonRpcController(ControllerBase):
     def __init__(self, req, link, data, **config):
