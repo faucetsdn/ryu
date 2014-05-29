@@ -344,6 +344,11 @@ class AppManager(object):
         while len(app_lists) > 0:
             app_cls_name = app_lists.pop(0)
 
+            context_modules = map(lambda x: x.__module__,
+                                  self.contexts_cls.values())
+            if app_cls_name in context_modules:
+                continue
+
             LOG.info('loading app %s', app_cls_name)
 
             cls = self.load_app(app_cls_name)
@@ -356,19 +361,19 @@ class AppManager(object):
             for key, context_cls in cls.context_iteritems():
                 v = self.contexts_cls.setdefault(key, context_cls)
                 assert v == context_cls
+                context_modules.append(context_cls.__module__)
 
                 if issubclass(context_cls, RyuApp):
                     services.extend(get_dependent_services(context_cls))
 
             # we can't load an app that will be initiataed for
             # contexts.
-            context_modules = map(lambda x: x.__module__,
-                                  self.contexts_cls.values())
             for i in get_dependent_services(cls):
                 if i not in context_modules:
                     services.append(i)
             if services:
-                app_lists.extend(services)
+                app_lists.extend([s for s in set(services)
+                                  if s not in app_lists])
 
     def create_contexts(self):
         for key, cls in self.contexts_cls.items():
