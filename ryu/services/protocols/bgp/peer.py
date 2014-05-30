@@ -33,6 +33,7 @@ from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
+from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.services.protocols.bgp.utils import bgp as bgp_utils
 from ryu.services.protocols.bgp.utils.evtlet import EventletIOFactory
 from ryu.services.protocols.bgp.utils import stats
@@ -607,7 +608,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         new_pathattr = []
 
         if path.is_withdraw:
-            if self._neigh_conf.cap_mbgp_ipv4:
+            if isinstance(path, Ipv4Path):
                 update = BGPUpdate(withdrawn_routes=[path.nlri])
                 return update
             else:
@@ -639,7 +640,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             nexthop_attr = BGPPathAttributeNextHop(next_hop)
             assert nexthop_attr, 'Missing NEXTHOP mandatory attribute.'
 
-            if not self._neigh_conf.cap_mbgp_ipv4:
+            if not isinstance(path, Ipv4Path):
                 # We construct mpreach-nlri attribute.
                 mpnlri_attr = BGPPathAttributeMpReachNLRI(
                     path.route_family.afi,
@@ -754,7 +755,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Ordering path attributes according to type as RFC says. We set
             # MPReachNLRI first as advised by experts as a new trend in BGP
             # implementation.
-            if self._neigh_conf.cap_mbgp_ipv4:
+            if isinstance(path, Ipv4Path):
                 new_pathattr.append(nexthop_attr)
             else:
                 new_pathattr.append(mpnlri_attr)
@@ -772,7 +773,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if unkown_opttrans_attrs:
                 new_pathattr.extend(unkown_opttrans_attrs.values())
 
-            if self._neigh_conf.cap_mbgp_ipv4:
+            if isinstance(path, Ipv4Path):
                 update = BGPUpdate(path_attributes=new_pathattr,
                                    nlri=nlri_list)
             else:
@@ -1661,10 +1662,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
             # Construct OutgoingRoute specific for this peer and put it in
             # its sink.
-            bgp4_format = False
-            if self._neigh_conf.cap_mbgp_ipv4:
-                bgp4_format = True
-            outgoing_route = OutgoingRoute(path, bgp4_format=bgp4_format)
+            outgoing_route = OutgoingRoute(path)
             self.enque_outgoing_msg(outgoing_route)
             LOG.debug('Enqueued outgoing route %s for peer %s' %
                       (outgoing_route.path.nlri, self))
