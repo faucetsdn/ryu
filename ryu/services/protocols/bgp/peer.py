@@ -1128,7 +1128,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       ' UPDATE. %s' % update_msg)
             return
 
-        next_hop = update_msg.get_path_attr(BGP_ATTR_TYPE_NEXT_HOP)
+        next_hop = update_msg.get_path_attr(BGP_ATTR_TYPE_NEXT_HOP).value
         # Nothing to do if we do not have any new NLRIs in this message.
         msg_nlri_list = update_msg.nlri
         if not msg_nlri_list:

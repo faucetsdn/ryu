@@ -119,7 +119,7 @@ class InternalApi(object):
             elif origin == BGP_ATTR_ORIGIN_EGP:
                 origin = 'e'
 
-            nexthop = path.nexthop.value
+            nexthop = path.nexthop
             # Get the MED path attribute
             med = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
             med = med.value if med else ''

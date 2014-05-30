@@ -20,7 +20,6 @@ from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
-from ryu.lib.packet.bgp import BGPPathAttributeNextHop
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
@@ -489,7 +488,7 @@ class TableCoreManager(object):
         src_ver_num = 1
         peer = None
         # set mandatory path attributes
-        nexthop = BGPPathAttributeNextHop("0.0.0.0")
+        nexthop = '0.0.0.0'
         origin = BGPPathAttributeOrigin(BGP_ATTR_ORIGIN_IGP)
         aspath = BGPPathAttributeAsPath([[]])
 
