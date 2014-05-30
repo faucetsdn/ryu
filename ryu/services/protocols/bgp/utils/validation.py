@@ -195,10 +195,10 @@ def is_valid_mpls_label(label):
     return valid
 
 
-def is_valid_route_disc(route_disc):
-    """Validates *route_disc* as string representation of route distinguisher.
+def is_valid_route_dist(route_dist):
+    """Validates *route_dist* as string representation of route distinguisher.
 
-    Returns True if *route_disc* is as per our convention of RD, else False.
+    Returns True if *route_dist* is as per our convention of RD, else False.
     Our convention is to represent RD as a string in format:
     *admin_sub_field:assigned_num_field* and *admin_sub_field* can be valid
     IPv4 string representation.
@@ -206,7 +206,7 @@ def is_valid_route_disc(route_disc):
     Invalid examples: '1.11.1: 333'
     """
     # TODO(PH): Provide complete implementation.
-    return is_valid_ext_comm_attr(route_disc)
+    return is_valid_ext_comm_attr(route_dist)
 
 
 def is_valid_ext_comm_attr(attr):

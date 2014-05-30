@@ -352,9 +352,9 @@ class CoreService(Factory, Activity):
     def unregister_flexinet_sink(self, sink):
         self._sinks.remove(sink)
 
-    def update_flexinet_peers(self, path, route_disc):
+    def update_flexinet_peers(self, path, route_dist):
         for sink in self._sinks:
-            out_route = FlexinetOutgoingRoute(path, route_disc)
+            out_route = FlexinetOutgoingRoute(path, route_dist)
             sink.enque_outgoing_msg(out_route)
 
     def on_peer_added(self, peer):

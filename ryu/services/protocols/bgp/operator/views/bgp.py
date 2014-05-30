@@ -217,7 +217,7 @@ class IpNlriDetailView(OperatorDetailView):
 
 class VpnNlriDetailView(IpNlriDetailView):
     labels = fields.DataField('label_list')
-    rd = fields.DataField('route_disc')
+    rd = fields.DataField('route_dist')
 
 
 class NlriDetailView(OperatorDetailView):

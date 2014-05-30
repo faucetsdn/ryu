@@ -928,7 +928,7 @@ class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def formatted_nlri_str(self):
-        return "%s:%s" % (self.route_disc, self.prefix)
+        return "%s:%s" % (self.route_dist, self.prefix)
 
 
 class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
@@ -951,7 +951,7 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def formatted_nlri_str(self):
-        return "%s:%s" % (self.route_disc, self.prefix)
+        return "%s:%s" % (self.route_dist, self.prefix)
 
 
 class RouteTargetMembershipNLRI(StringifyMixin):

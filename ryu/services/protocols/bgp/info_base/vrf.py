@@ -151,7 +151,7 @@ class VrfTable(Table):
         vrf_nlri = self.NLRI_CLASS(length=int(masklen), addr=ip)
 
         vpn_nlri = vpn_path.nlri
-        puid = self.VRF_PATH_CLASS.create_puid(vpn_nlri.route_disc,
+        puid = self.VRF_PATH_CLASS.create_puid(vpn_nlri.route_dist,
                                                vpn_nlri.prefix)
         vrf_path = self.VRF_PATH_CLASS(
             puid,
@@ -279,7 +279,7 @@ class VrfDest(Destination):
 
     def __init__(self, table, nlri):
         super(VrfDest, self).__init__(table, nlri)
-        self._route_disc = self._table.vrf_conf.route_dist
+        self._route_dist = self._table.vrf_conf.route_dist
 
     def _best_path_lost(self):
         # Have to send update messages for withdraw of best-path to Network
@@ -295,10 +295,10 @@ class VrfDest(Destination):
             # out of old best path and queue it into flexinet sinks.
             old_best_path = old_best_path.clone(for_withdrawal=True)
             self._core_service.update_flexinet_peers(old_best_path,
-                                                     self._route_disc)
+                                                     self._route_dist)
         else:
             # Create withdraw-path out of old best path.
-            gpath = old_best_path.clone_to_vpn(self._route_disc,
+            gpath = old_best_path.clone_to_vpn(self._route_dist,
                                                for_withdrawal=True)
             # Insert withdraw into global table and enqueue the destination
             # for further processing.
@@ -327,16 +327,16 @@ class VrfDest(Destination):
             if not old_best_path or (old_best_path and really_diff()):
                 # Create OutgoingRoute and queue it into NC sink.
                 self._core_service.update_flexinet_peers(
-                    best_path, self._route_disc
+                    best_path, self._route_dist
                 )
         else:
             # If NC is source, we create new path and insert into global
             # table.
-            gpath = best_path.clone_to_vpn(self._route_disc)
+            gpath = best_path.clone_to_vpn(self._route_dist)
             tm = self._core_service.table_manager
             tm.learn_path(gpath)
             LOG.debug('VRF table %s has new best path: %s' %
-                      (self._route_disc, self.best_path))
+                      (self._route_dist, self.best_path))
 
     def _remove_withdrawals(self):
         """Removes withdrawn paths.
@@ -466,9 +466,9 @@ class VrfPath(Path):
         return self._label_list[:]
 
     @staticmethod
-    def create_puid(route_disc, ip_prefix):
-        assert route_disc and ip_prefix
-        return route_disc + ':' + ip_prefix
+    def create_puid(route_dist, ip_prefix):
+        assert route_dist and ip_prefix
+        return str(route_dist) + ':' + ip_prefix
 
     def clone(self, for_withdrawal=False):
         pathattrs = None

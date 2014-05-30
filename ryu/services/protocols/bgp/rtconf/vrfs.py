@@ -103,15 +103,11 @@ def validate_export_rts(export_rts):
 
 
 @validate(name=ROUTE_DISTINGUISHER)
-def valdiate_rd(route_disc):
-    if not isinstance(route_disc, str):
-        raise ConfigTypeError(conf_name=ROUTE_DISTINGUISHER,
-                              conf_value=route_disc)
-
-    if not validation.is_valid_route_disc(route_disc):
+def validate_rd(route_dist):
+    if not validation.is_valid_route_dist(route_dist):
         raise ConfigValueError(conf_name=ROUTE_DISTINGUISHER,
-                               conf_value=route_disc)
-    return route_disc
+                               conf_value=route_dist)
+    return route_dist
 
 
 @validate(name=VRF_RF)

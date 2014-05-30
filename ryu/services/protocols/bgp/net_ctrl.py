@@ -255,7 +255,7 @@ def _create_prefix_notif(outgoing_msg, rpc_session):
     assert path.source is not None
     if path.source != VRF_TABLE:
         # Extract relevant info for update-add/update-delete.
-        params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_disc,
+        params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_dist,
                    PREFIX: vpn_nlri.prefix,
                    NEXT_HOP: path.nexthop,
                    VPN_LABEL: path.label_list[0],
@@ -270,7 +270,7 @@ def _create_prefix_notif(outgoing_msg, rpc_session):
                                                       params)
     else:
         # Extract relevant info for update-add/update-delete.
-        params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_disc,
+        params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_dist,
                    PREFIX: vpn_nlri.prefix,
                    NEXT_HOP: path.nexthop,
                    VRF_RF: VrfConf.rf_2_vrf_rf(path.route_family),

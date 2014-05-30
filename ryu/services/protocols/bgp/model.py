@@ -93,9 +93,9 @@ class FlexinetOutgoingRoute(object):
     """
 
     __slots__ = ('_path', 'sink', 'next_outgoing_route', 'prev_outgoing_route',
-                 'next_sink_out_route', 'prev_sink_out_route', '_route_disc')
+                 'next_sink_out_route', 'prev_sink_out_route', '_route_dist')
 
-    def __init__(self, path, route_disc):
+    def __init__(self, path, route_dist):
         from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Path
         from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Path
         assert path.route_family in (Vrf4Path.ROUTE_FAMILY,
@@ -103,7 +103,7 @@ class FlexinetOutgoingRoute(object):
 
         self.sink = None
         self._path = path
-        self._route_disc = route_disc
+        self._route_dist = route_dist
 
         # Automatically generated, for list off of Destination.
         #
@@ -120,12 +120,12 @@ class FlexinetOutgoingRoute(object):
         return self._path
 
     @property
-    def route_disc(self):
-        return self._route_disc
+    def route_dist(self):
+        return self._route_dist
 
     def __str__(self):
-        return ('FlexinetOutgoingRoute(path: %s, route_disc: %s)' %
-                (self.path, self.route_disc))
+        return ('FlexinetOutgoingRoute(path: %s, route_dist: %s)' %
+                (self.path, self.route_dist))
 
 
 class SentRoute(object):

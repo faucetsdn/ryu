@@ -44,7 +44,7 @@ class VpnTable(Table):
         """Return a key that will uniquely identify this vpnvX NLRI inside
         this table.
         """
-        return vpn_nlri.route_disc + ':' + vpn_nlri.prefix
+        return vpn_nlri.route_dist + ':' + vpn_nlri.prefix
 
     def _create_dest(self, nlri):
         return self.VPN_DEST_CLASS(self, nlri)
@@ -70,7 +70,7 @@ class VpnPath(Path):
 
         vrf_path = self.VRF_PATH_CLASS(
             self.VRF_PATH_CLASS.create_puid(
-                self._nlri.route_disc,
+                self._nlri.route_dist,
                 self._nlri.prefix
             ),
             self.source, vrf_nlri,
