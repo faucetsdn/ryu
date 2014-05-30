@@ -210,8 +210,8 @@ def to_match(dp, attrs):
     match = dp.ofproto_parser.OFPMatch()
     convert = {'in_port': int,
                'in_phy_port': int,
-               'dl_src': mac.haddr_to_bin,
-               'dl_dst': mac.haddr_to_bin,
+               'dl_src': to_match_eth,
+               'dl_dst': to_match_eth,
                'dl_type': int,
                'dl_vlan': int,
                'vlan_pcp': int,
@@ -224,8 +224,8 @@ def to_match(dp, attrs):
                'tp_dst': int,
                'mpls_label': int,
                'metadata': to_match_metadata,
-               'eth_src': mac.haddr_to_bin,
-               'eth_dst': mac.haddr_to_bin,
+               'eth_src': to_match_eth,
+               'eth_dst': to_match_eth,
                'eth_type': int,
                'vlan_vid': int,
                'ipv4_src': to_match_ip,
@@ -242,8 +242,8 @@ def to_match(dp, attrs):
                'arp_op': int,
                'arp_spa': to_match_ip,
                'arp_tpa': to_match_ip,
-               'arp_sha': mac.haddr_to_bin,
-               'arp_tha': mac.haddr_to_bin,
+               'arp_sha': to_match_eth,
+               'arp_tha': to_match_eth,
                'ipv6_src': to_match_ipv6,
                'ipv6_dst': to_match_ipv6,
                'ipv6_flabel': int,
@@ -259,8 +259,8 @@ def to_match(dp, attrs):
                'ipv6_exthdr': int}
 
     match_append = {'in_port': match.set_in_port,
-                    'dl_src': match.set_dl_src,
-                    'dl_dst': match.set_dl_dst,
+                    'dl_src': match.set_dl_src_masked,
+                    'dl_dst': match.set_dl_dst_masked,
                     'dl_type': match.set_dl_type,
                     'dl_vlan': match.set_vlan_vid,
                     'vlan_pcp': match.set_vlan_pcp,
@@ -271,8 +271,8 @@ def to_match(dp, attrs):
                     'tp_dst': to_match_tpdst,
                     'mpls_label': match.set_mpls_label,
                     'metadata': match.set_metadata_masked,
-                    'eth_src': match.set_dl_src,
-                    'eth_dst': match.set_dl_dst,
+                    'eth_src': match.set_dl_src_masked,
+                    'eth_dst': match.set_dl_dst_masked,
                     'eth_type': match.set_dl_type,
                     'vlan_vid': match.set_vlan_vid,
                     'ip_dscp': match.set_ip_dscp,
@@ -291,8 +291,8 @@ def to_match(dp, attrs):
                     'arp_op': match.set_arp_opcode,
                     'arp_spa': match.set_arp_spa_masked,
                     'arp_tpa': match.set_arp_tpa_masked,
-                    'arp_sha': match.set_arp_sha,
-                    'arp_tha': match.set_arp_tha,
+                    'arp_sha': match.set_arp_sha_masked,
+                    'arp_tha': match.set_arp_tha_masked,
                     'ipv6_src': match.set_ipv6_src_masked,
                     'ipv6_dst': match.set_ipv6_dst_masked,
                     'ipv6_flabel': match.set_ipv6_flabel,
@@ -320,7 +320,14 @@ def to_match(dp, attrs):
         if key in convert:
             value = convert[key](value)
         if key in match_append:
-            if key == 'nw_src' or key == 'nw_dst' or \
+            if key == 'dl_src' or key == 'dl_dst' or \
+                    key == 'eth_src' or key == 'eth_dst' or \
+                    key == 'arp_sha' or key == 'arp_tha':
+                # MAC address
+                eth = value[0]
+                mask = value[1]
+                match_append[key](eth, mask)
+            elif key == 'nw_src' or key == 'nw_dst' or \
                     key == 'ipv4_src' or key == 'ipv4_dst' or \
                     key == 'arp_spa' or key == 'arp_tpa' or \
                     key == 'ipv6_src' or key == 'ipv6_dst':
@@ -343,6 +350,20 @@ def to_match(dp, attrs):
                 match_append[key](value)
 
     return match
+
+
+def to_match_eth(value):
+    eth_mask = value.split('/')
+
+    # MAC address
+    eth = mac.haddr_to_bin(eth_mask[0])
+    # mask
+    mask = mac.haddr_to_bin('ff:ff:ff:ff:ff:ff')
+
+    if len(eth_mask) == 2:
+        mask = mac.haddr_to_bin(eth_mask[1])
+
+    return eth, mask
 
 
 def to_match_tpsrc(value, match, rest):
@@ -414,6 +435,8 @@ def match_to_str(ofmatch):
             ofproto_v1_3.OXM_OF_IN_PHY_PORT: 'in_phy_port',
             ofproto_v1_3.OXM_OF_ETH_SRC: 'dl_src',
             ofproto_v1_3.OXM_OF_ETH_DST: 'dl_dst',
+            ofproto_v1_3.OXM_OF_ETH_SRC_W: 'dl_src',
+            ofproto_v1_3.OXM_OF_ETH_DST_W: 'dl_dst',
             ofproto_v1_3.OXM_OF_ETH_TYPE: 'dl_type',
             ofproto_v1_3.OXM_OF_VLAN_VID: 'dl_vlan',
             ofproto_v1_3.OXM_OF_VLAN_PCP: 'vlan_pcp',
@@ -444,6 +467,8 @@ def match_to_str(ofmatch):
             ofproto_v1_3.OXM_OF_ARP_TPA_W: 'arp_tpa',
             ofproto_v1_3.OXM_OF_ARP_SHA: 'arp_sha',
             ofproto_v1_3.OXM_OF_ARP_THA: 'arp_tha',
+            ofproto_v1_3.OXM_OF_ARP_SHA_W: 'arp_sha',
+            ofproto_v1_3.OXM_OF_ARP_THA_W: 'arp_tha',
             ofproto_v1_3.OXM_OF_IPV6_SRC: 'ipv6_src',
             ofproto_v1_3.OXM_OF_IPV6_DST: 'ipv6_dst',
             ofproto_v1_3.OXM_OF_IPV6_SRC_W: 'ipv6_src',
@@ -462,8 +487,9 @@ def match_to_str(ofmatch):
     for match_field in ofmatch.fields:
         key = keys[match_field.header]
         if key == 'dl_src' or key == 'dl_dst' or key == 'arp_sha' or \
-                key == 'arp_tha' or key == 'ipv6_nd_tll' or \
-                key == 'ipv6_nd_sll':
+                key == 'arp_tha':
+            value = match_eth_to_str(match_field.value, match_field.mask)
+        elif key == 'ipv6_nd_tll' or key == 'ipv6_nd_sll':
             value = mac.haddr_to_str(match_field.value)
         elif key == 'nw_src' or key == 'nw_dst' or \
                 key == 'arp_spa' or key == 'arp_tpa':
@@ -478,6 +504,15 @@ def match_to_str(ofmatch):
         match.setdefault(key, value)
 
     return match
+
+
+def match_eth_to_str(value, mask):
+    eth_str = mac.haddr_to_str(value)
+
+    if mask is not None:
+        eth_str = eth_str + '/' + mac.haddr_to_str(mask)
+
+    return eth_str
 
 
 def match_ip_to_str(value, mask):
