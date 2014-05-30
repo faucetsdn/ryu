@@ -44,6 +44,7 @@ from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf import neighbors
+from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 
@@ -203,8 +204,9 @@ class BGPSpeaker(RyuApp):
         All valid VRFs are loaded.
         """
         vpns_conf = routing_settings.setdefault('vpns', {})
-        for vrf in vpns_conf:
+        for vrfname, vrf in vpns_conf.iteritems():
             try:
+                vrf[vrfs.VRF_NAME] = vrfname
                 call('vrf.create', **vrf)
                 LOG.debug('Added vrf  %s' % str(vrf))
             except RuntimeConfigError as e:

@@ -27,6 +27,7 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
+from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
 from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
 
 from ryu.services.protocols.bgp.base import OrderedDict
@@ -146,8 +147,8 @@ class VrfTable(Table):
         source = vpn_path.source
         if not source:
             source = VRF_TABLE
-
-        vrf_nlri = self.NLRI_CLASS(vpn_path.nlri.prefix)
+        ip, masklen = vpn_path.nlri.prefix.split('/')
+        vrf_nlri = self.NLRI_CLASS(length=int(masklen), addr=ip)
 
         vpn_nlri = vpn_path.nlri
         puid = self.VRF_PATH_CLASS.create_puid(vpn_nlri.route_disc,
@@ -212,9 +213,24 @@ class VrfTable(Table):
             pattrs[BGP_ATTR_TYPE_ORIGIN] = BGPPathAttributeOrigin(
                 EXPECTED_ORIGIN)
             pattrs[BGP_ATTR_TYPE_AS_PATH] = BGPPathAttributeAsPath([])
+            communities = []
+            for rt in vrf_conf.export_rts:
+                as_num, local_admin = rt.split(':')
+                subtype = 2
+                communities.append(BGPTwoOctetAsSpecificExtendedCommunity(
+                                   as_number=int(as_num),
+                                   local_administrator=int(local_admin),
+                                   subtype=subtype))
+            for soo in vrf_conf.soo_list:
+                as_num, local_admin = rt.split(':')
+                subtype = 3
+                communities.append(BGPTwoOctetAsSpecificExtendedCommunity(
+                                   as_number=int(as_num),
+                                   local_administrator=int(local_admin),
+                                   subtype=subtype))
+
             pattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = \
-                BGPPathAttributeExtendedCommunities(
-                rt_list=vrf_conf.export_rts, soo_list=vrf_conf.soo_list)
+                BGPPathAttributeExtendedCommunities(communities=communities)
             if vrf_conf.multi_exit_disc:
                 pattrs[BGP_ATTR_TYPE_MULTI_EXIT_DISC] = \
                     BGPPathAttributeMultiExitDisc(vrf_conf.multi_exit_disc)
@@ -471,10 +487,12 @@ class VrfPath(Path):
         )
         return clone
 
-    def clone_to_vpn(self, route_disc, for_withdrawal=False):
-        vpn_nlri = self.VPN_NLRI_CLASS(
-            self.label_list, route_disc, self._nlri.prefix
-        )
+    def clone_to_vpn(self, route_dist, for_withdrawal=False):
+        ip, masklen = self._nlri.prefix.split('/')
+        vpn_nlri = self.VPN_NLRI_CLASS(length=int(masklen),
+                                       addr=ip,
+                                       labels=self.label_list,
+                                       route_dist=route_dist)
 
         pathattrs = None
         if not for_withdrawal:

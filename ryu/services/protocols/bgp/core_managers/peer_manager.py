@@ -10,6 +10,7 @@ from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
 from ryu.services.protocols.bgp.utils.bgp \
     import clone_path_and_update_med_for_target_neighbor
 LOG = logging.getLogger('bgpspeaker.core_managers.peer_manager')

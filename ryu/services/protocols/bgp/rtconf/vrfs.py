@@ -134,7 +134,7 @@ class VrfConf(ConfWithId, ConfWithStats):
                                    EXPORT_RTS])
 
     OPTIONAL_SETTINGS = frozenset(
-        [MULTI_EXIT_DISC, SITE_OF_ORIGINS, VRF_RF, IMPORT_MAPS]
+        [VRF_NAME, MULTI_EXIT_DISC, SITE_OF_ORIGINS, VRF_RF, IMPORT_MAPS]
     )
 
     def __init__(self, **kwargs):
