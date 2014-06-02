@@ -443,6 +443,8 @@ def match_to_str(ofmatch):
         if key == 'dl_src' or key == 'dl_dst' or key == 'arp_sha' or \
                 key == 'arp_tha':
             value = match_eth_to_str(match_field.value, match_field.mask)
+        elif key == 'ipv6_nd_tll' or key == 'ipv6_nd_sll':
+            value = mac.haddr_to_str(match_field.value)
         elif key == 'nw_src' or key == 'nw_dst' or \
                 key == 'arp_spa' or key == 'arp_tpa':
             value = match_ip_to_str(match_field.value, match_field.mask)
