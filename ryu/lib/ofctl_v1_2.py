@@ -440,8 +440,8 @@ def match_to_str(ofmatch):
     match = {}
     for match_field in ofmatch.fields:
         key = keys[match_field.header]
-        if key == 'dl_src' or key == 'dl_dst' or \
-              key == 'arp_sha' or key == 'arp_tha':
+        if key == 'dl_src' or key == 'dl_dst' or key == 'arp_sha' or \
+                key == 'arp_tha':
             value = match_eth_to_str(match_field.value, match_field.mask)
         elif key == 'nw_src' or key == 'nw_dst' or \
                 key == 'arp_spa' or key == 'arp_tpa':
