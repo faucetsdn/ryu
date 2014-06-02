@@ -765,7 +765,7 @@ class Path(object):
         if extcomm_attr is None:
             rts = []
         else:
-            rts = extcomm_attr.rt_list[:]
+            rts = extcomm_attr.rt_list
         return rts
 
     def has_rts_in(self, interested_rts):

@@ -80,10 +80,10 @@ class Test_bgp(unittest.TestCase):
                                                   addr='192.0.2.13')]
         mp_nlri = [
             bgp.LabelledVPNIPAddrPrefix(24, '192.0.9.0',
-                                        route_dist=100,
+                                        route_dist='100:100',
                                         labels=[1, 2, 3]),
             bgp.LabelledVPNIPAddrPrefix(26, '192.0.10.192',
-                                        route_dist=4000000000,
+                                        route_dist='10.0.0.1:10000',
                                         labels=[5, 6, 7, 8]),
         ]
         communities = [
@@ -223,10 +223,10 @@ class Test_bgp(unittest.TestCase):
                                                   addr='192.0.2.13')]
         mp_nlri = [
             bgp.LabelledVPNIPAddrPrefix(24, '192.0.9.0',
-                                        route_dist=100,
+                                        route_dist='100:100',
                                         labels=[1, 2, 3]),
             bgp.LabelledVPNIPAddrPrefix(26, '192.0.10.192',
-                                        route_dist=4000000000,
+                                        route_dist='10.0.0.1:10000',
                                         labels=[5, 6, 7, 8]),
         ]
         communities = [

@@ -142,6 +142,72 @@ BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION = 7
 BGP_ERROR_SUB_OUT_OF_RESOURCES = 8
 
 
+class _Value(object):
+    _VALUE_PACK_STR = None
+    _VALUE_FIELDS = ['value']
+
+    @staticmethod
+    def do_init(cls, self, kwargs, **extra_kwargs):
+        ourfields = {}
+        for f in cls._VALUE_FIELDS:
+            v = kwargs[f]
+            del kwargs[f]
+            ourfields[f] = v
+        kwargs.update(extra_kwargs)
+        super(cls, self).__init__(**kwargs)
+        self.__dict__.update(ourfields)
+
+    @classmethod
+    def parse_value(cls, buf):
+        values = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        return dict(zip(cls._VALUE_FIELDS, values))
+
+    def serialize_value(self):
+        args = []
+        for f in self._VALUE_FIELDS:
+            args.append(getattr(self, f))
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, *args)
+        return buf
+
+
+class _TypeDisp(object):
+    _TYPES = {}
+    _REV_TYPES = None
+    _UNKNOWN_TYPE = None
+
+    @classmethod
+    def register_unknown_type(cls):
+        def _register_type(subcls):
+            cls._UNKNOWN_TYPE = subcls
+            return subcls
+        return _register_type
+
+    @classmethod
+    def register_type(cls, type_):
+        cls._TYPES = cls._TYPES.copy()
+
+        def _register_type(subcls):
+            cls._TYPES[type_] = subcls
+            cls._REV_TYPES = None
+            return subcls
+        return _register_type
+
+    @classmethod
+    def _lookup_type(cls, type_):
+        try:
+            return cls._TYPES[type_]
+        except KeyError:
+            return cls._UNKNOWN_TYPE
+
+    @classmethod
+    def _rev_lookup_type(cls, targ_cls):
+        if cls._REV_TYPES is None:
+            rev = dict((v, k) for k, v in cls._TYPES.iteritems())
+            cls._REV_TYPES = rev
+        return cls._REV_TYPES[targ_cls]
+
+
 class BgpExc(Exception):
     """Base bgp exception."""
 
@@ -505,10 +571,114 @@ RF_IPv4_VPN = RouteFamily(afi.IP, safi.MPLS_VPN)
 RF_IPv6_VPN = RouteFamily(afi.IP6, safi.MPLS_VPN)
 RF_RTC_UC = RouteFamily(afi.IP, safi.ROUTE_TARGET_CONSTRTAINS)
 
+_rf_map = {
+    (afi.IP, safi.UNICAST): RF_IPv4_UC,
+    (afi.IP6, safi.UNICAST): RF_IPv6_UC,
+    (afi.IP, safi.MPLS_VPN): RF_IPv4_VPN,
+    (afi.IP6, safi.MPLS_VPN): RF_IPv6_VPN,
+    (afi.IP, safi.ROUTE_TARGET_CONSTRTAINS): RF_RTC_UC
+}
+
 
 def pad(bin, len_):
     assert len(bin) <= len_
     return bin + (len_ - len(bin)) * '\0'
+
+
+class _RouteDistinguisher(StringifyMixin, _TypeDisp, _Value):
+    _PACK_STR = '!H'
+    TWO_OCTET_AS = 0
+    IPV4_ADDRESS = 1
+    FOUR_OCTET_AS = 2
+
+    def __init__(self, type_, admin=0, assigned=0):
+        self.type = type_
+        self.admin = admin
+        self.assigned = assigned
+
+    @classmethod
+    def parser(cls, buf):
+        assert len(buf) == 8
+        (type_,) = struct.unpack_from(cls._PACK_STR, buffer(buf))
+        rest = buf[struct.calcsize(cls._PACK_STR):]
+        subcls = cls._lookup_type(type_)
+        return subcls(type_=type_, **subcls.parse_value(rest))
+
+    @classmethod
+    def from_str(cls, str_):
+        assert isinstance(str_, str)
+
+        first, second = str_.split(':')
+        if '.' in first:
+            type_ = cls.IPV4_ADDRESS
+        elif int(first) > (1 << 16):
+            type_ = cls.FOUR_OCTET_AS
+            first = int(first)
+        else:
+            type_ = cls.TWO_OCTET_AS
+            first = int(first)
+        subcls = cls._lookup_type(type_)
+        return subcls(type_=type_, admin=first, assigned=int(second))
+
+    def serialize(self):
+        value = self.serialize_value()
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type)
+        return buf + value
+
+    @property
+    def formatted_str(self):
+        return "%s:%s" % (str(self.admin), str(self.assigned))
+
+
+@_RouteDistinguisher.register_type(_RouteDistinguisher.TWO_OCTET_AS)
+class BGPTwoOctetAsRD(_RouteDistinguisher):
+    _VALUE_PACK_STR = '!HI'
+    _VALUE_FIELDS = ['admin', 'assigned']
+
+    def __init__(self, type_=_RouteDistinguisher.TWO_OCTET_AS, **kwargs):
+        self.do_init(BGPTwoOctetAsRD, self, kwargs, type_=type_)
+
+
+@_RouteDistinguisher.register_type(_RouteDistinguisher.IPV4_ADDRESS)
+class BGPIPv4AddressRD(_RouteDistinguisher):
+    _VALUE_PACK_STR = '!4sH'
+    _VALUE_FIELDS = ['admin', 'assigned']
+    _TYPE = {
+        'ascii': [
+            'admin'
+        ]
+    }
+
+    def __init__(self, type_=_RouteDistinguisher.IPV4_ADDRESS, **kwargs):
+        self.do_init(BGPIPv4AddressRD, self, kwargs, type_=type_)
+
+    @classmethod
+    def parse_value(cls, buf):
+        d_ = super(BGPIPv4AddressRD, cls).parse_value(buf)
+        d_['admin'] = addrconv.ipv4.bin_to_text(d_['admin'])
+        return d_
+
+    def serialize_value(self):
+        args = []
+        for f in self._VALUE_FIELDS:
+            v = getattr(self, f)
+            if f == 'admin':
+                v = bytes(addrconv.ipv4.text_to_bin(v))
+            args.append(v)
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0, *args)
+        return buf
+
+
+@_RouteDistinguisher.register_type(_RouteDistinguisher.FOUR_OCTET_AS)
+class BGPFourOctetAsRD(_RouteDistinguisher):
+    _VALUE_PACK_STR = '!IH'
+    _VALUE_FIELDS = ['admin', 'assigned']
+
+    def __init__(self, type_=_RouteDistinguisher.FOUR_OCTET_AS,
+                 **kwargs):
+        self.do_init(BGPFourOctetAsRD, self, kwargs, type_=type_)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -690,6 +860,10 @@ class _VPNAddrPrefix(_AddrPrefix):
             addr = addr[1:]
         else:
             length += struct.calcsize(self._RD_PACK_STR) * 8
+
+        if isinstance(route_dist, str):
+            route_dist = _RouteDistinguisher.from_str(route_dist)
+
         prefixes = prefixes + (route_dist,)
         super(_VPNAddrPrefix, self).__init__(prefixes=prefixes,
                                              length=length,
@@ -699,15 +873,14 @@ class _VPNAddrPrefix(_AddrPrefix):
     def _prefix_to_bin(cls, addr):
         rd = addr[0]
         rest = addr[1:]
-        binrd = bytearray()
-        msg_pack_into(cls._RD_PACK_STR, binrd, 0, rd)
+        binrd = rd.serialize()
         return binrd + super(_VPNAddrPrefix, cls)._prefix_to_bin(rest)
 
     @classmethod
     def _prefix_from_bin(cls, binaddr):
         binrd = binaddr[:8]
         binrest = binaddr[8:]
-        (rd,) = struct.unpack_from(cls._RD_PACK_STR, buffer(binrd))
+        rd = _RouteDistinguisher.parser(binrd)
         return (rd,) + super(_VPNAddrPrefix, cls)._prefix_from_bin(binrest)
 
 
@@ -741,11 +914,13 @@ class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def prefix(self):
-        return self.addr[-1] + '/{0}'.format(self.length)
+        masklen = self.length - struct.calcsize(self._RD_PACK_STR) * 8 \
+            - struct.calcsize(self._LABEL_PACK_STR) * 8 * len(self.addr[:-2])
+        return self.addr[-1] + '/{0}'.format(masklen)
 
     @property
-    def route_disc(self):
-        return self.addr[-2]
+    def route_dist(self):
+        return self.addr[-2].formatted_str
 
     @property
     def label_list(self):
@@ -762,11 +937,13 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def prefix(self):
-        return self.addr[-1] + '/{0}'.format(self.length)
+        masklen = self.length - struct.calcsize(self._RD_PACK_STR) * 8 \
+            - struct.calcsize(self._LABEL_PACK_STR) * 8 * len(self.addr[:-2])
+        return self.addr[-1] + '/{0}'.format(masklen)
 
     @property
-    def route_disc(self):
-        return self.addr[-2]
+    def route_dist(self):
+        return self.addr[-2].formatted_str
 
     @property
     def label_list(self):
@@ -861,27 +1038,7 @@ class RouteTargetMembershipNLRI(StringifyMixin):
         idx += 4
 
         # Extract route target.
-        route_target = ''
-        etype, esubtype, payload = struct.unpack_from('BB6s', buf, idx)
-        # RFC says: The value of the high-order octet of the Type field for the
-        # Route Target Community can be 0x00, 0x01, or 0x02.  The value of the
-        # low-order octet of the Type field for this community is 0x02.
-        # TODO(PH): Remove this exception when it breaks something Here we make
-        # exception as Routem packs lower-order octet as 0x00
-        if etype in (0, 2) and esubtype in (0, 2):
-            # If we have route target community in AS number format.
-            asnum, i = struct.unpack('!HI', payload)
-            route_target = ('%s:%s' % (asnum, i))
-        elif etype == 1 and esubtype == 2:
-            # If we have route target community in IP address format.
-            ip_addr, i = struct.unpack('!4sH', payload)
-            ip_addr = socket.inet_ntoa(ip_addr)
-            route_target = ('%s:%s' % (ip_addr, i))
-        elif etype == 0 and esubtype == 1:
-            # TODO(PH): Parsing of RtNlri 1:1:100:1
-            asnum, i = struct.unpack('!HI', payload)
-            route_target = ('%s:%s' % (asnum, i))
-
+        route_target = _ExtendedCommunity(buf[idx:])
         return cls(origin_as, route_target)
 
     def serialize(self):
@@ -889,12 +1046,7 @@ class RouteTargetMembershipNLRI(StringifyMixin):
         if not self.is_default_rtnlri():
             rt_nlri += struct.pack('!I', self.origin_as)
             # Encode route target
-            first, second = self.route_target.split(':')
-            if '.' in first:
-                ip_addr = socket.inet_aton(first)
-                rt_nlri += struct.pack('!BB4sH', 1, 2, ip_addr, int(second))
-            else:
-                rt_nlri += struct.pack('!BBHI', 0, 2, int(first), int(second))
+            rt_nlri += self.route_target.serialize()
 
         # RT Nlri is 12 octets
         return struct.pack('B', (8 * 12)) + rt_nlri
@@ -915,72 +1067,6 @@ def _get_addr_class(afi, safi):
         return _ADDR_CLASSES[(afi, safi)]
     except KeyError:
         return _BinAddrPrefix
-
-
-class _Value(object):
-    _VALUE_PACK_STR = None
-    _VALUE_FIELDS = ['value']
-
-    @staticmethod
-    def do_init(cls, self, kwargs, **extra_kwargs):
-        ourfields = {}
-        for f in cls._VALUE_FIELDS:
-            v = kwargs[f]
-            del kwargs[f]
-            ourfields[f] = v
-        kwargs.update(extra_kwargs)
-        super(cls, self).__init__(**kwargs)
-        self.__dict__.update(ourfields)
-
-    @classmethod
-    def parse_value(cls, buf):
-        values = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
-        return dict(zip(cls._VALUE_FIELDS, values))
-
-    def serialize_value(self):
-        args = []
-        for f in self._VALUE_FIELDS:
-            args.append(getattr(self, f))
-        buf = bytearray()
-        msg_pack_into(self._VALUE_PACK_STR, buf, 0, *args)
-        return buf
-
-
-class _TypeDisp(object):
-    _TYPES = {}
-    _REV_TYPES = None
-    _UNKNOWN_TYPE = None
-
-    @classmethod
-    def register_unknown_type(cls):
-        def _register_type(subcls):
-            cls._UNKNOWN_TYPE = subcls
-            return subcls
-        return _register_type
-
-    @classmethod
-    def register_type(cls, type_):
-        cls._TYPES = cls._TYPES.copy()
-
-        def _register_type(subcls):
-            cls._TYPES[type_] = subcls
-            cls._REV_TYPES = None
-            return subcls
-        return _register_type
-
-    @classmethod
-    def _lookup_type(cls, type_):
-        try:
-            return cls._TYPES[type_]
-        except KeyError:
-            return cls._UNKNOWN_TYPE
-
-    @classmethod
-    def _rev_lookup_type(cls, targ_cls):
-        if cls._REV_TYPES is None:
-            rev = dict((v, k) for k, v in cls._TYPES.iteritems())
-            cls._REV_TYPES = rev
-        return cls._REV_TYPES[targ_cls]
 
 
 class _OptParam(StringifyMixin, _TypeDisp, _Value):
@@ -1549,6 +1635,26 @@ class BGPPathAttributeExtendedCommunities(_PathAttribute):
             buf += comm.serialize()
         return buf
 
+    def _community_list(self, subtype):
+        _list = []
+        for comm in (c for c in self.communities
+                     if hasattr(c, "subtype") and c.subtype == subtype):
+            if comm.type == 0 or comm.type == 2:
+                _list.append('%d:%d' % (comm.as_number,
+                                        comm.local_administrator))
+            elif comm.type == 1:
+                _list.append('%s:%d' % (comm.ipv4_address,
+                                        comm.local_administrator))
+        return _list
+
+    @property
+    def rt_list(self):
+        return self._community_list(2)
+
+    @property
+    def soo_list(self):
+        return self._community_list(3)
+
 
 class _ExtendedCommunity(StringifyMixin, _TypeDisp, _Value):
     _PACK_STR = '!B7s'  # type high (+ type low) + value
@@ -1716,6 +1822,10 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         buf += binnlri
         return buf
 
+    @property
+    def route_family(self):
+        return _rf_map[(self.afi, self.safi)]
+
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_MP_UNREACH_NLRI)
 class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
@@ -1758,6 +1868,10 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
             binnlri += n.serialize()
         buf += binnlri
         return buf
+
+    @property
+    def route_family(self):
+        return _rf_map[(self.afi, self.safi)]
 
 
 class BGPNLRI(IPAddrPrefix):
