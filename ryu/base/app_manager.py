@@ -178,8 +178,8 @@ class RyuApp(object):
     def unregister_handler(self, ev_cls, handler):
         assert callable(handler)
         self.event_handlers[ev_cls].remove(handler)
-        if not event_handlers[ev_cls]:
-            del event_handlers[ev_cls]
+        if not self.event_handlers[ev_cls]:
+            del self.event_handlers[ev_cls]
 
     def register_observer(self, ev_cls, name, states=None):
         states = states or set()
