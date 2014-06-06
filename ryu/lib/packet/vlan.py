@@ -24,6 +24,7 @@ from . import lldp
 from . import slow
 from . import llc
 from . import pbb
+from . import cfm
 from ryu.ofproto import ether
 
 
@@ -121,6 +122,7 @@ vlan.register_packet_type(ipv6.ipv6, ether.ETH_TYPE_IPV6)
 vlan.register_packet_type(lldp.lldp, ether.ETH_TYPE_LLDP)
 vlan.register_packet_type(slow.slow, ether.ETH_TYPE_SLOW)
 vlan.register_packet_type(llc.llc, ether.ETH_TYPE_IEEE802_3)
+vlan.register_packet_type(cfm.cfm, ether.ETH_TYPE_CFM)
 
 svlan.register_packet_type(vlan, ether.ETH_TYPE_8021Q)
 svlan.register_packet_type(pbb.itag, ether.ETH_TYPE_8021AH)
