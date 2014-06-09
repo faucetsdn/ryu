@@ -708,3 +708,17 @@ ERRORS = {
         'description': 'Experimenter error messages.'
     }
 }
+
+
+def error_description(type, code):
+    if type not in ERRORS:
+        return 'Malformed error'
+    template_string = '{0} ({1}): {2}'
+    error_type = ERRORS[type]
+    error_type_string = template_string.format(error_type['name'], type, error_type['description'])
+    if code not in error_type:
+        error_code_string = 'Malformed error code.'
+    else:
+        error_code = error_type[code]
+        error_code_string = template_string.format(error_code['name'], code, error_code['description'])
+    return 'Error {0} [{1}]'.format(error_type_string, error_code_string)
