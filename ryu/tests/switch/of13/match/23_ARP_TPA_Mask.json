@@ -1,7 +1,7 @@
 [
     "match: 23_ARP_TPA (Mask)",
     {
-        "description":"ethernet/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -18,7 +18,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -58,7 +58,7 @@
         ]
     },
     {
-        "description":"ethernet/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:CONTROLLER'",
+        "description":"ethernet/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -75,7 +75,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -116,7 +116,7 @@
         ]
     },
     {
-        "description":"ethernet/arp(dst_ip='10.10.20.20')-->'arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/arp(dst_ip='10.10.20.20')-->'arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -133,7 +133,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -171,7 +171,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/vlan/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -188,7 +188,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -230,7 +230,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:CONTROLLER'",
+        "description":"ethernet/vlan/arp(dst_ip='192.168.20.20')-->'arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -247,7 +247,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -290,7 +290,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(dst_ip='10.10.20.20')-->'arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/vlan/arp(dst_ip='10.10.20.20')-->'arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -307,7 +307,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -346,7 +346,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(dst_ip='192.168.20.20')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/mpls/arp(dst_ip='192.168.20.20')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -399,7 +399,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -440,7 +440,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(dst_ip='192.168.20.20')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:CONTROLLER'",
+        "description":"ethernet/mpls/arp(dst_ip='192.168.20.20')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -493,7 +493,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -535,7 +535,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(dst_ip='10.10.20.20')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/mpls/arp(dst_ip='10.10.20.20')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -588,7 +588,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -627,7 +627,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(dst_ip='192.168.20.20')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(dst_ip='192.168.20.20')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -678,7 +678,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -720,7 +720,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(dst_ip='192.168.20.20')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:CONTROLLER'",
+        "description":"ethernet/itag/ethernet/arp(dst_ip='192.168.20.20')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -771,7 +771,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }
@@ -814,7 +814,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(dst_ip='10.10.20.20')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=0xffff00ff),actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(dst_ip='10.10.20.20')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_tpa=192.168.0.20(mask=255.255.0.255),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -865,7 +865,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_tpa",
-                                        "mask":4294902015,
+                                        "mask":"255.255.0.255",
                                         "value":"192.168.0.20"
                                     }
                                 }

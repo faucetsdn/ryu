@@ -1,7 +1,7 @@
 [
     "match: 26_IPV6_SRC (Mask)",
     {
-        "description":"ethernet/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -18,7 +18,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -60,7 +60,7 @@
         ]
     },
     {
-        "description":"ethernet/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:CONTROLLER'",
+        "description":"ethernet/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -77,7 +77,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -120,7 +120,7 @@
         ]
     },
     {
-        "description":"ethernet/ipv6(src='a0::a0')/tcp-->'ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/ipv6(src='a0::a0')/tcp-->'ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -137,7 +137,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -176,7 +176,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/vlan/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -193,7 +193,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -237,7 +237,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:CONTROLLER'",
+        "description":"ethernet/vlan/ipv6(src='10::10')/tcp-->'ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -254,7 +254,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -299,7 +299,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/ipv6(src='a0::a0')/tcp-->'ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/vlan/ipv6(src='a0::a0')/tcp-->'ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -316,7 +316,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -356,7 +356,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/ipv6(src='10::10')/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/mpls/ipv6(src='10::10')/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -409,7 +409,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -452,7 +452,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/ipv6(src='10::10')/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:CONTROLLER'",
+        "description":"ethernet/mpls/ipv6(src='10::10')/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -505,7 +505,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -549,7 +549,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/ipv6(src='a0::a0')/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/mpls/ipv6(src='a0::a0')/tcp-->'actions=pop_mpls:0x86dd,goto_table:1','table_id:1,ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -602,7 +602,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -642,7 +642,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/ipv6(src='10::10')/tcp-->'actions=pop_pbb,goto_table:1','table_id:1,ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/itag/ethernet/ipv6(src='10::10')/tcp-->'actions=pop_pbb,goto_table:1','table_id:1,ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -693,7 +693,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -737,7 +737,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/ipv6(src='10::10')/tcp-->'actions=pop_pbb,goto_table:1','table_id:1,ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:CONTROLLER'",
+        "description":"ethernet/itag/ethernet/ipv6(src='10::10')/tcp-->'actions=pop_pbb,goto_table:1','table_id:1,ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -788,7 +788,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
@@ -833,7 +833,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/ipv6(src='a0::a0')/tcp-->'actions=pop_pbb,goto_table:1','table_id:1,ipv6_src=10::0(mask=0xffffffffffffffffffffffffffff0000),actions=output:2'",
+        "description":"ethernet/itag/ethernet/ipv6(src='a0::a0')/tcp-->'actions=pop_pbb,goto_table:1','table_id:1,ipv6_src=10::0(mask=ffff:ffff:ffff:ffff:ffff:ffff:ffff:0),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -884,7 +884,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"ipv6_src",
-                                        "mask":340282366920938463463374607431768145920,
+                                        "mask":"ffff:ffff:ffff:ffff:ffff:ffff:ffff:0",
                                         "value":"10::0"
                                     }
                                 }
