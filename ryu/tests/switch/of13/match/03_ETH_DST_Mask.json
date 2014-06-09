@@ -1,7 +1,7 @@
 [
     "match: 03_ETH_DST (Mask)",
     {
-        "description":"ethernet(dst='22:22:22:22:22:22')/ipv4/tcp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:2'",
+        "description":"ethernet(dst='22:22:22:22:22:22')/ipv4/tcp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -12,7 +12,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -54,7 +54,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='22:22:22:22:22:22')/ipv4/tcp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:CONTROLLER'",
+        "description":"ethernet(dst='22:22:22:22:22:22')/ipv4/tcp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -65,7 +65,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -108,7 +108,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='ba:bb:bb:bb:bb:bb')/ipv4/tcp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:2'",
+        "description":"ethernet(dst='ba:bb:bb:bb:bb:bb')/ipv4/tcp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -119,7 +119,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -158,7 +158,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='22:22:22:22:22:22')/ipv6/tcp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:2'",
+        "description":"ethernet(dst='22:22:22:22:22:22')/ipv6/tcp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -169,7 +169,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -211,7 +211,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='22:22:22:22:22:22')/ipv6/tcp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:CONTROLLER'",
+        "description":"ethernet(dst='22:22:22:22:22:22')/ipv6/tcp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -222,7 +222,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -265,7 +265,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='ba:bb:bb:bb:bb:bb')/ipv6/tcp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:2'",
+        "description":"ethernet(dst='ba:bb:bb:bb:bb:bb')/ipv6/tcp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -276,7 +276,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -315,7 +315,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='22:22:22:22:22:22')/arp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:2'",
+        "description":"ethernet(dst='22:22:22:22:22:22')/arp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -326,7 +326,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -366,7 +366,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='22:22:22:22:22:22')/arp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:CONTROLLER'",
+        "description":"ethernet(dst='22:22:22:22:22:22')/arp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -377,7 +377,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }
@@ -418,7 +418,7 @@
         ]
     },
     {
-        "description":"ethernet(dst='ba:bb:bb:bb:bb:bb')/arp-->'eth_dst=22:22:22:22:22:00(mask=0xffffffffff00),actions=output:2'",
+        "description":"ethernet(dst='ba:bb:bb:bb:bb:bb')/arp-->'eth_dst=22:22:22:22:22:00(mask=ff:ff:ff:ff:ff:00),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -429,7 +429,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"eth_dst",
-                                        "mask":281474976710400,
+                                        "mask":"ff:ff:ff:ff:ff:00",
                                         "value":"22:22:22:22:22:00"
                                     }
                                 }

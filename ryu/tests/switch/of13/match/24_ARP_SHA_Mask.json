@@ -1,7 +1,7 @@
 [
     "match: 24_ARP_SHA (Mask)",
     {
-        "description":"ethernet/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -18,7 +18,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -58,7 +58,7 @@
         ]
     },
     {
-        "description":"ethernet/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -75,7 +75,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -116,7 +116,7 @@
         ]
     },
     {
-        "description":"ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -133,7 +133,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -171,7 +171,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/vlan/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -188,7 +188,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -230,7 +230,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/vlan/arp(src_mac='12:11:11:11:11:11')-->'arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -247,7 +247,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -290,7 +290,7 @@
         ]
     },
     {
-        "description":"ethernet/vlan/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/vlan/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -307,7 +307,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -346,7 +346,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/mpls/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -399,7 +399,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -440,7 +440,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/mpls/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -493,7 +493,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -535,7 +535,7 @@
         ]
     },
     {
-        "description":"ethernet/mpls/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/mpls/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_mpls:0x0806,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -588,7 +588,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -627,7 +627,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -678,7 +678,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -720,7 +720,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:CONTROLLER'",
+        "description":"ethernet/itag/ethernet/arp(src_mac='12:11:11:11:11:11')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:CONTROLLER'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -771,7 +771,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
@@ -814,7 +814,7 @@
         ]
     },
     {
-        "description":"ethernet/itag/ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=0xffffff00ffff),actions=output:2'",
+        "description":"ethernet/itag/ethernet/arp(src_mac='aa:aa:aa:aa:aa:aa')-->'actions=pop_pbb,goto_table:1','table_id:1,arp_sha=12:11:11:00:11:11(mask=ff:ff:ff:00:ff:ff),actions=output:2'",
         "prerequisite":[
             {
                 "OFPFlowMod":{
@@ -865,7 +865,7 @@
                                 {
                                     "OXMTlv":{
                                         "field":"arp_sha",
-                                        "mask":281474959998975,
+                                        "mask":"ff:ff:ff:00:ff:ff",
                                         "value":"12:11:11:00:11:11"
                                     }
                                 }
