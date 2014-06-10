@@ -242,7 +242,11 @@ class RpcOFPManager(app_manager.RyuApp):
     @handler.set_ev_cls(ofp_event.EventOFPErrorMsg,
                         handler.MAIN_DISPATCHER)
     def _error_msg_handler(self, ev):
-        self.log.info(ev.msg.to_jsondict())
+        d = ev.msg.to_jsondict()
+        d['OFPErrorMsg']['xid'] = ev.msg.xid
+        self.log.info(d)
+        for peer in self._peers:
+            peer._endpoint.send_notification("OFPError", [d])
 
     @handler.set_ev_cls(ofp_event.EventOFPBarrierReply,
                         handler.MAIN_DISPATCHER)
