@@ -11,6 +11,7 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
+from ryu.ofproto import ofproto_error_table
 from ryu.lib import hub
 from ryu.lib import apgw_log
 from ryu.lib import rpc
@@ -244,6 +245,7 @@ class RpcOFPManager(app_manager.RyuApp):
     def _error_msg_handler(self, ev):
         d = ev.msg.to_jsondict()
         d['OFPErrorMsg']['xid'] = ev.msg.xid
+        d['OFPErrorMsg']['description'] = ofproto_error_table.error_description(ev.msg.type, ev.msg.code)
         self.log.info(d)
         for peer in self._peers:
             peer._endpoint.send_notification("OFPError", [d])
