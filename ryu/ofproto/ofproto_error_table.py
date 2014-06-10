@@ -73,7 +73,8 @@ ERRORS = {
         },
         13: {
             'name': 'OFPBRC_MULTIPART_BUFFER_OVERFLOW',
-            'description': 'ofp_multipart_request overflowed the assigned buffer.'
+            'description': 'ofp_multipart_request overflowed the assigned '
+                           'buffer.'
         },
         14: {
             'name': 'OFPBRC_MULTIPART_REQUEST_TIMEOUT',
@@ -309,7 +310,8 @@ ERRORS = {
         },
         1: {
             'name': 'OFPGMFC_INVALID_GROUP',
-            'description': 'Group not added because Group specified is invalid.'
+            'description': 'Group not added because Group specified is '
+                           'invalid.'
         },
         2: {
             'name': 'OFPGMFC_WEIGHT_UNSUPPORTED',
@@ -327,12 +329,13 @@ ERRORS = {
         },
         5: {
             'name': 'OFPGMFC_CHAINING_UNSUPPORTED',
-            'description': 'Switch does not support groups that forward to groups.'
+            'description': 'Switch does not support groups that forward to '
+                           'groups.'
         },
         6: {
             'name': 'OFPGMFC_WATCH_UNSUPPORTED',
-            'description': 'This group cannot watch the watch_port or watch_group '
-                           'specified.'
+            'description': 'This group cannot watch the watch_port or '
+                           'watch_group specified.'
         },
         7: {
             'name': 'OFPGMFC_LOOP',
@@ -340,13 +343,13 @@ ERRORS = {
         },
         8: {
             'name': 'OFPGMFC_UNKNOWN_GROUP',
-            'description': 'Group not modified because a group MODIFY attempted '
-                           'to modify a non-existent group.'
+            'description': 'Group not modified because a group MODIFY '
+                           'attempted to modify a non-existent group.'
         },
         9: {
             'name': 'OFPGMFC_CHAINED_GROUP',
-            'description': 'Group not deleted because another group is forwarding '
-                           'to it.'
+            'description': 'Group not deleted because another group is '
+                           'forwarding to it.'
         },
         10: {
             'name': 'OFPGMFC_BAD_TYPE',
@@ -378,8 +381,8 @@ ERRORS = {
         },
         1: {
             'name': 'OFPPMFC_BAD_HW_ADDR',
-            'description': 'Specified hardware address does not match the port '
-                           'number.'
+            'description': 'Specified hardware address does not match the '
+                           'port number.'
         },
         2: {
             'name': 'OFPPMFC_BAD_CONFIG',
@@ -472,12 +475,13 @@ ERRORS = {
         },
         2: {
             'name': 'OFPMMFC_INVALID_METER',
-            'description': 'Meter not added because Meter specified is invalid.'
+            'description': 'Meter not added because Meter specified is '
+                           'invalid.'
         },
         3: {
             'name': 'OFPMMFC_UNKNOWN_METER',
-            'description': 'Meter not modified because a Meter MODIFY attempted '
-                           'to modify a non-existent Meter.'
+            'description': 'Meter not modified because a Meter MODIFY '
+                           'attempted to modify a non-existent Meter.'
         },
         4: {
             'name': 'OFPMMFC_BAD_COMMAND',
@@ -509,8 +513,8 @@ ERRORS = {
         },
         11: {
             'name': 'OFPMMFC_OUT_OF_BANDS',
-            'description': 'The maximum number of properties for a meter has been '
-                           'exceeded.'
+            'description': 'The maximum number of properties for a meter has '
+                           'been exceeded.'
         }
     },
     13: {
@@ -611,12 +615,13 @@ ERRORS = {
         },
         2: {
             'name': 'OFPMOFC_INVALID_MONITOR',
-            'description': 'Monitor not added because Monitor specified is invalid.'
+            'description': 'Monitor not added because Monitor specified is '
+                           'invalid.'
         },
         3: {
             'name': 'OFPMOFC_UNKNOWN_MONITOR',
-            'description': 'Monitor not modified because a Monitor MODIFY attempted '
-                           'to modify a non-existent Monitor.'
+            'description': 'Monitor not modified because a Monitor MODIFY '
+                           'attempted to modify a non-existent Monitor.'
         },
         4: {
             'name': 'OFPMOFC_BAD_COMMAND',
@@ -715,10 +720,12 @@ def error_description(type, code):
         return 'Malformed error'
     template_string = '{0} ({1}): {2}'
     error_type = ERRORS[type]
-    error_type_string = template_string.format(error_type['name'], type, error_type['description'])
+    error_type_string = template_string.format(error_type['name'], type,
+                                               error_type['description'])
     if code not in error_type:
         error_code_string = 'Malformed error code.'
     else:
         error_code = error_type[code]
-        error_code_string = template_string.format(error_code['name'], code, error_code['description'])
+        error_code_string = template_string.format(error_code['name'], code,
+                                                   error_code['description'])
     return 'Error {0} [{1}]'.format(error_type_string, error_code_string)
