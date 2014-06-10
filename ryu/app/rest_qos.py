@@ -64,7 +64,8 @@ from ryu.ofproto import inet
 # POST /qos/queue/{switch-id}
 #
 # request body format:
-#  {"type": "<linux-htb or linux-other>",
+#  {"port_name":"<name of port>",
+#   "type": "<linux-htb or linux-other>",
 #   "max-rate": "<int>",
 #   "queues":[{"max_rate": "<int>", "min_rate": "<int>"},...]}
 #
@@ -72,6 +73,9 @@ from ryu.ofproto import inet
 #         previous configurations.
 #   Note: Queue configurations are available for
 #         OpenvSwitch.
+#   Note: port_name is optional argument.
+#         If does not pass the port_name argument,
+#         all ports are target for configuration.
 #
 # delete queue
 # DELETE /qos/queue/{swtich-id}
@@ -121,7 +125,7 @@ from ryu.ofproto import inet
 #    "nw_proto": "<TCP or UDP or ICMP or ICMPv6>"
 #    "tp_src"  : "<int>"
 #    "tp_dst"  : "<int>"
-#    "dscp"    : "<int>"
+#    "ip_dscp" : "<int>"
 #
 #    * action field
 #    "mark": <dscp-value>
@@ -182,6 +186,7 @@ REST_COMMAND_RESULT = 'command_result'
 REST_PRIORITY = 'priority'
 REST_VLANID = 'vlan_id'
 REST_DL_VLAN = 'dl_vlan'
+REST_PORT_NAME = 'port_name'
 REST_QUEUE_TYPE = 'type'
 REST_QUEUE_MAX_RATE = 'max_rate'
 REST_QUEUE_MIN_RATE = 'min_rate'
@@ -234,8 +239,8 @@ VLANID_MIN = 2
 VLANID_MAX = 4094
 COOKIE_SHIFT_VLANID = 32
 
-base_url = '/qos'
-requirements = {'switchid': SWITCHID_PATTERN,
+BASE_URL = '/qos'
+REQUIREMENTS = {'switchid': SWITCHID_PATTERN,
                 'vlanid': VLANID_PATTERN}
 
 LOG = logging.getLogger(__name__)
@@ -414,80 +419,80 @@ class QoSController(ControllerBase):
         ofs = QoSController._OFS_LIST.get(dpid, None)
         ofs.set_ovsdb_addr(dpid, None)
 
-    @route('qos_switch', base_url + '/queue/{switchid}',
-           methods=['GET'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/queue/{switchid}',
+           methods=['GET'], requirements=REQUIREMENTS)
     def get_queue(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_queue', None)
 
-    @route('qos_switch', base_url + '/queue/{switchid}',
-           methods=['POST'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/queue/{switchid}',
+           methods=['POST'], requirements=REQUIREMENTS)
     def set_queue(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'set_queue', None)
 
-    @route('qos_switch', base_url + '/queue/{switchid}',
-           methods=['DELETE'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/queue/{switchid}',
+           methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_queue(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'delete_queue', None)
 
-    @route('qos_switch', base_url + '/queue/status/{switchid}',
-           methods=['GET'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/queue/status/{switchid}',
+           methods=['GET'], requirements=REQUIREMENTS)
     def get_status(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_status', self.waiters)
 
-    @route('qos_switch', base_url + '/rules/{switchid}',
-           methods=['GET'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/rules/{switchid}',
+           methods=['GET'], requirements=REQUIREMENTS)
     def get_qos(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_qos', self.waiters)
 
-    @route('qos_switch', base_url + '/rules/{switchid}/{vlanid}',
-           methods=['GET'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/rules/{switchid}/{vlanid}',
+           methods=['GET'], requirements=REQUIREMENTS)
     def get_vlan_qos(self, req, switchid, vlanid, **_kwargs):
         return self._access_switch(req, switchid, vlanid,
                                    'get_qos', self.waiters)
 
-    @route('qos_switch', base_url + '/rules/{switchid}',
-           methods=['POST'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/rules/{switchid}',
+           methods=['POST'], requirements=REQUIREMENTS)
     def set_qos(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'set_qos', self.waiters)
 
-    @route('qos_switch', base_url + '/rules/{switchid}/{vlanid}',
-           methods=['POST'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/rules/{switchid}/{vlanid}',
+           methods=['POST'], requirements=REQUIREMENTS)
     def set_vlan_qos(self, req, switchid, vlanid, **_kwargs):
         return self._access_switch(req, switchid, vlanid,
                                    'set_qos', self.waiters)
 
-    @route('qos_switch', base_url + '/rules/{switchid}',
-           methods=['DELETE'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/rules/{switchid}',
+           methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_qos(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'delete_qos', self.waiters)
 
-    @route('qos_switch', base_url + '/rules/{switchid}/{vlanid}',
-           methods=['DELETE'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/rules/{switchid}/{vlanid}',
+           methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_vlan_qos(self, req, switchid, vlanid, **_kwargs):
         return self._access_switch(req, switchid, vlanid,
                                    'delete_qos', self.waiters)
 
-    @route('qos_switch', base_url + '/meter/{switchid}',
-           methods=['GET'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/meter/{switchid}',
+           methods=['GET'], requirements=REQUIREMENTS)
     def get_meter(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_meter', self.waiters)
 
-    @route('qos_switch', base_url + '/meter/{switchid}',
-           methods=['POST'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/meter/{switchid}',
+           methods=['POST'], requirements=REQUIREMENTS)
     def set_meter(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'set_meter', self.waiters)
 
-    @route('qos_switch', base_url + '/meter/{switchid}',
-           methods=['DELETE'], requirements=requirements)
+    @route('qos_switch', BASE_URL + '/meter/{switchid}',
+           methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_meter(self, req, switchid, **_kwargs):
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'delete_meter', self.waiters)
@@ -673,10 +678,17 @@ class QoS(object):
             self.queue_list[queue_id] = {'config': config}
             queue_id += 1
 
-        vif_ports = self.ovs_bridge.get_external_ports()
-        for port in vif_ports:
+        port_name = rest.get(REST_PORT_NAME, None)
+        vif_ports = self.ovs_bridge.get_port_name_list()
+
+        if port_name is not None:
+            if port_name not in vif_ports:
+                raise ValueError('%s port is not exists' % port_name)
+            vif_ports = [port_name]
+
+        for port_name in vif_ports:
             try:
-                self.ovs_bridge.set_qos(port.port_name, type=queue_type,
+                self.ovs_bridge.set_qos(port_name, type=queue_type,
                                         max_rate=parent_max_rate,
                                         queues=queue_config)
             except Exception, msg:
@@ -770,6 +782,8 @@ class QoS(object):
         if str(self.dp.id) in msgs:
             flow_stats = msgs[str(self.dp.id)]
             for flow_stat in flow_stats:
+                if flow_stat['table_id'] != QOS_TABLE_ID:
+                    continue
                 priority = flow_stat[REST_PRIORITY]
                 if priority != DEFAULT_FLOW_PRIORITY:
                     vid = flow_stat[REST_MATCH].get(REST_DL_VLAN, VLANID_NONE)
