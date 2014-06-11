@@ -249,7 +249,7 @@ class RpcOFPManager(app_manager.RyuApp):
             ofproto_error_table.error_description(ev.msg.type, ev.msg.code)
         self.log.info(d)
         for peer in self._peers:
-            peer._endpoint.send_notification("OFPError", [d])
+            peer._endpoint.send_notification("ofp_error", [d])
 
     @handler.set_ev_cls(ofp_event.EventOFPBarrierReply,
                         handler.MAIN_DISPATCHER)
