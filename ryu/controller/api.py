@@ -26,6 +26,9 @@ import eventlet
 import sys
 
 
+logging.setLoggerClass(apgw_log.JSONLogger)
+
+
 class RPCError(Exception):
     pass
 
@@ -79,7 +82,8 @@ class RpcOFPManager(app_manager.RyuApp):
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._rpc_message_thread)
         hub.spawn(self._meter_stats_thread)
-        self.log = apgw_log.initialize(self.LOGGER_NAME)
+        self.log = logging.getLogger('ofwire')
+        apgw_log.configure_logging(self.log, 'ofwire')
         self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
                                                          log_type='states')
         self.stats_log = apgw_log.DictAndLogTypeAdapter(self.log,

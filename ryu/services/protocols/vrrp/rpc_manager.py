@@ -29,6 +29,7 @@ from ryu.lib import hub
 from ryu.lib import mac
 
 CONF = cfg.CONF
+logging.setLoggerClass(apgw_log.JSONLogger)
 
 
 class RPCError(Exception):
@@ -55,7 +56,8 @@ class RpcVRRPManager(app_manager.RyuApp):
         self._rpc_events = hub.Queue(128)
         self.server_thread = hub.spawn(self._peer_accept_thread)
         self.event_thread = hub.spawn(self._rpc_request_loop_thread)
-        self.log = apgw_log.initialize('vrrp')
+        self.log = logging.getLogger('vrrp')
+        apgw_log.configure_logging(self.log, 'vrrp')
         self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
                                                          log_type='states')
 

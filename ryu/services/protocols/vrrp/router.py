@@ -33,7 +33,7 @@ from ryu.lib.packet import vrrp
 from ryu.services.protocols.vrrp import event as vrrp_event
 from ryu.services.protocols.vrrp import api as vrrp_api
 
-stats_log = apgw_log.initialize('vrrp')
+stats_log = logging.getLogger('vrrp')
 stats_log = apgw_log.DictAndLogTypeAdapter(stats_log,
                                            log_type='stats')
 
