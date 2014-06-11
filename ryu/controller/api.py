@@ -244,8 +244,9 @@ class RpcOFPManager(app_manager.RyuApp):
                         handler.MAIN_DISPATCHER)
     def _error_msg_handler(self, ev):
         d = ev.msg.to_jsondict()
-        d['OFPErrorMsg']['xid'] = ev.msg.xid
-        d['OFPErrorMsg']['description'] = \
+        d = d['OFPErrorMsg']
+        d['xid'] = ev.msg.xid
+        d['description'] = \
             ofproto_error_table.error_description(ev.msg.type, ev.msg.code)
         self.log.info(d)
         for peer in self._peers:
