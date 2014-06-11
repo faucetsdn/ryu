@@ -6,3 +6,4 @@ lxml
 netaddr
 oslo.config>=1.2.0
 msgpack-python>=0.4.0
+git+ssh://git@github.com/nttmcl/LimeLib@master

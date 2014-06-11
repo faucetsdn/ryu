@@ -1,5 +1,6 @@
 import json
 import logging
+from limelib import jsonlog as apgw_log
 from operator import attrgetter
 from oslo.config import cfg
 from ryu.base import app_manager
@@ -12,7 +13,6 @@ from ryu.ofproto import ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.lib import hub
-from ryu.lib import apgw_log
 from ryu.lib import rpc
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
@@ -25,8 +25,6 @@ import ryu.lib.of_config.classes as ofc
 import eventlet
 import sys
 
-
-logging.setLoggerClass(apgw_log.ApgwLogger)
 
 class RPCError(Exception):
     pass
@@ -81,8 +79,7 @@ class RpcOFPManager(app_manager.RyuApp):
         hub.spawn(self._peer_accept_thread)
         hub.spawn(self._rpc_message_thread)
         hub.spawn(self._meter_stats_thread)
-        self.log = logging.getLogger('ofwire')
-        apgw_log.configure_logging(self.log, 'ofwire')
+        self.log = apgw_log.initialize(self.LOGGER_NAME)
         self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
                                                          log_type='states')
         self.stats_log = apgw_log.DictAndLogTypeAdapter(self.log,

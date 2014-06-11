@@ -16,6 +16,8 @@
 from oslo.config import cfg
 import socket
 
+from limelib import jsonlog as apgw_log
+
 import netaddr
 import logging
 from ryu.base import app_manager
@@ -25,10 +27,8 @@ from ryu.services.protocols.vrrp import api as vrrp_api
 from ryu.lib import rpc
 from ryu.lib import hub
 from ryu.lib import mac
-from ryu.lib import apgw_log
 
 CONF = cfg.CONF
-logging.setLoggerClass(apgw_log.ApgwLogger)
 
 
 class RPCError(Exception):
@@ -55,8 +55,7 @@ class RpcVRRPManager(app_manager.RyuApp):
         self._rpc_events = hub.Queue(128)
         self.server_thread = hub.spawn(self._peer_accept_thread)
         self.event_thread = hub.spawn(self._rpc_request_loop_thread)
-        self.log = logging.getLogger('vrrp')
-        apgw_log.configure_logging(self.log, 'vrrp')
+        self.log = apgw_log.initialize('vrrp')
         self.states_log = apgw_log.DictAndLogTypeAdapter(self.log,
                                                          log_type='states')
 
