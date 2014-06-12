@@ -25,7 +25,6 @@ from ryu import cfg
 from neutron.common import config as logging_config
 from neutron.openstack.common import log as logging
 
-from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 
 
@@ -35,18 +34,7 @@ LOG = logging.getLogger(__name__)
 def main():
     cfg.CONF(project='ryu')
     logging_config.setup_logging(cfg.CONF)
-    app_lists = ['neutron.plugins.ofagent.agent.ofa_neutron_agent']
-    app_mgr = AppManager.get_instance()
-    app_mgr.load_apps(app_lists)
-    contexts = app_mgr.create_contexts()
-    services = app_mgr.instantiate_apps(**contexts)
-    webapp = wsgi.start_service(app_mgr)
-    if webapp:
-        services.append(hub.spawn(webapp))
-    try:
-        hub.joinall(services)
-    finally:
-        app_mgr.close()
+    AppManager.run_apps(['neutron.plugins.ofagent.agent.ofa_neutron_agent'])
 
 
 if __name__ == "__main__":
