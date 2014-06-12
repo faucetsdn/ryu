@@ -23,12 +23,8 @@ hub.patch()
 from ryu import cfg
 
 from neutron.common import config as logging_config
-from neutron.openstack.common import log as logging
 
 from ryu.base.app_manager import AppManager
-
-
-LOG = logging.getLogger(__name__)
 
 
 def main():
