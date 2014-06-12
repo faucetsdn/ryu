@@ -45,12 +45,19 @@ class PendingRPC(Exception):
 
 
 class Peer(object):
-    def __init__(self, queue):
+    def __init__(self, queue, log):
         super(Peer, self).__init__()
         self._queue = queue
         self.wait_for_ofp_resepnse = {}
+        self.log = log
 
     def _handle_rpc_request(self, data):
+        if data[2]:
+            params = str(data[2][0])
+        else:
+            params = ''
+        m = {'RPC request': {'method': data[1], 'params': params, 'msgid': data[0]}}
+        self.log.info(m)
         self._queue.put((self, rpc.MessageType.REQUEST, data))
 
     def _handle_rpc_notify(self, data):
@@ -151,6 +158,8 @@ class RpcOFPManager(app_manager.RyuApp):
                 self.log.info({'bogus RPC': data})
 
             peer._endpoint.send_response(msgid, error=error, result=result)
+            m = {'RPC response': {'result': result, 'error': error, 'msgid': msgid}}
+            self.log.info(m)
 
     def _peer_loop_thread(self, peer):
         peer._endpoint.serve()
@@ -158,7 +167,7 @@ class RpcOFPManager(app_manager.RyuApp):
         self._peers.remove(peer)
 
     def peer_accept_handler(self, new_sock, addr):
-        peer = Peer(self._rpc_events)
+        peer = Peer(self._rpc_events, self.log)
         table = {
             rpc.MessageType.REQUEST: peer._handle_rpc_request,
             rpc.MessageType.NOTIFY: peer._handle_rpc_notify,
@@ -180,6 +189,8 @@ class RpcOFPManager(app_manager.RyuApp):
                 msgid = peer.wait_for_ofp_resepnse[msg.datapath.id][msg.xid]
                 peer._endpoint.send_response(msgid, error=None,
                                              result=msg.to_jsondict())
+                m = {'RPC response': {'result': msg.to_jsondict(), 'error': None, 'msgid': msgid}}
+                self.log.info(m)
                 del peer.wait_for_ofp_resepnse[msg.datapath.id][msg.xid]
                 return
 
