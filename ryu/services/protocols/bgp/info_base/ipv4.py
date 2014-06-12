@@ -38,9 +38,11 @@ class IPv4Dest(Destination, NonVrfPathProcessingMixin):
 
     def _best_path_lost(self):
         NonVrfPathProcessingMixin._best_path_lost(self)
+        self._core_service._signal_bus.best_path_changed(self)
 
     def _new_best_path(self, best_path):
         NonVrfPathProcessingMixin._new_best_path(self, best_path)
+        self._core_service._signal_bus.best_path_changed(best_path)
 
 
 class Ipv4Table(Table):

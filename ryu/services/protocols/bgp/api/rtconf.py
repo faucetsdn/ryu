@@ -178,3 +178,10 @@ def add_network(prefix):
     tm = CORE_MANAGER.get_core_service().table_manager
     tm.add_to_ipv4_global_table(prefix)
     return True
+
+
+@register(name='network.del')
+def del_network(prefix):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.add_to_ipv4_global_table(prefix, is_withdraw=True)
+    return True

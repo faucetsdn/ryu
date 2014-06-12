@@ -11,6 +11,7 @@ class BgpSignalBus(SignalBus):
     BGP_VRF_STATS_CONFIG_CHANGED = (
         'core', 'vrf', 'config', 'stats', 'changed'
     )
+    BGP_BEST_PATH_CHANGED = ('core', 'best', 'changed')
 
     def bgp_error(self, peer, code, subcode, reason):
         return self.emit_signal(
@@ -53,3 +54,8 @@ class BgpSignalBus(SignalBus):
             self.BGP_VRF_STATS_CONFIG_CHANGED,
             vrf_conf
         )
+
+    def best_path_changed(self, best_path):
+        return self.emit_signal(
+            self.BGP_BEST_PATH_CHANGED,
+            best_path)

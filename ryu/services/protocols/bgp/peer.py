@@ -773,12 +773,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if unkown_opttrans_attrs:
                 new_pathattr.extend(unkown_opttrans_attrs.values())
 
-            if isinstance(path, Ipv4Path):
-                update = BGPUpdate(path_attributes=new_pathattr,
-                                   nlri=nlri_list)
-            else:
-                update = BGPUpdate(path_attributes=new_pathattr)
-            return update
+        if isinstance(path, Ipv4Path):
+            update = BGPUpdate(path_attributes=new_pathattr,
+                               nlri=nlri_list)
+        else:
+            update = BGPUpdate(path_attributes=new_pathattr)
+        return update
 
     def _connect_loop(self, client_factory):
         """In the current greeenlet we try to establish connection with peer.

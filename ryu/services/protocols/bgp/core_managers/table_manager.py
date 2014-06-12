@@ -477,12 +477,13 @@ class TableCoreManager(object):
                 raise BgpCoreError(desc='Invalid Ipv6 prefix or nexthop.')
             ip6, masklen = prefix.split('/')
             prefix = IP6AddrPrefix(int(masklen), ip6)
+
         return vrf_table.insert_vrf_path(
             prefix, next_hop=next_hop,
             gen_lbl=True
         )
 
-    def add_to_ipv4_global_table(self, prefix):
+    def add_to_ipv4_global_table(self, prefix, is_withdraw=False):
         ip, masklen = prefix.split('/')
         _nlri = IPAddrPrefix(int(masklen), ip)
         src_ver_num = 1
@@ -497,7 +498,8 @@ class TableCoreManager(object):
         pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
 
         new_path = Ipv4Path(peer, _nlri, src_ver_num,
-                            pattrs=pathattrs, nexthop=nexthop)
+                            pattrs=pathattrs, nexthop=nexthop,
+                            is_withdraw=is_withdraw)
         # add to global ipv4 table and propagates to neighbors
         self.learn_path(new_path)
 

@@ -67,12 +67,12 @@ class ApplicationException(BGPSException):
     pass
 
 
-class BGPSpeaker(RyuApp):
+class RyuBGPSpeaker(RyuApp):
     def __init__(self, *args, **kwargs):
-        self.bind_ip = BGPSpeaker.validate_rpc_ip(CONF.bind_ip)
-        self.bind_port = BGPSpeaker.validate_rpc_port(CONF.bind_port)
+        self.bind_ip = RyuBGPSpeaker.validate_rpc_ip(CONF.bind_ip)
+        self.bind_port = RyuBGPSpeaker.validate_rpc_port(CONF.bind_port)
         self.config_file = CONF.bgp_config_file
-        super(BGPSpeaker, self).__init__(*args, **kwargs)
+        super(RyuBGPSpeaker, self).__init__(*args, **kwargs)
 
     def start(self):
         # Only two main green threads are required for APGW bgp-agent.
@@ -98,7 +98,7 @@ class BGPSpeaker(RyuApp):
                       net_ctrl.NC_RPC_BIND_PORT: self.bind_port})
         LOG.debug('Started Network Controller')
 
-        super(BGPSpeaker, self).start()
+        super(RyuBGPSpeaker, self).start()
 
         return t
 
