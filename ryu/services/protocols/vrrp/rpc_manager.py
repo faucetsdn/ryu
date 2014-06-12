@@ -16,6 +16,8 @@
 from oslo.config import cfg
 import socket
 
+from limelib import jsonlog as apgw_log
+
 import netaddr
 import logging
 from ryu.base import app_manager
@@ -25,10 +27,9 @@ from ryu.services.protocols.vrrp import api as vrrp_api
 from ryu.lib import rpc
 from ryu.lib import hub
 from ryu.lib import mac
-from ryu.lib import apgw_log
 
 CONF = cfg.CONF
-logging.setLoggerClass(apgw_log.ApgwLogger)
+logging.setLoggerClass(apgw_log.JSONLogger)
 
 
 class RPCError(Exception):

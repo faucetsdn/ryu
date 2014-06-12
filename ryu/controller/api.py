@@ -1,5 +1,6 @@
 import json
 import logging
+from limelib import jsonlog as apgw_log
 from operator import attrgetter
 from oslo.config import cfg
 from ryu.base import app_manager
@@ -13,7 +14,6 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.ofproto import ofproto_error_table
 from ryu.lib import hub
-from ryu.lib import apgw_log
 from ryu.lib import rpc
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
@@ -27,7 +27,8 @@ import eventlet
 import sys
 
 
-logging.setLoggerClass(apgw_log.ApgwLogger)
+logging.setLoggerClass(apgw_log.JSONLogger)
+
 
 class RPCError(Exception):
     pass
