@@ -31,6 +31,7 @@ import os
 
 from ryu import cfg
 from ryu import utils
+from ryu.app import wsgi
 from ryu.controller.handler import register_instance, get_dependent_services
 from ryu.controller.controller import Datapath
 from ryu.controller import event
@@ -324,6 +325,25 @@ class RyuApp(object):
 class AppManager(object):
     # singletone
     _instance = None
+
+    @staticmethod
+    def run_apps(app_lists):
+        """Run a set of Ryu applications
+
+        A convenient method to load and instantiate apps.
+        This blocks until all relevant apps stop.
+        """
+        app_mgr = AppManager.get_instance()
+        app_mgr.load_apps(app_lists)
+        contexts = app_mgr.create_contexts()
+        services = app_mgr.instantiate_apps(**contexts)
+        webapp = wsgi.start_service(app_mgr)
+        if webapp:
+            services.append(hub.spawn(webapp))
+        try:
+            hub.joinall(services)
+        finally:
+            app_mgr.close()
 
     @staticmethod
     def get_instance():
