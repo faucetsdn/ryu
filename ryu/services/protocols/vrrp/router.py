@@ -495,7 +495,8 @@ class VRRPRouterV2(VRRPRouter):
             self.adver_timer.start(self.config.advertisement_interval)
         else:
             self.state_change(vrrp_event.VRRP_STATE_BACKUP)
-            self.master_down_timer.start(params.master_down_interval)
+            if self.config.priority != 0:
+                self.master_down_timer.start(params.master_down_interval)
 
         super(VRRPRouterV2, self).start()
 
@@ -733,7 +734,8 @@ class VRRPRouterV3(VRRPRouter):
             params = self.params
             params.master_adver_interval = self.config.advertisement_interval
             self.state_change(vrrp_event.VRRP_STATE_BACKUP)
-            self.master_down_timer.start(params.master_down_interval)
+            if self.config.priority != 0:
+                self.master_down_timer.start(params.master_down_interval)
 
         self.stats_out_timer.start(self.statistics.statistics_interval)
         super(VRRPRouterV3, self).start()
