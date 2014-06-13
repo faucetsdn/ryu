@@ -164,10 +164,15 @@ class RpcOFPManager(app_manager.RyuApp):
     def _peer_loop_thread(self, peer):
         peer._endpoint.serve()
         # the peer connection is closed
+        m = {'RPC session down': {'source': peer.addr[0] + ':' + str(peer.addr[1])}}
+        self.log.critical(m)
         self._peers.remove(peer)
 
     def peer_accept_handler(self, new_sock, addr):
+        m = {'RPC session up': {'source': addr[0] + ':' + str(addr[1])}}
+        self.log.critical(m)
         peer = Peer(self._rpc_events, self.log)
+        peer.addr = addr
         table = {
             rpc.MessageType.REQUEST: peer._handle_rpc_request,
             rpc.MessageType.NOTIFY: peer._handle_rpc_notify,
