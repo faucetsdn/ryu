@@ -65,17 +65,23 @@ def unregister_app(app):
     SERVICE_BRICKS.pop(app.name)
 
 
-def require_app(app_name):
+def require_app(app_name, api_style=False):
     """
-    Request the application to be loaded.
+    Request the application to be automatically loaded.
 
-    This is used for "api" style modules, which is imported by a client
-    application, to automatically load the corresponding server application.
+    If this is used for "api" style modules, which is imported by a client
+    application, set api_style=True.
+
+    If this is used for client application module, set api_style=False.
     """
-    frm = inspect.stack()[2]  # skip a frame for "api" module
+    if api_style:
+        frm = inspect.stack()[2]  # skip a frame for "api" module
+    else:
+        frm = inspect.stack()[1]
     m = inspect.getmodule(frm[0])  # client module
     m._REQUIRED_APP = getattr(m, '_REQUIRED_APP', [])
     m._REQUIRED_APP.append(app_name)
+    LOG.debug('require_app: %s is required by %s', app_name, m.__name__)
 
 
 class RyuApp(object):

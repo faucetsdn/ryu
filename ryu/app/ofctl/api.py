@@ -38,4 +38,4 @@ def send_msg(app, msg, reply_cls=None, reply_multi=False):
                                                  reply_multi=reply_multi))()
 
 
-app_manager.require_app('ryu.app.ofctl.service')
+app_manager.require_app('ryu.app.ofctl.service', api_style=True)

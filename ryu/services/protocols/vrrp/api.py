@@ -66,4 +66,4 @@ def vrrp_config_change(app, instance_name,
     return app.send_event(vrrp_event.VRRP_MANAGER_NAME, config_change)
 
 
-app_manager.require_app('ryu.services.protocols.vrrp.manager')
+app_manager.require_app('ryu.services.protocols.vrrp.manager', api_style=True)

@@ -35,4 +35,4 @@ def get_all_link(app):
     return get_link(app)
 
 
-app_manager.require_app('ryu.topology.switches')
+app_manager.require_app('ryu.topology.switches', api_style=True)
