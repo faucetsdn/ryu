@@ -200,8 +200,12 @@ class RpcVRRPManager(app_manager.RyuApp):
 
         priority = config_values.get('priority')
         interval = config_values.get('advertisement_interval')
+        preempt_mode = config_values.get('preempt_mode')
+        preempt_delay = config_values.get('preempt_delay')
         vrrp_api.vrrp_config_change(self, instance_name, priority=priority,
-                                    advertisement_interval=interval)
+                                    advertisement_interval=interval,
+                                    preempt_mode=preempt_mode,
+                                    preempt_delay=preempt_delay)
         return {}
 
     def _list(self, msgid, params):
