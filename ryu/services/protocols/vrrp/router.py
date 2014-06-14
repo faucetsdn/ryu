@@ -452,6 +452,14 @@ class VRRPV2StateBackup(VRRPState):
         vrrp_router = self.vrrp_router
         vrrp_router.logger.warn('%s vrrp_config_change_request',
                                 self.__class__.__name__)
+        if ev.priority == 0:
+            vrrp_router.master_down_timer.cancel()
+        else:
+            # if the timer is running, the following code stops it and
+            # starts a new one.
+            params = vrrp_router.params
+            vrrp_router.master_down_timer.start(params.master_down_interval)
+
         if ev.priority is not None and vrrp_router.config.address_owner:
             vrrp_router.master_down_timer.cancel()
             self._master_down()
@@ -489,7 +497,8 @@ class VRRPRouterV2(VRRPRouter):
             self.adver_timer.start(self.config.advertisement_interval)
         else:
             self.state_change(vrrp_event.VRRP_STATE_BACKUP)
-            self.master_down_timer.start(params.master_down_interval)
+            if self.config.priority != 0:
+                self.master_down_timer.start(params.master_down_interval)
 
         super(VRRPRouterV2, self).start()
 
@@ -672,6 +681,14 @@ class VRRPV3StateBackup(VRRPState):
         vrrp_router = self.vrrp_router
         vrrp_router.logger.warn('%s vrrp_config_change_request',
                                 self.__class__.__name__)
+        if ev.priority == 0:
+            vrrp_router.master_down_timer.cancel()
+        else:
+            # if the timer is running, the following code stops it and
+            # starts a new one.
+            params = vrrp_router.params
+            vrrp_router.master_down_timer.start(params.master_down_interval)
+
         if ev.priority is not None and vrrp_router.config.address_owner:
             vrrp_router.master_down_timer.cancel()
             self._master_down()
@@ -719,7 +736,8 @@ class VRRPRouterV3(VRRPRouter):
             params = self.params
             params.master_adver_interval = self.config.advertisement_interval
             self.state_change(vrrp_event.VRRP_STATE_BACKUP)
-            self.master_down_timer.start(params.master_down_interval)
+            if self.config.priority != 0:
+                self.master_down_timer.start(params.master_down_interval)
 
         self.stats_out_timer.start(self.statistics.statistics_interval)
         super(VRRPRouterV3, self).start()
