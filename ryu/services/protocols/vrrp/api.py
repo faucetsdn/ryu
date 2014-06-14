@@ -55,11 +55,12 @@ def vrrp_list(app, instance_name=None):
 
 def vrrp_config_change(app, instance_name,
                        priority=None, advertisement_interval=None,
-                       preempt_mode=None, accept_mode=None):
+                       preempt_mode=None, accept_mode=None,
+                       preempt_delay=None):
     """change configuration of an instance.
     None means no change.
     """
     config_change = vrrp_event.EventVRRPConfigChangeRequest(
         instance_name, priority, advertisement_interval,
-        preempt_mode, accept_mode)
+        preempt_mode, preempt_delay, accept_mode)
     return app.send_event(vrrp_event.VRRP_MANAGER_NAME, config_change)
