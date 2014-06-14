@@ -30,11 +30,7 @@ import sys
 logging.setLoggerClass(apgw_log.JSONLogger)
 
 
-opts = []
-opts.append(cfg.IntOpt('flow-stats-interval', default=60,
-                       help=('Flow stats polling interval')))
-CONF = cfg.CONF
-CONF.register_cli_opts(opts)
+_FLOW_STATS_INTERVAL = 60
 
 
 class RPCError(Exception):
@@ -87,7 +83,7 @@ class RpcOFPManager(app_manager.RyuApp):
         self.monitored_ports = {}
         self.monitored_flows = {}
         self.monitored_meters = {}
-        self.flow_stats_interval = CONF['flow_stats_interval']
+        self.flow_stats_interval = _FLOW_STATS_INTERVAL
         self.meter_stats_epoch = 0
         self.monitored_queues = {}
         self.pending_rpc_requests = []
