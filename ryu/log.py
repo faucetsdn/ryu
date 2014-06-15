@@ -72,7 +72,7 @@ def init_log():
     if CONF.log_config_file:
         try:
             logging.config.fileConfig(CONF.log_config_file,
-                                      disable_existing_loggers=True)
+                                      disable_existing_loggers=False)
         except ConfigParser.Error as e:
             print('Failed to parse %s: %s' % (CONF.log_config_file, e),
                   file=sys.stderr)
