@@ -532,22 +532,20 @@ class RpcOFPManager(app_manager.RyuApp):
                                         str(key)})
         elif (dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION and
               ofmsg.msg_type is dp.ofproto.OFPT_METER_MOD):
-            if contexts is not None:
-                if ofmsg.command is dp.ofproto.OFPMC_ADD:
-                    if ofmsg.meter_id in self.monitored_meters:
-                        raise RPCError('meter already exitsts %d' %
-                                       (ofmsg.meter_id))
-                    self.monitored_meters[ofmsg.meter_id] = (contexts,
-                                                             interval)
-                elif ofmsg.command is dp.ofproto.OFPMC_DELETE:
-                    try:
-                        del self.monitored_meters[ofmsg.meter_id]
-                    except:
-                        raise RPCError('unknown meter %d' % (ofmsg.meter_id))
-                elif ofmsg.command is dp.ofproto.OFPMC_MODIFY:
-                    raise RPCError('METER_MOD with contexts is not supported')
-                else:
-                    raise RPCError('unknown meter_mod command')
+            if ofmsg.command is dp.ofproto.OFPMC_ADD and contexts is not None:
+                if ofmsg.meter_id in self.monitored_meters:
+                    raise RPCError('meter already exitsts %d' %
+                                   (ofmsg.meter_id))
+                self.monitored_meters[ofmsg.meter_id] = (contexts,
+                                                         interval)
+            elif (ofmsg.command is dp.ofproto.OFPMC_DELETE and
+                  ofmsg.meter_id in self.monitored_meters):
+                del self.monitored_meters[ofmsg.meter_id]
+            elif (ofmsg.command is dp.ofproto.OFPMC_MODIFY and
+                  contexts is not None):
+                raise RPCError('METER_MOD with contexts is not supported')
+            else:
+                raise RPCError('unknown meter_mod command')
         else:
             raise RPCError('unknown of message, %s' % (str(param_dict)))
 
