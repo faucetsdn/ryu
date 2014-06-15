@@ -376,6 +376,8 @@ class BgpProtocol(Protocol, Activity):
         self._sendlock.acquire()
         try:
             self._socket.sendall(msg.serialize())
+        except socket.error as err:
+            self.connection_lost('failed to write to socket')
         finally:
             self._sendlock.release()
 
