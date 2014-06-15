@@ -541,9 +541,9 @@ class RpcOFPManager(app_manager.RyuApp):
             elif (ofmsg.command is dp.ofproto.OFPMC_DELETE and
                   ofmsg.meter_id in self.monitored_meters):
                 del self.monitored_meters[ofmsg.meter_id]
-            elif (ofmsg.command is dp.ofproto.OFPMC_MODIFY and
-                  contexts is not None):
-                raise RPCError('METER_MOD with contexts is not supported')
+            elif ofmsg.command is dp.ofproto.OFPMC_MODIFY:
+                if contexts is not None:
+                    raise RPCError('METER_MOD with contexts is not supported')
             else:
                 raise RPCError('unknown meter_mod command')
         else:
