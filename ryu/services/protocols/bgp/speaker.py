@@ -20,6 +20,7 @@ import logging
 import socket
 import struct
 import traceback
+from socket import IPPROTO_TCP, TCP_NODELAY
 
 from ryu.lib.packet import bgp
 from ryu.lib.packet.bgp import RouteFamily
@@ -102,6 +103,7 @@ class BgpProtocol(Protocol, Activity):
         self._peer = None
         self._recv_buff = ''
         self._socket = socket
+        self._socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         self._signal_bus = signal_bus
         self._holdtime = None
         self._keepalive = None
