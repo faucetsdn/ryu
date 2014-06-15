@@ -21,6 +21,7 @@ import socket
 import struct
 import traceback
 from socket import IPPROTO_TCP, TCP_NODELAY
+from eventlet import semaphore
 
 from ryu.lib.packet import bgp
 from ryu.lib.packet.bgp import RouteFamily
@@ -104,6 +105,7 @@ class BgpProtocol(Protocol, Activity):
         self._recv_buff = ''
         self._socket = socket
         self._socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+        self._sendlock = semaphore.Semaphore()
         self._signal_bus = signal_bus
         self._holdtime = None
         self._keepalive = None
@@ -362,13 +364,20 @@ class BgpProtocol(Protocol, Activity):
         """
         notification = BGPNotification(code, subcode)
         reason = notification.reason
-        self._socket.sendall(notification.serialize())
+        self._send_with_lock(notification)
         self._signal_bus.bgp_error(self._peer, code, subcode, reason)
         LOG.error(
             'Sent notification to %r >> %s' %
             (self._socket.getpeername(), notification)
         )
         self._socket.close()
+
+    def _send_with_lock(self, msg):
+        self._sendlock.acquire()
+        try:
+            self._socket.sendall(msg.serialize())
+        finally:
+            self._sendlock.release()
 
     def send(self, msg):
         if not self.started:
@@ -378,7 +387,7 @@ class BgpProtocol(Protocol, Activity):
         # get peername before senging msg because sending msg can occur
         # conncetion lost
         peername = self.get_peername()
-        self._socket.sendall(msg.serialize())
+        self._send_with_lock(msg)
 
         if msg.type == BGP_MSG_NOTIFICATION:
             LOG.error('Sent notification to %s >> %s' %
