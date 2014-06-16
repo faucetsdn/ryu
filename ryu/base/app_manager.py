@@ -226,9 +226,10 @@ class RyuApp(object):
             return handlers
 
         def test(h):
-            if ev_cls not in h.callers:
-                # this handler does not listen the event.
-                return False
+            if not hasattr(h, 'callers') or ev_cls not in h.callers:
+                # dynamically registered handlers does not have
+                # h.callers element for the event.
+                return True
             states = h.callers[ev_cls].dispatchers
             if not states:
                 # empty states means all states
