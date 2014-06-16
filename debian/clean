@@ -1,0 +1,3 @@
+ryu.egg-info/*
+debian/ryu-manager.8
+debian/ryu.8

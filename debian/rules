@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+
+%:
+	dh $@ --with python2
+
+override_dh_install:
+	txt2man -d 'June 2014' -t ryu-manager -v "Ryu Manager's Manual" -s 8 < debian/ryu-manager.8.txt > debian/ryu-manager.8
+	txt2man -d 'June 2014' -t ryu -v "Ryu Command's Manual" -s 8 < debian/ryu.8.txt > debian/ryu.8
+	dh_install --fail-missing -X/usr/etc -X/usr/bin/quantum
+
+override_dh_installinit:
+	dh_installinit --no-start --name=ryu
+
+override_dh_installlogrotate:
+	dh_installlogrotate --name=ryu
+
