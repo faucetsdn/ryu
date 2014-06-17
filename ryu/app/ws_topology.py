@@ -59,7 +59,7 @@ class WebSocketTopology(app_manager.RyuApp):
         self.rpc_clients = []
 
         wsgi = kwargs['wsgi']
-        wsgi.register(TopologyController, {'app': self})
+        wsgi.register(WebSocketTopologyController, {'app': self})
 
     @set_ev_cls(event.EventSwitchEnter)
     def _event_switch_enter_handler(self, ev):
@@ -92,10 +92,11 @@ class WebSocketTopology(app_manager.RyuApp):
                 self.logger.error(e)
 
 
-class TopologyController(ControllerBase):
+class WebSocketTopologyController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
-        super(TopologyController, self).__init__(req, link, data, **config)
+        super(WebSocketTopologyController, self).__init__(
+            req, link, data, **config)
         self.app = data['app']
 
     @websocket('topology', '/v1.0/topology/ws')
