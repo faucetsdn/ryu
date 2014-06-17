@@ -34,6 +34,7 @@ $ sudo mn --controller=remote --topo linear,2
 ...
 """
 
+from socket import error as SocketError
 from tinyrpc.exc import InvalidReplyError
 
 from ryu.app.wsgi import (
@@ -88,6 +89,9 @@ class WebSocketTopology(app_manager.RyuApp):
             rpc_server = rpc_client.get_proxy()
             try:
                 getattr(rpc_server, func_name)(msg)
+            except SocketError:
+                self.logger.debug('WebSocket disconnected: %s' % rpc_client.ws)
+                self.rpc_clients.remove(rpc_client)
             except InvalidReplyError as e:
                 self.logger.error(e)
 
