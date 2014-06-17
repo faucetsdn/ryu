@@ -1,4 +1,5 @@
 import logging
+import netaddr
 
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp.model import OutgoingRoute
@@ -53,7 +54,7 @@ class PeerManager(object):
         self._core_service.on_peer_removed(peer)
 
     def get_by_addr(self, addr):
-        return self._peers.get(addr)
+        return self._peers.get(str(netaddr.IPAddress(addr)))
 
     def on_peer_down(self, peer):
         """Peer down handler.

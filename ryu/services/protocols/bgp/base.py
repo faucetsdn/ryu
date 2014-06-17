@@ -21,6 +21,7 @@ import socket
 import time
 import traceback
 import weakref
+import netaddr
 
 from ryu.lib import hub
 from ryu.lib.hub import Timeout
@@ -318,16 +319,24 @@ class Activity(object):
 
         For each connection `server_factory` starts a new protocol.
         """
-        server = hub.listen(loc_addr)
+        if ':' in loc_addr[0]:
+            server = hub.listen(loc_addr, family=socket.AF_INET6)
+        else:
+            server = hub.listen(loc_addr)
+
         server_name = self.name + '_server@' + str(loc_addr)
         self._asso_socket_map[server_name] = server
 
         # We now wait for connection requests from client.
         while True:
             sock, client_address = server.accept()
+            client_address, port = client_address[:2]
             LOG.debug('Connect request received from client for port'
-                      ' %s:%s' % client_address)
-            client_name = self.name + '_client@' + str(client_address)
+                      ' %s:%s' % (client_address, port))
+            if 'ffff:' in client_address:
+                client_address = str(netaddr.IPAddress(client_address).ipv4())
+
+            client_name = self.name + '_client@' + client_address
             self._asso_socket_map[client_name] = sock
             self._spawn(client_name, conn_handle, sock)
 
@@ -341,8 +350,12 @@ class Activity(object):
         """
         LOG.debug('Connect TCP called for %s:%s' % (peer_addr[0],
                                                     peer_addr[1]))
+        if netaddr.valid_ipv4(peer_addr[0]):
+            family = socket.AF_INET
+        else:
+            family = socket.AF_INET6
         with Timeout(time_out, socket.error):
-            sock = hub.connect(peer_addr, bind=bind_address)
+            sock = hub.connect(peer_addr, family=family, bind=bind_address)
             if sock:
                 # Connection name for pro-active connection is made up
                 # of local end address + remote end address

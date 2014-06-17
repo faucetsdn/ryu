@@ -18,6 +18,7 @@
 """
 from abc import abstractmethod
 import logging
+import netaddr
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
@@ -107,20 +108,26 @@ def validate_changes(changes):
     return changes
 
 
+def valid_ip_address(addr):
+    if not netaddr.valid_ipv4(addr) and not netaddr.valid_ipv6(addr):
+        return False
+    return True
+
+
 @validate(name=IP_ADDRESS)
 def validate_ip_address(ip_address):
-    if not is_valid_ipv4(ip_address):
+    if not valid_ip_address(ip_address):
         raise ConfigValueError(desc='Invalid neighbor ip_address: %s' %
                                ip_address)
-    return ip_address
+    return str(netaddr.IPAddress(ip_address))
 
 
 @validate(name=LOCAL_ADDRESS)
 def validate_local_address(ip_address):
-    if not is_valid_ipv4(ip_address):
+    if not valid_ip_address(ip_address):
         raise ConfigValueError(desc='Invalid local ip_address: %s' %
                                ip_address)
-    return ip_address
+    return str(netaddr.IPAddress(ip_address))
 
 
 @validate(name=LOCAL_PORT)

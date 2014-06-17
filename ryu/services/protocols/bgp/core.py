@@ -45,7 +45,7 @@ LOG = logging.getLogger('bgpspeaker.core')
 
 # Interface IP address on which to run bgp server. Core service listens on all
 # interfaces of the host on port 179 - standard bgp port.
-CORE_IP = '0.0.0.0'
+CORE_IP = '::'
 
 # Required dictates that Origin attribute be incomplete
 EXPECTED_ORIGIN = BGP_ATTR_ORIGIN_INCOMPLETE
@@ -380,7 +380,7 @@ class CoreService(Factory, Activity):
     def build_protocol(self, socket):
         assert socket
         # Check if its a reactive connection or pro-active connection
-        _, remote_port = socket.getpeername()
+        _, remote_port = socket.getpeername()[:2]
         is_reactive_conn = True
         if remote_port == STD_BGP_SERVER_PORT_NUM:
             is_reactive_conn = False
@@ -399,7 +399,9 @@ class CoreService(Factory, Activity):
         protocol.
         """
         assert socket
-        peer_addr, peer_port = socket.getpeername()
+        peer_addr, peer_port = socket.getpeername()[:2]
+        if 'ffff:' in peer_addr:
+            peer_addr = str(netaddr.IPAddress(peer_addr).ipv4())
         peer = self._peer_manager.get_by_addr(peer_addr)
         bgp_proto = self.build_protocol(socket)
 
@@ -424,7 +426,7 @@ class CoreService(Factory, Activity):
             subcode = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
             bgp_proto.send_notification(code, subcode)
         else:
-            bind_ip, bind_port = socket.getsockname()
+            bind_ip, bind_port = socket.getsockname()[0:2]
             peer._host_bind_ip = bind_ip
             peer._host_bind_port = bind_port
             self._spawn_activity(bgp_proto, peer)
