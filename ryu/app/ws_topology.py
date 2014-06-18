@@ -32,7 +32,7 @@ $ sudo mn --controller=remote --topo linear,2
 < {"params": [{"ports": [{"hw_addr": "56:c7:08:12:bb:36", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "de:b9:49:24:74:3f", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}], "jsonrpc": "2.0", "method": "event_switch_leave", "id": 2}
 > {"id": 2, "jsonrpc": "2.0", "result": ""}
 ...
-"""
+"""  # noqa
 
 from socket import error as SocketError
 from tinyrpc.exc import InvalidReplyError
