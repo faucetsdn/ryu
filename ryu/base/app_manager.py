@@ -27,6 +27,7 @@ import inspect
 import itertools
 import logging
 import sys
+import os
 
 from ryu import cfg
 from ryu import utils
@@ -338,8 +339,11 @@ class AppManager(object):
 
     def load_app(self, name):
         mod = utils.import_module(name)
-        clses = inspect.getmembers(mod, lambda cls: (inspect.isclass(cls) and
-                                                     issubclass(cls, RyuApp)))
+        clses = inspect.getmembers(mod,
+                                   lambda cls: (inspect.isclass(cls) and
+                                                issubclass(cls, RyuApp) and
+                                                mod.__name__ ==
+                                                cls.__module__))
         if clses:
             return clses[0][1]
         return None
