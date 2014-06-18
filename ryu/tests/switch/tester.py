@@ -798,6 +798,7 @@ class OfTester(app_manager.RyuApp):
         def __reasm_match(match):
             """ reassemble match_fields. """
             mask_lengths = {'vlan_vid': 12 + 1,
+                            'ipv6_flabel': 20,
                             'ipv6_exthdr': 9}
             match_fields = list()
             for key, united_value in match.iteritems():
