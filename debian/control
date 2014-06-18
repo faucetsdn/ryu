@@ -2,7 +2,7 @@ Source: ryu
 Section: net
 Priority: optional
 Maintainer: Ryu Project Team <ryu-devel@lists.sourceforge.net>
-Build-Depends: debhelper (>= 9.0.0), python-all (>= 2.6), txt2man
+Build-Depends: debhelper (>= 9.0.0), python-all (>= 2.6), python-sphinx
 Build-Depends-Indep:
  python-eventlet,
  python-lxml,
@@ -37,6 +37,7 @@ Depends:
  python-webob (>=1.0.8),
  ${misc:Depends},
  ${python:Depends}
+Suggests: python-ryu-doc
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
 Description: Ryu is a software defined networking framework
@@ -65,3 +66,17 @@ Description: Ryu is a software defined networking framework
  Ryu supports fully 1.0, 1.2, 1.3, 1.4 and Nicira Extensions.
  .
  This package provides the Ryu manager.
+
+Package: python-ryu-doc
+Architecture: all
+Section: doc
+Description: Ryu is a software defined networking framework
+ Ryu is a component-based software defined networking framework.
+ Ryu provides software components with well defined API that make
+ it easy for developers to create new network management and control
+ applications. Ryu supports various protocols for managing network
+ devices, such as OpenFlow, Netconf, OF-config, etc. About OpenFlow,
+ Ryu supports fully 1.0, 1.2, 1.3, 1.4 and Nicira Extensions.
+ .
+ This package provides the HTML documentation including the Ryu API
+ manual.

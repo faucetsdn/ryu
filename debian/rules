@@ -11,10 +11,18 @@ export DH_OPTIONS
 %:
 	dh $@ --with python2
 
-override_dh_install:
-	txt2man -d 'June 2014' -t ryu-manager -v "Ryu Manager's Manual" -s 8 < debian/ryu-manager.8.txt > debian/ryu-manager.8
-	txt2man -d 'June 2014' -t ryu -v "Ryu Command's Manual" -s 8 < debian/ryu.8.txt > debian/ryu.8
-	dh_install --fail-missing -X/usr/etc -X/usr/bin/quantum
+override_dh_installman:
+	cd doc; \
+	make man; \
+	cp build/man/* ../debian/
+	dh_installman
+
+override_dh_auto_build:
+	dh_auto_build
+	mkdir -p debian/html
+	cd doc; \
+	make html; \
+	cp -r build/html/* ../debian/html/
 
 override_dh_installinit:
 	dh_installinit --no-start --name=ryu
@@ -22,3 +30,6 @@ override_dh_installinit:
 override_dh_installlogrotate:
 	dh_installlogrotate --name=ryu
 
+override_dh_auto_clean:
+	rm -rf html
+	dh_auto_clean
