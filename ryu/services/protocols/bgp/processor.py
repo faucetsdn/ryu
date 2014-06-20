@@ -466,7 +466,7 @@ def _cmp_by_router_id(local_asn, path1, path2):
         if path_source is None:
             return local_bgp_id
         else:
-            return path_source.protocol.recv_open.bgp_identifier
+            return path_source.protocol.recv_open_msg.bgp_identifier
 
     path_source1 = path1.source
     path_source2 = path2.source
