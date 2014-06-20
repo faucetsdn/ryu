@@ -466,7 +466,7 @@ def _cmp_by_router_id(local_asn, path1, path2):
         if path_source is None:
             return local_bgp_id
         else:
-            return path_source.protocol.recv_open.bgpid
+            return path_source.protocol.recv_open.bgp_identifier
 
     path_source1 = path1.source
     path_source2 = path2.source
@@ -492,9 +492,9 @@ def _cmp_by_router_id(local_asn, path1, path2):
 
     # At least one path is not coming from NC, so we get local bgp id.
     if path_source1 is not None:
-        local_bgp_id = path_source1.protocol.sent_open_msg.bgpid
+        local_bgp_id = path_source1.protocol.sent_open_msg.bgp_identifier
     else:
-        local_bgp_id = path_source2.protocol.sent_open_msg.bgpid
+        local_bgp_id = path_source2.protocol.sent_open_msg.bgp_identifier
 
     # Get router ids.
     router_id1 = get_router_id(path_source1, local_bgp_id)

@@ -163,8 +163,8 @@ class BgpProtocol(Protocol, Activity):
         if not self.state == BGP_FSM_OPEN_CONFIRM:
             raise BgpProtocolException(desc='Can access remote router id only'
                                             ' after open message is received')
-        remote_id = self.recv_open_msg.bgpid
-        local_id = self.sent_open_msg.bgpid
+        remote_id = self.recv_open_msg.bgp_identifier
+        local_id = self.sent_open_msg.bgp_identifier
         return from_inet_ptoi(local_id) > from_inet_ptoi(remote_id)
 
     def is_enhanced_rr_cap_valid(self):
