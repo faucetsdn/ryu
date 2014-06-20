@@ -422,6 +422,10 @@ class VRRPV2StateBackup(VRRPState):
         vrrp_router.logger.debug('%s vrrp_received', self.__class__.__name__)
 
         config = vrrp_router.config
+        # we don't try to be master whatever we receive.
+        if config.priority == 0:
+            return
+
         _ip, vrrp_ = vrrp.vrrp.get_payload(ev.packet)
         if vrrp_.priority == 0:
             if config.priority != 0:
@@ -650,6 +654,9 @@ class VRRPV3StateBackup(VRRPState):
         vrrp_router.logger.debug('%s vrrp_received', self.__class__.__name__)
 
         config = vrrp_router.config
+        # we don't try to be master whatever we receive.
+        if config.priority == 0:
+            return
         _ip, vrrp_ = vrrp.vrrp.get_payload(ev.packet)
         if vrrp_.priority == 0:
             if config.priority != 0:
