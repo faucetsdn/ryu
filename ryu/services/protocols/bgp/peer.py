@@ -336,6 +336,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         return self._neigh_conf.ip_address
 
     @property
+    def protocol(self):
+        return self._protocol
+
+    @property
     def host_bind_ip(self):
         return self._host_bind_ip
 

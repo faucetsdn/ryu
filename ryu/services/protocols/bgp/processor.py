@@ -492,9 +492,9 @@ def _cmp_by_router_id(local_asn, path1, path2):
 
     # At least one path is not coming from NC, so we get local bgp id.
     if path_source1 is not None:
-        local_bgp_id = path_source1.protocol.sent_open.bgpid
+        local_bgp_id = path_source1.protocol.sent_open_msg.bgpid
     else:
-        local_bgp_id = path_source2.protocol.sent_open.bgpid
+        local_bgp_id = path_source2.protocol.sent_open_msg.bgpid
 
     # Get router ids.
     router_id1 = get_router_id(path_source1, local_bgp_id)
@@ -506,9 +506,8 @@ def _cmp_by_router_id(local_asn, path1, path2):
         return None
 
     # Select the path with lowest router Id.
-    from ryu.services.protocols.bgp.ker.utils.bgp import from_inet_ptoi
-    if (from_inet_ptoi(router_id1) <
-            from_inet_ptoi(router_id2)):
+    from ryu.services.protocols.bgp.utils.bgp import from_inet_ptoi
+    if (from_inet_ptoi(router_id1) < from_inet_ptoi(router_id2)):
         return path1
     else:
         return path2
