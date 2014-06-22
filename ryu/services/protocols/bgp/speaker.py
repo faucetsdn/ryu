@@ -443,7 +443,7 @@ class BgpProtocol(Protocol, Activity):
         message except for *Open* and *Notification* message. On receiving
         *Notification* message we close connection with peer.
         """
-        LOG.debug('Received msg from %s << %s' % (str(self.get_peername()),
+        LOG.debug('Received msg from %s << %s' % (str(self.get_peername()[0]),
                                                   msg))
 
         # If we receive open message we try to bind to protocol

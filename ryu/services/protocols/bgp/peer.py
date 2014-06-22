@@ -840,9 +840,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # Update state attributes
         self.state.peer_ip, self.state.peer_port = \
-            self._protocol.get_peername()
+            self._protocol.get_peername()[:2]
         self.state.local_ip, self.state.local_port = \
-            self._protocol.get_sockname()
+            self._protocol.get_sockname()[:2]
 #         self.state.bgp_state = self._protocol.state
         # Stop connect_loop retry timer as we are now connected
         if self._protocol and self._connect_retry_event.is_set():

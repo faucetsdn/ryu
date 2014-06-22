@@ -20,6 +20,7 @@
   peers and maintains VRFs and Global tables.
 """
 import logging
+import netaddr
 
 from ryu.lib.packet.bgp import BGP_ERROR_CEASE
 from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_RESET
@@ -426,7 +427,9 @@ class CoreService(Factory, Activity):
             subcode = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
             bgp_proto.send_notification(code, subcode)
         else:
-            bind_ip, bind_port = socket.getsockname()[0:2]
+            bind_ip, bind_port = socket.getsockname()[:2]
+            if 'ffff:'in bind_ip:
+                bind_ip = str(netaddr.IPAddress(bind_ip).ipv4())
             peer._host_bind_ip = bind_ip
             peer._host_bind_port = bind_port
             self._spawn_activity(bgp_proto, peer)
