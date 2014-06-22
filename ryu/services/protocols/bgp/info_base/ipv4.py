@@ -37,8 +37,9 @@ class IPv4Dest(Destination, NonVrfPathProcessingMixin):
     ROUTE_FAMILY = RF_IPv4_UC
 
     def _best_path_lost(self):
+        old_best_path = self._best_path
         NonVrfPathProcessingMixin._best_path_lost(self)
-        self._core_service._signal_bus.best_path_changed(self)
+        self._core_service._signal_bus.best_path_changed(old_best_path)
 
     def _new_best_path(self, best_path):
         NonVrfPathProcessingMixin._new_best_path(self, best_path)
