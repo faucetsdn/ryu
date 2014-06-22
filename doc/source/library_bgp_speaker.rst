@@ -22,7 +22,7 @@ instance advertizes some prefixes.
     import eventlet
 
     # BGPSpeaker needs sockets patched
-    eventlet.patch()
+    eventlet.monkey_patch()
 
     # initialize a log handler
     # this is not strictly necessary but useful if you get messages like:
