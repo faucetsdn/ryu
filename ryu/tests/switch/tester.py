@@ -1284,6 +1284,18 @@ class Test(stringify.StringifyMixin):
             data.serialize()
             return str(data.data)
 
+        # get ofproto modules using user-specified versions
+        (target_ofproto, target_parser) = ofproto_protocol._versions[
+            OfTester.target_ver]
+        (tester_ofproto, tester_parser) = ofproto_protocol._versions[
+            OfTester.tester_ver]
+        target_dp = DummyDatapath()
+        target_dp.ofproto = target_ofproto
+        target_dp.ofproto_parser = target_parser
+        tester_dp = DummyDatapath()
+        tester_dp.ofproto = tester_ofproto
+        tester_dp.ofproto_parser = tester_parser
+
         # parse 'description'
         description = buf.get(KEY_DESC)
 
@@ -1298,9 +1310,9 @@ class Test(stringify.StringifyMixin):
                 raise ValueError(
                     '"%s" block allows only the followings: %s' % (
                         KEY_PREREQ, allowed_mod))
-            cls = getattr(ofproto_v1_3_parser, key)
-            msg = cls.from_jsondict(value, datapath=DummyDatapath())
-            msg.version = ofproto_v1_3.OFP_VERSION
+            cls = getattr(target_parser, key)
+            msg = cls.from_jsondict(value, datapath=target_dp)
+            msg.version = target_ofproto.OFP_VERSION
             msg.msg_type = msg.cls_msg_type
             msg.xid = 0
             prerequisite.append(msg)
@@ -1346,9 +1358,9 @@ class Test(stringify.StringifyMixin):
                     for throughput in test[KEY_EGRESS][KEY_THROUGHPUT]:
                         one = {}
                         mod = {'match': {'OFPMatch': throughput[KEY_MATCH]}}
-                        cls = getattr(ofproto_v1_3_parser, KEY_FLOW)
+                        cls = getattr(tester_parser, KEY_FLOW)
                         msg = cls.from_jsondict(
-                            mod, datapath=DummyDatapath(),
+                            mod, datapath=tester_dp,
                             cookie=THROUGHPUT_COOKIE,
                             priority=THROUGHPUT_PRIORITY)
                         one[KEY_FLOW] = msg
