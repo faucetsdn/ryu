@@ -6,4 +6,5 @@ Configuration
    :maxdepth: 2
 
    tls.rst
+   gui.rst
 
