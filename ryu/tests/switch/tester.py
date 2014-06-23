@@ -1301,6 +1301,16 @@ class Test(stringify.StringifyMixin):
             data.serialize()
             return str(data.data)
 
+        def __normalize_match(ofproto, match):
+            match_json = match.to_jsondict()
+            oxm_fields = match_json['OFPMatch']['oxm_fields']
+            fields = []
+            for field in oxm_fields:
+                field_obj = ofproto.oxm_from_jsondict(field)
+                field_obj = ofproto.oxm_normalize_user(*field_obj)
+                fields.append(field_obj)
+            return match.__class__(_ordered_fields=fields)
+
         # get ofproto modules using user-specified versions
         (target_ofproto, target_parser) = ofproto_protocol._versions[
             OfTester.target_ver]
@@ -1332,6 +1342,10 @@ class Test(stringify.StringifyMixin):
             msg.version = target_ofproto.OFP_VERSION
             msg.msg_type = msg.cls_msg_type
             msg.xid = 0
+            if isinstance(msg, target_parser.OFPFlowMod):
+                # normalize OFPMatch
+                msg.match = __normalize_match(target_ofproto, msg.match)
+            msg.serialize()
             prerequisite.append(msg)
 
         # parse 'tests'
@@ -1380,6 +1394,8 @@ class Test(stringify.StringifyMixin):
                             mod, datapath=tester_dp,
                             cookie=THROUGHPUT_COOKIE,
                             priority=THROUGHPUT_PRIORITY)
+                        msg.match = __normalize_match(
+                            tester_ofproto, msg.match)
                         one[KEY_FLOW] = msg
                         one[KEY_KBPS] = throughput.get(KEY_KBPS)
                         one[KEY_PKTPS] = throughput.get(KEY_PKTPS)
