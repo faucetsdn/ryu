@@ -487,13 +487,13 @@ class RpcOFPManager(app_manager.RyuApp):
             if interval == 0:
                 raise RPCError('"interval" must be non zero with'
                                ' "contexts", %s' % (str(param_dict)))
-            if interval % self.apgw_minimum_interval != 0 or \
-                    interval < self.apgw_minimum_interval:
+            if interval % self.apgw_stats_minimum_interval != 0 or \
+                    interval < self.apgw_stats_minimum_interval:
                 self.logger.warning('"interval" must be a multiple of %d' %
-                                    self.apgw_minimum_interval)
-                interval = ((interval + (self.apgw_minimum_interval - 1)) /
-                            self.apgw_minimum_interval *
-                            self.apgw_minimum_interval)
+                                    self.apgw_stats_minimum_interval)
+                interval = ((interval + (self.apgw_stats_minimum_interval - 1)) /
+                            self.apgw_stats_minimum_interval *
+                            self.apgw_stats_minimum_interval)
 
         dp.set_xid(ofmsg)
         ofmsg.serialize()
