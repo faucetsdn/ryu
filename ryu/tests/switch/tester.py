@@ -642,7 +642,8 @@ class OfTester(app_manager.RyuApp):
         if msg.datapath.id != pkt_in_src_model.dp.id:
             pkt_type = 'packet-in'
             err_msg = 'SW[dpid=%s]' % dpid_lib.dpid_to_str(msg.datapath.id)
-        elif msg.reason != ofproto_v1_3.OFPR_ACTION:
+        elif msg.reason == msg.datapath.ofproto.OFPR_NO_MATCH or \
+                msg.reason == msg.datapath.ofproto.OFPR_INVALID_TTL:
             pkt_type = 'packet-in'
             err_msg = 'OFPPacketIn[reason=%d]' % msg.reason
         elif repr(msg.data) != repr(model_pkt):
