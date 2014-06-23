@@ -1,0 +1,342 @@
+[
+    "action: set_field: 21_ARP_OP",
+    {
+        "description": "ethernet/arp(opcode=1)-->'arp_op=1,actions=set_field:2->arp_op,output:2'",
+        "prerequisite":[
+            {
+                "OFPFlowMod":{
+                    "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":2054
+                                    }
+                                },
+                                {
+                                    "OXMTlv":{
+                                        "field":"arp_op",
+                                        "value":1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionSetField":{
+                                            "field":{
+                                                "OXMTlv":{
+                                                    "field":"arp_op",
+                                                    "value":2
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "OFPActionOutput":{
+                                            "port":2
+                                        }
+                                    }
+                                ],
+                                "type":4
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "tests":[
+            {
+                "ingress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * (60 - 42))"
+                ],
+                "egress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=2, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * (60 - 42))"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/arp(opcode=1)-->'arp_op=1,actions=set_field:2->arp_op,output:2'",
+        "prerequisite":[
+            {
+                "OFPFlowMod":{
+                    "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":2054
+                                    }
+                                },
+                                {
+                                    "OXMTlv":{
+                                        "field":"arp_op",
+                                        "value":1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionSetField":{
+                                            "field":{
+                                                "OXMTlv":{
+                                                    "field":"arp_op",
+                                                    "value":2
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "OFPActionOutput":{
+                                            "port":2
+                                        }
+                                    }
+                                ],
+                                "type":4
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "tests":[
+            {
+                "ingress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * 30)"
+                ],
+                "egress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=2, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * 30)"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/mpls/arp(opcode=1)-->'actions=pop_mpls:0x0800,goto_table:1','table_id:1,arp_op=1,actions=set_field:2->arp_op,output:2'",
+        "prerequisite":[
+            {
+                "OFPFlowMod":{
+                    "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":34887
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopMpls":{
+                                            "ethertype":2054
+                                        }
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":2054
+                                    }
+                                },
+                                {
+                                    "OXMTlv":{
+                                        "field":"arp_op",
+                                        "value":1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionSetField":{
+                                            "field":{
+                                                "OXMTlv":{
+                                                    "field":"arp_op",
+                                                    "value":2
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "OFPActionOutput":{
+                                            "port":2
+                                        }
+                                    }
+                                ],
+                                "type":4
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "tests":[
+            {
+                "ingress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
+                    "mpls(bsb=1, label=100, exp=3, ttl=64)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * (60 - 42))"
+                ],
+                "egress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=2, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * (60 - 42))"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/itag/ethernet/arp(opcode=1)-->'actions=pop_pbb,goto_table:1','table_id:1,arp_op=1,actions=set_field:2->arp_op,output:2'",
+        "prerequisite":[
+            {
+                "OFPFlowMod":{
+                    "table_id":0,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":35047
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionPopPbb":{}
+                                    }
+                                ],
+                                "type":4
+                            }
+                        },
+                        {
+                            "OFPInstructionGotoTable":{
+                                "table_id":1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "OFPFlowMod":{
+                    "table_id":1,
+                    "match":{
+                        "OFPMatch":{
+                            "oxm_fields":[
+                                {
+                                    "OXMTlv":{
+                                        "field":"eth_type",
+                                        "value":2054
+                                    }
+                                },
+                                {
+                                    "OXMTlv":{
+                                        "field":"arp_op",
+                                        "value":1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "instructions":[
+                        {
+                            "OFPInstructionActions":{
+                                "actions":[
+                                    {
+                                        "OFPActionSetField":{
+                                            "field":{
+                                                "OXMTlv":{
+                                                    "field":"arp_op",
+                                                    "value":2
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "OFPActionOutput":{
+                                            "port":2
+                                        }
+                                    }
+                                ],
+                                "type":4
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "tests":[
+            {
+                "ingress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=35047)",
+                    "itag(sid=100)",
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=1, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * (60 - 42))"
+                ],
+                "egress":[
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2054)",
+                    "arp(dst_ip='192.168.20.20',dst_mac='22:22:22:22:22:22', opcode=2, src_ip='192.168.10.10',src_mac='12:11:11:11:11:11')",
+                    "str('\\x00' * (60 - 42))"
+                ]
+            }
+        ]
+    }
+]
