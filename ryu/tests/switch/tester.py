@@ -1311,6 +1311,15 @@ class Test(stringify.StringifyMixin):
                 fields.append(field_obj)
             return match.__class__(_ordered_fields=fields)
 
+        def __normalize_action(ofproto, action):
+            action_json = action.to_jsondict()
+            field = action_json['OFPActionSetField']['field']
+            field_obj = ofproto.oxm_from_jsondict(field)
+            field_obj = ofproto.oxm_normalize_user(*field_obj)
+            kwargs = {}
+            kwargs[field_obj[0]] = field_obj[1]
+            return action.__class__(**kwargs)
+
         # get ofproto modules using user-specified versions
         (target_ofproto, target_parser) = ofproto_protocol._versions[
             OfTester.target_ver]
@@ -1345,6 +1354,36 @@ class Test(stringify.StringifyMixin):
             if isinstance(msg, target_parser.OFPFlowMod):
                 # normalize OFPMatch
                 msg.match = __normalize_match(target_ofproto, msg.match)
+                # normalize OFPActionSetField
+                insts = []
+                for inst in msg.instructions:
+                    if isinstance(inst, target_parser.OFPInstructionActions):
+                        acts = []
+                        for act in inst.actions:
+                            if isinstance(
+                                    act, target_parser.OFPActionSetField):
+                                act = __normalize_action(target_ofproto, act)
+                            acts.append(act)
+                        inst = target_parser.OFPInstructionActions(
+                            inst.type, actions=acts)
+                    insts.append(inst)
+                msg.instructions = insts
+            elif isinstance(msg, target_parser.OFPGroupMod):
+                # normalize OFPActionSetField
+                buckets = []
+                for bucket in msg.buckets:
+                    acts = []
+                    for act in bucket.actions:
+                        if isinstance(act, target_parser.OFPActionSetField):
+                            act = __normalize_action(target_ofproto, act)
+                        acts.append(act)
+                    bucket = target_parser.OFPBucket(
+                        weight=bucket.weight,
+                        watch_port=bucket.watch_port,
+                        watch_group=bucket.watch_group,
+                        actions=acts)
+                    buckets.append(bucket)
+                msg.buckets = buckets
             msg.serialize()
             prerequisite.append(msg)
 
