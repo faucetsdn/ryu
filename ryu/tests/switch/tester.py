@@ -47,8 +47,10 @@ from ryu.lib import dpid as dpid_lib
 from ryu.lib import hub
 from ryu.lib import stringify
 from ryu.lib.packet import packet
+from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
+from ryu.ofproto import ofproto_v1_4
 
 
 """ Required test network:
@@ -255,7 +257,8 @@ class TestError(TestMessageBase):
 class OfTester(app_manager.RyuApp):
     """ OpenFlow Switch Tester. """
 
-    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
+    tester_ver = None
+    target_ver = None
 
     def __init__(self):
         super(OfTester, self).__init__()
@@ -267,6 +270,31 @@ class OfTester(app_manager.RyuApp):
                          dpid_lib.dpid_to_str(self.target_dpid))
         self.logger.info('tester_dpid=%s',
                          dpid_lib.dpid_to_str(self.tester_dpid))
+
+        def __get_version(opt):
+            vers = {
+                'openflow13': ofproto_v1_3.OFP_VERSION,
+                'openflow14': ofproto_v1_4.OFP_VERSION
+            }
+            ver = vers.get(opt.lower())
+            if ver is None:
+                self.logger.error(
+                    '%s is not supported. '
+                    'Supported versions are openflow13 and openflow14.',
+                    opt)
+                self._test_end()
+            return ver
+
+        target_opt = CONF['test-switch']['target_version']
+        self.logger.info('target ofp version=%s', target_opt)
+        OfTester.target_ver = __get_version(target_opt)
+        tester_opt = CONF['test-switch']['tester_version']
+        self.logger.info('tester ofp version=%s', tester_opt)
+        OfTester.tester_ver = __get_version(tester_opt)
+        # set app_supported_versions later.
+        ofproto_protocol.set_app_supported_versions(
+            [OfTester.target_ver, OfTester.tester_ver])
+
         test_dir = CONF['test-switch']['dir']
         self.logger.info('Test files directory = %s', test_dir)
 
@@ -317,15 +345,27 @@ class OfTester(app_manager.RyuApp):
             self._unregister_sw(ev.datapath)
 
     def _register_sw(self, dp):
+        vers = {
+            ofproto_v1_3.OFP_VERSION: 'openflow13',
+            ofproto_v1_4.OFP_VERSION: 'openflow14'
+        }
         if dp.id == self.target_dpid:
-            self.target_sw.dp = dp
-            msg = 'Join target SW.'
+            if dp.ofproto.OFP_VERSION != OfTester.target_ver:
+                msg = 'Join target SW, but ofp version is not %s.' % \
+                    vers[OfTester.target_ver]
+            else:
+                self.target_sw.dp = dp
+                msg = 'Join target SW.'
         elif dp.id == self.tester_dpid:
-            self.tester_sw.dp = dp
-            self.tester_sw.add_flow(
-                in_port=TESTER_RECEIVE_PORT,
-                out_port=dp.ofproto.OFPP_CONTROLLER)
-            msg = 'Join tester SW.'
+            if dp.ofproto.OFP_VERSION != OfTester.tester_ver:
+                msg = 'Join tester SW, but ofp version is not %s.' % \
+                    vers[OfTester.tester_ver]
+            else:
+                self.tester_sw.dp = dp
+                self.tester_sw.add_flow(
+                    in_port=TESTER_RECEIVE_PORT,
+                    out_port=dp.ofproto.OFPP_CONTROLLER)
+                msg = 'Join tester SW.'
         else:
             msg = 'Connect unknown SW.'
         if dp.id:
