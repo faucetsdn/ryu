@@ -440,15 +440,18 @@ class OfTester(app_manager.RyuApp):
                        THROUGHPUT_COOKIE)
             # Install flows.
             for flow in test.prerequisite:
-                if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
+                if isinstance(
+                        flow, self.target_sw.dp.ofproto_parser.OFPFlowMod):
                     self._test(STATE_FLOW_INSTALL, self.target_sw, flow)
                     self._test(STATE_FLOW_EXIST_CHK,
                                self.target_sw.send_flow_stats, flow)
-                elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
+                elif isinstance(
+                        flow, self.target_sw.dp.ofproto_parser.OFPMeterMod):
                     self._test(STATE_METER_INSTALL, self.target_sw, flow)
                     self._test(STATE_METER_EXIST_CHK,
                                self.target_sw.send_meter_config_stats, flow)
-                elif isinstance(flow, ofproto_v1_3_parser.OFPGroupMod):
+                elif isinstance(
+                        flow, self.target_sw.dp.ofproto_parser.OFPGroupMod):
                     self._test(STATE_GROUP_INSTALL, self.target_sw, flow)
                     self._test(STATE_GROUP_EXIST_CHK,
                                self.target_sw.send_group_desc_stats, flow)
@@ -589,7 +592,7 @@ class OfTester(app_manager.RyuApp):
         self._wait()
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+        assert isinstance(msg, datapath.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_msg_install(self, datapath, message):
         xid = datapath.send_msg(message)
@@ -601,20 +604,21 @@ class OfTester(app_manager.RyuApp):
         self._wait()
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+        assert isinstance(msg, datapath.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_exist_check(self, method, message):
+        parser = method.__self__.dp.ofproto_parser
         method_dict = {
             OpenFlowSw.send_flow_stats.__name__: {
-                'reply': ofproto_v1_3_parser.OFPFlowStatsReply,
+                'reply': parser.OFPFlowStatsReply,
                 'compare': self._compare_flow
             },
             OpenFlowSw.send_meter_config_stats.__name__: {
-                'reply': ofproto_v1_3_parser.OFPMeterConfigStatsReply,
+                'reply': parser.OFPMeterConfigStatsReply,
                 'compare': self._compare_meter
             },
             OpenFlowSw.send_group_desc_stats.__name__: {
-                'reply': ofproto_v1_3_parser.OFPGroupDescStatsReply,
+                'reply': parser.OFPGroupDescStatsReply,
                 'compare': self._compare_group
             }
         }
@@ -668,7 +672,17 @@ class OfTester(app_manager.RyuApp):
 
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPPacketIn)
+        # Compare a received message with OFPPacketIn
+        #
+        # We compare names of classes instead of classes themselves
+        # due to OVS bug. The code below should be as follows:
+        #
+        # assert isinstance(msg, msg.datapath.ofproto_parser.OFPPacketIn)
+        #
+        # At this moment, OVS sends Packet-In messages of of13 even if
+        # OVS is configured to use of14, so the above code causes an
+        # assertion.
+        assert msg.__class__.__name__ == 'OFPPacketIn'
         self.logger.debug("dpid=%s : receive_packet[%s]",
                           dpid_lib.dpid_to_str(msg.datapath.id),
                           packet.Packet(msg.data))
@@ -742,7 +756,8 @@ class OfTester(app_manager.RyuApp):
         self._wait()
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+        assert isinstance(
+            msg, self.tester_sw.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_flow_unmatching_check(self, before_stats, pkt):
         # Check matched packet count.
@@ -846,7 +861,7 @@ class OfTester(app_manager.RyuApp):
                 if isinstance(united_value, tuple):
                     (value, mask) = united_value
                     # look up oxm_fields.TypeDescr to get mask length.
-                    for ofb in ofproto_v1_3.oxm_types:
+                    for ofb in stats2.datapath.ofproto.oxm_types:
                         if ofb.name == key:
                             # create all one bits mask
                             mask_len = mask_lengths.get(
@@ -1031,7 +1046,8 @@ class OfTester(app_manager.RyuApp):
         if timeout:
             raise TestTimeout(self.state)
         if (self.rcv_msgs and isinstance(
-                self.rcv_msgs[0], ofproto_v1_3_parser.OFPErrorMsg)):
+                self.rcv_msgs[0],
+                self.rcv_msgs[0].datapath.ofproto_parser.OFPErrorMsg)):
             raise TestReceiveError(self.state, self.rcv_msgs[0])
 
     @set_ev_cls([ofp_event.EventOFPFlowStatsReply,
@@ -1062,7 +1078,8 @@ class OfTester(app_manager.RyuApp):
         if self.state in event_states[ev.__class__]:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
-                if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
+                if not ev.msg.flags & \
+                        ev.msg.datapath.ofproto.OFPMPF_REPLY_MORE:
                     self.waiter.set()
                     hub.sleep(0)
 
