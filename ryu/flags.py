@@ -56,5 +56,11 @@ CONF.register_cli_opts([
     cfg.StrOpt('target', default='0000000000000001', help='target sw dp-id'),
     cfg.StrOpt('tester', default='0000000000000002', help='tester sw dp-id'),
     cfg.StrOpt('dir', default='ryu/tests/switch/of13',
-               help='test files directory')
+               help='test files directory'),
+    cfg.StrOpt('target-version', default='openflow13',
+               help='target sw OFP version [openflow13|openflow14] '
+               '(default: openflow13)'),
+    cfg.StrOpt('tester-version', default='openflow13',
+               help='tester sw OFP version [openflow13|openflow14] '
+               '(default: openflow13)')
 ], group='test-switch')
