@@ -17,6 +17,9 @@
 """
 
 from ryu.lib import hub
+from ryu.base import app_manager
+from ryu.services.protocols.bgp.operator import ssh
+
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.api.base import call
@@ -78,7 +81,8 @@ class BGPSpeaker(object):
                  bgp_server_port=DEFAULT_BGP_SERVER_PORT,
                  refresh_stalepath_time=DEFAULT_REFRESH_STALEPATH_TIME,
                  refresh_max_eor_time=DEFAULT_REFRESH_MAX_EOR_TIME,
-                 best_path_change_handler=None):
+                 best_path_change_handler=None,
+                 ssh_console=False):
         """Create a new BGPSpeaker object with as_number and router_id to
         listen on bgp_server_port.
 
@@ -119,6 +123,11 @@ class BGPSpeaker(object):
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
+
+        if ssh_console:
+            app_mgr = app_manager.AppManager.get_instance()
+            ssh_cli = app_mgr.instantiate(ssh.Cli)
+            ssh_cli.start()
 
     def _notify_best_path_changed(self, path):
         if not path.source:
