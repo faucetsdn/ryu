@@ -146,13 +146,17 @@ Multipart Messages
 
     JSON Example:
 
-    .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of14/5-53-ofp_table_features_request.packet.json
+       See an example in:
+
+       ``ryu/tests/unit/ofproto/json/of14/5-53-ofp_table_features_request.packet.json``
 
 .. autoclass:: OFPTableFeaturesStatsReply
 
     JSON Example:
 
-    .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of14/5-54-ofp_table_features_reply.packet.json
+       See an example in:
+
+       ``ryu/tests/unit/ofproto/json/of14/5-54-ofp_table_features_reply.packet.json``
 
 .. autoclass:: OFPPortStatsRequest
 
