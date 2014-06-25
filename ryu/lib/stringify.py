@@ -192,6 +192,8 @@ class StringifyMixin(object):
 
         This method takes the following arguments.
 
+        .. tabularcolumns:: |l|L|
+
         =============  =====================================================
         Argument       Description
         =============  =====================================================
@@ -274,6 +276,8 @@ class StringifyMixin(object):
         Instantiate this class with parameters specified by the dict.
 
         This method takes the following arguments.
+
+        .. tabularcolumns:: |l|L|
 
         =============== =====================================================
         Argument        Descrpition

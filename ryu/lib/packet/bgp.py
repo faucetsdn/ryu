@@ -2036,6 +2036,8 @@ class BGPUpdate(BGPMessage):
     order.
     __init__ takes the corresponding args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     ========================== ===============================================
     Attribute                  Description
     ========================== ===============================================

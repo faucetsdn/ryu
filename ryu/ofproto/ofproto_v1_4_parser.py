@@ -487,9 +487,10 @@ class OFPGetConfigReply(MsgBase):
     Attribute     Description
     ============= =========================================================
     flags         Bitmap of the following flags.
-                  OFPC_FRAG_NORMAL
-                  OFPC_FRAG_DROP
-                  OFPC_FRAG_REASM
+
+                  | OFPC_FRAG_NORMAL
+                  | OFPC_FRAG_DROP
+                  | OFPC_FRAG_REASM
     miss_send_len Max bytes of new flow that datapath should send to the
                   controller
     ============= =========================================================
@@ -540,9 +541,10 @@ class OFPSetConfig(MsgBase):
     Attribute     Description
     ============= =========================================================
     flags         Bitmap of the following flags.
-                  OFPC_FRAG_NORMAL
-                  OFPC_FRAG_DROP
-                  OFPC_FRAG_REASM
+
+                  | OFPC_FRAG_NORMAL
+                  | OFPC_FRAG_DROP
+                  | OFPC_FRAG_REASM
     miss_send_len Max bytes of new flow that datapath should send to the
                   controller
     ============= =========================================================
@@ -1578,12 +1580,13 @@ class OFPPacketIn(MsgBase):
     buffer_id     ID assigned by datapath
     total_len     Full length of frame
     reason        Reason packet is being sent.
-                  OFPR_TABLE_MISS
-                  OFPR_APPLY_ACTION
-                  OFPR_INVALID_TTL
-                  OFPR_ACTION_SET
-                  OFPR_GROUP
-                  OFPR_PACKET_OUT
+
+                  | OFPR_TABLE_MISS
+                  | OFPR_APPLY_ACTION
+                  | OFPR_INVALID_TTL
+                  | OFPR_ACTION_SET
+                  | OFPR_GROUP
+                  | OFPR_PACKET_OUT
     table_id      ID of the table that was looked up
     cookie        Cookie of the flow entry that was looked up
     match         Instance of ``OFPMatch``
@@ -1668,12 +1671,13 @@ class OFPFlowRemoved(MsgBase):
     cookie           Opaque controller-issued identifier
     priority         Priority level of flow entry
     reason           One of the following values.
-                     OFPRR_IDLE_TIMEOUT
-                     OFPRR_HARD_TIMEOUT
-                     OFPRR_DELETE
-                     OFPRR_GROUP_DELETE
-                     OFPRR_METER_DELETE
-                     OFPRR_EVICTION
+
+                     | OFPRR_IDLE_TIMEOUT
+                     | OFPRR_HARD_TIMEOUT
+                     | OFPRR_DELETE
+                     | OFPRR_GROUP_DELETE
+                     | OFPRR_METER_DELETE
+                     | OFPRR_EVICTION
     table_id         ID of the table
     duration_sec     Time flow was alive in seconds
     duration_nsec    Time flow was alive in nanoseconds beyond duration_sec
@@ -1867,19 +1871,22 @@ class OFPMeterMod(MsgBase):
     Attribute        Description
     ================ ======================================================
     command          One of the following values.
-                     OFPMC_ADD
-                     OFPMC_MODIFY
-                     OFPMC_DELETE
+
+                     | OFPMC_ADD
+                     | OFPMC_MODIFY
+                     | OFPMC_DELETE
     flags            Bitmap of the following flags.
-                     OFPMF_KBPS
-                     OFPMF_PKTPS
-                     OFPMF_BURST
-                     OFPMF_STATS
+
+                     | OFPMF_KBPS
+                     | OFPMF_PKTPS
+                     | OFPMF_BURST
+                     | OFPMF_STATS
     meter_id         Meter instance
     bands            list of the following class instance.
-                     OFPMeterBandDrop
-                     OFPMeterBandDscpRemark
-                     OFPMeterBandExperimenter
+
+                     | OFPMeterBandDrop
+                     | OFPMeterBandDscpRemark
+                     | OFPMeterBandExperimenter
     ================ ======================================================
     """
     def __init__(self, datapath, command=ofproto.OFPMC_ADD,
@@ -1913,8 +1920,9 @@ class OFPTableMod(MsgBase):
     ================ ======================================================
     table_id         ID of the table (OFPTT_ALL indicates all tables)
     config           Bitmap of configuration flags.
-                     OFPTC_EVICTION
-                     OFPTC_VACANCY_EVENTS
+
+                     | OFPTC_EVICTION
+                     | OFPTC_VACANCY_EVENTS
     properties       List of ``OFPTableModProp`` subclass instance
     ================ ======================================================
 
@@ -3570,18 +3578,20 @@ class OFPFlowMonitorRequest(OFPFlowMonitorRequestBase):
     out_group        Require matching entries to include this as an output
                      group
     monitor_flags    Bitmap of the following flags.
-                     OFPFMF_INITIAL
-                     OFPFMF_ADD
-                     OFPFMF_REMOVED
-                     OFPFMF_MODIFY
-                     OFPFMF_INSTRUCTIONS
-                     OFPFMF_NO_ABBREV
-                     OFPFMF_ONLY_OWN
+
+                     | OFPFMF_INITIAL
+                     | OFPFMF_ADD
+                     | OFPFMF_REMOVED
+                     | OFPFMF_MODIFY
+                     | OFPFMF_INSTRUCTIONS
+                     | OFPFMF_NO_ABBREV
+                     | OFPFMF_ONLY_OWN
     table_id         ID of table to monitor
     command          One of the following values.
-                     OFPFMC_ADD
-                     OFPFMC_MODIFY
-                     OFPFMC_DELETE
+
+                     | OFPFMC_ADD
+                     | OFPFMC_MODIFY
+                     | OFPFMC_DELETE
     match            Instance of ``OFPMatch``
     ================ ======================================================
 
@@ -3625,9 +3635,10 @@ class OFPFlowMonitorReply(OFPMultipartReply):
     Attribute        Description
     ================ ======================================================
     body             List of list of the following class instance.
-                     OFPFlowMonitorFull
-                     OFPFlowMonitorAbbrev
-                     OFPFlowMonitorPaused
+
+                     | OFPFlowMonitorFull
+                     | OFPFlowMonitorAbbrev
+                     | OFPFlowMonitorPaused
     ================ ======================================================
 
     Example::
@@ -4310,9 +4321,10 @@ class OFPPortStatus(MsgBase):
     Attribute        Description
     ================ ======================================================
     reason           One of the following values.
-                     OFPPR_ADD
-                     OFPPR_DELETE
-                     OFPPR_MODIFY
+
+                     | OFPPR_ADD
+                     | OFPPR_DELETE
+                     | OFPPR_MODIFY
     desc             instance of ``OFPPort``
     ================ ======================================================
 
@@ -4364,13 +4376,15 @@ class OFPRoleStatus(MsgBase):
     Attribute        Description
     ================ ======================================================
     role             One of the following values.
-                     OFPCR_ROLE_NOCHANGE
-                     OFPCR_ROLE_EQUAL
-                     OFPCR_ROLE_MASTER
+
+                     | OFPCR_ROLE_NOCHANGE
+                     | OFPCR_ROLE_EQUAL
+                     | OFPCR_ROLE_MASTER
     reason           One of the following values.
-                     OFPCRR_MASTER_REQUEST
-                     OFPCRR_CONFIG
-                     OFPCRR_EXPERIMENTER
+
+                     | OFPCRR_MASTER_REQUEST
+                     | OFPCRR_CONFIG
+                     | OFPCRR_EXPERIMENTER
     generation_id    Master Election Generation ID
     properties       List of ``OFPRoleProp`` subclass instance
     ================ ======================================================
@@ -4442,8 +4456,9 @@ class OFPTableStatus(MsgBase):
     Attribute        Description
     ================ ======================================================
     reason           One of the following values.
-                     OFPTR_VACANCY_DOWN
-                     OFPTR_VACANCY_UP
+
+                     | OFPTR_VACANCY_DOWN
+                     | OFPTR_VACANCY_UP
     table            ``OFPTableDesc`` instance
     ================ ======================================================
 
@@ -4605,11 +4620,12 @@ class OFPFlowMod(MsgBase):
                      ``OFPFC_DELETE*``
     table_id         ID of the table to put the flow in
     command          One of the following values.
-                     OFPFC_ADD
-                     OFPFC_MODIFY
-                     OFPFC_MODIFY_STRICT
-                     OFPFC_DELETE
-                     OFPFC_DELETE_STRICT
+
+                     | OFPFC_ADD
+                     | OFPFC_MODIFY
+                     | OFPFC_MODIFY_STRICT
+                     | OFPFC_DELETE
+                     | OFPFC_DELETE_STRICT
     idle_timeout     Idle time before discarding (seconds)
     hard_timeout     Max time before discarding (seconds)
     priority         Priority level of flow entry
@@ -4619,11 +4635,12 @@ class OFPFlowMod(MsgBase):
     out_group        For ``OFPFC_DELETE*`` commands, require matching
                      entries to include this as an output group
     flags            Bitmap of the following flags.
-                     OFPFF_SEND_FLOW_REM
-                     OFPFF_CHECK_OVERLAP
-                     OFPFF_RESET_COUNTS
-                     OFPFF_NO_PKT_COUNTS
-                     OFPFF_NO_BYT_COUNTS
+
+                     | OFPFF_SEND_FLOW_REM
+                     | OFPFF_CHECK_OVERLAP
+                     | OFPFF_RESET_COUNTS
+                     | OFPFF_NO_PKT_COUNTS
+                     | OFPFF_NO_BYT_COUNTS
     importance       Eviction precedence
     match            Instance of ``OFPMatch``
     instructions     list of ``OFPInstruction*`` instance
@@ -4799,9 +4816,10 @@ class OFPInstructionActions(OFPInstruction):
     Attribute        Description
     ================ ======================================================
     type             One of following values.
-                     OFPIT_WRITE_ACTIONS
-                     OFPIT_APPLY_ACTIONS
-                     OFPIT_CLEAR_ACTIONS
+
+                     | OFPIT_WRITE_ACTIONS
+                     | OFPIT_APPLY_ACTIONS
+                     | OFPIT_CLEAR_ACTIONS
     actions          list of OpenFlow action class
     ================ ======================================================
 
@@ -5398,14 +5416,16 @@ class OFPGroupMod(MsgBase):
     Attribute        Description
     ================ ======================================================
     command          One of the following values.
-                     OFPGC_ADD
-                     OFPGC_MODIFY
-                     OFPGC_DELETE
+
+                     | OFPGC_ADD
+                     | OFPGC_MODIFY
+                     | OFPGC_DELETE
     type             One of the following values.
-                     OFPGT_ALL
-                     OFPGT_SELECT
-                     OFPGT_INDIRECT
-                     OFPGT_FF
+
+                     | OFPGT_ALL
+                     | OFPGT_SELECT
+                     | OFPGT_INDIRECT
+                     | OFPGT_FF
     group_id         Group identifier
     buckets          list of ``OFPBucket``
     ================ ======================================================
@@ -5510,10 +5530,11 @@ class OFPPortMod(MsgBase):
     hw_addr          The hardware address that must be the same as hw_addr
                      of ``OFPPort`` of ``OFPSwitchFeatures``
     config           Bitmap of configuration flags.
-                     OFPPC_PORT_DOWN
-                     OFPPC_NO_RECV
-                     OFPPC_NO_FWD
-                     OFPPC_NO_PACKET_IN
+
+                     | OFPPC_PORT_DOWN
+                     | OFPPC_NO_RECV
+                     | OFPPC_NO_FWD
+                     | OFPPC_NO_PACKET_IN
     mask             Bitmap of configuration flags above to be changed
     properties       List of ``OFPPortProp`` subclass instance
     ================ ======================================================
@@ -5618,10 +5639,11 @@ class OFPRoleRequest(MsgBase):
     Attribute        Description
     ================ ======================================================
     role             One of the following values.
-                     OFPCR_ROLE_NOCHANGE
-                     OFPCR_ROLE_EQUAL
-                     OFPCR_ROLE_MASTER
-                     OFPCR_ROLE_SLAVE
+
+                     | OFPCR_ROLE_NOCHANGE
+                     | OFPCR_ROLE_EQUAL
+                     | OFPCR_ROLE_MASTER
+                     | OFPCR_ROLE_SLAVE
     generation_id    Master Election Generation ID
     ================ ======================================================
 
@@ -5659,10 +5681,11 @@ class OFPRoleReply(MsgBase):
     Attribute        Description
     ================ ======================================================
     role             One of the following values.
-                     OFPCR_ROLE_NOCHANGE
-                     OFPCR_ROLE_EQUAL
-                     OFPCR_ROLE_MASTER
-                     OFPCR_ROLE_SLAVE
+
+                     | OFPCR_ROLE_NOCHANGE
+                     | OFPCR_ROLE_EQUAL
+                     | OFPCR_ROLE_MASTER
+                     | OFPCR_ROLE_SLAVE
     generation_id    Master Election Generation ID
     ================ ======================================================
 
@@ -5865,17 +5888,19 @@ class OFPBundleCtrlMsg(MsgBase):
     ================ ======================================================
     bundle_id        Id of the bundle
     type             One of the following values.
-                     OFPBCT_OPEN_REQUEST
-                     OFPBCT_OPEN_REPLY
-                     OFPBCT_CLOSE_REQUEST
-                     OFPBCT_CLOSE_REPLY
-                     OFPBCT_COMMIT_REQUEST
-                     OFPBCT_COMMIT_REPLY
-                     OFPBCT_DISCARD_REQUEST
-                     OFPBCT_DISCARD_REPLY
+
+                     | OFPBCT_OPEN_REQUEST
+                     | OFPBCT_OPEN_REPLY
+                     | OFPBCT_CLOSE_REQUEST
+                     | OFPBCT_CLOSE_REPLY
+                     | OFPBCT_COMMIT_REQUEST
+                     | OFPBCT_COMMIT_REPLY
+                     | OFPBCT_DISCARD_REQUEST
+                     | OFPBCT_DISCARD_REPLY
     flags            Bitmap of the following flags.
-                     OFPBF_ATOMIC
-                     OFPBF_ORDERED
+
+                     | OFPBF_ATOMIC
+                     | OFPBF_ORDERED
     properties       List of ``OFPBundleProp`` subclass instance
     ================ ======================================================
 
@@ -5920,8 +5945,9 @@ class OFPBundleAddMsg(MsgInMsgBase):
     ================ ======================================================
     bundle_id        Id of the bundle
     flags            Bitmap of the following flags.
-                     OFPBF_ATOMIC
-                     OFPBF_ORDERED
+
+                     | OFPBF_ATOMIC
+                     | OFPBF_ORDERED
     message          ``MsgBase`` subclass instance
     properties       List of ``OFPBundleProp`` subclass instance
     ================ ======================================================

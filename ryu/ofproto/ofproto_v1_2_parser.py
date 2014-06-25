@@ -448,11 +448,12 @@ class OFPGetConfigReply(MsgBase):
     Attribute     Description
     ============= =========================================================
     flags         One of the following configuration flags.
-                  OFPC_FRAG_NORMAL
-                  OFPC_FRAG_DROP
-                  OFPC_FRAG_REASM
-                  OFPC_FRAG_MASK
-                  OFPC_INVALID_TTL_TO_CONTROLLER
+
+                  | OFPC_FRAG_NORMAL
+                  | OFPC_FRAG_DROP
+                  | OFPC_FRAG_REASM
+                  | OFPC_FRAG_MASK
+                  | OFPC_INVALID_TTL_TO_CONTROLLER
     miss_send_len Max bytes of new flow that datapath should send to the
                   controller
     ============= =========================================================
@@ -508,11 +509,12 @@ class OFPSetConfig(MsgBase):
     Attribute     Description
     ============= =========================================================
     flags         One of the following configuration flags.
-                  OFPC_FRAG_NORMAL
-                  OFPC_FRAG_DROP
-                  OFPC_FRAG_REASM
-                  OFPC_FRAG_MASK
-                  OFPC_INVALID_TTL_TO_CONTROLLER
+
+                  | OFPC_FRAG_NORMAL
+                  | OFPC_FRAG_DROP
+                  | OFPC_FRAG_REASM
+                  | OFPC_FRAG_MASK
+                  | OFPC_INVALID_TTL_TO_CONTROLLER
     miss_send_len Max bytes of new flow that datapath should send to the
                   controller
     ============= =========================================================
@@ -554,9 +556,10 @@ class OFPPacketIn(MsgBase):
     buffer_id     ID assigned by datapath
     total_len     Full length of frame
     reason        Reason packet is being sent.
-                  OFPR_NO_MATCH
-                  OFPR_ACTION
-                  OFPR_INVALID_TTL
+
+                  | OFPR_NO_MATCH
+                  | OFPR_ACTION
+                  | OFPR_INVALID_TTL
     table_id      ID of the table that was looked up
     match         Instance of ``OFPMatch``
     data          Ethernet frame
@@ -633,10 +636,11 @@ class OFPFlowRemoved(MsgBase):
     cookie           Opaque controller-issued identifier
     priority         Priority level of flow entry
     reason           One of the following values.
-                     OFPRR_IDLE_TIMEOUT
-                     OFPRR_HARD_TIMEOUT
-                     OFPRR_DELETE
-                     OFPRR_GROUP_DELETE
+
+                     | OFPRR_IDLE_TIMEOUT
+                     | OFPRR_HARD_TIMEOUT
+                     | OFPRR_DELETE
+                     | OFPRR_GROUP_DELETE
     table_id         ID of the table
     duration_sec     Time flow was alive in seconds
     duration_nsec    Time flow was alive in nanoseconds beyond duration_sec
@@ -726,9 +730,10 @@ class OFPPortStatus(MsgBase):
     Attribute        Description
     ================ ======================================================
     reason           One of the following values.
-                     OFPPR_ADD
-                     OFPPR_DELETE
-                     OFPPR_MODIFY
+
+                     | OFPPR_ADD
+                     | OFPPR_DELETE
+                     | OFPPR_MODIFY
     desc             instance of ``OFPPort``
     ================ ======================================================
 
@@ -843,11 +848,12 @@ class OFPFlowMod(MsgBase):
                      ``OFPFC_DELETE*``
     table_id         ID of the table to put the flow in
     command          One of the following values.
-                     OFPFC_ADD
-                     OFPFC_MODIFY
-                     OFPFC_MODIFY_STRICT
-                     OFPFC_DELETE
-                     OFPFC_DELETE_STRICT
+
+                     | OFPFC_ADD
+                     | OFPFC_MODIFY
+                     | OFPFC_MODIFY_STRICT
+                     | OFPFC_DELETE
+                     | OFPFC_DELETE_STRICT
     idle_timeout     Idle time before discarding (seconds)
     hard_timeout     Max time before discarding (seconds)
     priority         Priority level of flow entry
@@ -857,9 +863,10 @@ class OFPFlowMod(MsgBase):
     out_group        For ``OFPFC_DELETE*`` commands, require matching
                      entries to include this as an output group
     flags            One of the following values.
-                     OFPFF_SEND_FLOW_REM
-                     OFPFF_CHECK_OVERLAP
-                     OFPFF_RESET_COUNTS
+
+                     | OFPFF_SEND_FLOW_REM
+                     | OFPFF_CHECK_OVERLAP
+                     | OFPFF_RESET_COUNTS
     match            Instance of ``OFPMatch``
     instructions     list of ``OFPInstruction*`` instance
     ================ ======================================================
@@ -1030,9 +1037,10 @@ class OFPInstructionActions(OFPInstruction):
     Attribute        Description
     ================ ======================================================
     type             One of following values.
-                     OFPIT_WRITE_ACTIONS
-                     OFPIT_APPLY_ACTIONS
-                     OFPIT_CLEAR_ACTIONS
+
+                     | OFPIT_WRITE_ACTIONS
+                     | OFPIT_APPLY_ACTIONS
+                     | OFPIT_CLEAR_ACTIONS
     actions          list of OpenFlow action class
     ================ ======================================================
 
@@ -1649,14 +1657,16 @@ class OFPGroupMod(MsgBase):
     Attribute        Description
     ================ ======================================================
     command          One of the following values.
-                     OFPGC_ADD
-                     OFPGC_MODIFY
-                     OFPGC_DELETE
+
+                     | OFPGC_ADD
+                     | OFPGC_MODIFY
+                     | OFPGC_DELETE
     type             One of the following values.
-                     OFPGT_ALL
-                     OFPGT_SELECT
-                     OFPGT_INDIRECT
-                     OFPGT_FF
+
+                     | OFPGT_ALL
+                     | OFPGT_SELECT
+                     | OFPGT_INDIRECT
+                     | OFPGT_FF
     group_id         Group identifier
     buckets          list of ``OFPBucket``
     ================ ======================================================
@@ -1717,28 +1727,30 @@ class OFPPortMod(MsgBase):
     hw_addr          The hardware address that must be the same as hw_addr
                      of ``OFPPort`` of ``OFPSwitchFeatures``
     config           Bitmap of configuration flags.
-                     OFPPC_PORT_DOWN
-                     OFPPC_NO_RECV
-                     OFPPC_NO_FWD
-                     OFPPC_NO_PACKET_IN
+
+                     | OFPPC_PORT_DOWN
+                     | OFPPC_NO_RECV
+                     | OFPPC_NO_FWD
+                     | OFPPC_NO_PACKET_IN
     mask             Bitmap of configuration flags above to be changed
     advertise        Bitmap of the following flags.
-                     OFPPF_10MB_HD
-                     OFPPF_10MB_FD
-                     OFPPF_100MB_HD
-                     OFPPF_100MB_FD
-                     OFPPF_1GB_HD
-                     OFPPF_1GB_FD
-                     OFPPF_10GB_FD
-                     OFPPF_40GB_FD
-                     OFPPF_100GB_FD
-                     OFPPF_1TB_FD
-                     OFPPF_OTHER
-                     OFPPF_COPPER
-                     OFPPF_FIBER
-                     OFPPF_AUTONEG
-                     OFPPF_PAUSE
-                     OFPPF_PAUSE_ASYM
+
+                     | OFPPF_10MB_HD
+                     | OFPPF_10MB_FD
+                     | OFPPF_100MB_HD
+                     | OFPPF_100MB_FD
+                     | OFPPF_1GB_HD
+                     | OFPPF_1GB_FD
+                     | OFPPF_10GB_FD
+                     | OFPPF_40GB_FD
+                     | OFPPF_100GB_FD
+                     | OFPPF_1TB_FD
+                     | OFPPF_OTHER
+                     | OFPPF_COPPER
+                     | OFPPF_FIBER
+                     | OFPPF_AUTONEG
+                     | OFPPF_PAUSE
+                     | OFPPF_PAUSE_ASYM
     ================ ======================================================
 
     Example::
@@ -1796,10 +1808,11 @@ class OFPTableMod(MsgBase):
     ================ ======================================================
     table_id         ID of the table (OFPTT_ALL indicates all tables)
     config           Bitmap of the following flags.
-                     OFPTC_TABLE_MISS_CONTROLLER
-                     OFPTC_TABLE_MISS_CONTINUE
-                     OFPTC_TABLE_MISS_DROP
-                     OFPTC_TABLE_MISS_MASK
+
+                     | OFPTC_TABLE_MISS_CONTROLLER
+                     | OFPTC_TABLE_MISS_CONTINUE
+                     | OFPTC_TABLE_MISS_DROP
+                     | OFPTC_TABLE_MISS_MASK
     ================ ======================================================
 
     Example::
@@ -3080,10 +3093,11 @@ class OFPRoleRequest(MsgBase):
     Attribute        Description
     ================ ======================================================
     role             One of the following values.
-                     OFPCR_ROLE_NOCHANGE
-                     OFPCR_ROLE_EQUAL
-                     OFPCR_ROLE_MASTER
-                     OFPCR_ROLE_SLAVE
+
+                     | OFPCR_ROLE_NOCHANGE
+                     | OFPCR_ROLE_EQUAL
+                     | OFPCR_ROLE_MASTER
+                     | OFPCR_ROLE_SLAVE
     generation_id    Master Election Generation ID
     ================ ======================================================
 
@@ -3119,10 +3133,11 @@ class OFPRoleReply(MsgBase):
     Attribute        Description
     ================ ======================================================
     role             One of the following values.
-                     OFPCR_ROLE_NOCHANGE
-                     OFPCR_ROLE_EQUAL
-                     OFPCR_ROLE_MASTER
-                     OFPCR_ROLE_SLAVE
+
+                     | OFPCR_ROLE_NOCHANGE
+                     | OFPCR_ROLE_EQUAL
+                     | OFPCR_ROLE_MASTER
+                     | OFPCR_ROLE_SLAVE
     generation_id    Master Election Generation ID
     ================ ======================================================
 

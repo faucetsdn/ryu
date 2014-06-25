@@ -96,6 +96,8 @@ class svlan(_vlan):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the corresponding args in this order.
 
+    .. tabularcolumns:: |l|L|
+
     ============== ====================
     Attribute      Description
     ============== ====================
