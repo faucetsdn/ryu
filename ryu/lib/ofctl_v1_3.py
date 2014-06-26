@@ -577,6 +577,7 @@ def get_desc_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPDescStatsRequest(dp, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
+    s = {}
 
     for msg in msgs:
         stats = msg.body
