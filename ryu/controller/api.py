@@ -30,7 +30,7 @@ import sys
 logging.setLoggerClass(apgw_log.JSONLogger)
 
 
-_FLOW_STATS_INTERVAL = 60
+CONF = cfg.CONF
 
 
 class RPCError(Exception):
@@ -83,7 +83,8 @@ class RpcOFPManager(app_manager.RyuApp):
         self.monitored_ports = {}
         self.monitored_flows = {}
         self.monitored_meters = {}
-        self.flow_stats_interval = _FLOW_STATS_INTERVAL
+        self.apgw_stats_default_interval = CONF.apgw_stats_interval
+        self.apgw_stats_minimum_interval = 30
         self.meter_stats_epoch = 0
         self.monitored_queues = {}
         self.pending_rpc_requests = []
@@ -112,7 +113,7 @@ class RpcOFPManager(app_manager.RyuApp):
             if dp:
                 msg = dp.ofproto_parser.OFPMeterStatsRequest(datapath=dp)
                 dp.send_msg(msg)
-            hub.sleep(self.flow_stats_interval)
+            hub.sleep(self.apgw_stats_minimum_interval)
 
     def _rpc_message_thread(self):
         while True:
@@ -159,7 +160,7 @@ class RpcOFPManager(app_manager.RyuApp):
                     d[e.xid] = e.msgid
                 continue
             except:
-                self.log.info({'bogus RPC': data})
+                self.log.exception({'bogus RPC': data})
 
             peer._endpoint.send_response(msgid, error=error, result=result)
             m = {'RPC response': {'result': result, 'error': error, 'msgid': msgid}}
@@ -333,7 +334,7 @@ class RpcOFPManager(app_manager.RyuApp):
                 stats['band_stats'] = self._add_band_name(stats['band_stats'])
                 stats.update(contexts)
                 self.stats_log.info(stats)
-        self.meter_stats_epoch += self.flow_stats_interval
+        self.meter_stats_epoch += self.apgw_stats_minimum_interval
 
     @handler.set_ev_cls(ofp_event.EventOFPQueueStatsReply,
                         handler.MAIN_DISPATCHER)
@@ -464,7 +465,7 @@ class RpcOFPManager(app_manager.RyuApp):
         contexts = None
         ofmsg = None
         # default interval
-        interval = 60
+        interval = self.apgw_stats_default_interval
         for k, v in param_dict.items():
             if k == 'ofmsg':
                 try:
@@ -486,13 +487,13 @@ class RpcOFPManager(app_manager.RyuApp):
             if interval == 0:
                 raise RPCError('"interval" must be non zero with'
                                ' "contexts", %s' % (str(param_dict)))
-            if interval % self.flow_stats_interval != 0 or \
-                    interval < self.flow_stats_interval:
+            if interval % self.apgw_stats_minimum_interval != 0 or \
+                    interval < self.apgw_stats_minimum_interval:
                 self.logger.warning('"interval" must be a multiple of %d' %
-                                    self.flow_stats_interval)
-                interval = ((interval + (self.flow_stats_interval - 1)) /
-                            self.flow_stats_interval *
-                            self.flow_stats_interval)
+                                    self.apgw_stats_minimum_interval)
+                interval = ((interval + (self.apgw_stats_minimum_interval - 1)) /
+                            self.apgw_stats_minimum_interval *
+                            self.apgw_stats_minimum_interval)
 
         dp.set_xid(ofmsg)
         ofmsg.serialize()
@@ -579,7 +580,7 @@ class RpcOFPManager(app_manager.RyuApp):
             raise RPCError('parameters are missing')
         resource_id = None
         contexts = None
-        interval = 60
+        interval = self.apgw_stats_default_interval
 
         resource_name = mandatory_params.pop(0)
         for k, v in param_dict.items():

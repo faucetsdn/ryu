@@ -53,6 +53,8 @@ CONF.register_cli_opts([
                help='port for vrrp rpc interface'),
     cfg.BoolOpt('vrrp-use-vmac', default=False,
                 help='use virtual mac'),
+    cfg.IntOpt('apgw-stats-interval', default=300,
+                help='Interval for Statistics Collection (in seconds)'),
     cfg.BoolOpt('apgw-debug', default=False, help='use debug level'),
 ])
 
