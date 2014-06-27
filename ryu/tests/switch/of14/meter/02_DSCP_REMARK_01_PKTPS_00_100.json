@@ -1,7 +1,7 @@
 [
     "meter: 02_DSCP_REMARK_01_PKTPS_00_100",
     {
-        "description":"200pktps(ethernet/ipv4(dscp=24)/tcp)-->'in_port=1,actions=meter:100pktps(dscp_remark:ip_dscp=16),output:2'",
+        "description":"200pktps(ethernet/ipv4(dscp=18)/tcp)-->'in_port=1,actions=meter:100pktps(dscp_remark:ip_dscp=20),output:2'",
         "prerequisite":[
             {
                 "OFPMeterMod":{
@@ -59,7 +59,7 @@
                     "packets":{
                         "data":[
                             "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
-                            "ipv4(proto=6, tos=96)",
+                            "ipv4(proto=6, tos=72)",
                             "tcp()",
                             "str('\\x11' * (1500 - 54))"
                         ],
@@ -87,7 +87,7 @@
                                     {
                                         "OXMTlv":{
                                             "field":"ip_dscp",
-                                            "value":24
+                                            "value":20
                                         }
                                     }
                                 ]
@@ -112,7 +112,7 @@
                                     {
                                         "OXMTlv":{
                                             "field":"ip_dscp",
-                                            "value":16
+                                            "value":18
                                         }
                                     }
                                 ]
@@ -125,7 +125,7 @@
         ]
     },
     {
-        "description":"200pktps(ethernet/ipv6(dscp=24)/tcp)-->'in_port=1,actions=meter:100pktps(dscp_remark:ip_dscp=16),output:2'",
+        "description":"200pktps(ethernet/ipv6(dscp=18)/tcp)-->'in_port=1,actions=meter:100pktps(dscp_remark:ip_dscp=20),output:2'",
         "prerequisite":[
             {
                 "OFPMeterMod":{
@@ -183,7 +183,7 @@
                     "packets":{
                         "data":[
                             "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
-                            "ipv6(nxt=6, traffic_class=96)",
+                            "ipv6(nxt=6, traffic_class=72)",
                             "tcp()",
                             "str('\\x11' * (1500 - 74))"
                         ],
@@ -211,7 +211,7 @@
                                     {
                                         "OXMTlv":{
                                             "field":"ip_dscp",
-                                            "value":24
+                                            "value":20
                                         }
                                     }
                                 ]
@@ -236,7 +236,7 @@
                                     {
                                         "OXMTlv":{
                                             "field":"ip_dscp",
-                                            "value":16
+                                            "value":18
                                         }
                                     }
                                 ]
