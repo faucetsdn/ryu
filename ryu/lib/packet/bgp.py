@@ -26,6 +26,7 @@ import abc
 import six
 import struct
 import copy
+import netaddr
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
@@ -1777,6 +1778,10 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         self.safi = safi
         self.next_hop_len = next_hop_len
         self.next_hop = next_hop
+        if RouteFamily(afi, safi) in (RF_IPv6_UC, RF_IPv6_VPN):
+            self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
+        else:
+            self._next_hop_bin = addrconv.ipv4.text_to_bin(next_hop)
         self.reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
@@ -1797,24 +1802,28 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         while binnlri:
             n, binnlri = addr_cls.parser(binnlri)
             nlri.append(n)
+        if RouteFamily(afi, safi) in (RF_IPv6_UC, RF_IPv6_VPN):
+            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
+        else:
+            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin)
         return {
             'afi': afi,
             'safi': safi,
             'next_hop_len': next_hop_len,
-            'next_hop': next_hop_bin,
+            'next_hop': next_hop,
             'reserved': reserved,
             'nlri': nlri,
         }
 
     def serialize_value(self):
         # fixup
-        self.next_hop_len = len(self.next_hop)
+        self.next_hop_len = len(self._next_hop_bin)
         self.reserved = '\0'
 
         buf = bytearray()
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi,
                       self.safi, self.next_hop_len)
-        buf += self.next_hop
+        buf += self._next_hop_bin
         buf += self.reserved
         binnlri = bytearray()
         for n in self.nlri:
