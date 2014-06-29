@@ -71,6 +71,7 @@ ENABLED = 'enabled'
 CHANGES = 'changes'
 LOCAL_ADDRESS = 'local_address'
 LOCAL_PORT = 'local_port'
+PEER_NEXT_HOP = 'next_hop'
 
 # Default value constants.
 DEFAULT_CAP_GR_NULL = True
@@ -132,6 +133,14 @@ def validate_local_address(ip_address):
     return str(netaddr.IPAddress(ip_address))
 
 
+@validate(name=PEER_NEXT_HOP)
+def validate_next_hop(ip_address):
+    if not valid_ip_address(ip_address):
+        raise ConfigValueError(desc='Invalid next_hop ip_address: %s' %
+                               ip_address)
+    return str(netaddr.IPAddress(ip_address))
+
+
 @validate(name=LOCAL_PORT)
 def validate_local_port(port):
     if not isinstance(port, (int, long)):
@@ -164,7 +173,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    CAP_RTC, RTC_AS, HOLD_TIME,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
-                                   LOCAL_ADDRESS, LOCAL_PORT])
+                                   LOCAL_ADDRESS, LOCAL_PORT,
+                                   PEER_NEXT_HOP])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -212,6 +222,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
             LOCAL_ADDRESS, None, **kwargs)
         self._settings[LOCAL_PORT] = compute_optional_conf(
             LOCAL_PORT, None, **kwargs)
+
+        self._settings[PEER_NEXT_HOP] = compute_optional_conf(
+            PEER_NEXT_HOP, None, **kwargs)
 
         # RTC configurations.
         self._settings[CAP_RTC] = \
@@ -264,6 +277,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def host_bind_port(self):
         return self._settings[LOCAL_PORT]
+
+    @property
+    def next_hop(self):
+        return self._settings[PEER_NEXT_HOP]
 
     # =========================================================================
     # Optional attributes with valid defaults.

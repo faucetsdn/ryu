@@ -590,7 +590,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         point/local ip address.
         """
         # By default we use BGPS's interface IP with this peer as next_hop.
-        next_hop = self.host_bind_ip
+        if self._neigh_conf.next_hop:
+            next_hop = self._neigh_conf.next_hop
+        else:
+            next_hop = self.host_bind_ip
         if route_family == RF_IPv6_VPN:
             # Next hop ipv4_mapped ipv6
             def _ipv4_mapped_ipv6(ipv4):
