@@ -1,10 +1,13 @@
 import logging
+import netaddr
 from collections import OrderedDict
 
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp.info_base.rtc import RtcTable
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Table
+from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Path
+from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Table
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Table
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
@@ -164,7 +167,8 @@ class TableCoreManager(object):
         global_table = None
         if route_family == RF_IPv4_UC:
             global_table = self.get_ipv4_table()
-
+        elif route_family == RF_IPv6_UC:
+            global_table = self.get_ipv6_table()
         elif route_family == RF_IPv4_VPN:
             global_table = self.get_vpn4_table()
 
@@ -204,6 +208,14 @@ class TableCoreManager(object):
             self._tables[(None, RF_IPv4_UC)] = vpn_table
 
         return vpn_table
+
+    def get_ipv6_table(self):
+        table = self._global_tables.get(RF_IPv6_UC)
+        if not table:
+            table = Ipv6Table(self._core_service, self._signal_bus)
+            self._global_tables[RF_IPv6_UC] = table
+            self._tables[(None, RF_IPv6_UC)] = table
+        return table
 
     def get_vpn6_table(self):
         """Returns global VPNv6 table.
@@ -483,13 +495,10 @@ class TableCoreManager(object):
             gen_lbl=True
         )
 
-    def add_to_ipv4_global_table(self, prefix, is_withdraw=False):
-        ip, masklen = prefix.split('/')
-        _nlri = IPAddrPrefix(int(masklen), ip)
+    def add_to_global_table(self, prefix, is_withdraw=False):
         src_ver_num = 1
         peer = None
         # set mandatory path attributes
-        nexthop = '0.0.0.0'
         origin = BGPPathAttributeOrigin(BGP_ATTR_ORIGIN_IGP)
         aspath = BGPPathAttributeAsPath([[]])
 
@@ -497,9 +506,22 @@ class TableCoreManager(object):
         pathattrs[BGP_ATTR_TYPE_ORIGIN] = origin
         pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
 
-        new_path = Ipv4Path(peer, _nlri, src_ver_num,
-                            pattrs=pathattrs, nexthop=nexthop,
-                            is_withdraw=is_withdraw)
+        net = netaddr.IPNetwork(prefix)
+        ip = str(net.ip)
+        masklen = net.prefixlen
+        if netaddr.valid_ipv4(ip):
+            _nlri = IPAddrPrefix(masklen, ip)
+            nexthop = '0.0.0.0'
+            p = Ipv4Path
+        else:
+            _nlri = IP6AddrPrefix(masklen, ip)
+            nexthop = '::'
+            p = Ipv6Path
+
+        new_path = p(peer, _nlri, src_ver_num,
+                     pattrs=pathattrs, nexthop=nexthop,
+                     is_withdraw=is_withdraw)
+
         # add to global ipv4 table and propagates to neighbors
         self.learn_path(new_path)
 

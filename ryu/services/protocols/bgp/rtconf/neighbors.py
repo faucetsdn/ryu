@@ -38,6 +38,7 @@ from ryu.services.protocols.bgp.rtconf.base import BaseConf
 from ryu.services.protocols.bgp.rtconf.base import BaseConfListener
 from ryu.services.protocols.bgp.rtconf.base import CAP_ENHANCED_REFRESH
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_REFRESH
@@ -76,6 +77,7 @@ DEFAULT_CAP_GR_NULL = True
 DEFAULT_CAP_REFRESH = True
 DEFAULT_CAP_ENHANCED_REFRESH = False
 DEFAULT_CAP_MBGP_IPV4 = True
+DEFAULT_CAP_MBGP_IPV6 = False
 DEFAULT_CAP_MBGP_VPNV4 = False
 DEFAULT_CAP_MBGP_VPNV6 = False
 DEFAULT_HOLD_TIME = 40
@@ -156,8 +158,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
     VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT])
     REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS])
     OPTIONAL_SETTINGS = frozenset([CAP_REFRESH,
-                                   CAP_ENHANCED_REFRESH, CAP_MBGP_VPNV4,
-                                   CAP_MBGP_IPV4, CAP_MBGP_VPNV6,
+                                   CAP_ENHANCED_REFRESH,
+                                   CAP_MBGP_IPV4, CAP_MBGP_IPV6,
+                                   CAP_MBGP_VPNV4, CAP_MBGP_VPNV6,
                                    CAP_RTC, RTC_AS, HOLD_TIME,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
@@ -173,6 +176,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
             CAP_ENHANCED_REFRESH, DEFAULT_CAP_ENHANCED_REFRESH, **kwargs)
         self._settings[CAP_MBGP_IPV4] = compute_optional_conf(
             CAP_MBGP_IPV4, DEFAULT_CAP_MBGP_IPV4, **kwargs)
+        self._settings[CAP_MBGP_IPV6] = compute_optional_conf(
+            CAP_MBGP_IPV6, DEFAULT_CAP_MBGP_IPV6, **kwargs)
         self._settings[CAP_MBGP_VPNV4] = compute_optional_conf(
             CAP_MBGP_VPNV4, DEFAULT_CAP_MBGP_VPNV4, **kwargs)
         self._settings[CAP_MBGP_VPNV6] = compute_optional_conf(
@@ -281,6 +286,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
         return self._settings[CAP_MBGP_IPV4]
 
     @property
+    def cap_mbgp_ipv6(self):
+        return self._settings[CAP_MBGP_IPV6]
+
+    @property
     def cap_mbgp_vpnv4(self):
         return self._settings[CAP_MBGP_VPNV4]
 
@@ -353,6 +362,11 @@ class NeighborConf(ConfWithId, ConfWithStats):
             mbgp_caps.append(
                 BGPOptParamCapabilityMultiprotocol(
                     RF_IPv4_UC.afi, RF_IPv4_UC.safi))
+
+        if self.cap_mbgp_ipv6:
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_IPv6_UC.afi, RF_IPv6_UC.safi))
 
         if self.cap_mbgp_vpnv4:
             mbgp_caps.append(

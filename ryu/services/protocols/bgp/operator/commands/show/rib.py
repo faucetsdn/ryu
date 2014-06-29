@@ -11,7 +11,7 @@ from ryu.services.protocols.bgp.operator.commands.responses import \
 
 
 class RibBase(Command, RouteFormatterMixin):
-    supported_families = ['ipv4', 'vpnv4', 'rtfilter', 'vpnv6']
+    supported_families = ['ipv4', 'ipv6', 'vpnv4', 'rtfilter', 'vpnv6']
 
 
 class Rib(RibBase):

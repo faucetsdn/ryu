@@ -40,6 +40,7 @@ LOG = logging.getLogger('bgpspeaker.rtconf.base')
 CAP_REFRESH = 'cap_refresh'
 CAP_ENHANCED_REFRESH = 'cap_enhanced_refresh'
 CAP_MBGP_IPV4 = 'cap_mbgp_ipv4'
+CAP_MBGP_IPV6 = 'cap_mbgp_ipv6'
 CAP_MBGP_VPNV4 = 'cap_mbgp_vpnv4'
 CAP_MBGP_VPNV6 = 'cap_mbgp_vpnv6'
 CAP_RTC = 'cap_rtc'
@@ -595,6 +596,15 @@ def validate_cap_mbgp_ipv4(cmv4):
                               'settings: %s boolean value expected' % cmv4)
 
     return cmv4
+
+
+@validate(name=CAP_MBGP_IPV6)
+def validate_cap_mbgp_ipv4(cmv6):
+    if cmv6 not in (True, False):
+        raise ConfigTypeError(desc='Invalid Enhanced Refresh capability '
+                              'settings: %s boolean value expected' % cmv4)
+
+    return cmv6
 
 
 @validate(name=CAP_MBGP_VPNV4)

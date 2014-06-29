@@ -1233,7 +1233,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       ' UPDATE. %s' % update_msg)
             return
 
-        if msg_rf in (RF_IPv4_VPN, RF_IPv6_UC):
+        if msg_rf in (RF_IPv4_VPN, RF_IPv6_VPN):
             # Check if we have Extended Communities Attribute.
             # TODO(PH): Check if RT_NLRI afi/safi will ever have this attribute
             ext_comm_attr = umsg_pattrs.get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)

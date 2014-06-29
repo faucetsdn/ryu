@@ -16,6 +16,7 @@
 
 """
 
+import netaddr
 from ryu.lib import hub
 from ryu.base import app_manager
 from ryu.services.protocols.bgp.operator import ssh
@@ -43,6 +44,7 @@ from ryu.services.protocols.bgp.rtconf.common import LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
@@ -188,9 +190,20 @@ class BGPSpeaker(object):
         bgp_neighbor = {}
         bgp_neighbor[neighbors.IP_ADDRESS] = address
         bgp_neighbor[neighbors.REMOTE_AS] = remote_as
-        bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
-        bgp_neighbor[CAP_MBGP_VPNV4] = enable_vpnv4
-        bgp_neighbor[CAP_MBGP_VPNV6] = enable_vpnv6
+        # v6 advertizement is available with only v6 peering
+        if netaddr.valid_ipv4(address):
+            bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
+            bgp_neighbor[CAP_MBGP_IPV6] = False
+            bgp_neighbor[CAP_MBGP_VPNV4] = enable_vpnv4
+            bgp_neighbor[CAP_MBGP_VPNV6] = enable_vpnv6
+        elif netaddr.valid_ipv6(address):
+            bgp_neighbor[CAP_MBGP_IPV4] = False
+            bgp_neighbor[CAP_MBGP_IPV6] = True
+            bgp_neighbor[CAP_MBGP_VPNV4] = False
+            bgp_neighbor[CAP_MBGP_VPNV6] = False
+        else:
+            # FIXME: should raise an exception
+            pass
         call('neighbor.create', **bgp_neighbor)
 
     def neighbor_del(self, address):
