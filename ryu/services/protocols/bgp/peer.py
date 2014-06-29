@@ -822,10 +822,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 LOG.debug('%s trying to connect to %s' % (self, peer_address))
                 tcp_conn_timeout = self._common_conf.tcp_conn_timeout
                 try:
+                    password = self._neigh_conf.password
                     sock = self._connect_tcp(peer_address,
                                              client_factory,
                                              time_out=tcp_conn_timeout,
-                                             bind_address=bind_addr)
+                                             bind_address=bind_addr,
+                                             password=password)
                 except socket.error:
                     self.state.bgp_state = const.BGP_FSM_ACTIVE
                     LOG.debug('Socket could not be created in time (%s secs),'

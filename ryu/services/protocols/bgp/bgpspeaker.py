@@ -51,6 +51,7 @@ from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
+from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
 from ryu.services.protocols.bgp.application import RyuBGPSpeaker
 
 
@@ -169,7 +170,7 @@ class BGPSpeaker(object):
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
-                     next_hop=None):
+                     next_hop=None, password=None):
         """ This method registers a new neighbor. The BGP speaker tries to
         establish a bgp session with the peer (accepts a connection
         from the peer and also tries to connect to it).
@@ -192,11 +193,15 @@ class BGPSpeaker(object):
 
         ``next_hop`` specifies the next hop IP address. If not
         specified, host's ip address to access to a peer is used.
+
+        ``password`` is used for the MD5 authentication if it's
+        specified. By default, the MD5 authenticaiton is disabled.
         """
         bgp_neighbor = {}
         bgp_neighbor[neighbors.IP_ADDRESS] = address
         bgp_neighbor[neighbors.REMOTE_AS] = remote_as
         bgp_neighbor[PEER_NEXT_HOP] = next_hop
+        bgp_neighbor[PASSWORD] = password
         # v6 advertizement is available with only v6 peering
         if netaddr.valid_ipv4(address):
             bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4

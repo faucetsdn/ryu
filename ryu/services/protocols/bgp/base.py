@@ -24,6 +24,7 @@ import weakref
 import netaddr
 
 from ryu.lib import hub
+from ryu.lib import sockopt
 from ryu.lib.hub import Timeout
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
@@ -353,7 +354,7 @@ class Activity(object):
             self._spawn(client_name, conn_handle, sock)
 
     def _connect_tcp(self, peer_addr, conn_handler, time_out=None,
-                     bind_address=None):
+                     bind_address=None, password=None):
         """Creates a TCP connection to given peer address.
 
         Tries to create a socket for `timeout` number of seconds. If
@@ -367,17 +368,25 @@ class Activity(object):
         else:
             family = socket.AF_INET6
         with Timeout(time_out, socket.error):
-            sock = hub.connect(peer_addr, family=family, bind=bind_address)
-            if sock:
-                # Connection name for pro-active connection is made up
-                # of local end address + remote end address
-                local = self.get_localname(sock)[0]
-                remote = self.get_remotename(sock)[0]
-                conn_name = ('L: ' + local + ', R: ' + remote)
-                self._asso_socket_map[conn_name] = sock
-                # If connection is established, we call connection handler
-                # in a new thread.
-                self._spawn(conn_name, conn_handler, sock)
+            sock = socket.socket(family)
+            if bind_address:
+                sock.bind(bind_address)
+            if password:
+                sockopt.set_tcp_md5sig(sock, peer_addr[0], password)
+            sock.connect(peer_addr)
+            # socket.error exception is rasied in cese of timeout and
+            # the following code is executed only when the connection
+            # is established.
+
+        # Connection name for pro-active connection is made up of
+        # local end address + remote end address
+        local = self.get_localname(sock)[0]
+        remote = self.get_remotename(sock)[0]
+        conn_name = ('L: ' + local + ', R: ' + remote)
+        self._asso_socket_map[conn_name] = sock
+        # If connection is established, we call connection handler
+        # in a new thread.
+        self._spawn(conn_name, conn_handler, sock)
         return sock
 
 

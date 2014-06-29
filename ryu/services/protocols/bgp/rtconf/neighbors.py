@@ -72,6 +72,7 @@ CHANGES = 'changes'
 LOCAL_ADDRESS = 'local_address'
 LOCAL_PORT = 'local_port'
 PEER_NEXT_HOP = 'next_hop'
+PASSWORD = 'password'
 
 # Default value constants.
 DEFAULT_CAP_GR_NULL = True
@@ -141,6 +142,11 @@ def validate_next_hop(ip_address):
     return str(netaddr.IPAddress(ip_address))
 
 
+@validate(name=PASSWORD)
+def validate_password(password):
+    return password
+
+
 @validate(name=LOCAL_PORT)
 def validate_local_port(port):
     if not isinstance(port, (int, long)):
@@ -174,7 +180,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
                                    LOCAL_ADDRESS, LOCAL_PORT,
-                                   PEER_NEXT_HOP])
+                                   PEER_NEXT_HOP, PASSWORD])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -225,6 +231,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
 
         self._settings[PEER_NEXT_HOP] = compute_optional_conf(
             PEER_NEXT_HOP, None, **kwargs)
+
+        self._settings[PASSWORD] = compute_optional_conf(
+            PASSWORD, None, **kwargs)
 
         # RTC configurations.
         self._settings[CAP_RTC] = \
@@ -281,6 +290,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def next_hop(self):
         return self._settings[PEER_NEXT_HOP]
+
+    @property
+    def password(self):
+        return self._settings[PASSWORD]
 
     # =========================================================================
     # Optional attributes with valid defaults.
