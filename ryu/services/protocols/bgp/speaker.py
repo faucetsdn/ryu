@@ -96,9 +96,11 @@ class BgpProtocol(Protocol, Activity):
         # Validate input.
         if socket is None:
             raise ValueError('Invalid arguments passed.')
-        activity_name = ('BgpProtocol %s, %s, %s' % (
-            is_reactive_conn, socket.getpeername(), socket.getsockname())
-        )
+        self._remotename = self.get_remotename(socket)
+        self._localname = self.get_localname(socket)
+        activity_name = ('BgpProtocol %s, %s, %s' % (is_reactive_conn,
+                                                     self._remotename,
+                                                     self._localname))
         Activity.__init__(self, name=activity_name)
         # Intialize instance variables.
         self._peer = None
@@ -122,12 +124,6 @@ class BgpProtocol(Protocol, Activity):
         self.recv_open_msg = None
         self._is_bound = False
 
-    def get_peername(self):
-        return self._socket.getpeername()
-
-    def get_sockname(self):
-        return self._socket.getsockname()
-
     @property
     def is_reactive(self):
         return self._is_reactive
@@ -146,8 +142,8 @@ class BgpProtocol(Protocol, Activity):
                              '`BgpProtocol`')
 
         # Compare protocol connection end point's addresses
-        if (self.get_peername()[0] == other_protocol.get_peername()[0] and
-                self.get_sockname()[0] == other_protocol.get_sockname()[0]):
+        if (self._remotename[0] == other_protoco._remotename[0] and
+                self._localname[0] == other_protocol._localname[0]):
             return True
 
         return False
@@ -366,10 +362,8 @@ class BgpProtocol(Protocol, Activity):
         reason = notification.reason
         self._send_with_lock(notification)
         self._signal_bus.bgp_error(self._peer, code, subcode, reason)
-        LOG.error(
-            'Sent notification to %r >> %s' %
-            (self._socket.getpeername(), notification)
-        )
+        LOG.error('Sent notification to %r >> %s' % (self._localname(),
+                                                     notification))
         self._socket.close()
 
     def _send_with_lock(self, msg):
@@ -386,18 +380,15 @@ class BgpProtocol(Protocol, Activity):
             raise BgpProtocolException('Tried to send message to peer when '
                                        'this protocol instance is not started'
                                        ' or is no longer is started state.')
-        # get peername before senging msg because sending msg can occur
-        # conncetion lost
-        peername = self.get_peername()
         self._send_with_lock(msg)
 
         if msg.type == BGP_MSG_NOTIFICATION:
             LOG.error('Sent notification to %s >> %s' %
-                      (peername, msg))
+                      (self._remotename, msg))
 
             self._signal_bus.bgp_notification_sent(self._peer, msg)
         else:
-            LOG.debug('Sent msg to %s >> %s' % (peername, msg))
+            LOG.debug('Sent msg to %s >> %s' % (self._remotename, msg))
 
     def stop(self):
         Activity.stop(self)
@@ -443,8 +434,7 @@ class BgpProtocol(Protocol, Activity):
         message except for *Open* and *Notification* message. On receiving
         *Notification* message we close connection with peer.
         """
-        LOG.debug('Received msg from %s << %s' % (str(self.get_peername()[0]),
-                                                  msg))
+        LOG.debug('Received msg from %s << %s' % (self._remotename, msg))
 
         # If we receive open message we try to bind to protocol
         if (msg.type == BGP_MSG_OPEN):

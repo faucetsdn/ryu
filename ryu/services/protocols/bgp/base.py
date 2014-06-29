@@ -314,6 +314,20 @@ class Activity(object):
         self._timers = weakref.WeakValueDictionary()
         LOG.debug('Stopping activity %s finished.' % self.name)
 
+    def _canonicalize_ip(self, ip):
+        addr = netaddr.IPAddress(ip)
+        if addr.is_ipv4_mapped():
+            ip = str(addr.ipv4())
+        return ip
+
+    def get_remotename(self, sock):
+        addr, port = sock.getpeername()[:2]
+        return (self._canonicalize_ip(addr), str(port))
+
+    def get_localname(self, sock):
+        addr, port = sock.getsockname()[:2]
+        return (self._canonicalize_ip(addr), str(port))
+
     def _listen_tcp(self, loc_addr, conn_handle):
         """Creates a TCP server socket which listens on `port` number.
 
@@ -330,12 +344,9 @@ class Activity(object):
         # We now wait for connection requests from client.
         while True:
             sock, client_address = server.accept()
-            client_address, port = client_address[:2]
+            client_address, port = self.get_remotename(sock)
             LOG.debug('Connect request received from client for port'
                       ' %s:%s' % (client_address, port))
-            if 'ffff:' in client_address:
-                client_address = str(netaddr.IPAddress(client_address).ipv4())
-
             client_name = self.name + '_client@' + client_address
             self._asso_socket_map[client_name] = sock
             self._spawn(client_name, conn_handle, sock)
@@ -359,8 +370,9 @@ class Activity(object):
             if sock:
                 # Connection name for pro-active connection is made up
                 # of local end address + remote end address
-                conn_name = ('L: ' + str(sock.getsockname()) + ', R: ' +
-                             str(sock.getpeername()))
+                local = self.get_localname(sock)[0]
+                remote = self.get_remotename(sock)[0]
+                conn_name = ('L: ' + local + ', R: ' + remote)
                 self._asso_socket_map[conn_name] = sock
                 # If connection is established, we call connection handler
                 # in a new thread.
