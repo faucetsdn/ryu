@@ -132,21 +132,23 @@ class BGPSpeaker(object):
             ssh_cli = app_mgr.instantiate(ssh.Cli)
             ssh_cli.start()
 
-    def _notify_best_path_changed(self, path):
+    def _notify_best_path_changed(self, path, is_withdraw):
         if not path.source:
             # ours
             return
         ev = EventPrefix(remote_as=path.source.remote_as,
                          route_dist=None,
                          prefix=path.nlri.addr + '/' + str(path.nlri.length),
-                         nexthop=path.nexthop, is_withdraw=path.is_withdraw)
+                         nexthop=path.nexthop, is_withdraw=is_withdraw)
         if self._best_path_change_handler:
             self._best_path_change_handler(ev)
 
     def _init_signal_listeners(self):
         CORE_MANAGER.get_core_service()._signal_bus.register_listener(
             BgpSignalBus.BGP_BEST_PATH_CHANGED,
-            lambda _, dest: self._notify_best_path_changed(dest)
+            lambda _, info:
+                self._notify_best_path_changed(info['path'],
+                                               info['is_withdraw'])
         )
 
     def _core_start(self, settings):

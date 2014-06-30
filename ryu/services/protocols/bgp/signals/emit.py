@@ -55,7 +55,7 @@ class BgpSignalBus(SignalBus):
             vrf_conf
         )
 
-    def best_path_changed(self, best_path):
+    def best_path_changed(self, path, is_withdraw):
         return self.emit_signal(
             self.BGP_BEST_PATH_CHANGED,
-            best_path)
+            {'path': path, 'is_withdraw': is_withdraw})
