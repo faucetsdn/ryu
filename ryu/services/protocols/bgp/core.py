@@ -21,6 +21,7 @@
 """
 import logging
 import netaddr
+import socket
 
 from ryu.lib.packet.bgp import BGP_ERROR_CEASE
 from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_RESET
@@ -40,6 +41,7 @@ from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.utils.rtfilter import RouteTargetManager
 from ryu.services.protocols.bgp.utils import stats
+from ryu.lib import sockopt
 
 
 LOG = logging.getLogger('bgpspeaker.core')
@@ -221,7 +223,9 @@ class CoreService(Factory, Activity):
         server_addr = (CORE_IP, self._common_config.bgp_server_port)
         waiter = kwargs.pop('waiter')
         waiter.set()
-        server_thread = self._listen_tcp(server_addr, self.start_protocol)
+        server_thread, sockets = self._listen_tcp(server_addr,
+                                                  self.start_protocol)
+        self.listen_sockets = sockets
 
         server_thread.wait()
         processor_thread.wait()
@@ -358,7 +362,21 @@ class CoreService(Factory, Activity):
             out_route = FlexinetOutgoingRoute(path, route_dist)
             sink.enque_outgoing_msg(out_route)
 
+    def _set_password(self, address, password):
+        if netaddr.valid_ipv4(address):
+            family = socket.AF_INET
+        else:
+            family = socket.AF_INET6
+
+        for sock in self.listen_sockets.values():
+            if sock.family == family:
+                sockopt.set_tcp_md5sig(sock, address, password)
+
     def on_peer_added(self, peer):
+        if peer._neigh_conf.password:
+            self._set_password(peer._neigh_conf.ip_address,
+                               peer._neigh_conf.password)
+
         if self.started:
             self._spawn_activity(
                 peer, self.start_protocol
@@ -372,6 +390,10 @@ class CoreService(Factory, Activity):
             )
 
     def on_peer_removed(self, peer):
+        if peer._neigh_conf.password:
+            # seting zero length key means deleting the key
+            self._set_password(peer._neigh_conf.ip_address, '')
+
         if peer.rtc_as != self.asn:
             self._spawn(
                 'OLD_RTC_AS_HANDLER %s' % peer.rtc_as,

@@ -330,28 +330,61 @@ class Activity(object):
         addr, port = sock.getsockname()[:2]
         return (self._canonicalize_ip(addr), str(port))
 
-    def _listen_tcp(self, loc_addr, conn_handle):
-        """Creates a TCP server socket which listens on `port` number.
+    def _create_listen_socket(self, family, loc_addr):
+        s = socket.socket(family)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(loc_addr)
+        s.listen(1)
+        return s
 
-        For each connection `server_factory` starts a new protocol.
-        """
-        if ':' in loc_addr[0]:
-            server = hub.listen(loc_addr, family=socket.AF_INET6)
-        else:
-            server = hub.listen(loc_addr)
-
-        server_name = self.name + '_server@' + str(loc_addr)
-        self._asso_socket_map[server_name] = server
-
-        # We now wait for connection requests from client.
+    def _listen_socket_loop(self, s, conn_handle):
         while True:
-            sock, client_address = server.accept()
+            sock, client_address = s.accept()
             client_address, port = self.get_remotename(sock)
             LOG.debug('Connect request received from client for port'
                       ' %s:%s' % (client_address, port))
             client_name = self.name + '_client@' + client_address
             self._asso_socket_map[client_name] = sock
             self._spawn(client_name, conn_handle, sock)
+
+    def _listen_tcp(self, loc_addr, conn_handle):
+        """Creates a TCP server socket which listens on `port` number.
+
+        For each connection `server_factory` starts a new protocol.
+        """
+        info = socket.getaddrinfo(None, loc_addr[1], socket.AF_UNSPEC,
+                                  socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
+        listen_sockets = {}
+        for res in info:
+            af, socktype, proto, cannonname, sa = res
+            sock = None
+            try:
+                sock = socket.socket(af, socktype, proto)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                if af == socket.AF_INET6:
+                    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+
+                sock.bind(sa)
+                sock.listen(50)
+                listen_sockets[sa] = sock
+            except socket.error:
+                if sock:
+                    sock.close()
+
+        count = 0
+        server = None
+        for sa in listen_sockets.keys():
+            name = self.name + '_server@' + str(sa[0])
+            if count == 0:
+                import eventlet
+                server = eventlet.spawn(self._listen_socket_loop,
+                                        listen_sockets[sa], conn_handle)
+
+                count += 1
+            else:
+                self._spawn(name, self._listen_socket_loop,
+                            listen_sockets[sa], conn_handle)
+        return server, listen_sockets
 
     def _connect_tcp(self, peer_addr, conn_handler, time_out=None,
                      bind_address=None, password=None):
