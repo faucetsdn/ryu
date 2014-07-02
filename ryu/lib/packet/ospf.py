@@ -25,6 +25,7 @@ from ryu.lib.packet import packet_utils
 from ryu.lib.packet import stream_parser
 
 from ryu.lib import addrconv
+import logging
 
 _VERSION = 2
 
@@ -68,6 +69,12 @@ ROUTER_LSA_SHORTCUT = 0x20  # Shortcut-ABR specific flag
 AS_EXTERNAL_METRIC = 0x80
 
 OSPF_OPAQUE_TYPE_UNKNOWN = 0
+OSPF_OPAQUE_TYPE_EXTENDED_PREFIX_LSA = 7
+OSPF_OPAQUE_TYPE_EXTENDED_LINK_LSA = 8
+
+OSPF_EXTENDED_PREFIX_TLV = 1
+OSPF_EXTENDED_PREFIX_SID_SUBTLV = 2
+
 
 class InvalidChecksum(Exception):
     pass
@@ -415,6 +422,78 @@ class NSSAExternalLSA(LSA):
     pass
 
 
+class ExtendedPrefixTLV(StringifyMixin, _TypeDisp):
+    pass
+
+
+@ExtendedPrefixTLV.register_type(OSPF_EXTENDED_PREFIX_TLV)
+class ExtendedPrefixTLV(ExtendedPrefixTLV):
+    _VALUE_PACK_STR = '!HHBBBB4s'
+    _VALUE_PACK_LEN = struct.calcsize(_VALUE_PACK_STR)
+    _VALUE_FIELDS = ['route_type', 'prefix_length', 'address_family', '_pad'
+                     'prefix']
+
+    def __init__(self, type_=OSPF_EXTENDED_PREFIX_TLV, length=0, route_type=0,
+                 prefix_length=0, address_family=0, prefix='0.0.0.0'):
+        self.type_ = type_
+        self.length = length
+        self.route_type = route_type
+        self.prefix_length = prefix_length
+        self.address_family = address_family
+        self.prefix = prefix
+
+    @classmethod
+    def parser(cls, buf):
+        rest = buf[cls._VALUE_PACK_LEN:]
+        buf = buf[:cls._VALUE_PACK_LEN]
+        (type_, length, route_type, prefix_length, address_family, _pad,
+         prefix) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+
+        prefix = addrconv.ipv4.bin_to_text(prefix)
+        return cls(type_, length, route_type, prefix_length, address_family,
+                   prefix), rest
+
+    def serialize(self):
+        prefix = addrconv.ipv4.text_to_bin(self.prefix)
+        return struct.pack(self._VALUE_PACK_STR, OSPF_EXTENDED_PREFIX_TLV,
+                           self._VALUE_PACK_LEN - 4, self.route_type,
+                           self.prefix_length, self.address_family, 0, prefix)
+
+
+@ExtendedPrefixTLV.register_type(OSPF_EXTENDED_PREFIX_SID_SUBTLV)
+class PrefixSIDSubTLV(ExtendedPrefixTLV):
+    _VALUE_PACK_STR = '!HHBBBBHHI'
+    _VALUE_PACK_LEN = struct.calcsize(_VALUE_PACK_STR)
+    _VALUE_FIELDS = ['flags', 'mt_id', 'algorithm', '_pad', 'range_size',
+                     '_pad', 'index']
+
+    def __init__(self, type_=OSPF_EXTENDED_PREFIX_SID_SUBTLV, length=0,
+                 flags=0, mt_id=0, algorithm=0, range_size=0, index=0):
+        self.type_ = type_
+        self.length = length
+        self.flags = flags
+        self.mt_id = mt_id
+        self.algorithm = algorithm
+        self.range_size = range_size
+        self.index = index
+
+    @classmethod
+    def parser(cls, buf):
+        rest = buf[cls._VALUE_PACK_LEN:]
+        buf = buf[:cls._VALUE_PACK_LEN]
+        (type_, length, flags, mt_id, algorithm, _pad, range_size, _pad,
+         index) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+
+        return cls(type_, length, flags, mt_id, algorithm, range_size,
+                   index), rest
+
+    def serialize(self):
+        return struct.pack(self._VALUE_PACK_STR,
+                           OSPF_EXTENDED_PREFIX_SID_SUBTLV,
+                           self._VALUE_PACK_LEN - 4, self.flags, self.mt_id,
+                           self.algorithm, 0, self.range_size, 0, self.index)
+
+
 class OpaqueBody(StringifyMixin, _TypeDisp):
     def __init__(self, tlvs=[]):
         self.tlvs = tlvs
@@ -422,6 +501,44 @@ class OpaqueBody(StringifyMixin, _TypeDisp):
     def serialize(self):
         return reduce(lambda a, b: a + b,
                       (tlv.serialize() for tlv in self.tlvs))
+
+
+@OpaqueBody.register_type(OSPF_OPAQUE_TYPE_EXTENDED_PREFIX_LSA)
+class ExtendedPrefixOpaqueBody(OpaqueBody):
+    @classmethod
+    def parser(cls, buf):
+        buf = buffer(buf)
+        tlvs = []
+        while buf:
+            (type_, length) = struct.unpack_from('!HH', buf)
+            if len(buf[struct.calcsize('!HH'):]) < length:
+                raise stream_parser.StreamParser.TooSmallException(
+                    '%d < %d' % (len(buf), length))
+            tlvcls = ExtendedPrefixTLV._lookup_type(type_)
+            if tlvcls:
+                tlv, buf = tlvcls.parser(buf)
+                tlvs.append(tlv)
+
+        return cls(tlvs)
+
+
+@OpaqueBody.register_type(OSPF_OPAQUE_TYPE_EXTENDED_LINK_LSA)
+class ExtendedLinkOpaqueBody(OpaqueBody):
+    @classmethod
+    def parser(cls, buf):
+        buf = buffer(buf)
+        tlvs = []
+        while buf:
+            (type_, length) = struct.unpack_from('!HH', buf)
+            if len(buf[struct.calcsize('!HH'):]) < length:
+                raise stream_parser.StreamParser.TooSmallException(
+                    '%d < %d' % (len(buf), length))
+            tlvcls = ExtendedLinkTLV._lookup_type(type_)
+            if tlvcls:
+                tlv, buf = tlvcls.parser(buf)
+                tlvs.append(tlv)
+
+        return cls(tlvs)
 
 
 class OpaqueLSA(LSA):
