@@ -166,7 +166,7 @@ class LSAHeader(StringifyMixin):
             id_ = addrconv.ipv4.text_to_bin(self.id_)
         else:
             id_ = (self.opaque_type << 24) + self.opaque_id
-            (id_,) = struct.unpack_from('4s', struct.pack('I', id_))
+            (id_,) = struct.unpack_from('4s', struct.pack('!I', id_))
 
         adv_router = addrconv.ipv4.text_to_bin(self.adv_router)
         return bytearray(struct.pack(self._HDR_PACK_STR, self.ls_age,
