@@ -67,6 +67,7 @@ ROUTER_LSA_SHORTCUT = 0x20  # Shortcut-ABR specific flag
 
 AS_EXTERNAL_METRIC = 0x80
 
+OSPF_OPAQUE_TYPE_UNKNOWN = 0
 
 class InvalidChecksum(Exception):
     pass
@@ -115,11 +116,16 @@ class LSAHeader(StringifyMixin):
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_UNKNOWN_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
-                 checksum=None, length=None):
+                 checksum=0, length=0, opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN,
+                 opaque_id=0):
         self.ls_age = ls_age
         self.options = options
         self.type_ = type_
-        self.id_ = id_
+        if self.type_ < OSPF_OPAQUE_LINK_LSA:
+            self.id_ = id_
+        else:
+            self.opaque_type = opaque_type
+            self.opaque_id = opaque_id
         self.adv_router = adv_router
         self.ls_seqnum = ls_seqnum
         self.checksum = checksum
@@ -132,23 +138,36 @@ class LSAHeader(StringifyMixin):
                 '%d < %d' % (len(buf), cls._HDR_LEN))
         (ls_age, options, type_, id_, adv_router, ls_seqnum, checksum,
          length,) = struct.unpack_from(cls._HDR_PACK_STR, buffer(buf))
-        id_ = addrconv.ipv4.bin_to_text(id_)
         adv_router = addrconv.ipv4.bin_to_text(adv_router)
         rest = buf[cls._HDR_LEN:]
+        lsacls = LSA._lookup_type(type_)
 
-        return {
+        value = {
             "ls_age": ls_age,
             "options": options,
             "type_": type_,
-            "id_": id_,
             "adv_router": adv_router,
             "ls_seqnum": ls_seqnum,
             "checksum": checksum,
             "length": length,
-        }, rest
+        }
+
+        if issubclass(lsacls, OpaqueLSA):
+            (id_,) = struct.unpack_from('!I', buffer(id_))
+            value['opaque_type'] = (id_ & 0xff000000) >> 24
+            value['opaque_id'] = (id_ & 0xffffff)
+        else:
+            value['id_'] = addrconv.ipv4.bin_to_text(id_)
+
+        return value, rest
 
     def serialize(self):
-        id_ = addrconv.ipv4.text_to_bin(self.id_)
+        if self.type_ < OSPF_OPAQUE_LINK_LSA:
+            id_ = addrconv.ipv4.text_to_bin(self.id_)
+        else:
+            id_ = (self.opaque_type << 24) + self.opaque_id
+            (id_,) = struct.unpack_from('4s', struct.pack('I', id_))
+
         adv_router = addrconv.ipv4.text_to_bin(self.adv_router)
         return bytearray(struct.pack(self._HDR_PACK_STR, self.ls_age,
                          self.options, self.type_, id_, adv_router,
@@ -158,9 +177,15 @@ class LSAHeader(StringifyMixin):
 class LSA(_TypeDisp, StringifyMixin):
     def __init__(self, ls_age=0, options=0, type_=OSPF_UNKNOWN_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
-                 checksum=None, length=None):
-        self.header = LSAHeader(ls_age, options, type_, id_, adv_router,
-                                ls_seqnum, 0, 0)
+                 checksum=0, length=0, opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN,
+                 opaque_id=0):
+        if type_ < OSPF_OPAQUE_LINK_LSA:
+            self.header = LSAHeader(ls_age, options, type_, id_, adv_router,
+                                    ls_seqnum, 0, 0)
+        else:
+            self.header = LSAHeader(ls_age, options, type_, 0, adv_router,
+                                    ls_seqnum, 0, 0, opaque_type, opaque_id)
+
         if not (checksum or length):
             tail = self.serialize_tail()
             length = self.header._HDR_LEN + len(tail)
@@ -173,6 +198,9 @@ class LSA(_TypeDisp, StringifyMixin):
     @classmethod
     def parser(cls, buf):
         hdr, rest = LSAHeader.parser(buf)
+        if len(buf) < hdr['length']:
+            raise stream_parser.StreamParser.TooSmallException(
+                '%d < %d' % (len(buf), hdr['length']))
         # exclude ls_age for checksum calculation
         csum = packet_utils.fletcher_checksum(buf[2:hdr['length']], 14)
         if csum != hdr['checksum']:
@@ -181,7 +209,10 @@ class LSA(_TypeDisp, StringifyMixin):
         subcls = cls._lookup_type(hdr['type_'])
         body = rest[:hdr['length'] - LSAHeader._HDR_LEN]
         rest = rest[hdr['length'] - LSAHeader._HDR_LEN:]
-        kwargs = subcls.parser(body)
+        if issubclass(subcls, OpaqueLSA):
+            kwargs = subcls.parser(body, hdr['opaque_type'])
+        else:
+            kwargs = subcls.parser(body)
         kwargs.update(hdr)
         return subcls(**kwargs), subcls, rest
 
@@ -384,19 +415,63 @@ class NSSAExternalLSA(LSA):
     pass
 
 
+class OpaqueBody(StringifyMixin, _TypeDisp):
+    def __init__(self, tlvs=[]):
+        self.tlvs = tlvs
+
+    def serialize(self):
+        return reduce(lambda a, b: a + b,
+                      (tlv.serialize() for tlv in self.tlvs))
+
+
+class OpaqueLSA(LSA):
+    @classmethod
+    def parser(cls, buf, opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN):
+        opaquecls = OpaqueBody._lookup_type(opaque_type)
+        if opaquecls:
+            data = opaquecls.parser(buf)
+        else:
+            data = buf
+        return {'data': data}
+
+    def serialize_tail(self):
+        if isinstance(self.data, OpaqueBody):
+            return self.data.serialize()
+        else:
+            return self.data
+
+
 @LSA.register_type(OSPF_OPAQUE_LINK_LSA)
-class LocalOpaqueLSA(LSA):
-    pass
+class LocalOpaqueLSA(OpaqueLSA):
+    def __init__(self, ls_age=0, options=0, type_=OSPF_OPAQUE_LINK_LSA,
+                 adv_router='0.0.0.0', ls_seqnum=0, checksum=0, length=0,
+                 opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN, opaque_id=0, data=None):
+        self.data = data
+        super(LocalOpaqueLSA, self).__init__(ls_age, options, type_, 0,
+                                             adv_router, ls_seqnum, checksum,
+                                             length, opaque_type, opaque_id)
 
 
 @LSA.register_type(OSPF_OPAQUE_AREA_LSA)
-class AreaOpaqueLSA(LSA):
-    pass
+class AreaOpaqueLSA(OpaqueLSA):
+    def __init__(self, ls_age=0, options=0, type_=OSPF_OPAQUE_AREA_LSA,
+                 adv_router='0.0.0.0', ls_seqnum=0, checksum=0, length=0,
+                 opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN, opaque_id=0, data=None):
+        self.data = data
+        super(AreaOpaqueLSA, self).__init__(ls_age, options, type_, 0,
+                                            adv_router, ls_seqnum, checksum,
+                                            length, opaque_type, opaque_id)
 
 
 @LSA.register_type(OSPF_OPAQUE_AS_LSA)
-class ASOpaqueLSA(LSA):
-    pass
+class ASOpaqueLSA(OpaqueLSA):
+    def __init__(self, ls_age=0, options=0, type_=OSPF_OPAQUE_AS_LSA,
+                 adv_router='0.0.0.0', ls_seqnum=0, checksum=0, length=0,
+                 opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN, opaque_id=0, data=None):
+        self.data = data
+        super(ASOpaqueLSA, self).__init__(ls_age, options, type_, 0,
+                                          adv_router, ls_seqnum, checksum,
+                                          length, opaque_type, opaque_id)
 
 
 class OSPFMessage(packet_base.PacketBase, _TypeDisp):
