@@ -434,11 +434,10 @@ class ExtendedPrefixTLV(ExtendedPrefixTLV):
                      'prefix']
 
     def __init__(self, type_=OSPF_EXTENDED_PREFIX_TLV, length=0, route_type=0,
-                 prefix_length=0, address_family=0, prefix='0.0.0.0'):
+                 address_family=0, prefix='0.0.0.0/0'):
         self.type_ = type_
         self.length = length
         self.route_type = route_type
-        self.prefix_length = prefix_length
         self.address_family = address_family
         self.prefix = prefix
 
@@ -450,14 +449,16 @@ class ExtendedPrefixTLV(ExtendedPrefixTLV):
          prefix) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
 
         prefix = addrconv.ipv4.bin_to_text(prefix)
-        return cls(type_, length, route_type, prefix_length, address_family,
-                   prefix), rest
+        prefix = "%s/%d" % (prefix, prefix_length)
+        return cls(type_, length, route_type, address_family, prefix), rest
 
     def serialize(self):
-        prefix = addrconv.ipv4.text_to_bin(self.prefix)
+        prefix, prefix_length = self.prefix.split('/')
+        prefix = addrconv.ipv4.text_to_bin(prefix)
+        prefix_length = int(prefix_length)
         return struct.pack(self._VALUE_PACK_STR, OSPF_EXTENDED_PREFIX_TLV,
                            self._VALUE_PACK_LEN - 4, self.route_type,
-                           self.prefix_length, self.address_family, 0, prefix)
+                           prefix_length, self.address_family, 0, prefix)
 
 
 @ExtendedPrefixTLV.register_type(OSPF_EXTENDED_PREFIX_SID_SUBTLV)
