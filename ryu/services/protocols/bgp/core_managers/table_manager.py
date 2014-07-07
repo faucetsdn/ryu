@@ -495,7 +495,8 @@ class TableCoreManager(object):
             gen_lbl=True
         )
 
-    def add_to_global_table(self, prefix, is_withdraw=False):
+    def add_to_global_table(self, prefix, nexthop=None,
+                            is_withdraw=False):
         src_ver_num = 1
         peer = None
         # set mandatory path attributes
@@ -511,11 +512,13 @@ class TableCoreManager(object):
         masklen = net.prefixlen
         if netaddr.valid_ipv4(ip):
             _nlri = IPAddrPrefix(masklen, ip)
-            nexthop = '0.0.0.0'
+            if nexthop is None:
+                nexthop = '0.0.0.0'
             p = Ipv4Path
         else:
             _nlri = IP6AddrPrefix(masklen, ip)
-            nexthop = '::'
+            if nexthop is None:
+                nexthop = '::'
             p = Ipv6Path
 
         new_path = p(peer, _nlri, src_ver_num,

@@ -581,7 +581,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         update = BGPUpdate(path_attributes=[mpunreach_attr])
         self.enque_outgoing_msg(update)
 
-    def _session_next_hop(self, route_family):
+    def _session_next_hop(self, path):
         """Returns nexthop address relevant to current session
 
         Nexthop used can depend on capabilities of the session. If VPNv6
@@ -589,6 +589,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         IPv4 mapped IPv6 address. In other cases we can use connection end
         point/local ip address.
         """
+        route_family = path.route_family
+
+        if route_family == RF_IPv4_UC and path.nexthop != '0.0.0.0':
+            return path.nexthop
+        if route_family == RF_IPv6_UC and path.nexthop != '::':
+            return path.nexthop
+
         # By default we use BGPS's interface IP with this peer as next_hop.
         if self._neigh_conf.next_hop:
             next_hop = self._neigh_conf.next_hop
@@ -638,7 +645,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # By default we use BGPS's interface IP with this peer as next_hop.
             # TODO(PH): change to use protocol's local address.
             # next_hop = self.host_bind_ip
-            next_hop = self._session_next_hop(path.route_family)
+            next_hop = self._session_next_hop(path)
             # If this is a iBGP peer.
             if not self.is_ebgp_peer() and path.source is not None:
                 # If the path came from a bgp peer and not from NC, according
