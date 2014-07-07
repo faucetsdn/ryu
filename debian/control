@@ -12,7 +12,7 @@ Build-Depends-Indep:
  python-paramiko,
  python-routes,
  python-six (>= 1.4.0),
- python-webob (>=1.0.8),
+ python-webob (>=1.2),
  python-setuptools,
  python-pip,
  python-pbr
@@ -34,7 +34,7 @@ Depends:
  python-paramiko,
  python-routes,
  python-six (>= 1.4.0),
- python-webob (>=1.0.8),
+ python-webob (>=1.2),
  ${misc:Depends},
  ${python:Depends}
 Suggests: python-ryu-doc
