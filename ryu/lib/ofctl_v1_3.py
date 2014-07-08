@@ -894,6 +894,33 @@ def get_group_desc(dp, waiters):
     return descs
 
 
+def get_port_desc(dp, waiters):
+
+    stats = dp.ofproto_parser.OFPPortDescStatsRequest(dp, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    descs = []
+
+    for msg in msgs:
+        stats = msg.body
+        for stat in stats:
+            d = {'port_no': stat.port_no,
+                 'hw_addr': stat.hw_addr,
+                 'name': stat.name,
+                 'config': stat.config,
+                 'state': stat.state,
+                 'curr': stat.curr,
+                 'advertised': stat.advertised,
+                 'supported': stat.supported,
+                 'peer': stat.peer,
+                 'curr_speed': stat.curr_speed,
+                 'max_speed': stat.max_speed}
+            descs.append(d)
+    descs = {str(dp.id): descs}
+    return descs
+
+
 def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     cookie_mask = int(flow.get('cookie_mask', 0))

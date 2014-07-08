@@ -68,6 +68,9 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # get groups stats of the switch
 # GET /stats/group/<dpid>
+#
+# get ports description of the switch
+# GET /stats/portdesc/<dpid>
 
 # Update the switch stats
 #
@@ -257,6 +260,24 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_stats(dp, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(groups)
+        return Response(content_type='application/json', body=body)
+
+    def get_port_desc(self, req, dpid, **_kwargs):
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            groups = ofctl_v1_0.get_port_desc(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            groups = ofctl_v1_2.get_port_desc(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            groups = ofctl_v1_3.get_port_desc(dp, self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -517,6 +538,11 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_group_stats',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/portdesc/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_port_desc',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/flowentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_flow_entry',
@@ -556,7 +582,9 @@ class RestStatsApi(app_manager.RyuApp):
                  ofp_event.EventOFPMeterConfigStatsReply,
                  ofp_event.EventOFPGroupStatsReply,
                  ofp_event.EventOFPGroupFeaturesStatsReply,
-                 ofp_event.EventOFPGroupDescStatsReply], MAIN_DISPATCHER)
+                 ofp_event.EventOFPGroupDescStatsReply,
+                 ofp_event.EventOFPPortDescStatsReply
+                 ], MAIN_DISPATCHER)
     def stats_reply_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
@@ -578,5 +606,20 @@ class RestStatsApi(app_manager.RyuApp):
 
         if msg.flags & flags:
             return
+        del self.waiters[dp.id][msg.xid]
+        lock.set()
+
+    @set_ev_cls([ofp_event.EventOFPSwitchFeatures], MAIN_DISPATCHER)
+    def features_reply_handler(self, ev):
+        msg = ev.msg
+        dp = msg.datapath
+
+        if dp.id not in self.waiters:
+            return
+        if msg.xid not in self.waiters[dp.id]:
+            return
+        lock, msgs = self.waiters[dp.id][msg.xid]
+        msgs.append(msg)
+
         del self.waiters[dp.id][msg.xid]
         lock.set()
