@@ -308,3 +308,16 @@ def delete_flow_entry(dp):
         command=dp.ofproto.OFPFC_DELETE)
 
     dp.send_msg(flow_mod)
+
+
+def mod_port_behavior(dp, port_config):
+    port_no = int(port_config.get('port_no', 0))
+    hw_addr = port_config.get('hw_addr')
+    config = int(port_config.get('config', 0))
+    mask = int(port_config.get('mask', 0))
+    advertise = int(port_config.get('advertise'))
+
+    port_mod = dp.ofproto_parser.OFPPortMod(
+        dp, port_no, hw_addr, config, mask, advertise)
+
+    dp.send_msg(port_mod)

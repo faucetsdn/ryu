@@ -101,6 +101,9 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # delete a group entry
 # POST /stats/groupentry/delete
 #
+# modify behavior of the physical port
+# POST /stats/portdesc/modify
+#
 #
 # send a experimeter message
 # POST /stats/experimenter/<dpid>
@@ -380,6 +383,47 @@ class StatsController(ControllerBase):
 
         return Response(status=200)
 
+    def mod_port_behavior(self, req, cmd, **_kwargs):
+        try:
+            port_config = eval(req.body)
+        except SyntaxError:
+            LOG.debug('invalid syntax %s', req.body)
+            return Response(status=400)
+
+        dpid = port_config.get('dpid')
+
+        port_no = int(port_config.get('port_no', 0))
+        port_info = self.dpset.port_state[int(dpid)].get(port_no)
+
+        if 'hw_addr' not in port_config:
+            if port_info is not None:
+                port_config['hw_addr'] = port_info.hw_addr
+            else:
+                return Response(status=404)
+
+        if 'advertise' not in port_config:
+            if port_info is not None:
+                port_config['advertise'] = port_info.advertised
+            else:
+                return Response(status=404)
+
+        dp = self.dpset.get(int(dpid))
+        if dp is None:
+            return Response(status=404)
+
+        if cmd != 'modify':
+            return Response(status=404)
+
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            ofctl_v1_0.mod_port_behavior(dp, port_config)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            ofctl_v1_2.mod_port_behavior(dp, port_config)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+            ofctl_v1_3.mod_port_behavior(dp, port_config)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
     def send_experimenter(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
         if dp is None:
@@ -491,6 +535,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/groupentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_group_entry',
+                       conditions=dict(method=['POST']))
+
+        uri = path + '/portdesc/{cmd}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='mod_port_behavior',
                        conditions=dict(method=['POST']))
 
         uri = path + '/experimenter/{dpid}'
