@@ -43,6 +43,7 @@ from oslo.config.cfg import IntOpt
 from oslo.config.cfg import ListOpt
 from oslo.config.cfg import MultiStrOpt
 from oslo.config.cfg import StrOpt
+from oslo.config.cfg import FloatOpt
 
 from oslo.config.cfg import RequiredOptError
 from oslo.config.cfg import ConfigFilesNotFoundError
