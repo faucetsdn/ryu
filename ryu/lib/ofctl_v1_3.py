@@ -153,7 +153,7 @@ def action_to_str(act):
     elif action_type == ofproto_v1_3.OFPAT_PUSH_MPLS:
         buf = 'PUSH_MPLS:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_POP_MPLS:
-        buf = 'POP_MPLS'
+        buf = 'POP_MPLS:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_SET_QUEUE:
         buf = 'SET_QUEUE:' + str(act.queue_id)
     elif action_type == ofproto_v1_3.OFPAT_GROUP:
@@ -259,6 +259,7 @@ def to_match(dp, attrs):
                'ipv6_exthdr': int}
 
     match_append = {'in_port': match.set_in_port,
+                    'in_phy_port': match.set_in_phy_port,
                     'dl_src': match.set_dl_src_masked,
                     'dl_dst': match.set_dl_dst_masked,
                     'dl_type': match.set_dl_type,
@@ -335,6 +336,8 @@ def to_match(dp, attrs):
                 ip = value[0]
                 mask = value[1]
                 match_append[key](ip, mask)
+            elif key == 'ipv6_nd_target':
+                match_append[key](value[0])
             elif key == 'tp_src' or key == 'tp_dst' or \
                     key == 'tcp_src' or key == 'tcp_dst' or \
                     key == 'udp_src' or key == 'udp_dst':
@@ -496,6 +499,8 @@ def match_to_str(ofmatch):
             value = match_ip_to_str(match_field.value, match_field.mask)
         elif key == 'ipv6_src' or key == 'ipv6_dst':
             value = match_ipv6_to_str(match_field.value, match_field.mask)
+        elif key == 'ipv6_nd_target':
+            value = match_ipv6_to_str(match_field.value, None)
         elif key == 'metadata':
             value = ('%d/%d' % (match_field.value, match_field.mask)
                      if match_field.mask else '%d' % match_field.value)
