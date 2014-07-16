@@ -85,7 +85,7 @@ class WebSocketTopology(app_manager.RyuApp):
     def _rpc_broadcall(self, func_name, msg):
         for rpc_client in self.rpc_clients:
             # NOTE: Although broadcasting is desired,
-            #       RPCClient#get_proxy(one_way=False) does not work well
+            #       RPCClient#get_proxy(one_way=True) does not work well
             rpc_server = rpc_client.get_proxy()
             try:
                 getattr(rpc_server, func_name)(msg)
