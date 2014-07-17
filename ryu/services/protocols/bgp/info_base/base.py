@@ -632,6 +632,18 @@ class Destination(object):
     def _get_num_withdraws(self):
         return len(self._withdraw_list)
 
+    def sent_routes_by_peer(self, peer):
+        """get sent routes corresponding to specified peer.
+
+        Returns SentRoute list.
+        """
+        result = []
+        for route in self._sent_routes.values():
+            if route.sent_peer == peer:
+                result.append(route)
+
+        return result
+
 
 class Path(object):
     """Represents a way of reaching an IP destination.

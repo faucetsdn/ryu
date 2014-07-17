@@ -78,6 +78,9 @@ def update_neighbor(neigh_ip_address, changes):
         if k == neighbors.ENABLED:
             rets.append(update_neighbor_enabled(neigh_ip_address, v))
 
+        if k == neighbors.OUT_FILTER:
+            rets.append(_update_outfilter(neigh_ip_address, v))
+
     return all(rets)
 
 
@@ -85,6 +88,12 @@ def _update_med(neigh_ip_address, value):
     neigh_conf = _get_neighbor_conf(neigh_ip_address)
     neigh_conf.multi_exit_disc = value
     LOG.info('MED value for neigh: %s updated to %s' % (neigh_conf, value))
+    return True
+
+
+def _update_outfilter(neigh_ip_address, value):
+    neigh_conf = _get_neighbor_conf(neigh_ip_address)
+    neigh_conf.out_filter = value
     return True
 
 

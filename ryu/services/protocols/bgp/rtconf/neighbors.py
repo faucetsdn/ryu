@@ -59,6 +59,7 @@ from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.base import validate
 from ryu.services.protocols.bgp.rtconf.base import validate_med
 from ryu.services.protocols.bgp.rtconf.base import validate_soo_list
+from ryu.services.protocols.bgp.rtconf.base import OUT_FILTER
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
 
@@ -73,6 +74,7 @@ LOCAL_ADDRESS = 'local_address'
 LOCAL_PORT = 'local_port'
 PEER_NEXT_HOP = 'next_hop'
 PASSWORD = 'password'
+OUT_FILTER = 'out_filter'
 
 # Default value constants.
 DEFAULT_CAP_GR_NULL = True
@@ -102,7 +104,7 @@ def validate_enabled(enabled):
 @validate(name=CHANGES)
 def validate_changes(changes):
     for k, v in changes.iteritems():
-        if k not in (MULTI_EXIT_DISC, ENABLED):
+        if k not in (MULTI_EXIT_DISC, ENABLED, OUT_FILTER):
             raise ConfigValueError(desc="Unknown field to change: %s" % k)
 
         if k == MULTI_EXIT_DISC:
@@ -169,8 +171,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
 
     UPDATE_ENABLED_EVT = 'update_enabled_evt'
     UPDATE_MED_EVT = 'update_med_evt'
+    UPDATE_OUT_FILTER_EVT = 'update_out_filter_evt'
 
-    VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT])
+    VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT,
+                           UPDATE_OUT_FILTER_EVT])
     REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS])
     OPTIONAL_SETTINGS = frozenset([CAP_REFRESH,
                                    CAP_ENHANCED_REFRESH,
@@ -244,6 +248,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
         default_rt_as = CORE_MANAGER.common_conf.local_as
         self._settings[RTC_AS] = \
             compute_optional_conf(RTC_AS, default_rt_as, **kwargs)
+
+        # out filter configuration
+        self._settings[OUT_FILTER] = []
 
         # Since ConfWithId' default values use str(self) and repr(self), we
         # call super method after we have initialized other settings.
@@ -371,6 +378,23 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def rtc_as(self):
         return self._settings[RTC_AS]
+
+    @property
+    def out_filter(self):
+        return self._settings[OUT_FILTER]
+
+    @out_filter.setter
+    def out_filter(self, value):
+        self._settings[OUT_FILTER] = []
+        prefix_lists = value['prefix_lists']
+        for prefix_list in prefix_lists:
+            # copy PrefixList object and put it in the _settings
+            self._settings[OUT_FILTER].append(prefix_list.clone())
+
+        LOG.debug('set out-filter : %s' % prefix_lists)
+
+        # check sent_route
+        self._notify_listeners(NeighborConf.UPDATE_OUT_FILTER_EVT, value)
 
     def exceeds_max_prefix_allowed(self, prefix_count):
         allowed_max = self._settings[MAX_PREFIXES]
@@ -515,12 +539,18 @@ class NeighborConfListener(ConfWithIdListener, ConfWithStatsListener):
                                 self.on_update_enabled)
         neigh_conf.add_listener(NeighborConf.UPDATE_MED_EVT,
                                 self.on_update_med)
+        neigh_conf.add_listener(NeighborConf.UPDATE_OUT_FILTER_EVT,
+                                self.on_update_out_filter)
 
     @abstractmethod
     def on_update_enabled(self, evt):
         raise NotImplementedError('This method should be overridden.')
 
     def on_update_med(self, evt):
+        raise NotImplementedError('This method should be overridden.')
+
+    @abstractmethod
+    def on_update_out_filter(self, evt):
         raise NotImplementedError('This method should be overridden.')
 
 

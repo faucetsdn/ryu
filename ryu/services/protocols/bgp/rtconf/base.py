@@ -63,6 +63,9 @@ MULTI_EXIT_DISC = 'multi_exit_disc'
 # Extended community attribute route origin.
 SITE_OF_ORIGINS = 'site_of_origins'
 
+# OUT FILTER
+OUT_FILTER = 'out_filter'
+
 # Constants related to errors.
 CONF_NAME = 'conf_name'
 CONF_VALUE = 'conf_value'
