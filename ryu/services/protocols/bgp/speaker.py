@@ -42,6 +42,7 @@ from ryu.lib.packet.bgp import BGP_CAP_MULTIPROTOCOL
 from ryu.lib.packet.bgp import BGP_CAP_ROUTE_REFRESH
 from ryu.lib.packet.bgp import BGP_ERROR_HOLD_TIMER_EXPIRED
 from ryu.lib.packet.bgp import BGP_ERROR_SUB_HOLD_TIMER_EXPIRED
+from ryu.lib.packet.bgp import get_rf
 
 from ryu.services.protocols.bgp.base import Activity
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
@@ -238,7 +239,7 @@ class BgpProtocol(Protocol, Activity):
 
         afs = []
         for afi, safi in afi_safi:
-            afs.append(RouteFamily(afi, safi))
+            afs.append(get_rf(afi, safi))
         return afs
 
     def is_mbgp_cap_valid(self, route_family):

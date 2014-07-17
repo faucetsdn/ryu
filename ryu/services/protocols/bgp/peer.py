@@ -47,6 +47,7 @@ from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import get_rf
 
 from ryu.lib.packet.bgp import BGPOpen
 from ryu.lib.packet.bgp import BGPUpdate
@@ -1521,7 +1522,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       demarcation)
 
     def _handle_route_refresh_req(self, afi, safi):
-        rr_af = RouteFamily(afi, safi)
+        rr_af = get_rf(afi, safi)
         self.state.incr(PeerCounterNames.RECV_REFRESH)
 
         # Check if peer has asked for route-refresh for af that was advertised

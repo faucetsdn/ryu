@@ -581,6 +581,10 @@ _rf_map = {
 }
 
 
+def get_rf(afi, safi):
+    return _rf_map[(afi, safi)]
+
+
 def pad(bin, len_):
     assert len(bin) <= len_
     return bin + (len_ - len(bin)) * '\0'
