@@ -174,12 +174,17 @@ class BgpProtocol(Protocol, Activity):
             raise ValueError('Did not yet receive peers open message.')
 
         err_cap_enabled = False
-        local_cap = self.sent_open_msg.caps
-        peer_cap = self.recv_open_msg.caps
+        local_caps = self.sent_open_msg.opt_param
+        peer_caps = self.recv_open_msg.opt_param
+
+        local_cap = [cap for cap in local_caps
+                     if cap.cap_code == BGP_CAP_ENHANCED_ROUTE_REFRESH]
+        peer_cap = [cap for cap in peer_caps
+                    if cap.cap_code == BGP_CAP_ENHANCED_ROUTE_REFRESH]
+
         # Both local and peer should advertise ERR capability for it to be
         # enabled.
-        if (local_cap.get(BGP_CAP_ENHANCED_ROUTE_REFRESH) and
-                peer_cap.get(BGP_CAP_ENHANCED_ROUTE_REFRESH)):
+        if local_cap and peer_cap:
             err_cap_enabled = True
 
         return err_cap_enabled
@@ -218,19 +223,22 @@ class BgpProtocol(Protocol, Activity):
 
     @property
     def negotiated_afs(self):
-        local_caps = self.sent_open_msg.caps
-        remote_caps = self.recv_open_msg.caps
+        local_caps = self.sent_open_msg.opt_param
+        remote_caps = self.recv_open_msg.opt_param
 
-        local_mbgp_cap = local_caps.get(BGP_CAP_MULTIPROTOCOL)
-        remote_mbgp_cap = remote_caps.get(BGP_CAP_MULTIPROTOCOL)
+        local_mbgp_cap = [cap for cap in local_caps
+                          if cap.cap_code == BGP_CAP_MULTIPROTOCOL]
+        remote_mbgp_cap = [cap for cap in remote_caps
+                           if cap.cap_code == BGP_CAP_MULTIPROTOCOL]
+
         # Check MP_BGP capabilities were advertised.
         if local_mbgp_cap and remote_mbgp_cap:
             local_families = {
-                (peer_cap.route_family.afi, peer_cap.route_family.safi)
+                (peer_cap.afi, peer_cap.safi)
                 for peer_cap in local_mbgp_cap
             }
             remote_families = {
-                (peer_cap.route_family.afi, peer_cap.route_family.safi)
+                (peer_cap.afi, peer_cap.safi)
                 for peer_cap in remote_mbgp_cap
             }
             afi_safi = local_families.intersection(remote_families)
