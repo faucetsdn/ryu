@@ -124,14 +124,14 @@ class RyuBGPSpeaker(RyuApp):
     def load_config(self, config_file):
         """Validates give file as settings file for BGPSpeaker.
 
-        Load the configuration from file as bgpspeaker.setting module.
+        Load the configuration from file as settings module.
         """
         if not config_file or not isinstance(config_file, str):
             raise ApplicationException('Invalid configuration file.')
 
         # Check if file can be read
         try:
-            return imp.load_source('bgpspeaker.settings', config_file)
+            return imp.load_source('settings', config_file)
         except Exception as e:
             raise ApplicationException(desc=str(e))
 
