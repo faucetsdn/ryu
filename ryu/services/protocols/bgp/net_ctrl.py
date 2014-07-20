@@ -336,7 +336,8 @@ class _NetworkController(FlexinetPeer, Activity):
         sock_addr = (apgw_rpc_bind_ip, apgw_rpc_bind_port)
         LOG.debug('NetworkController started listening for connections...')
 
-        server_thread = self._listen_tcp(sock_addr, self._start_rpc_session)
+        server_thread, socket = self._listen_tcp(sock_addr,
+                                                 self._start_rpc_session)
         self.pause(0)
         server_thread.wait()
 
