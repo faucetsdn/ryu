@@ -216,7 +216,7 @@ class CoreService(Factory, Activity):
 
         # Pro-actively try to establish bgp-session with peers.
         for peer in self._peer_manager.iterpeers:
-            self._spawn_activity(peer, self)
+            self._spawn_activity(peer, self.start_protocol)
 
         # Reactively establish bgp-session with peer by listening on
         # server port for connection requests.

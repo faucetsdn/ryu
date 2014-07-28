@@ -53,6 +53,11 @@ from ryu.lib.packet.bgp import BGPOpen
 from ryu.lib.packet.bgp import BGPUpdate
 from ryu.lib.packet.bgp import BGPRouteRefresh
 
+from ryu.lib.packet.bgp import BGP_ERROR_CEASE
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_ADMINISTRATIVE_SHUTDOWN
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
+
+
 from ryu.lib.packet.bgp import BGP_MSG_UPDATE
 from ryu.lib.packet.bgp import BGP_MSG_KEEPALIVE
 from ryu.lib.packet.bgp import BGP_MSG_ROUTE_REFRESH
@@ -410,9 +415,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         LOG.debug('Peer %s configuration update event, enabled: %s.' %
                   (self, enabled))
         if enabled:
-            if self._protocol:
+            if self._protocol and self._protocol.started:
                 LOG.error('Tried to enable neighbor that is already enabled')
             else:
+                self.state.bgp_state = const.BGP_FSM_CONNECT
                 # Restart connect loop if not already running.
                 if not self._connect_retry_event.is_set():
                     self._connect_retry_event.set()
@@ -429,6 +435,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     BGP_ERROR_SUB_ADMINISTRATIVE_SHUTDOWN
                 )
                 self._protocol.stop()
+                self._protocol = None
+                self.state.bgp_state = const.BGP_FSM_IDLE
             # If this peer is not enabled any-more we stop trying to make any
             # connection.
             LOG.debug('Disabling connect-retry as neighbor was disabled (%s)' %
@@ -966,7 +974,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # If existing protocol is already established, we raise exception.
             if self.state.bgp_state != const.BGP_FSM_IDLE:
                 LOG.debug('Currently in %s state, hence will send collision'
-                          ' Notification to close this protocol.')
+                          ' Notification to close this protocol.'
+                          % self.state.bgp_state)
                 self._send_collision_err_and_stop(proto)
                 return
 
@@ -1775,6 +1784,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         )
         self.state.bgp_state = const.BGP_FSM_IDLE
         if self._protocol:
+            self._protocol.stop()
             self._protocol = None
             # Create new collection for initial RT NLRIs
             self._init_rtc_nlri_path = []
