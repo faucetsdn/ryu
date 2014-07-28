@@ -74,6 +74,7 @@ LOCAL_ADDRESS = 'local_address'
 LOCAL_PORT = 'local_port'
 PEER_NEXT_HOP = 'next_hop'
 PASSWORD = 'password'
+IN_FILTER = 'in_filter'
 OUT_FILTER = 'out_filter'
 
 # Default value constants.
@@ -87,6 +88,7 @@ DEFAULT_CAP_MBGP_VPNV6 = False
 DEFAULT_HOLD_TIME = 40
 DEFAULT_ENABLED = True
 DEFAULT_CAP_RTC = False
+DEFAULT_IN_FILTER = []
 DEFAULT_OUT_FILTER = []
 
 # Default value for *MAX_PREFIXES* setting is set to 0.
@@ -105,7 +107,7 @@ def validate_enabled(enabled):
 @validate(name=CHANGES)
 def validate_changes(changes):
     for k, v in changes.iteritems():
-        if k not in (MULTI_EXIT_DISC, ENABLED, OUT_FILTER):
+        if k not in (MULTI_EXIT_DISC, ENABLED, IN_FILTER, OUT_FILTER):
             raise ConfigValueError(desc="Unknown field to change: %s" % k)
 
         if k == MULTI_EXIT_DISC:
@@ -202,6 +204,11 @@ def valid_filter(filter_):
     return SUPPORTED_FILTER_VALIDATORS[filter_['type']](filter_)
 
 
+@validate(name=IN_FILTER)
+def validate_in_filters(filters):
+    return [valid_filter(filter_) for filter_ in filters]
+
+
 @validate(name=OUT_FILTER)
 def validate_out_filters(filters):
     return [valid_filter(filter_) for filter_ in filters]
@@ -226,7 +233,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
                                    LOCAL_ADDRESS, LOCAL_PORT,
                                    PEER_NEXT_HOP, PASSWORD,
-                                   OUT_FILTER])
+                                   IN_FILTER, OUT_FILTER])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -252,6 +259,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
             MAX_PREFIXES, DEFAULT_MAX_PREFIXES, **kwargs)
         self._settings[ADVERTISE_PEER_AS] = compute_optional_conf(
             ADVERTISE_PEER_AS, DEFAULT_ADVERTISE_PEER_AS, **kwargs)
+        self._settings[IN_FILTER] = compute_optional_conf(
+            IN_FILTER, DEFAULT_IN_FILTER, **kwargs)
         self._settings[OUT_FILTER] = compute_optional_conf(
             OUT_FILTER, DEFAULT_OUT_FILTER, **kwargs)
 
@@ -419,6 +428,20 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def rtc_as(self):
         return self._settings[RTC_AS]
+
+    @property
+    def in_filter(self):
+        return self._settings[IN_FILTER]
+
+    @in_filter.setter
+    def in_filter(self, value):
+        self._settings[IN_FILTER] = []
+        prefix_lists = value['prefix_lists']
+        for prefix_list in prefix_lists:
+            # copy PrefixList object and put it in the _settings
+            self._settings[IN_FILTER].append(prefix_list.clone())
+
+        LOG.debug('set in-filter : %s' % prefix_lists)
 
     @property
     def out_filter(self):

@@ -53,12 +53,15 @@ from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
+from ryu.services.protocols.bgp.rtconf.neighbors import IN_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
 from ryu.lib.packet.bgp import RF_IPv4_UC, RF_IPv6_UC
 
 
 OUT_FILTER_RF_IPv4_UC = RF_IPv4_UC
 OUT_FILTER_RF_IPv6_UC = RF_IPv6_UC
+IN_FILTER_RF_IPv4_UC = RF_IPv4_UC
+IN_FILTER_RF_IPv6_UC = RF_IPv6_UC
 NEIGHBOR_CONF_MED = 'multi_exit_disc'
 
 
@@ -429,3 +432,29 @@ class BGPSpeaker(object):
         param[neighbors.IP_ADDRESS] = address
         settings = call(func_name, **param)
         return settings[OUT_FILTER]
+
+    def in_filter_set(self, address, prefix_lists,
+                      route_family=IN_FILTER_RF_IPv4_UC):
+        assert route_family in (IN_FILTER_RF_IPv4_UC,
+                                IN_FILTER_RF_IPv6_UC),\
+            "route family must be IPv4 or IPv6"
+
+        if prefix_lists is None:
+            prefix_lists = []
+
+        func_name = 'neighbor.update'
+        prefix_value = {'prefix_lists': prefix_lists,
+                        'route_family': route_family}
+        filter_param = {neighbors.IN_FILTER: prefix_value}
+
+        param = {}
+        param[neighbors.IP_ADDRESS] = address
+        param[neighbors.CHANGES] = filter_param
+        call(func_name, **param)
+
+    def in_filter_get(self, address):
+        func_name = 'neighbor.get'
+        param = {}
+        param[neighbors.IP_ADDRESS] = address
+        settings = call(func_name, **param)
+        return settings[IN_FILTER]

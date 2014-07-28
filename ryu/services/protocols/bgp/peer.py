@@ -1187,6 +1187,23 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         if withdraw_list:
             self._extract_and_handle_bgp4_withdraws(withdraw_list)
 
+    def _apply_in_filter(self, path):
+        block = False
+        blocked_cause = None
+        prefix_lists = self._neigh_conf.in_filter
+
+        for prefix_list in prefix_lists:
+            policy, is_matched = prefix_list.evaluate(path)
+            if policy == PrefixList.POLICY_PERMIT and is_matched:
+                block = False
+                break
+            elif policy == PrefixList.POLICY_DENY and is_matched:
+                block = True
+                blocked_cause = prefix_list.prefix + ' - DENY'
+                break
+
+        return block, blocked_cause
+
     def _extract_and_handle_bgp4_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's
          *MpReachNlri* attribute.
@@ -1234,9 +1251,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 nexthop=next_hop
             )
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
-            # Update appropriate table with new paths.
-            tm = self._core_service.table_manager
-            tm.learn_path(new_path)
+
+            block, blocked_cause = self._apply_in_filter(new_path)
+            if not block:
+                # Update appropriate table with new paths.
+                tm = self._core_service.table_manager
+                tm.learn_path(new_path)
+            else:
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (msg_nlri, blocked_cause))
 
         # If update message had any qualifying new paths, do some book-keeping.
         if msg_nlri_list:
@@ -1283,9 +1306,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 w_nlri,
                 is_withdraw=True
             )
-            # Update appropriate table with withdraws.
-            tm = self._core_service.table_manager
-            tm.learn_path(w_path)
+
+            block, blocked_cause = self._apply_in_filter(w_path)
+            if block:
+                # Update appropriate table with withdraws.
+                tm = self._core_service.table_manager
+                tm.learn_path(w_path)
+            else:
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (msg_nlri, blocked_cause))
 
     def _extract_and_handle_mpbgp_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's
@@ -1363,13 +1392,19 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 nexthop=next_hop
             )
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
-            if msg_rf == RF_RTC_UC \
-                    and self._init_rtc_nlri_path is not None:
-                self._init_rtc_nlri_path.append(new_path)
+
+            block, blocked_cause = self._apply_in_filter(new_path)
+            if block:
+                if msg_rf == RF_RTC_UC \
+                        and self._init_rtc_nlri_path is not None:
+                    self._init_rtc_nlri_path.append(new_path)
+                else:
+                    # Update appropriate table with new paths.
+                    tm = self._core_service.table_manager
+                    tm.learn_path(new_path)
             else:
-                # Update appropriate table with new paths.
-                tm = self._core_service.table_manager
-                tm.learn_path(new_path)
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (msg_nlri, blocked_cause))
 
         # If update message had any qualifying new paths, do some book-keeping.
         if msg_nlri_list:
@@ -1416,9 +1451,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 w_nlri,
                 is_withdraw=True
             )
-            # Update appropriate table with withdraws.
-            tm = self._core_service.table_manager
-            tm.learn_path(w_path)
+            block, blocked_cause = self._apply_in_filter(w_path)
+            if block:
+                # Update appropriate table with withdraws.
+                tm = self._core_service.table_manager
+                tm.learn_path(w_path)
+            else:
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (w_nlri, blocked_cause))
 
     def _handle_eor(self, route_family):
         """Currently we only handle EOR for RTC address-family.
