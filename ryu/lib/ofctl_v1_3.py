@@ -47,7 +47,6 @@ def to_action(dp, dic):
     ofp = dp.ofproto
     parser = dp.ofproto_parser
 
-    result = None
     action_type = dic.get('type')
     if action_type == 'OUTPUT':
         out_port = int(dic.get('port', ofp.OFPP_ANY))
@@ -94,7 +93,7 @@ def to_action(dp, dic):
     elif action_type == 'POP_PBB':
         result = parser.OFPActionPopPbb()
     else:
-        LOG.debug('Unknown action type: %s' % action_type)
+        result = None
 
     return result
 
