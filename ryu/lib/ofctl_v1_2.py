@@ -349,7 +349,7 @@ def to_match_tpsrc(value, match, rest):
     match_append = {inet.IPPROTO_TCP: match.set_tcp_src,
                     inet.IPPROTO_UDP: match.set_udp_src}
 
-    nw_proto = rest.get('nw_proto', rest.get('ip_proto', 0))
+    nw_proto = int(rest.get('nw_proto', rest.get('ip_proto', 0)))
     if nw_proto in match_append:
         match_append[nw_proto](value)
 
@@ -360,7 +360,7 @@ def to_match_tpdst(value, match, rest):
     match_append = {inet.IPPROTO_TCP: match.set_tcp_dst,
                     inet.IPPROTO_UDP: match.set_udp_dst}
 
-    nw_proto = rest.get('nw_proto', rest.get('ip_proto', 0))
+    nw_proto = int(rest.get('nw_proto', rest.get('ip_proto', 0)))
     if nw_proto in match_append:
         match_append[nw_proto](value)
 
