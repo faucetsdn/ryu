@@ -30,6 +30,7 @@ from ryu.services.protocols.bgp import constants as const
 from ryu.services.protocols.bgp.model import OutgoingRoute
 from ryu.services.protocols.bgp.model import SentRoute
 from ryu.services.protocols.bgp.info_base.base import PrefixList
+from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
@@ -330,6 +331,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         self._sent_init_non_rtc_update = False
         self._init_rtc_nlri_path = []
 
+        # in-bound filters
+        self._in_filters = self._neigh_conf.in_filter
+
+        # out-bound filters
+        self._out_filters = self._neigh_conf.out_filter
+
+        # Adj-rib-in
+        self._adj_rib_in = {}
+
+        # Adj-rib-out
+        self._adj_rib_out = {}
+
     @property
     def remote_as(self):
         return self._neigh_conf.remote_as
@@ -553,6 +566,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                         blocked_cause = prefix_list.prefix + ' - DENY'
                         break
 
+        nlri_str = outgoing_route.path.nlri.formatted_nlri_str
+        sent_route = SentRoute(outgoing_route.path, self, block)
+        self._adj_rib_out[nlri_str] = sent_route
+        self._signal_bus.adj_rib_out_changed(self, sent_route)
+
         # TODO(PH): optimized by sending several prefixes per update.
         # Construct and send update message.
         if allow_to_send:
@@ -569,7 +587,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         if (not outgoing_route.path.is_withdraw and
                 not outgoing_route.for_route_refresh):
             # Update the destination with new sent route.
-            sent_route = SentRoute(outgoing_route.path, self)
             tm = self._core_service.table_manager
             tm.remember_sent_route(sent_route)
 
@@ -1253,6 +1270,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
 
             block, blocked_cause = self._apply_in_filter(new_path)
+
+            nlri_str = new_path.nlri.formatted_nlri_str
+            received_route = ReceivedRoute(new_path, self, block)
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
             if not block:
                 # Update appropriate table with new paths.
                 tm = self._core_service.table_manager
@@ -1308,6 +1331,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             )
 
             block, blocked_cause = self._apply_in_filter(w_path)
+
+            received_route = ReceivedRoute(w_path, self, block)
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
             if block:
                 # Update appropriate table with withdraws.
                 tm = self._core_service.table_manager
@@ -1394,6 +1422,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
 
             block, blocked_cause = self._apply_in_filter(new_path)
+
+            received_route = ReceivedRoute(new_path, self, block)
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
             if block:
                 if msg_rf == RF_RTC_UC \
                         and self._init_rtc_nlri_path is not None:
@@ -1452,6 +1485,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 is_withdraw=True
             )
             block, blocked_cause = self._apply_in_filter(w_path)
+
+            received_route = ReceivedRoute(w_path, self, block)
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
             if block:
                 # Update appropriate table with withdraws.
                 tm = self._core_service.table_manager

@@ -19,6 +19,7 @@
  sessions.
 """
 import logging
+from time import localtime
 
 
 LOG = logging.getLogger('bgpspeaker.model')
@@ -130,13 +131,20 @@ class SentRoute(object):
     about a particular BGP destination.
     """
 
-    def __init__(self, path, peer):
+    def __init__(self, path, peer, filtered=None, timestamp=None):
         assert(path and hasattr(peer, 'version_num'))
 
         self.path = path
 
         # Peer to which this path was sent.
         self._sent_peer = peer
+
+        self.filtered = filtered
+
+        if timestamp:
+            self.timestamp = timestamp
+        else:
+            self.timestamp = localtime()
 
         # Automatically generated.
         #
@@ -146,3 +154,28 @@ class SentRoute(object):
     @property
     def sent_peer(self):
         return self._sent_peer
+
+
+class ReceivedRoute(object):
+    """Holds the information that has been received to one sinks
+    about a particular BGP destination.
+    """
+
+    def __init__(self, path, peer, filtered=None, timestamp=None):
+        assert(path and hasattr(peer, 'version_num'))
+
+        self.path = path
+
+        # Peer to which this path was received.
+        self._received_peer = peer
+
+        self.filtered = filtered
+
+        if timestamp:
+            self.timestamp = timestamp
+        else:
+            self.timestamp = localtime()
+
+    @property
+    def received_peer(self):
+        return self._received_peer
