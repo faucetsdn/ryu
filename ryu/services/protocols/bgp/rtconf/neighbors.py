@@ -59,9 +59,9 @@ from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.base import validate
 from ryu.services.protocols.bgp.rtconf.base import validate_med
 from ryu.services.protocols.bgp.rtconf.base import validate_soo_list
-from ryu.services.protocols.bgp.rtconf.base import OUT_FILTER
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
+from ryu.services.protocols.bgp.info_base.base import PrefixList
 
 LOG = logging.getLogger('bgpspeaker.rtconf.neighbor')
 
@@ -87,6 +87,7 @@ DEFAULT_CAP_MBGP_VPNV6 = False
 DEFAULT_HOLD_TIME = 40
 DEFAULT_ENABLED = True
 DEFAULT_CAP_RTC = False
+DEFAULT_OUT_FILTER = []
 
 # Default value for *MAX_PREFIXES* setting is set to 0.
 DEFAULT_MAX_PREFIXES = 0
@@ -166,6 +167,46 @@ def validate_remote_as(asn):
     return asn
 
 
+def valid_prefix_filter(filter_):
+    policy = filter_.get('policy', None)
+    if policy == 'permit':
+        policy = PrefixList.POLICY_PERMIT
+    else:
+        policy = PrefixList.POLICY_DENY
+    prefix = filter_['prefix']
+    ge = filter_.get('ge', None)
+    le = filter_.get('le', None)
+    return PrefixList(prefix, policy, ge=ge, le=le)
+
+PREFIX_FILTER = 'prefix_filter'
+
+SUPPORTED_FILTER_VALIDATORS = {
+    PREFIX_FILTER: valid_prefix_filter
+}
+
+
+def valid_filter(filter_):
+    if not isinstance(filter_, dict):
+        raise ConfigTypeError(desc='Invalid filter: %s' % filter_)
+
+    if 'type' not in filter_:
+        raise ConfigTypeError(desc='Invalid filter: %s, needs \'type\' field'
+                              % filter_)
+
+    if not filter_['type'] in SUPPORTED_FILTER_VALIDATORS:
+        raise ConfigTypeError(desc='Invalid filter type: %s, supported filter'
+                              ' types are %s'
+                              % (filter_['type'],
+                                 SUPPORTED_FILTER_VALIDATORS.keys()))
+
+    return SUPPORTED_FILTER_VALIDATORS[filter_['type']](filter_)
+
+
+@validate(name=OUT_FILTER)
+def validate_out_filters(filters):
+    return [valid_filter(filter_) for filter_ in filters]
+
+
 class NeighborConf(ConfWithId, ConfWithStats):
     """Class that encapsulates one neighbors' configuration."""
 
@@ -184,7 +225,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
                                    LOCAL_ADDRESS, LOCAL_PORT,
-                                   PEER_NEXT_HOP, PASSWORD])
+                                   PEER_NEXT_HOP, PASSWORD,
+                                   OUT_FILTER])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -210,6 +252,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
             MAX_PREFIXES, DEFAULT_MAX_PREFIXES, **kwargs)
         self._settings[ADVERTISE_PEER_AS] = compute_optional_conf(
             ADVERTISE_PEER_AS, DEFAULT_ADVERTISE_PEER_AS, **kwargs)
+        self._settings[OUT_FILTER] = compute_optional_conf(
+            OUT_FILTER, DEFAULT_OUT_FILTER, **kwargs)
 
         # We do not have valid default MED value.
         # If no MED attribute is provided then we do not have to use MED.
@@ -248,9 +292,6 @@ class NeighborConf(ConfWithId, ConfWithStats):
         default_rt_as = CORE_MANAGER.common_conf.local_as
         self._settings[RTC_AS] = \
             compute_optional_conf(RTC_AS, default_rt_as, **kwargs)
-
-        # out filter configuration
-        self._settings[OUT_FILTER] = []
 
         # Since ConfWithId' default values use str(self) and repr(self), we
         # call super method after we have initialized other settings.

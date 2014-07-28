@@ -63,9 +63,6 @@ MULTI_EXIT_DISC = 'multi_exit_disc'
 # Extended community attribute route origin.
 SITE_OF_ORIGINS = 'site_of_origins'
 
-# OUT FILTER
-OUT_FILTER = 'out_filter'
-
 # Constants related to errors.
 CONF_NAME = 'conf_name'
 CONF_VALUE = 'conf_value'
@@ -714,7 +711,7 @@ def compute_optional_conf(conf_name, default_value, **all_config):
     conf_value = all_config.get(conf_name)
     if conf_value is not None:
         # Validate configuration value.
-        get_validator(conf_name)(conf_value)
+        conf_value = get_validator(conf_name)(conf_value)
     else:
         conf_value = default_value
     return conf_value
