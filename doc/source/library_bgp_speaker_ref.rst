@@ -11,5 +11,5 @@ BGPSpeaker class
 .. autoclass:: ryu.services.protocols.bgp.bgpspeaker.EventPrefix
    :members:
 
-.. autoclass:: ryu.services.protocols.bgp.bgpspeaker.PrefixList
+.. autoclass:: ryu.services.protocols.bgp.info_base.base.PrefixFilter
    :members:

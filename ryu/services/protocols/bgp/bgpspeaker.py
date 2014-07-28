@@ -55,13 +55,9 @@ from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
 from ryu.services.protocols.bgp.rtconf.neighbors import IN_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
-from ryu.lib.packet.bgp import RF_IPv4_UC, RF_IPv6_UC
+from ryu.services.protocols.bgp.info_base.base import Filter
 
 
-OUT_FILTER_RF_IPv4_UC = RF_IPv4_UC
-OUT_FILTER_RF_IPv6_UC = RF_IPv6_UC
-IN_FILTER_RF_IPv4_UC = RF_IPv4_UC
-IN_FILTER_RF_IPv6_UC = RF_IPv6_UC
 NEIGHBOR_CONF_MED = 'multi_exit_disc'
 
 
@@ -371,55 +367,59 @@ class BGPSpeaker(object):
         show['params'] = ['rib', family]
         return call('operator.show', **show)
 
-    def out_filter_set(self, address, prefix_lists,
-                       route_family=OUT_FILTER_RF_IPv4_UC):
+    def _set_filter(self, filter_type, address, filters):
+        assert filter_type in ('in', 'out'),\
+            'filter type must be \'in\' or \'out\''
+
+        assert all(isinstance(f, Filter) for f in filters),\
+            'all the items in filters must be an instance of Filter sub-class'
+
+        if filters is None:
+            filters = []
+
+        func_name = 'neighbor.' + filter_type + '_filter.set'
+        param = {}
+        param[neighbors.IP_ADDRESS] = address
+        if filter_type == 'in':
+            param[neighbors.IN_FILTER] = filters
+        else:
+            param[neighbors.OUT_FILTER] = filters
+        call(func_name, **param)
+
+    def out_filter_set(self, address, filters):
         """ This method sets out-filter to neighbor.
 
         ``address`` specifies the IP address of the peer.
 
-        ``prefix_lists`` specifies prefix list to filter path advertisement.
-         This parameter must be list that has PrefixList objects.
-
-        ``route_family`` specifies the route family for out-filter.
-        This parameter must be bgpspeaker.OUT_FILTER_RF_IPv4_UC or
-        bgpspeaker.OUT_FILTER_RF_IPv6_UC.
-
+        ``filters`` specifies a filter list to filter the path advertisement.
+        The contents must be an instance of Filter sub-class
 
         If you want to define out-filter that send only a particular
-        prefix to neighbor, prefix_lists can be created as follows;
+        prefix to neighbor, filters can be created as follows;
 
-          p = PrefixList('10.5.111.0/24', policy=PrefixList.POLICY_PERMIT)
+          p = PrefixFilter('10.5.111.0/24',
+                           policy=PrefixFilter.POLICY_PERMIT)
 
-          all = PrefixList('0.0.0.0/0', policy=PrefixList.POLICY_DENY)
+          all = PrefixFilter('0.0.0.0/0',
+                             policy=PrefixFilter.POLICY_DENY)
 
           pList = [p, all]
 
           self.bgpspeaker.out_filter_set(neighbor_address, pList)
 
         NOTE:
-        out-filter evaluates prefixes in the order of PrefixList in the pList.
+        out-filter evaluates paths in the order of Filter in the pList.
 
         """
 
-        assert route_family in (OUT_FILTER_RF_IPv4_UC,
-                                OUT_FILTER_RF_IPv6_UC),\
-            "route family must be IPv4 or IPv6"
-
-        if prefix_lists is None:
-            prefix_lists = []
-
-        func_name = 'neighbor.out_filter.set'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
-        param[neighbors.OUT_FILTER] = prefix_lists
-        call(func_name, **param)
+        self._set_filter('out', address, filters)
 
     def out_filter_get(self, address):
         """ This method gets out-filter setting from the specified neighbor.
 
         ``address`` specifies the IP address of the peer.
 
-        Returns list object that has PrefixList objects.
+        Returns a list object containing an instance of Filter sub-class
 
         """
 
@@ -429,22 +429,28 @@ class BGPSpeaker(object):
         out_filter = call(func_name, **param)
         return out_filter
 
-    def in_filter_set(self, address, prefix_lists,
-                      route_family=IN_FILTER_RF_IPv4_UC):
-        assert route_family in (IN_FILTER_RF_IPv4_UC,
-                                IN_FILTER_RF_IPv6_UC),\
-            "route family must be IPv4 or IPv6"
+    def in_filter_set(self, address, filters):
+        """This method sets in-bound filters to a neighbor.
 
-        if prefix_lists is None:
-            prefix_lists = []
+        ``address`` specifies the IP address of the neighbor
 
-        func_name = 'neighbor.in_filter.set'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
-        param[neighbors.IN_FILTER] = prefix_lists
-        call(func_name, **param)
+        ``filters`` specifies filter list applied before advertised paths are
+        imported to the global rib. All the items in the list must be an
+        instance of Filter sub-class.
+
+        """
+
+        self._set_filter('in', address, filters)
 
     def in_filter_get(self, address):
+        """This method gets in-bound filters of the specified neighbor.
+
+        ``address`` specifies the IP address of the neighbor.
+
+        Returns a list object containing an instance of Filter sub-class
+
+        """
+
         func_name = 'neighbor.in_filter.get'
         param = {}
         param[neighbors.IP_ADDRESS] = address

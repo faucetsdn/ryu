@@ -29,7 +29,7 @@ from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp import constants as const
 from ryu.services.protocols.bgp.model import OutgoingRoute
 from ryu.services.protocols.bgp.model import SentRoute
-from ryu.services.protocols.bgp.info_base.base import PrefixList
+from ryu.services.protocols.bgp.info_base.base import PrefixFilter
 from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
@@ -488,10 +488,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         for filter_ in filters:
             policy, is_matched = filter_.evaluate(path)
-            if policy == PrefixList.POLICY_PERMIT and is_matched:
+            if policy == PrefixFilter.POLICY_PERMIT and is_matched:
                 block = False
                 break
-            elif policy == PrefixList.POLICY_DENY and is_matched:
+            elif policy == PrefixFilter.POLICY_DENY and is_matched:
                 block = True
                 blocked_cause = filter_.prefix + ' - DENY'
                 break

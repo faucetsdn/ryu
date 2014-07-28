@@ -62,7 +62,7 @@ from ryu.services.protocols.bgp.rtconf.base import validate_soo_list
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
 from ryu.services.protocols.bgp.info_base.base import Filter
-from ryu.services.protocols.bgp.info_base.base import PrefixList
+from ryu.services.protocols.bgp.info_base.base import PrefixFilter
 
 LOG = logging.getLogger('bgpspeaker.rtconf.neighbor')
 
@@ -173,13 +173,13 @@ def validate_remote_as(asn):
 def valid_prefix_filter(filter_):
     policy = filter_.get('policy', None)
     if policy == 'permit':
-        policy = PrefixList.POLICY_PERMIT
+        policy = PrefixFilter.POLICY_PERMIT
     else:
-        policy = PrefixList.POLICY_DENY
+        policy = PrefixFilter.POLICY_DENY
     prefix = filter_['prefix']
     ge = filter_.get('ge', None)
     le = filter_.get('le', None)
-    return PrefixList(prefix, policy, ge=ge, le=le)
+    return PrefixFilter(prefix, policy, ge=ge, le=le)
 
 PREFIX_FILTER = 'prefix_filter'
 
