@@ -583,7 +583,6 @@ class BgpProtocol(Protocol, Activity):
         self.sent_open_msg = open_msg
         self.send(open_msg)
         self._peer.connection_made()
-        LOG.debug('Sent open message %s' % open_msg)
 
     def connection_lost(self, reason):
         """Stops all timers and notifies peer that connection is lost.

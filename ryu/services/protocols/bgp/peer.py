@@ -412,9 +412,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         enabled = conf_evt.value
         # If we do not have any protocol bound and configuration asks us to
         # enable this peer, we try to establish connection again.
-        LOG.debug('Peer %s configuration update event, enabled: %s.' %
-                  (self, enabled))
         if enabled:
+            LOG.info('%s enabled' % self)
             if self._protocol and self._protocol.started:
                 LOG.error('Tried to enable neighbor that is already enabled')
             else:
@@ -424,6 +423,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     self._connect_retry_event.set()
                     LOG.debug('Starting connect loop as neighbor is enabled.')
         else:
+            LOG.info('%s disabled' % self)
             if self._protocol:
                 # Stopping protocol will eventually trigger connection_lost
                 # handler which will do some clean-up.
@@ -439,8 +439,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 self.state.bgp_state = const.BGP_FSM_IDLE
             # If this peer is not enabled any-more we stop trying to make any
             # connection.
-            LOG.debug('Disabling connect-retry as neighbor was disabled (%s)' %
-                      (not enabled))
+            LOG.debug('Disabling connect-retry as neighbor was disabled')
             self._connect_retry_event.clear()
 
     def on_update_med(self, conf_evt):
@@ -932,8 +931,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Stop connect_loop retry timer as we are now connected
         if self._protocol and self._connect_retry_event.is_set():
             self._connect_retry_event.clear()
-            LOG.debug('Connect retry event for %s is now set: %s' %
-                      (self, self._connect_retry_event.is_set()))
+            LOG.debug('Connect retry event for %s is cleared' % self)
 
         if self._protocol and self.outgoing_msg_event.is_set():
             # Start processing sink.
@@ -1760,7 +1758,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def connection_made(self):
         """Protocols connection established handler
         """
-        LOG.critical(
+        LOG.info(
             'Connection to peer: %s established',
             self._neigh_conf.ip_address,
             extra={
@@ -1772,7 +1770,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def connection_lost(self, reason):
         """Protocols connection lost handler.
         """
-        LOG.critical(
+        LOG.info(
             'Connection to peer %s lost, reason: %s Resetting '
             'retry connect loop: %s' %
             (self._neigh_conf.ip_address, reason,
