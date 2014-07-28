@@ -50,27 +50,88 @@
         <div class="post-cnt">
 	  <h2>OpenFlow Switches</h2>
 	  <p>
-	  We continuously test Ryu with various OpenFlow v1.3 switches. You can check out what kinds of actions and matches work (or not).
+	  We continuously test Ryu with various OpenFlow v1.3 and v1.4 switches. You can check out what kinds of actions and matches work (or not).
 	  </p>
           <p>Of course, the test suite is included in Ryu. So you can modify the existing test scenarios and add new scenarios. A test scenario is written in JSON without Python knowledge. An action test scenario is defining a packet to be sent, the actions, and an expected packet. For example, 'push_vlan' <a href="https://github.com/osrg/ryu/blob/master/ryu/tests/switch/of13/action/17_PUSH_VLAN.json">test scenerio</a> is installing 'vlan vid' match flow, sending an IP packet, check out if a switch properly pushed a vlan header to the packet. Ryu can generate and parse wire-format of <a href="https://github.com/osrg/ryu/tree/master/ryu/lib/packet">many network protocols</a>.
           </p>
 	  <p>
-	    <ul>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/Centec_V350">Centec V350</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/ofsoftswitch13">CPqD</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/EdgeCore_AS4600-54T">Edge-Core AS4600-54T</a></li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/Hewlett-Packard_HP2920">HP 2920</a></li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/IBM_RackSwitch-G8264">IBM RackSwitch G8264</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/ivs">Indigo Virtual Switch</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/lagopus">Lagopus</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/LINC">LINC</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/NEC_PF5220">NEC PF5220</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/NoviFlow_NoviKit200">NoviFlow NoviKit200</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/ovs">Open vSwitch</a></li>
-	      <li><a href="http://osrg.github.io/ryu-certification/switch/ovs_netdev">Open vSwitch (netdev)</a></li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/Pica8_P-3290">Pica8 P-3290</a></li>
-              <li><a href="http://osrg.github.io/ryu-certification/switch/Trema_Switch">Trema Switch</a></li>
-	    </ul>
+            <table cellspacing=20px>
+              <tr>
+                <th width=250><br></th>
+                <th>OpenFlow 1.3</th>
+                <th>OpenFlow 1.4</th>
+              </tr>
+              <tr>
+                <td>Centec V350</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/Centec_V350">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>CpQd</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/ofsoftswitch13">Supported</a></td>
+                <td align=center></td>
+              </tr>
+              <tr>
+                <td>Edge-Core AS4600-54T</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/EdgeCore_AS4600-54T">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>HP 2920</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/Hewlett-Packard_HP2920">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>IBM RackSwitch G8264</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/IBM_RackSwitch-G8264">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Indigo Virtual Switch</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/ivs">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Lagopus</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/lagopus">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>LINC</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/LINC">Supported</a></td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/of14/LINC">Supported</a></td>
+              </tr>
+              <tr>
+                <td>NEC PF5220</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/NEC_PF5220">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>NoviFlow NoviKit200</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/NoviFlow_NoviKit200">Supported</a></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Open vSwitch</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/ovs">Supported</a></td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/of14/ovs">Supported</a></td>
+              </tr>
+              <tr>
+                <td>Open vSwitch (netdev)</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/ovs_netdev">Supported</a></td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/of14/ovs_netdev">Supported</a></td>
+              </tr>
+              <tr>
+                <td>Pica8 P-3290</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/Pica8_P-3290">Supported</a></td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/of14/Pica8_P-3290">Supported</a></td>
+              </tr>
+              <tr>
+                <td>Trema Switch</td>
+                <td align=center><a href="http://osrg.github.io/ryu-certification/switch/Trema_Switch">Supported</a></td>
+                <td></td>
+              </tr>
+            </table>
 	  </p>
 	</div>
       </section>
