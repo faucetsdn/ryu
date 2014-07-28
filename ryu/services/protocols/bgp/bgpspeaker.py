@@ -54,7 +54,6 @@ from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
 from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
-from ryu.services.protocols.bgp.application import RyuBGPSpeaker
 from netaddr.ip import IPAddress, IPNetwork
 from ryu.lib.packet.bgp import RF_IPv4_UC, RF_IPv6_UC
 
@@ -250,7 +249,6 @@ class BGPSpeaker(object):
 
         """
         super(BGPSpeaker, self).__init__()
-        self.speaker = RyuBGPSpeaker()
 
         settings = {}
         settings[LOCAL_AS] = as_number
