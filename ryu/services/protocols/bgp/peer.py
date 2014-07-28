@@ -375,6 +375,26 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def med(self):
         return self._neigh_conf.multi_exit_disc
 
+    @property
+    def in_filters(self):
+        return self._in_filters
+
+    @in_filters.setter
+    def in_filters(self, filters):
+        self._in_filters = [f.clone() for f in filters]
+        LOG.debug('set in-filter : %s' % filters)
+        self.on_update_in_filter()
+
+    @property
+    def out_filters(self):
+        return self._out_filters
+
+    @out_filters.setter
+    def out_filters(self, filters):
+        self._out_filters = [f.clone() for f in filters]
+        LOG.debug('set out-filter : %s' % filters)
+        self.on_update_out_filter()
+
     def is_mpbgp_cap_valid(self, route_family):
         if not self.in_established:
             raise ValueError('Invalid request: Peer not in established state')
@@ -462,47 +482,74 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             for af in negotiated_afs:
                 self._fire_route_refresh(af)
 
-    def on_update_out_filter(self, conf_evt):
-        LOG.debug('on_update_out_filter fired')
-        event_value = conf_evt.value
-        prefix_lists = event_value['prefix_lists']
-        rf = event_value['route_family']
+    def _apply_filter(self, filters, path):
+        block = False
+        blocked_cause = None
 
-        table = self._core_service.\
-            table_manager.get_global_table_by_route_family(rf)
-        for destination in table.itervalues():
-            LOG.debug('dest : %s' % destination)
-            sent_routes = destination.sent_routes_by_peer(self)
-            if len(sent_routes) == 0:
+        for filter_ in filters:
+            policy, is_matched = filter_.evaluate(path)
+            if policy == PrefixList.POLICY_PERMIT and is_matched:
+                block = False
+                break
+            elif policy == PrefixList.POLICY_DENY and is_matched:
+                block = True
+                blocked_cause = filter_.prefix + ' - DENY'
+                break
+
+        return block, blocked_cause
+
+    def _apply_in_filter(self, path):
+        return self._apply_filter(self._in_filters, path)
+
+    def _apply_out_filter(self, path):
+        return self._apply_filter(self._out_filters, path)
+
+    def on_update_in_filter(self):
+        LOG.debug('on_update_in_filter fired')
+        for received_path in self._adj_rib_in.itervalues():
+            LOG.debug('received_path: %s' % received_path)
+            path = received_path.path
+            nlri_str = path.nlri.formatted_nlri_str
+            block, blocked_reason = self._apply_in_filter(path)
+            if block == received_path.filtered:
+                LOG.debug('block situation not changed: %s' % block)
                 continue
+            elif block:
+                # path wasn't blocked, but must be blocked by this update
+                path = sent_route.path.clone(for_withdrawal=True)
+                LOG.debug('withdraw %s because of in filter update'
+                          % nlri_str)
+            else:
+                # path was blocked, but mustn't be blocked by this update
+                LOG.debug('learn blocked %s because of in filter update'
+                          % nlri_str)
+            received_path.filtered = block
+            tm = self._core_service.table_manager
+            tm.learn_path(path)
 
-            for sent_route in sent_routes:
-                path = sent_route.path
-                nlri_str = path.nlri.formatted_nlri_str
-                send_withdraw = False
-                for pl in prefix_lists:
-                    policy, result = pl.evaluate(path)
-
-                    if policy == PrefixList.POLICY_PERMIT and result:
-                        send_withdraw = False
-                        break
-                    elif policy == PrefixList.POLICY_DENY and result:
-                        send_withdraw = True
-                        break
-
-                outgoing_route = None
-                if send_withdraw:
-                    # send withdraw routes that have already been sent
-                    withdraw_clone = sent_route.path.clone(for_withdrawal=True)
-                    outgoing_route = OutgoingRoute(withdraw_clone)
-                    LOG.debug('send withdraw %s because of out filter'
-                              % nlri_str)
-                else:
-                    outgoing_route = OutgoingRoute(sent_route.path,
-                                                   for_route_refresh=True)
-                    LOG.debug('resend path : %s' % nlri_str)
-
-                self.enque_outgoing_msg(outgoing_route)
+    def on_update_out_filter(self):
+        LOG.debug('on_update_out_filter fired')
+        for sent_path in self._adj_rib_out.itervalues():
+            LOG.debug('sent_path: %s' % sent_path)
+            path = sent_path.path
+            nlri_str = path.nlri.formatted_nlri_str
+            block, blocked_reason = self._apply_out_filter(path)
+            if block == sent_path.filtered:
+                LOG.debug('block situation not changed: %s' % block)
+                continue
+            elif block:
+                # path wasn't blocked, but must be blocked by this update
+                withdraw_clone = sent_route.path.clone(for_withdrawal=True)
+                outgoing_route = OutgoingRoute(withdraw_clone)
+                LOG.debug('send withdraw %s because of out filter update'
+                          % nlri_str)
+            else:
+                # path was blocked, but mustn't be blocked by this update
+                outgoing_route = OutgoingRoute(path)
+                LOG.debug('send blocked %s because of out filter update'
+                          % nlri_str)
+            sent_path.filtered = block
+            self.enque_outgoing_msg(outgoing_route)
 
     def __str__(self):
         return 'Peer(ip: %s, asn: %s)' % (self._neigh_conf.ip_address,
@@ -548,23 +595,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         Populates Adj-RIB-out with corresponding `SentRoute`.
         """
 
-        # evaluate prefix list
-        rf = outgoing_route.path.route_family
-        allow_to_send = True
-        if rf in (RF_IPv4_UC, RF_IPv6_UC):
-            prefix_lists = self._neigh_conf.out_filter
-
-            if not outgoing_route.path.is_withdraw:
-                for prefix_list in prefix_lists:
-                    path = outgoing_route.path
-                    policy, is_matched = prefix_list.evaluate(path)
-                    if policy == PrefixList.POLICY_PERMIT and is_matched:
-                        allow_to_send = True
-                        break
-                    elif policy == PrefixList.POLICY_DENY and is_matched:
-                        allow_to_send = False
-                        blocked_cause = prefix_list.prefix + ' - DENY'
-                        break
+        path = outgoing_route.path
+        block, blocked_cause = self._apply_out_filter(path)
 
         nlri_str = outgoing_route.path.nlri.formatted_nlri_str
         sent_route = SentRoute(outgoing_route.path, self, block)
@@ -573,7 +605,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # TODO(PH): optimized by sending several prefixes per update.
         # Construct and send update message.
-        if allow_to_send:
+        if not block:
             update_msg = self._construct_update(outgoing_route)
             self._protocol.send(update_msg)
             # Collect update statistics.
@@ -1203,23 +1235,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         if withdraw_list:
             self._extract_and_handle_bgp4_withdraws(withdraw_list)
-
-    def _apply_in_filter(self, path):
-        block = False
-        blocked_cause = None
-        prefix_lists = self._neigh_conf.in_filter
-
-        for prefix_list in prefix_lists:
-            policy, is_matched = prefix_list.evaluate(path)
-            if policy == PrefixList.POLICY_PERMIT and is_matched:
-                block = False
-                break
-            elif policy == PrefixList.POLICY_DENY and is_matched:
-                block = True
-                blocked_cause = prefix_list.prefix + ' - DENY'
-                break
-
-        return block, blocked_cause
 
     def _extract_and_handle_bgp4_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's

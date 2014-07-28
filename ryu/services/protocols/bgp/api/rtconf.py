@@ -78,12 +78,6 @@ def update_neighbor(neigh_ip_address, changes):
         if k == neighbors.ENABLED:
             rets.append(update_neighbor_enabled(neigh_ip_address, v))
 
-        if k == neighbors.OUT_FILTER:
-            rets.append(_update_outfilter(neigh_ip_address, v))
-
-        if k == neighbors.IN_FILTER:
-            rets.append(_update_infilter(neigh_ip_address, v))
-
     return all(rets)
 
 
@@ -91,18 +85,6 @@ def _update_med(neigh_ip_address, value):
     neigh_conf = _get_neighbor_conf(neigh_ip_address)
     neigh_conf.multi_exit_disc = value
     LOG.info('MED value for neigh: %s updated to %s' % (neigh_conf, value))
-    return True
-
-
-def _update_infilter(neigh_ip_address, value):
-    neigh_conf = _get_neighbor_conf(neigh_ip_address)
-    neigh_conf.in_filter = value
-    return True
-
-
-def _update_outfilter(neigh_ip_address, value):
-    neigh_conf = _get_neighbor_conf(neigh_ip_address)
-    neigh_conf.out_filter = value
     return True
 
 
@@ -128,6 +110,44 @@ def get_neighbor_conf(neigh_ip_address):
 @register(name='neighbors.get')
 def get_neighbors_conf():
     return CORE_MANAGER.neighbors_conf.settings
+
+
+@RegisterWithArgChecks(name='neighbor.in_filter.get',
+                       req_args=[neighbors.IP_ADDRESS])
+def get_neighbor_in_filter(neigh_ip_address):
+    """Returns a neighbor in_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    return peer.in_filters
+
+
+@RegisterWithArgChecks(name='neighbor.in_filter.set',
+                       req_args=[neighbors.IP_ADDRESS, neighbors.IN_FILTER])
+def set_neighbor_in_filter(neigh_ip_address, filters):
+    """Returns a neighbor in_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    peer.in_filters = filters
+    return True
+
+
+@RegisterWithArgChecks(name='neighbor.out_filter.get',
+                       req_args=[neighbors.IP_ADDRESS])
+def get_neighbor_out_filter(neigh_ip_address):
+    """Returns a neighbor out_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    ret = core.peer_manager.get_by_addr(neigh_ip_address).out_filters
+    return ret
+
+
+@RegisterWithArgChecks(name='neighbor.out_filter.set',
+                       req_args=[neighbors.IP_ADDRESS, neighbors.OUT_FILTER])
+def set_neighbor_in_filter(neigh_ip_address, filters):
+    """Returns a neighbor in_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    peer.out_filters = filters
+    return True
 
 
 # =============================================================================

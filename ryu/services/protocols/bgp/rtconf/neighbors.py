@@ -61,6 +61,7 @@ from ryu.services.protocols.bgp.rtconf.base import validate_med
 from ryu.services.protocols.bgp.rtconf.base import validate_soo_list
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
+from ryu.services.protocols.bgp.info_base.base import Filter
 from ryu.services.protocols.bgp.info_base.base import PrefixList
 
 LOG = logging.getLogger('bgpspeaker.rtconf.neighbor')
@@ -107,7 +108,7 @@ def validate_enabled(enabled):
 @validate(name=CHANGES)
 def validate_changes(changes):
     for k, v in changes.iteritems():
-        if k not in (MULTI_EXIT_DISC, ENABLED, IN_FILTER, OUT_FILTER):
+        if k not in (MULTI_EXIT_DISC, ENABLED):
             raise ConfigValueError(desc="Unknown field to change: %s" % k)
 
         if k == MULTI_EXIT_DISC:
@@ -188,6 +189,9 @@ SUPPORTED_FILTER_VALIDATORS = {
 
 
 def valid_filter(filter_):
+    if isinstance(filter_, Filter):
+        return filter_
+
     if not isinstance(filter_, dict):
         raise ConfigTypeError(desc='Invalid filter: %s' % filter_)
 
@@ -219,10 +223,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
 
     UPDATE_ENABLED_EVT = 'update_enabled_evt'
     UPDATE_MED_EVT = 'update_med_evt'
-    UPDATE_OUT_FILTER_EVT = 'update_out_filter_evt'
 
-    VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT,
-                           UPDATE_OUT_FILTER_EVT])
+    VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT])
     REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS])
     OPTIONAL_SETTINGS = frozenset([CAP_REFRESH,
                                    CAP_ENHANCED_REFRESH,
@@ -433,32 +435,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
     def in_filter(self):
         return self._settings[IN_FILTER]
 
-    @in_filter.setter
-    def in_filter(self, value):
-        self._settings[IN_FILTER] = []
-        prefix_lists = value['prefix_lists']
-        for prefix_list in prefix_lists:
-            # copy PrefixList object and put it in the _settings
-            self._settings[IN_FILTER].append(prefix_list.clone())
-
-        LOG.debug('set in-filter : %s' % prefix_lists)
-
     @property
     def out_filter(self):
         return self._settings[OUT_FILTER]
-
-    @out_filter.setter
-    def out_filter(self, value):
-        self._settings[OUT_FILTER] = []
-        prefix_lists = value['prefix_lists']
-        for prefix_list in prefix_lists:
-            # copy PrefixList object and put it in the _settings
-            self._settings[OUT_FILTER].append(prefix_list.clone())
-
-        LOG.debug('set out-filter : %s' % prefix_lists)
-
-        # check sent_route
-        self._notify_listeners(NeighborConf.UPDATE_OUT_FILTER_EVT, value)
 
     def exceeds_max_prefix_allowed(self, prefix_count):
         allowed_max = self._settings[MAX_PREFIXES]
@@ -603,18 +582,12 @@ class NeighborConfListener(ConfWithIdListener, ConfWithStatsListener):
                                 self.on_update_enabled)
         neigh_conf.add_listener(NeighborConf.UPDATE_MED_EVT,
                                 self.on_update_med)
-        neigh_conf.add_listener(NeighborConf.UPDATE_OUT_FILTER_EVT,
-                                self.on_update_out_filter)
 
     @abstractmethod
     def on_update_enabled(self, evt):
         raise NotImplementedError('This method should be overridden.')
 
     def on_update_med(self, evt):
-        raise NotImplementedError('This method should be overridden.')
-
-    @abstractmethod
-    def on_update_out_filter(self, evt):
         raise NotImplementedError('This method should be overridden.')
 
 

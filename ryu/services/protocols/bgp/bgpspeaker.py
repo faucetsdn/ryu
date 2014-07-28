@@ -408,14 +408,10 @@ class BGPSpeaker(object):
         if prefix_lists is None:
             prefix_lists = []
 
-        func_name = 'neighbor.update'
-        prefix_value = {'prefix_lists': prefix_lists,
-                        'route_family': route_family}
-        filter_param = {neighbors.OUT_FILTER: prefix_value}
-
+        func_name = 'neighbor.out_filter.set'
         param = {}
         param[neighbors.IP_ADDRESS] = address
-        param[neighbors.CHANGES] = filter_param
+        param[neighbors.OUT_FILTER] = prefix_lists
         call(func_name, **param)
 
     def out_filter_get(self, address):
@@ -427,11 +423,11 @@ class BGPSpeaker(object):
 
         """
 
-        func_name = 'neighbor.get'
+        func_name = 'neighbor.out_filter.get'
         param = {}
         param[neighbors.IP_ADDRESS] = address
-        settings = call(func_name, **param)
-        return settings[OUT_FILTER]
+        out_filter = call(func_name, **param)
+        return out_filter
 
     def in_filter_set(self, address, prefix_lists,
                       route_family=IN_FILTER_RF_IPv4_UC):
@@ -442,19 +438,15 @@ class BGPSpeaker(object):
         if prefix_lists is None:
             prefix_lists = []
 
-        func_name = 'neighbor.update'
-        prefix_value = {'prefix_lists': prefix_lists,
-                        'route_family': route_family}
-        filter_param = {neighbors.IN_FILTER: prefix_value}
-
+        func_name = 'neighbor.in_filter.set'
         param = {}
         param[neighbors.IP_ADDRESS] = address
-        param[neighbors.CHANGES] = filter_param
+        param[neighbors.IN_FILTER] = prefix_lists
         call(func_name, **param)
 
     def in_filter_get(self, address):
-        func_name = 'neighbor.get'
+        func_name = 'neighbor.in_filter.get'
         param = {}
         param[neighbors.IP_ADDRESS] = address
-        settings = call(func_name, **param)
-        return settings[IN_FILTER]
+        in_filter = call(func_name, **param)
+        return in_filter
