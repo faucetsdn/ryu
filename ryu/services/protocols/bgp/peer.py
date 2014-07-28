@@ -29,7 +29,7 @@ from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp import constants as const
 from ryu.services.protocols.bgp.model import OutgoingRoute
 from ryu.services.protocols.bgp.model import SentRoute
-from ryu.services.protocols.bgp.bgpspeaker import PrefixList
+from ryu.services.protocols.bgp.info_base.base import PrefixList
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
@@ -464,11 +464,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 continue
 
             for sent_route in sent_routes:
-                nlri = sent_route.path.nlri
-                nlri_str = nlri.formatted_nlri_str
+                path = sent_route.path
+                nlri_str = path.nlri.formatted_nlri_str
                 send_withdraw = False
                 for pl in prefix_lists:
-                    policy, result = pl.evaluate(nlri)
+                    policy, result = pl.evaluate(path)
 
                     if policy == PrefixList.POLICY_PERMIT and result:
                         send_withdraw = False
@@ -543,8 +543,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
             if not outgoing_route.path.is_withdraw:
                 for prefix_list in prefix_lists:
-                    nlri = outgoing_route.path.nlri
-                    policy, is_matched = prefix_list.evaluate(nlri)
+                    path = outgoing_route.path
+                    policy, is_matched = prefix_list.evaluate(path)
                     if policy == PrefixList.POLICY_PERMIT and is_matched:
                         allow_to_send = True
                         break
@@ -562,7 +562,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             self.state.incr(PeerCounterNames.SENT_UPDATES)
         else:
             LOG.debug('prefix : %s is not sent by filter : %s'
-                      % (nlri, blocked_cause))
+                      % (path.nlri, blocked_cause))
 
         # We have to create sent_route for every OutgoingRoute which is
         # not a withdraw or was for route-refresh msg.

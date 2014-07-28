@@ -23,6 +23,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 from copy import copy
 import logging
+import netaddr
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
@@ -806,3 +807,154 @@ class Path(object):
         return ('Path(%s, %s, %s, %s, %s, %s)' % (
             self._source, self._nlri, self._source_version_num,
             self._path_attr_map, self._nexthop, self._is_withdraw))
+
+
+class Filter(object):
+    """Represents a general filter for in-bound and out-bound filter
+
+    ================ ==================================================
+    Attribute        Description
+    ================ ==================================================
+    policy           Filter.POLICY_PERMIT or Filter.POLICY_DENY
+    ================ ==================================================
+
+    """
+    __metaclass__ = ABCMeta
+
+    POLICY_DENY = 0
+    POLICY_PERMIT = 1
+
+    def __init__(self, policy=POLICY_DENY):
+        self._policy = policy
+
+    @property
+    def policy(self):
+        return self._policy
+
+    @abstractmethod
+    def evaluate(self, path):
+        raise NotImplementedError()
+
+
+class PrefixList(Filter):
+    """
+    used to specify a prefix for out-filter.
+
+    We can create PrefixList object as follows.
+
+    prefix_list = PrefixList('10.5.111.0/24', policy=PrefixList.POLICY_PERMIT)
+
+    ================ ==================================================
+    Attribute        Description
+    ================ ==================================================
+    prefix           A prefix used for out-filter
+    policy           PrefixList.POLICY.PERMIT or PrefixList.POLICY_DENY
+    ge               Prefix length that will be applied out-filter.
+                     ge means greater than or equal.
+    le               Prefix length that will be applied out-filter.
+                     le means less than or equal.
+    ================ ==================================================
+
+
+    For example, when PrefixList object is created as follows:
+
+    * p = PrefixList('10.5.111.0/24',
+                   policy=PrefixList.POLICY_DENY,
+                   ge=26, le=28)
+
+
+    prefixes which match 10.5.111.0/24 and its length matches
+    from 26 to 28 will be filtered and stopped to send to neighbor
+    because of POLICY_DENY. If you specify POLICY_PERMIT,
+    the path is sent to neighbor.
+
+    If you don't want to send prefixes 10.5.111.64/26 and 10.5.111.32/27
+    and 10.5.111.16/28, and allow to send other 10.5.111.0's prefixes,
+    you can do it by specifying as follows;
+
+    * p = PrefixList('10.5.111.0/24',
+                   policy=PrefixList.POLICY_DENY,
+                   ge=26, le=28).
+
+    """
+
+    def __init__(self, prefix, policy, ge=None, le=None):
+        super(PrefixList, self).__init__(policy)
+        self._prefix = prefix
+        self._network = netaddr.IPNetwork(prefix)
+        self._ge = ge
+        self._le = le
+
+    def __cmp__(self, other):
+        return cmp(self.prefix, other.prefix)
+
+    def __repr__(self):
+        policy = 'PERMIT' \
+            if self._policy == self.POLICY_PERMIT else 'DENY'
+
+        return 'PrefixList(prefix=%s,policy=%s,ge=%s,le=%s)'\
+               % (self._prefix, policy, self._ge, self._le)
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def policy(self):
+        return self._policy
+
+    @property
+    def ge(self):
+        return self._ge
+
+    @property
+    def le(self):
+        return self._le
+
+    def evaluate(self, path):
+        """ This method evaluates the prefix.
+
+        Returns this object's policy and the result of matching.
+        If the specified prefix matches this object's prefix and
+        ge and le condition,
+        this method returns True as the matching result.
+
+        ``prefix`` specifies the prefix. prefix must be string.
+
+        """
+        prefix = path.nlri
+
+        result = False
+        length = prefix.length
+        net = netaddr.IPNetwork(prefix.formatted_nlri_str)
+
+        if net in self._network:
+            if self._ge is None and self._le is None:
+                result = True
+
+            elif self._ge is None and self._le:
+                if length <= self._le:
+                    result = True
+
+            elif self._ge and self._le is None:
+                if self._ge <= length:
+                    result = True
+
+            elif self._ge and self._le:
+                if self._ge <= length <= self._le:
+                    result = True
+
+        return self.policy, result
+
+    def clone(self):
+        """ This method clones PrefixList object.
+
+        Returns PrefixList object that has the same values with the
+        original one.
+
+        """
+
+        return PrefixList(self.prefix,
+                          policy=self._policy,
+                          ge=self._ge,
+                          le=self._le)
