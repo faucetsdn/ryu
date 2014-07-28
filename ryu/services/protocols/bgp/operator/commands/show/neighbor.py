@@ -133,3 +133,34 @@ class Neighbor(Command):
         'sent-routes': SentRoutes,
         'received-routes': ReceivedRoutes
     }
+
+    fmtstr = ' {0:<12s} {1:<12s} {2:<}\n'
+
+    def action(self, params):
+        core_service = self.api.get_core_service()
+        core_service_view = CoreServiceDetailView(core_service)
+        peers_view = core_service_view.rel('peer_manager').rel('peers')
+
+        ret = peers_view.encode()
+        return CommandsResponse(STATUS_OK,
+                                [{'ip_addr': k,
+                                  'as_num': str(v['remote_as']),
+                                  'bgp_state': v['stats']['bgp_state']}
+                                 for k, v in ret.iteritems()])
+
+    @classmethod
+    def cli_resp_formatter(cls, resp):
+        if resp.status == STATUS_ERROR:
+            return Command.cli_resp_formatter(resp)
+        return cls._format_header() + cls._format_value(resp.value)
+
+    @classmethod
+    def _format_header(cls):
+        return cls.fmtstr.format('IP Address', 'AS Number', 'BGP State')
+
+    @classmethod
+    def _format_value(cls, value):
+        ret = ''
+        for v in value:
+            ret += cls.fmtstr.format(v['ip_addr'], v['as_num'], v['bgp_state'])
+        return ret
