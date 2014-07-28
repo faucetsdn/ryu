@@ -371,6 +371,17 @@ class BGPSpeaker(object):
         bgp_neighbor[neighbors.IP_ADDRESS] = address
         call('neighbor.delete', **bgp_neighbor)
 
+    def neighbor_reset(self, address):
+        """ This method reset the registered neighbor.
+
+        ``address`` specifies the IP address of the peer. It must be
+        the string representation of an IP address.
+
+        """
+        bgp_neighbor = {}
+        bgp_neighbor[neighbors.IP_ADDRESS] = address
+        call('core.reset_neighbor', **bgp_neighbor)
+
     def neighbor_update(self, address, conf_type, conf_value):
         """ This method changes the neighbor configuration.
 
