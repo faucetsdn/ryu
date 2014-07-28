@@ -1914,9 +1914,9 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
 
     def __init__(self, type_, len_=None, marker=None):
         if marker is None:
-            self.marker = _MARKER
+            self._marker = _MARKER
         else:
-            self.marker = marker
+            self._marker = marker
         self.len = len_
         self.type = type_
 
@@ -1939,11 +1939,11 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
 
     def serialize(self):
         # fixup
-        self.marker = _MARKER
+        self._marker = _MARKER
         tail = self.serialize_tail()
         self.len = self._HDR_LEN + len(tail)
 
-        hdr = bytearray(struct.pack(self._HDR_PACK_STR, self.marker,
+        hdr = bytearray(struct.pack(self._HDR_PACK_STR, self._marker,
                                     self.len, self.type))
         return hdr + tail
 
