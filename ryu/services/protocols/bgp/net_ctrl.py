@@ -94,7 +94,7 @@ class RpcSession(Activity):
     """
 
     def __init__(self, socket, outgoing_msg_sink_iter):
-        super(RpcSession, self).__init__()
+        super(RpcSession, self).__init__("RpcSession(%s)" % socket)
         import msgpack
 
         self._packer = msgpack.Packer()
