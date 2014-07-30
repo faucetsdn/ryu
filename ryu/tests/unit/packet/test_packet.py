@@ -638,8 +638,8 @@ class TestPacket(unittest.TestCase):
 
         # sctp
         ok_(p_sctp)
-        eq_(0, p_sctp.src_port)
-        eq_(0, p_sctp.dst_port)
+        eq_(1, p_sctp.src_port)
+        eq_(1, p_sctp.dst_port)
         eq_(0, p_sctp.vtag)
         assert isinstance(p_sctp.chunks[0], sctp.chunk_data)
         eq_(0, p_sctp.chunks[0]._type)
@@ -694,8 +694,8 @@ class TestPacket(unittest.TestCase):
                              for k in sorted(data_values.keys())])
         data_str = '[%s(%s)]' % (sctp.chunk_data.__name__, _data_str)
 
-        sctp_values = {'src_port': 0,
-                       'dst_port': 0,
+        sctp_values = {'src_port': 1,
+                       'dst_port': 1,
                        'vtag': 0,
                        'csum': p_sctp.csum,
                        'chunks': data_str}
@@ -1178,8 +1178,8 @@ class TestPacket(unittest.TestCase):
 
         # sctp
         ok_(p_sctp)
-        eq_(0, p_sctp.src_port)
-        eq_(0, p_sctp.dst_port)
+        eq_(1, p_sctp.src_port)
+        eq_(1, p_sctp.dst_port)
         eq_(0, p_sctp.vtag)
         assert isinstance(p_sctp.chunks[0], sctp.chunk_data)
         eq_(0, p_sctp.chunks[0]._type)
@@ -1230,8 +1230,8 @@ class TestPacket(unittest.TestCase):
                              for k in sorted(data_values.keys())])
         data_str = '[%s(%s)]' % (sctp.chunk_data.__name__, _data_str)
 
-        sctp_values = {'src_port': 0,
-                       'dst_port': 0,
+        sctp_values = {'src_port': 1,
+                       'dst_port': 1,
                        'vtag': 0,
                        'csum': p_sctp.csum,
                        'chunks': data_str}
