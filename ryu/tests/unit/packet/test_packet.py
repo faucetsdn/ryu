@@ -906,21 +906,21 @@ class TestPacket(unittest.TestCase):
         eq_(len(u_buf) + len(self.payload), p_ipv6.payload_length)
         eq_(inet.IPPROTO_UDP, p_ipv6.nxt)
         eq_(255, p_ipv6.hop_limit)
-        eq_('::', p_ipv6.src)
-        eq_('::', p_ipv6.dst)
+        eq_('10::10', p_ipv6.src)
+        eq_('20::20', p_ipv6.dst)
 
         # udp
         ok_(p_udp)
         eq_(0, p_udp.src_port)
         eq_(0, p_udp.dst_port)
         eq_(len(u_buf) + len(self.payload), p_udp.total_length)
-        eq_(0x2bc2, p_udp.csum)
+        eq_(0x2B62, p_udp.csum)
         t = bytearray(u_buf)
         struct.pack_into('!H', t, 6, p_udp.csum)
         ph = struct.pack('!16s16sI3xB', ipaddr, ipaddr,
                          len(u_buf) + len(self.payload), 17)
         t = ph + t + self.payload
-        eq_(packet_utils.checksum(t), 0)
+        eq_(packet_utils.checksum(t), 0x60)
 
         # payload
         ok_('payload' in protocols)
@@ -941,8 +941,8 @@ class TestPacket(unittest.TestCase):
                        'payload_length': len(u_buf) + len(self.payload),
                        'nxt': inet.IPPROTO_UDP,
                        'hop_limit': 255,
-                       'src': '::',
-                       'dst': '::',
+                       'src': '10::10',
+                       'dst': '20::20',
                        'ext_hdrs': []}
         _ipv6_str = ','.join(['%s=%s' % (k, repr(ipv6_values[k]))
                               for k, v in inspect.getmembers(p_ipv6)
@@ -952,7 +952,7 @@ class TestPacket(unittest.TestCase):
         udp_values = {'src_port': 0,
                       'dst_port': 0,
                       'total_length': len(u_buf) + len(self.payload),
-                      'csum': 0x2bc2}
+                      'csum': 0x2B62}
         _udp_str = ','.join(['%s=%s' % (k, repr(udp_values[k]))
                              for k, v in inspect.getmembers(p_udp)
                              if k in udp_values])
@@ -1033,8 +1033,8 @@ class TestPacket(unittest.TestCase):
         eq_(len(t_buf) + len(self.payload), p_ipv6.payload_length)
         eq_(inet.IPPROTO_TCP, p_ipv6.nxt)
         eq_(255, p_ipv6.hop_limit)
-        eq_('::', p_ipv6.src)
-        eq_('::', p_ipv6.dst)
+        eq_('10::10', p_ipv6.src)
+        eq_('20::20', p_ipv6.dst)
 
         # tcp
         ok_(p_tcp)
@@ -1052,7 +1052,7 @@ class TestPacket(unittest.TestCase):
         ph = struct.pack('!16s16sI3xB', ipaddr, ipaddr,
                          len(t_buf) + len(self.payload), 6)
         t = ph + t + self.payload
-        eq_(packet_utils.checksum(t), 0)
+        eq_(packet_utils.checksum(t), 0x60)
 
         # payload
         ok_('payload' in protocols)
@@ -1073,8 +1073,8 @@ class TestPacket(unittest.TestCase):
                        'payload_length': len(t_buf) + len(self.payload),
                        'nxt': inet.IPPROTO_TCP,
                        'hop_limit': 255,
-                       'src': '::',
-                       'dst': '::',
+                       'src': '10::10',
+                       'dst': '20::20',
                        'ext_hdrs': []}
         _ipv6_str = ','.join(['%s=%s' % (k, repr(ipv6_values[k]))
                               for k, v in inspect.getmembers(p_ipv6)
@@ -1173,8 +1173,8 @@ class TestPacket(unittest.TestCase):
         eq_(len(s_buf), p_ipv6.payload_length)
         eq_(inet.IPPROTO_SCTP, p_ipv6.nxt)
         eq_(255, p_ipv6.hop_limit)
-        eq_('::', p_ipv6.src)
-        eq_('::', p_ipv6.dst)
+        eq_('10::10', p_ipv6.src)
+        eq_('20::20', p_ipv6.dst)
 
         # sctp
         ok_(p_sctp)
@@ -1209,8 +1209,8 @@ class TestPacket(unittest.TestCase):
                        'payload_length': len(s_buf),
                        'nxt': inet.IPPROTO_SCTP,
                        'hop_limit': 255,
-                       'src': '::',
-                       'dst': '::',
+                       'src': '10::10',
+                       'dst': '20::20',
                        'ext_hdrs': []}
         _ipv6_str = ','.join(['%s=%s' % (k, repr(ipv6_values[k]))
                               for k, v in inspect.getmembers(p_ipv6)
@@ -1307,8 +1307,8 @@ class TestPacket(unittest.TestCase):
         eq_(len(ic_buf), p_ipv6.payload_length)
         eq_(inet.IPPROTO_ICMPV6, p_ipv6.nxt)
         eq_(255, p_ipv6.hop_limit)
-        eq_('::', p_ipv6.src)
-        eq_('::', p_ipv6.dst)
+        eq_('10::10', p_ipv6.src)
+        eq_('20::20', p_ipv6.dst)
 
         # icmpv6
         ok_(p_icmpv6)
@@ -1319,7 +1319,7 @@ class TestPacket(unittest.TestCase):
         struct.pack_into('!H', t, 2, p_icmpv6.csum)
         ph = struct.pack('!16s16sI3xB', ipaddr, ipaddr, len(ic_buf), 58)
         t = ph + t
-        eq_(packet_utils.checksum(t), 0)
+        eq_(packet_utils.checksum(t), 0x60)
 
         # to string
         eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
@@ -1336,8 +1336,8 @@ class TestPacket(unittest.TestCase):
                        'payload_length': len(ic_buf),
                        'nxt': inet.IPPROTO_ICMPV6,
                        'hop_limit': 255,
-                       'src': '::',
-                       'dst': '::',
+                       'src': '10::10',
+                       'dst': '20::20',
                        'ext_hdrs': []}
         _ipv6_str = ','.join(['%s=%s' % (k, repr(ipv6_values[k]))
                               for k, _ in inspect.getmembers(p_ipv6)
