@@ -456,3 +456,17 @@ class BGPSpeaker(object):
         param[neighbors.IP_ADDRESS] = address
         in_filter = call(func_name, **param)
         return in_filter
+
+    def bmp_start(self, host, port):
+        func_name = 'bmp.start'
+        param = {}
+        param['host'] = host
+        param['port'] = port
+        call(func_name, **param)
+
+    def bmp_stop(self, host, port):
+        func_name = 'bmp.stop'
+        param = {}
+        param['host'] = host
+        param['port'] = port
+        call(func_name, **param)

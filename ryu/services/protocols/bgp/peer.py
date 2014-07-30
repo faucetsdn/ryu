@@ -195,12 +195,14 @@ class PeerState(object):
         if new_state == const.BGP_FSM_ESTABLISHED:
             self.incr(PeerCounterNames.FSM_ESTB_TRANSITIONS)
             self._established_time = time.time()
+            self._signal_bus.adj_up(self.peer)
             NET_CONTROLLER.send_rpc_notification(
                 'neighbor.up', {'ip_address': self.peer.ip_address}
             )
         # transition from Established to another state
         elif old_state == const.BGP_FSM_ESTABLISHED:
             self._established_time = 0
+            self._signal_bus.adj_down(self.peer)
             NET_CONTROLLER.send_rpc_notification(
                 'neighbor.down', {'ip_address': self.peer.ip_address}
             )

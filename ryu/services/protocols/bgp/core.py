@@ -41,6 +41,7 @@ from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.utils.rtfilter import RouteTargetManager
 from ryu.services.protocols.bgp.utils import stats
+from ryu.services.protocols.bgp.bmp import BMPClient
 from ryu.lib import sockopt
 
 
@@ -124,6 +125,9 @@ class CoreService(Factory, Activity):
 
         # BgpProcessor instance (initialized during start)
         self._bgp_processor = None
+
+        # BMP clients key: (host, port) value: BMPClient instance
+        self.bmpclients = {}
 
     def _init_signal_listeners(self):
         self._signal_bus.register_listener(
@@ -451,3 +455,23 @@ class CoreService(Factory, Activity):
             peer._host_bind_ip = bind_ip
             peer._host_bind_port = bind_port
             self._spawn_activity(bgp_proto, peer)
+
+    def start_bmp(self, host, port):
+        if (host, port) in self.bmpclients:
+            bmpclient = self.bmpclients[(host, port)]
+            if bmpclient.started:
+                LOG.warn("bmpclient is already running for %s:%s" % (host,
+                                                                     port))
+                return False
+        bmpclient = BMPClient(self, host, port)
+        self.bmpclients[(host, port)] = bmpclient
+        self._spawn_activity(bmpclient)
+        return True
+
+    def stop_bmp(self, host, port):
+        if (host, port) not in self.bmpclients:
+            LOG.warn("no bmpclient is running for %s:%s" % (host, port))
+            return False
+
+        bmpclient = self.bmpclients[(host, port)]
+        bmpclient.stop()

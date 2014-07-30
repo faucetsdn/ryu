@@ -223,3 +223,19 @@ def del_network(prefix):
     tm = CORE_MANAGER.get_core_service().table_manager
     tm.add_to_global_table(prefix, is_withdraw=True)
     return True
+
+# =============================================================================
+# BMP configuration related APIs
+# =============================================================================
+
+
+@register(name='bmp.start')
+def bmp_start(host, port):
+    core = CORE_MANAGER.get_core_service()
+    return core.start_bmp(host, port)
+
+
+@register(name='bmp.stop')
+def bmp_stop(host, port):
+    core = CORE_MANAGER.get_core_service()
+    return core.stop_bmp(host, port)

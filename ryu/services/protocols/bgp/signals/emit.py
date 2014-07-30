@@ -14,6 +14,8 @@ class BgpSignalBus(SignalBus):
     BGP_BEST_PATH_CHANGED = ('core', 'best', 'changed')
     BGP_ADJ_RIB_IN_CHANGED = ('core', 'adj', 'rib', 'in', 'changed')
     BGP_ADJ_RIB_OUT_CHANGED = ('core', 'adj', 'rib', 'out', 'changed')
+    BGP_ADJ_UP = ('core', 'adj', 'up')
+    BGP_ADJ_DOWN = ('core', 'adj', 'down')
 
     def bgp_error(self, peer, code, subcode, reason):
         return self.emit_signal(
@@ -71,3 +73,9 @@ class BgpSignalBus(SignalBus):
         return self.emit_signal(
             self.BGP_ADJ_RIB_OUT_CHANGED,
             {'peer': peer, 'sent_route': sent_route})
+
+    def adj_up(self, peer):
+        return self.emit_signal(self.BGP_ADJ_UP, {'peer': peer})
+
+    def adj_down(self, peer):
+        return self.emit_signal(self.BGP_ADJ_DOWN, {'peer': peer})
