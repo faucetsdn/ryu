@@ -1348,6 +1348,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             block, blocked_cause = self._apply_in_filter(w_path)
 
             received_route = ReceivedRoute(w_path, self, block)
+            nlri_str = w_nlri.formatted_nlri_str
             self._adj_rib_in[nlri_str] = received_route
             self._signal_bus.adj_rib_in_changed(self, received_route)
 
@@ -1439,6 +1440,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             block, blocked_cause = self._apply_in_filter(new_path)
 
             received_route = ReceivedRoute(new_path, self, block)
+            nlri_str = msg_nlri.formatted_nlri_str
             self._adj_rib_in[nlri_str] = received_route
             self._signal_bus.adj_rib_in_changed(self, received_route)
 
@@ -1502,6 +1504,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             block, blocked_cause = self._apply_in_filter(w_path)
 
             received_route = ReceivedRoute(w_path, self, block)
+            nlri_str = w_nlri.formatted_nlri_str
             self._adj_rib_in[nlri_str] = received_route
             self._signal_bus.adj_rib_in_changed(self, received_route)
 
