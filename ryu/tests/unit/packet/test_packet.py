@@ -630,11 +630,11 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv4.flags)
         eq_(255, p_ipv4.ttl)
         eq_(inet.IPPROTO_SCTP, p_ipv4.proto)
-        eq_('0.0.0.0', p_ipv4.src)
-        eq_('0.0.0.0', p_ipv4.dst)
+        eq_('10.0.0.1', p_ipv4.src)
+        eq_('10.0.0.2', p_ipv4.dst)
         t = bytearray(ip_buf)
         struct.pack_into('!H', t, 10, p_ipv4.csum)
-        eq_(packet_utils.checksum(t), 0)
+        eq_(packet_utils.checksum(t), 0x1403)
 
         # sctp
         ok_(p_sctp)
@@ -673,8 +673,8 @@ class TestPacket(unittest.TestCase):
                        'ttl': 255,
                        'proto': inet.IPPROTO_SCTP,
                        'csum': p_ipv4.csum,
-                       'src': '0.0.0.0',
-                       'dst': '0.0.0.0',
+                       'src': '10.0.0.1',
+                       'dst': '10.0.0.2',
                        'option': None}
         _ipv4_str = ','.join(['%s=%s' % (k, repr(ipv4_values[k]))
                               for k, v in inspect.getmembers(p_ipv4)
@@ -779,11 +779,11 @@ class TestPacket(unittest.TestCase):
         eq_(0, p_ipv4.flags)
         eq_(255, p_ipv4.ttl)
         eq_(inet.IPPROTO_ICMP, p_ipv4.proto)
-        eq_('0.0.0.0', p_ipv4.src)
-        eq_('0.0.0.0', p_ipv4.dst)
+        eq_('10.0.0.1', p_ipv4.src)
+        eq_('10.0.0.2', p_ipv4.dst)
         t = bytearray(ip_buf)
         struct.pack_into('!H', t, 10, p_ipv4.csum)
-        eq_(packet_utils.checksum(t), 0)
+        eq_(packet_utils.checksum(t), 0x1403)
 
         # icmp
         ok_(p_icmp)
@@ -815,8 +815,8 @@ class TestPacket(unittest.TestCase):
                        'ttl': 255,
                        'proto': inet.IPPROTO_ICMP,
                        'csum': p_ipv4.csum,
-                       'src': '0.0.0.0',
-                       'dst': '0.0.0.0',
+                       'src': '10.0.0.1',
+                       'dst': '10.0.0.2',
                        'option': None}
         _ipv4_str = ','.join(['%s=%s' % (k, repr(ipv4_values[k]))
                               for k, _ in inspect.getmembers(p_ipv4)

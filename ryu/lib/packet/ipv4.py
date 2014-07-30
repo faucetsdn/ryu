@@ -79,8 +79,8 @@ class ipv4(packet_base.PacketBase):
     def __init__(self, version=4, header_length=5, tos=0,
                  total_length=0, identification=0, flags=0,
                  offset=0, ttl=255, proto=0, csum=0,
-                 src='0.0.0.0',
-                 dst='0.0.0.0',
+                 src='10.0.0.1',
+                 dst='10.0.0.2',
                  option=None):
         super(ipv4, self).__init__()
         self.version = version
