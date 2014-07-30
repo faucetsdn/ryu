@@ -2444,10 +2444,6 @@ class OFPTableFeaturesStatsReply(OFPMultipartReply):
     The switch responds with this message to a table features statistics
     request.
 
-    This implmentation is still incomplete.
-    Namely, this implementation does not parse ``properties`` list and
-    always reports it empty.
-
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
