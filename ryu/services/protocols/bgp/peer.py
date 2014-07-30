@@ -1490,7 +1490,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             )
             return
 
-        w_nlris = mp_unreach_attr.nlri_list
+        w_nlris = mp_unreach_attr.withdrawn_routes
         if not w_nlris:
             # If this is EOR of some kind, handle it
             self._handle_eor(msg_rf)
