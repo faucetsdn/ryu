@@ -911,16 +911,16 @@ class TestPacket(unittest.TestCase):
 
         # udp
         ok_(p_udp)
-        eq_(0, p_udp.src_port)
-        eq_(0, p_udp.dst_port)
+        eq_(1, p_udp.src_port)
+        eq_(1, p_udp.dst_port)
         eq_(len(u_buf) + len(self.payload), p_udp.total_length)
-        eq_(0x2B62, p_udp.csum)
+        eq_(0x2B60, p_udp.csum)
         t = bytearray(u_buf)
         struct.pack_into('!H', t, 6, p_udp.csum)
         ph = struct.pack('!16s16sI3xB', ipaddr, ipaddr,
                          len(u_buf) + len(self.payload), 17)
         t = ph + t + self.payload
-        eq_(packet_utils.checksum(t), 0x60)
+        eq_(packet_utils.checksum(t), 0x62)
 
         # payload
         ok_('payload' in protocols)
@@ -949,10 +949,10 @@ class TestPacket(unittest.TestCase):
                               if k in ipv6_values])
         ipv6_str = '%s(%s)' % (ipv6.ipv6.__name__, _ipv6_str)
 
-        udp_values = {'src_port': 0,
-                      'dst_port': 0,
+        udp_values = {'src_port': 1,
+                      'dst_port': 1,
                       'total_length': len(u_buf) + len(self.payload),
-                      'csum': 0x2B62}
+                      'csum': 0x2B60}
         _udp_str = ','.join(['%s=%s' % (k, repr(udp_values[k]))
                              for k, v in inspect.getmembers(p_udp)
                              if k in udp_values])
