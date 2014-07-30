@@ -1038,8 +1038,8 @@ class TestPacket(unittest.TestCase):
 
         # tcp
         ok_(p_tcp)
-        eq_(0, p_tcp.src_port)
-        eq_(0, p_tcp.dst_port)
+        eq_(1, p_tcp.src_port)
+        eq_(1, p_tcp.dst_port)
         eq_(0, p_tcp.seq)
         eq_(0, p_tcp.ack)
         eq_(6, p_tcp.offset)
@@ -1052,7 +1052,7 @@ class TestPacket(unittest.TestCase):
         ph = struct.pack('!16s16sI3xB', ipaddr, ipaddr,
                          len(t_buf) + len(self.payload), 6)
         t = ph + t + self.payload
-        eq_(packet_utils.checksum(t), 0x60)
+        eq_(packet_utils.checksum(t), 0x62)
 
         # payload
         ok_('payload' in protocols)
@@ -1081,8 +1081,8 @@ class TestPacket(unittest.TestCase):
                               if k in ipv6_values])
         ipv6_str = '%s(%s)' % (ipv6.ipv6.__name__, _ipv6_str)
 
-        tcp_values = {'src_port': 0,
-                      'dst_port': 0,
+        tcp_values = {'src_port': 1,
+                      'dst_port': 1,
                       'seq': 0,
                       'ack': 0,
                       'offset': 6,
