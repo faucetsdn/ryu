@@ -25,6 +25,7 @@ from ryu.services.protocols.bgp.info_base.base import Path
 from ryu.services.protocols.bgp.info_base.base import Table
 from ryu.services.protocols.bgp.info_base.base import Destination
 from ryu.services.protocols.bgp.info_base.base import NonVrfPathProcessingMixin
+from ryu.services.protocols.bgp.info_base.base import PrefixFilter
 
 LOG = logging.getLogger('bgpspeaker.info_base.ipv4')
 
@@ -83,3 +84,8 @@ class Ipv4Path(Path):
         super(Ipv4Path, self).__init__(*args, **kwargs)
         from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Path
         self.VRF_PATH_CLASS = Vrf4Path
+
+
+class Ipv4PrefixFilter(PrefixFilter):
+    """IPv4 Prefix Filter class"""
+    ROUTE_FAMILY = RF_IPv4_UC

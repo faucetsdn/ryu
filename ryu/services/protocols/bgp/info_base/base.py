@@ -821,6 +821,8 @@ class Filter(object):
     """
     __metaclass__ = ABCMeta
 
+    ROUTE_FAMILY = RF_IPv4_UC
+
     POLICY_DENY = 0
     POLICY_PERMIT = 1
 
@@ -978,7 +980,7 @@ class PrefixFilter(Filter):
 
         """
 
-        return PrefixFilter(self.prefix,
-                            policy=self._policy,
-                            ge=self._ge,
-                            le=self._le)
+        return self.__class__(self.prefix,
+                              policy=self._policy,
+                              ge=self._ge,
+                              le=self._le)

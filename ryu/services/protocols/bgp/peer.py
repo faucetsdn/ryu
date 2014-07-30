@@ -487,6 +487,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         blocked_cause = None
 
         for filter_ in filters:
+            if filter_.ROUTE_FAMILY != path.ROUTE_FAMILY:
+                continue
+
             policy, is_matched = filter_.evaluate(path)
             if policy == PrefixFilter.POLICY_PERMIT and is_matched:
                 block = False
@@ -1352,7 +1355,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             self._adj_rib_in[nlri_str] = received_route
             self._signal_bus.adj_rib_in_changed(self, received_route)
 
-            if block:
+            if not block:
                 # Update appropriate table with withdraws.
                 tm = self._core_service.table_manager
                 tm.learn_path(w_path)
@@ -1444,7 +1447,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             self._adj_rib_in[nlri_str] = received_route
             self._signal_bus.adj_rib_in_changed(self, received_route)
 
-            if block:
+            if not block:
                 if msg_rf == RF_RTC_UC \
                         and self._init_rtc_nlri_path is not None:
                     self._init_rtc_nlri_path.append(new_path)
@@ -1508,7 +1511,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             self._adj_rib_in[nlri_str] = received_route
             self._signal_bus.adj_rib_in_changed(self, received_route)
 
-            if block:
+            if not block:
                 # Update appropriate table with withdraws.
                 tm = self._core_service.table_manager
                 tm.learn_path(w_path)
