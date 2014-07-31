@@ -79,6 +79,9 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 
+from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
+from ryu.lib.packet.bgp import BGPIPv4AddressSpecificExtendedCommunity
+
 LOG = logging.getLogger('bgpspeaker.peer')
 
 

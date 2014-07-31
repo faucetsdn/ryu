@@ -222,7 +222,7 @@ class VrfTable(Table):
                                    local_administrator=int(local_admin),
                                    subtype=subtype))
             for soo in vrf_conf.soo_list:
-                as_num, local_admin = rt.split(':')
+                as_num, local_admin = soo.split(':')
                 subtype = 3
                 communities.append(BGPTwoOctetAsSpecificExtendedCommunity(
                                    as_number=int(as_num),

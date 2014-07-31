@@ -48,6 +48,7 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
+from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
@@ -175,7 +176,8 @@ class BGPSpeaker(object):
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
-                     next_hop=None, password=None, multi_exit_disc=None):
+                     next_hop=None, password=None, multi_exit_disc=None,
+                     site_of_origins=None):
         """ This method registers a new neighbor. The BGP speaker tries to
         establish a bgp session with the peer (accepts a connection
         from the peer and also tries to connect to it).
@@ -206,6 +208,8 @@ class BGPSpeaker(object):
         The default is None and if not specified, MED value is
         not sent to the neighbor. It must be an integer.
 
+        ``site_of_origins`` specifies site_of_origin values.
+        This parameter must be a list of string.
         """
         bgp_neighbor = {}
         bgp_neighbor[neighbors.IP_ADDRESS] = address
@@ -229,6 +233,9 @@ class BGPSpeaker(object):
 
         if multi_exit_disc:
             bgp_neighbor[MULTI_EXIT_DISC] = multi_exit_disc
+
+        if site_of_origins:
+            bgp_neighbor[SITE_OF_ORIGINS] = site_of_origins
 
         call('neighbor.create', **bgp_neighbor)
 
@@ -332,12 +339,16 @@ class BGPSpeaker(object):
 
         ``export_rts`` specifies route targets to be exported.
 
+        ``site_of_origins`` specifies site_of_origin values.
+        This parameter must be a list of string.
+
         """
 
         vrf = {}
         vrf[vrfs.ROUTE_DISTINGUISHER] = route_dist
         vrf[vrfs.IMPORT_RTS] = import_rts
         vrf[vrfs.EXPORT_RTS] = export_rts
+        vrf[vrfs.SITE_OF_ORIGINS] = site_of_origins
         call('vrf.create', **vrf)
 
     def vrf_del(self, route_dist):
