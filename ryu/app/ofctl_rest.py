@@ -80,8 +80,14 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # modify all matching flow entries
 # POST /stats/flowentry/modify
 #
+# modify flow entry strictly matching wildcards and priority
+# POST /stats/flowentry/modify_strict
+#
 # delete all matching flow entries
 # POST /stats/flowentry/delete
+#
+# delete flow entry strictly matching wildcards and priority
+# POST /stats/flowentry/delete_strict
 #
 # delete all flow entries of the switch
 # DELETE /stats/flowentry/clear/<dpid>
@@ -301,8 +307,12 @@ class StatsController(ControllerBase):
             cmd = dp.ofproto.OFPFC_ADD
         elif cmd == 'modify':
             cmd = dp.ofproto.OFPFC_MODIFY
+        elif cmd == 'modify_strict':
+            cmd = dp.ofproto.OFPFC_MODIFY_STRICT
         elif cmd == 'delete':
             cmd = dp.ofproto.OFPFC_DELETE
+        elif cmd == 'delete_strict':
+            cmd = dp.ofproto.OFPFC_DELETE_STRICT
         else:
             return Response(status=404)
 
