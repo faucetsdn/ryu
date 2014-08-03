@@ -362,9 +362,10 @@ class BGPSpeaker(object):
         vrf[vrfs.ROUTE_DISTINGUISHER] = route_dist
         call('vrf.delete', **vrf)
 
-    def vrfs_get(self):
+    def vrfs_get(self, format='json'):
         show = {}
         show['params'] = ['vrf', 'routes', 'all']
+        show['format'] = format
         return call('operator.show', **show)
 
     def rib_get(self, family='ipv4', format='json'):
