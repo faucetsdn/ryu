@@ -367,7 +367,7 @@ class BGPSpeaker(object):
         show['params'] = ['vrf', 'routes', 'all']
         return call('operator.show', **show)
 
-    def rib_get(self, family='ipv4'):
+    def rib_get(self, family='ipv4', format='json'):
         """ This method returns the BGP routing information in a json
         format. This will be improved soon.
 
@@ -376,6 +376,7 @@ class BGPSpeaker(object):
         """
         show = {}
         show['params'] = ['rib', family]
+        show['format'] = format
         return call('operator.show', **show)
 
     def _set_filter(self, filter_type, address, filters):
