@@ -2,6 +2,7 @@
     "match: 06_VLAN_VID",
     {
         "description":"ethernet/vlan(vid=100)/ipv4/tcp-->'vlan_vid=100,actions=output:2'",
+        "notes":"A value of VLAN_VID (4196) means '100 | OFPVID_PRESENT(0x1000)'.",
         "prerequisite":[
             {
                 "OFPFlowMod":{
