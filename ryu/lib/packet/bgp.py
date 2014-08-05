@@ -1325,6 +1325,15 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
     _AS_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
 
+    def __init__(self, value, as_pack_str=None, flags=0, type_=None,
+                 length=None):
+        super(_BGPPathAttributeAsPathCommon, self).__init__(value=value,
+                                                            flags=flags,
+                                                            type_=type_,
+                                                            length=length)
+        if as_pack_str:
+            self._AS_PACK_STR = as_pack_str
+
     @property
     def path_seg_list(self):
         return copy.deepcopy(self.value)
@@ -1361,17 +1370,44 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
         return False
 
     @classmethod
+    def _is_valid_16bit_as_path(cls, buf):
+
+        two_byte_as_size = struct.calcsize('!H')
+
+        while buf:
+            (type_, num_as) = struct.unpack_from(cls._SEG_HDR_PACK_STR,
+                                                 buffer(buf))
+
+            if type_ is not cls._AS_SET and type_ is not cls._AS_SEQUENCE:
+                return False
+
+            buf = buf[struct.calcsize(cls._SEG_HDR_PACK_STR):]
+
+            if len(buf) < num_as * two_byte_as_size:
+                return False
+
+            buf = buf[num_as * two_byte_as_size:]
+
+        return True
+
+    @classmethod
     def parse_value(cls, buf):
         result = []
+
+        if cls._is_valid_16bit_as_path(buf):
+            as_pack_str = '!H'
+        else:
+            as_pack_str = '!I'
+
         while buf:
             (type_, num_as) = struct.unpack_from(cls._SEG_HDR_PACK_STR,
                                                  buffer(buf))
             buf = buf[struct.calcsize(cls._SEG_HDR_PACK_STR):]
             l = []
             for i in xrange(0, num_as):
-                (as_number,) = struct.unpack_from(cls._AS_PACK_STR,
+                (as_number,) = struct.unpack_from(as_pack_str,
                                                   buffer(buf))
-                buf = buf[struct.calcsize(cls._AS_PACK_STR):]
+                buf = buf[struct.calcsize(as_pack_str):]
                 l.append(as_number)
             if type_ == cls._AS_SET:
                 result.append(set(l))
@@ -1380,7 +1416,8 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
             else:
                 assert(0)  # protocol error
         return {
-            'value': result
+            'value': result,
+            'as_pack_str': as_pack_str,
         }
 
     def serialize_value(self):
@@ -1405,20 +1442,25 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS_PATH)
 class BGPPathAttributeAsPath(_BGPPathAttributeAsPathCommon):
-    # XXX currently this implementation assumes 16 bit AS numbers.
-    # depends on negotiated capability, AS numbers can be 32 bit.
+    # XXX depends on negotiated capability, AS numbers can be 32 bit.
     # while wireshark seems to attempt auto-detect, it seems that
     # there's no way to detect it reliably.  for example, the
     # following byte sequence can be interpreted in two ways.
     #   01 02 99 88 77 66 02 01 55 44
     #   AS_SET num=2 9988 7766 AS_SEQUENCE num=1 5544
     #   AS_SET num=2 99887766 02015544
+    # we first check whether AS path can be parsed in 16bit format and if
+    # it fails, we try to parse as 32bit
     _AS_PACK_STR = '!H'
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_PATH)
 class BGPPathAttributeAs4Path(_BGPPathAttributeAsPathCommon):
     _AS_PACK_STR = '!I'
+
+    @classmethod
+    def _is_valid_16bit_as_path(cls, buf):
+        return False
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_NEXT_HOP)
