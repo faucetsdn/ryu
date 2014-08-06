@@ -454,7 +454,7 @@ class BMPStatisticsReport(BMPPeerMessage):
 
 
 @BMPMessage.register_type(BMP_MSG_PEER_DOWN_NOTIFICATION)
-class BMPPeerDownNotification(BMPMessage):
+class BMPPeerDownNotification(BMPPeerMessage):
     """BMP Peer Down Notification Message
 
     ========================== ===============================================
@@ -468,14 +468,29 @@ class BMPPeerDownNotification(BMPMessage):
     ========================== ===============================================
     """
 
-    def __init__(self, reason, data, type_=BMP_MSG_PEER_DOWN_NOTIFICATION,
-                 len_=None, version=VERSION):
-        super(BMPPeerDownNotification, self).__init__(type_, len_, version)
+    def __init__(self, reason, data, peer_type, is_post_policy,
+                 peer_distinguisher, peer_address, peer_as, peer_bgp_id,
+                 timestamp, version=VERSION,
+                 type_=BMP_MSG_PEER_DOWN_NOTIFICATION, len_=None):
+
+        super(BMPPeerDownNotification,
+              self).__init__(peer_type=peer_type,
+                             is_post_policy=is_post_policy,
+                             peer_distinguisher=peer_distinguisher,
+                             peer_address=peer_address,
+                             peer_as=peer_as,
+                             peer_bgp_id=peer_bgp_id,
+                             timestamp=timestamp,
+                             len_=len_,
+                             type_=type_,
+                             version=version)
+
         self.reason = reason
         self.data = data
 
     @classmethod
     def parser(cls, buf):
+        kwargs, buf = super(BMPPeerDownNotification, cls).parser(buf)
         reason, = struct.unpack_from('!B', buffer(buf))
         buf = buf[struct.calcsize('!B'):]
 
@@ -491,14 +506,14 @@ class BMPPeerDownNotification(BMPMessage):
             reason = BMP_PEER_DOWN_REASON_UNKNOWN
             data = buf
 
-        kwargs = {}
         kwargs['reason'] = reason
         kwargs['data'] = data
 
         return kwargs
 
     def serialize_tail(self):
-        msg = struct.pack('!B', self.reason)
+        msg = super(BMPPeerDownNotification, self).serialize_tail()
+        msg += struct.pack('!B', self.reason)
 
         if self.reason == BMP_PEER_DOWN_REASON_LOCAL_BGP_NOTIFICATION:
             msg += self.data.serialize()

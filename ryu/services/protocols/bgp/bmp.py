@@ -139,8 +139,25 @@ class BMPClient(Activity):
         return msg
 
     def _construct_peer_down_notification(self, peer):
+        if peer.is_mpbgp_cap_valid(bgp.RF_IPv4_VPN) or \
+                peer.is_mpbgp_cap_valid(bgp.RF_IPv6_VPN):
+            peer_type = bmp.BMP_PEER_TYPE_L3VPN
+        else:
+            peer_type = bmp.BMP_PEER_TYPE_GLOBAL
+
+        peer_as = peer._neigh_conf.remote_as
+        peer_bgp_id = self._core_service.router_id
+        peer_address, _ = peer.protocol._remotename
+
         return bmp.BMPPeerDownNotification(bmp.BMP_PEER_DOWN_REASON_UNKNOWN,
-                                           data=None)
+                                           data=None,
+                                           peer_type=peer_type,
+                                           is_post_policy=False,
+                                           peer_distinguisher=0,
+                                           peer_address=peer_address,
+                                           peer_as=peer_as,
+                                           peer_bgp_id=peer_bgp_id,
+                                           timestamp=0)
 
     def _construct_route_monitoring(self, peer, path):
         if peer.is_mpbgp_cap_valid(bgp.RF_IPv4_VPN) or \
