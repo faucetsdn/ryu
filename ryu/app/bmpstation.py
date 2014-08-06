@@ -21,7 +21,7 @@ from ryu.base import app_manager
 
 from ryu.lib import hub
 from ryu.lib.hub import StreamServer
-from ryu.lib.packet.bmp import *
+from ryu.lib.packet import bmp
 
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 11019
@@ -40,24 +40,29 @@ class BMPStation(app_manager.RyuApp):
 
     def loop(self, sock, addr):
         logging.debug("started bmp loop.")
-        self.is_active = True
-
+        is_active = True
         buf = bytearray()
-        required_len = BMPMessage._HDR_LEN
+        required_len = bmp.BMPMessage._HDR_LEN
 
-        while self.is_active:
-            buf = sock.recv(BMPMessage._HDR_LEN)
-            if len(buf) == 0:
-                self.is_active = False
+        while is_active:
+            ret = sock.recv(required_len)
+            if len(ret) == 0:
+                is_active = False
                 break
+            buf += ret
+            while len(buf) >= required_len:
+                version, len_, _ = bmp.BMPMessage.parse_header(buf)
+                if version != bmp.VERSION:
+                    logging.error("unsupported bmp version: %d" % version)
+                    is_active = False
+                    break
 
-            _, len_, _ = BMPMessage.parse_header(buf)
+                required_len = len_
+                if len(buf) < required_len:
+                    break
 
-            body = sock.recv(len_ - BMPMessage._HDR_LEN)
-            if len(body) == 0:
-                self.is_active = False
-                break
+                msg, rest = bmp.BMPMessage.parser(buf)
+                print msg, '\n'
 
-            msg, rest = BMPMessage.parser(buf + body)
-            assert len(rest) == 0
-            print msg, '\n'
+                buf = rest
+                required_len = bmp.BMPMessage._HDR_LEN
