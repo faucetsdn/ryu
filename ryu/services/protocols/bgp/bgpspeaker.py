@@ -27,6 +27,7 @@ from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.api.base import PREFIX
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
+from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
@@ -286,8 +287,7 @@ class BGPSpeaker(object):
                  neighbors.CHANGES: attribute_param}
         call(func_name, **param)
 
-    def prefix_add(self, prefix, next_hop=None, route_dist=None,
-                   route_family=None):
+    def prefix_add(self, prefix, next_hop=None, route_dist=None):
         """ This method adds a new prefix to be advertized.
 
         ``prefix`` must be the string representation of an IP network
@@ -310,9 +310,26 @@ class BGPSpeaker(object):
         if route_dist:
             func_name = 'prefix.add_local'
             networks[ROUTE_DISTINGUISHER] = route_dist
+
+            # check if the prefix address is IPv6 address
+            ip, masklen = prefix.split('/')
+            if netaddr.valid_ipv6(ip):
+                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV6
+                # convert the next_hop address to IPv4-Mapped IPv6 Address
+                # if it is IPv4 address
+                if netaddr.valid_ipv4(next_hop):
+                    networks[NEXT_HOP] = \
+                        str(netaddr.IPAddress(next_hop).ipv6())
+
+                # normalize IPv6 address expression
+                networks[PREFIX] = \
+                    str(netaddr.IPAddress(ip)) + '/' + masklen
+            else:
+                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV4
+
         call(func_name, **networks)
 
-    def prefix_del(self, prefix, route_dist=None, route_family=None):
+    def prefix_del(self, prefix, route_dist=None):
         """ This method deletes a advertized prefix.
 
         ``prefix`` must be the string representation of an IP network
@@ -329,6 +346,16 @@ class BGPSpeaker(object):
         if route_dist:
             func_name = 'prefix.delete_local'
             networks[ROUTE_DISTINGUISHER] = route_dist
+
+            ip, masklen = prefix.split('/')
+            if netaddr.valid_ipv6(ip):
+                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV6
+                # normalize IPv6 address expression
+                networks[PREFIX] = \
+                    str(netaddr.IPAddress(ip)) + '/' + masklen
+            else:
+                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV4
+
         call(func_name, **networks)
 
     def vrf_add(self, route_dist, import_rts, export_rts, site_of_origins=None,

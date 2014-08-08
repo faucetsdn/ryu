@@ -560,7 +560,7 @@ class TableCoreManager(object):
                 raise BgpCoreError(desc='Vrf for route distinguisher %s does '
                                         'not exist.' % route_dist)
             ip6, masklen = prefix.split('/')
-            prefix = IP6AddrPrefix(int(masklen), ip)
+            prefix = IP6AddrPrefix(int(masklen), ip6)
             # We do not check if we have a path to given prefix, we issue
         # withdrawal. Hence multiple withdrawals have not side effect.
         return vrf_table.insert_vrf_path(prefix, is_withdraw=True)
