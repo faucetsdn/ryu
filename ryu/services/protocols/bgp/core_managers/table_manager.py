@@ -400,7 +400,7 @@ class TableCoreManager(object):
         interested_rts = self._rt_mgr.global_interested_rts
         LOG.debug('Cleaning uninteresting paths. Global interested RTs %s' %
                   interested_rts)
-        for route_family in SUPPORTED_GLOBAL_RF:
+        for route_family in [RF_IPv4_VPN, RF_IPv6_VPN, RF_RTC_UC]:
             # TODO(PH): We currently do not install RT_NLRI paths based on
             # extended path attributes (RT)
             if route_family == RF_RTC_UC:
