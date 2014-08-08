@@ -53,6 +53,9 @@ BGP_CAP_CARRYING_LABEL_INFO = 4  # RFC 3107
 BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
 BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
 # draft-ietf-idr-bgp-enhanced-route-refresh-05
+BGP_CAP_ROUTE_REFRESH_CISCO = 128
+# in cisco routers, there are two route refresh code: one using the capability code of 128 (old),
+# another using the capability code of 2 (new).
 
 BGP_ATTR_FLAG_OPTIONAL = 1 << 7
 BGP_ATTR_FLAG_TRANSITIVE = 1 << 6
@@ -1178,6 +1181,11 @@ class BGPOptParamCapabilityUnknown(_OptParamCapability):
 
 @_OptParamCapability.register_type(BGP_CAP_ROUTE_REFRESH)
 class BGPOptParamCapabilityRouteRefresh(_OptParamEmptyCapability):
+    pass
+
+
+@_OptParamCapability.register_type(BGP_CAP_ROUTE_REFRESH_CISCO)
+class BGPOptParamCapabilityCiscoRouteRefresh(_OptParamEmptyCapability):
     pass
 
 
