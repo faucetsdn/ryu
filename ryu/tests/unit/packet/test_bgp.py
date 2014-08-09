@@ -45,6 +45,7 @@ class Test_bgp(unittest.TestCase):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
                                                       cap_value='hoge'),
                      bgp.BGPOptParamCapabilityRouteRefresh(),
+                     bgp.BGPOptParamCapabilityCiscoRouteRefresh(),
                      bgp.BGPOptParamCapabilityMultiprotocol(
                          afi=afi.IP, safi=safi.MPLS_VPN),
                      bgp.BGPOptParamCapabilityCarryingLabelInfo(),
