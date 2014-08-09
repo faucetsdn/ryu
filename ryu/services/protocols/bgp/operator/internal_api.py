@@ -130,9 +130,15 @@ class InternalApi(object):
             localpref = path.get_pattr(BGP_ATTR_TYPE_LOCAL_PREF)
             localpref = localpref.value if localpref else ''
 
+            if hasattr(path.nlri, 'label_list'):
+                labels = path.nlri.label_list
+            else:
+                labels = None
+
             return {'best': (path == dst.best_path),
                     'bpr': bpr,
                     'prefix': path.nlri.formatted_nlri_str,
+                    'labels': labels,
                     'nexthop': nexthop,
                     'metric': med,
                     'aspath': aspath,

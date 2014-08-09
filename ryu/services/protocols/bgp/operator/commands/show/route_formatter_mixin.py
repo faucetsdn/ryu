@@ -3,14 +3,15 @@ import StringIO
 
 class RouteFormatterMixin(object):
 
-    fmtstr = ' {0:<3s} {1:<32s} {2:<20s} {3:<15s} {4:<6s} {5:<6s} {6:<}\n'
+    fmtstr = ' {0:<3s} {1:<32s} {2:<8s} {3:<20s} {4:<15s} '\
+        '{5:<6s} {6:<6s} {7:<}\n'
 
     @classmethod
     def _format_family_header(cls):
         ret = ''
         ret += ('Status codes: * valid, > best\n')
-        ret += cls.fmtstr.format('', 'Network', 'Next Hop', 'Reason', 'Metric',
-                                 'LocPrf', 'Path')
+        ret += cls.fmtstr.format('', 'Network', 'Labels', 'Next Hop', 'Reason',
+                                 'Metric', 'LocPrf', 'Path/Origin')
         return ret
 
     @classmethod
@@ -26,6 +27,7 @@ class RouteFormatterMixin(object):
             bpr = path.get('bpr')
             next_hop = path.get('nexthop')
             med = path.get('metric')
+            labels = path.get('labels')
             localpref = path.get('localpref')
             # Construct path status string.
             path_status = '*'
@@ -38,7 +40,7 @@ class RouteFormatterMixin(object):
                 prefix = path.get('prefix')
 
             # Append path info to String buffer.
-            buff.write(cls.fmtstr.format(path_status, prefix,
+            buff.write(cls.fmtstr.format(path_status, prefix, labels,
                                          next_hop, bpr, str(med),
                                          str(localpref),
                                          ' '.join(map(str, aspath))))
