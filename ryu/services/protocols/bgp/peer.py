@@ -400,6 +400,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         LOG.debug('set out-filter : %s' % filters)
         self.on_update_out_filter()
 
+    @property
+    def is_route_server_client(self):
+        return self._neigh_conf.is_route_server_client
+
+    @property
+    def check_first_as(self):
+        return self._neigh_conf.check_first_as
+
     def is_mpbgp_cap_valid(self, route_family):
         if not self.in_established:
             raise ValueError('Invalid request: Peer not in established state')
@@ -761,6 +769,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     path.route_family.afi, path.route_family.safi, [path.nlri]
                 )
                 new_pathattr.append(mpunreach_attr)
+        elif self.is_route_server_client:
+            nlri_list = [path.nlri]
+            for pathattr in path.pathattr_map.itervalues():
+                new_pathattr.append(pathattr)
         else:
             # Supported and un-supported/unknown attributes.
             origin_attr = None
@@ -1140,9 +1152,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     raise bgp.MissingWellKnown(
                         BGP_ATTR_TYPE_AS_PATH)
 
-                # We do not have a setting to enable/disable first-as check.
-                # We by default do first-as check below.
-                if (self.is_ebgp_peer() and
+                if (self.check_first_as and self.is_ebgp_peer() and
                         not aspath.has_matching_leftmost(self.remote_as)):
                     LOG.error('First AS check fails. Raise appropriate'
                               ' exception.')
@@ -1180,9 +1190,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not aspath:
                 raise bgp.MissingWellKnown(BGP_ATTR_TYPE_AS_PATH)
 
-            # We do not have a setting to enable/disable first-as check.
-            # We by default do first-as check below.
-            if (self.is_ebgp_peer() and
+            if (self.check_first_as and self.is_ebgp_peer() and
                     not aspath.has_matching_leftmost(self.remote_as)):
                 LOG.error('First AS check fails. Raise appropriate exception.')
                 raise bgp.MalformedAsPath()
@@ -1382,7 +1390,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         processing.
         """
         umsg_pattrs = update_msg.pathattr_map
-        mpreach_nlri_attr = umsg_pattrs.pop(BGP_ATTR_TYPE_MP_REACH_NLRI)
+        mpreach_nlri_attr = umsg_pattrs.get(BGP_ATTR_TYPE_MP_REACH_NLRI)
         assert mpreach_nlri_attr
 
         msg_rf = mpreach_nlri_attr.route_family
@@ -1791,6 +1799,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             LOG.debug('Skipping sending path as AS_PATH has peer AS %s' %
                       self.remote_as)
             return
+
+        # If this peer is a route server client, we forward the path
+        # regardless of AS PATH loop, whether the connction is iBGP or eBGP,
+        # or path's communities.
+        if self.is_route_server_client:
+            outgoing_route = OutgoingRoute(path)
+            self.enque_outgoing_msg(outgoing_route)
 
         if self._neigh_conf.multi_exit_disc:
             med_attr = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)

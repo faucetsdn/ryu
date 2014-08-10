@@ -77,6 +77,8 @@ PEER_NEXT_HOP = 'peer_next_hop'
 PASSWORD = 'password'
 IN_FILTER = 'in_filter'
 OUT_FILTER = 'out_filter'
+IS_ROUTE_SERVER_CLIENT = 'is_route_server_client'
+CHECK_FIRST_AS = 'check_first_as'
 
 # Default value constants.
 DEFAULT_CAP_GR_NULL = True
@@ -91,6 +93,8 @@ DEFAULT_ENABLED = True
 DEFAULT_CAP_RTC = False
 DEFAULT_IN_FILTER = []
 DEFAULT_OUT_FILTER = []
+DEFAULT_IS_ROUTE_SERVER_CLIENT = False
+DEFAULT_CHECK_FIRST_AS = False
 
 # Default value for *MAX_PREFIXES* setting is set to 0.
 DEFAULT_MAX_PREFIXES = 0
@@ -218,6 +222,24 @@ def validate_out_filters(filters):
     return [valid_filter(filter_) for filter_ in filters]
 
 
+@validate(name=IS_ROUTE_SERVER_CLIENT)
+def validate_is_route_server_client(is_route_server_client):
+    if is_route_server_client not in (True, False):
+        raise ConfigValueError(desc='Invalid is_route_server_client(%s)' %
+                               is_route_server_client)
+
+    return is_route_server_client
+
+
+@validate(name=CHECK_FIRST_AS)
+def validate_check_first_as(check_first_as):
+    if check_first_as not in (True, False):
+        raise ConfigValueError(desc='Invalid check_first_as(%s)' %
+                               check_first_as)
+
+    return check_first_as
+
+
 class NeighborConf(ConfWithId, ConfWithStats):
     """Class that encapsulates one neighbors' configuration."""
 
@@ -235,7 +257,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
                                    LOCAL_ADDRESS, LOCAL_PORT,
                                    PEER_NEXT_HOP, PASSWORD,
-                                   IN_FILTER, OUT_FILTER])
+                                   IN_FILTER, OUT_FILTER,
+                                   IS_ROUTE_SERVER_CLIENT, CHECK_FIRST_AS])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -265,6 +288,11 @@ class NeighborConf(ConfWithId, ConfWithStats):
             IN_FILTER, DEFAULT_IN_FILTER, **kwargs)
         self._settings[OUT_FILTER] = compute_optional_conf(
             OUT_FILTER, DEFAULT_OUT_FILTER, **kwargs)
+        self._settings[IS_ROUTE_SERVER_CLIENT] = compute_optional_conf(
+            IS_ROUTE_SERVER_CLIENT,
+            DEFAULT_IS_ROUTE_SERVER_CLIENT, **kwargs)
+        self._settings[CHECK_FIRST_AS] = compute_optional_conf(
+            CHECK_FIRST_AS, DEFAULT_CHECK_FIRST_AS, **kwargs)
 
         # We do not have valid default MED value.
         # If no MED attribute is provided then we do not have to use MED.
@@ -438,6 +466,14 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def out_filter(self):
         return self._settings[OUT_FILTER]
+
+    @property
+    def is_route_server_client(self):
+        return self._settings[IS_ROUTE_SERVER_CLIENT]
+
+    @property
+    def check_first_as(self):
+        return self._settings[CHECK_FIRST_AS]
 
     def exceeds_max_prefix_allowed(self, prefix_count):
         allowed_max = self._settings[MAX_PREFIXES]
