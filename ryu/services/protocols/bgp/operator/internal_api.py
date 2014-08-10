@@ -13,6 +13,7 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_LOCAL_PREF
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_INCOMPLETE
 
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -118,6 +119,8 @@ class InternalApi(object):
                 origin = 'i'
             elif origin == BGP_ATTR_ORIGIN_EGP:
                 origin = 'e'
+            elif origin == BGP_ATTR_ORIGIN_INCOMPLETE:
+                origin = '?'
 
             nexthop = path.nexthop
             # Get the MED path attribute
