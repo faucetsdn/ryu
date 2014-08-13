@@ -20,30 +20,26 @@ import logging
 import paramiko
 import sys
 from copy import copy
-from oslo.config import cfg
 import os.path
+
+CONF = {
+    "ssh_port": 4990,
+    "ssh_host": "localhost",
+    "ssh_hostkey": None,
+    "ssh_username": "ryu",
+    "ssh_password": "ryu",
+}
 
 from ryu.lib import hub
 from ryu import version
-from ryu.base import app_manager
 from ryu.services.protocols.bgp.operator.command import Command
 from ryu.services.protocols.bgp.operator.command import CommandsResponse
 from ryu.services.protocols.bgp.operator.commands.root import RootCmd
 from ryu.services.protocols.bgp.operator.internal_api import InternalApi
 from ryu.services.protocols.bgp.operator.command import STATUS_OK
+from ryu.services.protocols.bgp.base import Activity
 
 LOG = logging.getLogger('bgpspeaker.cli')
-
-CONF = cfg.CONF
-CONF.register_opts([
-    cfg.ListOpt('cli-transports', default=[], help='cli transports to enable'),
-    cfg.StrOpt('cli-ssh-host', default='localhost',
-               help='cli ssh listen host'),
-    cfg.IntOpt('cli-ssh-port', default=4990, help='cli ssh listen port'),
-    cfg.StrOpt('cli-ssh-hostkey', help='cli ssh host key file'),
-    cfg.StrOpt('cli-ssh-username', default='ryu', help='cli ssh username'),
-    cfg.StrOpt('cli-ssh-password', default='ryu', help='cli ssh password')
-])
 
 
 class SshServer(paramiko.ServerInterface):
@@ -86,8 +82,8 @@ Hello, this is Ryu BGP speaker (version %s).
         transport.start_server(server=self)
 
     def _find_ssh_server_key(self):
-        if CONF.cli_ssh_hostkey:
-            return paramiko.RSAKey.from_private_key_file(CONF.cli_ssh_hostkey)
+        if CONF["ssh_hostkey"]:
+            return paramiko.RSAKey.from_private_key_file(ssh_hostkey)
         elif os.path.exists("/etc/ssh_host_rsa_key"):
             # OSX
             return paramiko.RSAKey.from_private_key_file(
@@ -103,8 +99,8 @@ Hello, this is Ryu BGP speaker (version %s).
         return paramiko.AUTH_SUCCESSFUL
 
     def check_auth_password(self, username, password):
-        if username == CONF.cli_ssh_username and \
-                password == CONF.cli_ssh_password:
+        if username == CONF["ssh_username"] and \
+                password == CONF["ssh_password"]:
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
 
@@ -467,21 +463,20 @@ class SshServerFactory(object):
         SshServer(sock, addr)
 
 
-class Cli(app_manager.RyuApp):
-    def __init__(self, *args, **kwargs):
-        super(Cli, self).__init__(*args, **kwargs)
-        something_started = False
+class Cli(Activity):
+    def __init__(self):
+        super(Cli, self).__init__()
 
-    def start(self):
-        LOG.info("starting ssh server at %s:%d",
-                 CONF.cli_ssh_host, CONF.cli_ssh_port)
-        t = hub.spawn(self._ssh_thread)
-        something_started = True
-        return t
+    def _run(self, *args, **kwargs):
+        for k, v in kwargs.items():
+            if k in CONF:
+                CONF[k] = v
 
-    def _ssh_thread(self):
+        LOG.info("starting ssh server at %s:%d", CONF["ssh_host"],
+                 CONF["ssh_port"])
         factory = SshServerFactory()
-        server = hub.StreamServer((CONF.cli_ssh_host,
-                                   CONF.cli_ssh_port),
+        server = hub.StreamServer((CONF["ssh_host"], CONF["ssh_port"]),
                                   factory.streamserver_handle)
         server.serve_forever()
+
+SSH_CLI_CONTROLLER = Cli()

@@ -47,6 +47,7 @@ from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
+from ryu.services.protocols.bgp.operator import ssh
 
 LOG = logging.getLogger('bgpspeaker.application')
 CONF = cfg.CONF
@@ -92,6 +93,8 @@ class RyuBGPSpeaker(RyuApp):
             if getattr(settings, 'BGP', None):
                 self._start_core(settings)
 
+            if getattr(settings, 'SSH', None) is not None:
+                hub.spawn(ssh.SSH_CLI_CONTROLLER.start, None, **settings.SSH)
         # Start Network Controller to server RPC peers.
         t = hub.spawn(net_ctrl.NET_CONTROLLER.start, *[],
                       **{net_ctrl.NC_RPC_BIND_IP: self.bind_ip,

@@ -18,7 +18,6 @@
 
 import netaddr
 from ryu.lib import hub
-from ryu.base import app_manager
 from ryu.services.protocols.bgp.operator import ssh
 
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
@@ -137,11 +136,8 @@ class BGPSpeaker(object):
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
-
         if ssh_console:
-            app_mgr = app_manager.AppManager.get_instance()
-            ssh_cli = app_mgr.instantiate(ssh.Cli)
-            ssh_cli.start()
+            hub.spawn(ssh.SSH_CLI_CONTROLLER.start)
 
     def _notify_best_path_changed(self, path, is_withdraw):
         if not path.source:
