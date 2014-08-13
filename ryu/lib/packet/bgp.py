@@ -932,7 +932,7 @@ class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def label_list(self):
-        return self.addr[:-2]
+        return self.addr[0]
 
     @property
     def formatted_nlri_str(self):
@@ -955,7 +955,7 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def label_list(self):
-        return self.addr[:-2]
+        return self.addr[0]
 
     @property
     def formatted_nlri_str(self):
