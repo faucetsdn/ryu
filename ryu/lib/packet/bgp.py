@@ -50,6 +50,7 @@ BGP_OPT_CAPABILITY = 2  # RFC 5492
 BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
 BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
 BGP_CAP_CARRYING_LABEL_INFO = 4  # RFC 3107
+BGP_CAP_GRACEFUL_RESTART = 64  # RFC 4724
 BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
 BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
 # draft-ietf-idr-bgp-enhanced-route-refresh-05
@@ -1194,6 +1195,39 @@ class BGPOptParamCapabilityCiscoRouteRefresh(_OptParamEmptyCapability):
 @_OptParamCapability.register_type(BGP_CAP_ENHANCED_ROUTE_REFRESH)
 class BGPOptParamCapabilityEnhancedRouteRefresh(_OptParamEmptyCapability):
     pass
+
+
+@_OptParamCapability.register_type(BGP_CAP_GRACEFUL_RESTART)
+class BGPOptParamCapabilityGracefulRestart(_OptParamCapability):
+    _CAP_PACK_STR = "!H"
+
+    def __init__(self, flags, time, tuples, **kwargs):
+        super(BGPOptParamCapabilityGracefulRestart, self).__init__(**kwargs)
+        self.flags = flags
+        self.time = time
+        self.tuples = tuples
+
+    @classmethod
+    def parse_cap_value(cls, buf):
+        (restart, ) = struct.unpack_from(cls._CAP_PACK_STR, buffer(buf))
+        buf = buf[2:]
+        l = []
+        while len(buf) > 0:
+            l.append(struct.unpack_from("!HBB", buffer(buf)))
+            buf = buf[4:]
+        return {'flags': restart >> 12, 'time': restart & 0xfff, 'tuples': l}
+
+    def serialize_cap_value(self):
+        buf = bytearray()
+        msg_pack_into(self._CAP_PACK_STR, buf, 0, self.flags << 12 | self.time)
+        tuples = self.tuples
+        i = 0
+        offset = 2
+        for i in self.tuples:
+            afi, safi, flags = i
+            msg_pack_into("!HBB", buf, offset, afi, safi, flags)
+            offset += 4
+        return buf
 
 
 @_OptParamCapability.register_type(BGP_CAP_FOUR_OCTET_AS_NUMBER)

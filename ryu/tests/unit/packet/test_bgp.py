@@ -44,6 +44,9 @@ class Test_bgp(unittest.TestCase):
     def test_open2(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
                                                       cap_value='hoge'),
+                     bgp.BGPOptParamCapabilityGracefulRestart(flags=0,
+                                                              time=120,
+                                                              tuples=[]),
                      bgp.BGPOptParamCapabilityRouteRefresh(),
                      bgp.BGPOptParamCapabilityCiscoRouteRefresh(),
                      bgp.BGPOptParamCapabilityMultiprotocol(
