@@ -113,6 +113,8 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeAggregator(as_number=40000,
                                            addr='192.0.2.99'),
             bgp.BGPPathAttributeCommunities(communities=communities),
+            bgp.BGPPathAttributeOriginatorId(value='10.1.1.1'),
+            bgp.BGPPathAttributeClusterList(value=['1.1.1.1', '2.2.2.2']),
             bgp.BGPPathAttributeExtendedCommunities(communities=ecommunities),
             bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
                                                [1003, 1000004]]),

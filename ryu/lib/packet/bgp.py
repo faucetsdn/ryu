@@ -70,6 +70,8 @@ BGP_ATTR_TYPE_LOCAL_PREF = 5  # uint32
 BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
 BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
 BGP_ATTR_TYPE_COMMUNITIES = 8  # RFC 1997
+BGP_ATTR_TYPE_ORIGINATOR_ID = 9  # RFC 4456
+BGP_ATTR_TYPE_CLUSTER_LIST = 10  # RFC 4456
 BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
 BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
 BGP_ATTR_TYPE_EXTENDED_COMMUNITIES = 16  # RFC 4360
@@ -1630,6 +1632,73 @@ class BGPPathAttributeCommunities(_PathAttribute):
         return False
 
 
+@_PathAttribute.register_type(BGP_ATTR_TYPE_ORIGINATOR_ID)
+class BGPPathAttributeOriginatorId(_PathAttribute):
+    # ORIGINATOR_ID is a new optional, non-transitive BGP attribute of Type
+    # code 9. This attribute is 4 bytes long and it will be created by an
+    # RR in reflecting a route.
+    _VALUE_PACK_STR = '!4s'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+    _TYPE = {
+        'ascii': [
+            'value'
+        ]
+    }
+
+    @classmethod
+    def parse_value(cls, buf):
+        (originator_id,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        return {
+            'value': addrconv.ipv4.bin_to_text(originator_id),
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0,
+                      addrconv.ipv4.text_to_bin(self.value))
+        return buf
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_CLUSTER_LIST)
+class BGPPathAttributeClusterList(_PathAttribute):
+    # CLUSTER_LIST is a new, optional, non-transitive BGP attribute of Type
+    # code 10. It is a sequence of CLUSTER_ID values representing the
+    # reflection path that the route has passed.
+    _VALUE_PACK_STR = '!4s'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+    _TYPE = {
+        'ascii': [
+            'value'
+        ]
+    }
+
+    @classmethod
+    def parse_value(cls, buf):
+        rest = buf
+        cluster_list = []
+        elem_size = struct.calcsize(cls._VALUE_PACK_STR)
+        while len(rest) >= elem_size:
+            (cluster_id, ) = struct.unpack_from(
+                cls._VALUE_PACK_STR, buffer(rest))
+            cluster_list.append(addrconv.ipv4.bin_to_text(cluster_id))
+            rest = rest[elem_size:]
+        return {
+            'value': cluster_list,
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        for cluster_id in self.value:
+            cluster_id_bin = bytearray()
+            msg_pack_into(
+                self._VALUE_PACK_STR,
+                cluster_id_bin,
+                0,
+                addrconv.ipv4.text_to_bin(cluster_id))
+            buf += cluster_id_bin
+        return buf
+
+
 # Extended Communities
 # RFC 4360
 # RFC 5668
@@ -1660,6 +1729,7 @@ class BGPPathAttributeCommunities(_PathAttribute):
 # 00    03          Route Origin Community (two-octet AS specific)
 # 01    03          Route Origin Community (IPv4 address specific)
 # 02    03          Route Origin Community (four-octet AS specific, RFC 5668)
+
 @_PathAttribute.register_type(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
 class BGPPathAttributeExtendedCommunities(_PathAttribute):
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
