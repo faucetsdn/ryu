@@ -1722,14 +1722,14 @@ class BGPPathAttributeClusterList(_PathAttribute):
 
     def serialize_value(self):
         buf = bytearray()
+        offset = 0
         for cluster_id in self.value:
-            cluster_id_bin = bytearray()
             msg_pack_into(
                 self._VALUE_PACK_STR,
-                cluster_id_bin,
-                0,
+                buf,
+                offset,
                 addrconv.ipv4.text_to_bin(cluster_id))
-            buf += cluster_id_bin
+            offset += struct.calcsize(self._VALUE_PACK_STR)
         return buf
 
 
