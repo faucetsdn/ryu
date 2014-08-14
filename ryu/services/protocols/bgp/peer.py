@@ -1616,8 +1616,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 LOG.debug('Refresh Stale Path timer set (%s sec).' % rst)
 
     def _handle_route_refresh_msg(self, msg):
-        afi = msg.route_family.afi
-        safi = msg.route_family.safi
+        afi = msg.afi
+        safi = msg.safi
         demarcation = msg.demarcation
 
         # If this normal route-refresh request.
