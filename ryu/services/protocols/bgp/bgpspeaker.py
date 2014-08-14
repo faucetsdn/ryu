@@ -506,16 +506,32 @@ class BGPSpeaker(object):
         in_filter = call(func_name, **param)
         return in_filter
 
-    def bmp_start(self, host, port):
+    def bmp_server_add(self, address, port):
+        """This method registers a new BMP (BGP monitoring Protocol)
+        server. The BGP speaker starts to send BMP messages to the
+        server. Currently, only one BMP server can be registered.
+
+        ``address`` specifies the IP address of a BMP server.
+
+        ``port`` specifies the listen port number of a BMP server.
+        """
+
         func_name = 'bmp.start'
         param = {}
-        param['host'] = host
+        param['host'] = address
         param['port'] = port
         call(func_name, **param)
 
-    def bmp_stop(self, host, port):
+    def bmp_server_del(self, address, port):
+        """ This method unregister the registered BMP server.
+
+        ``address`` specifies the IP address of a BMP server.
+
+        ``port`` specifies the listen port number of a BMP server.
+        """
+
         func_name = 'bmp.stop'
         param = {}
-        param['host'] = host
+        param['host'] = address
         param['port'] = port
         call(func_name, **param)
