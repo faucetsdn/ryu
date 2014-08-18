@@ -852,12 +852,6 @@ class _UnlabelledAddrPrefix(_AddrPrefix):
 
 
 class _IPAddrPrefix(_AddrPrefix):
-    _TYPE = {
-        'ascii': [
-            'addr'
-        ]
-    }
-
     @staticmethod
     def _prefix_to_bin(addr):
         (addr,) = addr
@@ -869,12 +863,6 @@ class _IPAddrPrefix(_AddrPrefix):
 
 
 class _IP6AddrPrefix(_AddrPrefix):
-    _TYPE = {
-        'ascii': [
-            'addr'
-        ]
-    }
-
     @staticmethod
     def _prefix_to_bin(addr):
         (addr,) = addr
@@ -923,6 +911,11 @@ class _VPNAddrPrefix(_AddrPrefix):
 
 class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
     ROUTE_FAMILY = RF_IPv4_UC
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
 
     @property
     def prefix(self):
@@ -935,6 +928,11 @@ class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
 
 class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
     ROUTE_FAMILY = RF_IPv6_UC
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
 
     @property
     def prefix(self):
