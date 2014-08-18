@@ -30,8 +30,8 @@ import netaddr
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
-from ryu.lib.packet import afi
-from ryu.lib.packet import safi
+from ryu.lib.packet import afi as addr_family
+from ryu.lib.packet import safi as subaddr_family
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
@@ -572,18 +572,23 @@ class RouteFamily(StringifyMixin):
         return cmp((other.afi, other.safi), (self.afi, self.safi))
 
 # Route Family Singleton
-RF_IPv4_UC = RouteFamily(afi.IP, safi.UNICAST)
-RF_IPv6_UC = RouteFamily(afi.IP6, safi.UNICAST)
-RF_IPv4_VPN = RouteFamily(afi.IP, safi.MPLS_VPN)
-RF_IPv6_VPN = RouteFamily(afi.IP6, safi.MPLS_VPN)
-RF_RTC_UC = RouteFamily(afi.IP, safi.ROUTE_TARGET_CONSTRTAINS)
+RF_IPv4_UC = RouteFamily(addr_family.IP, subaddr_family.UNICAST)
+RF_IPv6_UC = RouteFamily(addr_family.IP6, subaddr_family.UNICAST)
+RF_IPv4_VPN = RouteFamily(addr_family.IP, subaddr_family.MPLS_VPN)
+RF_IPv6_VPN = RouteFamily(addr_family.IP6, subaddr_family.MPLS_VPN)
+RF_IPv4_MPLS = RouteFamily(addr_family.IP, subaddr_family.MPLS_LABEL)
+RF_IPv6_MPLS = RouteFamily(addr_family.IP6, subaddr_family.MPLS_LABEL)
+RF_RTC_UC = RouteFamily(addr_family.IP,
+                        subaddr_family.ROUTE_TARGET_CONSTRTAINS)
 
 _rf_map = {
-    (afi.IP, safi.UNICAST): RF_IPv4_UC,
-    (afi.IP6, safi.UNICAST): RF_IPv6_UC,
-    (afi.IP, safi.MPLS_VPN): RF_IPv4_VPN,
-    (afi.IP6, safi.MPLS_VPN): RF_IPv6_VPN,
-    (afi.IP, safi.ROUTE_TARGET_CONSTRTAINS): RF_RTC_UC
+    (addr_family.IP, subaddr_family.UNICAST): RF_IPv4_UC,
+    (addr_family.IP6, subaddr_family.UNICAST): RF_IPv6_UC,
+    (addr_family.IP, subaddr_family.MPLS_VPN): RF_IPv4_VPN,
+    (addr_family.IP6, subaddr_family.MPLS_VPN): RF_IPv6_VPN,
+    (addr_family.IP, subaddr_family.MPLS_LABEL): RF_IPv4_MPLS,
+    (addr_family.IP6, subaddr_family.MPLS_LABEL): RF_IPv6_MPLS,
+    (addr_family.IP, subaddr_family.ROUTE_TARGET_CONSTRTAINS): RF_RTC_UC
 }
 
 
@@ -803,9 +808,30 @@ class _LabelledAddrPrefix(_AddrPrefix):
                             bytearray()) + cls._prefix_to_bin(rest))
 
     @classmethod
+    def _has_no_label(cls, bin_):
+        try:
+            length = len(bin_)
+            labels = []
+            while True:
+                (label, bin_) = cls._label_from_bin(bin_)
+                labels.append(label)
+                if label & 1:  # bottom of stack
+                    break
+            assert length > struct.calcsize(cls._LABEL_PACK_STR) * len(labels)
+        except struct.error:
+            return True
+        except AssertionError:
+            return True
+        return False
+
+    @classmethod
     def _from_bin(cls, addr):
         rest = addr
         labels = []
+
+        if cls._has_no_label(rest):
+            return ([],) + cls._prefix_from_bin(rest)
+
         while True:
             (label, rest) = cls._label_from_bin(rest)
             labels.append(label >> 4)
@@ -917,6 +943,14 @@ class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
     @property
     def formatted_nlri_str(self):
         return self.prefix
+
+
+class LabelledIPAddrPrefix(_LabelledAddrPrefix, _IPAddrPrefix):
+    ROUTE_FAMILY = RF_IPv4_MPLS
+
+
+class LabelledIP6AddrPrefix(_LabelledAddrPrefix, _IP6AddrPrefix):
+    ROUTE_FAMILY = RF_IPv6_MPLS
 
 
 class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
@@ -1067,6 +1101,8 @@ _addr_class_key = lambda x: (x.afi, x.safi)
 _ADDR_CLASSES = {
     _addr_class_key(RF_IPv4_UC): IPAddrPrefix,
     _addr_class_key(RF_IPv6_UC): IP6AddrPrefix,
+    _addr_class_key(RF_IPv4_MPLS): LabelledIPAddrPrefix,
+    _addr_class_key(RF_IPv6_MPLS): LabelledIP6AddrPrefix,
     _addr_class_key(RF_IPv4_VPN): LabelledVPNIPAddrPrefix,
     _addr_class_key(RF_IPv6_VPN): LabelledVPNIP6AddrPrefix,
     _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
@@ -1937,10 +1973,12 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         self.safi = safi
         self.next_hop_len = next_hop_len
         self.next_hop = next_hop
-        if RouteFamily(afi, safi) in (RF_IPv6_UC, RF_IPv6_VPN):
+        if afi == addr_family.IP:
+            self._next_hop_bin = addrconv.ipv4.text_to_bin(next_hop)
+        elif afi == addr_family.IP6:
             self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
         else:
-            self._next_hop_bin = addrconv.ipv4.text_to_bin(next_hop)
+            raise ValueError('Invalid address familly(%d)' % afi)
         self.reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
@@ -1963,16 +2001,19 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             nlri.append(n)
 
         rf = RouteFamily(afi, safi)
-        if rf == RF_IPv6_UC:
-            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
-        elif rf == RF_IPv6_VPN:
+        if rf == RF_IPv6_VPN:
             next_hop = addrconv.ipv6.bin_to_text(next_hop_bin[cls._rd_length:])
             next_hop_len -= cls._rd_length
         elif rf == RF_IPv4_VPN:
             next_hop = addrconv.ipv4.bin_to_text(next_hop_bin[cls._rd_length:])
             next_hop_len -= cls._rd_length
-        else:
+        elif afi == addr_family.IP:
             next_hop = addrconv.ipv4.bin_to_text(next_hop_bin)
+        elif afi == addr_family.IP6:
+            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
+        else:
+            raise ValueError('Invalid address familly(%d)' % afi)
+
         return {
             'afi': afi,
             'safi': safi,
