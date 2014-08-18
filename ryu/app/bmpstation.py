@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import socket
-import logging
-logging.basicConfig(level=logging.DEBUG)
+import time
 
 from ryu.base import app_manager
 
@@ -23,23 +23,32 @@ from ryu.lib import hub
 from ryu.lib.hub import StreamServer
 from ryu.lib.packet import bmp
 
-SERVER_HOST = '0.0.0.0'
-SERVER_PORT = 11019
-
 
 class BMPStation(app_manager.RyuApp):
     def __init__(self):
         super(BMPStation, self).__init__()
         self.name = 'bmpstation'
+        self.server_host = os.environ.get('RYU_BMP_SERVER_HOST', '0.0.0.0')
+        self.server_port = int(os.environ.get('RYU_BMP_SERVER_PORT', 11019))
+        output_file = os.environ.get('RYU_BMP_OUTPUT_FILE', 'ryu_bmp.log')
+        failed_dump = os.environ.get('RYU_BMP_FAILED_DUMP',
+                                     'ryu_bmp_failed.dump')
+
+        self.output_fd = open(output_file, 'w')
+        self.failed_dump_fd = open(failed_dump, 'w')
+
+        self.failed_pkt_count = 0
 
     def start(self):
         super(BMPStation, self).start()
+        self.logger.debug("listening on %s:%s" % (self.server_host,
+                                                  self.server_port))
 
-        return hub.spawn(StreamServer((SERVER_HOST, SERVER_PORT),
+        return hub.spawn(StreamServer((self.server_host, self.server_port),
                                       self.loop).serve_forever)
 
     def loop(self, sock, addr):
-        logging.debug("started bmp loop.")
+        self.logger.debug("start bmp loop: client %s" % str(addr))
         is_active = True
         buf = bytearray()
         required_len = bmp.BMPMessage._HDR_LEN
@@ -53,7 +62,7 @@ class BMPStation(app_manager.RyuApp):
             while len(buf) >= required_len:
                 version, len_, _ = bmp.BMPMessage.parse_header(buf)
                 if version != bmp.VERSION:
-                    logging.error("unsupported bmp version: %d" % version)
+                    self.logger.error("unsupported bmp version: %d" % version)
                     is_active = False
                     break
 
@@ -61,8 +70,27 @@ class BMPStation(app_manager.RyuApp):
                 if len(buf) < required_len:
                     break
 
-                msg, rest = bmp.BMPMessage.parser(buf)
-                print msg, '\n'
+                try:
+                    msg, rest = bmp.BMPMessage.parser(buf)
+                except Exception, e:
+                    pkt = buf[:len_]
+                    self.failed_dump_fd.write(pkt)
+                    self.failed_dump_fd.flush()
+                    buf = buf[len_:]
+                    self.failed_pkt_count += 1
+                    self.logger.error("failed to parse: %s"
+                                      " (total fail count: %d)" %
+                                      (e, self.failed_pkt_count))
+                else:
+                    t = time.strftime("%Y %b %d %H:%M:%S", time.localtime())
+                    self.logger.debug("%s | %s\n" % (t, msg))
+                    self.output_fd.write("%s | %s\n\n" % (t, msg))
+                    self.output_fd.flush()
+                    buf = rest
 
-                buf = rest
                 required_len = bmp.BMPMessage._HDR_LEN
+
+        self.logger.debug("end bmp loop.")
+        sock.close()
+        self.output_fd.close()
+        self.failed_dump_fd.close()
