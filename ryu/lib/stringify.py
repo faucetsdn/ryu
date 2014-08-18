@@ -105,6 +105,7 @@ class StringifyMixin(object):
     """
 
     _class_prefixes = []
+    _class_suffixes = []
 
     def stringify_attrs(self):
         """an override point for sub classes"""
@@ -132,6 +133,9 @@ class StringifyMixin(object):
             return False
         for p in cls._class_prefixes:
             if k.startswith(p):
+                return True
+        for p in cls._class_suffixes:
+            if k.endswith(p):
                 return True
         return False
 
