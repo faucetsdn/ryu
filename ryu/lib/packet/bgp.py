@@ -1960,6 +1960,11 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
     _class_suffixes = ['AddrPrefix']
     _rd_length = 8
+    _TYPE = {
+        'ascii': [
+            'next_hop'
+        ]
+    }
 
     def __init__(self, afi, safi, next_hop, nlri,
                  next_hop_len=0, reserved='\0',
