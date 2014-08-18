@@ -1982,7 +1982,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
         else:
             raise ValueError('Invalid address familly(%d)' % afi)
-        self.reserved = reserved
+        self._reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
         for i in nlri:
@@ -1996,6 +1996,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         next_hop_bin = rest[:next_hop_len]
         rest = rest[next_hop_len:]
         reserved = rest[:1]
+        assert reserved == '\0'
         binnlri = rest[1:]
         addr_cls = _get_addr_class(afi, safi)
         nlri = []
@@ -2039,13 +2040,13 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             next_hop_len = self.next_hop_len
             next_hop_bin = self._next_hop_bin
 
-        self.reserved = '\0'
+        self._reserved = '\0'
 
         buf = bytearray()
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi,
                       self.safi, next_hop_len)
         buf += next_hop_bin
-        buf += self.reserved
+        buf += self._reserved
         binnlri = bytearray()
         for n in self.nlri:
             binnlri += n.serialize()
