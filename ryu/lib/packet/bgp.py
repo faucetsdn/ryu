@@ -1958,7 +1958,7 @@ class BGPUnknownExtendedCommunity(_ExtendedCommunity):
 class BGPPathAttributeMpReachNLRI(_PathAttribute):
     _VALUE_PACK_STR = '!HBB'  # afi, safi, next hop len
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
-    _class_prefixes = ['_BinAddrPrefix']
+    _class_suffixes = ['AddrPrefix']
     _rd_length = 8
 
     def __init__(self, afi, safi, next_hop, nlri,
@@ -2056,7 +2056,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
 class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
     _VALUE_PACK_STR = '!HB'  # afi, safi
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
-    _class_prefixes = ['_BinAddrPrefix']
+    _class_suffixes = ['AddrPrefix']
 
     def __init__(self, afi, safi, withdrawn_routes,
                  flags=0, type_=None, length=None):
