@@ -312,21 +312,14 @@ class BGPSpeaker(object):
             func_name = 'prefix.add_local'
             networks[ROUTE_DISTINGUISHER] = route_dist
 
-            # check if the prefix address is IPv6 address
-            ip, masklen = prefix.split('/')
-            if netaddr.valid_ipv6(ip):
-                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV6
-                # convert the next_hop address to IPv4-Mapped IPv6 Address
-                # if it is IPv4 address
-                if netaddr.valid_ipv4(next_hop):
-                    networks[NEXT_HOP] = \
-                        str(netaddr.IPAddress(next_hop).ipv6())
+            rf, p = self._check_rf_and_normalize(prefix)
+            networks[ROUTE_FAMILY] = rf
+            networks[PREFIX] = p
 
-                # normalize IPv6 address expression
-                networks[PREFIX] = \
-                    str(netaddr.IPAddress(ip)) + '/' + masklen
-            else:
-                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV4
+            if rf == vrfs.VRF_RF_IPV6 and netaddr.valid_ipv4(next_hop):
+                # convert the next_hop to IPv4-Mapped IPv6 Address
+                networks[NEXT_HOP] = \
+                    str(netaddr.IPAddress(next_hop).ipv6())
 
         call(func_name, **networks)
 
@@ -348,14 +341,9 @@ class BGPSpeaker(object):
             func_name = 'prefix.delete_local'
             networks[ROUTE_DISTINGUISHER] = route_dist
 
-            ip, masklen = prefix.split('/')
-            if netaddr.valid_ipv6(ip):
-                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV6
-                # normalize IPv6 address expression
-                networks[PREFIX] = \
-                    str(netaddr.IPAddress(ip)) + '/' + masklen
-            else:
-                networks[ROUTE_FAMILY] = vrfs.VRF_RF_IPV4
+            rf, p = self._check_rf_and_normalize(prefix)
+            networks[ROUTE_FAMILY] = rf
+            networks[PREFIX] = p
 
         call(func_name, **networks)
 
@@ -535,3 +523,19 @@ class BGPSpeaker(object):
         param['host'] = address
         param['port'] = port
         call(func_name, **param)
+
+    @staticmethod
+    def _check_rf_and_normalize(prefix):
+        """ check prefix's route_family and if the address is
+        IPv6 address, return IPv6 route_family and normalized IPv6 address.
+        If the address is IPv4 address, return IPv4 route_family
+        and the prefix itself.
+
+        """
+        ip, masklen = prefix.split('/')
+        if netaddr.valid_ipv6(ip):
+            # normalize IPv6 address
+            ipv6_prefix = str(netaddr.IPAddress(ip)) + '/' + masklen
+            return vrfs.VRF_RF_IPV6, ipv6_prefix
+        else:
+            return vrfs.VRF_RF_IPV4, prefix
