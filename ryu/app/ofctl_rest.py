@@ -48,6 +48,9 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # get flows stats of the switch
 # GET /stats/flow/<dpid>
 #
+# get flows stats of the switch filtered by the fields
+# POST /stats/flow/<dpid>
+#
 # get ports stats of the switch
 # GET /stats/port/<dpid>
 #
@@ -148,16 +151,25 @@ class StatsController(ControllerBase):
         return (Response(content_type='application/json', body=body))
 
     def get_flow_stats(self, req, dpid, **_kwargs):
+        if req.body == '':
+            flow = {}
+        else:
+            try:
+                flow = eval(req.body)
+            except SyntaxError:
+                LOG.debug('invalid syntax %s', req.body)
+                return Response(status=400)
+
         dp = self.dpset.get(int(dpid))
         if dp is None:
             return Response(status=404)
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
-            flows = ofctl_v1_0.get_flow_stats(dp, self.waiters)
+            flows = ofctl_v1_0.get_flow_stats(dp, self.waiters, flow)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
-            flows = ofctl_v1_2.get_flow_stats(dp, self.waiters)
+            flows = ofctl_v1_2.get_flow_stats(dp, self.waiters, flow)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
-            flows = ofctl_v1_3.get_flow_stats(dp, self.waiters)
+            flows = ofctl_v1_3.get_flow_stats(dp, self.waiters, flow)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -511,7 +523,7 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/flow/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_flow_stats',
-                       conditions=dict(method=['GET']))
+                       conditions=dict(method=['GET', 'POST']))
 
         uri = path + '/port/{dpid}'
         mapper.connect('stats', uri,

@@ -616,14 +616,14 @@ def get_queue_stats(dp, waiters):
     return desc
 
 
-def get_flow_stats(dp, waiters):
-    table_id = dp.ofproto.OFPTT_ALL
-    flags = 0
-    out_port = dp.ofproto.OFPP_ANY
-    out_group = dp.ofproto.OFPG_ANY
-    cookie = 0
-    cookie_mask = 0
-    match = dp.ofproto_parser.OFPMatch()
+def get_flow_stats(dp, waiters, flow={}):
+    table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
+    flags = int(flow.get('flags', 0))
+    out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
+    out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
+    cookie = int(flow.get('cookie', 0))
+    cookie_mask = int(flow.get('cookie_mask', 0))
+    match = to_match(dp, flow.get('match', {}))
 
     stats = dp.ofproto_parser.OFPFlowStatsRequest(
         dp, flags, table_id, out_port, out_group, cookie, cookie_mask,
