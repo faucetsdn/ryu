@@ -96,7 +96,8 @@ class BGPSpeaker(object):
                  refresh_stalepath_time=DEFAULT_REFRESH_STALEPATH_TIME,
                  refresh_max_eor_time=DEFAULT_REFRESH_MAX_EOR_TIME,
                  best_path_change_handler=None,
-                 ssh_console=False):
+                 ssh_console=False,
+                 label_range=DEFAULT_LABEL_RANGE):
         """Create a new BGPSpeaker object with as_number and router_id to
         listen on bgp_server_port.
 
@@ -133,6 +134,7 @@ class BGPSpeaker(object):
         settings[BGP_SERVER_PORT] = bgp_server_port
         settings[REFRESH_STALEPATH_TIME] = refresh_stalepath_time
         settings[REFRESH_MAX_EOR_TIME] = refresh_max_eor_time
+        settings[LABEL_RANGE] = label_range
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
