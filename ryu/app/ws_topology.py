@@ -35,7 +35,8 @@ $ sudo mn --controller=remote --topo linear,2
 """  # noqa
 
 from socket import error as SocketError
-from tinyrpc.exc import InvalidReplyError
+from ryu.contrib.tinyrpc.exc import InvalidReplyError
+
 
 from ryu.app.wsgi import (
     ControllerBase,
@@ -83,6 +84,7 @@ class WebSocketTopology(app_manager.RyuApp):
         self._rpc_broadcall('event_link_delete', msg)
 
     def _rpc_broadcall(self, func_name, msg):
+        disconnected_clients = []
         for rpc_client in self.rpc_clients:
             # NOTE: Although broadcasting is desired,
             #       RPCClient#get_proxy(one_way=True) does not work well
@@ -91,9 +93,12 @@ class WebSocketTopology(app_manager.RyuApp):
                 getattr(rpc_server, func_name)(msg)
             except SocketError:
                 self.logger.debug('WebSocket disconnected: %s' % rpc_client.ws)
-                self.rpc_clients.remove(rpc_client)
+                disconnected_clients.append(rpc_client)
             except InvalidReplyError as e:
                 self.logger.error(e)
+
+        for client in disconnected_clients:
+            self.rpc_clients.remove(client)
 
 
 class WebSocketTopologyController(ControllerBase):
