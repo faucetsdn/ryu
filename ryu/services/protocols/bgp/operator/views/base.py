@@ -49,7 +49,7 @@ class OperatorAbstractView(object):
     def _collect_fields(cls):
         names = [attr for attr in dir(cls)
                  if isinstance(getattr(cls, attr), fields.Field)]
-        return {name: getattr(cls, name) for name in names}
+        return dict([(name, getattr(cls, name)) for name in names])
 
     def combine_related(self, field_name):
         """Combines related views. In case of DetailView it just returns

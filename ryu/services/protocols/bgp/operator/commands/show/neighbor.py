@@ -61,10 +61,10 @@ class SentRoutes(Command):
             return WrongParamResp('wrong addr_family name')
 
         ret = self._retrieve_paths(addr_family, rf, ip_addr).encode()
-        ret = {
-            path['nlri']['formatted_nlri']: path
+        ret = dict([
+            (path['nlri']['formatted_nlri'], path)
             for path in ret
-        }
+        ])
 
         return CommandsResponse(STATUS_OK, ret)
 

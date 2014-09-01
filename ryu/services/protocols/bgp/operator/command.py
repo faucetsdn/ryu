@@ -257,8 +257,9 @@ class TextFilter(object):
                 resp = [resp[key] for key, value in enumerate(resp)
                         if key not in remove]
             else:
-                resp = {key: value for key, value in resp.iteritems()
-                        if key not in remove}
+                resp = dict([(key, value)
+                             for key, value in resp.iteritems()
+                             if key not in remove])
 
             return resp
         else:

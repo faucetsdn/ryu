@@ -167,8 +167,9 @@ class PeerState(object):
         )
 
     def _remember_last_bgp_error(self, identifier, data):
-        self._last_bgp_error = {k: v for k, v in data.iteritems()
-                                if k != 'peer'}
+        self._last_bgp_error = dict([(k, v)
+                                     for k, v in data.iteritems()
+                                     if k != 'peer'])
 
     @property
     def recv_prefix(self):

@@ -233,14 +233,14 @@ class BgpProtocol(Protocol, Activity):
 
         # Check MP_BGP capabilities were advertised.
         if local_mbgp_cap and remote_mbgp_cap:
-            local_families = {
+            local_families = set([
                 (peer_cap.afi, peer_cap.safi)
                 for peer_cap in local_mbgp_cap
-            }
-            remote_families = {
+            ])
+            remote_families = set([
                 (peer_cap.afi, peer_cap.safi)
                 for peer_cap in remote_mbgp_cap
-            }
+            ])
             afi_safi = local_families.intersection(remote_families)
         else:
             afi_safi = set()

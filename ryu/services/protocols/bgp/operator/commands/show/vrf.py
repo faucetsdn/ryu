@@ -137,7 +137,8 @@ class Summary(Command, CountRoutesMixin):
                     vrf_rf
                 )
 
-            encoded = {str(k): v for k, v in encoded.iteritems()}
+            encoded = dict([(str(k), v)
+                            for k, v in encoded.iteritems()])
             return CommandsResponse(
                 STATUS_OK,
                 encoded
