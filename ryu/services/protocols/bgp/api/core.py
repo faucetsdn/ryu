@@ -37,7 +37,10 @@ def start(**kwargs):
         raise RuntimeConfigError('Current context has to be stopped to start '
                                  'a new context.')
 
-    waiter = kwargs.pop('waiter')
+    try:
+        waiter = kwargs.pop('waiter')
+    except KeyError:
+        waiter = hub.Event()
     common_config = CommonConf(**kwargs)
     hub.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config,
                                           'waiter': waiter})
