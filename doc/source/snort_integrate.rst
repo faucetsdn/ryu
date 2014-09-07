@@ -7,6 +7,8 @@ This document describes how to integrate Ryu with Snort.
 Overview
 ====
 
+There are two options can send alert to Ryu controller. The Option 1 is easier if you just want to demonstrate or test. Since Snort need very large computation power for analyzing packets you can choose Option 2 to separate them.  
+
 **[Option 1] Ryu and Snort are on the same machine**
 ::
 
@@ -40,7 +42,7 @@ The above depicts Ryu and Snort architecture. Ryu receives Snort alert packet vi
                 +----------+   +----------+
 
 
-**\*CP: Controller Plane**
+**\*CP: Control Plane**
 
 The above depicts Ryu and Snort architecture. Ryu receives Snort alert packet via **Network Socket** . To monitor packets between HostA and HostB, installing a flow that mirrors packets to Snort.
 
@@ -92,7 +94,7 @@ The incoming packets will all mirror to **port 3** which should be connect to Sn
 3. Run Snort: ::
 
     $ sudo -i
-    $ sudo snort -i eth1 -A unsock -l /tmp -c /etc/snort/snort.conf
+    $ snort -i eth1 -A unsock -l /tmp -c /etc/snort/snort.conf
 
 4. Send an ICMP packet from HostA (192.168.8.40) to HostB (192.168.8.50): ::
 
@@ -114,20 +116,20 @@ The incoming packets will all mirror to **port 3** which should be connect to Sn
 
 2. Run Ryu with sample application (On the Controller): ::
 
-    $ sudo ./bin/ryu-manager ryu/app/simple_switch_snort.py
+    $ ./bin/ryu-manager ryu/app/simple_switch_snort.py
 
 3. Run Snort (On the Snort machine): ::
 
     $ sudo -i
-    $ sudo snort -i eth1 -A unsock -l /tmp -c /etc/snort/snort.conf
+    $ snort -i eth1 -A unsock -l /tmp -c /etc/snort/snort.conf
 
-4. Run ``unsock2nwsock.py`` (On the Snort machine): ::
+4. Run ``pigrelay.py`` (On the Snort machine): ::
 
-    $ sudo python unsock2nwsock.py
+    $ sudo python pigrelay.py
 
 This program listening snort alert messages from unix domain socket and sending it to Ryu using network socket.
 
-You can clone the script over here. https://gist.github.com/John-Lin/9408ab716df57dbe32ca
+You can clone the source code from this repo. https://github.com/John-Lin/pigrelay
 
 
 5. Send an ICMP packet from HostA (192.168.8.40) to HostB (192.168.8.50): ::

@@ -47,13 +47,11 @@ class SnortLib(app_manager.RyuApp):
 
     def start_socket_server(self):
         if not self.config.get('unixsock'):
-            self.config['ip'] = hub.socket.gethostbyname(hub.socket.
-                                                         gethostname())
+
             if self.config.get('port') is None:
                 self.config['port'] = 51234
 
-            self._start_recv_nw_sock(self.config.get('ip'),
-                                     self.config.get('port'))
+            self._start_recv_nw_sock(self.config.get('port'))
         else:
             self._start_recv()
 
@@ -76,20 +74,21 @@ class SnortLib(app_manager.RyuApp):
         self.sock.bind(SOCKFILE)
         hub.spawn(self._recv_loop)
 
-    def _start_recv_nw_sock(self, ip, port):
+    def _start_recv_nw_sock(self, port):
 
         self.nwsock = hub.socket.socket(hub.socket.AF_INET,
                                         hub.socket.SOCK_STREAM)
-        self.nwsock.bind((ip, port))
+        self.nwsock.bind(('0.0.0.0', port))
         self.nwsock.listen(5)
-        self.conn, addr = self.nwsock.accept()
 
         hub.spawn(self._recv_loop_nw_sock)
 
     def _recv_loop_nw_sock(self):
         self.logger.info("Network socket server start listening...")
         while True:
-            data = self.conn.recv(BUFSIZE, hub.socket.MSG_WAITALL)
+            conn, addr = self.nwsock.accept()
+            self.logger.info("Connected with %s", addr[0])
+            data = conn.recv(BUFSIZE, hub.socket.MSG_WAITALL)
 
             if len(data) == BUFSIZE:
                 msg = alert.AlertPkt.parser(data)
