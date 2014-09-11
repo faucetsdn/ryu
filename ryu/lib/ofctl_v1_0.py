@@ -312,6 +312,8 @@ def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     priority = int(flow.get('priority',
                             dp.ofproto.OFP_DEFAULT_PRIORITY))
+    buffer_id = int(flow.get('buffer_id', dp.ofproto.OFP_NO_BUFFER))
+    out_port = int(flow.get('out_port', dp.ofproto.OFPP_NONE))
     flags = int(flow.get('flags', 0))
     idle_timeout = int(flow.get('idle_timeout', 0))
     hard_timeout = int(flow.get('hard_timeout', 0))
@@ -321,7 +323,9 @@ def mod_flow_entry(dp, flow, cmd):
     flow_mod = dp.ofproto_parser.OFPFlowMod(
         datapath=dp, match=match, cookie=cookie,
         command=cmd, idle_timeout=idle_timeout,
-        hard_timeout=hard_timeout, priority=priority, flags=flags,
+        hard_timeout=hard_timeout, priority=priority,
+        buffer_id=buffer_id, out_port=out_port,
+        flags=flags,
         actions=actions)
 
     dp.send_msg(flow_mod)
