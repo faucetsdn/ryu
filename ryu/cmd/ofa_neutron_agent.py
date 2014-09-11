@@ -18,6 +18,10 @@
 # @author: Fumihiko Kakuma, VA Linux Systems Japan K.K.
 # @author: YAMAMOTO Takashi, VA Linux Systems Japan K.K.
 
+# NOTE: This module is used by Neutron "ofagent" agent for
+# IceHouse release.  Juno and later releases do not use this.
+# TODO: Remove this module when IceHouse is EOL'ed.
+
 from ryu.lib import hub
 hub.patch()
 
