@@ -74,6 +74,18 @@ from ryu.ofproto import ofproto_v1_4
     Then the tester sw receives the packet and sends a PacketIn message.
     If the packet did not match, the target sw drops the packet.
 
+    If you want to use the other port number which differ from above chart,
+    you can specify the port number in the options when this tool is started.
+    For details of this options, please refer to the Help command.
+    Also, if you describe the name of an option argument
+    (e.g. "target_send_port_1") in test files,
+    this tool sets the argument value in the port number.
+
+        e.g.)
+            "OFPActionOutput":{
+                "port":"target_send_port_1"
+            }
+
 """
 
 
