@@ -13,3 +13,9 @@ BGPSpeaker class
 
 .. autoclass:: ryu.services.protocols.bgp.info_base.base.PrefixFilter
    :members:
+
+.. autoclass:: ryu.services.protocols.bgp.info_base.base.ASPathFilter
+   :members:
+
+.. autoclass:: ryu.services.protocols.bgp.info_base.base.AttributeMap
+   :members:

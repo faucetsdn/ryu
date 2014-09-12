@@ -30,6 +30,7 @@ from ryu.services.protocols.bgp import constants as const
 from ryu.services.protocols.bgp.model import OutgoingRoute
 from ryu.services.protocols.bgp.model import SentRoute
 from ryu.services.protocols.bgp.info_base.base import PrefixFilter
+from ryu.services.protocols.bgp.info_base.base import AttributeMap
 from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
@@ -349,6 +350,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Adj-rib-out
         self._adj_rib_out = {}
 
+        # attribute maps
+        self._attribute_maps = {}
+
     @property
     def remote_as(self):
         return self._neigh_conf.remote_as
@@ -408,6 +412,29 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     @property
     def check_first_as(self):
         return self._neigh_conf.check_first_as
+
+    @property
+    def attribute_maps(self):
+        return self._attribute_maps['__orig']\
+            if '__orig' in self._attribute_maps else []
+
+    @attribute_maps.setter
+    def attribute_maps(self, attribute_maps):
+        _attr_maps = {}
+        _attr_maps.setdefault('__orig', [])
+
+        for a in attribute_maps:
+            cloned = a.clone()
+            LOG.debug("AttributeMap attr_type: %s, attr_value: %s",
+                      cloned.attr_type, cloned.attr_value)
+            attr_list = _attr_maps.setdefault(cloned.attr_type, [])
+            attr_list.append(cloned)
+
+            # preserve original order of attribute_maps
+            _attr_maps['__orig'].append(cloned)
+
+        self._attribute_maps = _attr_maps
+        self.on_update_attribute_maps()
 
     def is_mpbgp_cap_valid(self, route_family):
         if not self.in_established:
@@ -567,6 +594,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                           % nlri_str)
             sent_path.filtered = block
             self.enque_outgoing_msg(outgoing_route)
+
+    def on_update_attribute_maps(self):
+        # resend sent_route in case of filter matching
+        LOG.debug('on_update_attribute_maps fired')
+        for sent_path in self._adj_rib_out.itervalues():
+            LOG.debug('resend path: %s' % sent_path)
+            path = sent_path.path
+            self.enque_outgoing_msg(OutgoingRoute(path))
 
     def __str__(self):
         return 'Peer(ip: %s, asn: %s)' % (self._neigh_conf.ip_address,
@@ -869,8 +904,24 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # LOCAL_PREF Attribute.
             if not self.is_ebgp_peer():
                 # For iBGP peers we are required to send local-pref attribute
-                # for connected or local prefixes. We send default local-pref.
+                # for connected or local prefixes. We check if the path matches
+                # attribute_maps and set local-pref value.
+                # If the path doesn't match, we set default local-pref 100.
                 localpref_attr = BGPPathAttributeLocalPref(100)
+                # TODO handle VPNv4Path
+                if isinstance(path, Ipv4Path):
+                    if AttributeMap.ATTR_LOCAL_PREF in self._attribute_maps:
+                        maps = \
+                            self._attribute_maps[AttributeMap.ATTR_LOCAL_PREF]
+                        for m in maps:
+                            cause, result = m.evaluate(path)
+                            LOG.debug(
+                                "local_pref evaluation result:%s, cause:%s",
+                                result, cause)
+
+                            if result:
+                                localpref_attr = m.get_attribute()
+                                break
 
             # COMMUNITY Attribute.
             community_attr = pathattr_map.get(BGP_ATTR_TYPE_COMMUNITIES)
