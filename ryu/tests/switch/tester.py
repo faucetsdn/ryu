@@ -81,11 +81,6 @@ CONF = cfg.CONF
 
 
 # Default settings.
-TESTER_SENDER_PORT = 1
-TESTER_RECEIVE_PORT = 2
-TARGET_SENDER_PORT = 2
-TARGET_RECEIVE_PORT = 1
-
 INTERVAL = 1  # sec
 WAIT_TIMER = 3  # sec
 CONTINUOUS_THREAD_INTVL = float(0.01)  # sec
@@ -265,7 +260,13 @@ class OfTester(app_manager.RyuApp):
         self._set_logger()
 
         self.target_dpid = self._convert_dpid(CONF['test-switch']['target'])
+        self.target_send_port_1 = CONF['test-switch']['target_send_port_1']
+        self.target_send_port_2 = CONF['test-switch']['target_send_port_2']
+        self.target_recv_port = CONF['test-switch']['target_recv_port']
         self.tester_dpid = self._convert_dpid(CONF['test-switch']['tester'])
+        self.tester_send_port = CONF['test-switch']['tester_send_port']
+        self.tester_recv_port_1 = CONF['test-switch']['tester_recv_port_1']
+        self.tester_recv_port_2 = CONF['test-switch']['tester_recv_port_2']
         self.logger.info('target_dpid=%s',
                          dpid_lib.dpid_to_str(self.target_dpid))
         self.logger.info('tester_dpid=%s',
@@ -363,7 +364,7 @@ class OfTester(app_manager.RyuApp):
             else:
                 self.tester_sw.dp = dp
                 self.tester_sw.add_flow(
-                    in_port=TESTER_RECEIVE_PORT,
+                    in_port=self.tester_recv_port_1,
                     out_port=dp.ofproto.OFPP_CONTROLLER)
                 msg = 'Join tester SW.'
         else:
@@ -712,14 +713,17 @@ class OfTester(app_manager.RyuApp):
 
     def _test_no_pktin_reason_check(self, test_type,
                                     target_pkt_count, tester_pkt_count):
-        before_target_receive = target_pkt_count[0][TARGET_RECEIVE_PORT]['rx']
-        before_target_send = target_pkt_count[0][TARGET_SENDER_PORT]['tx']
-        before_tester_receive = tester_pkt_count[0][TESTER_RECEIVE_PORT]['rx']
-        before_tester_send = tester_pkt_count[0][TESTER_SENDER_PORT]['tx']
-        after_target_receive = target_pkt_count[1][TARGET_RECEIVE_PORT]['rx']
-        after_target_send = target_pkt_count[1][TARGET_SENDER_PORT]['tx']
-        after_tester_receive = tester_pkt_count[1][TESTER_RECEIVE_PORT]['rx']
-        after_tester_send = tester_pkt_count[1][TESTER_SENDER_PORT]['tx']
+        before_target_receive = target_pkt_count[
+            0][self.target_recv_port]['rx']
+        before_target_send = target_pkt_count[0][self.target_send_port_1]['tx']
+        before_tester_receive = tester_pkt_count[
+            0][self.tester_recv_port_1]['rx']
+        before_tester_send = tester_pkt_count[0][self.tester_send_port]['tx']
+        after_target_receive = target_pkt_count[1][self.target_recv_port]['rx']
+        after_target_send = target_pkt_count[1][self.target_send_port_1]['tx']
+        after_tester_receive = tester_pkt_count[
+            1][self.tester_recv_port_1]['rx']
+        after_tester_send = tester_pkt_count[1][self.tester_send_port]['tx']
 
         if after_tester_send == before_tester_send:
             log_msg = 'no change in tx_packets on tester.'
@@ -1121,10 +1125,12 @@ class OfTester(app_manager.RyuApp):
 
 
 class OpenFlowSw(object):
+
     def __init__(self, dp, logger):
         super(OpenFlowSw, self).__init__()
         self.dp = dp
         self.logger = logger
+        self.tester_send_port = CONF['test-switch']['tester_send_port']
 
     def send_msg(self, msg):
         if isinstance(self.dp, DummyDatapath):
@@ -1229,7 +1235,7 @@ class OpenFlowSw(object):
         """ send a PacketOut message."""
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
-        actions = [parser.OFPActionOutput(TESTER_SENDER_PORT)]
+        actions = [parser.OFPActionOutput(self.tester_send_port)]
         out = parser.OFPPacketOut(
             datapath=self.dp, buffer_id=ofp.OFP_NO_BUFFER,
             data=data, in_port=ofp.OFPP_CONTROLLER, actions=actions)
@@ -1272,6 +1278,27 @@ class TestFile(stringify.StringifyMixin):
         self.tests = []
         self._get_tests(path)
 
+    def _normalize_test_json(self, val):
+        def __replace_port_name(k, v):
+            for port_name in [
+                'target_recv_port', 'target_send_port_1',
+                'target_send_port_2', 'tester_send_port',
+                    'tester_recv_port_1', 'tester_recv_port_2']:
+                if v[k] == port_name:
+                    v[k] = CONF['test-switch'][port_name]
+        if isinstance(val, dict):
+            for k, v in val.iteritems():
+                if k == "OFPActionOutput":
+                    if 'port' in v:
+                        __replace_port_name("port", v)
+                elif k == "OXMTlv":
+                    if v.get("field", "") == "in_port":
+                        __replace_port_name("value", v)
+                self._normalize_test_json(v)
+        elif isinstance(val, list):
+            for v in val:
+                self._normalize_test_json(v)
+
     def _get_tests(self, path):
         with open(path, 'rb') as fhandle:
             buf = fhandle.read()
@@ -1281,6 +1308,7 @@ class TestFile(stringify.StringifyMixin):
                     if isinstance(test_json, unicode):
                         self.description = test_json
                     else:
+                        self._normalize_test_json(test_json)
                         self.tests.append(Test(test_json))
             except (ValueError, TypeError) as e:
                 result = (TEST_FILE_ERROR %
