@@ -349,7 +349,7 @@ OFPFC_DELETE_STRICT = 4     # Strictly match wildcards and priority.
 OFPFF_SEND_FLOW_REM = 1 << 0    # Send flow removed message when flow
                                 # expires or is deleted.
 OFPFF_CHECK_OVERLAP = 1 << 1    # Check for overlapping entries first.
-OFPFF_RESET_COUNT = 1 << 2      # Reset flow packet and byte counts.
+OFPFF_RESET_COUNTS = 1 << 2     # Reset flow packet and byte counts.
 
 # struct ofp_group_mod
 OFP_GROUP_MOD_PACK_STR = '!HBxI'
