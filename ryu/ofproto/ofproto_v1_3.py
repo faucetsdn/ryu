@@ -939,7 +939,7 @@ OFPBIC_UNSUP_METADATA_MASK = 4  # Metadata mask value unsupported by
                                 # datapath.
 OFPBIC_BAD_EXPERIMENTER = 5     # Unknown experimenter id specified.
 OFPBIC_BAD_EXP_TYPE = 6         # Unknown instruction for experimenter id.
-OFPBIC_BAD_EXP_LEN = 7          # Length problem in instrucitons.
+OFPBIC_BAD_LEN = 7              # Length problem in instrucitons.
 OFPBIC_EPERM = 8                # Permissions error.
 
 # enum ofp_bad_match_code

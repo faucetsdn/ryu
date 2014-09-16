@@ -2673,7 +2673,7 @@ class OFPQueueStats(StringifyMixin):
         return stats
 
 
-@_set_stats_type(ofproto.OFPMP_QUEUE, OFPQueueStats)
+@_set_stats_type(ofproto.OFPMP_QUEUE_STATS, OFPQueueStats)
 @_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
 class OFPQueueStatsRequest(OFPMultipartRequest):
     """
@@ -2713,7 +2713,7 @@ class OFPQueueStatsRequest(OFPMultipartRequest):
 
 
 @OFPMultipartReply.register_stats_type()
-@_set_stats_type(ofproto.OFPMP_QUEUE, OFPQueueStats)
+@_set_stats_type(ofproto.OFPMP_QUEUE_STATS, OFPQueueStats)
 @_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
 class OFPQueueStatsReply(OFPMultipartReply):
     """
