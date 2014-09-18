@@ -648,7 +648,9 @@ def get_flow_stats(dp, waiters, flow={}):
                  'duration_sec': stats.duration_sec,
                  'duration_nsec': stats.duration_nsec,
                  'packet_count': stats.packet_count,
-                 'table_id': stats.table_id}
+                 'table_id': stats.table_id,
+                 'length': stats.length,
+                 'flags': stats.flags}
             flows.append(s)
     flows = {str(dp.id): flows}
 
@@ -676,7 +678,9 @@ def get_port_stats(dp, waiters):
                  'rx_frame_err': stats.rx_frame_err,
                  'rx_over_err': stats.rx_over_err,
                  'rx_crc_err': stats.rx_crc_err,
-                 'collisions': stats.collisions}
+                 'collisions': stats.collisions,
+                 'duration_sec': stats.duration_sec,
+                 'duration_nsec': stats.duration_nsec}
             ports.append(s)
     ports = {str(dp.id): ports}
     return ports
@@ -701,6 +705,8 @@ def get_meter_stats(dp, waiters):
                  'flow_count': stats.flow_count,
                  'packet_in_count': stats.packet_in_count,
                  'byte_in_count': stats.byte_in_count,
+                 'duration_sec': stats.duration_sec,
+                 'duration_nsec': stats.duration_nsec,
                  'band_stats': bands}
             meters.append(s)
     meters = {str(dp.id): meters}
@@ -726,7 +732,8 @@ def get_meter_features(dp, waiters):
                     band_types.append(v)
             f = {'max_meter': feature.max_meter,
                  'band_types': band_types,
-                 'max_band': feature.max_band,
+                 'capabilities': feature.capabilities,
+                 'max_bands': feature.max_bands,
                  'max_color': feature.max_color}
             features.append(f)
     features = {str(dp.id): features}
@@ -787,7 +794,8 @@ def get_group_stats(dp, waiters):
                 c = {'packet_count': bucket_stat.packet_count,
                      'byte_count': bucket_stat.byte_count}
                 bucket_stats.append(c)
-            g = {'group_id': stats.group_id,
+            g = {'length': stats.length,
+                 'group_id': stats.group_id,
                  'ref_count': stats.ref_count,
                  'packet_count': stats.packet_count,
                  'byte_count': stats.byte_count,

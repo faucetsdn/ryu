@@ -577,9 +577,7 @@ def get_queue_stats(dp, waiters):
     for msg in msgs:
         stats = msg.body
         for stat in stats:
-            s.append({'duration_nsec': stat.duration_nsec,
-                      'duration_sec': stat.duration_sec,
-                      'port_no': stat.port_no,
+            s.append({'port_no': stat.port_no,
                       'queue_id': stat.queue_id,
                       'tx_bytes': stat.tx_bytes,
                       'tx_errors': stat.tx_errors,
@@ -617,7 +615,8 @@ def get_flow_stats(dp, waiters, flow={}):
                  'duration_sec': stats.duration_sec,
                  'duration_nsec': stats.duration_nsec,
                  'packet_count': stats.packet_count,
-                 'table_id': stats.table_id}
+                 'table_id': stats.table_id,
+                 'length': stats.length}
             flows.append(s)
     flows = {str(dp.id): flows}
 
