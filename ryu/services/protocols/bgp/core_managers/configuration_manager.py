@@ -94,6 +94,14 @@ class ConfigurationManager(CommonConfListener, VrfsConfListener,
 
         self._signal_bus.vrf_removed(vrf_conf.route_dist)
 
+        # Remove AttributeMaps under the removed vrf
+        rd = vrf_conf.route_dist
+        rf = vrf_conf.route_family
+        peers = self._peer_manager.iterpeers
+        for peer in peers:
+            key = ':'.join([rd, rf])
+            peer.attribute_maps.pop(key, None)
+
     def on_add_vrf_conf(self, evt):
         """Event handler for new VrfConf.
 

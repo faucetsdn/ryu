@@ -48,3 +48,9 @@ VRF_TABLE = 'vrf_table'
 # RTC EOR timer default value
 # Time to wait for RTC-EOR, before we can send initial UPDATE as per RFC
 RTC_EOR_DEFAULT_TIME = 60
+
+# Constants for AttributeMaps
+ATTR_MAPS_ORG_KEY = '__orig'
+ATTR_MAPS_LABEL_KEY = 'at_maps_key'
+ATTR_MAPS_LABEL_DEFAULT = 'default'
+ATTR_MAPS_VALUE = 'at_maps'

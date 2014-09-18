@@ -526,7 +526,8 @@ class BGPSpeaker(object):
         param['port'] = port
         call(func_name, **param)
 
-    def attribute_map_set(self, address, attribute_maps):
+    def attribute_map_set(self, address, attribute_maps,
+                          route_dist=None, route_family=RF_VPN_V4):
         """This method sets attribute mapping to a neighbor.
         attribute mapping can be used when you want to apply
         attribute to BGPUpdate under specific conditions.
@@ -536,6 +537,12 @@ class BGPSpeaker(object):
         ``attribute_maps`` specifies attribute_map list that are used
         before paths are advertised. All the items in the list must
         be an instance of AttributeMap class
+
+        ``route_dist`` specifies route dist in which attribute_maps
+        are added.
+
+        ``route_family`` specifies route family of the VRF.
+        This parameter must be RF_VPN_V4 or RF_VPN_V6.
 
         We can set AttributeMap to a neighbor as follows;
 
@@ -549,24 +556,42 @@ class BGPSpeaker(object):
 
         """
 
+        assert route_family in (RF_VPN_V4, RF_VPN_V6),\
+            'route_family must be RF_VPN_V4 or RF_VPN_V6'
+
         func_name = 'neighbor.attribute_map.set'
         param = {}
         param[neighbors.IP_ADDRESS] = address
         param[neighbors.ATTRIBUTE_MAP] = attribute_maps
+        if route_dist is not None:
+            param[vrfs.ROUTE_DISTINGUISHER] = route_dist
+            param[vrfs.VRF_RF] = route_family
         call(func_name, **param)
 
-    def attribute_map_get(self, address):
+    def attribute_map_get(self, address, route_dist=None,
+                          route_family=RF_VPN_V4):
         """This method gets in-bound filters of the specified neighbor.
 
         ``address`` specifies the IP address of the neighbor.
+
+        ``route_dist`` specifies route distinguisher that has attribute_maps.
+
+        ``route_family`` specifies route family of the VRF.
+        This parameter must be RF_VPN_V4 or RF_VPN_V6.
 
         Returns a list object containing an instance of AttributeMap
 
         """
 
+        assert route_family in (RF_VPN_V4, RF_VPN_V6),\
+            'route_family must be RF_VPN_V4 or RF_VPN_V6'
+
         func_name = 'neighbor.attribute_map.get'
         param = {}
         param[neighbors.IP_ADDRESS] = address
+        if route_dist is not None:
+            param[vrfs.ROUTE_DISTINGUISHER] = route_dist
+            param[vrfs.VRF_RF] = route_family
         attribute_maps = call(func_name, **param)
         return attribute_maps
 

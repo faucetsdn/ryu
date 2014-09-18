@@ -947,14 +947,14 @@ class PrefixFilter(Filter):
         ge and le condition,
         this method returns True as the matching result.
 
-        ``prefix`` specifies the prefix. prefix must be string.
+        ``path`` specifies the path that has prefix.
 
         """
-        prefix = path.nlri
+        nlri = path.nlri
 
         result = False
-        length = prefix.length
-        net = netaddr.IPNetwork(prefix.formatted_nlri_str)
+        length = nlri.length
+        net = netaddr.IPNetwork(nlri.prefix)
 
         if net in self._network:
             if self._ge is None and self._le is None:

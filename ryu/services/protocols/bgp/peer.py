@@ -37,6 +37,9 @@ from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
+from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
+from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4, VRF_RF_IPV6
 from ryu.services.protocols.bgp.utils import bgp as bgp_utils
 from ryu.services.protocols.bgp.utils.evtlet import EventletIOFactory
 from ryu.services.protocols.bgp.utils import stats
@@ -415,15 +418,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
     @property
     def attribute_maps(self):
-        return self._attribute_maps['__orig']\
-            if '__orig' in self._attribute_maps else []
+        return self._attribute_maps
 
     @attribute_maps.setter
     def attribute_maps(self, attribute_maps):
         _attr_maps = {}
-        _attr_maps.setdefault('__orig', [])
+        _attr_maps.setdefault(const.ATTR_MAPS_ORG_KEY, [])
 
-        for a in attribute_maps:
+        # key is 'default' or rd_rf that represents RD and route_family
+        key = attribute_maps[const.ATTR_MAPS_LABEL_KEY]
+        at_maps = attribute_maps[const.ATTR_MAPS_VALUE]
+
+        for a in at_maps:
             cloned = a.clone()
             LOG.debug("AttributeMap attr_type: %s, attr_value: %s",
                       cloned.attr_type, cloned.attr_value)
@@ -431,9 +437,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             attr_list.append(cloned)
 
             # preserve original order of attribute_maps
-            _attr_maps['__orig'].append(cloned)
+            _attr_maps[const.ATTR_MAPS_ORG_KEY].append(cloned)
 
-        self._attribute_maps = _attr_maps
+        self._attribute_maps[key] = _attr_maps
         self.on_update_attribute_maps()
 
     def is_mpbgp_cap_valid(self, route_family):
@@ -908,20 +914,19 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # attribute_maps and set local-pref value.
                 # If the path doesn't match, we set default local-pref 100.
                 localpref_attr = BGPPathAttributeLocalPref(100)
-                # TODO handle VPNv4Path
-                if isinstance(path, Ipv4Path):
-                    if AttributeMap.ATTR_LOCAL_PREF in self._attribute_maps:
-                        maps = \
-                            self._attribute_maps[AttributeMap.ATTR_LOCAL_PREF]
-                        for m in maps:
-                            cause, result = m.evaluate(path)
-                            LOG.debug(
-                                "local_pref evaluation result:%s, cause:%s",
-                                result, cause)
+                key = const.ATTR_MAPS_LABEL_DEFAULT
 
-                            if result:
-                                localpref_attr = m.get_attribute()
-                                break
+                if isinstance(path, (Vpnv4Path, Vpnv6Path)):
+                    nlri = nlri_list[0]
+                    rf = VRF_RF_IPV4 if isinstance(path, Vpnv4Path)\
+                        else VRF_RF_IPV6
+                    key = ':'.join([nlri.route_dist, rf])
+
+                attr_type = AttributeMap.ATTR_LOCAL_PREF
+                at_maps = self._attribute_maps.get(key, {})
+                result = self._lookup_attribute_map(at_maps, attr_type, path)
+                if result:
+                    localpref_attr = result
 
             # COMMUNITY Attribute.
             community_attr = pathattr_map.get(BGP_ATTR_TYPE_COMMUNITIES)
@@ -1972,3 +1977,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if self._neigh_conf.enabled:
                 if not self._connect_retry_event.is_set():
                     self._connect_retry_event.set()
+
+    @staticmethod
+    def _lookup_attribute_map(attribute_map, attr_type, path):
+        result_attr = None
+        if attr_type in attribute_map:
+            maps = attribute_map[attr_type]
+            for m in maps:
+                cause, result = m.evaluate(path)
+                LOG.debug(
+                    "local_pref evaluation result:%s, cause:%s",
+                    result, cause)
+                if result:
+                    result_attr = m.get_attribute()
+                    break
+        return result_attr
