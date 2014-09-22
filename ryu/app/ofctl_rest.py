@@ -202,6 +202,10 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_features(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
+                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -216,6 +220,10 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_config(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
+                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -230,6 +238,10 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_stats(dp, self.waiters)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
+                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -246,6 +258,9 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_features(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_features(dp, self.waiters)
+        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -262,6 +277,9 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_desc(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_desc(dp, self.waiters)
+        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -278,6 +296,9 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_stats(dp, self.waiters)
+        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -369,11 +390,6 @@ class StatsController(ControllerBase):
         if dp is None:
             return Response(status=404)
 
-        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
         if cmd == 'add':
             cmd = dp.ofproto.OFPMC_ADD
         elif cmd == 'modify':
@@ -385,6 +401,10 @@ class StatsController(ControllerBase):
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_meter_entry(dp, flow, cmd)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
+                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -404,7 +424,7 @@ class StatsController(ControllerBase):
             return Response(status=404)
 
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
-            LOG.debug('Unsupported OF protocol')
+            LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
 
         if cmd == 'add':
@@ -482,6 +502,9 @@ class StatsController(ControllerBase):
             ofctl_v1_2.send_experimenter(dp, exp)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.send_experimenter(dp, exp)
+        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            LOG.debug('Request not supported in this OF protocol version')
+            return Response(status=501)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
