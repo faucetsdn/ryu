@@ -158,7 +158,7 @@ from ryu.ofproto import inet
 #
 #  request body format:
 #   {"meter_id": <int>,
-#    "bands":[{"action": "<DROP or REMARK>",
+#    "bands":[{"action": "<DROP or DSCP_REMARK>",
 #              "flag": "<KBPS or PKTPS or BURST or STATS"
 #              "burst_size": <int>,
 #              "rate": <int>,

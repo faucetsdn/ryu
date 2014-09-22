@@ -664,7 +664,8 @@ def get_group_stats(dp, waiters):
                 c = {'packet_count': bucket_counter.packet_count,
                      'byte_count': bucket_counter.byte_count}
                 bucket_counters.append(c)
-            g = {'group_id': stats.group_id,
+            g = {'length': stats.length,
+                 'group_id': stats.group_id,
                  'ref_count': stats.ref_count,
                  'packet_count': stats.packet_count,
                  'byte_count': stats.byte_count,
@@ -684,7 +685,7 @@ def get_group_features(dp, waiters):
     cap_convert = {ofp.OFPGFC_SELECT_WEIGHT: 'SELECT_WEIGHT',
                    ofp.OFPGFC_SELECT_LIVENESS: 'SELECT_LIVENESS',
                    ofp.OFPGFC_CHAINING: 'CHAINING',
-                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHCEKS'}
+                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHECKS'}
     act_convert = {ofp.OFPAT_OUTPUT: 'OUTPUT',
                    ofp.OFPAT_COPY_TTL_OUT: 'COPY_TTL_OUT',
                    ofp.OFPAT_COPY_TTL_IN: 'COPY_TTL_IN',

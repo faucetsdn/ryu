@@ -747,7 +747,7 @@ def get_meter_config(dp, waiters):
              dp.ofproto.OFPMF_STATS: 'STATS'}
 
     band_type = {dp.ofproto.OFPMBT_DROP: 'DROP',
-                 dp.ofproto.OFPMBT_DSCP_REMARK: 'REMARK',
+                 dp.ofproto.OFPMBT_DSCP_REMARK: 'DSCP_REMARK',
                  dp.ofproto.OFPMBT_EXPERIMENTER: 'EXPERIMENTER'}
 
     stats = dp.ofproto_parser.OFPMeterConfigStatsRequest(
@@ -817,7 +817,7 @@ def get_group_features(dp, waiters):
     cap_convert = {ofp.OFPGFC_SELECT_WEIGHT: 'SELECT_WEIGHT',
                    ofp.OFPGFC_SELECT_LIVENESS: 'SELECT_LIVENESS',
                    ofp.OFPGFC_CHAINING: 'CHAINING',
-                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHCEKS'}
+                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHECKS'}
     act_convert = {ofp.OFPAT_OUTPUT: 'OUTPUT',
                    ofp.OFPAT_COPY_TTL_OUT: 'COPY_TTL_OUT',
                    ofp.OFPAT_COPY_TTL_IN: 'COPY_TTL_IN',
@@ -976,7 +976,7 @@ def mod_meter_entry(dp, flow, cmd):
         if band_type == 'DROP':
             bands.append(
                 dp.ofproto_parser.OFPMeterBandDrop(rate, burst_size))
-        elif band_type == 'REMARK':
+        elif band_type == 'DSCP_REMARK':
             prec_level = int(band.get('prec_level', 0))
             bands.append(
                 dp.ofproto_parser.OFPMeterBandDscpRemark(
