@@ -706,10 +706,15 @@ class OfTester(app_manager.RyuApp):
         model_pkt = (pkt[KEY_EGRESS] if KEY_EGRESS in pkt
                      else pkt[KEY_PKT_IN])
 
+        if hasattr(msg.datapath.ofproto, "OFPR_NO_MATCH"):
+            table_miss_value = msg.datapath.ofproto.OFPR_NO_MATCH
+        else:
+            table_miss_value = msg.datapath.ofproto.OFPR_TABLE_MISS
+
         if msg.datapath.id != pkt_in_src_model.dp.id:
             pkt_type = 'packet-in'
             err_msg = 'SW[dpid=%s]' % dpid_lib.dpid_to_str(msg.datapath.id)
-        elif msg.reason == msg.datapath.ofproto.OFPR_NO_MATCH or \
+        elif msg.reason == table_miss_value or \
                 msg.reason == msg.datapath.ofproto.OFPR_INVALID_TTL:
             pkt_type = 'packet-in'
             err_msg = 'OFPPacketIn[reason=%d]' % msg.reason
