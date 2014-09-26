@@ -1002,7 +1002,7 @@ def mod_group_entry(dp, group, cmd):
                     'INDIRECT': dp.ofproto.OFPGT_INDIRECT,
                     'FF': dp.ofproto.OFPGT_FF}
 
-    type_ = type_convert.get(group.get('type'))
+    type_ = type_convert.get(group.get('type', 'ALL'))
     if type_ is None:
         LOG.debug('Unknown type: %s', group.get('type'))
 
