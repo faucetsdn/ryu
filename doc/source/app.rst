@@ -10,3 +10,4 @@ Others provide some functionalities to other Ryu applications.
    :maxdepth: 1
 
    app/ofctl.rst
+   app/ofctl_rest.rst
