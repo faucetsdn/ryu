@@ -4732,7 +4732,7 @@ class OFPMeterConfigStatsReply(OFPMultipartReply):
 
 class OFPMeterFeaturesStats(ofproto_parser.namedtuple('OFPMeterFeaturesStats',
                             ('max_meter', 'band_types', 'capabilities',
-                             'max_band', 'max_color'))):
+                             'max_bands', 'max_color'))):
     @classmethod
     def parser(cls, buf, offset):
         meter_features = struct.unpack_from(
@@ -4792,10 +4792,10 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
             features = []
             for stat in ev.msg.body:
                 features.append('max_meter=%d band_types=0x%08x '
-                                'capabilities=0x%08x max_band=%d '
+                                'capabilities=0x%08x max_bands=%d '
                                 'max_color=%d' %
                                 (stat.max_meter, stat.band_types,
-                                 stat.capabilities, stat.max_band,
+                                 stat.capabilities, stat.max_bands,
                                  stat.max_color))
             self.logger.debug('MeterFeaturesStats: %s', configs)
     """
