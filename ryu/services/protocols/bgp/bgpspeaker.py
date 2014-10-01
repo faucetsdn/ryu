@@ -57,6 +57,7 @@ from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
 from ryu.services.protocols.bgp.rtconf.neighbors import IN_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_ROUTE_SERVER_CLIENT
+from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
 from ryu.services.protocols.bgp.info_base.base import Filter
 
 
@@ -179,7 +180,8 @@ class BGPSpeaker(object):
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
                      next_hop=None, password=None, multi_exit_disc=None,
-                     site_of_origins=None, is_route_server_client=False):
+                     site_of_origins=None, is_route_server_client=False,
+                     is_next_hop_self=False):
         """ This method registers a new neighbor. The BGP speaker tries to
         establish a bgp session with the peer (accepts a connection
         from the peer and also tries to connect to it).
@@ -215,6 +217,9 @@ class BGPSpeaker(object):
 
         ``is_route_server_client`` specifies whether this neighbor is a
         router server's client or not.
+
+        ``is_next_hop_self`` specifies whether the BGP speaker announces
+        its own ip address to iBGP neighbor or not as path's next_hop address.
         """
         bgp_neighbor = {}
         bgp_neighbor[neighbors.IP_ADDRESS] = address
@@ -222,6 +227,7 @@ class BGPSpeaker(object):
         bgp_neighbor[PEER_NEXT_HOP] = next_hop
         bgp_neighbor[PASSWORD] = password
         bgp_neighbor[IS_ROUTE_SERVER_CLIENT] = is_route_server_client
+        bgp_neighbor[IS_NEXT_HOP_SELF] = is_next_hop_self
         # v6 advertizement is available with only v6 peering
         if netaddr.valid_ipv4(address):
             bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4

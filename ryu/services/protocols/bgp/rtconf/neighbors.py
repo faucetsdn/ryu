@@ -81,6 +81,7 @@ OUT_FILTER = 'out_filter'
 IS_ROUTE_SERVER_CLIENT = 'is_route_server_client'
 CHECK_FIRST_AS = 'check_first_as'
 ATTRIBUTE_MAP = 'attribute_map'
+IS_NEXT_HOP_SELF = 'is_next_hop_self'
 
 # Default value constants.
 DEFAULT_CAP_GR_NULL = True
@@ -97,6 +98,7 @@ DEFAULT_IN_FILTER = []
 DEFAULT_OUT_FILTER = []
 DEFAULT_IS_ROUTE_SERVER_CLIENT = False
 DEFAULT_CHECK_FIRST_AS = False
+DEFAULT_IS_NEXT_HOP_SELF = False
 
 # Default value for *MAX_PREFIXES* setting is set to 0.
 DEFAULT_MAX_PREFIXES = 0
@@ -255,6 +257,15 @@ def validate_check_first_as(check_first_as):
     return check_first_as
 
 
+@validate(name=IS_NEXT_HOP_SELF)
+def validate_is_next_hop_self(is_next_hop_self):
+    if is_next_hop_self not in (True, False):
+        raise ConfigValueError(desc='Invalid is_next_hop_self(%s)' %
+                               is_next_hop_self)
+
+    return is_next_hop_self
+
+
 class NeighborConf(ConfWithId, ConfWithStats):
     """Class that encapsulates one neighbors' configuration."""
 
@@ -273,7 +284,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    LOCAL_ADDRESS, LOCAL_PORT,
                                    PEER_NEXT_HOP, PASSWORD,
                                    IN_FILTER, OUT_FILTER,
-                                   IS_ROUTE_SERVER_CLIENT, CHECK_FIRST_AS])
+                                   IS_ROUTE_SERVER_CLIENT, CHECK_FIRST_AS,
+                                   IS_NEXT_HOP_SELF])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -308,6 +320,9 @@ class NeighborConf(ConfWithId, ConfWithStats):
             DEFAULT_IS_ROUTE_SERVER_CLIENT, **kwargs)
         self._settings[CHECK_FIRST_AS] = compute_optional_conf(
             CHECK_FIRST_AS, DEFAULT_CHECK_FIRST_AS, **kwargs)
+        self._settings[IS_NEXT_HOP_SELF] = compute_optional_conf(
+            IS_NEXT_HOP_SELF,
+            DEFAULT_IS_NEXT_HOP_SELF, **kwargs)
 
         # We do not have valid default MED value.
         # If no MED attribute is provided then we do not have to use MED.
@@ -489,6 +504,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def check_first_as(self):
         return self._settings[CHECK_FIRST_AS]
+
+    @property
+    def is_next_hop_self(self):
+        return self._settings[IS_NEXT_HOP_SELF]
 
     def exceeds_max_prefix_allowed(self, prefix_count):
         allowed_max = self._settings[MAX_PREFIXES]

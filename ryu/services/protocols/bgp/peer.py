@@ -783,14 +783,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         else:
             next_hop = self.host_bind_ip
         if route_family == RF_IPv6_VPN:
-            # Next hop ipv4_mapped ipv6
-            def _ipv4_mapped_ipv6(ipv4):
-                from netaddr import IPAddress
-                return str(IPAddress(ipv4).ipv6())
-
-            next_hop = _ipv4_mapped_ipv6(next_hop)
+            next_hop = self._ipv4_mapped_ipv6(next_hop)
 
         return next_hop
+
+    @staticmethod
+    def _ipv4_mapped_ipv6(ipv4_address):
+        # Next hop ipv4_mapped ipv6
+        from netaddr import IPAddress
+        return str(IPAddress(ipv4_address).ipv6())
 
     def _construct_update(self, outgoing_route):
         """Construct update message with Outgoing-routes path attribute
@@ -835,7 +836,17 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not self.is_ebgp_peer() and path.source is not None:
                 # If the path came from a bgp peer and not from NC, according
                 # to RFC 4271 we should not modify next_hop.
-                next_hop = path.nexthop
+                # However RFC 4271 allows us to change next_hop
+                # if configured to announce its own ip address.
+                if self._neigh_conf.is_next_hop_self:
+                    next_hop = self.host_bind_ip
+                    if path.route_family == RF_IPv6_VPN:
+                        next_hop = self._ipv4_mapped_ipv6(next_hop)
+                    LOG.debug('using %s as a next_hop address instead'
+                              ' of path.nexthop %s' % (next_hop, path.nexthop))
+                else:
+                    next_hop = path.nexthop
+
             nexthop_attr = BGPPathAttributeNextHop(next_hop)
             assert nexthop_attr, 'Missing NEXTHOP mandatory attribute.'
 
