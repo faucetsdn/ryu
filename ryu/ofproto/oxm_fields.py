@@ -230,6 +230,10 @@ def parse(mod, buf, offset):
                                         offset + hdr_len)
         exp_hdr_len = struct.calcsize(exp_hdr_pack_str)
         if exp_id == ofproto_common.ONF_EXPERIMENTER_ID:
+            # XXX
+            # This block implements EXT-256 style experimenter OXM.
+            # However, according to blp, the extension will be rectified.
+            # https://www.mail-archive.com/dev%40openvswitch.org/msg37644.html
             onf_exp_type_pack_str = '!H'
             (exp_type, ) = struct.unpack_from(onf_exp_type_pack_str, buf,
                                               offset + hdr_len + exp_hdr_len)
