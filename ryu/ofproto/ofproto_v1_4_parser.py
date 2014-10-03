@@ -2323,7 +2323,8 @@ class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
 
 # Implementation note: OFPOxmId is specific to this implementation.
 # It does not have a corresponding structure in the specification.
-# (the specification uses plain uint32_t for them.)
+# (the specification uses plain uint32_t for non-experimenter OXMs
+# and uint64_t for experimenter OXMs.)
 #
 # i have taken a look at some of software switch implementations
 # but they all look broken or incomplete.  according to the spec,
@@ -2339,9 +2340,10 @@ class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
 #     oxm_hasmask  always 0
 #     oxm_length   always 0
 #   ovs:
-#     table-feature is not implemented
+#     seems in flux as of writing this [20141003]
 class OFPOxmId(StringifyMixin):
     _PACK_STR = '!I'  # oxm header
+    _EXPERIMENTER_ID_PACK_STR = '!I'
 
     _TYPE = {
         'ascii': [
@@ -2353,26 +2355,51 @@ class OFPOxmId(StringifyMixin):
         self.type = type_
         self.hasmask = hasmask
         self.length = length
-        # XXX experimenter
 
     @classmethod
     def parse(cls, buf):
         (oxm,) = struct.unpack_from(cls._PACK_STR, buffer(buf), 0)
-        (type_, _v) = ofproto.oxm_to_user(oxm >> 9, None, None)
+        # oxm (32 bit) == class (16) | field (7) | hasmask (1) | length (8)
+        # in case of experimenter OXMs, another 32 bit value
+        # (experimenter id) follows.
+        (type_, _v) = ofproto.oxm_to_user(oxm >> (1 + 8), None, None)
+        rest = buf[struct.calcsize(cls._PACK_STR):]
         hasmask = ofproto.oxm_tlv_header_extract_hasmask(oxm)
         length = oxm & 0xff  # XXX see the comment on OFPOxmId
-        rest = buf[4:]  # XXX see the comment on OFPOxmId
-        return cls(type_=type_, hasmask=hasmask, length=length), rest
+        class_ = oxm >> (7 + 1 + 8)
+        if class_ == ofproto.OFPXMC_EXPERIMENTER:
+            (exp_id,) = struct.unpack_from(cls._EXPERIMENTER_ID_PACK_STR,
+                                           buffer(rest), 0)
+            rest = rest[struct.calcsize(cls._EXPERIMENTER_ID_PACK_STR):]
+            subcls = OFPExperimenterOxmId
+            return subcls(type_=type_, exp_id=exp_id, hasmask=hasmask,
+                          length=length), rest
+        else:
+            return cls(type_=type_, hasmask=hasmask, length=length), rest
 
     def serialize(self):
         # fixup
         self.length = 0  # XXX see the comment on OFPOxmId
 
         (n, _v, _m) = ofproto.oxm_from_user(self.type, None)
-        oxm = (n << 9) | (self.hasmask << 8) | self.length
+        oxm = (n << (1 + 8)) | (self.hasmask << 8) | self.length
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf, 0, oxm)
+        assert n >> 7 != ofproto.OFPXMC_EXPERIMENTER
         return buf
+
+
+class OFPExperimenterOxmId(OFPOxmId):
+    def __init__(self, type_, exp_id, hasmask=False, length=None):
+        super(OFPExperimenterOxmId, self).__init__(type_=type_,
+                                                   hasmask=hasmask,
+                                                   length=length)
+        self.exp_id = exp_id
+
+    def serialize(self):
+        buf = super(OFPExperimenterOxmId, self).serialize()
+        msg_pack_into(self._EXPERIMENTER_ID_PACK_STR, buf,
+                      struct.calcsize(self._PACK_STR), self.exp_id)
 
 
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_MATCH)
