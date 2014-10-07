@@ -6853,6 +6853,40 @@ class TestOFPMatch(unittest.TestCase):
             match.set_vlan_vid_masked(vid, mask)
         self._test_serialize_and_parser(match, header, vid, mask)
 
+    def _test_set_vlan_vid_none(self):
+        header = ofproto.OXM_OF_VLAN_VID
+        match = OFPMatch()
+        match.set_vlan_vid_none()
+        value = ofproto.OFPVID_NONE
+        cls_ = OFPMatchField._FIELDS_HEADERS.get(header)
+        pack_str = cls_.pack_str.replace('!', '')
+        fmt = '!HHI' + pack_str
+
+        # serialize
+        buf = bytearray()
+        length = match.serialize(buf, 0)
+        eq_(length, len(buf))
+
+        res = list(unpack_from(fmt, str(buf), 0)[3:])
+        res_value = res.pop(0)
+        eq_(res_value, value)
+
+        # parser
+        res = match.parser(str(buf), 0)
+        eq_(res.type, ofproto.OFPMT_OXM)
+        eq_(res.fields[0].header, header)
+        eq_(res.fields[0].value, value)
+
+        # to_jsondict
+        jsondict = match.to_jsondict()
+
+        # from_jsondict
+        match2 = match.from_jsondict(jsondict["OFPMatch"])
+        buf2 = bytearray()
+        match2.serialize(buf2, 0)
+        eq_(str(match), str(match2))
+        eq_(buf, buf2)
+
     def test_set_vlan_vid_mid(self):
         self._test_set_vlan_vid(2047)
 
@@ -6870,6 +6904,9 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_set_vlan_vid_masked_min(self):
         self._test_set_vlan_vid(2047, 0)
+
+    def test_set_vlan_vid_none(self):
+        self._test_set_vlan_vid_none()
 
     # set_vlan_pcp
     def _test_set_vlan_pcp(self, pcp):

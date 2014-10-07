@@ -1250,10 +1250,16 @@ class OFPMatch(StringifyMixin):
         self._wc.ft_set(ofproto.OFPXMT_OFB_ETH_TYPE)
         self._flow.dl_type = dl_type
 
+    def set_vlan_vid_none(self):
+        self._wc.ft_set(ofproto.OFPXMT_OFB_VLAN_VID)
+        self._wc.vlan_vid_mask = UINT16_MAX
+        self._flow.vlan_vid = ofproto.OFPVID_NONE
+
     def set_vlan_vid(self, vid):
         self.set_vlan_vid_masked(vid, UINT16_MAX)
 
     def set_vlan_vid_masked(self, vid, mask):
+        vid |= ofproto.OFPVID_PRESENT
         self._wc.ft_set(ofproto.OFPXMT_OFB_VLAN_VID)
         self._wc.vlan_vid_mask = mask
         self._flow.vlan_vid = vid
@@ -1637,10 +1643,6 @@ class MTVlanVid(OFPMatchField):
         m = super(MTVlanVid, cls).field_parser(header, buf, offset)
         m.value &= ~ofproto.OFPVID_PRESENT
         return m
-
-    def serialize(self, buf, offset):
-        self.value |= ofproto.OFPVID_PRESENT
-        super(MTVlanVid, self).serialize(buf, offset)
 
 
 @OFPMatchField.register_field_header([ofproto.OXM_OF_VLAN_PCP])
