@@ -117,3 +117,16 @@ Protocol Header classes
    :members:
 .. automodule:: ryu.lib.packet.sctp
    :members:
+
+.. autoclass:: ryu.lib.packet.bfd.bfd
+   :members:
+.. autoclass:: ryu.lib.packet.bfd.SimplePassword
+   :members:
+.. autoclass:: ryu.lib.packet.bfd.KeyedMD5
+   :members:
+.. autoclass:: ryu.lib.packet.bfd.MeticulousKeyedMD5
+   :members:
+.. autoclass:: ryu.lib.packet.bfd.KeyedSHA1
+   :members:
+.. autoclass:: ryu.lib.packet.bfd.MeticulousKeyedSHA1
+   :members:
