@@ -201,9 +201,8 @@ def send_stats_request(dp, stats, waiters, msgs):
     waiters_per_dp[stats.xid] = (lock, msgs)
     dp.send_msg(stats)
 
-    try:
-        lock.wait(timeout=DEFAULT_TIMEOUT)
-    except hub.Timeout:
+    lock.wait(timeout=DEFAULT_TIMEOUT)
+    if not lock.is_set():
         del waiters_per_dp[stats.xid]
 
 
