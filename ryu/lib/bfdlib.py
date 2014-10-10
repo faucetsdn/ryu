@@ -535,9 +535,10 @@ class BFDPacket(object):
         pkt.add_protocol(eth_pkt)
 
         # IPv4 encapsulation
-        # ToS sets to 192 (Network control/CS6)
+        # set ToS to 192 (Network control/CS6)
+        # set TTL to 255 (RFC5881 Section 5.)
         ipv4_pkt = ipv4.ipv4(proto=inet.IPPROTO_UDP, src=src_ip, dst=dst_ip,
-                             tos=192, identification=ipv4_id)
+                             tos=192, identification=ipv4_id, ttl=255)
         pkt.add_protocol(ipv4_pkt)
 
         # UDP encapsulation
@@ -860,6 +861,10 @@ class BFDLib(app_manager.RyuApp):
             return
 
         ip_pkt = pkt.get_protocols(ipv4.ipv4)[0]
+
+        # Discard it if TTL != 255 for single hop bfd. (RFC5881 Section 5.)
+        if ip_pkt.ttl != 255:
+            return
 
         # Parse BFD packet here.
         bfd_pkt = BFDPacket.bfd_parse(data)
