@@ -58,6 +58,8 @@ from ryu.services.protocols.bgp.rtconf.neighbors import IN_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_ROUTE_SERVER_CLIENT
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
+from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
+from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
 from ryu.services.protocols.bgp.info_base.base import Filter
 
 
@@ -181,7 +183,8 @@ class BGPSpeaker(object):
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
                      next_hop=None, password=None, multi_exit_disc=None,
                      site_of_origins=None, is_route_server_client=False,
-                     is_next_hop_self=False):
+                     is_next_hop_self=False, local_address=None,
+                     local_port=None):
         """ This method registers a new neighbor. The BGP speaker tries to
         establish a bgp session with the peer (accepts a connection
         from the peer and also tries to connect to it).
@@ -220,6 +223,11 @@ class BGPSpeaker(object):
 
         ``is_next_hop_self`` specifies whether the BGP speaker announces
         its own ip address to iBGP neighbor or not as path's next_hop address.
+
+        ``local_address`` specifies Loopback interface address for iBGP peering.
+
+        ``local_port`` specifies source TCP port for iBGP peering.
+
         """
         bgp_neighbor = {}
         bgp_neighbor[neighbors.IP_ADDRESS] = address
@@ -248,6 +256,12 @@ class BGPSpeaker(object):
 
         if site_of_origins:
             bgp_neighbor[SITE_OF_ORIGINS] = site_of_origins
+
+        if local_address:
+            bgp_neighbor[LOCAL_ADDRESS] = local_address
+
+        if local_port:
+            bgp_neighbor[LOCAL_PORT] = local_port
 
         call('neighbor.create', **bgp_neighbor)
 
