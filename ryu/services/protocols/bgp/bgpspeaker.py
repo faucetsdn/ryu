@@ -224,7 +224,8 @@ class BGPSpeaker(object):
         ``is_next_hop_self`` specifies whether the BGP speaker announces
         its own ip address to iBGP neighbor or not as path's next_hop address.
 
-        ``local_address`` specifies Loopback interface address for iBGP peering.
+        ``local_address`` specifies Loopback interface address for
+        iBGP peering.
 
         ``local_port`` specifies source TCP port for iBGP peering.
 

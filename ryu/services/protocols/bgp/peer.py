@@ -1038,11 +1038,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                                 const.STD_BGP_SERVER_PORT_NUM)
 
                 if bind_addr:
-                    LOG.debug('%s trying to connect from %s to %s'
-                               % (self, bind_addr, peer_address))
+                    LOG.debug('%s trying to connect from'
+                              '%s to %s' % (self, bind_addr,
+                                            peer_address))
                 else:
-                    LOG.debug('%s trying to connect to %s'
-                               % (self, peer_address))
+                    LOG.debug('%s trying to connect to %s' % (self,
+                                                              peer_address))
                 tcp_conn_timeout = self._common_conf.tcp_conn_timeout
                 try:
                     password = self._neigh_conf.password
