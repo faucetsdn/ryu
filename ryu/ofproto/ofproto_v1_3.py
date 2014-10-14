@@ -1177,6 +1177,8 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('tunnel_id', 38, oxm_fields.Int8),
     oxm_fields.OpenFlowBasic('ipv6_exthdr', 39, oxm_fields.Int2),
     oxm_fields.ONFExperimenter('pbb_uca', 2560, oxm_fields.Int1),
+    oxm_fields.NiciraExtended1('tun_ipv4_src', 31, oxm_fields.IPv4Addr),
+    oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, oxm_fields.IPv4Addr),
 ]
 
 oxm_fields.generate(__name__)
