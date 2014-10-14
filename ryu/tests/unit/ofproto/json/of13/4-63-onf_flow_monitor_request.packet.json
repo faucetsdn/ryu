@@ -23,7 +23,7 @@
                "id": 999, 
                "match": {
                   "OFPMatch": {
-                     "length": 335, 
+                     "length": 351, 
                      "oxm_fields": [
                         {
                            "OXMTlv": {
@@ -304,12 +304,26 @@
                               "mask": null, 
                               "value": 1
                            }
+                        }, 
+                        {
+                           "OXMTlv": {
+                              "field": "tun_ipv4_src", 
+                              "mask": null, 
+                              "value": "1.2.3.4"
+                           }
+                        }, 
+                        {
+                           "OXMTlv": {
+                              "field": "tun_ipv4_dst", 
+                              "mask": null, 
+                              "value": "1.2.3.4"
+                           }
                         }
                      ], 
                      "type": 1
                   }
                }, 
-               "match_len": 331, 
+               "match_len": 347, 
                "out_port": 4294967295, 
                "table_id": 255
             }

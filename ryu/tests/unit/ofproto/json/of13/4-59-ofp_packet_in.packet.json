@@ -5,7 +5,7 @@
       "data": "", 
       "match": {
          "OFPMatch": {
-            "length": 335, 
+            "length": 351, 
             "oxm_fields": [
                {
                   "OXMTlv": {
@@ -285,6 +285,20 @@
                      "field": "pbb_uca", 
                      "mask": null, 
                      "value": 1
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_src", 
+                     "mask": null, 
+                     "value": "1.2.3.4"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_dst", 
+                     "mask": null, 
+                     "value": "1.2.3.4"
                   }
                }
             ], 
