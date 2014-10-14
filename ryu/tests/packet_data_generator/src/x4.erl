@@ -207,6 +207,16 @@ x() ->
              class = {experimenter, onf},name = pbb_uca,
              has_mask = false,
              value = <<1:1>>,
+             mask = undefined},
+         #ofp_field{
+             class = nxm_1,name = 31,  % tun_ipv4_src
+             has_mask = false,
+             value = <<1,2,3,4>>,
+             mask = undefined},
+         #ofp_field{
+             class = nxm_1,name = 32,  % tun_ipv4_dst
+             has_mask = false,
+             value = <<1,2,3,4>>,
              mask = undefined}
     ],
     List = [
