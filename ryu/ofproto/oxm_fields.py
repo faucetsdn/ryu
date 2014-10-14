@@ -87,6 +87,8 @@ class UnknownType(TypeDescr):
     from_user = staticmethod(base64.b64decode)
 
 
+OFPXMC_NXM_0 = 0  # Nicira Extended Match (NXM_OF_)
+OFPXMC_NXM_1 = 1  # Nicira Extended Match (NXM_NX_)
 OFPXMC_OPENFLOW_BASIC = 0x8000
 OFPXMC_EXPERIMENTER = 0xffff
 
@@ -95,15 +97,14 @@ class _OxmClass(object):
     def __init__(self, name, num, type_):
         self.name = name
         self.oxm_type = num | (self._class << 7)
+        # TODO(yamamoto): Clean this up later.
+        # Probably when we drop EXT-256 style experimenter OXMs.
+        self.num = self.oxm_type
         self.type = type_
 
 
 class OpenFlowBasic(_OxmClass):
     _class = OFPXMC_OPENFLOW_BASIC
-
-    def __init__(self, name, num, type_):
-        super(OpenFlowBasic, self).__init__(name, num, type_)
-        self.num = self.oxm_type
 
 
 class _Experimenter(_OxmClass):
@@ -117,6 +118,24 @@ class ONFExperimenter(_Experimenter):
         super(ONFExperimenter, self).__init__(name, 0, type_)
         self.num = (ONFExperimenter, num)
         self.exp_type = num
+
+
+class NiciraExtended0(_OxmClass):
+    """Nicira Extended Match (NXM_0)
+
+    NXM header format is same as 32-bit (non-experimenter) OXMs.
+    """
+
+    _class = OFPXMC_NXM_0
+
+
+class NiciraExtended1(_OxmClass):
+    """Nicira Extended Match (NXM_1)
+
+    NXM header format is same as 32-bit (non-experimenter) OXMs.
+    """
+
+    _class = OFPXMC_NXM_1
 
 
 def generate(modname):
