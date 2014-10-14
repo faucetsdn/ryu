@@ -225,6 +225,7 @@ def parse(mod, buf, offset):
     oxm_len = mod.oxm_tlv_header_extract_length(header)
     oxm_class = oxm_type >> 7
     if oxm_class == OFPXMC_EXPERIMENTER:
+        # Experimenter OXMs have 64-bit header.  (vs 32-bit for other OXMs)
         exp_hdr_pack_str = '!I'  # experimenter_id
         (exp_id, ) = struct.unpack_from(exp_hdr_pack_str, buf,
                                         offset + hdr_len)
@@ -242,6 +243,8 @@ def parse(mod, buf, offset):
     else:
         num = oxm_type
         exp_hdr_len = 0
+    # Note: OXM payload length (oxm_len) includes Experimenter ID (exp_hdr_len)
+    # for experimenter OXMs.
     value_offset = offset + hdr_len + exp_hdr_len
     value_len = oxm_len - exp_hdr_len
     value_pack_str = '!%ds' % value_len
