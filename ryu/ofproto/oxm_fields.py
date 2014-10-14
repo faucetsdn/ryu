@@ -222,7 +222,7 @@ def parse(mod, buf, offset):
     hdr_len = struct.calcsize(hdr_pack_str)
     oxm_type = header >> 9  # class|field
     oxm_hasmask = mod.oxm_tlv_header_extract_hasmask(header)
-    len = mod.oxm_tlv_header_extract_length(header)
+    oxm_len = mod.oxm_tlv_header_extract_length(header)
     oxm_class = oxm_type >> 7
     if oxm_class == OFPXMC_EXPERIMENTER:
         exp_hdr_pack_str = '!I'  # experimenter_id
@@ -243,7 +243,7 @@ def parse(mod, buf, offset):
         num = oxm_type
         exp_hdr_len = 0
     value_offset = offset + hdr_len + exp_hdr_len
-    value_len = len - exp_hdr_len
+    value_len = oxm_len - exp_hdr_len
     value_pack_str = '!%ds' % value_len
     assert struct.calcsize(value_pack_str) == value_len
     (value, ) = struct.unpack_from(value_pack_str, buf, value_offset)
