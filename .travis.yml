@@ -1,10 +1,14 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
 
+env:
+  - TOX_ENV=py26
+  - TOX_ENV=py27
+  - TOX_ENV=pep8
+
 install:
-  - "pip install -r tools/pip-requires -r tools/test-requires --use-mirrors"
+  - "pip install tox"
 
 script:
-  - "./run_tests.sh -N"
+  - tox -e $TOX_ENV
