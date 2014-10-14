@@ -17,7 +17,7 @@
 import unittest
 from nose.tools import eq_
 
-import addrconv
+from ryu.lib import addrconv
 
 
 class Test_addrconv(unittest.TestCase):
