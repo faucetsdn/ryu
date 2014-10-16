@@ -41,7 +41,7 @@ class SimpleSwitch14(app_manager.RyuApp):
         # OVS bug. At this moment, if we specify a lesser number, e.g.,
         # 128, OVS will send Packet-In with invalid buffer_id and
         # truncated packet data. In that case, we cannot output packets
-        # correctly.
+        # correctly.  The bug has been fixed in OVS v2.1.0.
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
