@@ -211,8 +211,8 @@ MSG = {STATE_INIT_FLOW:
        {TIMEOUT: 'Failed to request table stats: request timeout.',
         RCV_ERR: 'Failed to request table stats: %(err_msg)s'},
        STATE_SEND_BARRIER:
-       {TIMEOUT: 'Faild to send packet: barrier request timeout.',
-        RCV_ERR: 'Faild to send packet: %(err_msg)s'},
+       {TIMEOUT: 'Failed to send packet: barrier request timeout.',
+        RCV_ERR: 'Failed to send packet: %(err_msg)s'},
        STATE_FLOW_UNMATCH_CHK:
        {FAILURE: 'Table-miss error: increment in matched_count.',
         ERROR: 'Table-miss error: no change in lookup_count.',
