@@ -1000,9 +1000,9 @@ class ASPathFilter(Filter):
     Attribute        Description
     ================ ==================================================
     as_number        A AS number used for this filter
-    policy           ASPathFilter.POLICY_TOP and PrefixFilter.POLICY_END,
+    policy           ASPathFilter.POLICY_TOP and ASPathFilter.POLICY_END,
                      ASPathFilter.POLICY_INCLUDE and
-                     PrefixFilter.POLICY_NOT_INCLUDE are available.
+                     ASPathFilter.POLICY_NOT_INCLUDE are available.
     ================ ==================================================
 
     Meaning of each policy is as follows;
@@ -1011,7 +1011,7 @@ class ASPathFilter(Filter):
         Filter checks if the specified AS number is at the top of
         AS_PATH attribute.
 
-    * POLICY_TOP :
+    * POLICY_END :
         Filter checks is the specified AS number
         is at the last of AS_PATH attribute.
 
@@ -1071,7 +1071,10 @@ class ASPathFilter(Filter):
 
         path_aspath = path.pathattr_map.get(BGP_ATTR_TYPE_AS_PATH)
         path_seg_list = path_aspath.path_seg_list
-        path_seg = path_seg_list[0]
+        if path_seg_list:
+            path_seg = path_seg_list[0]
+        else:
+            path_seg = []
         result = False
 
         LOG.debug("path_seg : %s", path_seg)
