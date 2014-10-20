@@ -410,7 +410,7 @@ class RouterController(ControllerBase):
     def _access_router(self, switch_id, vlan_id, func, rest_param):
         rest_message = []
         routers = self._get_router(switch_id)
-        param = eval(rest_param) if rest_param else {}
+        param = json.loads(rest_param) if rest_param else {}
         for router in routers.values():
             function = getattr(router, func)
             data = function(vlan_id, param, self.waiters)
