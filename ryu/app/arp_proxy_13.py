@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Author:Li Cheng 
+# Contributor:Li Cheng @BUPT
 # Homepage:www.muzixing.com
 # Time:2014/10/19
 #
