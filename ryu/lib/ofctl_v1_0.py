@@ -167,6 +167,7 @@ def match_to_str(m):
             'in_port': m.in_port,
             'nw_dst': nw_dst_to_str(m.wildcards, m.nw_dst),
             'nw_proto': m.nw_proto,
+            'nw_tos': m.nw_tos,
             'nw_src': nw_src_to_str(m.wildcards, m.nw_src),
             'tp_src': m.tp_src,
             'tp_dst': m.tp_dst}
