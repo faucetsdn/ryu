@@ -124,7 +124,7 @@ class lldp(packet_base.PacketBase):
                 self.tlvs[-1].tlv_type == LLDP_TLV_END)
 
     @classmethod
-    def parser(cls, buf):
+    def _parser(cls, buf):
         tlvs = []
 
         while buf:
@@ -143,6 +143,13 @@ class lldp(packet_base.PacketBase):
         assert lldp_pkt._tlvs_valid()
 
         return lldp_pkt, None, buf
+
+    @classmethod
+    def parser(cls, buf):
+        try:
+            return cls._parser(buf)
+        except:
+            return None, None, buf
 
     def serialize(self, payload, prev):
         data = bytearray()
