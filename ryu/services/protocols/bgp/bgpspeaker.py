@@ -61,6 +61,10 @@ from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
 from ryu.services.protocols.bgp.info_base.base import Filter
+from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
+from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Path
+from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
+from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 
 
 NEIGHBOR_CONF_MED = 'multi_exit_disc'
@@ -80,16 +84,19 @@ class EventPrefix(object):
     route_dist       None in the case of ipv4 or ipv6 family
     prefix           A prefix was changed
     nexthop          The nexthop of the changed prefix
+    label            mpls label for vpnv4 prefix
     is_withdraw      True if this prefix has gone otherwise False
     ================ ======================================================
 
     """
 
-    def __init__(self, remote_as, route_dist, prefix, nexthop, is_withdraw):
+    def __init__(self, remote_as, route_dist, prefix, nexthop, label,
+                 is_withdraw):
         self.remote_as = remote_as
         self.route_dist = route_dist
         self.prefix = prefix
         self.nexthop = nexthop
+        self.label = label
         self.is_withdraw = is_withdraw
 
 
@@ -145,13 +152,27 @@ class BGPSpeaker(object):
             hub.spawn(ssh.SSH_CLI_CONTROLLER.start)
 
     def _notify_best_path_changed(self, path, is_withdraw):
-        if not path.source:
-            # ours
+        if path.source:
+            nexthop = path.nexthop
+            is_withdraw = is_withdraw
+            remote_as = path.source.remote_as
+        else:
             return
-        ev = EventPrefix(remote_as=path.source.remote_as,
-                         route_dist=None,
-                         prefix=path.nlri.addr + '/' + str(path.nlri.length),
-                         nexthop=path.nexthop, is_withdraw=is_withdraw)
+
+        if isinstance(path, Ipv4Path) or isinstance(path, Ipv6Path):
+            prefix = path.nlri.addr + '/' + str(path.nlri.length)
+            route_dist = None
+            label = None
+        elif isinstance(path, Vpnv4Path) or isinstance(path, Vpnv6Path):
+            prefix = path.nlri.prefix
+            route_dist = path.nlri.route_dist
+            label = path.nlri.label_list
+        else:
+            return
+
+        ev = EventPrefix(remote_as, route_dist, prefix, nexthop, label,
+                         is_withdraw)
+
         if self._best_path_change_handler:
             self._best_path_change_handler(ev)
 
