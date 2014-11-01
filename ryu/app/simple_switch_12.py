@@ -81,7 +81,11 @@ class SimpleSwitch12(app_manager.RyuApp):
         if out_port != ofproto.OFPP_FLOOD:
             self.add_flow(datapath, in_port, dst, actions)
 
+        data = None
+        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+            data = msg.data
+
         out = datapath.ofproto_parser.OFPPacketOut(
             datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
-            actions=actions)
+            actions=actions, data=data)
         datapath.send_msg(out)
