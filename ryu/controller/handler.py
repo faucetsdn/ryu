@@ -117,6 +117,7 @@ def register_service(service):
     This mechanism is used to e.g. automatically start ofp_handler if
     there are applications consuming OFP events.
     """
-    frm = inspect.stack()[1]
-    m = inspect.getmodule(frm[0])
-    m._SERVICE_NAME = service
+    frame = inspect.currentframe()
+    modname = frame.f_back.f_globals['__name__']
+    mod = sys.modules[modname]
+    mod._SERVICE_NAME = service
