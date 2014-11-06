@@ -423,20 +423,6 @@ class BgpProtocol(Protocol, Activity):
         if open_msg.version != BGP_VERSION_NUM:
             raise bgp.UnsupportedVersion(BGP_VERSION_NUM)
 
-        adv_caps = open_msg.opt_param
-        for cap in adv_caps:
-            if cap.cap_code == BGP_CAP_ROUTE_REFRESH:
-                rr_cap_adv = cap
-            elif cap.cap_code == BGP_CAP_ENHANCED_ROUTE_REFRESH:
-                err_cap_adv = cap
-        # If either RTC or RR/ERR are MUST capability if peer does not support
-        # either one of them we have to end session as we have to request peer
-        # to send prefixes for new VPNs that may be created automatically.
-        # TODO(PH): Check with experts if error is suitable in this case
-        if not (rr_cap_adv or err_cap_adv or
-                self._check_route_fmly_adv(open_msg, RF_RTC_UC)):
-            raise bgp.UnsupportedOptParam()
-
     def _handle_msg(self, msg):
         """When a BGP message is received, send it to peer.
 
