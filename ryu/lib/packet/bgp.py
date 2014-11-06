@@ -1132,8 +1132,10 @@ class _OptParam(StringifyMixin, _TypeDisp, _Value):
         value = bytes(rest[:length])
         rest = rest[length:]
         subcls = cls._lookup_type(type_)
-        kwargs, subcls = subcls.parse_value(value)
-        return subcls(type_=type_, length=length, **kwargs), rest
+        caps = subcls.parse_value(value)
+        if type(caps) != list:
+            caps = [subcls(type_=type_, length=length, **caps[0])]
+        return caps, rest
 
     def serialize(self):
         # fixup
@@ -1175,16 +1177,21 @@ class _OptParamCapability(_OptParam, _TypeDisp):
 
     @classmethod
     def parse_value(cls, buf):
-        (code, length) = struct.unpack_from(cls._CAP_HDR_PACK_STR, buffer(buf))
-        value = buf[struct.calcsize(cls._CAP_HDR_PACK_STR):]
-        assert len(value) == length
-        kwargs = {
-            'cap_code': code,
-            'cap_length': length,
-        }
-        subcls = cls._lookup_type(code)
-        kwargs.update(subcls.parse_cap_value(value))
-        return kwargs, subcls
+        caps = []
+        while len(buf) > 0:
+            (code, length) = struct.unpack_from(cls._CAP_HDR_PACK_STR,
+                                                buffer(buf))
+            value = buf[struct.calcsize(cls._CAP_HDR_PACK_STR):]
+            buf = buf[length + 2:]
+            kwargs = {
+                'cap_code': code,
+                'cap_length': length,
+            }
+            subcls = cls._lookup_type(code)
+            kwargs.update(subcls.parse_cap_value(value))
+            caps.append(subcls(type_=BGP_OPT_CAPABILITY, length=length + 2,
+                               **kwargs))
+        return caps
 
     def serialize_value(self):
         # fixup
@@ -2239,7 +2246,7 @@ class BGPOpen(BGPMessage):
         opt_param = []
         while binopts:
             opt, binopts = _OptParam.parser(binopts)
-            opt_param.append(opt)
+            opt_param.extend(opt)
         return {
             "version": version,
             "my_as": my_as,
