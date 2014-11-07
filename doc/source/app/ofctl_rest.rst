@@ -745,6 +745,11 @@ Add a flow entry
         actions       Instruction set (list of dict)                        [{"type":"OUTPUT", "port":2}]  [] #DROP
         ============= ===================================================== ============================== ===============
 
+    .. NOTE::
+
+        For description of match and actions, please see :ref:`description-of-match-and-actions`.
+
+
     Example of use::
 
         $ curl -X POST -d '{ \
@@ -1390,3 +1395,189 @@ Send a experimenter message
             "data": "data" \
             }' \
          http://localhost:8080/stats/experimenter/1
+
+
+.. _description-of-match-and-actions:
+
+Reference: Description of Match and Actions
+============================================
+
+Description of Match on request messages
+----------------------------------------
+
+    List of Match fields (OpenFlow1.0):
+
+        =============== ================================================ ==============================================
+        Match field     Description                                      Example
+        =============== ================================================ ==============================================
+        in_port         Input switch port (int)                          {"in_port": 7}
+        dl_src          Ethernet source address (string)                 {"dl_src": "aa:bb:cc:11:22:33"}
+        dl_dst          Ethernet destination address (string)            {"dl_dst": "aa:bb:cc:11:22:33"}
+        dl_vlan         Input VLAN id (int)                              {"dl_vlan": 5}
+        dl_vlan_pcp     Input VLAN priority (int)                        {"dl_vlan_pcp": 3, "dl_vlan": 3}
+        dl_type         Ethernet frame type (int)                        {"dl_type": 123}
+        nw_tos          IP ToS (int)                                     {"nw_tos": 16, "dl_type": 2048}
+        nw_proto        IP protocol or lower 8 bits of ARP opcode (int)  {"nw_proto": 5, "dl_type": 2048}
+        nw_src          IPv4 source address (string)                     {"nw_src": "192.168.0.1", "dl_type": 2048}
+        nw_dst          IPv4 destination address (string)                {"nw_dst": "192.168.0.1/24", "dl_type": 2048}
+        tp_src          TCP/UDP source port (int)                        {"tp_src": 1, "nw_proto": 6, "dl_type": 2048}
+        tp_dst          TCP/UDP destination port (int)                   {"tp_dst": 2, "nw_proto": 6, "dl_type": 2048}
+        =============== ================================================ ==============================================
+
+    .. NOTE::
+
+        IPv4 address field can be described as IP Prefix like as follows.
+
+        IPv4 address::
+
+            "192.168.0.1"
+            "192.168.0.2/24"
+
+    List of Match fields (OpenFlow1.2 or later):
+
+        =============== ================================================== =======================================================================================================
+        Match field     Description                                        Example
+        =============== ================================================== =======================================================================================================
+        in_port         Switch input port (int)                            {"in_port": 7}
+        in_phy_port     Switch physical input port (int)                   {"in_phy_port": 5, "in_port": 3}
+        metadata        Metadata passed between tables (string)            {"metadata": "0x1212121212121212"}
+        dl_dst          Ethernet destination address (string)              {"dl_dst": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"}
+        dl_src          Ethernet source address (string)                   {"dl_src": "aa:bb:cc:11:22:33"}
+        eth_dst         Ethernet destination address (string)              {"eth_dst": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"}
+        eth_src         Ethernet source address (string)                   {"eth_src": "aa:bb:cc:11:22:33"}
+        dl_type         Ethernet frame type (int)                          {"dl_type": 123}
+        eth_type        Ethernet frame type (int)                          {"eth_type": 2048}
+        dl_vlan         VLAN id (string)                                   {"dl_vlan": 5}
+        vlan_vid        VLAN id (string)                                   {"vlan_vid": 5}
+        vlan_pcp        VLAN priority (int)                                {"vlan_pcp": 3, "vlan_vid": 3}
+        ip_dscp         IP DSCP (6 bits in ToS field) (int)                {"ip_dscp": 3, "eth_type": 2048}
+        ip_ecn          IP ECN (2 bits in ToS field) (int)                 {"ip_ecn": 0, "eth_type": 34525}
+        nw_proto        IP protocol (int)                                  {"nw_proto": 5, "eth_type": 2048}
+        ip_proto        IP protocol (int)                                  {"ip_proto": 5, "eth_type": 34525}
+        tp_src          Transport layer source port (int)                  {"tp_src": 1, "ip_proto": 6, "eth_type": 2048}
+        tp_dst          Transport layer destination port (int)             {"tp_dst": 2, "ip_proto": 6, "eth_type": 2048}
+        nw_src          IPv4 source address (string)                       {"nw_src": "192.168.0.1", "eth_type": 2048}
+        nw_dst          IPv4 destination address (string)                  {"nw_dst": "192.168.0.1/24", "eth_type": 2048}
+        ipv4_src        IPv4 source address (string)                       {"ipv4_src": "192.168.0.1", "eth_type": 2048}
+        ipv4_dst        IPv4 destination address (string)                  {"ipv4_dst": "192.168.10.10/255.255.255.0", "eth_type": 2048}
+        tcp_src         TCP source port (int)                              {"tcp_src": 3, "ip_proto": 6, "eth_type": 2048}
+        tcp_dst         TCP destination port (int)                         {"tcp_dst": 5, "ip_proto": 6, "eth_type": 2048}
+        udp_src         UDP source port (int)                              {"udp_src": 2, "ip_proto": 17, "eth_type": 2048}
+        udp_dst         UDP destination port (int)                         {"udp_dst": 6, "ip_proto": 17, "eth_type": 2048}
+        sctp_src        SCTP source port (int)                             {"sctp_src": 99, "ip_proto": 132, "eth_type": 2048}
+        sctp_dst        SCTP destination port (int)                        {"sctp_dst": 99, "ip_proto": 132, "eth_type": 2048}
+        icmpv4_type     ICMP type (int)                                    {"icmpv4_type": 5, "ip_proto": 1, "eth_type": 2048}
+        icmpv4_code     ICMP code (int)                                    {"icmpv4_code": 6, "ip_proto": 1, "eth_type": 2048}
+        arp_op          ARP opcode (int)                                   {"arp_op": 3, "eth_type": 2054}
+        arp_spa         ARP source IPv4 address (string)                   {"arp_spa": "192.168.0.11", "eth_type": 2054}
+        arp_tpa         ARP target IPv4 address (string)                   {"arp_tpa": "192.168.0.44/24", "eth_type": 2054}
+        arp_sha         ARP source hardware address (string)               {"arp_sha": "aa:bb:cc:11:22:33", "eth_type": 2054}
+        arp_tha         ARP target hardware address (string)               {"arp_tha": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff", "eth_type": 2054}
+        ipv6_src        IPv6 source address (string)                       {"ipv6_src": "2001::aaaa:bbbb:cccc:1111", "eth_type": 34525}
+        ipv6_dst        IPv6 destination address (string)                  {"ipv6_dst": "2001::ffff:cccc:bbbb:1111/64", "eth_type": 34525}
+        ipv6_flabel     IPv6 Flow Label (int)                              {"ipv6_flabel": 2, "eth_type": 34525}
+        icmpv6_type     ICMPv6 type (int)                                  {"icmpv6_type": 3, "ip_proto": 58, "eth_type": 34525}
+        icmpv6_code     ICMPv6 code (int)                                  {"icmpv6_code": 4, "ip_proto": 58, "eth_type": 34525}
+        ipv6_nd_target  Target address for Neighbor Discovery (string)     {"ipv6_nd_target": "2001::ffff:cccc:bbbb:1111", "icmpv6_type": 135, "ip_proto": 58, "eth_type": 34525}
+        ipv6_nd_sll     Source link-layer for Neighbor Discovery (string)  {"ipv6_nd_sll": "aa:bb:cc:11:22:33", "icmpv6_type": 135, "ip_proto": 58, "eth_type": 34525}
+        ipv6_nd_tll     Target link-layer for Neighbor Discovery (string)  {"ipv6_nd_tll": "aa:bb:cc:11:22:33", "icmpv6_type": 136, "ip_proto": 58, "eth_type": 34525}
+        mpls_label      MPLS label (int)                                   {"mpls_label": 3, "eth_type": 34888}
+        mpls_tc         MPLS Traffic Class (int)                           {"mpls_tc": 2, "eth_type": 34888}
+        mpls_bos        MPLS BoS bit (int)                                 {"mpls_bos": 1, "eth_type": 34888}
+        pbb_isid        PBB I-SID (int)                                    {"pbb_isid": 5, "eth_type": 35047}
+        tunnel_id       Logical Port Metadata (int)                        {"tunnel_id": 7}
+        ipv6_exthdr     IPv6 Extension Header pseudo-field (int)           {"ipv6_exthdr": 3, "eth_type": 34525}
+        =============== ================================================== =======================================================================================================
+
+    .. NOTE::
+
+        Some field can be described with mask like as follows.
+
+        Ethernet address::
+
+            "aa:bb:cc:11:22:33"
+            "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"
+
+        IPv4 address::
+
+            "192.168.0.11"
+            "192.168.0.44/24"
+            "192.168.10.10/255.255.255.0"
+
+        IPv6 address::
+
+            "2001::ffff:cccc:bbbb:1111"
+            "2001::ffff:cccc:bbbb:2222/64"
+            "2001::ffff:cccc:bbbb:2222/ffff:ffff:ffff:ffff::0"
+
+        Metadata::
+
+            "0x1212121212121212"
+            "0x3434343434343434/0x01010101010101010"
+
+
+Description of Actions on request messages
+------------------------------------------
+
+    List of Actions (OpenFlow1.0):
+
+        =============== ============================================================================ ======================================================
+        Actions         Description                                                                  Example
+        =============== ============================================================================ ======================================================
+        OUTPUT          Output packet from "port"                                                    {"type": "OUTPUT", "port": 3}
+        SET_VLAN_VID    Set the 802.1Q VLAN ID using "vlan_vid"                                      {"type": "SET_VLAN_VID", "vlan_vid": 5}
+        SET_VLAN_PCP    Set the 802.1Q priority using "vlan_pcp"                                     {"type": "SET_VLAN_PCP", "vlan_pcp": 3}
+        STRIP_VLAN      Strip the 802.1Q header                                                      {"type": "STRIP_VLAN"}
+        SET_DL_SRC      Set ethernet source address using "dl_src"                                   {"type": "SET_DL_SRC", "dl_src": "aa:bb:cc:11:22:33"}
+        SET_DL_DST      Set ethernet destination address using "dl_dst"                              {"type": "SET_DL_DST", "dl_dst": "aa:bb:cc:11:22:33"}
+        =============== ============================================================================ ======================================================
+
+    List of Actions (OpenFlow1.2 or later):
+
+        =============== ============================================================================ ==================================================================
+        Actions         Description                                                                  Example
+        =============== ============================================================================ ==================================================================
+        OUTPUT          Output packet from "port"                                                    {"type": "OUTPUT", "port": 3}
+        COPY_TTL_OUT    Copy TTL outwards                                                            {"type": "COPY_TTL_OUT"}
+        COPY_TTL_IN     Copy TTL inwards                                                             {"type": "COPY_TTL_IN"}
+        SET_MPLS_TTL    Set MPLS TTL using "mpls_ttl"                                                {"type": "SET_MPLS_TTL", "mpls_ttl": 64}
+        DEC_MPLS_TTL    Decrement MPLS TTL                                                           {"type": "DEC_MPLS_TTL"}
+        PUSH_VLAN       Push a new VLAN tag with "ethertype"                                         {"type": "PUSH_VLAN", "ethertype": 33024}
+        POP_VLAN        Pop the outer VLAN tag                                                       {"type": "POP_VLAN"}
+        PUSH_MPLS       Push a new MPLS tag with "ethertype"                                         {"type": "PUSH_MPLS", "ethertype": 34887}
+        POP_MPLS        Pop the outer MPLS tag with "ethertype"                                      {"type": "POP_MPLS", "ethertype": 2054}
+        SET_QUEUE       Set queue id using "queue_id" when outputting to a port                      {"type": "SET_QUEUE", "queue_id": 7}
+        GROUP           Apply group identified by "group_id"                                         {"type": "GROUP", "group_id": 5}
+        SET_NW_TTL      Set IP TTL using "nw_ttl"                                                    {"type": "SET_NW_TTL", "nw_ttl": 64}
+        DEC_NW_TTL      Decrement IP TTL                                                             {"type": "DEC_NW_TTL"}
+        SET_FIELD       Set a "field" using "value"                                                  See :ref:`example-of-set-field-action`
+                        (The set of keywords available for "field" is the same as match field)
+        PUSH_PBB        Push a new PBB service tag with "ethertype"                                  {"type": "PUSH_PBB", "ethertype": 35047}
+        POP_PBB         Pop the outer PBB service tag                                                {"type": "POP_PBB"}
+        GOTO_TABLE      (Instruction) Setup the next table identified by "table_id"                  {"type": "GOTO_TABLE", "table_id": 8}
+        WRITE_METADATA  (Instruction) Setup the metadata field using "metadata" and "metadata_mask"  {"type": "WRITE_METADATA", "metadata": 0x3, "metadata_mask": 0x3}
+        METER           (Instruction) Apply meter identified by "meter_id"                           {"type": "METER", "meter_id": 3}
+        =============== ============================================================================ ==================================================================
+
+.. _example-of-set-field-action:
+
+Example of set-field action
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    To set VLAN ID to non-VLAN-tagged frame::
+
+        "actions":[
+            {
+                "type": "PUSH_VLAN",     # Push a new VLAN tag if a input frame is non-VLAN-tagged
+                "ethertype": 33024       # Ethertype 0x8100(=33024): IEEE 802.1Q VLAN-tagged frame
+            },
+            {
+                "type": "SET_FIELD",
+                "field": "vlan_vid",     # Set VLAN ID
+                "value": 4102            # Describe sum of vlan_id(e.g. 6) | OFPVID_PRESENT(0x1000=4096)
+            },
+            {
+                "type": "OUTPUT",
+                "port": 2
+            }
+        ]
