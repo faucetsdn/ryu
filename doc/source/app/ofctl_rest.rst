@@ -1530,6 +1530,12 @@ Description of Actions on request messages
         STRIP_VLAN      Strip the 802.1Q header                                                      {"type": "STRIP_VLAN"}
         SET_DL_SRC      Set ethernet source address using "dl_src"                                   {"type": "SET_DL_SRC", "dl_src": "aa:bb:cc:11:22:33"}
         SET_DL_DST      Set ethernet destination address using "dl_dst"                              {"type": "SET_DL_DST", "dl_dst": "aa:bb:cc:11:22:33"}
+        SET_NW_SRC      IP source address using "nw_src"                                             {"type": "SET_NW_SRC", "nw_src": "10.0.0.1"}
+        SET_NW_DST      IP destination address using "nw_dst"                                        {"type": "SET_NW_DST", "nw_dst": "10.0.0.1"}
+        SET_NW_TOS      Set IP ToS (DSCP field, 6 bits) using "nw_tos"                               {"type": "SET_NW_TOS", "nw_tos": 184}
+        SET_TP_SRC      Set TCP/UDP source port using "tp_src"                                       {"type": "SET_TP_SRC", "tp_src": 8080}
+        SET_TP_DST      Set TCP/UDP destination port using "tp_dst"                                  {"type": "SET_TP_DST", "tp_dst": 8080}
+        ENQUEUE         Output to queue with "queue_id" attached to "port"                           {"type": "ENQUEUE", "queue_id": 3, "port": 1}
         =============== ============================================================================ ======================================================
 
     List of Actions (OpenFlow1.2 or later):

@@ -32,10 +32,12 @@ def to_actions(dp, acts):
     for a in acts:
         action_type = a.get('type')
         if action_type == 'OUTPUT':
-            out_port = int(a.get('port', ofproto_v1_0.OFPP_NONE))
-            max_len = int(a.get('max_len', 65535))
-            actions.append(dp.ofproto_parser.OFPActionOutput(
-                out_port, max_len=max_len))
+            port = int(a.get('port', ofproto_v1_0.OFPP_NONE))
+            # NOTE: The reason of this magic number (0xffe5)
+            #       is because there is no good constant in of1.0.
+            #       The same value as OFPCML_MAX of of1.2 and of1.3 is used.
+            max_len = int(a.get('max_len', 0xffe5))
+            actions.append(dp.ofproto_parser.OFPActionOutput(port, max_len))
         elif action_type == 'SET_VLAN_VID':
             vlan_vid = int(a.get('vlan_vid', 0xffff))
             actions.append(dp.ofproto_parser.OFPActionVlanVid(vlan_vid))
@@ -50,6 +52,25 @@ def to_actions(dp, acts):
         elif action_type == 'SET_DL_DST':
             dl_dst = haddr_to_bin(a.get('dl_dst'))
             actions.append(dp.ofproto_parser.OFPActionSetDlDst(dl_dst))
+        elif action_type == 'SET_NW_SRC':
+            nw_src = ipv4_to_int(a.get('nw_src'))
+            actions.append(dp.ofproto_parser.OFPActionSetNwSrc(nw_src))
+        elif action_type == 'SET_NW_DST':
+            nw_dst = ipv4_to_int(a.get('nw_dst'))
+            actions.append(dp.ofproto_parser.OFPActionSetNwDst(nw_dst))
+        elif action_type == 'SET_NW_TOS':
+            nw_tos = int(a.get('nw_tos', 0))
+            actions.append(dp.ofproto_parser.OFPActionSetNwTos(nw_tos))
+        elif action_type == 'SET_TP_SRC':
+            tp_src = int(a.get('tp_src', 0))
+            actions.append(dp.ofproto_parser.OFPActionSetTpSrc(tp_src))
+        elif action_type == 'SET_TP_DST':
+            tp_dst = int(a.get('tp_dst', 0))
+            actions.append(dp.ofproto_parser.OFPActionSetTpDst(tp_dst))
+        elif action_type == 'ENQUEUE':
+            port = int(a.get('port', ofproto_v1_0.OFPP_NONE))
+            queue_id = int(a.get('queue_id', 0))
+            actions.append(dp.ofproto_parser.OFPActionEnqueue(port, queue_id))
         else:
             LOG.debug('Unknown action type')
 
@@ -73,11 +94,37 @@ def actions_to_str(acts):
             buf = 'SET_DL_SRC:' + haddr_to_str(a.dl_addr)
         elif action_type == ofproto_v1_0.OFPAT_SET_DL_DST:
             buf = 'SET_DL_DST:' + haddr_to_str(a.dl_addr)
+        elif action_type == ofproto_v1_0.OFPAT_SET_NW_SRC:
+            buf = 'SET_NW_SRC:' + \
+                  socket.inet_ntoa(struct.pack('!I', a.nw_addr))
+        elif action_type == ofproto_v1_0.OFPAT_SET_NW_DST:
+            buf = 'SET_NW_DST:' + \
+                  socket.inet_ntoa(struct.pack('!I', a.nw_addr))
+        elif action_type == ofproto_v1_0.OFPAT_SET_NW_TOS:
+            buf = 'SET_NW_TOS:' + str(a.tos)
+        elif action_type == ofproto_v1_0.OFPAT_SET_TP_SRC:
+            buf = 'SET_TP_SRC:' + str(a.tp)
+        elif action_type == ofproto_v1_0.OFPAT_SET_TP_DST:
+            buf = 'SET_TP_DST:' + str(a.tp)
+        elif action_type == ofproto_v1_0.OFPAT_ENQUEUE:
+            buf = 'ENQUEUE:' + str(a.queue_id)
+        elif action_type == ofproto_v1_0.OFPAT_VENDOR:
+            buf = 'VENDOR'
         else:
             buf = 'UNKNOWN'
         actions.append(buf)
 
     return actions
+
+
+def ipv4_to_int(addr):
+    ip = addr.split('.')
+    assert len(ip) == 4
+    i = 0
+    for b in ip:
+        b = int(b)
+        i = (i << 8) | b
+    return i
 
 
 def to_match(dp, attrs):
