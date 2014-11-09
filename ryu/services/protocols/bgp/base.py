@@ -267,14 +267,16 @@ class Activity(object):
             if child_activity.started:
                 child_activity.stop()
 
-    def _stop_child_threads(self):
+    def _stop_child_threads(self, name=None):
         """Stops all threads spawn by this activity.
         """
         child_threads = self._child_thread_map.items()
         for thread_name, thread in child_threads:
-            LOG.debug('%s: Stopping child thread %s' %
-                      (self.name, thread_name))
-            thread.kill()
+            if not name or thread_name is name:
+                LOG.debug('%s: Stopping child thread %s' %
+                          (self.name, thread_name))
+                thread.kill()
+                del self._child_thread_map[thread_name]
 
     def _close_asso_sockets(self):
         """Closes all the sockets linked to this activity.
