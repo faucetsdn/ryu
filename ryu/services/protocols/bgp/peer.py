@@ -409,6 +409,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         self.on_update_out_filter()
 
     @property
+    def adj_rib_in(self):
+        return self._adj_rib_in
+
+    @property
+    def adj_rib_out(self):
+        return self._adj_rib_out
+
+    @property
     def is_route_server_client(self):
         return self._neigh_conf.is_route_server_client
 

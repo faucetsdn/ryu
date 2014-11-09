@@ -80,6 +80,14 @@ class PeerDetailView(OperatorDetailView):
     remote_as = fields.DataField('remote_as')
     ip_address = fields.DataField('ip_address')
     enabled = fields.DataField('enabled')
+    adj_rib_in = fields.RelatedViewField(
+        'adj_rib_in',
+        'ryu.services.protocols.bgp.operator.views.bgp.ReceivedRouteDictView'
+    )
+    adj_rib_out = fields.RelatedViewField(
+        'adj_rib_out',
+        'ryu.services.protocols.bgp.operator.views.bgp.SentRouteDictView'
+    )
     neigh_conf = fields.RelatedViewField(
         '_neigh_conf',
         'ryu.services.protocols.bgp.operator.views.conf.ConfDetailView'
@@ -171,14 +179,43 @@ class PathDetailView(OperatorDetailView):
 
 
 class SentRouteDetailView(OperatorDetailView):
+    timestamp = fields.DataField('timestamp')
+    filtered = fields.DataField('filtered')
     path = fields.RelatedViewField(
         'path',
         'ryu.services.protocols.bgp.operator.views.bgp.PathDetailView',
     )
     peer = fields.RelatedViewField(
-        '_sent_peer',
+        'sent_peer',
         'ryu.services.protocols.bgp.operator.views.bgp.PeerDetailView'
     )
+
+    def encode(self):
+        ret = super(SentRouteDetailView, self).encode()
+        ret.update({
+            'path': self.rel('path').encode(),
+        })
+        return ret
+
+
+class ReceivedRouteDetailView(OperatorDetailView):
+    timestamp = fields.DataField('timestamp')
+    filtered = fields.DataField('filtered')
+    path = fields.RelatedViewField(
+        'path',
+        'ryu.services.protocols.bgp.operator.views.bgp.PathDetailView',
+    )
+    peer = fields.RelatedViewField(
+        'received_peer',
+        'ryu.services.protocols.bgp.operator.views.bgp.PeerDetailView'
+    )
+
+    def encode(self):
+        ret = super(ReceivedRouteDetailView, self).encode()
+        ret.update({
+            'path': self.rel('path').encode(),
+        })
+        return ret
 
 
 class DestinationDetailView(OperatorDetailView):
@@ -279,4 +316,9 @@ SentRouteListView = create_list_view_class(
 SentRouteDictView = create_dict_view_class(
     SentRouteDetailView,
     'SentRouteDictView'
+)
+
+ReceivedRouteDictView = create_dict_view_class(
+    ReceivedRouteDetailView,
+    'ReceivedRouteDictView'
 )

@@ -40,7 +40,7 @@ class Command(object):
     """
 
     help_msg = ''
-    param_help_msg = None
+    param_help_msg = ''
     command = ''
     cli_resp_line_template = '{0}: {1}\n'
 
