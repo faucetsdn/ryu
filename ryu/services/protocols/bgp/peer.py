@@ -73,6 +73,7 @@ from ryu.lib.packet.bgp import BGPPathAttributeLocalPref
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
+from ryu.lib.packet.bgp import BGPPathAttributeCommunities
 
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
