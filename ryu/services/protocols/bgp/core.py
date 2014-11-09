@@ -40,6 +40,7 @@ from ryu.services.protocols.bgp.protocol import Factory
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.utils.rtfilter import RouteTargetManager
+from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE_ACTIVE
 from ryu.services.protocols.bgp.utils import stats
 from ryu.services.protocols.bgp.bmp import BMPClient
 from ryu.lib import sockopt
@@ -408,6 +409,7 @@ class CoreService(Factory, Activity):
         assert socket
         # Check if its a reactive connection or pro-active connection
         _, remote_port = self.get_remotename(socket)
+        remote_port = int(remote_port)
         is_reactive_conn = True
         if remote_port == STD_BGP_SERVER_PORT_NUM:
             is_reactive_conn = False
@@ -435,8 +437,17 @@ class CoreService(Factory, Activity):
         #     configuration.
         # 2) If this neighbor is not enabled according to configuration.
         if not peer or not peer.enabled:
-            LOG.debug('Closed connection to %s:%s as it is not a recognized'
-                      ' peer.' % (peer_addr, peer_port))
+            LOG.debug('Closed connection %s %s:%s as it is not a recognized'
+                      ' peer.' % ('from' if bgp_proto.is_reactive else 'to',
+                                  peer_addr, peer_port))
+            # Send connection rejected notification as per RFC
+            code = BGP_ERROR_CEASE
+            subcode = BGP_ERROR_SUB_CONNECTION_RESET
+            bgp_proto.send_notification(code, subcode)
+        elif bgp_proto.is_reactive and \
+                peer.connect_mode is CONNECT_MODE_ACTIVE:
+            LOG.debug('Closed connection from %s:%s as connect_mode is'
+                      ' configured ACTIVE.' % (peer_addr, peer_port))
             # Send connection rejected notification as per RFC
             code = BGP_ERROR_CEASE
             subcode = BGP_ERROR_SUB_CONNECTION_RESET

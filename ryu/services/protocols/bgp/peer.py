@@ -34,6 +34,7 @@ from ryu.services.protocols.bgp.info_base.base import AttributeMap
 from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
+from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE_PASSIVE
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
@@ -426,6 +427,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         return self._neigh_conf.check_first_as
 
     @property
+    def connect_mode(self):
+        return self._neigh_conf.connect_mode
+
+    @property
     def attribute_maps(self):
         return self._attribute_maps
 
@@ -538,6 +543,19 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             for af in negotiated_afs:
                 self._fire_route_refresh(af)
 
+    def _on_update_connect_mode(self, mode):
+        if mode is not CONNECT_MODE_PASSIVE and \
+                'peer.connect_loop' not in self._child_thread_map:
+            LOG.debug("start connect loop. (mode: %s)" % mode)
+            self._spawn('peer.connect_loop', self._connect_loop,
+                        self._client_factory)
+        elif mode is CONNECT_MODE_PASSIVE:
+            LOG.debug("stop connect loop. (mode: %s)" % mode)
+            self._stop_child_threads('peer.connect_loop')
+
+    def on_update_connect_mode(self, conf_evt):
+        self._on_update_connect_mode(conf_evt.value)
+
     def _apply_filter(self, filters, path):
         block = False
         blocked_cause = None
@@ -624,11 +642,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
     def _run(self, client_factory):
         LOG.debug('Started peer %s' % self)
-        # Start sink processing in a separate thread
-        self._spawn('peer.process_outgoing', self._process_outgoing_msg_list)
+        self._client_factory = client_factory
 
-        # Tries actively to establish session.
-        self._connect_loop(client_factory)
+        # Tries actively to establish session if CONNECT_MODE is not PASSIVE
+        self._on_update_connect_mode(self._neigh_conf.connect_mode)
+
+        # Start sink processing
+        self._process_outgoing_msg_list()
 
     def _send_outgoing_route_refresh_msg(self, rr_msg):
         """Sends given message `rr_msg` to peer.

@@ -82,6 +82,10 @@ IS_ROUTE_SERVER_CLIENT = 'is_route_server_client'
 CHECK_FIRST_AS = 'check_first_as'
 ATTRIBUTE_MAP = 'attribute_map'
 IS_NEXT_HOP_SELF = 'is_next_hop_self'
+CONNECT_MODE = 'connect_mode'
+CONNECT_MODE_ACTIVE = 'active'
+CONNECT_MODE_PASSIVE = 'passive'
+CONNECT_MODE_BOTH = 'both'
 
 # Default value constants.
 DEFAULT_CAP_GR_NULL = True
@@ -99,6 +103,7 @@ DEFAULT_OUT_FILTER = []
 DEFAULT_IS_ROUTE_SERVER_CLIENT = False
 DEFAULT_CHECK_FIRST_AS = False
 DEFAULT_IS_NEXT_HOP_SELF = False
+DEFAULT_CONNECT_MODE = CONNECT_MODE_BOTH
 
 # Default value for *MAX_PREFIXES* setting is set to 0.
 DEFAULT_MAX_PREFIXES = 0
@@ -116,13 +121,15 @@ def validate_enabled(enabled):
 @validate(name=CHANGES)
 def validate_changes(changes):
     for k, v in changes.iteritems():
-        if k not in (MULTI_EXIT_DISC, ENABLED):
+        if k not in (MULTI_EXIT_DISC, ENABLED, CONNECT_MODE):
             raise ConfigValueError(desc="Unknown field to change: %s" % k)
 
         if k == MULTI_EXIT_DISC:
             validate_med(v)
         elif k == ENABLED:
             validate_enabled(v)
+        elif k == CONNECT_MODE:
+            validate_connect_mode(v)
     return changes
 
 
@@ -266,13 +273,24 @@ def validate_is_next_hop_self(is_next_hop_self):
     return is_next_hop_self
 
 
+@validate(name=CONNECT_MODE)
+def validate_connect_mode(mode):
+    if mode not in (CONNECT_MODE_ACTIVE,
+                    CONNECT_MODE_PASSIVE,
+                    CONNECT_MODE_BOTH):
+        raise ConfigValueError(desc='Invalid connect_mode(%s)' % mode)
+    return mode
+
+
 class NeighborConf(ConfWithId, ConfWithStats):
     """Class that encapsulates one neighbors' configuration."""
 
     UPDATE_ENABLED_EVT = 'update_enabled_evt'
     UPDATE_MED_EVT = 'update_med_evt'
+    UPDATE_CONNECT_MODE_EVT = 'update_connect_mode_evt'
 
-    VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT])
+    VALID_EVT = frozenset([UPDATE_ENABLED_EVT, UPDATE_MED_EVT,
+                           UPDATE_CONNECT_MODE_EVT])
     REQUIRED_SETTINGS = frozenset([REMOTE_AS, IP_ADDRESS])
     OPTIONAL_SETTINGS = frozenset([CAP_REFRESH,
                                    CAP_ENHANCED_REFRESH,
@@ -285,7 +303,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    PEER_NEXT_HOP, PASSWORD,
                                    IN_FILTER, OUT_FILTER,
                                    IS_ROUTE_SERVER_CLIENT, CHECK_FIRST_AS,
-                                   IS_NEXT_HOP_SELF])
+                                   IS_NEXT_HOP_SELF, CONNECT_MODE])
 
     def __init__(self, **kwargs):
         super(NeighborConf, self).__init__(**kwargs)
@@ -323,6 +341,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
         self._settings[IS_NEXT_HOP_SELF] = compute_optional_conf(
             IS_NEXT_HOP_SELF,
             DEFAULT_IS_NEXT_HOP_SELF, **kwargs)
+        self._settings[CONNECT_MODE] = compute_optional_conf(
+            CONNECT_MODE, DEFAULT_CONNECT_MODE, **kwargs)
 
         # We do not have valid default MED value.
         # If no MED attribute is provided then we do not have to use MED.
@@ -509,6 +529,15 @@ class NeighborConf(ConfWithId, ConfWithStats):
     def is_next_hop_self(self):
         return self._settings[IS_NEXT_HOP_SELF]
 
+    @property
+    def connect_mode(self):
+        return self._settings[CONNECT_MODE]
+
+    @connect_mode.setter
+    def connect_mode(self, mode):
+        self._settings[CONNECT_MODE] = mode
+        self._notify_listeners(NeighborConf.UPDATE_CONNECT_MODE_EVT, mode)
+
     def exceeds_max_prefix_allowed(self, prefix_count):
         allowed_max = self._settings[MAX_PREFIXES]
         does_exceed = False
@@ -652,12 +681,19 @@ class NeighborConfListener(ConfWithIdListener, ConfWithStatsListener):
                                 self.on_update_enabled)
         neigh_conf.add_listener(NeighborConf.UPDATE_MED_EVT,
                                 self.on_update_med)
+        neigh_conf.add_listener(NeighborConf.UPDATE_CONNECT_MODE_EVT,
+                                self.on_update_connect_mode)
 
     @abstractmethod
     def on_update_enabled(self, evt):
         raise NotImplementedError('This method should be overridden.')
 
+    @abstractmethod
     def on_update_med(self, evt):
+        raise NotImplementedError('This method should be overridden.')
+
+    @abstractmethod
+    def on_update_connect_mode(self, evt):
         raise NotImplementedError('This method should be overridden.')
 
 

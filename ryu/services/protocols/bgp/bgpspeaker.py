@@ -52,12 +52,14 @@ from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
+from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
 from ryu.services.protocols.bgp.rtconf.neighbors import IN_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_ROUTE_SERVER_CLIENT
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
+from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
 from ryu.services.protocols.bgp.info_base.base import Filter
@@ -205,7 +207,7 @@ class BGPSpeaker(object):
                      next_hop=None, password=None, multi_exit_disc=None,
                      site_of_origins=None, is_route_server_client=False,
                      is_next_hop_self=False, local_address=None,
-                     local_port=None):
+                     local_port=None, connect_mode=DEFAULT_CONNECT_MODE):
         """ This method registers a new neighbor. The BGP speaker tries to
         establish a bgp session with the peer (accepts a connection
         from the peer and also tries to connect to it).
@@ -245,6 +247,12 @@ class BGPSpeaker(object):
         ``is_next_hop_self`` specifies whether the BGP speaker announces
         its own ip address to iBGP neighbor or not as path's next_hop address.
 
+        ``connect_mode`` specifies how to connect to this neighbor.
+        CONNECT_MODE_ACTIVE tries to connect from us.
+        CONNECT_MODE_PASSIVE just listens and wait for the connection.
+        CONNECT_MODE_BOTH use both methods.
+        The default is CONNECT_MODE_BOTH
+
         ``local_address`` specifies Loopback interface address for
         iBGP peering.
 
@@ -258,6 +266,7 @@ class BGPSpeaker(object):
         bgp_neighbor[PASSWORD] = password
         bgp_neighbor[IS_ROUTE_SERVER_CLIENT] = is_route_server_client
         bgp_neighbor[IS_NEXT_HOP_SELF] = is_next_hop_self
+        bgp_neighbor[CONNECT_MODE] = connect_mode
         # v6 advertizement is available with only v6 peering
         if netaddr.valid_ipv4(address):
             bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
@@ -321,12 +330,14 @@ class BGPSpeaker(object):
 
         """
 
-        assert conf_type == NEIGHBOR_CONF_MED
+        assert conf_type == NEIGHBOR_CONF_MED or conf_type == CONNECT_MODE
 
         func_name = 'neighbor.update'
         attribute_param = {}
         if conf_type == NEIGHBOR_CONF_MED:
             attribute_param = {neighbors.MULTI_EXIT_DISC: conf_value}
+        elif conf_type == CONNECT_MODE:
+            attribute_param = {neighbors.CONNECT_MODE: conf_value}
 
         param = {neighbors.IP_ADDRESS: address,
                  neighbors.CHANGES: attribute_param}
