@@ -190,16 +190,15 @@ Get flows stats filtered by fields
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-             "table_id": 0, \
-             "out_port": 2, \
-             "cookie": 1, \
-             "cookie_mask": 1, \
-             "match":{ \
-                 "in_port":1 \
-             } \
-         }' \
-         http://localhost:8080/stats/flow/1
+        $ curl -X POST -d '{
+             "table_id": 0,
+             "out_port": 2,
+             "cookie": 1,
+             "cookie_mask": 1,
+             "match":{
+                 "in_port":1
+             }
+         }' http://localhost:8080/stats/flow/1
 
     ::
 
@@ -752,78 +751,74 @@ Add a flow entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "cookie": 1, \
-            "cookie_mask": 1, \
-            "table_id": 0, \
-            "idle_timeout": 30, \
-            "hard_timeout": 30, \
-            "priority": 11111, \
-            "flags": 1, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"OUTPUT", \
-                    "port": 2 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/add
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "cookie": 1,
+            "cookie_mask": 1,
+            "table_id": 0,
+            "idle_timeout": 30,
+            "hard_timeout": 30,
+            "priority": 11111,
+            "flags": 1,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 2
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
 
     ::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "priority": 22222, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"GOTO_TABLE", \
-                    "table_id": 1 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/add
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "priority": 22222,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"GOTO_TABLE",
+                    "table_id": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
 
     ::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "priority": 33333, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"WRITE_METADATA", \
-                    "metadata": 1, \
-                    "metadata_mask": 1 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/add
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "priority": 33333,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"WRITE_METADATA",
+                    "metadata": 1,
+                    "metadata_mask": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
 
     ::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "priority": 44444, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"METER", \
-                    "meter_id": 1 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/add
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "priority": 44444,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"METER",
+                    "meter_id": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
 
     .. NOTE::
 
@@ -862,26 +857,25 @@ Modify all matching flow entries
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "cookie": 1, \
-            "cookie_mask": 1, \
-            "table_id": 0, \
-            "idle_timeout": 30, \
-            "hard_timeout": 30, \
-            "priority": 11111, \
-            "flags": 1, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"OUTPUT", \
-                    "port": 2 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/modify
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "cookie": 1,
+            "cookie_mask": 1,
+            "table_id": 0,
+            "idle_timeout": 30,
+            "hard_timeout": 30,
+            "priority": 11111,
+            "flags": 1,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 2
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/modify
 
 
 Modify flow entry strictly
@@ -916,26 +910,25 @@ Modify flow entry strictly
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "cookie": 1, \
-            "cookie_mask": 1, \
-            "table_id": 0, \
-            "idle_timeout": 30, \
-            "hard_timeout": 30, \
-            "priority": 11111, \
-            "flags": 1, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"OUTPUT", \
-                    "port": 2 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/modify_strict
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "cookie": 1,
+            "cookie_mask": 1,
+            "table_id": 0,
+            "idle_timeout": 30,
+            "hard_timeout": 30,
+            "priority": 11111,
+            "flags": 1,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 2
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/modify_strict
 
 
 Delete all matching flow entries
@@ -972,26 +965,25 @@ Delete all matching flow entries
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "cookie": 1, \
-            "cookie_mask": 1, \
-            "table_id": 0, \
-            "idle_timeout": 30, \
-            "hard_timeout": 30, \
-            "priority": 11111, \
-            "flags": 1, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"OUTPUT", \
-                    "port": 2 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/delete
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "cookie": 1,
+            "cookie_mask": 1,
+            "table_id": 0,
+            "idle_timeout": 30,
+            "hard_timeout": 30,
+            "priority": 11111,
+            "flags": 1,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 2
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/delete
 
 
 Delete flow entry strictly
@@ -1028,26 +1020,25 @@ Delete flow entry strictly
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "cookie": 1, \
-            "cookie_mask": 1, \
-            "table_id": 0, \
-            "idle_timeout": 30, \
-            "hard_timeout": 30, \
-            "priority": 11111, \
-            "flags": 1, \
-            "match":{ \
-                "in_port":1 \
-            }, \
-            "actions":[ \
-                { \
-                    "type":"OUTPUT", \
-                    "port": 2 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/flowentry/delete_strict
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "cookie": 1,
+            "cookie_mask": 1,
+            "table_id": 0,
+            "idle_timeout": 30,
+            "hard_timeout": 30,
+            "priority": 11111,
+            "flags": 1,
+            "match":{
+                "in_port":1
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 2
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/delete_strict
 
 
 Delete all flow entries
@@ -1099,22 +1090,21 @@ Add a group entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "type": "ALL", \
-            "group_id": 1, \
-            "buckets": [ \
-                { \
-                    "actions": [ \
-                        { \
-                            "type": "OUTPUT", \
-                            "port": 1 \
-                        } \
-                    ] \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/groupentry/add
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "type": "ALL",
+            "group_id": 1,
+            "buckets": [
+                {
+                    "actions": [
+                        {
+                            "type": "OUTPUT",
+                            "port": 1
+                        }
+                    ]
+                }
+            ]
+         }' http://localhost:8080/stats/groupentry/add
 
     .. NOTE::
 
@@ -1153,22 +1143,21 @@ Modify a group entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "type": "ALL", \
-            "group_id": 1, \
-            "buckets": [ \
-                { \
-                    "actions": [ \
-                        { \
-                            "type": "OUTPUT", \
-                            "port": 1 \
-                        } \
-                    ] \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/groupentry/modify
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "type": "ALL",
+            "group_id": 1,
+            "buckets": [
+                {
+                    "actions": [
+                        {
+                            "type": "OUTPUT",
+                            "port": 1
+                        }
+                    ]
+                }
+            ]
+         }' http://localhost:8080/stats/groupentry/modify
 
 
 Delete a group entry
@@ -1194,11 +1183,10 @@ Delete a group entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "group_id": 1 \
-         }' \
-         http://localhost:8080/stats/groupentry/delete
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "group_id": 1
+         }' http://localhost:8080/stats/groupentry/delete
 
 
 Modify the behavior of the port
@@ -1226,13 +1214,12 @@ Modify the behavior of the port
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "port_no": 1, \
-            "config": 1, \
-            "mask": 1 \
-            }' \
-         http://localhost:8080/stats/portdesc/modify
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "port_no": 1,
+            "config": 1,
+            "mask": 1
+            }' http://localhost:8080/stats/portdesc/modify
 
     .. NOTE::
 
@@ -1267,18 +1254,17 @@ Add a meter entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "flags": "KBPS", \
-            "meter_id": 1, \
-            "bands": [ \
-                { \
-                    "type": "DROP", \
-                    "rate": 1000 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/meterentry/add
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "flags": "KBPS",
+            "meter_id": 1,
+            "bands": [
+                {
+                    "type": "DROP",
+                    "rate": 1000
+                }
+            ]
+         }' http://localhost:8080/stats/meterentry/add
 
     .. NOTE::
 
@@ -1313,18 +1299,17 @@ Modify a meter entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "meter_id": 1, \
-            "flags": "KBPS", \
-            "bands": [ \
-                { \
-                    "type": "DROP", \
-                    "rate": 1000 \
-                } \
-            ] \
-         }' \
-         http://localhost:8080/stats/meterentry/modify
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "meter_id": 1,
+            "flags": "KBPS",
+            "bands": [
+                {
+                    "type": "DROP",
+                    "rate": 1000
+                }
+            ]
+         }' http://localhost:8080/stats/meterentry/modify
 
 
 Delete a meter entry
@@ -1350,11 +1335,10 @@ Delete a meter entry
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "meter_id": 1 \
-         }' \
-         http://localhost:8080/stats/meterentry/delete
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "meter_id": 1
+         }' http://localhost:8080/stats/meterentry/delete
 
 
 Support for experimenter multipart
@@ -1387,14 +1371,13 @@ Send a experimenter message
 
     Example of use::
 
-        $ curl -X POST -d '{ \
-            "dpid": 1, \
-            "experimenter": 1, \
-            "exp_type": 1, \
-            "data_type": "ascii", \
-            "data": "data" \
-            }' \
-         http://localhost:8080/stats/experimenter/1
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "experimenter": 1,
+            "exp_type": 1,
+            "data_type": "ascii",
+            "data": "data"
+            }' http://localhost:8080/stats/experimenter/1
 
 
 .. _description-of-match-and-actions:
