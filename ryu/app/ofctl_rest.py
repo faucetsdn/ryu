@@ -16,6 +16,7 @@
 import logging
 
 import json
+import ast
 from webob import Response
 
 from ryu.base import app_manager
@@ -155,7 +156,7 @@ class StatsController(ControllerBase):
             flow = {}
         else:
             try:
-                flow = eval(req.body)
+                flow = ast.literal_eval(req.body)
             except SyntaxError:
                 LOG.debug('invalid syntax %s', req.body)
                 return Response(status=400)
@@ -326,7 +327,7 @@ class StatsController(ControllerBase):
 
     def mod_flow_entry(self, req, cmd, **_kwargs):
         try:
-            flow = eval(req.body)
+            flow = ast.literal_eval(req.body)
         except SyntaxError:
             LOG.debug('invalid syntax %s', req.body)
             return Response(status=400)
@@ -380,7 +381,7 @@ class StatsController(ControllerBase):
 
     def mod_meter_entry(self, req, cmd, **_kwargs):
         try:
-            flow = eval(req.body)
+            flow = ast.literal_eval(req.body)
         except SyntaxError:
             LOG.debug('invalid syntax %s', req.body)
             return Response(status=400)
@@ -413,7 +414,7 @@ class StatsController(ControllerBase):
 
     def mod_group_entry(self, req, cmd, **_kwargs):
         try:
-            group = eval(req.body)
+            group = ast.literal_eval(req.body)
         except SyntaxError:
             LOG.debug('invalid syntax %s', req.body)
             return Response(status=400)
@@ -448,7 +449,7 @@ class StatsController(ControllerBase):
 
     def mod_port_behavior(self, req, cmd, **_kwargs):
         try:
-            port_config = eval(req.body)
+            port_config = ast.literal_eval(req.body)
         except SyntaxError:
             LOG.debug('invalid syntax %s', req.body)
             return Response(status=400)
@@ -493,7 +494,7 @@ class StatsController(ControllerBase):
             return Response(status=404)
 
         try:
-            exp = eval(req.body)
+            exp = ast.literal_eval(req.body)
         except SyntaxError:
             LOG.debug('invalid syntax %s', req.body)
             return Response(status=400)
