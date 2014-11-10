@@ -492,7 +492,7 @@ class FirewallController(ControllerBase):
 
     def _set_rule(self, req, switchid, vlan_id=VLANID_NONE):
         try:
-            rule = eval(req.body)
+            rule = json.loads(req.body)
         except SyntaxError:
             FirewallController._LOGGER.debug('invalid syntax %s', req.body)
             return Response(status=400)
@@ -516,7 +516,7 @@ class FirewallController(ControllerBase):
 
     def _delete_rule(self, req, switchid, vlan_id=VLANID_NONE):
         try:
-            ruleid = eval(req.body)
+            ruleid = json.loads(req.body)
         except SyntaxError:
             FirewallController._LOGGER.debug('invalid syntax %s', req.body)
             return Response(status=400)
