@@ -75,6 +75,7 @@ from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeCommunities
+from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
 
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
@@ -940,12 +941,15 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # For eBGP session we can send multi-exit-disc if configured.
             multi_exit_disc = None
             if self.is_ebgp_peer():
-                multi_exit_disc = pathattr_map.get(
-                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
-                if not multi_exit_disc and self._neigh_conf.multi_exit_disc:
+                if self._neigh_conf.multi_exit_disc:
                     multi_exit_disc = BGPPathAttributeMultiExitDisc(
                         self._neigh_conf.multi_exit_disc
                     )
+                else:
+                    pass
+            if not self.is_ebgp_peer():
+                multi_exit_disc = pathattr_map.get(
+                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
 
             # LOCAL_PREF Attribute.
             if not self.is_ebgp_peer():
