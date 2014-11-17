@@ -259,7 +259,7 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_features(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_features(dp, self.waiters)
-        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -278,7 +278,7 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_desc(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_desc(dp, self.waiters)
-        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -297,7 +297,7 @@ class StatsController(ControllerBase):
             groups = ofctl_v1_2.get_group_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             groups = ofctl_v1_3.get_group_stats(dp, self.waiters)
-        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -503,7 +503,7 @@ class StatsController(ControllerBase):
             ofctl_v1_2.send_experimenter(dp, exp)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.send_experimenter(dp, exp)
-        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
