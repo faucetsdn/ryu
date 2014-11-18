@@ -94,6 +94,26 @@ def _to_match_ipv6(value):
         netmask = network.netmask.words
     return ipv6, netmask
 
+
+def _to_match_metadata(value):
+    if '/' in value:
+        metadata = value.split('/')
+        return _str_to_int(metadata[0]), _str_to_int(metadata[1])
+    else:
+        return _str_to_int(value), ofproto_v1_2_parser.UINT64_MAX
+
+
+def _str_to_int(src):
+    if isinstance(src, str):
+        if src.startswith("0x") or src.startswith("0X"):
+            dst = int(src, 16)
+        else:
+            dst = int(src)
+    else:
+        dst = src
+    return dst
+
+
 conv_dict = {
     'eth_src': 'dl_src',
     'eth_dst': 'dl_dst',
@@ -251,7 +271,12 @@ class Test_ofctl(unittest.TestCase):
                         eq_(mac.haddr_to_bin(value), field.value)
                         return
                     elif key == 'metadata':
-                        eq_(int(value, 16), field.value)
+                        metadata, mask = _to_match_metadata(value)
+                        metadata = metadata & mask
+                        if mask == (1 << 64) - 1:
+                            mask = None
+                        eq_(metadata, field.value)
+                        eq_(mask, field.mask)
                         return
                     else:
                         eq_(value, field.value)
@@ -310,7 +335,11 @@ class Test_ofctl(unittest.TestCase):
                         continue
                 return
             elif key == 'metadata':
-                eq_(str(int(value, 16)), match_str[key])
+                metadata_1, mask_1 = _to_match_metadata(value)
+                metadata_1 = metadata_1 & mask_1
+                metadata_2, mask_2 = _to_match_metadata(match_str[key])
+                eq_(metadata_1, metadata_2)
+                eq_(mask_1, mask_2)
                 return
             eq_(value, match_str[key])
 
@@ -349,6 +378,7 @@ class test_data_v1_2():
             {'in_port': 7},
             {'in_phy_port': 5, 'in_port': 3},
             {'metadata': '0x1212121212121212'},
+            {'metadata': '0x19af28be37fa91b/0x1010101010101010'},
             {'dl_src': "aa:bb:cc:11:22:33"},
             {'dl_src': "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"},
             {'dl_dst': "aa:bb:cc:11:22:33"},
