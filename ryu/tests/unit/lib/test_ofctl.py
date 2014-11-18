@@ -225,6 +225,8 @@ class Test_ofctl(unittest.TestCase):
                     elif key in ['nw_src', 'nw_dst', 'ipv4_src', 'ipv4_dst',
                                  'arp_spa', 'arp_tpa']:
                         ipv4, mask = _to_match_ip(value)
+                        if mask == (1 << 32) - 1:
+                            mask = None
                         eq_(ipv4, field.value)
                         eq_(mask, field.mask)
                         return
@@ -573,7 +575,8 @@ def _add_tests_actions(cls):
 def _add_tests_match(cls):
     for attr in cls.attr_list:
         for key, value in attr.items():
-            method_name = 'test_' + str(cls.ver) + '_' + key + '_match'
+            method_name = 'test_' + \
+                str(cls.ver) + '_' + key + '_' + str(value) + '_match'
 
             def _run(self, name, attr, cls):
                 print ('processing %s ...' % name)
