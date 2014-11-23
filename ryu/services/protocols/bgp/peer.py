@@ -802,11 +802,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         """
         route_family = path.route_family
 
-        if route_family == RF_IPv4_UC and path.nexthop != '0.0.0.0':
-            return path.nexthop
-        if route_family == RF_IPv6_UC and path.nexthop != '::':
-            return path.nexthop
-
         # By default we use BGPS's interface IP with this peer as next_hop.
         if self._neigh_conf.next_hop:
             next_hop = self._neigh_conf.next_hop
@@ -857,7 +852,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             unkown_opttrans_attrs = None
             nlri_list = [path.nlri]
 
-            # MP_REACH_NLRI Attribute.
             # By default we use BGPS's interface IP with this peer as next_hop.
             # TODO(PH): change to use protocol's local address.
             # next_hop = self.host_bind_ip
