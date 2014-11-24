@@ -48,7 +48,7 @@ def chop_py_suffix(p):
 
 def _likely_same(a, b):
     try:
-         # Samefile not availible on windows
+        # Samefile not availible on windows
         if sys.platform == 'win32':
             if os.stat(a) == os.stat(b):
                 return True
