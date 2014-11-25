@@ -206,30 +206,28 @@ def actions_to_str(instructions):
 
 
 def to_match(dp, attrs):
-    match = dp.ofproto_parser.OFPMatch()
     convert = {'in_port': int,
                'in_phy_port': int,
-               'dl_src': to_match_eth,
+               'metadata': to_match_metadata,
                'dl_dst': to_match_eth,
+               'dl_src': to_match_eth,
+               'eth_dst': to_match_eth,
+               'eth_src': to_match_eth,
                'dl_type': int,
+               'eth_type': int,
                'dl_vlan': int,
+               'vlan_vid': int,
                'vlan_pcp': int,
                'ip_dscp': int,
                'ip_ecn': int,
+               'nw_proto': int,
+               'ip_proto': int,
                'nw_src': to_match_ip,
                'nw_dst': to_match_ip,
-               'nw_proto': int,
-               'tp_src': int,
-               'tp_dst': int,
-               'mpls_label': int,
-               'metadata': to_match_metadata,
-               'eth_src': to_match_eth,
-               'eth_dst': to_match_eth,
-               'eth_type': int,
-               'vlan_vid': int,
                'ipv4_src': to_match_ip,
                'ipv4_dst': to_match_ip,
-               'ip_proto': int,
+               'tp_src': int,
+               'tp_dst': int,
                'tcp_src': int,
                'tcp_dst': int,
                'udp_src': int,
@@ -243,69 +241,28 @@ def to_match(dp, attrs):
                'arp_tpa': to_match_ip,
                'arp_sha': to_match_eth,
                'arp_tha': to_match_eth,
-               'ipv6_src': to_match_ipv6,
-               'ipv6_dst': to_match_ipv6,
+               'ipv6_src': to_match_ip,
+               'ipv6_dst': to_match_ip,
                'ipv6_flabel': int,
                'icmpv6_type': int,
                'icmpv6_code': int,
-               'ipv6_nd_target': to_match_ipv6,
-               'ipv6_nd_sll': mac.haddr_to_bin,
-               'ipv6_nd_tll': mac.haddr_to_bin,
+               'ipv6_nd_target': to_match_ip,
+               'ipv6_nd_sll': to_match_eth,
+               'ipv6_nd_tll': to_match_eth,
+               'mpls_label': int,
                'mpls_tc': int,
                'mpls_bos': int,
                'pbb_isid': int,
                'tunnel_id': int,
                'ipv6_exthdr': int}
 
-    match_append = {'in_port': match.set_in_port,
-                    'in_phy_port': match.set_in_phy_port,
-                    'dl_src': match.set_dl_src_masked,
-                    'dl_dst': match.set_dl_dst_masked,
-                    'dl_type': match.set_dl_type,
-                    'dl_vlan': match.set_vlan_vid,
-                    'vlan_pcp': match.set_vlan_pcp,
-                    'nw_src': match.set_ipv4_src_masked,
-                    'nw_dst': match.set_ipv4_dst_masked,
-                    'nw_proto': match.set_ip_proto,
-                    'tp_src': to_match_tpsrc,
-                    'tp_dst': to_match_tpdst,
-                    'mpls_label': match.set_mpls_label,
-                    'metadata': match.set_metadata_masked,
-                    'eth_src': match.set_dl_src_masked,
-                    'eth_dst': match.set_dl_dst_masked,
-                    'eth_type': match.set_dl_type,
-                    'vlan_vid': match.set_vlan_vid,
-                    'ip_dscp': match.set_ip_dscp,
-                    'ip_ecn': match.set_ip_ecn,
-                    'ipv4_src': match.set_ipv4_src_masked,
-                    'ipv4_dst': match.set_ipv4_dst_masked,
-                    'ip_proto': match.set_ip_proto,
-                    'tcp_src': to_match_tpsrc,
-                    'tcp_dst': to_match_tpdst,
-                    'udp_src': to_match_tpsrc,
-                    'udp_dst': to_match_tpdst,
-                    'sctp_src': match.set_sctp_src,
-                    'sctp_dst': match.set_sctp_dst,
-                    'icmpv4_type': match.set_icmpv4_type,
-                    'icmpv4_code': match.set_icmpv4_code,
-                    'arp_op': match.set_arp_opcode,
-                    'arp_spa': match.set_arp_spa_masked,
-                    'arp_tpa': match.set_arp_tpa_masked,
-                    'arp_sha': match.set_arp_sha_masked,
-                    'arp_tha': match.set_arp_tha_masked,
-                    'ipv6_src': match.set_ipv6_src_masked,
-                    'ipv6_dst': match.set_ipv6_dst_masked,
-                    'ipv6_flabel': match.set_ipv6_flabel,
-                    'icmpv6_type': match.set_icmpv6_type,
-                    'icmpv6_code': match.set_icmpv6_code,
-                    'ipv6_nd_target': match.set_ipv6_nd_target,
-                    'ipv6_nd_sll': match.set_ipv6_nd_sll,
-                    'ipv6_nd_tll': match.set_ipv6_nd_tll,
-                    'mpls_tc': match.set_mpls_tc,
-                    'mpls_bos': match.set_mpls_bos,
-                    'pbb_isid': match.set_pbb_isid,
-                    'tunnel_id': match.set_tunnel_id,
-                    'ipv6_exthdr': match.set_ipv6_exthdr}
+    keys = {'dl_dst': 'eth_dst',
+            'dl_src': 'eth_src',
+            'dl_type': 'eth_type',
+            'dl_vlan': 'vlan_vid',
+            'nw_src': 'ipv4_src',
+            'nw_dst': 'ipv4_dst',
+            'nw_proto': 'ip_proto'}
 
     if attrs.get('dl_type') == ether.ETH_TYPE_ARP or \
             attrs.get('eth_type') == ether.ETH_TYPE_ARP:
@@ -316,120 +273,56 @@ def to_match(dp, attrs):
             attrs['arp_tpa'] = attrs['nw_dst']
             del attrs['nw_dst']
 
+    kwargs = {}
     for key, value in attrs.items():
         if key in convert:
             value = convert[key](value)
-        if key in match_append:
-            if key == 'dl_src' or key == 'dl_dst' or \
-                    key == 'eth_src' or key == 'eth_dst' or \
-                    key == 'arp_sha' or key == 'arp_tha':
-                # MAC address
-                eth = value[0]
-                mask = value[1]
-                match_append[key](eth, mask)
-            elif key == 'nw_src' or key == 'nw_dst' or \
-                    key == 'ipv4_src' or key == 'ipv4_dst' or \
-                    key == 'arp_spa' or key == 'arp_tpa' or \
-                    key == 'ipv6_src' or key == 'ipv6_dst':
-                # IP address
-                ip = value[0]
-                mask = value[1]
-                match_append[key](ip, mask)
-            elif key == 'ipv6_nd_target':
-                match_append[key](value[0])
-            elif key == 'tp_src' or key == 'tp_dst' or \
-                    key == 'tcp_src' or key == 'tcp_dst' or \
-                    key == 'udp_src' or key == 'udp_dst':
-                # tp_src/dst
-                match_append[key](value, match, attrs)
-            elif key == 'metadata':
-                # metadata
-                metadata = value[0]
-                metadata_mask = value[1]
-                match_append[key](metadata, metadata_mask)
-            else:
-                # others
-                match_append[key](value)
+        if key in keys:
+            # For old field name
+            key = keys[key]
+        if key == 'tp_src' or key == 'tp_dst':
+            # TCP/UDP port
+            conv = {inet.IPPROTO_TCP: {'tp_src': 'tcp_src',
+                                       'tp_dst': 'tcp_dst'},
+                    inet.IPPROTO_UDP: {'tp_src': 'udp_src',
+                                       'tp_dst': 'udp_dst'}}
+            ip_proto = attrs.get('nw_proto', attrs.get('ip_proto', 0))
+            key = conv[ip_proto][key]
+            kwargs[key] = value
+        elif key == 'vlan_vid':
+            # VLAN ID
+            kwargs[key] = value | ofproto_v1_3.OFPVID_PRESENT
+        else:
+            # others
+            kwargs[key] = value
 
-    return match
+    return dp.ofproto_parser.OFPMatch(**kwargs)
 
 
 def to_match_eth(value):
-    eth_mask = value.split('/')
-
-    # MAC address
-    eth = mac.haddr_to_bin(eth_mask[0])
-    # mask
-    mask = mac.haddr_to_bin('ff:ff:ff:ff:ff:ff')
-
-    if len(eth_mask) == 2:
-        mask = mac.haddr_to_bin(eth_mask[1])
-
-    return eth, mask
-
-
-def to_match_tpsrc(value, match, rest):
-    match_append = {inet.IPPROTO_TCP: match.set_tcp_src,
-                    inet.IPPROTO_UDP: match.set_udp_src}
-
-    nw_proto = int(rest.get('nw_proto', rest.get('ip_proto', 0)))
-    if nw_proto in match_append:
-        match_append[nw_proto](value)
-
-    return match
-
-
-def to_match_tpdst(value, match, rest):
-    match_append = {inet.IPPROTO_TCP: match.set_tcp_dst,
-                    inet.IPPROTO_UDP: match.set_udp_dst}
-
-    nw_proto = int(rest.get('nw_proto', rest.get('ip_proto', 0)))
-    if nw_proto in match_append:
-        match_append[nw_proto](value)
-
-    return match
+    if '/' in value:
+        value = value.split('/')
+        return value[0], value[1]
+    else:
+        return value
 
 
 def to_match_ip(value):
-    ip_mask = value.split('/')
-
-    # IP address
-    ipv4 = struct.unpack('!I', socket.inet_aton(ip_mask[0]))[0]
-    # netmask
-    netmask = ofproto_v1_3_parser.UINT32_MAX
-
-    if len(ip_mask) == 2:
-        # Check the mask is CIDR or not.
-        if ip_mask[1].isdigit():
-            netmask &= ofproto_v1_3_parser.UINT32_MAX << 32 - int(ip_mask[1])
-        else:
-            netmask = struct.unpack('!I', socket.inet_aton(ip_mask[1]))[0]
-
-    return ipv4, netmask
-
-
-def to_match_ipv6(value):
-    ip_mask = value.split('/')
-
-    if len(ip_mask) == 2 and ip_mask[1].isdigit() is False:
-        # Both address and netmask are colon-hexadecimal.
-        ipv6 = netaddr.IPAddress(ip_mask[0]).words
-        netmask = netaddr.IPAddress(ip_mask[1]).words
+    if '/' in value:
+        ip = netaddr.ip.IPNetwork(value)
+        ip_addr = str(ip.ip)
+        ip_mask = str(ip.netmask)
+        return ip_addr, ip_mask
     else:
-        # For other formats.
-        network = netaddr.IPNetwork(value)
-        ipv6 = network.ip.words
-        netmask = network.netmask.words
-
-    return ipv6, netmask
+        return value
 
 
 def to_match_metadata(value):
     if '/' in value:
-        metadata = value.split('/')
-        return str_to_int(metadata[0]), str_to_int(metadata[1])
+        value = value.split('/')
+        return str_to_int(value[0]), str_to_int(value[1])
     else:
-        return str_to_int(value), ofproto_v1_3_parser.UINT64_MAX
+        return str_to_int(value)
 
 
 def match_to_str(ofmatch):
