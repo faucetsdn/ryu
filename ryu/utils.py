@@ -48,8 +48,13 @@ def chop_py_suffix(p):
 
 def _likely_same(a, b):
     try:
-        if os.path.samefile(a, b):
-            return True
+        # Samefile not availible on windows
+        if sys.platform == 'win32':
+            if os.stat(a) == os.stat(b):
+                return True
+        else:
+            if os.path.samefile(a, b):
+                return True
     except OSError:
         # m.__file__ is not always accessible.  eg. egg
         return False
