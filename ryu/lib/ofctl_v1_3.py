@@ -433,135 +433,43 @@ def to_match_metadata(value):
 
 
 def match_to_str(ofmatch):
-    keys = {ofproto_v1_3.OXM_OF_IN_PORT: 'in_port',
-            ofproto_v1_3.OXM_OF_IN_PHY_PORT: 'in_phy_port',
-            ofproto_v1_3.OXM_OF_ETH_SRC: 'dl_src',
-            ofproto_v1_3.OXM_OF_ETH_DST: 'dl_dst',
-            ofproto_v1_3.OXM_OF_ETH_SRC_W: 'dl_src',
-            ofproto_v1_3.OXM_OF_ETH_DST_W: 'dl_dst',
-            ofproto_v1_3.OXM_OF_ETH_TYPE: 'dl_type',
-            ofproto_v1_3.OXM_OF_VLAN_VID: 'dl_vlan',
-            ofproto_v1_3.OXM_OF_VLAN_PCP: 'vlan_pcp',
-            ofproto_v1_3.OXM_OF_IP_DSCP: 'ip_dscp',
-            ofproto_v1_3.OXM_OF_IP_ECN: 'ip_ecn',
-            ofproto_v1_3.OXM_OF_IPV4_SRC: 'nw_src',
-            ofproto_v1_3.OXM_OF_IPV4_DST: 'nw_dst',
-            ofproto_v1_3.OXM_OF_IPV4_SRC_W: 'nw_src',
-            ofproto_v1_3.OXM_OF_IPV4_DST_W: 'nw_dst',
-            ofproto_v1_3.OXM_OF_IP_PROTO: 'nw_proto',
-            ofproto_v1_3.OXM_OF_TCP_SRC: 'tp_src',
-            ofproto_v1_3.OXM_OF_TCP_DST: 'tp_dst',
-            ofproto_v1_3.OXM_OF_UDP_SRC: 'tp_src',
-            ofproto_v1_3.OXM_OF_UDP_DST: 'tp_dst',
-            ofproto_v1_3.OXM_OF_SCTP_SRC: 'sctp_src',
-            ofproto_v1_3.OXM_OF_SCTP_DST: 'sctp_dst',
-            ofproto_v1_3.OXM_OF_ICMPV4_TYPE: 'icmpv4_type',
-            ofproto_v1_3.OXM_OF_ICMPV4_CODE: 'icmpv4_code',
-            ofproto_v1_3.OXM_OF_MPLS_LABEL: 'mpls_label',
-            ofproto_v1_3.OXM_OF_MPLS_TC: 'mpls_tc',
-            ofproto_v1_3.OXM_OF_MPLS_BOS: 'mpls_bos',
-            ofproto_v1_3.OXM_OF_METADATA: 'metadata',
-            ofproto_v1_3.OXM_OF_METADATA_W: 'metadata',
-            ofproto_v1_3.OXM_OF_ARP_OP: 'arp_op',
-            ofproto_v1_3.OXM_OF_ARP_SPA: 'arp_spa',
-            ofproto_v1_3.OXM_OF_ARP_TPA: 'arp_tpa',
-            ofproto_v1_3.OXM_OF_ARP_SPA_W: 'arp_spa',
-            ofproto_v1_3.OXM_OF_ARP_TPA_W: 'arp_tpa',
-            ofproto_v1_3.OXM_OF_ARP_SHA: 'arp_sha',
-            ofproto_v1_3.OXM_OF_ARP_THA: 'arp_tha',
-            ofproto_v1_3.OXM_OF_ARP_SHA_W: 'arp_sha',
-            ofproto_v1_3.OXM_OF_ARP_THA_W: 'arp_tha',
-            ofproto_v1_3.OXM_OF_IPV6_SRC: 'ipv6_src',
-            ofproto_v1_3.OXM_OF_IPV6_DST: 'ipv6_dst',
-            ofproto_v1_3.OXM_OF_IPV6_SRC_W: 'ipv6_src',
-            ofproto_v1_3.OXM_OF_IPV6_DST_W: 'ipv6_dst',
-            ofproto_v1_3.OXM_OF_IPV6_FLABEL: 'ipv6_flabel',
-            ofproto_v1_3.OXM_OF_ICMPV6_TYPE: 'icmpv6_type',
-            ofproto_v1_3.OXM_OF_ICMPV6_CODE: 'icmpv6_code',
-            ofproto_v1_3.OXM_OF_IPV6_ND_TARGET: 'ipv6_nd_target',
-            ofproto_v1_3.OXM_OF_IPV6_ND_SLL: 'ipv6_nd_sll',
-            ofproto_v1_3.OXM_OF_IPV6_ND_TLL: 'ipv6_nd_tll',
-            ofproto_v1_3.OXM_OF_PBB_ISID: 'pbb_isid',
-            ofproto_v1_3.OXM_OF_TUNNEL_ID: 'tunnel_id',
-            ofproto_v1_3.OXM_OF_IPV6_EXTHDR: 'ipv6_exthdr'}
+
+    keys = {'eth_src': 'dl_src',
+            'eth_dst': 'dl_dst',
+            'eth_type': 'dl_type',
+            'vlan_vid': 'dl_vlan',
+            'ipv4_src': 'nw_src',
+            'ipv4_dst': 'nw_dst',
+            'ip_proto': 'nw_proto',
+            'tcp_src': 'tp_src',
+            'tcp_dst': 'tp_dst',
+            'udp_src': 'tp_src',
+            'udp_dst': 'tp_dst'
+            }
 
     match = {}
-    for match_field in ofmatch.fields:
-        key = keys[match_field.header]
-        if key == 'dl_src' or key == 'dl_dst' or key == 'arp_sha' or \
-                key == 'arp_tha':
-            value = match_eth_to_str(match_field.value, match_field.mask)
-        elif key == 'ipv6_nd_tll' or key == 'ipv6_nd_sll':
-            value = mac.haddr_to_str(match_field.value)
-        elif key == 'nw_src' or key == 'nw_dst' or \
-                key == 'arp_spa' or key == 'arp_tpa':
-            value = match_ip_to_str(match_field.value, match_field.mask)
-        elif key == 'ipv6_src' or key == 'ipv6_dst':
-            value = match_ipv6_to_str(match_field.value, match_field.mask)
-        elif key == 'ipv6_nd_target':
-            value = match_ipv6_to_str(match_field.value, None)
+
+    ofmatch = ofmatch.to_jsondict()['OFPMatch']
+    ofmatch = ofmatch['oxm_fields']
+
+    for match_field in ofmatch:
+        key = match_field['OXMTlv']['field']
+        if key in keys:
+            key = keys[key]
+        mask = match_field['OXMTlv']['mask']
+        value = match_field['OXMTlv']['value']
+        if key == 'dl_vlan':
+            value &= ~ofproto_v1_3.OFPVID_PRESENT
         elif key == 'metadata':
-            value = ('%d/%d' % (match_field.value, match_field.mask)
-                     if match_field.mask else '%d' % match_field.value)
+            value = ('%d/%d' % (value, mask) if mask else '%d' % value)
         else:
-            value = match_field.value
+            if mask is not None:
+                value = value + '/' + mask
+            else:
+                value = value
         match.setdefault(key, value)
 
     return match
-
-
-def match_eth_to_str(value, mask):
-    eth_str = mac.haddr_to_str(value)
-
-    if mask is not None:
-        eth_str = eth_str + '/' + mac.haddr_to_str(mask)
-
-    return eth_str
-
-
-def match_ip_to_str(value, mask):
-    ip = socket.inet_ntoa(struct.pack('!I', value))
-
-    if mask is not None and mask != 0:
-        binary_str = bin(mask)[2:].zfill(32).rstrip('0')
-        if binary_str.find('0') >= 0:
-            netmask = '/%s' % socket.inet_ntoa(struct.pack('!I', mask))
-        else:
-            netmask = '/%d' % len(binary_str)
-    else:
-        netmask = ''
-
-    return ip + netmask
-
-
-def match_ipv6_to_str(value, mask):
-    ip_list = []
-    for word in value:
-        ip_list.append('%04x' % word)
-    ip = netaddr.IPNetwork(':'.join(ip_list))
-
-    netmask = 128
-    netmask_str = None
-    if mask is not None:
-        mask_list = []
-        for word in mask:
-            mask_list.append('%04x' % word)
-        mask_v = netaddr.IPNetwork(':'.join(mask_list))
-        binary_str = mask_v.ip.bits().replace(':', '').zfill(128).rstrip('0')
-        if binary_str.find('0') >= 0:
-            netmask_str = str(mask_v.ip)
-        else:
-            netmask = len(binary_str)
-
-    if netmask_str is not None:
-        ip_str = str(ip.ip) + '/' + netmask_str
-    elif netmask == 128:
-        ip_str = str(ip.ip)
-    else:
-        ip.prefixlen = netmask
-        ip_str = str(ip)
-
-    return ip_str
 
 
 def send_stats_request(dp, stats, waiters, msgs):
