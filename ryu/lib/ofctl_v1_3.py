@@ -215,8 +215,8 @@ def to_match(dp, attrs):
                'eth_src': to_match_eth,
                'dl_type': int,
                'eth_type': int,
-               'dl_vlan': int,
-               'vlan_vid': int,
+               'dl_vlan': to_match_vid,
+               'vlan_vid': to_match_vid,
                'vlan_pcp': int,
                'ip_dscp': int,
                'ip_ecn': int,
@@ -289,9 +289,6 @@ def to_match(dp, attrs):
             ip_proto = attrs.get('nw_proto', attrs.get('ip_proto', 0))
             key = conv[ip_proto][key]
             kwargs[key] = value
-        elif key == 'vlan_vid':
-            # VLAN ID
-            kwargs[key] = value | ofproto_v1_3.OFPVID_PRESENT
         else:
             # others
             kwargs[key] = value
@@ -315,6 +312,28 @@ def to_match_ip(value):
         return ip_addr, ip_mask
     else:
         return value
+
+
+def to_match_vid(value):
+    # NOTE: If "vlan_id/dl_vlan" field is described as decimal int value
+    #       (and decimal string value), it is treated as values of
+    #       VLAN tag, and OFPVID_PRESENT(0x1000) bit is automatically
+    #       applied. OTOH, If it is described as hexadecimal string,
+    #       treated as values of oxm_value (including OFPVID_PRESENT
+    #       bit), and OFPVID_PRESENT bit is NOT automatically applied.
+    if isinstance(value, int):
+        # described as decimal int value
+        return value | ofproto_v1_3.OFPVID_PRESENT
+    else:
+        if '/' in value:
+            val = value.split('/')
+            return int(val[0], 0), int(val[1], 0)
+        else:
+            if value.isdigit():
+                # described as decimal string value
+                return int(value, 10) | ofproto_v1_3.OFPVID_PRESENT
+            else:
+                return int(value, 0)
 
 
 def to_match_metadata(value):
@@ -352,9 +371,9 @@ def match_to_str(ofmatch):
         mask = match_field['OXMTlv']['mask']
         value = match_field['OXMTlv']['value']
         if key == 'dl_vlan':
-            value &= ~ofproto_v1_3.OFPVID_PRESENT
+            value = match_vid_to_str(value, mask)
         elif key == 'metadata':
-            value = ('%d/%d' % (value, mask) if mask else '%d' % value)
+            value = match_metadata_to_str(value, mask)
         else:
             if mask is not None:
                 value = value + '/' + mask
@@ -363,6 +382,21 @@ def match_to_str(ofmatch):
         match.setdefault(key, value)
 
     return match
+
+
+def match_metadata_to_str(value, mask):
+    return ('%d/%d' % (value, mask) if mask else '%d' % value)
+
+
+def match_vid_to_str(value, mask):
+    if mask is not None:
+        value = '0x%04x/0x%04x' % (value, mask)
+    else:
+        if value & ofproto_v1_3.OFPVID_PRESENT:
+            value = str(value & ~ofproto_v1_3.OFPVID_PRESENT)
+        else:
+            value = '0x%04x' % value
+    return value
 
 
 def send_stats_request(dp, stats, waiters, msgs):

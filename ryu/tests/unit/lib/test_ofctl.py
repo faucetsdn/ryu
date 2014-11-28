@@ -189,6 +189,44 @@ class Test_ofctl(unittest.TestCase):
         dp = ofproto_protocol.ProtocolDesc(version=test.ver)
         ofproto = dp.ofproto
 
+        vid_present = dp.ofproto.OFPVID_PRESENT
+        expected_value = {
+            "vlan_vid": {
+                0: {"to_match": 0 | vid_present, "to_str": "0"},
+                3: {"to_match": 3 | vid_present, "to_str": "3"},
+                4095: {"to_match": 4095 | vid_present, "to_str": "4095"},
+                "0": {"to_match": 0 | vid_present, "to_str": "0"},
+                "3": {"to_match": 3 | vid_present, "to_str": "3"},
+                "4095": {"to_match": 4095 | vid_present, "to_str": "4095"},
+                "0x0000": {"to_match": 0x0000, "to_str": "0x0000"},
+                "0x0003": {"to_match": 0x0003, "to_str": "0x0003"},
+                "0x0fff": {"to_match": 0x0fff, "to_str": "0x0fff"},
+                "0x1000": {"to_match": 0x1000, "to_str": "0"},
+                "0x1003": {"to_match": 0x1003, "to_str": "3"},
+                "0x1fff": {"to_match": 0x1fff, "to_str": "4095"},
+                "4096/4096": {"to_match": (4096, 4096),
+                              "to_str": "0x1000/0x1000"},
+                "4096/4097": {"to_match": (4096, 4097),
+                              "to_str": "0x1000/0x1001"},
+                "2744/2748": {"to_match": (2744, 2748),
+                              "to_str": "0x0ab8/0x0abc"},
+                "2748/2748": {"to_match": (2748, 2748),
+                              "to_str": "0x0abc/0x0abc"},
+                "2748/2749": {"to_match": (2748, 2749),
+                              "to_str": "0x0abc/0x0abd"},
+                "0x1000/0x1000": {"to_match": (0x1000, 0x1000),
+                                  "to_str": "0x1000/0x1000"},
+                "0x1000/0x1001": {"to_match": (0x1000, 0x1001),
+                                  "to_str": "0x1000/0x1001"},
+                "0x0ab8/0x0abc": {"to_match": (0x0ab8, 0x0abc),
+                                  "to_str": "0x0ab8/0x0abc"},
+                "0x0abc/0x0abc": {"to_match": (0x0abc, 0x0abc),
+                                  "to_str": "0x0abc/0x0abc"},
+                "0x0abc/0x0abd": {"to_match": (0x0abc, 0x0abd),
+                                  "to_str": "0x0abc/0x0abd"}
+            }
+        }
+
         # str -> match
         match = to_match(dp, attrs)
 
@@ -230,8 +268,7 @@ class Test_ofctl(unittest.TestCase):
                     eq_(ipv6, field_value)
                 return
             elif key == 'vlan_vid':
-                vid = value | ofproto.OFPVID_PRESENT
-                eq_(vid, field_value)
+                eq_(expected_value['vlan_vid'][value]['to_match'], field_value)
                 return
             elif key == 'metadata':
                 # Metadata
@@ -308,6 +345,9 @@ class Test_ofctl(unittest.TestCase):
                     # without mask
                     eq_(ipv6, field_value)
                 return
+            elif key == 'dl_vlan':
+                eq_(expected_value['vlan_vid'][value]['to_str'], field_value)
+                return
             elif key == 'metadata':
                 # Metadata
                 meta, mask = _to_match_metadata(value)
@@ -373,7 +413,28 @@ class test_data_v1_2():
             {'eth_dst': "aa:bb:cc:11:22:33"},
             {'eth_dst': "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"},
             {'eth_type': 0x800},
-            {'dl_vlan': 5},
+            {'dl_vlan': 0},
+            {'dl_vlan': 3},
+            {'dl_vlan': 4095},
+            {'dl_vlan': "0"},
+            {'dl_vlan': "3"},
+            {'dl_vlan': "4095"},
+            {'dl_vlan': "0x0000"},
+            {'dl_vlan': "0x0003"},
+            {'dl_vlan': "0x0fff"},
+            {'dl_vlan': "0x1000"},
+            {'dl_vlan': "0x1003"},
+            {'dl_vlan': "0x1fff"},
+            {'dl_vlan': "4096/4096"},
+            {'dl_vlan': "4096/4097"},
+            {'dl_vlan': "2744/2748"},
+            {'dl_vlan': "2748/2748"},
+            {'dl_vlan': "2748/2749"},
+            {'dl_vlan': "0x1000/0x1000"},
+            {'dl_vlan': "0x1000/0x1001"},
+            {'dl_vlan': "0x0ab8/0x0abc"},
+            {'dl_vlan': "0x0abc/0x0abc"},
+            {'dl_vlan': "0x0abc/0x0abd"},
             {'vlan_pcp': 3, 'vlan_vid': 3},
             {'ip_dscp': 3, 'eth_type': 0x0800},
             {'ip_ecn': 4, 'eth_type': 0x86dd},
@@ -395,7 +456,28 @@ class test_data_v1_2():
             {'tp_dst': 2, 'ip_proto': 6},
             {'tp_src': 3, 'ip_proto': 17},
             {'tp_dst': 4, 'ip_proto': 17},
+            {'vlan_vid': 0},
             {'vlan_vid': 3},
+            {'vlan_vid': 4095},
+            {'vlan_vid': "0"},
+            {'vlan_vid': "3"},
+            {'vlan_vid': "4095"},
+            {'vlan_vid': "0x0000"},
+            {'vlan_vid': "0x0003"},
+            {'vlan_vid': "0x0fff"},
+            {'vlan_vid': "0x1000"},
+            {'vlan_vid': "0x1003"},
+            {'vlan_vid': "0x1fff"},
+            {'vlan_vid': "4096/4096"},
+            {'vlan_vid': "4096/4097"},
+            {'vlan_vid': "2744/2748"},
+            {'vlan_vid': "2748/2748"},
+            {'vlan_vid': "2748/2749"},
+            {'vlan_vid': "0x1000/0x1000"},
+            {'vlan_vid': "0x1000/0x1001"},
+            {'vlan_vid': "0x0ab8/0x0abc"},
+            {'vlan_vid': "0x0abc/0x0abc"},
+            {'vlan_vid': "0x0abc/0x0abd"},
             {'tcp_src': 3, 'ip_proto': 6},
             {'tcp_dst': 5, 'ip_proto': 6},
             {'udp_src': 2, 'ip_proto': 17},
@@ -590,7 +672,8 @@ def _add_tests_match(cls):
     for attr in cls.attr_list:
         for key, value in attr.items():
             method_name = 'test_' + \
-                str(cls.ver) + '_' + key + '_' + str(value) + '_match'
+                str(cls.ver) + '_' + key + '_' + str(
+                    value) + str(type(value)) + '_match'
 
             def _run(self, name, attr, cls):
                 print ('processing %s ...' % name)
@@ -603,6 +686,7 @@ def _add_tests_match(cls):
             func.__name__ = method_name
             im = new.instancemethod(func, None, Test_ofctl)
             setattr(Test_ofctl, method_name, im)
+
 
 """ Test case """
 
