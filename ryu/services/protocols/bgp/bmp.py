@@ -112,7 +112,7 @@ class BMPClient(Activity):
 
         peer_distinguisher = 0
         peer_as = peer._neigh_conf.remote_as
-        peer_bgp_id = self._core_service.router_id
+        peer_bgp_id = peer.protocol.recv_open_msg.bgp_identifier
         timestamp = peer.state._established_time
 
         local_address = peer.host_bind_ip
@@ -146,7 +146,7 @@ class BMPClient(Activity):
             peer_type = bmp.BMP_PEER_TYPE_GLOBAL
 
         peer_as = peer._neigh_conf.remote_as
-        peer_bgp_id = self._core_service.router_id
+        peer_bgp_id = peer.protocol.recv_open_msg.bgp_identifier
         peer_address, _ = peer.protocol._remotename
 
         return bmp.BMPPeerDownNotification(bmp.BMP_PEER_DOWN_REASON_UNKNOWN,
@@ -168,7 +168,7 @@ class BMPClient(Activity):
 
         peer_distinguisher = 0
         peer_as = peer._neigh_conf.remote_as
-        peer_bgp_id = self._core_service.router_id
+        peer_bgp_id = peer.protocol.recv_open_msg.bgp_identifier
         peer_address, _ = peer.protocol._remotename
 
         bgp_update = peer._construct_update(path)
