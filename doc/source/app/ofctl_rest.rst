@@ -1430,8 +1430,8 @@ Description of Match on request messages
         eth_src         Ethernet source address (string)                   {"eth_src": "aa:bb:cc:11:22:33"}
         dl_type         Ethernet frame type (int)                          {"dl_type": 123}
         eth_type        Ethernet frame type (int)                          {"eth_type": 2048}
-        dl_vlan         VLAN id (string)                                   {"dl_vlan": 5}
-        vlan_vid        VLAN id (string)                                   {"vlan_vid": 5}
+        dl_vlan         VLAN id (int or string)                            See :ref:`example-of-vlan-id-match-field`
+        vlan_vid        VLAN id (int or string)                            See :ref:`example-of-vlan-id-match-field`
         vlan_pcp        VLAN priority (int)                                {"vlan_pcp": 3, "vlan_vid": 3}
         ip_dscp         IP DSCP (6 bits in ToS field) (int)                {"ip_dscp": 3, "eth_type": 2048}
         ip_ecn          IP ECN (2 bits in ToS field) (int)                 {"ip_ecn": 0, "eth_type": 34525}
@@ -1497,6 +1497,84 @@ Description of Match on request messages
 
             "0x1212121212121212"
             "0x3434343434343434/0x01010101010101010"
+
+
+.. _example-of-vlan-id-match-field:
+
+Example of VLAN ID match field
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    The following is available in OpenFlow1.0 or later.
+
+    - To match only packets with VLAN tag and VLAN ID equal value 5::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "match":{
+                "dl_vlan": 5
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    .. NOTE::
+        When "dl_vlan" field is described as decimal int value, OFPVID_PRESENT(0x1000) bit is automatically applied.
+
+    The following is available in OpenFlow1.2 or later.
+
+    - To match only packets without a VLAN tag::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "match":{
+                "dl_vlan": "0x0000"   # Describe OFPVID_NONE(0x0000)
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    - To match only packets with a VLAN tag regardless of its value::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "match":{
+                "dl_vlan": "0x1000/0x1000"   # Describe OFPVID_PRESENT(0x1000/0x1000)
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    - To match only packets with VLAN tag and VLAN ID equal value 5::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "match":{
+                "dl_vlan": "0x1005"   # Describe sum of VLAN-ID(e.g. 5) | OFPVID_PRESENT(0x1000)
+            },
+            "actions":[
+                {
+                    "type":"OUTPUT",
+                    "port": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    .. NOTE::
+        When using the descriptions for OpenFlow1.2 or later, please describe "dl_vlan" field as hexadecimal string value,
+        and OFPVID_PRESENT(0x1000) bit is NOT automatically applied.
+
 
 
 Description of Actions on request messages
