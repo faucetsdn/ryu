@@ -612,7 +612,7 @@ class OSPFMessage(packet_base.PacketBase, _TypeDisp):
         self.authentication = authentication
 
     @classmethod
-    def parser(cls, buf):
+    def _parser(cls, buf):
         if len(buf) < cls._HDR_LEN:
             raise stream_parser.StreamParser.TooSmallException(
                 '%d < %d' % (len(buf), cls._HDR_LEN))
@@ -636,6 +636,13 @@ class OSPFMessage(packet_base.PacketBase, _TypeDisp):
         kwargs = subcls.parser(binmsg)
         return subcls(length, router_id, area_id, au_type, authentication,
                       checksum, version, **kwargs), None, rest
+
+    @classmethod
+    def parser(cls, buf):
+        try:
+            return cls._parser(buf)
+        except:
+            return None, None, buf
 
     def serialize(self):
         tail = self.serialize_tail()
