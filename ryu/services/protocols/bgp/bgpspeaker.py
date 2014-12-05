@@ -108,6 +108,8 @@ class BGPSpeaker(object):
                  refresh_stalepath_time=DEFAULT_REFRESH_STALEPATH_TIME,
                  refresh_max_eor_time=DEFAULT_REFRESH_MAX_EOR_TIME,
                  best_path_change_handler=None,
+                 peer_down_handler=None,
+                 peer_up_handler=None,
                  ssh_console=False,
                  label_range=DEFAULT_LABEL_RANGE):
         """Create a new BGPSpeaker object with as_number and router_id to
@@ -137,6 +139,12 @@ class BGPSpeaker(object):
         peer down. The handler is supposed to take one argument, the
         instance of an EventPrefix class instance.
 
+        ``peer_down_handler``, if specified, is called when BGP peering
+        session goes down.
+
+        ``peer_up_handler``, if specified, is called when BGP peering
+        session goes up.
+
         """
         super(BGPSpeaker, self).__init__()
 
@@ -150,8 +158,22 @@ class BGPSpeaker(object):
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
+        self._peer_down_handler = peer_down_handler
+        self._peer_up_handler = peer_up_handler
         if ssh_console:
             hub.spawn(ssh.SSH_CLI_CONTROLLER.start)
+
+    def _notify_peer_down(self, peer):
+        remote_ip = peer.protocol.recv_open_msg.bgp_identifier
+        remote_as = peer.protocol.recv_open_msg.my_as
+        if self._peer_down_handler:
+            self._peer_down_handler(remote_ip, remote_as)
+
+    def _notify_peer_up(self, peer):
+        remote_ip = peer.protocol.recv_open_msg.bgp_identifier
+        remote_as = peer.protocol.recv_open_msg.my_as
+        if self._peer_up_handler:
+            self._peer_up_handler(remote_ip, remote_as)
 
     def _notify_best_path_changed(self, path, is_withdraw):
         if path.source:
@@ -182,8 +204,18 @@ class BGPSpeaker(object):
         CORE_MANAGER.get_core_service()._signal_bus.register_listener(
             BgpSignalBus.BGP_BEST_PATH_CHANGED,
             lambda _, info:
-                self._notify_best_path_changed(info['path'],
-                                               info['is_withdraw'])
+            self._notify_best_path_changed(info['path'],
+                                           info['is_withdraw'])
+        )
+        CORE_MANAGER.get_core_service()._signal_bus.register_listener(
+            BgpSignalBus.BGP_ADJ_DOWN,
+            lambda _, info:
+            self._notify_peer_down(info['peer'])
+        )
+        CORE_MANAGER.get_core_service()._signal_bus.register_listener(
+            BgpSignalBus.BGP_ADJ_UP,
+            lambda _, info:
+            self._notify_peer_up(info['peer'])
         )
 
     def _core_start(self, settings):
