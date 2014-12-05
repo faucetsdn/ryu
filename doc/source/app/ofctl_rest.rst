@@ -681,15 +681,16 @@ Get meter features stats
 
     Response message body:
 
-        =========== ============================================ =========
-        Attribute   Description                                  Example
-        =========== ============================================ =========
-        dpid        Datapath ID                                  "1"
-        max_meter   Maximum number of meters                     256
-        band_types  Bitmaps of (1 << OFPMBT_*) values supported  ['DROP']
-        max_bands   Maximum bands per meters                     16
-        max_color   Maximum color value                          8
-        =========== ============================================ =========
+        ============= ============================================ ===========================
+        Attribute     Description                                  Example
+        ============= ============================================ ===========================
+        dpid          Datapath ID                                  "1"
+        max_meter     Maximum number of meters                     256
+        band_types    Bitmaps of (1 << OFPMBT_*) values supported  ["DROP"]
+        capabilities  Bitmaps of "ofp_meter_flags"                 ["KBPS", "BURST", "STATS"]
+        max_bands     Maximum bands per meters                     16
+        max_color     Maximum color value                          8
+        ============= ============================================ ===========================
 
     Example of use::
 
@@ -702,7 +703,12 @@ Get meter features stats
             {
               "max_meter": 256,
               "band_types": [
-                'DROP'
+                "DROP"
+              ],
+              "capabilities": [
+                "KBPS",
+                "BURST",
+                "STATS"
               ],
               "max_bands": 16,
               "max_color": 8
