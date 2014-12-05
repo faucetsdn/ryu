@@ -641,6 +641,66 @@ class OFPMatch(StringifyMixin):
         ...     print match['ipv6_src']
         ...
         ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
+
+    .. Note::
+
+        For VLAN id match field, special values are defined in OpenFlow Spec.
+
+        1) Packets with and without a VLAN tag
+
+            - Example::
+
+                match = parser.OFPMatch()
+
+            - Packet Matching
+
+                ====================== =====
+                non-VLAN-tagged        MATCH
+                VLAN-tagged(vlan_id=3) MATCH
+                VLAN-tagged(vlan_id=5) MATCH
+                ====================== =====
+
+        2) Only packets without a VLAN tag
+
+            - Example::
+
+                match = parser.OFPMatch(vlan_vid=0x0000)
+
+            - Packet Matching
+
+                ====================== =====
+                non-VLAN-tagged        MATCH
+                VLAN-tagged(vlan_id=3)   x
+                VLAN-tagged(vlan_id=5)   x
+                ====================== =====
+
+        3) Only packets with a VLAN tag regardless of its value
+
+            - Example::
+
+                match = parser.OFPMatch(vlan_vid=(0x1000, 0x1000))
+
+            - Packet Matching
+
+                ====================== =====
+                non-VLAN-tagged          x
+                VLAN-tagged(vlan_id=3) MATCH
+                VLAN-tagged(vlan_id=5) MATCH
+                ====================== =====
+
+        4) Only packets with VLAN tag and VID equal
+
+            - Example::
+
+                match = parser.OFPMatch(vlan_vid=(0x1000 | 3))
+
+            - Packet Matching
+
+                ====================== =====
+                non-VLAN-tagged          x
+                VLAN-tagged(vlan_id=3) MATCH
+                VLAN-tagged(vlan_id=5)   x
+                ====================== =====
     """
 
     def __init__(self, type_=None, length=None, _ordered_fields=None,
