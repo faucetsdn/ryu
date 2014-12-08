@@ -106,14 +106,21 @@ from ryu.ofproto import inet
 # POST /qos/{switch-id}/{vlan-id}
 #
 #  request body format:
-#   {"match": {"<field1>": "<value1>", "<field2>": "<value2>",...},
+#   {"priority": "<value>",
+#    "match": {"<field1>": "<value1>", "<field2>": "<value2>",...},
 #    "actions": {"<action1>": "<value1>", "<action2>": "<value2>",...}
 #   }
 #
 #  Description
+#    * priority field
+#     <value>
+#    "0 to 65533"
+#
+#   Note: When "priority" has not been set up,
+#         "priority: 1" is set to "priority".
+#
 #    * match field
 #     <field> : <value>
-#    "priority": "0 to 65533"
 #    "in_port" : "<int>"
 #    "dl_src"  : "<xx:xx:xx:xx:xx:xx>"
 #    "dl_dst"  : "<xx:xx:xx:xx:xx:xx>"
@@ -127,7 +134,8 @@ from ryu.ofproto import inet
 #    "tp_dst"  : "<int>"
 #    "ip_dscp" : "<int>"
 #
-#    * action field
+#    * actions field
+#     <field> : <value>
 #    "mark": <dscp-value>
 #    sets the IPv4 ToS/DSCP field to tos.
 #    "meter": <meter-id>
@@ -732,7 +740,7 @@ class QoS(object):
         if vlan_id:
             match_value[REST_DL_VLAN] = vlan_id
 
-        priority = int(match_value.get(REST_PRIORITY, QOS_PRIORITY_MIN))
+        priority = int(rest.get(REST_PRIORITY, QOS_PRIORITY_MIN))
         if (QOS_PRIORITY_MAX < priority):
             raise ValueError('Invalid priority value. Set [%d-%d]'
                              % (QOS_PRIORITY_MIN, QOS_PRIORITY_MAX))
