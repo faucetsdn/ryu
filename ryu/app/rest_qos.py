@@ -100,7 +100,7 @@ from ryu.ofproto import inet
 #   and process will apply and go to next table.
 #
 # * for no vlan
-# POST /qos/{switch-id}/{vlan-id}
+# POST /qos/{switch-id}
 #
 # * for specific vlan group
 # POST /qos/{switch-id}/{vlan-id}
