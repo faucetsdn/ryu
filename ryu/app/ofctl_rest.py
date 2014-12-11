@@ -367,12 +367,14 @@ class StatsController(ControllerBase):
         if dp is None:
             return Response(status=404)
 
+        flow = {'table_id': dp.ofproto.OFPTT_ALL}
+
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             ofctl_v1_0.delete_flow_entry(dp)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
-            ofctl_v1_2.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
+            ofctl_v1_2.mod_flow_entry(dp, flow, dp.ofproto.OFPFC_DELETE)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
-            ofctl_v1_3.mod_flow_entry(dp, {}, dp.ofproto.OFPFC_DELETE)
+            ofctl_v1_3.mod_flow_entry(dp, flow, dp.ofproto.OFPFC_DELETE)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
