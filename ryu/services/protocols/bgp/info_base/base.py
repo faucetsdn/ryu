@@ -257,6 +257,16 @@ class NonVrfPathProcessingMixin(object):
         pm = self._core_service.peer_manager
         pm.comm_new_best_to_bgp_peers(new_best_path)
 
+        # withdraw old best path
+        if old_best_path and self._sent_routes:
+            for sent_route in self._sent_routes.values():
+                sent_path = sent_route.path
+                withdraw_clone = sent_path.clone(for_withdrawal=True)
+                outgoing_route = OutgoingRoute(withdraw_clone)
+                sent_route.sent_peer.enque_outgoing_msg(outgoing_route)
+                LOG.debug('Sending withdrawal to %s for %s' %
+                          (sent_route.sent_peer, outgoing_route))
+
 
 class Destination(object):
     """State about a particular destination.
