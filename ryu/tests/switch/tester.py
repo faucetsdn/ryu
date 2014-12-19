@@ -47,8 +47,10 @@ from ryu.lib import dpid as dpid_lib
 from ryu.lib import hub
 from ryu.lib import stringify
 from ryu.lib.packet import packet
+from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
+from ryu.ofproto import ofproto_v1_4
 
 
 """ Required test network:
@@ -72,6 +74,18 @@ from ryu.ofproto import ofproto_v1_3_parser
     Then the tester sw receives the packet and sends a PacketIn message.
     If the packet did not match, the target sw drops the packet.
 
+    If you want to use the other port number which differ from above chart,
+    you can specify the port number in the options when this tool is started.
+    For details of this options, please refer to the Help command.
+    Also, if you describe the name of an option argument
+    (e.g. "target_send_port_1") in test files,
+    this tool sets the argument value in the port number.
+
+        e.g.)
+            "OFPActionOutput":{
+                "port":"target_send_port_1"
+            }
+
 """
 
 
@@ -79,11 +93,6 @@ CONF = cfg.CONF
 
 
 # Default settings.
-TESTER_SENDER_PORT = 1
-TESTER_RECEIVE_PORT = 2
-TARGET_SENDER_PORT = 2
-TARGET_RECEIVE_PORT = 1
-
 INTERVAL = 1  # sec
 WAIT_TIMER = 3  # sec
 CONTINUOUS_THREAD_INTVL = float(0.01)  # sec
@@ -202,8 +211,8 @@ MSG = {STATE_INIT_FLOW:
        {TIMEOUT: 'Failed to request table stats: request timeout.',
         RCV_ERR: 'Failed to request table stats: %(err_msg)s'},
        STATE_SEND_BARRIER:
-       {TIMEOUT: 'Faild to send packet: barrier request timeout.',
-        RCV_ERR: 'Faild to send packet: %(err_msg)s'},
+       {TIMEOUT: 'Failed to send packet: barrier request timeout.',
+        RCV_ERR: 'Failed to send packet: %(err_msg)s'},
        STATE_FLOW_UNMATCH_CHK:
        {FAILURE: 'Table-miss error: increment in matched_count.',
         ERROR: 'Table-miss error: no change in lookup_count.',
@@ -255,18 +264,50 @@ class TestError(TestMessageBase):
 class OfTester(app_manager.RyuApp):
     """ OpenFlow Switch Tester. """
 
-    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
+    tester_ver = None
+    target_ver = None
 
     def __init__(self):
         super(OfTester, self).__init__()
         self._set_logger()
 
         self.target_dpid = self._convert_dpid(CONF['test-switch']['target'])
+        self.target_send_port_1 = CONF['test-switch']['target_send_port_1']
+        self.target_send_port_2 = CONF['test-switch']['target_send_port_2']
+        self.target_recv_port = CONF['test-switch']['target_recv_port']
         self.tester_dpid = self._convert_dpid(CONF['test-switch']['tester'])
+        self.tester_send_port = CONF['test-switch']['tester_send_port']
+        self.tester_recv_port_1 = CONF['test-switch']['tester_recv_port_1']
+        self.tester_recv_port_2 = CONF['test-switch']['tester_recv_port_2']
         self.logger.info('target_dpid=%s',
                          dpid_lib.dpid_to_str(self.target_dpid))
         self.logger.info('tester_dpid=%s',
                          dpid_lib.dpid_to_str(self.tester_dpid))
+
+        def __get_version(opt):
+            vers = {
+                'openflow13': ofproto_v1_3.OFP_VERSION,
+                'openflow14': ofproto_v1_4.OFP_VERSION
+            }
+            ver = vers.get(opt.lower())
+            if ver is None:
+                self.logger.error(
+                    '%s is not supported. '
+                    'Supported versions are openflow13 and openflow14.',
+                    opt)
+                self._test_end()
+            return ver
+
+        target_opt = CONF['test-switch']['target_version']
+        self.logger.info('target ofp version=%s', target_opt)
+        OfTester.target_ver = __get_version(target_opt)
+        tester_opt = CONF['test-switch']['tester_version']
+        self.logger.info('tester ofp version=%s', tester_opt)
+        OfTester.tester_ver = __get_version(tester_opt)
+        # set app_supported_versions later.
+        ofproto_protocol.set_app_supported_versions(
+            [OfTester.target_ver, OfTester.tester_ver])
+
         test_dir = CONF['test-switch']['dir']
         self.logger.info('Test files directory = %s', test_dir)
 
@@ -317,15 +358,27 @@ class OfTester(app_manager.RyuApp):
             self._unregister_sw(ev.datapath)
 
     def _register_sw(self, dp):
+        vers = {
+            ofproto_v1_3.OFP_VERSION: 'openflow13',
+            ofproto_v1_4.OFP_VERSION: 'openflow14'
+        }
         if dp.id == self.target_dpid:
-            self.target_sw.dp = dp
-            msg = 'Join target SW.'
+            if dp.ofproto.OFP_VERSION != OfTester.target_ver:
+                msg = 'Join target SW, but ofp version is not %s.' % \
+                    vers[OfTester.target_ver]
+            else:
+                self.target_sw.dp = dp
+                msg = 'Join target SW.'
         elif dp.id == self.tester_dpid:
-            self.tester_sw.dp = dp
-            self.tester_sw.add_flow(
-                in_port=TESTER_RECEIVE_PORT,
-                out_port=dp.ofproto.OFPP_CONTROLLER)
-            msg = 'Join tester SW.'
+            if dp.ofproto.OFP_VERSION != OfTester.tester_ver:
+                msg = 'Join tester SW, but ofp version is not %s.' % \
+                    vers[OfTester.tester_ver]
+            else:
+                self.tester_sw.dp = dp
+                self.tester_sw.add_flow(
+                    in_port=self.tester_recv_port_1,
+                    out_port=dp.ofproto.OFPP_CONTROLLER)
+                msg = 'Join tester SW.'
         else:
             msg = 'Connect unknown SW.'
         if dp.id:
@@ -400,15 +453,18 @@ class OfTester(app_manager.RyuApp):
                        THROUGHPUT_COOKIE)
             # Install flows.
             for flow in test.prerequisite:
-                if isinstance(flow, ofproto_v1_3_parser.OFPFlowMod):
+                if isinstance(
+                        flow, self.target_sw.dp.ofproto_parser.OFPFlowMod):
                     self._test(STATE_FLOW_INSTALL, self.target_sw, flow)
                     self._test(STATE_FLOW_EXIST_CHK,
                                self.target_sw.send_flow_stats, flow)
-                elif isinstance(flow, ofproto_v1_3_parser.OFPMeterMod):
+                elif isinstance(
+                        flow, self.target_sw.dp.ofproto_parser.OFPMeterMod):
                     self._test(STATE_METER_INSTALL, self.target_sw, flow)
                     self._test(STATE_METER_EXIST_CHK,
                                self.target_sw.send_meter_config_stats, flow)
-                elif isinstance(flow, ofproto_v1_3_parser.OFPGroupMod):
+                elif isinstance(
+                        flow, self.target_sw.dp.ofproto_parser.OFPGroupMod):
                     self._test(STATE_GROUP_INSTALL, self.target_sw, flow)
                     self._test(STATE_GROUP_EXIST_CHK,
                                self.target_sw.send_group_desc_stats, flow)
@@ -549,7 +605,7 @@ class OfTester(app_manager.RyuApp):
         self._wait()
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+        assert isinstance(msg, datapath.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_msg_install(self, datapath, message):
         xid = datapath.send_msg(message)
@@ -561,20 +617,21 @@ class OfTester(app_manager.RyuApp):
         self._wait()
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+        assert isinstance(msg, datapath.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_exist_check(self, method, message):
+        parser = method.__self__.dp.ofproto_parser
         method_dict = {
             OpenFlowSw.send_flow_stats.__name__: {
-                'reply': ofproto_v1_3_parser.OFPFlowStatsReply,
+                'reply': parser.OFPFlowStatsReply,
                 'compare': self._compare_flow
             },
             OpenFlowSw.send_meter_config_stats.__name__: {
-                'reply': ofproto_v1_3_parser.OFPMeterConfigStatsReply,
+                'reply': parser.OFPMeterConfigStatsReply,
                 'compare': self._compare_meter
             },
             OpenFlowSw.send_group_desc_stats.__name__: {
-                'reply': ofproto_v1_3_parser.OFPGroupDescStatsReply,
+                'reply': parser.OFPGroupDescStatsReply,
                 'compare': self._compare_group
             }
         }
@@ -628,7 +685,17 @@ class OfTester(app_manager.RyuApp):
 
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPPacketIn)
+        # Compare a received message with OFPPacketIn
+        #
+        # We compare names of classes instead of classes themselves
+        # due to OVS bug. The code below should be as follows:
+        #
+        # assert isinstance(msg, msg.datapath.ofproto_parser.OFPPacketIn)
+        #
+        # At this moment, OVS sends Packet-In messages of of13 even if
+        # OVS is configured to use of14, so the above code causes an
+        # assertion.
+        assert msg.__class__.__name__ == 'OFPPacketIn'
         self.logger.debug("dpid=%s : receive_packet[%s]",
                           dpid_lib.dpid_to_str(msg.datapath.id),
                           packet.Packet(msg.data))
@@ -639,10 +706,16 @@ class OfTester(app_manager.RyuApp):
         model_pkt = (pkt[KEY_EGRESS] if KEY_EGRESS in pkt
                      else pkt[KEY_PKT_IN])
 
+        if hasattr(msg.datapath.ofproto, "OFPR_NO_MATCH"):
+            table_miss_value = msg.datapath.ofproto.OFPR_NO_MATCH
+        else:
+            table_miss_value = msg.datapath.ofproto.OFPR_TABLE_MISS
+
         if msg.datapath.id != pkt_in_src_model.dp.id:
             pkt_type = 'packet-in'
             err_msg = 'SW[dpid=%s]' % dpid_lib.dpid_to_str(msg.datapath.id)
-        elif msg.reason != ofproto_v1_3.OFPR_ACTION:
+        elif msg.reason == table_miss_value or \
+                msg.reason == msg.datapath.ofproto.OFPR_INVALID_TTL:
             pkt_type = 'packet-in'
             err_msg = 'OFPPacketIn[reason=%d]' % msg.reason
         elif repr(msg.data) != repr(model_pkt):
@@ -657,14 +730,17 @@ class OfTester(app_manager.RyuApp):
 
     def _test_no_pktin_reason_check(self, test_type,
                                     target_pkt_count, tester_pkt_count):
-        before_target_receive = target_pkt_count[0][TARGET_RECEIVE_PORT]['rx']
-        before_target_send = target_pkt_count[0][TARGET_SENDER_PORT]['tx']
-        before_tester_receive = tester_pkt_count[0][TESTER_RECEIVE_PORT]['rx']
-        before_tester_send = tester_pkt_count[0][TESTER_SENDER_PORT]['tx']
-        after_target_receive = target_pkt_count[1][TARGET_RECEIVE_PORT]['rx']
-        after_target_send = target_pkt_count[1][TARGET_SENDER_PORT]['tx']
-        after_tester_receive = tester_pkt_count[1][TESTER_RECEIVE_PORT]['rx']
-        after_tester_send = tester_pkt_count[1][TESTER_SENDER_PORT]['tx']
+        before_target_receive = target_pkt_count[
+            0][self.target_recv_port]['rx']
+        before_target_send = target_pkt_count[0][self.target_send_port_1]['tx']
+        before_tester_receive = tester_pkt_count[
+            0][self.tester_recv_port_1]['rx']
+        before_tester_send = tester_pkt_count[0][self.tester_send_port]['tx']
+        after_target_receive = target_pkt_count[1][self.target_recv_port]['rx']
+        after_target_send = target_pkt_count[1][self.target_send_port_1]['tx']
+        after_tester_receive = tester_pkt_count[
+            1][self.tester_recv_port_1]['rx']
+        after_tester_send = tester_pkt_count[1][self.tester_send_port]['tx']
 
         if after_tester_send == before_tester_send:
             log_msg = 'no change in tx_packets on tester.'
@@ -701,7 +777,8 @@ class OfTester(app_manager.RyuApp):
         self._wait()
         assert len(self.rcv_msgs) == 1
         msg = self.rcv_msgs[0]
-        assert isinstance(msg, ofproto_v1_3_parser.OFPBarrierReply)
+        assert isinstance(
+            msg, self.tester_sw.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_flow_unmatching_check(self, before_stats, pkt):
         # Check matched packet count.
@@ -798,13 +875,14 @@ class OfTester(app_manager.RyuApp):
         def __reasm_match(match):
             """ reassemble match_fields. """
             mask_lengths = {'vlan_vid': 12 + 1,
+                            'ipv6_flabel': 20,
                             'ipv6_exthdr': 9}
             match_fields = list()
             for key, united_value in match.iteritems():
                 if isinstance(united_value, tuple):
                     (value, mask) = united_value
                     # look up oxm_fields.TypeDescr to get mask length.
-                    for ofb in ofproto_v1_3.oxm_types:
+                    for ofb in stats2.datapath.ofproto.oxm_types:
                         if ofb.name == key:
                             # create all one bits mask
                             mask_len = mask_lengths.get(
@@ -989,7 +1067,8 @@ class OfTester(app_manager.RyuApp):
         if timeout:
             raise TestTimeout(self.state)
         if (self.rcv_msgs and isinstance(
-                self.rcv_msgs[0], ofproto_v1_3_parser.OFPErrorMsg)):
+                self.rcv_msgs[0],
+                self.rcv_msgs[0].datapath.ofproto_parser.OFPErrorMsg)):
             raise TestReceiveError(self.state, self.rcv_msgs[0])
 
     @set_ev_cls([ofp_event.EventOFPFlowStatsReply,
@@ -1020,7 +1099,8 @@ class OfTester(app_manager.RyuApp):
         if self.state in event_states[ev.__class__]:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
-                if not ev.msg.flags & ofproto_v1_3.OFPMPF_REPLY_MORE:
+                if not ev.msg.flags & \
+                        ev.msg.datapath.ofproto.OFPMPF_REPLY_MORE:
                     self.waiter.set()
                     hub.sleep(0)
 
@@ -1062,10 +1142,12 @@ class OfTester(app_manager.RyuApp):
 
 
 class OpenFlowSw(object):
+
     def __init__(self, dp, logger):
         super(OpenFlowSw, self).__init__()
         self.dp = dp
         self.logger = logger
+        self.tester_send_port = CONF['test-switch']['tester_send_port']
 
     def send_msg(self, msg):
         if isinstance(self.dp, DummyDatapath):
@@ -1170,7 +1252,7 @@ class OpenFlowSw(object):
         """ send a PacketOut message."""
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
-        actions = [parser.OFPActionOutput(TESTER_SENDER_PORT)]
+        actions = [parser.OFPActionOutput(self.tester_send_port)]
         out = parser.OFPPacketOut(
             datapath=self.dp, buffer_id=ofp.OFP_NO_BUFFER,
             data=data, in_port=ofp.OFPP_CONTROLLER, actions=actions)
@@ -1213,6 +1295,27 @@ class TestFile(stringify.StringifyMixin):
         self.tests = []
         self._get_tests(path)
 
+    def _normalize_test_json(self, val):
+        def __replace_port_name(k, v):
+            for port_name in [
+                'target_recv_port', 'target_send_port_1',
+                'target_send_port_2', 'tester_send_port',
+                    'tester_recv_port_1', 'tester_recv_port_2']:
+                if v[k] == port_name:
+                    v[k] = CONF['test-switch'][port_name]
+        if isinstance(val, dict):
+            for k, v in val.iteritems():
+                if k == "OFPActionOutput":
+                    if 'port' in v:
+                        __replace_port_name("port", v)
+                elif k == "OXMTlv":
+                    if v.get("field", "") == "in_port":
+                        __replace_port_name("value", v)
+                self._normalize_test_json(v)
+        elif isinstance(val, list):
+            for v in val:
+                self._normalize_test_json(v)
+
     def _get_tests(self, path):
         with open(path, 'rb') as fhandle:
             buf = fhandle.read()
@@ -1222,6 +1325,7 @@ class TestFile(stringify.StringifyMixin):
                     if isinstance(test_json, unicode):
                         self.description = test_json
                     else:
+                        self._normalize_test_json(test_json)
                         self.tests.append(Test(test_json))
             except (ValueError, TypeError) as e:
                 result = (TEST_FILE_ERROR %
@@ -1242,6 +1346,37 @@ class Test(stringify.StringifyMixin):
             data.serialize()
             return str(data.data)
 
+        def __normalize_match(ofproto, match):
+            match_json = match.to_jsondict()
+            oxm_fields = match_json['OFPMatch']['oxm_fields']
+            fields = []
+            for field in oxm_fields:
+                field_obj = ofproto.oxm_from_jsondict(field)
+                field_obj = ofproto.oxm_normalize_user(*field_obj)
+                fields.append(field_obj)
+            return match.__class__(_ordered_fields=fields)
+
+        def __normalize_action(ofproto, action):
+            action_json = action.to_jsondict()
+            field = action_json['OFPActionSetField']['field']
+            field_obj = ofproto.oxm_from_jsondict(field)
+            field_obj = ofproto.oxm_normalize_user(*field_obj)
+            kwargs = {}
+            kwargs[field_obj[0]] = field_obj[1]
+            return action.__class__(**kwargs)
+
+        # get ofproto modules using user-specified versions
+        (target_ofproto, target_parser) = ofproto_protocol._versions[
+            OfTester.target_ver]
+        (tester_ofproto, tester_parser) = ofproto_protocol._versions[
+            OfTester.tester_ver]
+        target_dp = DummyDatapath()
+        target_dp.ofproto = target_ofproto
+        target_dp.ofproto_parser = target_parser
+        tester_dp = DummyDatapath()
+        tester_dp.ofproto = tester_ofproto
+        tester_dp.ofproto_parser = tester_parser
+
         # parse 'description'
         description = buf.get(KEY_DESC)
 
@@ -1256,11 +1391,45 @@ class Test(stringify.StringifyMixin):
                 raise ValueError(
                     '"%s" block allows only the followings: %s' % (
                         KEY_PREREQ, allowed_mod))
-            cls = getattr(ofproto_v1_3_parser, key)
-            msg = cls.from_jsondict(value, datapath=DummyDatapath())
-            msg.version = ofproto_v1_3.OFP_VERSION
+            cls = getattr(target_parser, key)
+            msg = cls.from_jsondict(value, datapath=target_dp)
+            msg.version = target_ofproto.OFP_VERSION
             msg.msg_type = msg.cls_msg_type
             msg.xid = 0
+            if isinstance(msg, target_parser.OFPFlowMod):
+                # normalize OFPMatch
+                msg.match = __normalize_match(target_ofproto, msg.match)
+                # normalize OFPActionSetField
+                insts = []
+                for inst in msg.instructions:
+                    if isinstance(inst, target_parser.OFPInstructionActions):
+                        acts = []
+                        for act in inst.actions:
+                            if isinstance(
+                                    act, target_parser.OFPActionSetField):
+                                act = __normalize_action(target_ofproto, act)
+                            acts.append(act)
+                        inst = target_parser.OFPInstructionActions(
+                            inst.type, actions=acts)
+                    insts.append(inst)
+                msg.instructions = insts
+            elif isinstance(msg, target_parser.OFPGroupMod):
+                # normalize OFPActionSetField
+                buckets = []
+                for bucket in msg.buckets:
+                    acts = []
+                    for act in bucket.actions:
+                        if isinstance(act, target_parser.OFPActionSetField):
+                            act = __normalize_action(target_ofproto, act)
+                        acts.append(act)
+                    bucket = target_parser.OFPBucket(
+                        weight=bucket.weight,
+                        watch_port=bucket.watch_port,
+                        watch_group=bucket.watch_group,
+                        actions=acts)
+                    buckets.append(bucket)
+                msg.buckets = buckets
+            msg.serialize()
             prerequisite.append(msg)
 
         # parse 'tests'
@@ -1304,11 +1473,13 @@ class Test(stringify.StringifyMixin):
                     for throughput in test[KEY_EGRESS][KEY_THROUGHPUT]:
                         one = {}
                         mod = {'match': {'OFPMatch': throughput[KEY_MATCH]}}
-                        cls = getattr(ofproto_v1_3_parser, KEY_FLOW)
+                        cls = getattr(tester_parser, KEY_FLOW)
                         msg = cls.from_jsondict(
-                            mod, datapath=DummyDatapath(),
+                            mod, datapath=tester_dp,
                             cookie=THROUGHPUT_COOKIE,
                             priority=THROUGHPUT_PRIORITY)
+                        msg.match = __normalize_match(
+                            tester_ofproto, msg.match)
                         one[KEY_FLOW] = msg
                         one[KEY_KBPS] = throughput.get(KEY_KBPS)
                         one[KEY_PKTPS] = throughput.get(KEY_PKTPS)

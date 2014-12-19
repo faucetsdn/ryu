@@ -128,6 +128,10 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(self.boot_file.ljust(128, '\x00'), res.boot_file)
         eq_(str(self.options), str(res.options))
 
+    def test_parser_corrupted(self):
+        buf = self.buf[:128 - (14 + 20 + 8)]
+        _res = self.dh.parser(buf)
+
     def test_serialize(self):
         data = bytearray()
         prev = None

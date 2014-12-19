@@ -10,7 +10,7 @@ request' on github. We expect you to send a patch in Linux kernel
 development style. If you are not familiar with it, please read the
 following document:
 
-http://lxr.linux.no/source/Documentation/SubmittingPatches
+https://www.kernel.org/doc/Documentation/SubmittingPatches
 
 Please check your changes with pep8 and run unittests to make sure
 that they don't break the existing features. The following command

@@ -87,6 +87,8 @@ class UnknownType(TypeDescr):
     from_user = staticmethod(base64.b64decode)
 
 
+OFPXMC_NXM_0 = 0  # Nicira Extended Match (NXM_OF_)
+OFPXMC_NXM_1 = 1  # Nicira Extended Match (NXM_NX_)
 OFPXMC_OPENFLOW_BASIC = 0x8000
 OFPXMC_EXPERIMENTER = 0xffff
 
@@ -95,15 +97,14 @@ class _OxmClass(object):
     def __init__(self, name, num, type_):
         self.name = name
         self.oxm_type = num | (self._class << 7)
+        # TODO(yamamoto): Clean this up later.
+        # Probably when we drop EXT-256 style experimenter OXMs.
+        self.num = self.oxm_type
         self.type = type_
 
 
 class OpenFlowBasic(_OxmClass):
     _class = OFPXMC_OPENFLOW_BASIC
-
-    def __init__(self, name, num, type_):
-        super(OpenFlowBasic, self).__init__(name, num, type_)
-        self.num = self.oxm_type
 
 
 class _Experimenter(_OxmClass):
@@ -117,6 +118,24 @@ class ONFExperimenter(_Experimenter):
         super(ONFExperimenter, self).__init__(name, 0, type_)
         self.num = (ONFExperimenter, num)
         self.exp_type = num
+
+
+class NiciraExtended0(_OxmClass):
+    """Nicira Extended Match (NXM_0)
+
+    NXM header format is same as 32-bit (non-experimenter) OXMs.
+    """
+
+    _class = OFPXMC_NXM_0
+
+
+class NiciraExtended1(_OxmClass):
+    """Nicira Extended Match (NXM_1)
+
+    NXM header format is same as 32-bit (non-experimenter) OXMs.
+    """
+
+    _class = OFPXMC_NXM_1
 
 
 def generate(modname):
@@ -222,14 +241,19 @@ def parse(mod, buf, offset):
     hdr_len = struct.calcsize(hdr_pack_str)
     oxm_type = header >> 9  # class|field
     oxm_hasmask = mod.oxm_tlv_header_extract_hasmask(header)
-    len = mod.oxm_tlv_header_extract_length(header)
+    oxm_len = mod.oxm_tlv_header_extract_length(header)
     oxm_class = oxm_type >> 7
     if oxm_class == OFPXMC_EXPERIMENTER:
+        # Experimenter OXMs have 64-bit header.  (vs 32-bit for other OXMs)
         exp_hdr_pack_str = '!I'  # experimenter_id
         (exp_id, ) = struct.unpack_from(exp_hdr_pack_str, buf,
                                         offset + hdr_len)
         exp_hdr_len = struct.calcsize(exp_hdr_pack_str)
         if exp_id == ofproto_common.ONF_EXPERIMENTER_ID:
+            # XXX
+            # This block implements EXT-256 style experimenter OXM.
+            # However, according to blp, the extension will be rectified.
+            # https://www.mail-archive.com/dev%40openvswitch.org/msg37644.html
             onf_exp_type_pack_str = '!H'
             (exp_type, ) = struct.unpack_from(onf_exp_type_pack_str, buf,
                                               offset + hdr_len + exp_hdr_len)
@@ -238,8 +262,10 @@ def parse(mod, buf, offset):
     else:
         num = oxm_type
         exp_hdr_len = 0
+    # Note: OXM payload length (oxm_len) includes Experimenter ID (exp_hdr_len)
+    # for experimenter OXMs.
     value_offset = offset + hdr_len + exp_hdr_len
-    value_len = len - exp_hdr_len
+    value_len = oxm_len - exp_hdr_len
     value_pack_str = '!%ds' % value_len
     assert struct.calcsize(value_pack_str) == value_len
     (value, ) = struct.unpack_from(value_pack_str, buf, value_offset)

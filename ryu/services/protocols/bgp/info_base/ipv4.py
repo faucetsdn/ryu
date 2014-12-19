@@ -1,6 +1,17 @@
-# Copyright (c) NTT Multimedia Communications Laboratories, Inc.
-# All rights reserved.
-
+# Copyright (C) 2014 Nippon Telegraph and Telephone Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
  Defines data types and models required specifically for IPv4 support.
 """
@@ -14,6 +25,7 @@ from ryu.services.protocols.bgp.info_base.base import Path
 from ryu.services.protocols.bgp.info_base.base import Table
 from ryu.services.protocols.bgp.info_base.base import Destination
 from ryu.services.protocols.bgp.info_base.base import NonVrfPathProcessingMixin
+from ryu.services.protocols.bgp.info_base.base import PrefixFilter
 
 LOG = logging.getLogger('bgpspeaker.info_base.ipv4')
 
@@ -26,10 +38,13 @@ class IPv4Dest(Destination, NonVrfPathProcessingMixin):
     ROUTE_FAMILY = RF_IPv4_UC
 
     def _best_path_lost(self):
+        old_best_path = self._best_path
         NonVrfPathProcessingMixin._best_path_lost(self)
+        self._core_service._signal_bus.best_path_changed(old_best_path, True)
 
     def _new_best_path(self, best_path):
         NonVrfPathProcessingMixin._new_best_path(self, best_path)
+        self._core_service._signal_bus.best_path_changed(best_path, False)
 
 
 class Ipv4Table(Table):
@@ -69,3 +84,8 @@ class Ipv4Path(Path):
         super(Ipv4Path, self).__init__(*args, **kwargs)
         from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Path
         self.VRF_PATH_CLASS = Vrf4Path
+
+
+class Ipv4PrefixFilter(PrefixFilter):
+    """IPv4 Prefix Filter class"""
+    ROUTE_FAMILY = RF_IPv4_UC

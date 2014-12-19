@@ -286,6 +286,10 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         # End
         eq_(tlvs[16].tlv_type, lldp.LLDP_TLV_END)
 
+    def test_parse_corrupted(self):
+        buf = self.data
+        pkt = packet.Packet(buf[:128])
+
     def test_serialize(self):
         pkt = packet.Packet()
 

@@ -29,6 +29,7 @@ from ryu.services.protocols.bgp.rtconf.vrfs import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VrfConf
+from ryu.services.protocols.bgp import constants as const
 
 LOG = logging.getLogger('bgpspeaker.api.rtconf')
 
@@ -78,6 +79,9 @@ def update_neighbor(neigh_ip_address, changes):
         if k == neighbors.ENABLED:
             rets.append(update_neighbor_enabled(neigh_ip_address, v))
 
+        if k == neighbors.CONNECT_MODE:
+            rets.append(_update_connect_mode(neigh_ip_address, v))
+
     return all(rets)
 
 
@@ -85,6 +89,12 @@ def _update_med(neigh_ip_address, value):
     neigh_conf = _get_neighbor_conf(neigh_ip_address)
     neigh_conf.multi_exit_disc = value
     LOG.info('MED value for neigh: %s updated to %s' % (neigh_conf, value))
+    return True
+
+
+def _update_connect_mode(neigh_ip_address, value):
+    neigh_conf = _get_neighbor_conf(neigh_ip_address)
+    neigh_conf.connect_mode = value
     return True
 
 
@@ -112,9 +122,95 @@ def get_neighbors_conf():
     return CORE_MANAGER.neighbors_conf.settings
 
 
+@RegisterWithArgChecks(name='neighbor.in_filter.get',
+                       req_args=[neighbors.IP_ADDRESS])
+def get_neighbor_in_filter(neigh_ip_address):
+    """Returns a neighbor in_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    return peer.in_filters
+
+
+@RegisterWithArgChecks(name='neighbor.in_filter.set',
+                       req_args=[neighbors.IP_ADDRESS, neighbors.IN_FILTER])
+def set_neighbor_in_filter(neigh_ip_address, filters):
+    """Returns a neighbor in_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    peer.in_filters = filters
+    return True
+
+
+@RegisterWithArgChecks(name='neighbor.out_filter.get',
+                       req_args=[neighbors.IP_ADDRESS])
+def get_neighbor_out_filter(neigh_ip_address):
+    """Returns a neighbor out_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    ret = core.peer_manager.get_by_addr(neigh_ip_address).out_filters
+    return ret
+
+
+@RegisterWithArgChecks(name='neighbor.out_filter.set',
+                       req_args=[neighbors.IP_ADDRESS, neighbors.OUT_FILTER])
+def set_neighbor_in_filter(neigh_ip_address, filters):
+    """Returns a neighbor in_filter for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    peer.out_filters = filters
+    return True
+
+
+@RegisterWithArgChecks(name='neighbor.attribute_map.set',
+                       req_args=[neighbors.IP_ADDRESS,
+                                 neighbors.ATTRIBUTE_MAP],
+                       opt_args=[ROUTE_DISTINGUISHER, VRF_RF])
+def set_neighbor_attribute_map(neigh_ip_address, at_maps,
+                               route_dist=None, route_family=VRF_RF_IPV4):
+    """set attribute_maps to the neighbor."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+
+    at_maps_key = const.ATTR_MAPS_LABEL_DEFAULT
+    at_maps_dict = {}
+
+    if route_dist is not None:
+        vrf_conf =\
+            CORE_MANAGER.vrfs_conf.get_vrf_conf(route_dist, route_family)
+        if vrf_conf:
+            at_maps_key = ':'.join([route_dist, route_family])
+        else:
+            raise RuntimeConfigError(desc='No VrfConf with rd %s' %
+                                          route_dist)
+
+    at_maps_dict[const.ATTR_MAPS_LABEL_KEY] = at_maps_key
+    at_maps_dict[const.ATTR_MAPS_VALUE] = at_maps
+    peer.attribute_maps = at_maps_dict
+
+    return True
+
+
+@RegisterWithArgChecks(name='neighbor.attribute_map.get',
+                       req_args=[neighbors.IP_ADDRESS],
+                       opt_args=[ROUTE_DISTINGUISHER, VRF_RF])
+def get_neighbor_attribute_map(neigh_ip_address, route_dist=None,
+                               route_family=VRF_RF_IPV4):
+    """Returns a neighbor attribute_map for given ip address if exists."""
+    core = CORE_MANAGER.get_core_service()
+    peer = core.peer_manager.get_by_addr(neigh_ip_address)
+    at_maps_key = const.ATTR_MAPS_LABEL_DEFAULT
+
+    if route_dist is not None:
+        at_maps_key = ':'.join([route_dist, route_family])
+    at_maps = peer.attribute_maps.get(at_maps_key)
+    if at_maps:
+        return at_maps.get(const.ATTR_MAPS_ORG_KEY)
+    else:
+        return []
+
 # =============================================================================
 # VRF configuration related APIs
 # =============================================================================
+
 
 @register(name='vrf.create')
 def create_vrf(**kwargs):
@@ -174,7 +270,30 @@ def get_vrfs_conf():
 
 
 @register(name='network.add')
-def add_network(prefix):
+def add_network(prefix, next_hop=None):
     tm = CORE_MANAGER.get_core_service().table_manager
-    tm.add_to_ipv4_global_table(prefix)
+    tm.add_to_global_table(prefix, next_hop)
     return True
+
+
+@register(name='network.del')
+def del_network(prefix):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.add_to_global_table(prefix, is_withdraw=True)
+    return True
+
+# =============================================================================
+# BMP configuration related APIs
+# =============================================================================
+
+
+@register(name='bmp.start')
+def bmp_start(host, port):
+    core = CORE_MANAGER.get_core_service()
+    return core.start_bmp(host, port)
+
+
+@register(name='bmp.stop')
+def bmp_stop(host, port):
+    core = CORE_MANAGER.get_core_service()
+    return core.stop_bmp(host, port)

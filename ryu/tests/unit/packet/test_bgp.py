@@ -44,7 +44,11 @@ class Test_bgp(unittest.TestCase):
     def test_open2(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
                                                       cap_value='hoge'),
+                     bgp.BGPOptParamCapabilityGracefulRestart(flags=0,
+                                                              time=120,
+                                                              tuples=[]),
                      bgp.BGPOptParamCapabilityRouteRefresh(),
+                     bgp.BGPOptParamCapabilityCiscoRouteRefresh(),
                      bgp.BGPOptParamCapabilityMultiprotocol(
                          afi=afi.IP, safi=safi.MPLS_VPN),
                      bgp.BGPOptParamCapabilityCarryingLabelInfo(),
@@ -86,6 +90,9 @@ class Test_bgp(unittest.TestCase):
                                         route_dist='10.0.0.1:10000',
                                         labels=[5, 6, 7, 8]),
         ]
+        mp_nlri2 = [
+            bgp.LabelledIPAddrPrefix(24, '192.168.0.0', labels=[1, 2, 3])
+        ]
         communities = [
             bgp.BGP_COMMUNITY_NO_EXPORT,
             bgp.BGP_COMMUNITY_NO_ADVERTISE,
@@ -112,14 +119,19 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeAggregator(as_number=40000,
                                            addr='192.0.2.99'),
             bgp.BGPPathAttributeCommunities(communities=communities),
+            bgp.BGPPathAttributeOriginatorId(value='10.1.1.1'),
+            bgp.BGPPathAttributeClusterList(value=['1.1.1.1', '2.2.2.2']),
             bgp.BGPPathAttributeExtendedCommunities(communities=ecommunities),
             bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
                                               addr='192.0.2.99'),
             bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
-                                            next_hop='abcd',
+                                            next_hop='1.1.1.1',
                                             nlri=mp_nlri),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_LABEL,
+                                            next_hop='1.1.1.1',
+                                            nlri=mp_nlri2),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
             bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * 'bar')
@@ -261,7 +273,7 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
                                               addr='192.0.2.99'),
             bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
-                                            next_hop='abcd',
+                                            next_hop='1.1.1.1',
                                             nlri=mp_nlri),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),

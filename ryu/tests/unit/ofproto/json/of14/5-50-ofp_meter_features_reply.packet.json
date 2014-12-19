@@ -5,7 +5,7 @@
             "OFPMeterFeaturesStats": {
                "band_types": 2147483654, 
                "capabilities": 15, 
-               "max_band": 255, 
+               "max_bands": 255, 
                "max_color": 0, 
                "max_meter": 16777216
             }

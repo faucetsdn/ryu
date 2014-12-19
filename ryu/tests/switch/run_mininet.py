@@ -16,13 +16,15 @@ from ryu import version
 if '__main__' == __name__:
 
     opts = [
-        cfg.StrOpt('switch', default='ovs', help='test switch (ovs|cpqd)')
+        cfg.StrOpt('switch', default='ovs',
+                   help='test switch (ovs|ovs13|ovs14|cpqd)')
     ]
     conf = cfg.ConfigOpts()
     conf.register_cli_opts(opts)
     conf(project='ryu', version='run_mininet.py %s' % version)
     conf(sys.argv[1:])
-    switch_type = {'ovs': OVSSwitch, 'cpqd': UserSwitch}
+    switch_type = {'ovs': OVSSwitch, 'ovs13': OVSSwitch,
+                   'ovs14': OVSSwitch, 'cpqd': UserSwitch}
     switch = switch_type.get(conf.switch)
     if switch is None:
         raise ValueError('Invalid switch type. [%s]', conf.switch)
@@ -43,9 +45,12 @@ if '__main__' == __name__:
     s1.start([c0])
     s2.start([c0])
 
-    if conf.switch == 'ovs':
+    if conf.switch in ['ovs', 'ovs13']:
         s1.cmd('ovs-vsctl set Bridge s1 protocols=OpenFlow13')
         s2.cmd('ovs-vsctl set Bridge s2 protocols=OpenFlow13')
+    elif conf.switch == 'ovs14':
+        s1.cmd('ovs-vsctl set Bridge s1 protocols=OpenFlow14')
+        s2.cmd('ovs-vsctl set Bridge s2 protocols=OpenFlow14')
 
     CLI(net)
 

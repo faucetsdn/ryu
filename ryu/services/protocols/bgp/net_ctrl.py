@@ -94,7 +94,7 @@ class RpcSession(Activity):
     """
 
     def __init__(self, socket, outgoing_msg_sink_iter):
-        super(RpcSession, self).__init__()
+        super(RpcSession, self).__init__("RpcSession(%s)" % socket)
         import msgpack
 
         self._packer = msgpack.Packer()
@@ -336,7 +336,8 @@ class _NetworkController(FlexinetPeer, Activity):
         sock_addr = (apgw_rpc_bind_ip, apgw_rpc_bind_port)
         LOG.debug('NetworkController started listening for connections...')
 
-        server_thread = self._listen_tcp(sock_addr, self._start_rpc_session)
+        server_thread, socket = self._listen_tcp(sock_addr,
+                                                 self._start_rpc_session)
         self.pause(0)
         server_thread.wait()
 

@@ -20,6 +20,8 @@
   peers and maintains VRFs and Global tables.
 """
 import logging
+import netaddr
+import socket
 
 from ryu.lib.packet.bgp import BGP_ERROR_CEASE
 from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_RESET
@@ -38,14 +40,17 @@ from ryu.services.protocols.bgp.protocol import Factory
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.utils.rtfilter import RouteTargetManager
+from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE_ACTIVE
 from ryu.services.protocols.bgp.utils import stats
+from ryu.services.protocols.bgp.bmp import BMPClient
+from ryu.lib import sockopt
 
 
 LOG = logging.getLogger('bgpspeaker.core')
 
 # Interface IP address on which to run bgp server. Core service listens on all
 # interfaces of the host on port 179 - standard bgp port.
-CORE_IP = '0.0.0.0'
+CORE_IP = '::'
 
 # Required dictates that Origin attribute be incomplete
 EXPECTED_ORIGIN = BGP_ATTR_ORIGIN_INCOMPLETE
@@ -121,6 +126,9 @@ class CoreService(Factory, Activity):
 
         # BgpProcessor instance (initialized during start)
         self._bgp_processor = None
+
+        # BMP clients key: (host, port) value: BMPClient instance
+        self.bmpclients = {}
 
     def _init_signal_listeners(self):
         self._signal_bus.register_listener(
@@ -213,14 +221,16 @@ class CoreService(Factory, Activity):
 
         # Pro-actively try to establish bgp-session with peers.
         for peer in self._peer_manager.iterpeers:
-            self._spawn_activity(peer, self)
+            self._spawn_activity(peer, self.start_protocol)
 
         # Reactively establish bgp-session with peer by listening on
         # server port for connection requests.
         server_addr = (CORE_IP, self._common_config.bgp_server_port)
         waiter = kwargs.pop('waiter')
         waiter.set()
-        server_thread = self._listen_tcp(server_addr, self.start_protocol)
+        server_thread, sockets = self._listen_tcp(server_addr,
+                                                  self.start_protocol)
+        self.listen_sockets = sockets
 
         server_thread.wait()
         processor_thread.wait()
@@ -357,7 +367,21 @@ class CoreService(Factory, Activity):
             out_route = FlexinetOutgoingRoute(path, route_dist)
             sink.enque_outgoing_msg(out_route)
 
+    def _set_password(self, address, password):
+        if netaddr.valid_ipv4(address):
+            family = socket.AF_INET
+        else:
+            family = socket.AF_INET6
+
+        for sock in self.listen_sockets.values():
+            if sock.family == family:
+                sockopt.set_tcp_md5sig(sock, address, password)
+
     def on_peer_added(self, peer):
+        if peer._neigh_conf.password:
+            self._set_password(peer._neigh_conf.ip_address,
+                               peer._neigh_conf.password)
+
         if self.started:
             self._spawn_activity(
                 peer, self.start_protocol
@@ -371,6 +395,10 @@ class CoreService(Factory, Activity):
             )
 
     def on_peer_removed(self, peer):
+        if peer._neigh_conf.password:
+            # seting zero length key means deleting the key
+            self._set_password(peer._neigh_conf.ip_address, '')
+
         if peer.rtc_as != self.asn:
             self._spawn(
                 'OLD_RTC_AS_HANDLER %s' % peer.rtc_as,
@@ -380,7 +408,8 @@ class CoreService(Factory, Activity):
     def build_protocol(self, socket):
         assert socket
         # Check if its a reactive connection or pro-active connection
-        _, remote_port = socket.getpeername()
+        _, remote_port = self.get_remotename(socket)
+        remote_port = int(remote_port)
         is_reactive_conn = True
         if remote_port == STD_BGP_SERVER_PORT_NUM:
             is_reactive_conn = False
@@ -399,7 +428,7 @@ class CoreService(Factory, Activity):
         protocol.
         """
         assert socket
-        peer_addr, peer_port = socket.getpeername()
+        peer_addr, peer_port = self.get_remotename(socket)
         peer = self._peer_manager.get_by_addr(peer_addr)
         bgp_proto = self.build_protocol(socket)
 
@@ -408,8 +437,17 @@ class CoreService(Factory, Activity):
         #     configuration.
         # 2) If this neighbor is not enabled according to configuration.
         if not peer or not peer.enabled:
-            LOG.debug('Closed connection to %s:%s as it is not a recognized'
-                      ' peer.' % (peer_addr, peer_port))
+            LOG.debug('Closed connection %s %s:%s as it is not a recognized'
+                      ' peer.' % ('from' if bgp_proto.is_reactive else 'to',
+                                  peer_addr, peer_port))
+            # Send connection rejected notification as per RFC
+            code = BGP_ERROR_CEASE
+            subcode = BGP_ERROR_SUB_CONNECTION_RESET
+            bgp_proto.send_notification(code, subcode)
+        elif bgp_proto.is_reactive and \
+                peer.connect_mode is CONNECT_MODE_ACTIVE:
+            LOG.debug('Closed connection from %s:%s as connect_mode is'
+                      ' configured ACTIVE.' % (peer_addr, peer_port))
             # Send connection rejected notification as per RFC
             code = BGP_ERROR_CEASE
             subcode = BGP_ERROR_SUB_CONNECTION_RESET
@@ -424,7 +462,27 @@ class CoreService(Factory, Activity):
             subcode = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
             bgp_proto.send_notification(code, subcode)
         else:
-            bind_ip, bind_port = socket.getsockname()
+            bind_ip, bind_port = self.get_localname(socket)
             peer._host_bind_ip = bind_ip
             peer._host_bind_port = bind_port
             self._spawn_activity(bgp_proto, peer)
+
+    def start_bmp(self, host, port):
+        if (host, port) in self.bmpclients:
+            bmpclient = self.bmpclients[(host, port)]
+            if bmpclient.started:
+                LOG.warn("bmpclient is already running for %s:%s" % (host,
+                                                                     port))
+                return False
+        bmpclient = BMPClient(self, host, port)
+        self.bmpclients[(host, port)] = bmpclient
+        self._spawn_activity(bmpclient)
+        return True
+
+    def stop_bmp(self, host, port):
+        if (host, port) not in self.bmpclients:
+            LOG.warn("no bmpclient is running for %s:%s" % (host, port))
+            return False
+
+        bmpclient = self.bmpclients[(host, port)]
+        bmpclient.stop()

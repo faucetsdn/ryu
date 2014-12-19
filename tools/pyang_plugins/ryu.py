@@ -153,7 +153,7 @@ def generate_type_name(s):
     except AttributeError:
         pass
     s.i_ryu_class_name = name = _generate_type_name(s)
-    assert (not name in _classes) or same_class_def(_classes[name], s)
+    assert (name not in _classes) or same_class_def(_classes[name], s)
     _classes[name] = s
     return name
 

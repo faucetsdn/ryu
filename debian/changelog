@@ -1,0 +1,5 @@
+ryu (3.10-1) trusty; urgency=low
+
+  * Initial release.
+
+ -- Ryu Project Team <ryu-devel@lists.sourceforge.net>  Wed, 18 Jun 2014 14:50:23 +0900

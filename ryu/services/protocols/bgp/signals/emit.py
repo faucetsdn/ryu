@@ -11,6 +11,11 @@ class BgpSignalBus(SignalBus):
     BGP_VRF_STATS_CONFIG_CHANGED = (
         'core', 'vrf', 'config', 'stats', 'changed'
     )
+    BGP_BEST_PATH_CHANGED = ('core', 'best', 'changed')
+    BGP_ADJ_RIB_IN_CHANGED = ('core', 'adj', 'rib', 'in', 'changed')
+    BGP_ADJ_RIB_OUT_CHANGED = ('core', 'adj', 'rib', 'out', 'changed')
+    BGP_ADJ_UP = ('core', 'adj', 'up')
+    BGP_ADJ_DOWN = ('core', 'adj', 'down')
 
     def bgp_error(self, peer, code, subcode, reason):
         return self.emit_signal(
@@ -53,3 +58,24 @@ class BgpSignalBus(SignalBus):
             self.BGP_VRF_STATS_CONFIG_CHANGED,
             vrf_conf
         )
+
+    def best_path_changed(self, path, is_withdraw):
+        return self.emit_signal(
+            self.BGP_BEST_PATH_CHANGED,
+            {'path': path, 'is_withdraw': is_withdraw})
+
+    def adj_rib_in_changed(self, peer, received_route):
+        return self.emit_signal(
+            self.BGP_ADJ_RIB_IN_CHANGED,
+            {'peer': peer, 'received_route': received_route})
+
+    def adj_rib_out_changed(self, peer, sent_route):
+        return self.emit_signal(
+            self.BGP_ADJ_RIB_OUT_CHANGED,
+            {'peer': peer, 'sent_route': sent_route})
+
+    def adj_up(self, peer):
+        return self.emit_signal(self.BGP_ADJ_UP, {'peer': peer})
+
+    def adj_down(self, peer):
+        return self.emit_signal(self.BGP_ADJ_DOWN, {'peer': peer})

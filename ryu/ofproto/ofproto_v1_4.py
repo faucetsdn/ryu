@@ -320,6 +320,7 @@ OFPXMC_EXPERIMENTER = 0xFFFF    # Experimenter class
 
 # enum ofp_vlan_id
 OFPVID_PRESENT = 0x1000     # bit that indicate that a VLAN id is set.
+OFPVID_NONE = 0X0000        # No VLAN id was set.
 
 
 def _oxm_tlv_header(class_, field, hasmask, length):
@@ -387,6 +388,8 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('tunnel_id', 38, oxm_fields.Int8),
     oxm_fields.OpenFlowBasic('ipv6_exthdr', 39, oxm_fields.Int2),
     oxm_fields.OpenFlowBasic('pbb_uca', 41, oxm_fields.Int1),
+    oxm_fields.NiciraExtended1('tun_ipv4_src', 31, oxm_fields.IPv4Addr),
+    oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, oxm_fields.IPv4Addr),
 ]
 
 oxm_fields.generate(__name__)
@@ -536,7 +539,7 @@ OFP_DEFAULT_PRIORITY = 0x8000
 OFPFF_SEND_FLOW_REM = 1 << 0    # Send flow removed message when flow
                                 # expires or is deleted.
 OFPFF_CHECK_OVERLAP = 1 << 1    # Check for overlapping entries first.
-OFPFF_RESET_COUNT = 1 << 2      # Reset flow packet and byte counts.
+OFPFF_RESET_COUNTS = 1 << 2     # Reset flow packet and byte counts.
 OFPFF_NO_PKT_COUNTS = 1 << 3    # Don't keep track of packet count.
 OFPFF_NO_BYT_COUNTS = 1 << 4    # Don't keep track of byte count.
 
@@ -587,7 +590,7 @@ assert (calcsize(OFP_PACKET_OUT_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_PACKET_OUT_SIZE)
 
 # enum ofp_packet_in_reason
-OFPR_NO_MATCH = 0       # No matching flow (table-miss flow entry).
+OFPR_TABLE_MISS = 0     # No matching flow (table-miss flow entry).
 OFPR_APPLY_ACTION = 1   # Output to controller in apply-actions.
 OFPR_INVALID_TTL = 2    # Packet has invalid TTL.
 OFPR_ACTION_SET = 3     # Output to controller in action set.
@@ -760,7 +763,7 @@ OFPBIC_UNSUP_METADATA_MASK = 4  # Metadata mask value unsupported by
                                 # datapath.
 OFPBIC_BAD_EXPERIMENTER = 5     # Unknown experimenter id specified.
 OFPBIC_BAD_EXP_TYPE = 6         # Unknown instruction for experimenter id.
-OFPBIC_BAD_EXP_LEN = 7          # Length problem in instrucitons.
+OFPBIC_BAD_LEN = 7              # Length problem in instrucitons.
 OFPBIC_EPERM = 8                # Permissions error.
 OFPBIC_DUP_INST = 9             # Duplicate instruction.
 
@@ -950,7 +953,7 @@ OFPMP_FLOW = 1
 OFPMP_AGGREGATE = 2
 OFPMP_TABLE = 3
 OFPMP_PORT_STATS = 4
-OFPMP_QUEUE = 5
+OFPMP_QUEUE_STATS = 5
 OFPMP_GROUP = 6
 OFPMP_GROUP_DESC = 7
 OFPMP_GROUP_FEATURES = 8
@@ -1469,5 +1472,6 @@ assert (calcsize(OFP_BUNDLE_ADD_MSG_PACK_STR) + OFP_HEADER_SIZE ==
 
 # define constants
 OFP_VERSION = 0x05
-OFP_TCP_PORT = 6633
+OFP_TCP_PORT = 6653
+OFP_SSL_PORT = 6653
 MAX_XID = 0xffffffff

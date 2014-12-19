@@ -90,6 +90,7 @@ class VpnDest(Destination, NonVrfPathProcessingMixin):
     def _best_path_lost(self):
         old_best_path = self._best_path
         NonVrfPathProcessingMixin._best_path_lost(self)
+        self._core_service._signal_bus.best_path_changed(old_best_path, True)
 
         # Best-path might have been imported into VRF tables, we have to
         # withdraw from them, if the source is a peer.
@@ -102,6 +103,7 @@ class VpnDest(Destination, NonVrfPathProcessingMixin):
 
     def _new_best_path(self, best_path):
         NonVrfPathProcessingMixin._new_best_path(self, best_path)
+        self._core_service._signal_bus.best_path_changed(best_path, False)
 
         # Extranet feature requires that we import new best path into VRFs.
         tm = self._core_service.table_manager

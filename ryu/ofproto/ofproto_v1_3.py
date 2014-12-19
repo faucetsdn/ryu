@@ -368,7 +368,7 @@ OFP_DEFAULT_PRIORITY = 0x8000
 OFPFF_SEND_FLOW_REM = 1 << 0    # Send flow removed message when flow
                                 # expires or is deleted.
 OFPFF_CHECK_OVERLAP = 1 << 1    # Check for overlapping entries first.
-OFPFF_RESET_COUNT = 1 << 2      # Reset flow packet and byte counts.
+OFPFF_RESET_COUNTS = 1 << 2     # Reset flow packet and byte counts.
 OFPFF_NO_PKT_COUNTS = 1 << 3    # Don't keep track of packet count.
 OFPFF_NO_BYT_COUNTS = 1 << 4    # Don't keep track of byte count.
 
@@ -939,7 +939,7 @@ OFPBIC_UNSUP_METADATA_MASK = 4  # Metadata mask value unsupported by
                                 # datapath.
 OFPBIC_BAD_EXPERIMENTER = 5     # Unknown experimenter id specified.
 OFPBIC_BAD_EXP_TYPE = 6         # Unknown instruction for experimenter id.
-OFPBIC_BAD_EXP_LEN = 7          # Length problem in instrucitons.
+OFPBIC_BAD_LEN = 7              # Length problem in instrucitons.
 OFPBIC_EPERM = 8                # Permissions error.
 
 # enum ofp_bad_match_code
@@ -1177,6 +1177,8 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('tunnel_id', 38, oxm_fields.Int8),
     oxm_fields.OpenFlowBasic('ipv6_exthdr', 39, oxm_fields.Int2),
     oxm_fields.ONFExperimenter('pbb_uca', 2560, oxm_fields.Int1),
+    oxm_fields.NiciraExtended1('tun_ipv4_src', 31, oxm_fields.IPv4Addr),
+    oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, oxm_fields.IPv4Addr),
 ]
 
 oxm_fields.generate(__name__)

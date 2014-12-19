@@ -26,11 +26,12 @@ import abc
 import six
 import struct
 import copy
+import netaddr
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
-from ryu.lib.packet import afi
-from ryu.lib.packet import safi
+from ryu.lib.packet import afi as addr_family
+from ryu.lib.packet import safi as subaddr_family
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
@@ -49,9 +50,13 @@ BGP_OPT_CAPABILITY = 2  # RFC 5492
 BGP_CAP_MULTIPROTOCOL = 1  # RFC 4760
 BGP_CAP_ROUTE_REFRESH = 2  # RFC 2918
 BGP_CAP_CARRYING_LABEL_INFO = 4  # RFC 3107
+BGP_CAP_GRACEFUL_RESTART = 64  # RFC 4724
 BGP_CAP_FOUR_OCTET_AS_NUMBER = 65  # RFC 4893
 BGP_CAP_ENHANCED_ROUTE_REFRESH = 70  # https://tools.ietf.org/html/\
 # draft-ietf-idr-bgp-enhanced-route-refresh-05
+BGP_CAP_ROUTE_REFRESH_CISCO = 128  # in cisco routers, there are two\
+# route refresh code: one using the capability code of 128 (old),
+# another using the capability code of 2 (new).
 
 BGP_ATTR_FLAG_OPTIONAL = 1 << 7
 BGP_ATTR_FLAG_TRANSITIVE = 1 << 6
@@ -66,6 +71,8 @@ BGP_ATTR_TYPE_LOCAL_PREF = 5  # uint32
 BGP_ATTR_TYPE_ATOMIC_AGGREGATE = 6  # 0 bytes
 BGP_ATTR_TYPE_AGGREGATOR = 7  # AS number and IPv4 address
 BGP_ATTR_TYPE_COMMUNITIES = 8  # RFC 1997
+BGP_ATTR_TYPE_ORIGINATOR_ID = 9  # RFC 4456
+BGP_ATTR_TYPE_CLUSTER_LIST = 10  # RFC 4456
 BGP_ATTR_TYPE_MP_REACH_NLRI = 14  # RFC 4760
 BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
 BGP_ATTR_TYPE_EXTENDED_COMMUNITIES = 16  # RFC 4360
@@ -565,19 +572,28 @@ class RouteFamily(StringifyMixin):
         return cmp((other.afi, other.safi), (self.afi, self.safi))
 
 # Route Family Singleton
-RF_IPv4_UC = RouteFamily(afi.IP, safi.UNICAST)
-RF_IPv6_UC = RouteFamily(afi.IP6, safi.UNICAST)
-RF_IPv4_VPN = RouteFamily(afi.IP, safi.MPLS_VPN)
-RF_IPv6_VPN = RouteFamily(afi.IP6, safi.MPLS_VPN)
-RF_RTC_UC = RouteFamily(afi.IP, safi.ROUTE_TARGET_CONSTRTAINS)
+RF_IPv4_UC = RouteFamily(addr_family.IP, subaddr_family.UNICAST)
+RF_IPv6_UC = RouteFamily(addr_family.IP6, subaddr_family.UNICAST)
+RF_IPv4_VPN = RouteFamily(addr_family.IP, subaddr_family.MPLS_VPN)
+RF_IPv6_VPN = RouteFamily(addr_family.IP6, subaddr_family.MPLS_VPN)
+RF_IPv4_MPLS = RouteFamily(addr_family.IP, subaddr_family.MPLS_LABEL)
+RF_IPv6_MPLS = RouteFamily(addr_family.IP6, subaddr_family.MPLS_LABEL)
+RF_RTC_UC = RouteFamily(addr_family.IP,
+                        subaddr_family.ROUTE_TARGET_CONSTRTAINS)
 
 _rf_map = {
-    (afi.IP, safi.UNICAST): RF_IPv4_UC,
-    (afi.IP6, safi.UNICAST): RF_IPv6_UC,
-    (afi.IP, safi.MPLS_VPN): RF_IPv4_VPN,
-    (afi.IP6, safi.MPLS_VPN): RF_IPv6_VPN,
-    (afi.IP, safi.ROUTE_TARGET_CONSTRTAINS): RF_RTC_UC
+    (addr_family.IP, subaddr_family.UNICAST): RF_IPv4_UC,
+    (addr_family.IP6, subaddr_family.UNICAST): RF_IPv6_UC,
+    (addr_family.IP, subaddr_family.MPLS_VPN): RF_IPv4_VPN,
+    (addr_family.IP6, subaddr_family.MPLS_VPN): RF_IPv6_VPN,
+    (addr_family.IP, subaddr_family.MPLS_LABEL): RF_IPv4_MPLS,
+    (addr_family.IP6, subaddr_family.MPLS_LABEL): RF_IPv6_MPLS,
+    (addr_family.IP, subaddr_family.ROUTE_TARGET_CONSTRTAINS): RF_RTC_UC
 }
+
+
+def get_rf(afi, safi):
+    return _rf_map[(afi, safi)]
 
 
 def pad(bin, len_):
@@ -792,9 +808,30 @@ class _LabelledAddrPrefix(_AddrPrefix):
                             bytearray()) + cls._prefix_to_bin(rest))
 
     @classmethod
+    def _has_no_label(cls, bin_):
+        try:
+            length = len(bin_)
+            labels = []
+            while True:
+                (label, bin_) = cls._label_from_bin(bin_)
+                labels.append(label)
+                if label & 1:  # bottom of stack
+                    break
+            assert length > struct.calcsize(cls._LABEL_PACK_STR) * len(labels)
+        except struct.error:
+            return True
+        except AssertionError:
+            return True
+        return False
+
+    @classmethod
     def _from_bin(cls, addr):
         rest = addr
         labels = []
+
+        if cls._has_no_label(rest):
+            return ([],) + cls._prefix_from_bin(rest)
+
         while True:
             (label, rest) = cls._label_from_bin(rest)
             labels.append(label >> 4)
@@ -815,12 +852,6 @@ class _UnlabelledAddrPrefix(_AddrPrefix):
 
 
 class _IPAddrPrefix(_AddrPrefix):
-    _TYPE = {
-        'ascii': [
-            'addr'
-        ]
-    }
-
     @staticmethod
     def _prefix_to_bin(addr):
         (addr,) = addr
@@ -832,12 +863,6 @@ class _IPAddrPrefix(_AddrPrefix):
 
 
 class _IP6AddrPrefix(_AddrPrefix):
-    _TYPE = {
-        'ascii': [
-            'addr'
-        ]
-    }
-
     @staticmethod
     def _prefix_to_bin(addr):
         (addr,) = addr
@@ -886,6 +911,11 @@ class _VPNAddrPrefix(_AddrPrefix):
 
 class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
     ROUTE_FAMILY = RF_IPv4_UC
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
 
     @property
     def prefix(self):
@@ -898,6 +928,11 @@ class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
 
 class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
     ROUTE_FAMILY = RF_IPv6_UC
+    _TYPE = {
+        'ascii': [
+            'addr'
+        ]
+    }
 
     @property
     def prefix(self):
@@ -906,6 +941,14 @@ class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
     @property
     def formatted_nlri_str(self):
         return self.prefix
+
+
+class LabelledIPAddrPrefix(_LabelledAddrPrefix, _IPAddrPrefix):
+    ROUTE_FAMILY = RF_IPv4_MPLS
+
+
+class LabelledIP6AddrPrefix(_LabelledAddrPrefix, _IP6AddrPrefix):
+    ROUTE_FAMILY = RF_IPv6_MPLS
 
 
 class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
@@ -924,7 +967,7 @@ class LabelledVPNIPAddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def label_list(self):
-        return self.addr[:-2]
+        return self.addr[0]
 
     @property
     def formatted_nlri_str(self):
@@ -947,7 +990,7 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 
     @property
     def label_list(self):
-        return self.addr[:-2]
+        return self.addr[0]
 
     @property
     def formatted_nlri_str(self):
@@ -1056,6 +1099,8 @@ _addr_class_key = lambda x: (x.afi, x.safi)
 _ADDR_CLASSES = {
     _addr_class_key(RF_IPv4_UC): IPAddrPrefix,
     _addr_class_key(RF_IPv6_UC): IP6AddrPrefix,
+    _addr_class_key(RF_IPv4_MPLS): LabelledIPAddrPrefix,
+    _addr_class_key(RF_IPv6_MPLS): LabelledIP6AddrPrefix,
     _addr_class_key(RF_IPv4_VPN): LabelledVPNIPAddrPrefix,
     _addr_class_key(RF_IPv6_VPN): LabelledVPNIP6AddrPrefix,
     _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
@@ -1087,8 +1132,10 @@ class _OptParam(StringifyMixin, _TypeDisp, _Value):
         value = bytes(rest[:length])
         rest = rest[length:]
         subcls = cls._lookup_type(type_)
-        kwargs, subcls = subcls.parse_value(value)
-        return subcls(type_=type_, length=length, **kwargs), rest
+        caps = subcls.parse_value(value)
+        if type(caps) != list:
+            caps = [subcls(type_=type_, length=length, **caps[0])]
+        return caps, rest
 
     def serialize(self):
         # fixup
@@ -1130,16 +1177,21 @@ class _OptParamCapability(_OptParam, _TypeDisp):
 
     @classmethod
     def parse_value(cls, buf):
-        (code, length) = struct.unpack_from(cls._CAP_HDR_PACK_STR, buffer(buf))
-        value = buf[struct.calcsize(cls._CAP_HDR_PACK_STR):]
-        assert len(value) == length
-        kwargs = {
-            'cap_code': code,
-            'cap_length': length,
-        }
-        subcls = cls._lookup_type(code)
-        kwargs.update(subcls.parse_cap_value(value))
-        return kwargs, subcls
+        caps = []
+        while len(buf) > 0:
+            (code, length) = struct.unpack_from(cls._CAP_HDR_PACK_STR,
+                                                buffer(buf))
+            value = buf[struct.calcsize(cls._CAP_HDR_PACK_STR):]
+            buf = buf[length + 2:]
+            kwargs = {
+                'cap_code': code,
+                'cap_length': length,
+            }
+            subcls = cls._lookup_type(code)
+            kwargs.update(subcls.parse_cap_value(value))
+            caps.append(subcls(type_=BGP_OPT_CAPABILITY, length=length + 2,
+                               **kwargs))
+        return caps
 
     def serialize_value(self):
         # fixup
@@ -1176,9 +1228,47 @@ class BGPOptParamCapabilityRouteRefresh(_OptParamEmptyCapability):
     pass
 
 
+@_OptParamCapability.register_type(BGP_CAP_ROUTE_REFRESH_CISCO)
+class BGPOptParamCapabilityCiscoRouteRefresh(_OptParamEmptyCapability):
+    pass
+
+
 @_OptParamCapability.register_type(BGP_CAP_ENHANCED_ROUTE_REFRESH)
 class BGPOptParamCapabilityEnhancedRouteRefresh(_OptParamEmptyCapability):
     pass
+
+
+@_OptParamCapability.register_type(BGP_CAP_GRACEFUL_RESTART)
+class BGPOptParamCapabilityGracefulRestart(_OptParamCapability):
+    _CAP_PACK_STR = "!H"
+
+    def __init__(self, flags, time, tuples, **kwargs):
+        super(BGPOptParamCapabilityGracefulRestart, self).__init__(**kwargs)
+        self.flags = flags
+        self.time = time
+        self.tuples = tuples
+
+    @classmethod
+    def parse_cap_value(cls, buf):
+        (restart, ) = struct.unpack_from(cls._CAP_PACK_STR, buffer(buf))
+        buf = buf[2:]
+        l = []
+        while len(buf) > 0:
+            l.append(struct.unpack_from("!HBB", buffer(buf)))
+            buf = buf[4:]
+        return {'flags': restart >> 12, 'time': restart & 0xfff, 'tuples': l}
+
+    def serialize_cap_value(self):
+        buf = bytearray()
+        msg_pack_into(self._CAP_PACK_STR, buf, 0, self.flags << 12 | self.time)
+        tuples = self.tuples
+        i = 0
+        offset = 2
+        for i in self.tuples:
+            afi, safi, flags = i
+            msg_pack_into("!HBB", buf, offset, afi, safi, flags)
+            offset += 4
+        return buf
 
 
 @_OptParamCapability.register_type(BGP_CAP_FOUR_OCTET_AS_NUMBER)
@@ -1320,6 +1410,15 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
     _AS_PACK_STR = None
     _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE
 
+    def __init__(self, value, as_pack_str=None, flags=0, type_=None,
+                 length=None):
+        super(_BGPPathAttributeAsPathCommon, self).__init__(value=value,
+                                                            flags=flags,
+                                                            type_=type_,
+                                                            length=length)
+        if as_pack_str:
+            self._AS_PACK_STR = as_pack_str
+
     @property
     def path_seg_list(self):
         return copy.deepcopy(self.value)
@@ -1356,17 +1455,44 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
         return False
 
     @classmethod
+    def _is_valid_16bit_as_path(cls, buf):
+
+        two_byte_as_size = struct.calcsize('!H')
+
+        while buf:
+            (type_, num_as) = struct.unpack_from(cls._SEG_HDR_PACK_STR,
+                                                 buffer(buf))
+
+            if type_ is not cls._AS_SET and type_ is not cls._AS_SEQUENCE:
+                return False
+
+            buf = buf[struct.calcsize(cls._SEG_HDR_PACK_STR):]
+
+            if len(buf) < num_as * two_byte_as_size:
+                return False
+
+            buf = buf[num_as * two_byte_as_size:]
+
+        return True
+
+    @classmethod
     def parse_value(cls, buf):
         result = []
+
+        if cls._is_valid_16bit_as_path(buf):
+            as_pack_str = '!H'
+        else:
+            as_pack_str = '!I'
+
         while buf:
             (type_, num_as) = struct.unpack_from(cls._SEG_HDR_PACK_STR,
                                                  buffer(buf))
             buf = buf[struct.calcsize(cls._SEG_HDR_PACK_STR):]
             l = []
             for i in xrange(0, num_as):
-                (as_number,) = struct.unpack_from(cls._AS_PACK_STR,
+                (as_number,) = struct.unpack_from(as_pack_str,
                                                   buffer(buf))
-                buf = buf[struct.calcsize(cls._AS_PACK_STR):]
+                buf = buf[struct.calcsize(as_pack_str):]
                 l.append(as_number)
             if type_ == cls._AS_SET:
                 result.append(set(l))
@@ -1375,7 +1501,8 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
             else:
                 assert(0)  # protocol error
         return {
-            'value': result
+            'value': result,
+            'as_pack_str': as_pack_str,
         }
 
     def serialize_value(self):
@@ -1400,20 +1527,25 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS_PATH)
 class BGPPathAttributeAsPath(_BGPPathAttributeAsPathCommon):
-    # XXX currently this implementation assumes 16 bit AS numbers.
-    # depends on negotiated capability, AS numbers can be 32 bit.
+    # XXX depends on negotiated capability, AS numbers can be 32 bit.
     # while wireshark seems to attempt auto-detect, it seems that
     # there's no way to detect it reliably.  for example, the
     # following byte sequence can be interpreted in two ways.
     #   01 02 99 88 77 66 02 01 55 44
     #   AS_SET num=2 9988 7766 AS_SEQUENCE num=1 5544
     #   AS_SET num=2 99887766 02015544
+    # we first check whether AS path can be parsed in 16bit format and if
+    # it fails, we try to parse as 32bit
     _AS_PACK_STR = '!H'
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_PATH)
 class BGPPathAttributeAs4Path(_BGPPathAttributeAsPathCommon):
     _AS_PACK_STR = '!I'
+
+    @classmethod
+    def _is_valid_16bit_as_path(cls, buf):
+        return False
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_NEXT_HOP)
@@ -1575,6 +1707,73 @@ class BGPPathAttributeCommunities(_PathAttribute):
         return False
 
 
+@_PathAttribute.register_type(BGP_ATTR_TYPE_ORIGINATOR_ID)
+class BGPPathAttributeOriginatorId(_PathAttribute):
+    # ORIGINATOR_ID is a new optional, non-transitive BGP attribute of Type
+    # code 9. This attribute is 4 bytes long and it will be created by an
+    # RR in reflecting a route.
+    _VALUE_PACK_STR = '!4s'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+    _TYPE = {
+        'ascii': [
+            'value'
+        ]
+    }
+
+    @classmethod
+    def parse_value(cls, buf):
+        (originator_id,) = struct.unpack_from(cls._VALUE_PACK_STR, buffer(buf))
+        return {
+            'value': addrconv.ipv4.bin_to_text(originator_id),
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0,
+                      addrconv.ipv4.text_to_bin(self.value))
+        return buf
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYPE_CLUSTER_LIST)
+class BGPPathAttributeClusterList(_PathAttribute):
+    # CLUSTER_LIST is a new, optional, non-transitive BGP attribute of Type
+    # code 10. It is a sequence of CLUSTER_ID values representing the
+    # reflection path that the route has passed.
+    _VALUE_PACK_STR = '!4s'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
+    _TYPE = {
+        'ascii': [
+            'value'
+        ]
+    }
+
+    @classmethod
+    def parse_value(cls, buf):
+        rest = buf
+        cluster_list = []
+        elem_size = struct.calcsize(cls._VALUE_PACK_STR)
+        while len(rest) >= elem_size:
+            (cluster_id, ) = struct.unpack_from(
+                cls._VALUE_PACK_STR, buffer(rest))
+            cluster_list.append(addrconv.ipv4.bin_to_text(cluster_id))
+            rest = rest[elem_size:]
+        return {
+            'value': cluster_list,
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        offset = 0
+        for cluster_id in self.value:
+            msg_pack_into(
+                self._VALUE_PACK_STR,
+                buf,
+                offset,
+                addrconv.ipv4.text_to_bin(cluster_id))
+            offset += struct.calcsize(self._VALUE_PACK_STR)
+        return buf
+
+
 # Extended Communities
 # RFC 4360
 # RFC 5668
@@ -1605,6 +1804,7 @@ class BGPPathAttributeCommunities(_PathAttribute):
 # 00    03          Route Origin Community (two-octet AS specific)
 # 01    03          Route Origin Community (IPv4 address specific)
 # 02    03          Route Origin Community (four-octet AS specific, RFC 5668)
+
 @_PathAttribute.register_type(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
 class BGPPathAttributeExtendedCommunities(_PathAttribute):
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
@@ -1765,7 +1965,13 @@ class BGPUnknownExtendedCommunity(_ExtendedCommunity):
 class BGPPathAttributeMpReachNLRI(_PathAttribute):
     _VALUE_PACK_STR = '!HBB'  # afi, safi, next hop len
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
-    _class_prefixes = ['_BinAddrPrefix']
+    _class_suffixes = ['AddrPrefix']
+    _rd_length = 8
+    _TYPE = {
+        'ascii': [
+            'next_hop'
+        ]
+    }
 
     def __init__(self, afi, safi, next_hop, nlri,
                  next_hop_len=0, reserved='\0',
@@ -1777,7 +1983,13 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         self.safi = safi
         self.next_hop_len = next_hop_len
         self.next_hop = next_hop
-        self.reserved = reserved
+        if afi == addr_family.IP:
+            self._next_hop_bin = addrconv.ipv4.text_to_bin(next_hop)
+        elif afi == addr_family.IP6:
+            self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
+        else:
+            raise ValueError('Invalid address familly(%d)' % afi)
+        self._reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
         for i in nlri:
@@ -1791,31 +2003,67 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         next_hop_bin = rest[:next_hop_len]
         rest = rest[next_hop_len:]
         reserved = rest[:1]
+        assert reserved == '\0'
         binnlri = rest[1:]
         addr_cls = _get_addr_class(afi, safi)
         nlri = []
         while binnlri:
             n, binnlri = addr_cls.parser(binnlri)
             nlri.append(n)
+
+        rf = RouteFamily(afi, safi)
+        if rf == RF_IPv6_VPN:
+            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin[cls._rd_length:])
+            next_hop_len -= cls._rd_length
+        elif rf == RF_IPv4_VPN:
+            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin[cls._rd_length:])
+            next_hop_len -= cls._rd_length
+        elif afi == addr_family.IP:
+            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin)
+        elif afi == addr_family.IP6:
+            # next_hop_bin can include global address and link-local address
+            # according to RFC2545. Since a link-local address isn't needed in
+            # Ryu BGPSpeaker, we ignore it if both addresses were sent.
+            # The link-local address is supposed to follow after
+            # a global address and next_hop_len will be 32 bytes,
+            # so we use the first 16 bytes, which is a global address,
+            # as a next_hop and change the next_hop_len to 16.
+            if next_hop_len == 32:
+                next_hop_bin = next_hop_bin[:16]
+                next_hop_len = 16
+            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
+        else:
+            raise ValueError('Invalid address familly(%d)' % afi)
+
         return {
             'afi': afi,
             'safi': safi,
             'next_hop_len': next_hop_len,
-            'next_hop': next_hop_bin,
+            'next_hop': next_hop,
             'reserved': reserved,
             'nlri': nlri,
         }
 
     def serialize_value(self):
         # fixup
-        self.next_hop_len = len(self.next_hop)
-        self.reserved = '\0'
+        self.next_hop_len = len(self._next_hop_bin)
+
+        if RouteFamily(self.afi, self.safi) in (RF_IPv4_VPN, RF_IPv6_VPN):
+            empty_label_stack = '\x00' * self._rd_length
+            next_hop_len = len(self._next_hop_bin) + len(empty_label_stack)
+            next_hop_bin = empty_label_stack
+            next_hop_bin += self._next_hop_bin
+        else:
+            next_hop_len = self.next_hop_len
+            next_hop_bin = self._next_hop_bin
+
+        self._reserved = '\0'
 
         buf = bytearray()
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi,
-                      self.safi, self.next_hop_len)
-        buf += self.next_hop
-        buf += self.reserved
+                      self.safi, next_hop_len)
+        buf += next_hop_bin
+        buf += self._reserved
         binnlri = bytearray()
         for n in self.nlri:
             binnlri += n.serialize()
@@ -1831,7 +2079,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
 class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
     _VALUE_PACK_STR = '!HB'  # afi, safi
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
-    _class_prefixes = ['_BinAddrPrefix']
+    _class_suffixes = ['AddrPrefix']
 
     def __init__(self, afi, safi, withdrawn_routes,
                  flags=0, type_=None, length=None):
@@ -1901,9 +2149,9 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
 
     def __init__(self, type_, len_=None, marker=None):
         if marker is None:
-            self.marker = _MARKER
+            self._marker = _MARKER
         else:
-            self.marker = marker
+            self._marker = marker
         self.len = len_
         self.type = type_
 
@@ -1926,11 +2174,11 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
 
     def serialize(self):
         # fixup
-        self.marker = _MARKER
+        self._marker = _MARKER
         tail = self.serialize_tail()
         self.len = self._HDR_LEN + len(tail)
 
-        hdr = bytearray(struct.pack(self._HDR_PACK_STR, self.marker,
+        hdr = bytearray(struct.pack(self._HDR_PACK_STR, self._marker,
                                     self.len, self.type))
         return hdr + tail
 
@@ -1998,7 +2246,7 @@ class BGPOpen(BGPMessage):
         opt_param = []
         while binopts:
             opt, binopts = _OptParam.parser(binopts)
-            opt_param.append(opt)
+            opt_param.extend(opt)
         return {
             "version": version,
             "my_as": my_as,
@@ -2035,6 +2283,8 @@ class BGPUpdate(BGPMessage):
     Most of them are same to the on-wire counterparts but in host byte
     order.
     __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|L|
 
     ========================== ===============================================
     Attribute                  Description

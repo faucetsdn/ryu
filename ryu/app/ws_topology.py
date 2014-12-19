@@ -32,9 +32,11 @@ $ sudo mn --controller=remote --topo linear,2
 < {"params": [{"ports": [{"hw_addr": "56:c7:08:12:bb:36", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "de:b9:49:24:74:3f", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}], "jsonrpc": "2.0", "method": "event_switch_leave", "id": 2}
 > {"id": 2, "jsonrpc": "2.0", "result": ""}
 ...
-"""
+"""  # noqa
 
-from tinyrpc.exc import InvalidReplyError
+from socket import error as SocketError
+from ryu.contrib.tinyrpc.exc import InvalidReplyError
+
 
 from ryu.app.wsgi import (
     ControllerBase,
@@ -59,7 +61,7 @@ class WebSocketTopology(app_manager.RyuApp):
         self.rpc_clients = []
 
         wsgi = kwargs['wsgi']
-        wsgi.register(TopologyController, {'app': self})
+        wsgi.register(WebSocketTopologyController, {'app': self})
 
     @set_ev_cls(event.EventSwitchEnter)
     def _event_switch_enter_handler(self, ev):
@@ -82,20 +84,28 @@ class WebSocketTopology(app_manager.RyuApp):
         self._rpc_broadcall('event_link_delete', msg)
 
     def _rpc_broadcall(self, func_name, msg):
+        disconnected_clients = []
         for rpc_client in self.rpc_clients:
             # NOTE: Although broadcasting is desired,
-            #       RPCClient#get_proxy(one_way=False) does not work well
+            #       RPCClient#get_proxy(one_way=True) does not work well
             rpc_server = rpc_client.get_proxy()
             try:
                 getattr(rpc_server, func_name)(msg)
+            except SocketError:
+                self.logger.debug('WebSocket disconnected: %s' % rpc_client.ws)
+                disconnected_clients.append(rpc_client)
             except InvalidReplyError as e:
                 self.logger.error(e)
 
+        for client in disconnected_clients:
+            self.rpc_clients.remove(client)
 
-class TopologyController(ControllerBase):
+
+class WebSocketTopologyController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
-        super(TopologyController, self).__init__(req, link, data, **config)
+        super(WebSocketTopologyController, self).__init__(
+            req, link, data, **config)
         self.app = data['app']
 
     @websocket('topology', '/v1.0/topology/ws')

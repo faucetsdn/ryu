@@ -37,7 +37,10 @@ def start(**kwargs):
         raise RuntimeConfigError('Current context has to be stopped to start '
                                  'a new context.')
 
-    waiter = kwargs.pop('waiter')
+    try:
+        waiter = kwargs.pop('waiter')
+    except KeyError:
+        waiter = hub.Event()
     common_config = CommonConf(**kwargs)
     hub.spawn(CORE_MANAGER.start, *[], **{'common_conf': common_config,
                                           'waiter': waiter})
@@ -69,10 +72,13 @@ def reset_neighor(ip_address):
     if neigh_conf.enabled:
         # Disable neighbor to close existing session.
         neigh_conf.enabled = False
-        # Yield here so that we give chance for neighbor to be disabled.
-        hub.sleep(NEIGHBOR_RESET_WAIT_TIME)
-        # Enable neighbor, so that we have a new session with it.
-        neigh_conf.enabled = True
+        # Enable neighbor after NEIGHBOR_RESET_WAIT_TIME
+        # this API works asynchronously
+        # it's recommended to check it really reset neighbor later
+
+        def up():
+            neigh_conf.enabled = True
+        hub.spawn_after(NEIGHBOR_RESET_WAIT_TIME, up)
     else:
         raise RuntimeConfigError('Neighbor %s is not enabled, hence cannot'
                                  ' reset.' % ip_address)

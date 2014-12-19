@@ -1,0 +1,9 @@
+description "Ryu server"
+
+start on (starting neutron-server or runlevel [2345])
+stop on runlevel [!2345]
+
+respawn
+
+exec start-stop-daemon --start --exec /usr/bin/ryu -- \
+  run --config-file /etc/ryu/ryu.conf

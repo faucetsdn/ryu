@@ -455,8 +455,8 @@ class Test_ipv6(unittest.TestCase):
         eq_(res[1], 0)
         eq_(res[2], 6)
         eq_(res[3], 255)
-        eq_(res[4], addrconv.ipv6.text_to_bin('::'))
-        eq_(res[5], addrconv.ipv6.text_to_bin('::'))
+        eq_(res[4], addrconv.ipv6.text_to_bin('10::10'))
+        eq_(res[5], addrconv.ipv6.text_to_bin('20::20'))
 
         # with extension header
         ip = ipv6.ipv6(
@@ -471,8 +471,8 @@ class Test_ipv6(unittest.TestCase):
         eq_(res[1], 8)
         eq_(res[2], 0)
         eq_(res[3], 255)
-        eq_(res[4], addrconv.ipv6.text_to_bin('::'))
-        eq_(res[5], addrconv.ipv6.text_to_bin('::'))
+        eq_(res[4], addrconv.ipv6.text_to_bin('10::10'))
+        eq_(res[5], addrconv.ipv6.text_to_bin('20::20'))
         eq_(res[6], '\x3a\x00\x05\x02\x00\x00\x01\x00')
 
     def test_json(self):

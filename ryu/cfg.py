@@ -26,7 +26,7 @@ import oslo.config.cfg
 # We will unshare c. (and stop using it) as soon as ofagent neutron agent
 # is updated.
 # We want to avoid using c. for our options as a python program which embeds
-# ryu applications (eg. neutron agent) might want to its own set of cli
+# ryu applications (eg. neutron agent) might want to put its own set of cli
 # options into it, which can conflict with ours.  (Currently there seems
 # no conflict for the neutron agent.  But who knows?)
 # At some point later we might want to unshare a. and b. as well, in order
@@ -43,6 +43,7 @@ from oslo.config.cfg import IntOpt
 from oslo.config.cfg import ListOpt
 from oslo.config.cfg import MultiStrOpt
 from oslo.config.cfg import StrOpt
+from oslo.config.cfg import FloatOpt
 
 from oslo.config.cfg import RequiredOptError
 from oslo.config.cfg import ConfigFilesNotFoundError

@@ -120,9 +120,14 @@ if HUB_TYPE == 'eventlet':
                 sock, addr = self.server.accept()
                 spawn(self.handle, sock, addr)
 
+    class LoggingWrapper(object):
+        def write(self, message):
+            LOG.info(message.rstrip('\n'))
+
     class WSGIServer(StreamServer):
         def serve_forever(self):
-            eventlet.wsgi.server(self.server, self.handle)
+            self.logger = LoggingWrapper()
+            eventlet.wsgi.server(self.server, self.handle, self.logger)
 
     WebSocketWSGI = websocket.WebSocketWSGI
 

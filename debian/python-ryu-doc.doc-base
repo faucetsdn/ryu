@@ -1,0 +1,9 @@
+Document: python-ryu-doc
+Title: Ryu User Documentation
+Author: Ryu Project Team
+Abstract: Ryu is a component-based software defined networking framework.
+Section: Programming/Python
+
+Format: HTML
+Index: /usr/share/doc/python-ryu-doc/html/index.html
+Files: /usr/share/doc/python-ryu-doc/html/*.html

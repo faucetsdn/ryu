@@ -21,8 +21,10 @@ import socket
 import time
 import traceback
 import weakref
+import netaddr
 
 from ryu.lib import hub
+from ryu.lib import sockopt
 from ryu.lib.hub import Timeout
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
@@ -48,6 +50,7 @@ OrderedDict = OrderedDict
 
 # Currently supported address families.
 SUPPORTED_GLOBAL_RF = set([RF_IPv4_UC,
+                           RF_IPv6_UC,
                            RF_IPv4_VPN,
                            RF_RTC_UC,
                            RF_IPv6_VPN
@@ -264,14 +267,16 @@ class Activity(object):
             if child_activity.started:
                 child_activity.stop()
 
-    def _stop_child_threads(self):
+    def _stop_child_threads(self, name=None):
         """Stops all threads spawn by this activity.
         """
         child_threads = self._child_thread_map.items()
         for thread_name, thread in child_threads:
-            LOG.debug('%s: Stopping child thread %s' %
-                      (self.name, thread_name))
-            thread.kill()
+            if not name or thread_name is name:
+                LOG.debug('%s: Stopping child thread %s' %
+                          (self.name, thread_name))
+                thread.kill()
+                del self._child_thread_map[thread_name]
 
     def _close_asso_sockets(self):
         """Closes all the sockets linked to this activity.
@@ -313,26 +318,78 @@ class Activity(object):
         self._timers = weakref.WeakValueDictionary()
         LOG.debug('Stopping activity %s finished.' % self.name)
 
+    def _canonicalize_ip(self, ip):
+        addr = netaddr.IPAddress(ip)
+        if addr.is_ipv4_mapped():
+            ip = str(addr.ipv4())
+        return ip
+
+    def get_remotename(self, sock):
+        addr, port = sock.getpeername()[:2]
+        return (self._canonicalize_ip(addr), str(port))
+
+    def get_localname(self, sock):
+        addr, port = sock.getsockname()[:2]
+        return (self._canonicalize_ip(addr), str(port))
+
+    def _create_listen_socket(self, family, loc_addr):
+        s = socket.socket(family)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(loc_addr)
+        s.listen(1)
+        return s
+
+    def _listen_socket_loop(self, s, conn_handle):
+        while True:
+            sock, client_address = s.accept()
+            client_address, port = self.get_remotename(sock)
+            LOG.debug('Connect request received from client for port'
+                      ' %s:%s' % (client_address, port))
+            client_name = self.name + '_client@' + client_address
+            self._asso_socket_map[client_name] = sock
+            self._spawn(client_name, conn_handle, sock)
+
     def _listen_tcp(self, loc_addr, conn_handle):
         """Creates a TCP server socket which listens on `port` number.
 
         For each connection `server_factory` starts a new protocol.
         """
-        server = hub.listen(loc_addr)
-        server_name = self.name + '_server@' + str(loc_addr)
-        self._asso_socket_map[server_name] = server
+        info = socket.getaddrinfo(None, loc_addr[1], socket.AF_UNSPEC,
+                                  socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
+        listen_sockets = {}
+        for res in info:
+            af, socktype, proto, cannonname, sa = res
+            sock = None
+            try:
+                sock = socket.socket(af, socktype, proto)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                if af == socket.AF_INET6:
+                    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
 
-        # We now wait for connection requests from client.
-        while True:
-            sock, client_address = server.accept()
-            LOG.debug('Connect request received from client for port'
-                      ' %s:%s' % client_address)
-            client_name = self.name + '_client@' + str(client_address)
-            self._asso_socket_map[client_name] = sock
-            self._spawn(client_name, conn_handle, sock)
+                sock.bind(sa)
+                sock.listen(50)
+                listen_sockets[sa] = sock
+            except socket.error:
+                if sock:
+                    sock.close()
+
+        count = 0
+        server = None
+        for sa in listen_sockets.keys():
+            name = self.name + '_server@' + str(sa[0])
+            if count == 0:
+                import eventlet
+                server = eventlet.spawn(self._listen_socket_loop,
+                                        listen_sockets[sa], conn_handle)
+
+                count += 1
+            else:
+                self._spawn(name, self._listen_socket_loop,
+                            listen_sockets[sa], conn_handle)
+        return server, listen_sockets
 
     def _connect_tcp(self, peer_addr, conn_handler, time_out=None,
-                     bind_address=None):
+                     bind_address=None, password=None):
         """Creates a TCP connection to given peer address.
 
         Tries to create a socket for `timeout` number of seconds. If
@@ -341,17 +398,30 @@ class Activity(object):
         """
         LOG.debug('Connect TCP called for %s:%s' % (peer_addr[0],
                                                     peer_addr[1]))
+        if netaddr.valid_ipv4(peer_addr[0]):
+            family = socket.AF_INET
+        else:
+            family = socket.AF_INET6
         with Timeout(time_out, socket.error):
-            sock = hub.connect(peer_addr, bind=bind_address)
-            if sock:
-                # Connection name for pro-active connection is made up
-                # of local end address + remote end address
-                conn_name = ('L: ' + str(sock.getsockname()) + ', R: ' +
-                             str(sock.getpeername()))
-                self._asso_socket_map[conn_name] = sock
-                # If connection is established, we call connection handler
-                # in a new thread.
-                self._spawn(conn_name, conn_handler, sock)
+            sock = socket.socket(family)
+            if bind_address:
+                sock.bind(bind_address)
+            if password:
+                sockopt.set_tcp_md5sig(sock, peer_addr[0], password)
+            sock.connect(peer_addr)
+            # socket.error exception is rasied in cese of timeout and
+            # the following code is executed only when the connection
+            # is established.
+
+        # Connection name for pro-active connection is made up of
+        # local end address + remote end address
+        local = self.get_localname(sock)[0]
+        remote = self.get_remotename(sock)[0]
+        conn_name = ('L: ' + local + ', R: ' + remote)
+        self._asso_socket_map[conn_name] = sock
+        # If connection is established, we call connection handler
+        # in a new thread.
+        self._spawn(conn_name, conn_handler, sock)
         return sock
 
 

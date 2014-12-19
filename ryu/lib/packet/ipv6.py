@@ -76,7 +76,7 @@ class ipv6(packet_base.PacketBase):
 
     def __init__(self, version=6, traffic_class=0, flow_label=0,
                  payload_length=0, nxt=inet.IPPROTO_TCP, hop_limit=255,
-                 src='::', dst='::', ext_hdrs=None):
+                 src='10::10', dst='20::20', ext_hdrs=None):
         super(ipv6, self).__init__()
         self.version = version
         self.traffic_class = traffic_class

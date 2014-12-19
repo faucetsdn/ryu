@@ -99,7 +99,7 @@ class sctp(packet_base.PacketBase):
             return cls
         return _register_chunk_type(args[0])
 
-    def __init__(self, src_port=0, dst_port=0, vtag=0, csum=0, chunks=None):
+    def __init__(self, src_port=1, dst_port=1, vtag=0, csum=0, chunks=None):
         super(sctp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port

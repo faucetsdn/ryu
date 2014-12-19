@@ -84,6 +84,8 @@ received from switches and send these events to Ryu applications which
 expressed an interest using ryu.controller.handler.set_ev_cls.
 OpenFlow event classes have at least the following attributes.
 
+.. tabularcolumns:: |l|L|
+
 ============ =============================================================
 Attribute    Description
 ============ =============================================================
@@ -112,6 +114,8 @@ dispatchers argument specifies one of the following negotiation phases
 Note that, in case an event changes the phase, the phase before the change
 is used to check the interest.
 
+.. tabularcolumns:: |l|L|
+
 =========================================== ==================================
 Negotiation phase                           Description
 =========================================== ==================================
@@ -131,6 +135,8 @@ ryu.controller.controller.Datapath
 
 A class to describe an OpenFlow switch connected to this controller.
 An instance has the following attributes.
+
+.. tabularcolumns:: |l|L|
 
 ====================================== =======================================
 Attribute                              Description

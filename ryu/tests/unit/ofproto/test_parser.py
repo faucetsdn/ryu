@@ -194,12 +194,14 @@ class Test_Parser(unittest.TestCase):
 
 def _add_tests():
     import os
+    import os.path
     import fnmatch
     import new
     import functools
 
-    packet_data_dir = '../packet_data'
-    json_dir = './ofproto/json'
+    this_dir = os.path.dirname(sys.modules[__name__].__file__)
+    packet_data_dir = os.path.join(this_dir, '../../packet_data')
+    json_dir = os.path.join(this_dir, 'json')
     ofvers = [
         'of10',
         'of12',

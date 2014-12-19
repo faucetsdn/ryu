@@ -41,7 +41,7 @@ class udp(packet_base.PacketBase):
     _PACK_STR = '!HHHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, src_port=0, dst_port=0, total_length=0, csum=0):
+    def __init__(self, src_port=1, dst_port=1, total_length=0, csum=0):
         super(udp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port

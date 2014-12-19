@@ -1151,7 +1151,10 @@ class OfCtl_v1_2later(OfCtl_v1_0):
         config = {ofproto_v1_2: PORT_CONFIG_V1_2,
                   ofproto_v1_3: PORT_CONFIG_V1_3}
 
-        mask = 0b1111111
+        # Only turn on the relevant bits defined on OpenFlow 1.2+, otherwise
+        # some switch that follows the specification strictly will report
+        # OFPPMFC_BAD_CONFIG error.
+        mask = 0b1100101
         msg = parser.OFPPortMod(self.dp, port.port_no, port.hw_addr,
                                 config[ofp][state], mask, port.advertised)
         self.dp.send_msg(msg)

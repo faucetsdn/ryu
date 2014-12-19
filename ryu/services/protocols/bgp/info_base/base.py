@@ -23,10 +23,13 @@ from abc import ABCMeta
 from abc import abstractmethod
 from copy import copy
 import logging
+import netaddr
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
+from ryu.lib.packet.bgp import BGPPathAttributeLocalPref
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.constants import VPN_TABLE
@@ -253,6 +256,16 @@ class NonVrfPathProcessingMixin(object):
         # bgp-peers.
         pm = self._core_service.peer_manager
         pm.comm_new_best_to_bgp_peers(new_best_path)
+
+        # withdraw old best path
+        if old_best_path and self._sent_routes:
+            for sent_route in self._sent_routes.values():
+                sent_path = sent_route.path
+                withdraw_clone = sent_path.clone(for_withdrawal=True)
+                outgoing_route = OutgoingRoute(withdraw_clone)
+                sent_route.sent_peer.enque_outgoing_msg(outgoing_route)
+                LOG.debug('Sending withdrawal to %s for %s' %
+                          (sent_route.sent_peer, outgoing_route))
 
 
 class Destination(object):
@@ -632,6 +645,18 @@ class Destination(object):
     def _get_num_withdraws(self):
         return len(self._withdraw_list)
 
+    def sent_routes_by_peer(self, peer):
+        """get sent routes corresponding to specified peer.
+
+        Returns SentRoute list.
+        """
+        result = []
+        for route in self._sent_routes.values():
+            if route.sent_peer == peer:
+                result.append(route)
+
+        return result
+
 
 class Path(object):
     """Represents a way of reaching an IP destination.
@@ -794,3 +819,398 @@ class Path(object):
         return ('Path(%s, %s, %s, %s, %s, %s)' % (
             self._source, self._nlri, self._source_version_num,
             self._path_attr_map, self._nexthop, self._is_withdraw))
+
+
+class Filter(object):
+    """Represents a general filter for in-bound and out-bound filter
+
+    ================ ==================================================
+    Attribute        Description
+    ================ ==================================================
+    policy           Filter.POLICY_PERMIT or Filter.POLICY_DENY
+    ================ ==================================================
+
+    """
+    __metaclass__ = ABCMeta
+
+    ROUTE_FAMILY = RF_IPv4_UC
+
+    POLICY_DENY = 0
+    POLICY_PERMIT = 1
+
+    def __init__(self, policy=POLICY_DENY):
+        self._policy = policy
+
+    @property
+    def policy(self):
+        return self._policy
+
+    @abstractmethod
+    def evaluate(self, path):
+        """ This method evaluates the path.
+
+        Returns this object's policy and the result of matching.
+        If the specified prefix matches this object's prefix and
+        ge and le condition,
+        this method returns True as the matching result.
+
+        ``path`` specifies the path. prefix must be string.
+
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def clone(self):
+        """ This method clones Filter object.
+
+        Returns Filter object that has the same values with the original one.
+
+        """
+        raise NotImplementedError()
+
+
+class PrefixFilter(Filter):
+    """
+    used to specify a prefix for filter.
+
+    We can create PrefixFilter object as follows.
+
+    prefix_filter = PrefixFilter('10.5.111.0/24',
+                                 policy=PrefixFilter.POLICY_PERMIT)
+
+    ================ ==================================================
+    Attribute        Description
+    ================ ==================================================
+    prefix           A prefix used for this filter
+    policy           PrefixFilter.POLICY.PERMIT or PrefixFilter.POLICY_DENY
+    ge               Prefix length that will be applied to this filter.
+                     ge means greater than or equal.
+    le               Prefix length that will be applied to this filter.
+                     le means less than or equal.
+    ================ ==================================================
+
+
+    For example, when PrefixFilter object is created as follows:
+
+    * p = PrefixFilter('10.5.111.0/24',
+                       policy=PrefixFilter.POLICY_DENY,
+                       ge=26, le=28)
+
+
+    prefixes which match 10.5.111.0/24 and its length matches
+    from 26 to 28 will be filtered.
+    When this filter is used as an out-filter, it will stop sending
+    the path to neighbor because of POLICY_DENY.
+    When this filter is used as in-filter, it will stop importing the path
+    to the global rib because of POLICY_DENY.
+    If you specify POLICY_PERMIT, the path is sent to neighbor or imported to
+    the global rib.
+
+    If you don't want to send prefixes 10.5.111.64/26 and 10.5.111.32/27
+    and 10.5.111.16/28, and allow to send other 10.5.111.0's prefixes,
+    you can do it by specifying as follows;
+
+    * p = PrefixFilter('10.5.111.0/24',
+                       policy=PrefixFilter.POLICY_DENY,
+                       ge=26, le=28).
+
+    """
+
+    def __init__(self, prefix, policy, ge=None, le=None):
+        super(PrefixFilter, self).__init__(policy)
+        self._prefix = prefix
+        self._network = netaddr.IPNetwork(prefix)
+        self._ge = ge
+        self._le = le
+
+    def __cmp__(self, other):
+        return cmp(self.prefix, other.prefix)
+
+    def __repr__(self):
+        policy = 'PERMIT' \
+            if self._policy == self.POLICY_PERMIT else 'DENY'
+
+        return 'PrefixFilter(prefix=%s,policy=%s,ge=%s,le=%s)'\
+               % (self._prefix, policy, self._ge, self._le)
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def policy(self):
+        return self._policy
+
+    @property
+    def ge(self):
+        return self._ge
+
+    @property
+    def le(self):
+        return self._le
+
+    def evaluate(self, path):
+        """ This method evaluates the prefix.
+
+        Returns this object's policy and the result of matching.
+        If the specified prefix matches this object's prefix and
+        ge and le condition,
+        this method returns True as the matching result.
+
+        ``path`` specifies the path that has prefix.
+
+        """
+        nlri = path.nlri
+
+        result = False
+        length = nlri.length
+        net = netaddr.IPNetwork(nlri.prefix)
+
+        if net in self._network:
+            if self._ge is None and self._le is None:
+                result = True
+
+            elif self._ge is None and self._le:
+                if length <= self._le:
+                    result = True
+
+            elif self._ge and self._le is None:
+                if self._ge <= length:
+                    result = True
+
+            elif self._ge and self._le:
+                if self._ge <= length <= self._le:
+                    result = True
+
+        return self.policy, result
+
+    def clone(self):
+        """ This method clones PrefixFilter object.
+
+        Returns PrefixFilter object that has the same values with the
+        original one.
+
+        """
+
+        return self.__class__(self.prefix,
+                              policy=self._policy,
+                              ge=self._ge,
+                              le=self._le)
+
+
+class ASPathFilter(Filter):
+    """
+    used to specify a prefix for AS_PATH attribute.
+
+    We can create ASPathFilter object as follows;
+
+    * as_path_filter = ASPathFilter(65000,policy=ASPathFilter.TOP)
+
+    ================ ==================================================
+    Attribute        Description
+    ================ ==================================================
+    as_number        A AS number used for this filter
+    policy           ASPathFilter.POLICY_TOP and ASPathFilter.POLICY_END,
+                     ASPathFilter.POLICY_INCLUDE and
+                     ASPathFilter.POLICY_NOT_INCLUDE are available.
+    ================ ==================================================
+
+    Meaning of each policy is as follows;
+
+    * POLICY_TOP :
+        Filter checks if the specified AS number is at the top of
+        AS_PATH attribute.
+
+    * POLICY_END :
+        Filter checks is the specified AS number
+        is at the last of AS_PATH attribute.
+
+    * POLICY_INCLUDE :
+        Filter checks if specified AS number
+        exists in AS_PATH attribute
+
+    * POLICY_NOT_INCLUDE :
+        opposite to POLICY_INCLUDE
+
+
+    """
+
+    POLICY_TOP = 2
+    POLICY_END = 3
+    POLICY_INCLUDE = 4
+    POLICY_NOT_INCLUDE = 5
+
+    def __init__(self, as_number, policy):
+        super(ASPathFilter, self).__init__(policy)
+        self._as_number = as_number
+
+    def __cmp__(self, other):
+        return cmp(self.as_number, other.as_number)
+
+    def __repr__(self):
+        policy = 'TOP'
+        if self._policy == self.POLICY_INCLUDE:
+            policy = 'INCLUDE'
+        elif self._policy == self.POLICY_NOT_INCLUDE:
+            policy = 'NOT_INCLUDE'
+        elif self._policy == self.POLICY_END:
+            policy = 'END'
+
+        return 'ASPathFilter(as_number=%s,policy=%s)'\
+               % (self._as_number, policy)
+
+    @property
+    def as_number(self):
+        return self._as_number
+
+    @property
+    def policy(self):
+        return self._policy
+
+    def evaluate(self, path):
+        """ This method evaluates as_path list.
+
+        Returns this object's policy and the result of matching.
+        If the specified AS number matches this object's AS number
+        according to the policy,
+        this method returns True as the matching result.
+
+        ``path`` specifies the path.
+
+        """
+
+        path_aspath = path.pathattr_map.get(BGP_ATTR_TYPE_AS_PATH)
+        path_seg_list = path_aspath.path_seg_list
+        if path_seg_list:
+            path_seg = path_seg_list[0]
+        else:
+            path_seg = []
+        result = False
+
+        LOG.debug("path_seg : %s", path_seg)
+        if self.policy == ASPathFilter.POLICY_TOP:
+
+            if len(path_seg) > 0 and path_seg[0] == self._as_number:
+                result = True
+
+        elif self.policy == ASPathFilter.POLICY_INCLUDE:
+            for aspath in path_seg:
+                LOG.debug("POLICY_INCLUDE as_number : %s", aspath)
+                if aspath == self._as_number:
+                    result = True
+                    break
+
+        elif self.policy == ASPathFilter.POLICY_END:
+
+            if len(path_seg) > 0 and path_seg[-1] == self._as_number:
+                result = True
+
+        elif self.policy == ASPathFilter.POLICY_NOT_INCLUDE:
+
+            if self._as_number not in path_seg:
+                result = True
+
+        return self.policy, result
+
+    def clone(self):
+        """ This method clones ASPathFilter object.
+
+        Returns ASPathFilter object that has the same values with the
+        original one.
+
+        """
+
+        return self.__class__(self._as_number,
+                              policy=self._policy)
+
+
+class AttributeMap(object):
+    """
+    This class is used to specify an attribute to add if the path matches
+    filters.
+    We can create AttributeMap object as follows;
+
+      pref_filter = PrefixFilter('192.168.103.0/30',
+                                 PrefixFilter.POLICY_PERMIT)
+
+      attribute_map = AttributeMap([pref_filter],
+                    AttributeMap.ATTR_LOCAL_PREF, 250)
+
+      speaker.attribute_map_set('192.168.50.102', [attribute_map])
+
+    AttributeMap.ATTR_LOCAL_PREF means that 250 is set as a
+    local preference value if nlri in the path matches pref_filter.
+
+    ASPathFilter is also available as a filter. ASPathFilter checks if AS_PATH
+    attribute in the path matches AS number in the filter.
+
+    =================== ==================================================
+    Attribute           Description
+    =================== ==================================================
+    filters             A list of filter.
+                        Each object should be a Filter class or its sub-class
+    attr_type           A type of attribute to map on filters. Currently
+                        AttributeMap.ATTR_LOCAL_PREF is available.
+    attr_value          A attribute value
+    =================== ==================================================
+
+    """
+
+    ATTR_LOCAL_PREF = '_local_pref'
+
+    def __init__(self, filters, attr_type, attr_value):
+
+        assert all(isinstance(f, Filter) for f in filters),\
+            'all the items in filters must be an instance of Filter sub-class'
+        self.filters = filters
+        self.attr_type = attr_type
+        self.attr_value = attr_value
+
+    def evaluate(self, path):
+        """ This method evaluates attributes of the path.
+
+        Returns the cause and result of matching.
+        Both cause and result are returned from filters
+        that this object contains.
+
+        ``path`` specifies the path.
+
+        """
+        result = False
+        cause = None
+
+        for f in self.filters:
+
+            cause, result = f.evaluate(path)
+            if not result:
+                break
+
+        return cause, result
+
+    def get_attribute(self):
+        func = getattr(self, 'get' + self.attr_type)
+        return func()
+
+    def get_local_pref(self):
+        local_pref_attr = BGPPathAttributeLocalPref(value=self.attr_value)
+        return local_pref_attr
+
+    def clone(self):
+        """ This method clones AttributeMap object.
+
+        Returns AttributeMap object that has the same values with the
+        original one.
+
+        """
+
+        cloned_filters = [f.clone() for f in self.filters]
+        return self.__class__(cloned_filters, self.attr_type, self.attr_value)
+
+    def __repr__(self):
+
+        attr_type = 'LOCAL_PREF'\
+            if self.attr_type == self.ATTR_LOCAL_PREF else None
+
+        filter_string = ','.join(repr(f) for f in self.filters)
+        return 'AttributeMap(filters=[%s],attribute_type=%s,attribute_value=%s)'\
+               % (filter_string, attr_type, self.attr_value)

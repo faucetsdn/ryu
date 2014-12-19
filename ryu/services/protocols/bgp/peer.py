@@ -29,11 +29,18 @@ from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp import constants as const
 from ryu.services.protocols.bgp.model import OutgoingRoute
 from ryu.services.protocols.bgp.model import SentRoute
+from ryu.services.protocols.bgp.info_base.base import PrefixFilter
+from ryu.services.protocols.bgp.info_base.base import AttributeMap
+from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.neighbors import NeighborConfListener
+from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE_PASSIVE
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.speaker import BgpProtocol
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
+from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
+from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4, VRF_RF_IPV6
 from ryu.services.protocols.bgp.utils import bgp as bgp_utils
 from ryu.services.protocols.bgp.utils.evtlet import EventletIOFactory
 from ryu.services.protocols.bgp.utils import stats
@@ -46,10 +53,16 @@ from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
+from ryu.lib.packet.bgp import get_rf
 
 from ryu.lib.packet.bgp import BGPOpen
 from ryu.lib.packet.bgp import BGPUpdate
 from ryu.lib.packet.bgp import BGPRouteRefresh
+
+from ryu.lib.packet.bgp import BGP_ERROR_CEASE
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_ADMINISTRATIVE_SHUTDOWN
+from ryu.lib.packet.bgp import BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION
+
 
 from ryu.lib.packet.bgp import BGP_MSG_UPDATE
 from ryu.lib.packet.bgp import BGP_MSG_KEEPALIVE
@@ -61,6 +74,8 @@ from ryu.lib.packet.bgp import BGPPathAttributeLocalPref
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
+from ryu.lib.packet.bgp import BGPPathAttributeCommunities
+from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
 
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
@@ -70,6 +85,9 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MP_UNREACH_NLRI
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
+
+from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
+from ryu.lib.packet.bgp import BGPIPv4AddressSpecificExtendedCommunity
 
 LOG = logging.getLogger('bgpspeaker.peer')
 
@@ -156,8 +174,9 @@ class PeerState(object):
         )
 
     def _remember_last_bgp_error(self, identifier, data):
-        self._last_bgp_error = {k: v for k, v in data.iteritems()
-                                if k != 'peer'}
+        self._last_bgp_error = dict([(k, v)
+                                     for k, v in data.iteritems()
+                                     if k != 'peer'])
 
     @property
     def recv_prefix(self):
@@ -187,12 +206,14 @@ class PeerState(object):
         if new_state == const.BGP_FSM_ESTABLISHED:
             self.incr(PeerCounterNames.FSM_ESTB_TRANSITIONS)
             self._established_time = time.time()
+            self._signal_bus.adj_up(self.peer)
             NET_CONTROLLER.send_rpc_notification(
                 'neighbor.up', {'ip_address': self.peer.ip_address}
             )
         # transition from Established to another state
         elif old_state == const.BGP_FSM_ESTABLISHED:
             self._established_time = 0
+            self._signal_bus.adj_down(self.peer)
             NET_CONTROLLER.send_rpc_notification(
                 'neighbor.down', {'ip_address': self.peer.ip_address}
             )
@@ -323,6 +344,21 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         self._sent_init_non_rtc_update = False
         self._init_rtc_nlri_path = []
 
+        # in-bound filters
+        self._in_filters = self._neigh_conf.in_filter
+
+        # out-bound filters
+        self._out_filters = self._neigh_conf.out_filter
+
+        # Adj-rib-in
+        self._adj_rib_in = {}
+
+        # Adj-rib-out
+        self._adj_rib_out = {}
+
+        # attribute maps
+        self._attribute_maps = {}
+
     @property
     def remote_as(self):
         return self._neigh_conf.remote_as
@@ -334,6 +370,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     @property
     def ip_address(self):
         return self._neigh_conf.ip_address
+
+    @property
+    def protocol(self):
+        return self._protocol
 
     @property
     def host_bind_ip(self):
@@ -350,6 +390,72 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     @property
     def med(self):
         return self._neigh_conf.multi_exit_disc
+
+    @property
+    def in_filters(self):
+        return self._in_filters
+
+    @in_filters.setter
+    def in_filters(self, filters):
+        self._in_filters = [f.clone() for f in filters]
+        LOG.debug('set in-filter : %s' % filters)
+        self.on_update_in_filter()
+
+    @property
+    def out_filters(self):
+        return self._out_filters
+
+    @out_filters.setter
+    def out_filters(self, filters):
+        self._out_filters = [f.clone() for f in filters]
+        LOG.debug('set out-filter : %s' % filters)
+        self.on_update_out_filter()
+
+    @property
+    def adj_rib_in(self):
+        return self._adj_rib_in
+
+    @property
+    def adj_rib_out(self):
+        return self._adj_rib_out
+
+    @property
+    def is_route_server_client(self):
+        return self._neigh_conf.is_route_server_client
+
+    @property
+    def check_first_as(self):
+        return self._neigh_conf.check_first_as
+
+    @property
+    def connect_mode(self):
+        return self._neigh_conf.connect_mode
+
+    @property
+    def attribute_maps(self):
+        return self._attribute_maps
+
+    @attribute_maps.setter
+    def attribute_maps(self, attribute_maps):
+        _attr_maps = {}
+        _attr_maps.setdefault(const.ATTR_MAPS_ORG_KEY, [])
+
+        # key is 'default' or rd_rf that represents RD and route_family
+        key = attribute_maps[const.ATTR_MAPS_LABEL_KEY]
+        at_maps = attribute_maps[const.ATTR_MAPS_VALUE]
+
+        for a in at_maps:
+            cloned = a.clone()
+            LOG.debug("AttributeMap attr_type: %s, attr_value: %s",
+                      cloned.attr_type, cloned.attr_value)
+            attr_list = _attr_maps.setdefault(cloned.attr_type, [])
+            attr_list.append(cloned)
+
+            # preserve original order of attribute_maps
+            _attr_maps[const.ATTR_MAPS_ORG_KEY].append(cloned)
+
+        self._attribute_maps[key] = _attr_maps
+        self.on_update_attribute_maps()
 
     def is_mpbgp_cap_valid(self, route_family):
         if not self.in_established:
@@ -401,17 +507,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         enabled = conf_evt.value
         # If we do not have any protocol bound and configuration asks us to
         # enable this peer, we try to establish connection again.
-        LOG.debug('Peer %s configuration update event, enabled: %s.' %
-                  (self, enabled))
         if enabled:
-            if self._protocol:
+            LOG.info('%s enabled' % self)
+            if self._protocol and self._protocol.started:
                 LOG.error('Tried to enable neighbor that is already enabled')
             else:
+                self.state.bgp_state = const.BGP_FSM_CONNECT
                 # Restart connect loop if not already running.
                 if not self._connect_retry_event.is_set():
                     self._connect_retry_event.set()
                     LOG.debug('Starting connect loop as neighbor is enabled.')
         else:
+            LOG.info('%s disabled' % self)
             if self._protocol:
                 # Stopping protocol will eventually trigger connection_lost
                 # handler which will do some clean-up.
@@ -423,10 +530,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     BGP_ERROR_SUB_ADMINISTRATIVE_SHUTDOWN
                 )
                 self._protocol.stop()
+                self._protocol = None
+                self.state.bgp_state = const.BGP_FSM_IDLE
             # If this peer is not enabled any-more we stop trying to make any
             # connection.
-            LOG.debug('Disabling connect-retry as neighbor was disabled (%s)' %
-                      (not enabled))
+            LOG.debug('Disabling connect-retry as neighbor was disabled')
             self._connect_retry_event.clear()
 
     def on_update_med(self, conf_evt):
@@ -436,17 +544,112 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             for af in negotiated_afs:
                 self._fire_route_refresh(af)
 
+    def _on_update_connect_mode(self, mode):
+        if mode is not CONNECT_MODE_PASSIVE and \
+                'peer.connect_loop' not in self._child_thread_map:
+            LOG.debug("start connect loop. (mode: %s)" % mode)
+            self._spawn('peer.connect_loop', self._connect_loop,
+                        self._client_factory)
+        elif mode is CONNECT_MODE_PASSIVE:
+            LOG.debug("stop connect loop. (mode: %s)" % mode)
+            self._stop_child_threads('peer.connect_loop')
+
+    def on_update_connect_mode(self, conf_evt):
+        self._on_update_connect_mode(conf_evt.value)
+
+    def _apply_filter(self, filters, path):
+        block = False
+        blocked_cause = None
+
+        for filter_ in filters:
+            if filter_.ROUTE_FAMILY != path.ROUTE_FAMILY:
+                continue
+
+            policy, is_matched = filter_.evaluate(path)
+            if policy == PrefixFilter.POLICY_PERMIT and is_matched:
+                block = False
+                break
+            elif policy == PrefixFilter.POLICY_DENY and is_matched:
+                block = True
+                blocked_cause = filter_.prefix + ' - DENY'
+                break
+
+        return block, blocked_cause
+
+    def _apply_in_filter(self, path):
+        return self._apply_filter(self._in_filters, path)
+
+    def _apply_out_filter(self, path):
+        return self._apply_filter(self._out_filters, path)
+
+    def on_update_in_filter(self):
+        LOG.debug('on_update_in_filter fired')
+        for received_path in self._adj_rib_in.itervalues():
+            LOG.debug('received_path: %s' % received_path)
+            path = received_path.path
+            nlri_str = path.nlri.formatted_nlri_str
+            block, blocked_reason = self._apply_in_filter(path)
+            if block == received_path.filtered:
+                LOG.debug('block situation not changed: %s' % block)
+                continue
+            elif block:
+                # path wasn't blocked, but must be blocked by this update
+                path = sent_route.path.clone(for_withdrawal=True)
+                LOG.debug('withdraw %s because of in filter update'
+                          % nlri_str)
+            else:
+                # path was blocked, but mustn't be blocked by this update
+                LOG.debug('learn blocked %s because of in filter update'
+                          % nlri_str)
+            received_path.filtered = block
+            tm = self._core_service.table_manager
+            tm.learn_path(path)
+
+    def on_update_out_filter(self):
+        LOG.debug('on_update_out_filter fired')
+        for sent_path in self._adj_rib_out.itervalues():
+            LOG.debug('sent_path: %s' % sent_path)
+            path = sent_path.path
+            nlri_str = path.nlri.formatted_nlri_str
+            block, blocked_reason = self._apply_out_filter(path)
+            if block == sent_path.filtered:
+                LOG.debug('block situation not changed: %s' % block)
+                continue
+            elif block:
+                # path wasn't blocked, but must be blocked by this update
+                withdraw_clone = sent_route.path.clone(for_withdrawal=True)
+                outgoing_route = OutgoingRoute(withdraw_clone)
+                LOG.debug('send withdraw %s because of out filter update'
+                          % nlri_str)
+            else:
+                # path was blocked, but mustn't be blocked by this update
+                outgoing_route = OutgoingRoute(path)
+                LOG.debug('send blocked %s because of out filter update'
+                          % nlri_str)
+            sent_path.filtered = block
+            self.enque_outgoing_msg(outgoing_route)
+
+    def on_update_attribute_maps(self):
+        # resend sent_route in case of filter matching
+        LOG.debug('on_update_attribute_maps fired')
+        for sent_path in self._adj_rib_out.itervalues():
+            LOG.debug('resend path: %s' % sent_path)
+            path = sent_path.path
+            self.enque_outgoing_msg(OutgoingRoute(path))
+
     def __str__(self):
         return 'Peer(ip: %s, asn: %s)' % (self._neigh_conf.ip_address,
                                           self._neigh_conf.remote_as)
 
     def _run(self, client_factory):
         LOG.debug('Started peer %s' % self)
-        # Start sink processing in a separate thread
-        self._spawn('peer.process_outgoing', self._process_outgoing_msg_list)
+        self._client_factory = client_factory
 
-        # Tries actively to establish session.
-        self._connect_loop(client_factory)
+        # Tries actively to establish session if CONNECT_MODE is not PASSIVE
+        self._on_update_connect_mode(self._neigh_conf.connect_mode)
+
+        # Start sink processing
+        self._process_outgoing_msg_list()
 
     def _send_outgoing_route_refresh_msg(self, rr_msg):
         """Sends given message `rr_msg` to peer.
@@ -479,19 +682,31 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         Also, checks if any policies prevent sending this message.
         Populates Adj-RIB-out with corresponding `SentRoute`.
         """
+
+        path = outgoing_route.path
+        block, blocked_cause = self._apply_out_filter(path)
+
+        nlri_str = outgoing_route.path.nlri.formatted_nlri_str
+        sent_route = SentRoute(outgoing_route.path, self, block)
+        self._adj_rib_out[nlri_str] = sent_route
+        self._signal_bus.adj_rib_out_changed(self, sent_route)
+
         # TODO(PH): optimized by sending several prefixes per update.
         # Construct and send update message.
-        update_msg = self._construct_update(outgoing_route)
-        self._protocol.send(update_msg)
-        # Collect update statistics.
-        self.state.incr(PeerCounterNames.SENT_UPDATES)
+        if not block:
+            update_msg = self._construct_update(outgoing_route)
+            self._protocol.send(update_msg)
+            # Collect update statistics.
+            self.state.incr(PeerCounterNames.SENT_UPDATES)
+        else:
+            LOG.debug('prefix : %s is not sent by filter : %s'
+                      % (path.nlri, blocked_cause))
 
         # We have to create sent_route for every OutgoingRoute which is
         # not a withdraw or was for route-refresh msg.
         if (not outgoing_route.path.is_withdraw and
                 not outgoing_route.for_route_refresh):
             # Update the destination with new sent route.
-            sent_route = SentRoute(outgoing_route.path, self)
             tm = self._core_service.table_manager
             tm.remember_sent_route(sent_route)
 
@@ -577,7 +792,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         update = BGPUpdate(path_attributes=[mpunreach_attr])
         self.enque_outgoing_msg(update)
 
-    def _session_next_hop(self, route_family):
+    def _session_next_hop(self, path):
         """Returns nexthop address relevant to current session
 
         Nexthop used can depend on capabilities of the session. If VPNv6
@@ -585,17 +800,23 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         IPv4 mapped IPv6 address. In other cases we can use connection end
         point/local ip address.
         """
-        # By default we use BGPS's interface IP with this peer as next_hop.
-        next_hop = self.host_bind_ip
-        if route_family == RF_IPv6_VPN:
-            # Next hop ipv4_mapped ipv6
-            def _ipv4_mapped_ipv6(ipv4):
-                from netaddr import IPAddress
-                return str(IPAddress(ipv4).ipv6())
+        route_family = path.route_family
 
-            next_hop = _ipv4_mapped_ipv6(next_hop)
+        # By default we use BGPS's interface IP with this peer as next_hop.
+        if self._neigh_conf.next_hop:
+            next_hop = self._neigh_conf.next_hop
+        else:
+            next_hop = self.host_bind_ip
+        if route_family == RF_IPv6_VPN:
+            next_hop = self._ipv4_mapped_ipv6(next_hop)
 
         return next_hop
+
+    @staticmethod
+    def _ipv4_mapped_ipv6(ipv4_address):
+        # Next hop ipv4_mapped ipv6
+        from netaddr import IPAddress
+        return str(IPAddress(ipv4_address).ipv6())
 
     def _construct_update(self, outgoing_route):
         """Construct update message with Outgoing-routes path attribute
@@ -616,6 +837,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     path.route_family.afi, path.route_family.safi, [path.nlri]
                 )
                 new_pathattr.append(mpunreach_attr)
+        elif self.is_route_server_client:
+            nlri_list = [path.nlri]
+            for pathattr in path.pathattr_map.itervalues():
+                new_pathattr.append(pathattr)
         else:
             # Supported and un-supported/unknown attributes.
             origin_attr = None
@@ -627,16 +852,25 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             unkown_opttrans_attrs = None
             nlri_list = [path.nlri]
 
-            # MP_REACH_NLRI Attribute.
             # By default we use BGPS's interface IP with this peer as next_hop.
             # TODO(PH): change to use protocol's local address.
             # next_hop = self.host_bind_ip
-            next_hop = self._session_next_hop(path.route_family)
+            next_hop = self._session_next_hop(path)
             # If this is a iBGP peer.
             if not self.is_ebgp_peer() and path.source is not None:
                 # If the path came from a bgp peer and not from NC, according
                 # to RFC 4271 we should not modify next_hop.
-                next_hop = path.nexthop
+                # However RFC 4271 allows us to change next_hop
+                # if configured to announce its own ip address.
+                if self._neigh_conf.is_next_hop_self:
+                    next_hop = self.host_bind_ip
+                    if path.route_family == RF_IPv6_VPN:
+                        next_hop = self._ipv4_mapped_ipv6(next_hop)
+                    LOG.debug('using %s as a next_hop address instead'
+                              ' of path.nexthop %s' % (next_hop, path.nexthop))
+                else:
+                    next_hop = path.nexthop
+
             nexthop_attr = BGPPathAttributeNextHop(next_hop)
             assert nexthop_attr, 'Missing NEXTHOP mandatory attribute.'
 
@@ -701,18 +935,36 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # For eBGP session we can send multi-exit-disc if configured.
             multi_exit_disc = None
             if self.is_ebgp_peer():
-                multi_exit_disc = pathattr_map.get(
-                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
-                if not multi_exit_disc and self._neigh_conf.multi_exit_disc:
+                if self._neigh_conf.multi_exit_disc:
                     multi_exit_disc = BGPPathAttributeMultiExitDisc(
                         self._neigh_conf.multi_exit_disc
                     )
+                else:
+                    pass
+            if not self.is_ebgp_peer():
+                multi_exit_disc = pathattr_map.get(
+                    BGP_ATTR_TYPE_MULTI_EXIT_DISC)
 
             # LOCAL_PREF Attribute.
             if not self.is_ebgp_peer():
                 # For iBGP peers we are required to send local-pref attribute
-                # for connected or local prefixes. We send default local-pref.
+                # for connected or local prefixes. We check if the path matches
+                # attribute_maps and set local-pref value.
+                # If the path doesn't match, we set default local-pref 100.
                 localpref_attr = BGPPathAttributeLocalPref(100)
+                key = const.ATTR_MAPS_LABEL_DEFAULT
+
+                if isinstance(path, (Vpnv4Path, Vpnv6Path)):
+                    nlri = nlri_list[0]
+                    rf = VRF_RF_IPV4 if isinstance(path, Vpnv4Path)\
+                        else VRF_RF_IPV6
+                    key = ':'.join([nlri.route_dist, rf])
+
+                attr_type = AttributeMap.ATTR_LOCAL_PREF
+                at_maps = self._attribute_maps.get(key, {})
+                result = self._lookup_attribute_map(at_maps, attr_type, path)
+                if result:
+                    localpref_attr = result
 
             # COMMUNITY Attribute.
             community_attr = pathattr_map.get(BGP_ATTR_TYPE_COMMUNITIES)
@@ -773,12 +1025,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if unkown_opttrans_attrs:
                 new_pathattr.extend(unkown_opttrans_attrs.values())
 
-            if isinstance(path, Ipv4Path):
-                update = BGPUpdate(path_attributes=new_pathattr,
-                                   nlri=nlri_list)
-            else:
-                update = BGPUpdate(path_attributes=new_pathattr)
-            return update
+        if isinstance(path, Ipv4Path):
+            update = BGPUpdate(path_attributes=new_pathattr,
+                               nlri=nlri_list)
+        else:
+            update = BGPUpdate(path_attributes=new_pathattr)
+        return update
 
     def _connect_loop(self, client_factory):
         """In the current greeenlet we try to establish connection with peer.
@@ -812,13 +1064,21 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 peer_address = (self._neigh_conf.ip_address,
                                 const.STD_BGP_SERVER_PORT_NUM)
 
-                LOG.debug('%s trying to connect to %s' % (self, peer_address))
+                if bind_addr:
+                    LOG.debug('%s trying to connect from'
+                              '%s to %s' % (self, bind_addr,
+                                            peer_address))
+                else:
+                    LOG.debug('%s trying to connect to %s' % (self,
+                                                              peer_address))
                 tcp_conn_timeout = self._common_conf.tcp_conn_timeout
                 try:
+                    password = self._neigh_conf.password
                     sock = self._connect_tcp(peer_address,
                                              client_factory,
                                              time_out=tcp_conn_timeout,
-                                             bind_address=bind_addr)
+                                             bind_address=bind_addr,
+                                             password=password)
                 except socket.error:
                     self.state.bgp_state = const.BGP_FSM_ACTIVE
                     LOG.debug('Socket could not be created in time (%s secs),'
@@ -835,16 +1095,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         self._protocol = proto
 
         # Update state attributes
-        self.state.peer_ip, self.state.peer_port = \
-            self._protocol.get_peername()
-        self.state.local_ip, self.state.local_port = \
-            self._protocol.get_sockname()
+        self.state.peer_ip, self.state.peer_port = self._protocol._remotename
+        self.state.local_ip, self.state.local_port = self._protocol._localname
 #         self.state.bgp_state = self._protocol.state
         # Stop connect_loop retry timer as we are now connected
         if self._protocol and self._connect_retry_event.is_set():
             self._connect_retry_event.clear()
-            LOG.debug('Connect retry event for %s is now set: %s' %
-                      (self, self._connect_retry_event.is_set()))
+            LOG.debug('Connect retry event for %s is cleared' % self)
 
         if self._protocol and self.outgoing_msg_event.is_set():
             # Start processing sink.
@@ -885,7 +1142,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # If existing protocol is already established, we raise exception.
             if self.state.bgp_state != const.BGP_FSM_IDLE:
                 LOG.debug('Currently in %s state, hence will send collision'
-                          ' Notification to close this protocol.')
+                          ' Notification to close this protocol.'
+                          % self.state.bgp_state)
                 self._send_collision_err_and_stop(proto)
                 return
 
@@ -995,9 +1253,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     raise bgp.MissingWellKnown(
                         BGP_ATTR_TYPE_AS_PATH)
 
-                # We do not have a setting to enable/disable first-as check.
-                # We by default do first-as check below.
-                if (self.is_ebgp_peer() and
+                if (self.check_first_as and self.is_ebgp_peer() and
                         not aspath.has_matching_leftmost(self.remote_as)):
                     LOG.error('First AS check fails. Raise appropriate'
                               ' exception.')
@@ -1035,9 +1291,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not aspath:
                 raise bgp.MissingWellKnown(BGP_ATTR_TYPE_AS_PATH)
 
-            # We do not have a setting to enable/disable first-as check.
-            # We by default do first-as check below.
-            if (self.is_ebgp_peer() and
+            if (self.check_first_as and self.is_ebgp_peer() and
                     not aspath.has_matching_leftmost(self.remote_as)):
                 LOG.error('First AS check fails. Raise appropriate exception.')
                 raise bgp.MalformedAsPath()
@@ -1146,9 +1400,21 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 nexthop=next_hop
             )
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
-            # Update appropriate table with new paths.
-            tm = self._core_service.table_manager
-            tm.learn_path(new_path)
+
+            block, blocked_cause = self._apply_in_filter(new_path)
+
+            nlri_str = new_path.nlri.formatted_nlri_str
+            received_route = ReceivedRoute(new_path, self, block)
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
+            if not block:
+                # Update appropriate table with new paths.
+                tm = self._core_service.table_manager
+                tm.learn_path(new_path)
+            else:
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (msg_nlri, blocked_cause))
 
         # If update message had any qualifying new paths, do some book-keeping.
         if msg_nlri_list:
@@ -1195,9 +1461,21 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 w_nlri,
                 is_withdraw=True
             )
-            # Update appropriate table with withdraws.
-            tm = self._core_service.table_manager
-            tm.learn_path(w_path)
+
+            block, blocked_cause = self._apply_in_filter(w_path)
+
+            received_route = ReceivedRoute(w_path, self, block)
+            nlri_str = w_nlri.formatted_nlri_str
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
+            if not block:
+                # Update appropriate table with withdraws.
+                tm = self._core_service.table_manager
+                tm.learn_path(w_path)
+            else:
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (msg_nlri, blocked_cause))
 
     def _extract_and_handle_mpbgp_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's
@@ -1213,7 +1491,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         processing.
         """
         umsg_pattrs = update_msg.pathattr_map
-        mpreach_nlri_attr = umsg_pattrs.pop(BGP_ATTR_TYPE_MP_REACH_NLRI)
+        mpreach_nlri_attr = umsg_pattrs.get(BGP_ATTR_TYPE_MP_REACH_NLRI)
         assert mpreach_nlri_attr
 
         msg_rf = mpreach_nlri_attr.route_family
@@ -1231,7 +1509,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       ' UPDATE. %s' % update_msg)
             return
 
-        if msg_rf in (RF_IPv4_VPN, RF_IPv6_UC):
+        if msg_rf in (RF_IPv4_VPN, RF_IPv6_VPN):
             # Check if we have Extended Communities Attribute.
             # TODO(PH): Check if RT_NLRI afi/safi will ever have this attribute
             ext_comm_attr = umsg_pattrs.get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
@@ -1275,13 +1553,25 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 nexthop=next_hop
             )
             LOG.debug('Extracted paths from Update msg.: %s' % new_path)
-            if msg_rf == RF_RTC_UC \
-                    and self._init_rtc_nlri_path is not None:
-                self._init_rtc_nlri_path.append(new_path)
+
+            block, blocked_cause = self._apply_in_filter(new_path)
+
+            received_route = ReceivedRoute(new_path, self, block)
+            nlri_str = msg_nlri.formatted_nlri_str
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
+            if not block:
+                if msg_rf == RF_RTC_UC \
+                        and self._init_rtc_nlri_path is not None:
+                    self._init_rtc_nlri_path.append(new_path)
+                else:
+                    # Update appropriate table with new paths.
+                    tm = self._core_service.table_manager
+                    tm.learn_path(new_path)
             else:
-                # Update appropriate table with new paths.
-                tm = self._core_service.table_manager
-                tm.learn_path(new_path)
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (msg_nlri, blocked_cause))
 
         # If update message had any qualifying new paths, do some book-keeping.
         if msg_nlri_list:
@@ -1317,7 +1607,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             )
             return
 
-        w_nlris = mp_unreach_attr.nlri_list
+        w_nlris = mp_unreach_attr.withdrawn_routes
         if not w_nlris:
             # If this is EOR of some kind, handle it
             self._handle_eor(msg_rf)
@@ -1328,9 +1618,20 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 w_nlri,
                 is_withdraw=True
             )
-            # Update appropriate table with withdraws.
-            tm = self._core_service.table_manager
-            tm.learn_path(w_path)
+            block, blocked_cause = self._apply_in_filter(w_path)
+
+            received_route = ReceivedRoute(w_path, self, block)
+            nlri_str = w_nlri.formatted_nlri_str
+            self._adj_rib_in[nlri_str] = received_route
+            self._signal_bus.adj_rib_in_changed(self, received_route)
+
+            if not block:
+                # Update appropriate table with withdraws.
+                tm = self._core_service.table_manager
+                tm.learn_path(w_path)
+            else:
+                LOG.debug('prefix : %s is blocked by in-bound filter : %s'
+                          % (w_nlri, blocked_cause))
 
     def _handle_eor(self, route_family):
         """Currently we only handle EOR for RTC address-family.
@@ -1416,8 +1717,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 LOG.debug('Refresh Stale Path timer set (%s sec).' % rst)
 
     def _handle_route_refresh_msg(self, msg):
-        afi = msg.route_family.afi
-        safi = msg.route_family.safi
+        afi = msg.afi
+        safi = msg.safi
         demarcation = msg.demarcation
 
         # If this normal route-refresh request.
@@ -1441,7 +1742,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       demarcation)
 
     def _handle_route_refresh_req(self, afi, safi):
-        rr_af = RouteFamily(afi, safi)
+        rr_af = get_rf(afi, safi)
         self.state.incr(PeerCounterNames.RECV_REFRESH)
 
         # Check if peer has asked for route-refresh for af that was advertised
@@ -1600,6 +1901,13 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                       self.remote_as)
             return
 
+        # If this peer is a route server client, we forward the path
+        # regardless of AS PATH loop, whether the connction is iBGP or eBGP,
+        # or path's communities.
+        if self.is_route_server_client:
+            outgoing_route = OutgoingRoute(path)
+            self.enque_outgoing_msg(outgoing_route)
+
         if self._neigh_conf.multi_exit_disc:
             med_attr = path.get_pattr(BGP_ATTR_TYPE_MULTI_EXIT_DISC)
             if not med_attr:
@@ -1670,7 +1978,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def connection_made(self):
         """Protocols connection established handler
         """
-        LOG.critical(
+        LOG.info(
             'Connection to peer: %s established',
             self._neigh_conf.ip_address,
             extra={
@@ -1682,7 +1990,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def connection_lost(self, reason):
         """Protocols connection lost handler.
         """
-        LOG.critical(
+        LOG.info(
             'Connection to peer %s lost, reason: %s Resetting '
             'retry connect loop: %s' %
             (self._neigh_conf.ip_address, reason,
@@ -1694,6 +2002,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         )
         self.state.bgp_state = const.BGP_FSM_IDLE
         if self._protocol:
+            self._protocol.stop()
             self._protocol = None
             # Create new collection for initial RT NLRIs
             self._init_rtc_nlri_path = []
@@ -1712,3 +2021,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if self._neigh_conf.enabled:
                 if not self._connect_retry_event.is_set():
                     self._connect_retry_event.set()
+
+    @staticmethod
+    def _lookup_attribute_map(attribute_map, attr_type, path):
+        result_attr = None
+        if attr_type in attribute_map:
+            maps = attribute_map[attr_type]
+            for m in maps:
+                cause, result = m.evaluate(path)
+                LOG.debug(
+                    "local_pref evaluation result:%s, cause:%s",
+                    result, cause)
+                if result:
+                    result_attr = m.get_attribute()
+                    break
+        return result_attr

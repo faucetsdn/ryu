@@ -48,8 +48,13 @@ def chop_py_suffix(p):
 
 def _likely_same(a, b):
     try:
-        if os.path.samefile(a, b):
-            return True
+        # Samefile not availible on windows
+        if sys.platform == 'win32':
+            if os.stat(a) == os.stat(b):
+                return True
+        else:
+            if os.path.samefile(a, b):
+                return True
     except OSError:
         # m.__file__ is not always accessible.  eg. egg
         return False
@@ -93,14 +98,25 @@ def round_up(x, y):
     return ((x + y - 1) / y) * y
 
 
-def hex_array(data):
+def _str_to_hex(data):
     """Convert string into array of hexes to be printed."""
     return ' '.join(hex(ord(char)) for char in data)
 
 
-def bytearray_to_hex(data):
+def _bytearray_to_hex(data):
     """Convert bytearray into array of hexes to be printed."""
-    return ' '.join(hex(ord(byte)) for byte in data)
+    return ' '.join(hex(byte) for byte in data)
+
+
+def hex_array(data):
+    """Convert string or bytearray into array of hexes to be printed."""
+    to_hex = {str: _str_to_hex,
+              bytearray: _bytearray_to_hex}
+    try:
+        return to_hex[type(data)](data)
+    except KeyError:
+        LOG.exception('%s is invalid data type' % type(data))
+        return None
 
 
 # the following functions are taken from OpenStack

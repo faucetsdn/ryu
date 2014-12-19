@@ -47,6 +47,7 @@ from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
+from ryu.services.protocols.bgp.operator import ssh
 
 LOG = logging.getLogger('bgpspeaker.application')
 CONF = cfg.CONF
@@ -67,12 +68,12 @@ class ApplicationException(BGPSException):
     pass
 
 
-class BGPSpeaker(RyuApp):
+class RyuBGPSpeaker(RyuApp):
     def __init__(self, *args, **kwargs):
-        self.bind_ip = BGPSpeaker.validate_rpc_ip(CONF.bind_ip)
-        self.bind_port = BGPSpeaker.validate_rpc_port(CONF.bind_port)
+        self.bind_ip = RyuBGPSpeaker.validate_rpc_ip(CONF.bind_ip)
+        self.bind_port = RyuBGPSpeaker.validate_rpc_port(CONF.bind_port)
         self.config_file = CONF.bgp_config_file
-        super(BGPSpeaker, self).__init__(*args, **kwargs)
+        super(RyuBGPSpeaker, self).__init__(*args, **kwargs)
 
     def start(self):
         # Only two main green threads are required for APGW bgp-agent.
@@ -92,13 +93,15 @@ class BGPSpeaker(RyuApp):
             if getattr(settings, 'BGP', None):
                 self._start_core(settings)
 
+            if getattr(settings, 'SSH', None) is not None:
+                hub.spawn(ssh.SSH_CLI_CONTROLLER.start, None, **settings.SSH)
         # Start Network Controller to server RPC peers.
         t = hub.spawn(net_ctrl.NET_CONTROLLER.start, *[],
                       **{net_ctrl.NC_RPC_BIND_IP: self.bind_ip,
                       net_ctrl.NC_RPC_BIND_PORT: self.bind_port})
         LOG.debug('Started Network Controller')
 
-        super(BGPSpeaker, self).start()
+        super(RyuBGPSpeaker, self).start()
 
         return t
 
@@ -124,14 +127,14 @@ class BGPSpeaker(RyuApp):
     def load_config(self, config_file):
         """Validates give file as settings file for BGPSpeaker.
 
-        Load the configuration from file as bgpspeaker.setting module.
+        Load the configuration from file as settings module.
         """
         if not config_file or not isinstance(config_file, str):
             raise ApplicationException('Invalid configuration file.')
 
         # Check if file can be read
         try:
-            return imp.load_source('bgpspeaker.settings', config_file)
+            return imp.load_source('settings', config_file)
         except Exception as e:
             raise ApplicationException(desc=str(e))
 

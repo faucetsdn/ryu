@@ -47,7 +47,6 @@ def to_action(dp, dic):
     ofp = dp.ofproto
     parser = dp.ofproto_parser
 
-    result = None
     action_type = dic.get('type')
     if action_type == 'OUTPUT':
         out_port = int(dic.get('port', ofp.OFPP_ANY))
@@ -94,7 +93,7 @@ def to_action(dp, dic):
     elif action_type == 'POP_PBB':
         result = parser.OFPActionPopPbb()
     else:
-        LOG.debug('Unknown action type: %s' % action_type)
+        result = None
 
     return result
 
@@ -153,7 +152,7 @@ def action_to_str(act):
     elif action_type == ofproto_v1_3.OFPAT_PUSH_MPLS:
         buf = 'PUSH_MPLS:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_POP_MPLS:
-        buf = 'POP_MPLS'
+        buf = 'POP_MPLS:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_SET_QUEUE:
         buf = 'SET_QUEUE:' + str(act.queue_id)
     elif action_type == ofproto_v1_3.OFPAT_GROUP:
@@ -207,30 +206,28 @@ def actions_to_str(instructions):
 
 
 def to_match(dp, attrs):
-    match = dp.ofproto_parser.OFPMatch()
     convert = {'in_port': int,
                'in_phy_port': int,
-               'dl_src': to_match_eth,
+               'metadata': to_match_metadata,
                'dl_dst': to_match_eth,
+               'dl_src': to_match_eth,
+               'eth_dst': to_match_eth,
+               'eth_src': to_match_eth,
                'dl_type': int,
-               'dl_vlan': int,
+               'eth_type': int,
+               'dl_vlan': to_match_vid,
+               'vlan_vid': to_match_vid,
                'vlan_pcp': int,
                'ip_dscp': int,
                'ip_ecn': int,
+               'nw_proto': int,
+               'ip_proto': int,
                'nw_src': to_match_ip,
                'nw_dst': to_match_ip,
-               'nw_proto': int,
-               'tp_src': int,
-               'tp_dst': int,
-               'mpls_label': int,
-               'metadata': to_match_metadata,
-               'eth_src': to_match_eth,
-               'eth_dst': to_match_eth,
-               'eth_type': int,
-               'vlan_vid': int,
                'ipv4_src': to_match_ip,
                'ipv4_dst': to_match_ip,
-               'ip_proto': int,
+               'tp_src': int,
+               'tp_dst': int,
                'tcp_src': int,
                'tcp_dst': int,
                'udp_src': int,
@@ -244,68 +241,28 @@ def to_match(dp, attrs):
                'arp_tpa': to_match_ip,
                'arp_sha': to_match_eth,
                'arp_tha': to_match_eth,
-               'ipv6_src': to_match_ipv6,
-               'ipv6_dst': to_match_ipv6,
+               'ipv6_src': to_match_ip,
+               'ipv6_dst': to_match_ip,
                'ipv6_flabel': int,
                'icmpv6_type': int,
                'icmpv6_code': int,
-               'ipv6_nd_target': to_match_ipv6,
-               'ipv6_nd_sll': mac.haddr_to_bin,
-               'ipv6_nd_tll': mac.haddr_to_bin,
+               'ipv6_nd_target': to_match_ip,
+               'ipv6_nd_sll': to_match_eth,
+               'ipv6_nd_tll': to_match_eth,
+               'mpls_label': int,
                'mpls_tc': int,
                'mpls_bos': int,
                'pbb_isid': int,
                'tunnel_id': int,
                'ipv6_exthdr': int}
 
-    match_append = {'in_port': match.set_in_port,
-                    'dl_src': match.set_dl_src_masked,
-                    'dl_dst': match.set_dl_dst_masked,
-                    'dl_type': match.set_dl_type,
-                    'dl_vlan': match.set_vlan_vid,
-                    'vlan_pcp': match.set_vlan_pcp,
-                    'nw_src': match.set_ipv4_src_masked,
-                    'nw_dst': match.set_ipv4_dst_masked,
-                    'nw_proto': match.set_ip_proto,
-                    'tp_src': to_match_tpsrc,
-                    'tp_dst': to_match_tpdst,
-                    'mpls_label': match.set_mpls_label,
-                    'metadata': match.set_metadata_masked,
-                    'eth_src': match.set_dl_src_masked,
-                    'eth_dst': match.set_dl_dst_masked,
-                    'eth_type': match.set_dl_type,
-                    'vlan_vid': match.set_vlan_vid,
-                    'ip_dscp': match.set_ip_dscp,
-                    'ip_ecn': match.set_ip_ecn,
-                    'ipv4_src': match.set_ipv4_src_masked,
-                    'ipv4_dst': match.set_ipv4_dst_masked,
-                    'ip_proto': match.set_ip_proto,
-                    'tcp_src': to_match_tpsrc,
-                    'tcp_dst': to_match_tpdst,
-                    'udp_src': to_match_tpsrc,
-                    'udp_dst': to_match_tpdst,
-                    'sctp_src': match.set_sctp_src,
-                    'sctp_dst': match.set_sctp_dst,
-                    'icmpv4_type': match.set_icmpv4_type,
-                    'icmpv4_code': match.set_icmpv4_code,
-                    'arp_op': match.set_arp_opcode,
-                    'arp_spa': match.set_arp_spa_masked,
-                    'arp_tpa': match.set_arp_tpa_masked,
-                    'arp_sha': match.set_arp_sha_masked,
-                    'arp_tha': match.set_arp_tha_masked,
-                    'ipv6_src': match.set_ipv6_src_masked,
-                    'ipv6_dst': match.set_ipv6_dst_masked,
-                    'ipv6_flabel': match.set_ipv6_flabel,
-                    'icmpv6_type': match.set_icmpv6_type,
-                    'icmpv6_code': match.set_icmpv6_code,
-                    'ipv6_nd_target': match.set_ipv6_nd_target,
-                    'ipv6_nd_sll': match.set_ipv6_nd_sll,
-                    'ipv6_nd_tll': match.set_ipv6_nd_tll,
-                    'mpls_tc': match.set_mpls_tc,
-                    'mpls_bos': match.set_mpls_bos,
-                    'pbb_isid': match.set_pbb_isid,
-                    'tunnel_id': match.set_tunnel_id,
-                    'ipv6_exthdr': match.set_ipv6_exthdr}
+    keys = {'dl_dst': 'eth_dst',
+            'dl_src': 'eth_src',
+            'dl_type': 'eth_type',
+            'dl_vlan': 'vlan_vid',
+            'nw_src': 'ipv4_src',
+            'nw_dst': 'ipv4_dst',
+            'nw_proto': 'ip_proto'}
 
     if attrs.get('dl_type') == ether.ETH_TYPE_ARP or \
             attrs.get('eth_type') == ether.ETH_TYPE_ARP:
@@ -316,248 +273,130 @@ def to_match(dp, attrs):
             attrs['arp_tpa'] = attrs['nw_dst']
             del attrs['nw_dst']
 
+    kwargs = {}
     for key, value in attrs.items():
         if key in convert:
             value = convert[key](value)
-        if key in match_append:
-            if key == 'dl_src' or key == 'dl_dst' or \
-                    key == 'eth_src' or key == 'eth_dst' or \
-                    key == 'arp_sha' or key == 'arp_tha':
-                # MAC address
-                eth = value[0]
-                mask = value[1]
-                match_append[key](eth, mask)
-            elif key == 'nw_src' or key == 'nw_dst' or \
-                    key == 'ipv4_src' or key == 'ipv4_dst' or \
-                    key == 'arp_spa' or key == 'arp_tpa' or \
-                    key == 'ipv6_src' or key == 'ipv6_dst':
-                # IP address
-                ip = value[0]
-                mask = value[1]
-                match_append[key](ip, mask)
-            elif key == 'tp_src' or key == 'tp_dst' or \
-                    key == 'tcp_src' or key == 'tcp_dst' or \
-                    key == 'udp_src' or key == 'udp_dst':
-                # tp_src/dst
-                match_append[key](value, match, attrs)
-            elif key == 'metadata':
-                # metadata
-                metadata = value[0]
-                metadata_mask = value[1]
-                match_append[key](metadata, metadata_mask)
-            else:
-                # others
-                match_append[key](value)
+        if key in keys:
+            # For old field name
+            key = keys[key]
+        if key == 'tp_src' or key == 'tp_dst':
+            # TCP/UDP port
+            conv = {inet.IPPROTO_TCP: {'tp_src': 'tcp_src',
+                                       'tp_dst': 'tcp_dst'},
+                    inet.IPPROTO_UDP: {'tp_src': 'udp_src',
+                                       'tp_dst': 'udp_dst'}}
+            ip_proto = attrs.get('nw_proto', attrs.get('ip_proto', 0))
+            key = conv[ip_proto][key]
+            kwargs[key] = value
+        else:
+            # others
+            kwargs[key] = value
 
-    return match
+    return dp.ofproto_parser.OFPMatch(**kwargs)
 
 
 def to_match_eth(value):
-    eth_mask = value.split('/')
-
-    # MAC address
-    eth = mac.haddr_to_bin(eth_mask[0])
-    # mask
-    mask = mac.haddr_to_bin('ff:ff:ff:ff:ff:ff')
-
-    if len(eth_mask) == 2:
-        mask = mac.haddr_to_bin(eth_mask[1])
-
-    return eth, mask
-
-
-def to_match_tpsrc(value, match, rest):
-    match_append = {inet.IPPROTO_TCP: match.set_tcp_src,
-                    inet.IPPROTO_UDP: match.set_udp_src}
-
-    nw_proto = rest.get('nw_proto', rest.get('ip_proto', 0))
-    if nw_proto in match_append:
-        match_append[nw_proto](value)
-
-    return match
-
-
-def to_match_tpdst(value, match, rest):
-    match_append = {inet.IPPROTO_TCP: match.set_tcp_dst,
-                    inet.IPPROTO_UDP: match.set_udp_dst}
-
-    nw_proto = rest.get('nw_proto', rest.get('ip_proto', 0))
-    if nw_proto in match_append:
-        match_append[nw_proto](value)
-
-    return match
+    if '/' in value:
+        value = value.split('/')
+        return value[0], value[1]
+    else:
+        return value
 
 
 def to_match_ip(value):
-    ip_mask = value.split('/')
-
-    # IP address
-    ipv4 = struct.unpack('!I', socket.inet_aton(ip_mask[0]))[0]
-    # netmask
-    netmask = ofproto_v1_3_parser.UINT32_MAX
-
-    if len(ip_mask) == 2:
-        # Check the mask is CIDR or not.
-        if ip_mask[1].isdigit():
-            netmask &= ofproto_v1_3_parser.UINT32_MAX << 32 - int(ip_mask[1])
-        else:
-            netmask = struct.unpack('!I', socket.inet_aton(ip_mask[1]))[0]
-
-    return ipv4, netmask
-
-
-def to_match_ipv6(value):
-    ip_mask = value.split('/')
-
-    if len(ip_mask) == 2 and ip_mask[1].isdigit() is False:
-        # Both address and netmask are colon-hexadecimal.
-        ipv6 = netaddr.IPAddress(ip_mask[0]).words
-        netmask = netaddr.IPAddress(ip_mask[1]).words
+    if '/' in value:
+        ip = netaddr.ip.IPNetwork(value)
+        ip_addr = str(ip.ip)
+        ip_mask = str(ip.netmask)
+        return ip_addr, ip_mask
     else:
-        # For other formats.
-        network = netaddr.IPNetwork(value)
-        ipv6 = network.ip.words
-        netmask = network.netmask.words
+        return value
 
-    return ipv6, netmask
+
+def to_match_vid(value):
+    # NOTE: If "vlan_id/dl_vlan" field is described as decimal int value
+    #       (and decimal string value), it is treated as values of
+    #       VLAN tag, and OFPVID_PRESENT(0x1000) bit is automatically
+    #       applied. OTOH, If it is described as hexadecimal string,
+    #       treated as values of oxm_value (including OFPVID_PRESENT
+    #       bit), and OFPVID_PRESENT bit is NOT automatically applied.
+    if isinstance(value, int):
+        # described as decimal int value
+        return value | ofproto_v1_3.OFPVID_PRESENT
+    else:
+        if '/' in value:
+            val = value.split('/')
+            return int(val[0], 0), int(val[1], 0)
+        else:
+            if value.isdigit():
+                # described as decimal string value
+                return int(value, 10) | ofproto_v1_3.OFPVID_PRESENT
+            else:
+                return int(value, 0)
 
 
 def to_match_metadata(value):
     if '/' in value:
-        metadata = value.split('/')
-        return str_to_int(metadata[0]), str_to_int(metadata[1])
+        value = value.split('/')
+        return str_to_int(value[0]), str_to_int(value[1])
     else:
-        return str_to_int(value), ofproto_v1_3_parser.UINT64_MAX
+        return str_to_int(value)
 
 
 def match_to_str(ofmatch):
-    keys = {ofproto_v1_3.OXM_OF_IN_PORT: 'in_port',
-            ofproto_v1_3.OXM_OF_IN_PHY_PORT: 'in_phy_port',
-            ofproto_v1_3.OXM_OF_ETH_SRC: 'dl_src',
-            ofproto_v1_3.OXM_OF_ETH_DST: 'dl_dst',
-            ofproto_v1_3.OXM_OF_ETH_SRC_W: 'dl_src',
-            ofproto_v1_3.OXM_OF_ETH_DST_W: 'dl_dst',
-            ofproto_v1_3.OXM_OF_ETH_TYPE: 'dl_type',
-            ofproto_v1_3.OXM_OF_VLAN_VID: 'dl_vlan',
-            ofproto_v1_3.OXM_OF_VLAN_PCP: 'vlan_pcp',
-            ofproto_v1_3.OXM_OF_IP_DSCP: 'ip_dscp',
-            ofproto_v1_3.OXM_OF_IP_ECN: 'ip_ecn',
-            ofproto_v1_3.OXM_OF_IPV4_SRC: 'nw_src',
-            ofproto_v1_3.OXM_OF_IPV4_DST: 'nw_dst',
-            ofproto_v1_3.OXM_OF_IPV4_SRC_W: 'nw_src',
-            ofproto_v1_3.OXM_OF_IPV4_DST_W: 'nw_dst',
-            ofproto_v1_3.OXM_OF_IP_PROTO: 'nw_proto',
-            ofproto_v1_3.OXM_OF_TCP_SRC: 'tp_src',
-            ofproto_v1_3.OXM_OF_TCP_DST: 'tp_dst',
-            ofproto_v1_3.OXM_OF_UDP_SRC: 'tp_src',
-            ofproto_v1_3.OXM_OF_UDP_DST: 'tp_dst',
-            ofproto_v1_3.OXM_OF_SCTP_SRC: 'sctp_src',
-            ofproto_v1_3.OXM_OF_SCTP_DST: 'sctp_dst',
-            ofproto_v1_3.OXM_OF_ICMPV4_TYPE: 'icmpv4_type',
-            ofproto_v1_3.OXM_OF_ICMPV4_CODE: 'icmpv4_code',
-            ofproto_v1_3.OXM_OF_MPLS_LABEL: 'mpls_label',
-            ofproto_v1_3.OXM_OF_MPLS_TC: 'mpls_tc',
-            ofproto_v1_3.OXM_OF_MPLS_BOS: 'mpls_bos',
-            ofproto_v1_3.OXM_OF_METADATA: 'metadata',
-            ofproto_v1_3.OXM_OF_METADATA_W: 'metadata',
-            ofproto_v1_3.OXM_OF_ARP_OP: 'arp_op',
-            ofproto_v1_3.OXM_OF_ARP_SPA: 'arp_spa',
-            ofproto_v1_3.OXM_OF_ARP_TPA: 'arp_tpa',
-            ofproto_v1_3.OXM_OF_ARP_SPA_W: 'arp_spa',
-            ofproto_v1_3.OXM_OF_ARP_TPA_W: 'arp_tpa',
-            ofproto_v1_3.OXM_OF_ARP_SHA: 'arp_sha',
-            ofproto_v1_3.OXM_OF_ARP_THA: 'arp_tha',
-            ofproto_v1_3.OXM_OF_ARP_SHA_W: 'arp_sha',
-            ofproto_v1_3.OXM_OF_ARP_THA_W: 'arp_tha',
-            ofproto_v1_3.OXM_OF_IPV6_SRC: 'ipv6_src',
-            ofproto_v1_3.OXM_OF_IPV6_DST: 'ipv6_dst',
-            ofproto_v1_3.OXM_OF_IPV6_SRC_W: 'ipv6_src',
-            ofproto_v1_3.OXM_OF_IPV6_DST_W: 'ipv6_dst',
-            ofproto_v1_3.OXM_OF_IPV6_FLABEL: 'ipv6_flabel',
-            ofproto_v1_3.OXM_OF_ICMPV6_TYPE: 'icmpv6_type',
-            ofproto_v1_3.OXM_OF_ICMPV6_CODE: 'icmpv6_code',
-            ofproto_v1_3.OXM_OF_IPV6_ND_TARGET: 'ipv6_nd_target',
-            ofproto_v1_3.OXM_OF_IPV6_ND_SLL: 'ipv6_nd_sll',
-            ofproto_v1_3.OXM_OF_IPV6_ND_TLL: 'ipv6_nd_tll',
-            ofproto_v1_3.OXM_OF_PBB_ISID: 'pbb_isid',
-            ofproto_v1_3.OXM_OF_TUNNEL_ID: 'tunnel_id',
-            ofproto_v1_3.OXM_OF_IPV6_EXTHDR: 'ipv6_exthdr'}
+
+    keys = {'eth_src': 'dl_src',
+            'eth_dst': 'dl_dst',
+            'eth_type': 'dl_type',
+            'vlan_vid': 'dl_vlan',
+            'ipv4_src': 'nw_src',
+            'ipv4_dst': 'nw_dst',
+            'ip_proto': 'nw_proto',
+            'tcp_src': 'tp_src',
+            'tcp_dst': 'tp_dst',
+            'udp_src': 'tp_src',
+            'udp_dst': 'tp_dst'
+            }
 
     match = {}
-    for match_field in ofmatch.fields:
-        key = keys[match_field.header]
-        if key == 'dl_src' or key == 'dl_dst' or key == 'arp_sha' or \
-                key == 'arp_tha':
-            value = match_eth_to_str(match_field.value, match_field.mask)
-        elif key == 'ipv6_nd_tll' or key == 'ipv6_nd_sll':
-            value = mac.haddr_to_str(match_field.value)
-        elif key == 'nw_src' or key == 'nw_dst' or \
-                key == 'arp_spa' or key == 'arp_tpa':
-            value = match_ip_to_str(match_field.value, match_field.mask)
-        elif key == 'ipv6_src' or key == 'ipv6_dst':
-            value = match_ipv6_to_str(match_field.value, match_field.mask)
+
+    ofmatch = ofmatch.to_jsondict()['OFPMatch']
+    ofmatch = ofmatch['oxm_fields']
+
+    for match_field in ofmatch:
+        key = match_field['OXMTlv']['field']
+        if key in keys:
+            key = keys[key]
+        mask = match_field['OXMTlv']['mask']
+        value = match_field['OXMTlv']['value']
+        if key == 'dl_vlan':
+            value = match_vid_to_str(value, mask)
         elif key == 'metadata':
-            value = ('%d/%d' % (match_field.value, match_field.mask)
-                     if match_field.mask else '%d' % match_field.value)
+            value = match_metadata_to_str(value, mask)
         else:
-            value = match_field.value
+            if mask is not None:
+                value = value + '/' + mask
+            else:
+                value = value
         match.setdefault(key, value)
 
     return match
 
 
-def match_eth_to_str(value, mask):
-    eth_str = mac.haddr_to_str(value)
+def match_metadata_to_str(value, mask):
+    return ('%d/%d' % (value, mask) if mask else '%d' % value)
 
+
+def match_vid_to_str(value, mask):
     if mask is not None:
-        eth_str = eth_str + '/' + mac.haddr_to_str(mask)
-
-    return eth_str
-
-
-def match_ip_to_str(value, mask):
-    ip = socket.inet_ntoa(struct.pack('!I', value))
-
-    if mask is not None and mask != 0:
-        binary_str = bin(mask)[2:].zfill(32).rstrip('0')
-        if binary_str.find('0') >= 0:
-            netmask = '/%s' % socket.inet_ntoa(struct.pack('!I', mask))
-        else:
-            netmask = '/%d' % len(binary_str)
+        value = '0x%04x/0x%04x' % (value, mask)
     else:
-        netmask = ''
-
-    return ip + netmask
-
-
-def match_ipv6_to_str(value, mask):
-    ip_list = []
-    for word in value:
-        ip_list.append('%04x' % word)
-    ip = netaddr.IPNetwork(':'.join(ip_list))
-
-    netmask = 128
-    netmask_str = None
-    if mask is not None:
-        mask_list = []
-        for word in mask:
-            mask_list.append('%04x' % word)
-        mask_v = netaddr.IPNetwork(':'.join(mask_list))
-        binary_str = mask_v.ip.bits().replace(':', '').zfill(128).rstrip('0')
-        if binary_str.find('0') >= 0:
-            netmask_str = str(mask_v.ip)
+        if value & ofproto_v1_3.OFPVID_PRESENT:
+            value = str(value & ~ofproto_v1_3.OFPVID_PRESENT)
         else:
-            netmask = len(binary_str)
-
-    if netmask_str is not None:
-        ip_str = str(ip.ip) + '/' + netmask_str
-    elif netmask == 128:
-        ip_str = str(ip.ip)
-    else:
-        ip.prefixlen = netmask
-        ip_str = str(ip)
-
-    return ip_str
+            value = '0x%04x' % value
+    return value
 
 
 def send_stats_request(dp, stats, waiters, msgs):
@@ -567,9 +406,8 @@ def send_stats_request(dp, stats, waiters, msgs):
     waiters_per_dp[stats.xid] = (lock, msgs)
     dp.send_msg(stats)
 
-    try:
-        lock.wait(timeout=DEFAULT_TIMEOUT)
-    except hub.Timeout:
+    lock.wait(timeout=DEFAULT_TIMEOUT)
+    if not lock.is_set():
         del waiters_per_dp[stats.xid]
 
 
@@ -577,6 +415,7 @@ def get_desc_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPDescStatsRequest(dp, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
+    s = {}
 
     for msg in msgs:
         stats = msg.body
@@ -611,14 +450,14 @@ def get_queue_stats(dp, waiters):
     return desc
 
 
-def get_flow_stats(dp, waiters):
-    table_id = dp.ofproto.OFPTT_ALL
-    flags = 0
-    out_port = dp.ofproto.OFPP_ANY
-    out_group = dp.ofproto.OFPG_ANY
-    cookie = 0
-    cookie_mask = 0
-    match = dp.ofproto_parser.OFPMatch()
+def get_flow_stats(dp, waiters, flow={}):
+    table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
+    flags = int(flow.get('flags', 0))
+    out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
+    out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
+    cookie = int(flow.get('cookie', 0))
+    cookie_mask = int(flow.get('cookie_mask', 0))
+    match = to_match(dp, flow.get('match', {}))
 
     stats = dp.ofproto_parser.OFPFlowStatsRequest(
         dp, flags, table_id, out_port, out_group, cookie, cookie_mask,
@@ -643,7 +482,9 @@ def get_flow_stats(dp, waiters):
                  'duration_sec': stats.duration_sec,
                  'duration_nsec': stats.duration_nsec,
                  'packet_count': stats.packet_count,
-                 'table_id': stats.table_id}
+                 'table_id': stats.table_id,
+                 'length': stats.length,
+                 'flags': stats.flags}
             flows.append(s)
     flows = {str(dp.id): flows}
 
@@ -671,7 +512,9 @@ def get_port_stats(dp, waiters):
                  'rx_frame_err': stats.rx_frame_err,
                  'rx_over_err': stats.rx_over_err,
                  'rx_crc_err': stats.rx_crc_err,
-                 'collisions': stats.collisions}
+                 'collisions': stats.collisions,
+                 'duration_sec': stats.duration_sec,
+                 'duration_nsec': stats.duration_nsec}
             ports.append(s)
     ports = {str(dp.id): ports}
     return ports
@@ -696,6 +539,8 @@ def get_meter_stats(dp, waiters):
                  'flow_count': stats.flow_count,
                  'packet_in_count': stats.packet_in_count,
                  'byte_in_count': stats.byte_in_count,
+                 'duration_sec': stats.duration_sec,
+                 'duration_nsec': stats.duration_nsec,
                  'band_stats': bands}
             meters.append(s)
     meters = {str(dp.id): meters}
@@ -708,6 +553,11 @@ def get_meter_features(dp, waiters):
     type_convert = {ofp.OFPMBT_DROP: 'DROP',
                     ofp.OFPMBT_DSCP_REMARK: 'DSCP_REMARK'}
 
+    capa_convert = {ofp.OFPMF_KBPS: 'KBPS',
+                    ofp.OFPMF_PKTPS: 'PKTPS',
+                    ofp.OFPMF_BURST: 'BURST',
+                    ofp.OFPMF_STATS: 'STATS'}
+
     stats = dp.ofproto_parser.OFPMeterFeaturesStatsRequest(dp, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
@@ -719,9 +569,14 @@ def get_meter_features(dp, waiters):
             for k, v in type_convert.items():
                 if (1 << k) & feature.band_types:
                     band_types.append(v)
+            capabilities = []
+            for k, v in capa_convert.items():
+                if k & feature.capabilities:
+                    capabilities.append(v)
             f = {'max_meter': feature.max_meter,
                  'band_types': band_types,
-                 'max_band': feature.max_band,
+                 'capabilities': capabilities,
+                 'max_bands': feature.max_bands,
                  'max_color': feature.max_color}
             features.append(f)
     features = {str(dp.id): features}
@@ -735,7 +590,7 @@ def get_meter_config(dp, waiters):
              dp.ofproto.OFPMF_STATS: 'STATS'}
 
     band_type = {dp.ofproto.OFPMBT_DROP: 'DROP',
-                 dp.ofproto.OFPMBT_DSCP_REMARK: 'REMARK',
+                 dp.ofproto.OFPMBT_DSCP_REMARK: 'DSCP_REMARK',
                  dp.ofproto.OFPMBT_EXPERIMENTER: 'EXPERIMENTER'}
 
     stats = dp.ofproto_parser.OFPMeterConfigStatsRequest(
@@ -782,7 +637,8 @@ def get_group_stats(dp, waiters):
                 c = {'packet_count': bucket_stat.packet_count,
                      'byte_count': bucket_stat.byte_count}
                 bucket_stats.append(c)
-            g = {'group_id': stats.group_id,
+            g = {'length': stats.length,
+                 'group_id': stats.group_id,
                  'ref_count': stats.ref_count,
                  'packet_count': stats.packet_count,
                  'byte_count': stats.byte_count,
@@ -804,7 +660,7 @@ def get_group_features(dp, waiters):
     cap_convert = {ofp.OFPGFC_SELECT_WEIGHT: 'SELECT_WEIGHT',
                    ofp.OFPGFC_SELECT_LIVENESS: 'SELECT_LIVENESS',
                    ofp.OFPGFC_CHAINING: 'CHAINING',
-                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHCEKS'}
+                   ofp.OFPGFC_CHAINING_CHECKS: 'CHAINING_CHECKS'}
     act_convert = {ofp.OFPAT_OUTPUT: 'OUTPUT',
                    ofp.OFPAT_COPY_TTL_OUT: 'COPY_TTL_OUT',
                    ofp.OFPAT_COPY_TTL_IN: 'COPY_TTL_IN',
@@ -888,6 +744,33 @@ def get_group_desc(dp, waiters):
     return descs
 
 
+def get_port_desc(dp, waiters):
+
+    stats = dp.ofproto_parser.OFPPortDescStatsRequest(dp, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    descs = []
+
+    for msg in msgs:
+        stats = msg.body
+        for stat in stats:
+            d = {'port_no': stat.port_no,
+                 'hw_addr': stat.hw_addr,
+                 'name': stat.name,
+                 'config': stat.config,
+                 'state': stat.state,
+                 'curr': stat.curr,
+                 'advertised': stat.advertised,
+                 'supported': stat.supported,
+                 'peer': stat.peer,
+                 'curr_speed': stat.curr_speed,
+                 'max_speed': stat.max_speed}
+            descs.append(d)
+    descs = {str(dp.id): descs}
+    return descs
+
+
 def mod_flow_entry(dp, flow, cmd):
     cookie = int(flow.get('cookie', 0))
     cookie_mask = int(flow.get('cookie_mask', 0))
@@ -936,7 +819,7 @@ def mod_meter_entry(dp, flow, cmd):
         if band_type == 'DROP':
             bands.append(
                 dp.ofproto_parser.OFPMeterBandDrop(rate, burst_size))
-        elif band_type == 'REMARK':
+        elif band_type == 'DSCP_REMARK':
             prec_level = int(band.get('prec_level', 0))
             bands.append(
                 dp.ofproto_parser.OFPMeterBandDscpRemark(
@@ -962,7 +845,7 @@ def mod_group_entry(dp, group, cmd):
                     'INDIRECT': dp.ofproto.OFPGT_INDIRECT,
                     'FF': dp.ofproto.OFPGT_FF}
 
-    type_ = type_convert.get(group.get('type'))
+    type_ = type_convert.get(group.get('type', 'ALL'))
     if type_ is None:
         LOG.debug('Unknown type: %s', group.get('type'))
 
@@ -985,6 +868,19 @@ def mod_group_entry(dp, group, cmd):
         dp, cmd, type_, group_id, buckets)
 
     dp.send_msg(group_mod)
+
+
+def mod_port_behavior(dp, port_config):
+    port_no = int(port_config.get('port_no', 0))
+    hw_addr = port_config.get('hw_addr')
+    config = int(port_config.get('config', 0))
+    mask = int(port_config.get('mask', 0))
+    advertise = int(port_config.get('advertise'))
+
+    port_mod = dp.ofproto_parser.OFPPortMod(
+        dp, port_no, hw_addr, config, mask, advertise)
+
+    dp.send_msg(port_mod)
 
 
 def send_experimenter(dp, exp):

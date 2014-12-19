@@ -174,7 +174,7 @@ class dhcp(packet_base.PacketBase):
         self.options = options
 
     @classmethod
-    def parser(cls, buf):
+    def _parser(cls, buf):
         (op, htype, hlen) = struct.unpack_from(cls._HLEN_UNPACK_STR, buf)
         buf = buf[cls._HLEN_UNPACK_LEN:]
         unpack_str = cls._DHCP_UNPACK_STR % (hlen,
@@ -194,6 +194,13 @@ class dhcp(packet_base.PacketBase):
                     addrconv.ipv4.bin_to_text(siaddr),
                     addrconv.ipv4.bin_to_text(giaddr), sname, boot_file),
                 None, buf[length:])
+
+    @classmethod
+    def parser(cls, buf):
+        try:
+            return cls._parser(buf)
+        except:
+            return None, None, buf
 
     def serialize(self, payload, prev):
         seri_opt = self.options.serialize()

@@ -48,7 +48,7 @@ class tcp(packet_base.PacketBase):
     _PACK_STR = '!HHIIBBHHH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, src_port=0, dst_port=0, seq=0, ack=0, offset=0,
+    def __init__(self, src_port=1, dst_port=1, seq=0, ack=0, offset=0,
                  bits=0, window_size=0, csum=0, urgent=0, option=None):
         super(tcp, self).__init__()
         self.src_port = src_port

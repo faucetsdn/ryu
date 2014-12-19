@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+
+%:
+	dh $@ --with python2
+
+override_dh_installman:
+	cd doc; \
+	make man; \
+	cp build/man/* ../debian/
+	dh_installman
+
+override_dh_auto_build:
+	dh_auto_build
+	mkdir -p debian/html
+	cd doc; \
+	make html; \
+	cp -r build/html/* ../debian/html/
+
+override_dh_installinit:
+	dh_installinit --no-start --name=ryu
+
+override_dh_installlogrotate:
+	dh_installlogrotate --name=ryu
+
+override_dh_auto_clean:
+	rm -rf html
+	dh_auto_clean
