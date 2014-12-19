@@ -1475,7 +1475,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 tm.learn_path(w_path)
             else:
                 LOG.debug('prefix : %s is blocked by in-bound filter : %s'
-                          % (msg_nlri, blocked_cause))
+                          % (nlri_str, blocked_cause))
 
     def _extract_and_handle_mpbgp_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's
