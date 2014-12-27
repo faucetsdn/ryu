@@ -19,7 +19,7 @@
  sessions.
 """
 import logging
-from time import localtime
+from time import gmtime
 
 
 LOG = logging.getLogger('bgpspeaker.model')
@@ -144,7 +144,7 @@ class SentRoute(object):
         if timestamp:
             self.timestamp = timestamp
         else:
-            self.timestamp = localtime()
+            self.timestamp = gmtime()
 
         # Automatically generated.
         #
@@ -174,7 +174,7 @@ class ReceivedRoute(object):
         if timestamp:
             self.timestamp = timestamp
         else:
-            self.timestamp = localtime()
+            self.timestamp = gmtime()
 
     @property
     def received_peer(self):
