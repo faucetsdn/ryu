@@ -285,9 +285,11 @@ def to_match_eth(value):
 
 def to_match_ip(value):
     if '/' in value:
-        ip = netaddr.ip.IPNetwork(value)
-        ip_addr = str(ip.ip)
-        ip_mask = str(ip.netmask)
+        (ip_addr, ip_mask) = value.split('/')
+        if ip_mask.isdigit():
+            ip = netaddr.ip.IPNetwork(value)
+            ip_addr = str(ip.ip)
+            ip_mask = str(ip.netmask)
         return ip_addr, ip_mask
     else:
         return value
