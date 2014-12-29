@@ -349,7 +349,40 @@ class NetworkLSA(LSA):
 
 @LSA.register_type(OSPF_SUMMARY_LSA)
 class SummaryLSA(LSA):
-    pass
+    _PACK_STR = '!4sBBH'
+    _PACK_LEN = struct.calcsize(_PACK_STR)
+
+    def __init__(self, ls_age=0, options=0, type_=OSPF_NETWORK_LSA,
+                 id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
+                 checksum=None, length=None, mask='0.0.0.0', tos=0, metric=0):
+        self.mask = mask
+        self.tos = tos
+        self.metric = metric
+        super(SummaryLSA, self).__init__(ls_age, options, type_, id_,
+                                         adv_router, ls_seqnum, checksum,
+                                         length)
+
+    @classmethod
+    def parser(cls, buf):
+        if len(buf) < cls._PACK_LEN:
+            raise stream_parser.StreamParser.TooSmallException(
+                '%d < %d' % (len(buf), cls_PACK_LEN))
+        buf = buf[:cls._PACK_LEN]
+        (mask, tos, metric_fst, metric_lst) = struct.unpack_from(cls._PACK_STR,
+                                                                 buffer(buf))
+        mask = addrconv.ipv4.bin_to_text(mask)
+        metric = metric_fst << 16 | (metric_lst & 0xffff)
+        return {
+            "mask": mask,
+            "tos": tos,
+            "metric": metric,
+        }
+
+    def serialize_tail(self):
+        mask = addrconv.ipv4.text_to_bin(self.mask)
+        metric_fst = (self.metric >> 16) & 0xff
+        metric_lst = self.metric & 0xffff
+        return bytearray(struct.pack(self._PACK_STR, mask, self.tos, metric))
 
 
 @LSA.register_type(OSPF_ASBR_SUMMARY_LSA)
