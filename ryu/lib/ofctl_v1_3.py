@@ -125,7 +125,7 @@ def to_actions(dp, acts):
                 meter_id = int(a.get('meter_id'))
                 inst.append(parser.OFPInstructionMeter(meter_id))
             else:
-                LOG.debug('Unknown action type: %s' % action_type)
+                LOG.error('Unknown action type: %s' % action_type)
 
     inst.append(parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
                                              actions))
@@ -809,7 +809,7 @@ def mod_meter_entry(dp, flow, cmd):
     for flag in flow_flags:
         flags |= flags_convert.get(flag, 0)
     if not flags:
-        LOG.debug('Unknown flags: %s', flow.get('flags'))
+        LOG.error('Unknown flags: %s', flow.get('flags'))
 
     meter_id = int(flow.get('meter_id', 0))
 
@@ -832,7 +832,7 @@ def mod_meter_entry(dp, flow, cmd):
                 dp.ofproto_parser.OFPMeterBandExperimenter(
                     rate, burst_size, experimenter))
         else:
-            LOG.debug('Unknown band type: %s', band_type)
+            LOG.error('Unknown band type: %s', band_type)
 
     meter_mod = dp.ofproto_parser.OFPMeterMod(
         dp, cmd, flags, meter_id, bands)
@@ -849,7 +849,7 @@ def mod_group_entry(dp, group, cmd):
 
     type_ = type_convert.get(group.get('type', 'ALL'))
     if type_ is None:
-        LOG.debug('Unknown type: %s', group.get('type'))
+        LOG.error('Unknown type: %s', group.get('type'))
 
     group_id = int(group.get('group_id', 0))
 
@@ -890,7 +890,7 @@ def send_experimenter(dp, exp):
     exp_type = exp.get('exp_type', 0)
     data_type = exp.get('data_type', 'ascii')
     if data_type != 'ascii' and data_type != 'base64':
-        LOG.debug('Unknown data type: %s', data_type)
+        LOG.error('Unknown data type: %s', data_type)
     data = exp.get('data', '')
     if data_type == 'base64':
         data = base64.b64decode(data)

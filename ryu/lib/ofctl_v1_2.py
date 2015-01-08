@@ -117,7 +117,7 @@ def to_actions(dp, acts):
                     parser.OFPInstructionWriteMetadata(
                         metadata, metadata_mask))
             else:
-                LOG.debug('Unknown action type: %s' % action_type)
+                LOG.error('Unknown action type: %s' % action_type)
 
     inst.append(parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
                                              actions))
@@ -667,7 +667,7 @@ def mod_group_entry(dp, group, cmd):
 
     type_ = type_convert.get(group.get('type', 'ALL'))
     if type_ is None:
-        LOG.debug('Unknown type: %s', group.get('type'))
+        LOG.error('Unknown type: %s', group.get('type'))
 
     group_id = int(group.get('group_id', 0))
 
@@ -708,7 +708,7 @@ def send_experimenter(dp, exp):
     exp_type = exp.get('exp_type', 0)
     data_type = exp.get('data_type', 'ascii')
     if data_type != 'ascii' and data_type != 'base64':
-        LOG.debug('Unknown data type: %s', data_type)
+        LOG.error('Unknown data type: %s', data_type)
     data = exp.get('data', '')
     if data_type == 'base64':
         data = base64.b64decode(data)

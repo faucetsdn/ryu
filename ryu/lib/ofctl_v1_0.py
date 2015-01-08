@@ -72,7 +72,7 @@ def to_actions(dp, acts):
             queue_id = int(a.get('queue_id', 0))
             actions.append(dp.ofproto_parser.OFPActionEnqueue(port, queue_id))
         else:
-            LOG.debug('Unknown action type')
+            LOG.error('Unknown action type')
 
     return actions
 
@@ -196,7 +196,7 @@ def to_match(dp, attrs):
             tp_dst = int(value)
             wildcards &= ~ofp.OFPFW_TP_DST
         else:
-            LOG.debug("unknown match name %s, %s, %d", key, value, len(key))
+            LOG.error("unknown match name %s, %s, %d", key, value, len(key))
 
     match = dp.ofproto_parser.OFPMatch(
         wildcards, in_port, dl_src, dl_dst, dl_vlan, dl_vlan_pcp,
