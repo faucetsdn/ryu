@@ -352,7 +352,7 @@ class SummaryLSA(LSA):
     _PACK_STR = '!4sBBH'
     _PACK_LEN = struct.calcsize(_PACK_STR)
 
-    def __init__(self, ls_age=0, options=0, type_=OSPF_NETWORK_LSA,
+    def __init__(self, ls_age=0, options=0, type_=OSPF_SUMMARY_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
                  checksum=None, length=None, mask='0.0.0.0', tos=0, metric=0):
         self.mask = mask
