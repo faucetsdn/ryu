@@ -408,7 +408,7 @@ class BGPSpeaker(object):
                 networks[NEXT_HOP] = \
                     str(netaddr.IPAddress(next_hop).ipv6())
 
-        call(func_name, **networks)
+        return call(func_name, **networks)
 
     def prefix_del(self, prefix, route_dist=None):
         """ This method deletes a advertized prefix.
