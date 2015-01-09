@@ -745,6 +745,10 @@ NXM_OF_ARP_TPA_W = nxm_header_w(0x0000, 17, 4)
 
 NXM_NX_TUN_ID = nxm_header(0x0001, 16, 8)
 NXM_NX_TUN_ID_W = nxm_header_w(0x0001, 16, 8)
+NXM_NX_TUN_IPV4_SRC = nxm_header(0x0001, 31, 4)
+NXM_NX_TUN_IPV4_SRC_W = nxm_header_w(0x0001, 31, 4)
+NXM_NX_TUN_IPV4_DST = nxm_header(0x0001, 32, 4)
+NXM_NX_TUN_IPV4_DST_W = nxm_header_w(0x0001, 32, 4)
 
 NXM_NX_ARP_SHA = nxm_header(0x0001, 17, 6)
 NXM_NX_ARP_THA = nxm_header(0x0001, 18, 6)
