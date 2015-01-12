@@ -308,6 +308,9 @@ class ClsRule(object):
         if not self.wc.wildcards & FWW_NW_ECN:
             return ofproto_v1_0.NXFF_NXM
 
+        if self.wc.regs_bits > 0:
+            return ofproto_v1_0.NXFF_NXM
+
         return ofproto_v1_0.NXFF_OPENFLOW10
 
     def match_tuple(self):
