@@ -495,8 +495,6 @@ OFP_QUEUE_PROP_MIN_RATE_SIZE = 16
 assert (calcsize(OFP_QUEUE_PROP_MIN_RATE_PACK_STR) +
         OFP_QUEUE_PROP_HEADER_SIZE == OFP_QUEUE_PROP_MIN_RATE_SIZE)
 
-NX_VENDOR_ID = 0x00002320
-
 
 def nxm_header__(vendor, field, hasmask, length):
     return (vendor << 16) | (field << 9) | (hasmask << 8) | length

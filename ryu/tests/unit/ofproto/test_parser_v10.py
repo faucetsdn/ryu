@@ -1260,7 +1260,8 @@ class TestNXActionSetQueue(unittest.TestCase):
     # '!HHIH2xI'...type, len, vendor, subtype, zfill, queue_id
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x04', 'val': ofproto.NXAST_SET_QUEUE}
     zfill = '\x00' * 2
     queue_id = {'buf': '\xde\xbe\xc5\x18', 'val': 3737044248}
@@ -1313,7 +1314,8 @@ class TestNXActionPopQueue(unittest.TestCase):
     # '!HHIH6x'...type, len, vendor, subtype, zfill
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x05', 'val': ofproto.NXAST_POP_QUEUE}
     zfill = '\x00' * 6
 
@@ -1366,7 +1368,8 @@ class TestNXActionRegMove(unittest.TestCase):
     #                src_ofs, dst_ofs, src, dst
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x06', 'val': ofproto.NXAST_REG_MOVE}
     n_bits = {'buf': '\x3d\x98', 'val': 15768}
     src_ofs = {'buf': '\xf3\xa3', 'val': 62371}
@@ -1442,7 +1445,8 @@ class TestNXActionRegLoad(unittest.TestCase):
     #              ofs_nbits, dst, value
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x07', 'val': ofproto.NXAST_REG_LOAD}
     ofs_nbits = {'buf': '\x3d\x98', 'val': 15768}
     dst = {'buf': '\x9f\x9f\x88\x26', 'val': 2678032422}
@@ -1506,7 +1510,8 @@ class TestNXActionSetTunnel64(unittest.TestCase):
     # '!HHIH6xQ'...type, len, vendor, subtype, zfill, tun_id
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_SET_TUNNEL64_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x09', 'val': ofproto.NXAST_SET_TUNNEL64}
     zfill = '\x00' * 6
     tun_id = {'buf': '\x6e\x01\xa6\xea\x7e\x36\x1d\xd9',
@@ -1561,7 +1566,8 @@ class TestNXActionMultipath(unittest.TestCase):
     #                      algorithm, max_link, arg, zfill, ofs_nbits, dst
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_MULTIPATH_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x0a', 'val': ofproto.NXAST_MULTIPATH}
     fields = {'buf': '\x6d\xf5', 'val': 28149}
     basis = {'buf': '\x7c\x0a', 'val': 31754}
@@ -1651,7 +1657,8 @@ class TestNXActionBundle(unittest.TestCase):
     #                    ofs_nbits, dst, zfill
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_BUNDLE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x0c', 'val': ofproto.NXAST_BUNDLE}
     algorithm = {'buf': '\x51\xa7', 'val': 20903}
     fields = {'buf': '\xf8\xef', 'val': 63727}
@@ -1769,7 +1776,8 @@ class TestNXActionBundleLoad(unittest.TestCase):
     #                    ofs_nbits, dst, zfill
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_BUNDLE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x0d', 'val': ofproto.NXAST_BUNDLE_LOAD}
     algorithm = {'buf': '\x83\x15', 'val': 33557}
     fields = {'buf': '\xc2\x7a', 'val': 49786}
@@ -1886,7 +1894,8 @@ class TestNXActionAutopath(unittest.TestCase):
     #                dst, id_, zfill
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x0b', 'val': ofproto.NXAST_AUTOPATH}
     ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
     dst = {'buf': '\xf8\x55\x74\x95', 'val': 4166349973}
@@ -1957,7 +1966,8 @@ class TestNXActionOutputReg(unittest.TestCase):
     #                    src, max_len, zfill
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x0f', 'val': ofproto.NXAST_OUTPUT_REG}
     ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
     src = {'buf': '\x5e\x3a\x04\x26', 'val': 1580860454}
@@ -2027,7 +2037,8 @@ class TestNXActionExit(unittest.TestCase):
     # '!HHIH'...type, len, vendor, subtype
     type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
     len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_HEADER_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto.NX_VENDOR_ID}
+    vendor = {'buf': '\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
     subtype = {'buf': '\x00\x11', 'val': ofproto.NXAST_EXIT}
     zfill = '\x00' * 6
 
@@ -3029,7 +3040,7 @@ class TestNiciraHeader(unittest.TestCase):
         eq_(ofproto.OFP_VERSION, c.version)
         eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
@@ -3041,7 +3052,7 @@ class TestNiciraHeader(unittest.TestCase):
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(subtype, res[5])
         eq_(data, res[6])
 
@@ -3079,7 +3090,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
         eq_(ofproto.OFP_VERSION, c.version)
         eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
@@ -3091,7 +3102,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(ofproto.NXT_SET_FLOW_FORMAT, res[5])
         eq_(flow_format['val'], res[6])
 
@@ -3179,7 +3190,7 @@ class TestNXTFlowMod(unittest.TestCase):
         eq_(ofproto.OFP_VERSION, c.version)
         eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
@@ -3191,7 +3202,7 @@ class TestNXTFlowMod(unittest.TestCase):
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(ofproto.NXT_FLOW_MOD, res[5])
         eq_(self.cookie['val'], res[6])
         eq_(self.command['val'], res[7])
@@ -3209,7 +3220,7 @@ class TestNXTFlowMod(unittest.TestCase):
         eq_(ofproto.OFP_VERSION, c.version)
         eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
@@ -3222,7 +3233,7 @@ class TestNXTFlowMod(unittest.TestCase):
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(ofproto.NXT_FLOW_MOD, res[5])
         eq_(self.cookie['val'], res[6])
         eq_(self.command['val'], res[7])
@@ -3274,7 +3285,7 @@ class TestNXTRoleRequest(unittest.TestCase):
         eq_(ofproto.OFP_VERSION, self.c.version)
         eq_(ofproto.OFPT_VENDOR, self.c.msg_type)
         eq_(0, self.c.xid)
-        eq_(ofproto.NX_VENDOR_ID, self.c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, self.c.vendor)
 
         fmt = '!' \
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
@@ -3287,7 +3298,7 @@ class TestNXTRoleRequest(unittest.TestCase):
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(ofproto.NXT_ROLE_REQUEST, res[5])
         eq_(self.role['val'], res[6])
 
@@ -3326,7 +3337,7 @@ class TestNXTFlowModTableId(unittest.TestCase):
         eq_(ofproto.OFP_VERSION, self.c.version)
         eq_(ofproto.OFPT_VENDOR, self.c.msg_type)
         eq_(0, self.c.xid)
-        eq_(ofproto.NX_VENDOR_ID, self.c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, self.c.vendor)
 
         fmt = '!' \
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
@@ -3338,7 +3349,7 @@ class TestNXTFlowModTableId(unittest.TestCase):
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(ofproto.NXT_FLOW_MOD_TABLE_ID, res[5])
         eq_(self.set_['val'], res[6])
 

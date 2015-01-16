@@ -24,6 +24,7 @@ import binascii
 from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
 from ryu.lib import addrconv
 from ryu.lib import mac
+from . import ofproto_common
 from . import ofproto_parser
 from . import ofproto_v1_0 as ofproto
 from . import nx_match
@@ -497,7 +498,7 @@ class OFPActionVendor(OFPAction):
         return cls_.parser(buf, offset)
 
 
-@OFPActionVendor.register_action_vendor(ofproto.NX_VENDOR_ID)
+@OFPActionVendor.register_action_vendor(ofproto_common.NX_EXPERIMENTER_ID)
 class NXActionHeader(OFPActionVendor):
     _NX_ACTION_SUBTYPES = {}
 
@@ -1403,7 +1404,7 @@ class OFPVendor(MsgBase):
         self.buf += self.data
 
 
-@OFPVendor.register_vendor(ofproto.NX_VENDOR_ID)
+@OFPVendor.register_vendor(ofproto_common.NX_EXPERIMENTER_ID)
 class NiciraHeader(OFPVendor):
     _NX_SUBTYPES = {}
 
@@ -1417,7 +1418,7 @@ class NiciraHeader(OFPVendor):
 
     def __init__(self, datapath, subtype):
         super(NiciraHeader, self).__init__(datapath)
-        self.vendor = ofproto.NX_VENDOR_ID
+        self.vendor = ofproto_common.NX_EXPERIMENTER_ID
         self.subtype = subtype
 
     def serialize_header(self):
@@ -1973,7 +1974,7 @@ class OFPVendorStatsReply(OFPStatsReply):
             ofproto.OFP_VENDOR_STATS_MSG_SIZE)
 
 
-@OFPVendorStatsReply.register_stats_vendor(ofproto.NX_VENDOR_ID)
+@OFPVendorStatsReply.register_stats_vendor(ofproto_common.NX_EXPERIMENTER_ID)
 class NXStatsReply(OFPStatsReply):
     _NX_STATS_TYPES = {}
 
@@ -2307,7 +2308,7 @@ class OFPVendorStatsRequest(OFPStatsRequest):
 class NXStatsRequest(OFPVendorStatsRequest):
     def __init__(self, datapath, flags, subtype):
         super(NXStatsRequest, self).__init__(datapath, flags,
-                                             ofproto.NX_VENDOR_ID)
+                                             ofproto_common.NX_EXPERIMENTER_ID)
         self.subtype = subtype
 
     def _serialize_vendor_stats_body(self):
