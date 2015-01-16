@@ -75,6 +75,25 @@ class Test_OXM(unittest.TestCase):
         )
         self._test(user, on_wire, 4)
 
+    def test_exp_nomask(self):
+        user = ('_dp_hash', 0x12345678)
+        on_wire = (
+            b'\xff\xff\x00\x08'
+            b'\x00\x00\x23\x20'  # Nicira
+            b'\x12\x34\x56\x78'
+        )
+        self._test(user, on_wire, 8)
+
+    def test_exp_mask(self):
+        user = ('_dp_hash', (0x12345678, 0x7fffffff))
+        on_wire = (
+            b'\xff\xff\x01\x0c'
+            b'\x00\x00\x23\x20'  # Nicira
+            b'\x12\x34\x56\x78'
+            b'\x7f\xff\xff\xff'
+        )
+        self._test(user, on_wire, 8)
+
     def test_nxm_1_nomask(self):
         user = ('tun_ipv4_src', '192.0.2.1')
         on_wire = (

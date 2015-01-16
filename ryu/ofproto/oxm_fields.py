@@ -150,6 +150,10 @@ class ONFExperimenter(_Experimenter):
         self.exp_type = num
 
 
+class NiciraExperimenter(_Experimenter):
+    experimenter_id = ofproto_common.NX_EXPERIMENTER_ID
+
+
 class NiciraExtended0(_OxmClass):
     """Nicira Extended Match (NXM_0)
 
