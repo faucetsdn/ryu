@@ -136,13 +136,17 @@ class OpenFlowBasic(_OxmClass):
 class _Experimenter(_OxmClass):
     _class = OFPXMC_EXPERIMENTER
 
+    def __init__(self, name, num, type_):
+        super(_Experimenter, self).__init__(name, num, type_)
+        self.num = (self.experimenter_id, self.oxm_type)
+
 
 class ONFExperimenter(_Experimenter):
     experimenter_id = ofproto_common.ONF_EXPERIMENTER_ID
 
     def __init__(self, name, num, type_):
         super(ONFExperimenter, self).__init__(name, 0, type_)
-        self.num = (ONFExperimenter, num)
+        self.num = (self.experimenter_id, num)
         self.exp_type = num
 
 
@@ -247,7 +251,7 @@ def _get_field_info_by_number(num_to_field, n):
         name = f.name
     except KeyError:
         t = UnknownType
-        name = 'field_%d' % n
+        name = 'field_%d' % (n,)
     return name, t
 
 
@@ -309,8 +313,10 @@ def _parse_header_impl(mod, buf, offset):
             (exp_type, ) = struct.unpack_from(onf_exp_type_pack_str, buf,
                                               offset + hdr_len + exp_hdr_len)
             exp_hdr_len += struct.calcsize(onf_exp_type_pack_str)
-            num = (ONFExperimenter, exp_type)
             assert exp_hdr_len == 4 + 2
+            num = (exp_id, exp_type)
+        else:
+            num = (exp_id, oxm_type)
     else:
         num = oxm_type
         exp_hdr_len = 0
@@ -348,28 +354,38 @@ def _parse(mod, buf, offset):
 
 def _make_exp_hdr(mod, n):
     exp_hdr = bytearray()
-    if isinstance(n, tuple):
-        # XXX
-        # This block implements EXT-256 style experimenter OXM.
-        (cls, exp_type) = n
+    try:
         desc = mod._oxm_field_desc(n)
-        assert issubclass(cls, _Experimenter)
-        assert isinstance(desc, cls)
-        assert cls is ONFExperimenter
-        onf_exp_hdr_pack_str = '!IH'  # experimenter_id, exp_type
-        msg_pack_into(onf_exp_hdr_pack_str, exp_hdr, 0,
-                      cls.experimenter_id, exp_type)
-        assert len(exp_hdr) == struct.calcsize(onf_exp_hdr_pack_str)
+    except KeyError:
+        return n, exp_hdr
+    if isinstance(desc, _Experimenter):  # XXX
+        (exp_id, exp_type) = n
+        assert desc.experimenter_id == exp_id
+        if isinstance(desc, ONFExperimenter):  # XXX
+            # XXX
+            # This block implements EXT-256 style experimenter OXM.
+            exp_hdr_pack_str = '!IH'  # experimenter_id, exp_type
+            msg_pack_into(exp_hdr_pack_str, exp_hdr, 0,
+                          desc.experimenter_id, desc.exp_type)
+        else:
+            assert desc.oxm_type == exp_type
+            exp_hdr_pack_str = '!I'  # experimenter_id
+            msg_pack_into(exp_hdr_pack_str, exp_hdr, 0,
+                          desc.experimenter_id)
+        assert len(exp_hdr) == struct.calcsize(exp_hdr_pack_str)
         n = desc.oxm_type
         assert (n >> 7) == OFPXMC_EXPERIMENTER
     return n, exp_hdr
 
 
 def _serialize_header(mod, n, buf, offset):
-    desc = mod._oxm_field_desc(n)
+    try:
+        desc = mod._oxm_field_desc(n)
+        value_len = desc.type.size
+    except KeyError:
+        value_len = 0
     n, exp_hdr = _make_exp_hdr(mod, n)
     exp_hdr_len = len(exp_hdr)
-    value_len = desc.type.size
     pack_str = "!I%ds" % (exp_hdr_len,)
     msg_pack_into(pack_str, buf, offset,
                   (n << 9) | (0 << 8) | (exp_hdr_len + value_len),
