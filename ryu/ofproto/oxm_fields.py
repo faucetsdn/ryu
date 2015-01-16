@@ -189,17 +189,17 @@ def generate(modname):
 
     name_to_field = dict((f.name, f) for f in mod.oxm_types)
     num_to_field = dict((f.num, f) for f in mod.oxm_types)
-    add_attr('oxm_from_user', functools.partial(from_user, name_to_field))
-    add_attr('oxm_to_user', functools.partial(to_user, num_to_field))
+    add_attr('oxm_from_user', functools.partial(_from_user, name_to_field))
+    add_attr('oxm_to_user', functools.partial(_to_user, num_to_field))
     add_attr('_oxm_field_desc', functools.partial(_field_desc, num_to_field))
-    add_attr('oxm_normalize_user', functools.partial(normalize_user, mod))
-    add_attr('oxm_parse', functools.partial(parse, mod))
-    add_attr('oxm_serialize', functools.partial(serialize, mod))
-    add_attr('oxm_to_jsondict', to_jsondict)
-    add_attr('oxm_from_jsondict', from_jsondict)
+    add_attr('oxm_normalize_user', functools.partial(_normalize_user, mod))
+    add_attr('oxm_parse', functools.partial(_parse, mod))
+    add_attr('oxm_serialize', functools.partial(_serialize, mod))
+    add_attr('oxm_to_jsondict', _to_jsondict)
+    add_attr('oxm_from_jsondict', _from_jsondict)
 
 
-def from_user(name_to_field, name, user_value):
+def _from_user(name_to_field, name, user_value):
     try:
         f = name_to_field[name]
         t = f.type
@@ -224,7 +224,7 @@ def from_user(name_to_field, name, user_value):
     return num, value, mask
 
 
-def to_user(num_to_field, n, v, m):
+def _to_user(num_to_field, n, v, m):
     try:
         f = num_to_field[n]
         t = f.type
@@ -251,7 +251,7 @@ def _field_desc(num_to_field, n):
     return num_to_field[n]
 
 
-def normalize_user(mod, k, uv):
+def _normalize_user(mod, k, uv):
     (n, v, m) = mod.oxm_from_user(k, uv)
     # apply mask
     if m is not None:
@@ -261,7 +261,7 @@ def normalize_user(mod, k, uv):
     return (k2, uv2)
 
 
-def parse(mod, buf, offset):
+def _parse(mod, buf, offset):
     hdr_pack_str = '!I'
     (header, ) = struct.unpack_from(hdr_pack_str, buf, offset)
     hdr_len = struct.calcsize(hdr_pack_str)
@@ -302,7 +302,7 @@ def parse(mod, buf, offset):
     return num, value, mask, field_len
 
 
-def serialize(mod, n, value, mask, buf, offset):
+def _serialize(mod, n, value, mask, buf, offset):
     exp_hdr = bytearray()
     if isinstance(n, tuple):
         # XXX
@@ -334,7 +334,7 @@ def serialize(mod, n, value, mask, buf, offset):
     return struct.calcsize(pack_str)
 
 
-def to_jsondict(k, uv):
+def _to_jsondict(k, uv):
     if isinstance(uv, tuple):
         (value, mask) = uv
     else:
@@ -343,7 +343,7 @@ def to_jsondict(k, uv):
     return {"OXMTlv": {"field": k, "value": value, "mask": mask}}
 
 
-def from_jsondict(j):
+def _from_jsondict(j):
     tlv = j['OXMTlv']
     field = tlv['field']
     value = tlv['value']
