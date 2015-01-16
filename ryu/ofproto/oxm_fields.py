@@ -293,14 +293,15 @@ def _parse_header_impl(mod, buf, offset):
     hdr_len = struct.calcsize(hdr_pack_str)
     oxm_type = header >> 9  # class|field
     oxm_hasmask = mod.oxm_tlv_header_extract_hasmask(header)
-    oxm_len = mod.oxm_tlv_header_extract_length(header)
     oxm_class = oxm_type >> 7
+    oxm_length = header & 0xff
     if oxm_class == OFPXMC_EXPERIMENTER:
         # Experimenter OXMs have 64-bit header.  (vs 32-bit for other OXMs)
         exp_hdr_pack_str = '!I'  # experimenter_id
         (exp_id, ) = struct.unpack_from(exp_hdr_pack_str, buf,
                                         offset + hdr_len)
         exp_hdr_len = struct.calcsize(exp_hdr_pack_str)
+        assert exp_hdr_len == 4
         if exp_id == ofproto_common.ONF_EXPERIMENTER_ID:
             # XXX
             # This block implements EXT-256 style experimenter OXM.
@@ -309,11 +310,15 @@ def _parse_header_impl(mod, buf, offset):
                                               offset + hdr_len + exp_hdr_len)
             exp_hdr_len += struct.calcsize(onf_exp_type_pack_str)
             num = (ONFExperimenter, exp_type)
+            assert exp_hdr_len == 4 + 2
     else:
         num = oxm_type
         exp_hdr_len = 0
-    value_len = oxm_len - exp_hdr_len
-    field_len = hdr_len + (header & 0xff)
+    value_len = oxm_length - exp_hdr_len
+    if oxm_hasmask:
+        value_len /= 2
+    assert value_len > 0
+    field_len = hdr_len + oxm_length
     total_hdr_len = hdr_len + exp_hdr_len
     return num, total_hdr_len, oxm_hasmask, value_len, field_len
 
