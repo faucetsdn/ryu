@@ -24,6 +24,32 @@
 #   value and mask are on-wire bytes.
 #   mask is None if no mask.
 
+# There are three type of OXM/NXM headers.
+#
+# 32-bit OXM/NXM header
+# +-------------------------------+-------------+-+---------------+
+# | class                         | field       |m| length        |
+# +-------------------------------+-------------+-+---------------+
+#
+# 64-bit experimenter OXM header
+# +-------------------------------+-------------+-+---------------+
+# | class (OFPXMC_EXPERIMENTER)   | field       |m| length        |
+# +-------------------------------+-------------+-+---------------+
+# | experimenter ID                                               |
+# +---------------------------------------------------------------+
+#
+# ONF EXT-256 style experimenter OXM header
+# +-------------------------------+-------------+-+---------------+
+# | class (OFPXMC_EXPERIMENTER)   | ?????       |m| length        |
+# +-------------------------------+-------------+-+---------------+
+# | experimenter ID (ONF_EXPERIMENTER_ID)                         |
+# +-------------------------------+-------------------------------+
+# | exp_type                      |
+# +-------------------------------+
+#
+# Note: According to blp@nicira, EXT-256 will be rectified.
+# https://www.mail-archive.com/dev%40openvswitch.org/msg37644.html
+
 import itertools
 import struct
 import ofproto_common
@@ -252,8 +278,6 @@ def parse(mod, buf, offset):
         if exp_id == ofproto_common.ONF_EXPERIMENTER_ID:
             # XXX
             # This block implements EXT-256 style experimenter OXM.
-            # However, according to blp, the extension will be rectified.
-            # https://www.mail-archive.com/dev%40openvswitch.org/msg37644.html
             onf_exp_type_pack_str = '!H'
             (exp_type, ) = struct.unpack_from(onf_exp_type_pack_str, buf,
                                               offset + hdr_len + exp_hdr_len)
@@ -281,6 +305,8 @@ def parse(mod, buf, offset):
 def serialize(mod, n, value, mask, buf, offset):
     exp_hdr = bytearray()
     if isinstance(n, tuple):
+        # XXX
+        # This block implements EXT-256 style experimenter OXM.
         (cls, exp_type) = n
         desc = mod._oxm_field_desc(n)
         assert issubclass(cls, _Experimenter)
