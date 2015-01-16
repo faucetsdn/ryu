@@ -1,5 +1,5 @@
-# Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
+# Copyright (C) 2013-2015 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2013-2015 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -190,16 +190,22 @@ def generate(modname):
     name_to_field = dict((f.name, f) for f in mod.oxm_types)
     num_to_field = dict((f.num, f) for f in mod.oxm_types)
     add_attr('oxm_from_user', functools.partial(_from_user, name_to_field))
+    add_attr('oxm_from_user_header',
+             functools.partial(_from_user_header, name_to_field))
     add_attr('oxm_to_user', functools.partial(_to_user, num_to_field))
+    add_attr('oxm_to_user_header',
+             functools.partial(_to_user_header, num_to_field))
     add_attr('_oxm_field_desc', functools.partial(_field_desc, num_to_field))
     add_attr('oxm_normalize_user', functools.partial(_normalize_user, mod))
     add_attr('oxm_parse', functools.partial(_parse, mod))
+    add_attr('oxm_parse_header', functools.partial(_parse_header, mod))
     add_attr('oxm_serialize', functools.partial(_serialize, mod))
+    add_attr('oxm_serialize_header', functools.partial(_serialize_header, mod))
     add_attr('oxm_to_jsondict', _to_jsondict)
     add_attr('oxm_from_jsondict', _from_jsondict)
 
 
-def _from_user(name_to_field, name, user_value):
+def _get_field_info_by_name(name_to_field, name):
     try:
         f = name_to_field[name]
         t = f.type
@@ -210,6 +216,16 @@ def _from_user(name_to_field, name, user_value):
             num = int(name.split('_')[1])
         else:
             raise KeyError('unknown match field ' + name)
+    return num, t
+
+
+def _from_user_header(name_to_field, name):
+    (num, t) = _get_field_info_by_name(name_to_field, name)
+    return num
+
+
+def _from_user(name_to_field, name, user_value):
+    (num, t) = _get_field_info_by_name(name_to_field, name)
     # the 'list' case below is a bit hack; json.dumps silently maps
     # python tuples into json lists.
     if isinstance(user_value, (tuple, list)):
@@ -224,7 +240,7 @@ def _from_user(name_to_field, name, user_value):
     return num, value, mask
 
 
-def _to_user(num_to_field, n, v, m):
+def _get_field_info_by_number(num_to_field, n):
     try:
         f = num_to_field[n]
         t = f.type
@@ -232,6 +248,16 @@ def _to_user(num_to_field, n, v, m):
     except KeyError:
         t = UnknownType
         name = 'field_%d' % n
+    return name, t
+
+
+def _to_user_header(num_to_field, n):
+    (name, t) = _get_field_info_by_number(num_to_field, n)
+    return name
+
+
+def _to_user(num_to_field, n, v, m):
+    (name, t) = _get_field_info_by_number(num_to_field, n)
     if v is not None:
         if hasattr(t, 'size') and t.size != len(v):
             raise Exception(
@@ -261,7 +287,7 @@ def _normalize_user(mod, k, uv):
     return (k2, uv2)
 
 
-def _parse(mod, buf, offset):
+def _parse_header_impl(mod, buf, offset):
     hdr_pack_str = '!I'
     (header, ) = struct.unpack_from(hdr_pack_str, buf, offset)
     hdr_len = struct.calcsize(hdr_pack_str)
@@ -286,23 +312,36 @@ def _parse(mod, buf, offset):
     else:
         num = oxm_type
         exp_hdr_len = 0
+    value_len = oxm_len - exp_hdr_len
+    field_len = hdr_len + (header & 0xff)
+    total_hdr_len = hdr_len + exp_hdr_len
+    return num, total_hdr_len, oxm_hasmask, value_len, field_len
+
+
+def _parse_header(mod, buf, offset):
+    (oxm_type_num, total_hdr_len, hasmask, value_len,
+     field_len) = _parse_header_impl(mod, buf, offset)
+    return oxm_type_num, field_len - value_len
+
+
+def _parse(mod, buf, offset):
+    (oxm_type_num, total_hdr_len, hasmask, value_len,
+     field_len) = _parse_header_impl(mod, buf, offset)
     # Note: OXM payload length (oxm_len) includes Experimenter ID (exp_hdr_len)
     # for experimenter OXMs.
-    value_offset = offset + hdr_len + exp_hdr_len
-    value_len = oxm_len - exp_hdr_len
+    value_offset = offset + total_hdr_len
     value_pack_str = '!%ds' % value_len
     assert struct.calcsize(value_pack_str) == value_len
     (value, ) = struct.unpack_from(value_pack_str, buf, value_offset)
-    if oxm_hasmask:
+    if hasmask:
         (mask, ) = struct.unpack_from(value_pack_str, buf,
                                       value_offset + value_len)
     else:
         mask = None
-    field_len = hdr_len + (header & 0xff)
-    return num, value, mask, field_len
+    return oxm_type_num, value, mask, field_len
 
 
-def _serialize(mod, n, value, mask, buf, offset):
+def _make_exp_hdr(mod, n):
     exp_hdr = bytearray()
     if isinstance(n, tuple):
         # XXX
@@ -318,6 +357,23 @@ def _serialize(mod, n, value, mask, buf, offset):
         assert len(exp_hdr) == struct.calcsize(onf_exp_hdr_pack_str)
         n = desc.oxm_type
         assert (n >> 7) == OFPXMC_EXPERIMENTER
+    return n, exp_hdr
+
+
+def _serialize_header(mod, n, buf, offset):
+    desc = mod._oxm_field_desc(n)
+    n, exp_hdr = _make_exp_hdr(mod, n)
+    exp_hdr_len = len(exp_hdr)
+    value_len = desc.type.size
+    pack_str = "!I%ds" % (exp_hdr_len,)
+    msg_pack_into(pack_str, buf, offset,
+                  (n << 9) | (0 << 8) | (exp_hdr_len + value_len),
+                  bytes(exp_hdr))
+    return struct.calcsize(pack_str)
+
+
+def _serialize(mod, n, value, mask, buf, offset):
+    n, exp_hdr = _make_exp_hdr(mod, n)
     exp_hdr_len = len(exp_hdr)
     value_len = len(value)
     if mask:
