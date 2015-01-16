@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numbers
+
 from ryu.controller import event
 
 
@@ -32,7 +34,7 @@ class _ReplyBase(event.EventReplyBase):
 
 class GetDatapathRequest(_RequestBase):
     def __init__(self, dpid):
-        assert isinstance(dpid, (int, long))
+        assert isinstance(dpid, numbers.Integral)
         super(GetDatapathRequest, self).__init__()
         self.dpid = dpid
 

@@ -19,6 +19,7 @@
 from abc import abstractmethod
 import logging
 import netaddr
+import numbers
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
@@ -170,7 +171,7 @@ def validate_password(password):
 
 @validate(name=LOCAL_PORT)
 def validate_local_port(port):
-    if not isinstance(port, (int, long)):
+    if not isinstance(port, numbers.Integral):
         raise ConfigTypeError(desc='Invalid local port: %s' % port)
     if port < 1025 or port > 65535:
         raise ConfigValueError(desc='Invalid local port value: %s, has to be'

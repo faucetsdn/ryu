@@ -119,7 +119,7 @@ class RyuBGPSpeaker(RyuApp):
         """
         if not port:
             raise ApplicationException(desc='Invalid rpc port number.')
-        if not isinstance(port, (int, long)) and isinstance(port, str):
+        if isinstance(port, str):
             port = int(port)
 
         return port

@@ -15,6 +15,7 @@
 
 
 import logging
+import numbers
 import socket
 import struct
 
@@ -1875,7 +1876,7 @@ def ipv4_apply_mask(address, prefix_len, err_msg=None):
 
 
 def ipv4_int_to_text(ip_int):
-    assert isinstance(ip_int, (int, long))
+    assert isinstance(ip_int, numbers.Integral)
     return addrconv.ipv4.bin_to_text(struct.pack('!I', ip_int))
 
 

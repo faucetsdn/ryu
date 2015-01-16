@@ -17,6 +17,7 @@
 # limitations under the License.
 
 import sys
+import numbers
 import time
 import unittest
 from nose.tools import raises
@@ -136,7 +137,7 @@ class Test_rpc(unittest.TestCase):
         c = rpc.Client(self._client_sock)
         # NOTE: the python type of this value is int for 64-bit arch
         obj = -0x8000000000000000  # min value for msgpack
-        assert isinstance(obj, (int, long))
+        assert isinstance(obj, numbers.Integral)
         result = c.call("resp", [obj])
         assert result == obj
         assert isinstance(result, type(obj))

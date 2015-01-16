@@ -27,6 +27,7 @@ import six
 import struct
 import copy
 import netaddr
+import numbers
 
 from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
@@ -1026,7 +1027,7 @@ class RouteTargetMembershipNLRI(StringifyMixin):
         """
         valid = True
         # AS number should be a 16 bit number
-        if (not isinstance(asn, (int, long)) or (asn < 0) or
+        if (not isinstance(asn, numbers.Integral) or (asn < 0) or
                 (asn > ((2 ** 16) - 1))):
             valid = False
 

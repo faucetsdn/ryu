@@ -18,6 +18,7 @@
 """
 from abc import ABCMeta
 from abc import abstractmethod
+import numbers
 import logging
 import uuid
 from types import BooleanType
@@ -563,9 +564,9 @@ def validate_stats_log_enabled(stats_log_enabled):
 
 @validate(name=ConfWithStats.STATS_TIME)
 def validate_stats_time(stats_time):
-    if not isinstance(stats_time, (int, long)):
+    if not isinstance(stats_time, numbers.Integral):
         raise ConfigTypeError(desc='Statistics log timer value has to be of '
-                              'type int/long but got: %r' % stats_time)
+                              'integral type but got: %r' % stats_time)
     if stats_time < 10:
         raise ConfigValueError(desc='Statistics log timer cannot be set to '
                                'less then 10 sec, given timer value %s.' %

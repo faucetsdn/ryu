@@ -17,6 +17,7 @@
  Runtime configuration that applies to all bgp sessions, i.e. global settings.
 """
 import logging
+import numbers
 
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
@@ -105,9 +106,9 @@ def validate_router_id(router_id):
 
 @validate(name=REFRESH_STALEPATH_TIME)
 def validate_refresh_stalepath_time(rst):
-    if not isinstance(rst, (int, long)):
+    if not isinstance(rst, numbers.Integral):
         raise ConfigTypeError(desc=('Configuration value for %s has to be '
-                                    'int/long' % REFRESH_STALEPATH_TIME))
+                                    'integral type' % REFRESH_STALEPATH_TIME))
     if rst < 0:
         raise ConfigValueError(desc='Invalid refresh stalepath time %s' % rst)
 
@@ -116,9 +117,9 @@ def validate_refresh_stalepath_time(rst):
 
 @validate(name=REFRESH_MAX_EOR_TIME)
 def validate_refresh_max_eor_time(rmet):
-    if not isinstance(rmet, (int, long)):
+    if not isinstance(rmet, numbers.Integral):
         raise ConfigTypeError(desc=('Configuration value for %s has to be of '
-                                    'type int/long ' % REFRESH_MAX_EOR_TIME))
+                                    'integral type ' % REFRESH_MAX_EOR_TIME))
     if rmet < 0:
         raise ConfigValueError(desc='Invalid refresh stalepath time %s' % rmet)
 
@@ -129,8 +130,8 @@ def validate_refresh_max_eor_time(rmet):
 def validate_label_range(label_range):
     min_label, max_label = label_range
     if (not min_label or not max_label
-            or not isinstance(min_label, (int, long))
-            or not isinstance(max_label, (int, long)) or min_label < 17
+            or not isinstance(min_label, numbers.Integral)
+            or not isinstance(max_label, numbers.Integral) or min_label < 17
             or min_label >= max_label):
         raise ConfigValueError(desc=('Invalid label_range configuration value:'
                                      ' (%s).' % label_range))
@@ -140,7 +141,7 @@ def validate_label_range(label_range):
 
 @validate(name=BGP_SERVER_PORT)
 def validate_bgp_server_port(server_port):
-    if not isinstance(server_port, (int, long)):
+    if not isinstance(server_port, numbers.Integral):
         raise ConfigTypeError(desc=('Invalid bgp sever port configuration '
                                     'value %s' % server_port))
     if server_port <= 0 or server_port > 65535:
@@ -153,7 +154,7 @@ def validate_bgp_server_port(server_port):
 def validate_tcp_conn_timeout(tcp_conn_timeout):
     # TODO(apgw-dev) made-up some valid values for this settings, check if we
     # have a standard value in any routers
-    if not isinstance(tcp_conn_timeout, (int, long)):
+    if not isinstance(tcp_conn_timeout, numbers.Integral):
         raise ConfigTypeError(desc=('Invalid tcp connection timeout '
                                     'configuration value %s' %
                                     tcp_conn_timeout))
@@ -168,7 +169,7 @@ def validate_tcp_conn_timeout(tcp_conn_timeout):
 
 @validate(name=BGP_CONN_RETRY_TIME)
 def validate_bgp_conn_retry_time(bgp_conn_retry_time):
-    if not isinstance(bgp_conn_retry_time, (int, long)):
+    if not isinstance(bgp_conn_retry_time, numbers.Integral):
         raise ConfigTypeError(desc=('Invalid bgp conn. retry time '
                                     'configuration value %s' %
                                     bgp_conn_retry_time))

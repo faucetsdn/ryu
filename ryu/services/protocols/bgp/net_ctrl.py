@@ -300,7 +300,7 @@ def _validate_rpc_port(port):
     """
     if not port:
         raise NetworkControllerError(desc='Invalid rpc port number.')
-    if not isinstance(port, (int, long)) and isinstance(port, str):
+    if isinstance(port, str):
         port = int(port)
 
     if port <= 0:

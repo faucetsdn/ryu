@@ -16,6 +16,8 @@
 
 # ofctl service
 
+import numbers
+
 from ryu.base import app_manager
 
 from ryu.controller import ofp_event
@@ -71,7 +73,7 @@ class OfctlService(app_manager.RyuApp):
     def _switch_features_handler(self, ev):
         datapath = ev.msg.datapath
         id = datapath.id
-        assert isinstance(id, (int, long))
+        assert isinstance(id, numbers.Integral)
         old_info = self._switches.get(id, None)
         new_info = _SwitchInfo(datapath=datapath)
         self.logger.debug('add dpid %s datapath %s new_info %s old_info %s' %
@@ -96,7 +98,7 @@ class OfctlService(app_manager.RyuApp):
     @set_ev_cls(event.GetDatapathRequest, MAIN_DISPATCHER)
     def _handle_get_datapath(self, req):
         id = req.dpid
-        assert isinstance(id, (int, long))
+        assert isinstance(id, numbers.Integral)
         try:
             datapath = self._switches[id].datapath
         except KeyError:
