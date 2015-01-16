@@ -107,24 +107,24 @@ Get all flows stats
 
     Response message body:
 
-        ============== ========================================= ===============
-        Attribute      Description                               Example
-        ============== ========================================= ===============
-        dpid           Datapath ID                               "1"
-        length         Length of this entry                      88
-        table_id       Table ID                                  0
-        duration_sec   Time flow has been alive in seconds       2
-        duration_nsec  Time flow has been alive in nanoseconds   6.76e+08
-        priority       Priority of the entry                     11111
-        idle_timeout   Number of seconds idle before expiration  0
-        hard_timeout   Number of seconds before expiration       0
-        flags          Bitmap of OFPFF_* flags                   1
-        cookie         Opaque controller-issued identifier       1
-        packet_count   Number of packets in flow                 0
-        byte_count     Number of bytes in flow                   0
-        match          Fields to match                           {"in_port": 1}
-        actions        Instruction set                           ["OUTPUT:2"]
-        ============== ========================================= ===============
+        ============== ============================================================ ===============
+        Attribute      Description                                                  Example
+        ============== ============================================================ ===============
+        dpid           Datapath ID                                                  "1"
+        length         Length of this entry                                         88
+        table_id       Table ID                                                     0
+        duration_sec   Time flow has been alive in seconds                          2
+        duration_nsec  Time flow has been alive in nanoseconds beyond duration_sec  6.76e+08
+        priority       Priority of the entry                                        11111
+        idle_timeout   Number of seconds idle before expiration                     0
+        hard_timeout   Number of seconds before expiration                          0
+        flags          Bitmap of OFPFF_* flags                                      1
+        cookie         Opaque controller-issued identifier                          1
+        packet_count   Number of packets in flow                                    0
+        byte_count     Number of bytes in flow                                      0
+        match          Fields to match                                              {"in_port": 1}
+        actions        Instruction set                                              ["OUTPUT:2"]
+        ============== ============================================================ ===============
 
     Example of use::
 
@@ -239,26 +239,26 @@ Get ports stats
 
     Response message body:
 
-        ============== ======================================== =========
-        Attribute      Description                              Example
-        ============== ======================================== =========
-        dpid           Datapath ID                              "1"
-        port_no        Port number                              1
-        rx_packets     Number of received packets               9
-        tx_packets     Number of transmitted packets            6
-        rx_bytes       Number of received bytes                 738
-        tx_bytes       Number of transmitted bytes              252
-        rx_dropped     Number of packets dropped by RX          0
-        tx_dropped     Number of packets dropped by TX          0
-        rx_errors      Number of receive errors                 0
-        tx_errors      Number of transmit errors                0
-        rx_frame_err   Number of frame alignment errors         0
-        rx_over_err    Number of packets with RX overrun        0
-        rx_crc_err     Number of CRC errors                     0
-        collisions     Number of collisions                     0
-        duration_sec   Time port has been alive in seconds      12
-        duration_nsec  Time port has been alive in nanoseconds  9.76e+08
-        ============== ======================================== =========
+        ============== ============================================================ =========
+        Attribute      Description                                                  Example
+        ============== ============================================================ =========
+        dpid           Datapath ID                                                  "1"
+        port_no        Port number                                                  1
+        rx_packets     Number of received packets                                   9
+        tx_packets     Number of transmitted packets                                6
+        rx_bytes       Number of received bytes                                     738
+        tx_bytes       Number of transmitted bytes                                  252
+        rx_dropped     Number of packets dropped by RX                              0
+        tx_dropped     Number of packets dropped by TX                              0
+        rx_errors      Number of receive errors                                     0
+        tx_errors      Number of transmit errors                                    0
+        rx_frame_err   Number of frame alignment errors                             0
+        rx_over_err    Number of packets with RX overrun                            0
+        rx_crc_err     Number of CRC errors                                         0
+        collisions     Number of collisions                                         0
+        duration_sec   Time port has been alive in seconds                          12
+        duration_nsec  Time port has been alive in nanoseconds beyond duration_sec  9.76e+08
+        ============== ============================================================ =========
 
     Example of use::
 
@@ -379,7 +379,7 @@ Get groups stats
         packet_count     Number of packets processed by group                           0
         byte_count       Number of bytes processed by group                             0
         duration_sec     Time group has been alive in seconds                           161
-        duration_nsec    Time group has been alive in nanoseconds                       3.03e+08
+        duration_nsec    Time group has been alive in nanoseconds beyond duration_sec   3.03e+08
         bucket_stats     struct ofp_bucket_counter
         -- packet_count  Number of packets processed by bucket                          0
         -- byte_count    Number of bytes processed by bucket                            0
@@ -571,21 +571,21 @@ Get meters stats
 
     Response message body:
 
-        ===================== ========================================= ========
-        Attribute             Description                               Example
-        ===================== ========================================= ========
-        dpid                  Datapath ID                               "1"
-        meter_id              Meter ID                                  1
-        len                   Length in bytes of this stats             56
-        flow_count            Number of flows bound to meter            0
-        packet_in_count       Number of packets in input                0
-        byte_in_count         Number of bytes in input                  0
-        duration_sec          Time meter has been alive in seconds      37
-        duration_nsec         Time meter has been alive in nanoseconds  988000
+        ===================== ============================================================= ========
+        Attribute             Description                                                   Example
+        ===================== ============================================================= ========
+        dpid                  Datapath ID                                                   "1"
+        meter_id              Meter ID                                                      1
+        len                   Length in bytes of this stats                                 56
+        flow_count            Number of flows bound to meter                                0
+        packet_in_count       Number of packets in input                                    0
+        byte_in_count         Number of bytes in input                                      0
+        duration_sec          Time meter has been alive in seconds                          37
+        duration_nsec         Time meter has been alive in nanoseconds beyond duration_sec  988000
         band_stats            struct ofp_meter_band_stats
-        -- packet_band_count  Number of packets in band                 0
-        -- byte_band_count    Number of bytes in band                   0
-        ===================== ========================================= ========
+        -- packet_band_count  Number of packets in band                                     0
+        -- byte_band_count    Number of bytes in band                                       0
+        ===================== ============================================================= ========
 
     Example of use::
 
