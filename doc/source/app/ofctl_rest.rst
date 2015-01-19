@@ -225,6 +225,102 @@ Get flows stats filtered by fields
         }
 
 
+.. _get-aggregate-flow-stats:
+
+Get aggregate flow stats
+------------------------
+
+    Get aggregate flow stats of the switch which specified with Datapath ID in URI.
+
+    Usage:
+
+        ======= ============================
+        Method  GET
+        URI     /stats/aggregateflow/<dpid>
+        ======= ============================
+
+    Response message body:
+
+        ============= =========================== ========
+        Attribute     Description                 Example
+        ============= =========================== ========
+        dpid          Datapath ID                 "1"
+        packet_count  Number of packets in flows  18
+        byte_count    Number of bytes in flows    756
+        flow_count    Number of flows             3
+        ============= =========================== ========
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/aggregateflow/1
+
+    ::
+
+        {
+          "1": [
+            {
+              "packet_count": 18,
+              "byte_count": 756,
+              "flow_count": 3
+            }
+          ]
+        }
+
+
+Get aggregate flow stats filtered by fields
+-------------------------------------------
+
+    Get aggregate flow stats of the switch filtered by the OFPAggregateStats fields.
+    This is POST method version of :ref:`get-aggregate-flow-stats`.
+
+    Usage:
+
+        ======= ============================
+        Method  POST
+        URI     /stats/aggregateflow/<dpid>
+        ======= ============================
+
+    Request message body:
+
+        ============ ================================================================== =============== ===============
+        Attribute    Description                                                        Example         Default
+        ============ ================================================================== =============== ===============
+        table_id     Table ID (int)                                                     0               OFPTT_ALL
+        out_port     Require matching entries to include this as an output port (int)   2               OFPP_ANY
+        out_group    Require matching entries to include this as an output group (int)  1               OFPG_ANY
+        cookie       Require matching entries to contain this cookie value (int)        1               0
+        cookie_mask  Mask used to restrict the cookie bits that must match (int)        1               0
+        match        Fields to match (dict)                                             {"in_port": 1}  {} #wildcarded
+        ============ ================================================================== =============== ===============
+
+    Response message body:
+        The same as :ref:`get-aggregate-flow-stats`
+
+    Example of use::
+
+        $ curl -X POST -d '{
+             "table_id": 0,
+             "out_port": 2,
+             "cookie": 1,
+             "cookie_mask": 1,
+             "match":{
+                 "in_port":1
+             }
+         }' http://localhost:8080/stats/aggregateflow/1
+
+    ::
+
+        {
+          "1": [
+            {
+              "packet_count": 18,
+              "byte_count": 756,
+              "flow_count": 3
+            }
+          ]
+        }
+
+
 Get ports stats
 ---------------
 
