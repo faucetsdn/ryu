@@ -355,6 +355,63 @@ Get ports description
         }
 
 
+Get queues stats
+----------------
+
+    Get queues stats of the switch which specified with Datapath ID in URI.
+
+    Usage:
+
+        ======= ====================
+        Method  GET
+        URI     /stats/queue/<dpid>
+        ======= ====================
+
+    Response message body:
+
+        ============== ============================================================= ===========
+        Attribute      Description                                                   Example
+        ============== ============================================================= ===========
+        dpid           Datapath ID                                                   "1"
+        port_no        Port number                                                   1
+        queue_id       Queue ID                                                      0
+        tx_bytes       Number of transmitted bytes                                   0
+        tx_packets     Number of transmitted packets                                 0
+        tx_errors      Number of packets dropped due to overrun                      0
+        duration_sec   Time queue has been alive in seconds                          4294963425
+        duration_nsec  Time queue has been alive in nanoseconds beyond duration_sec  3912967296
+        ============== ============================================================= ===========
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/queue/1
+
+    ::
+
+        {
+          "1": [
+            {
+              "port_no": 1,
+              "queue_id": 0,
+              "tx_bytes": 0,
+              "tx_packets": 0,
+              "tx_errors": 0,
+              "duration_sec": 4294963425,
+              "duration_nsec": 3912967296
+            },
+            {
+              "port_no": 1,
+              "queue_id": 1,
+              "tx_bytes": 0,
+              "tx_packets": 0,
+              "tx_errors": 0,
+              "duration_sec": 4294963425,
+              "duration_nsec": 3912967296
+            }
+          ]
+        }
+
+
 Get groups stats
 ----------------
 
