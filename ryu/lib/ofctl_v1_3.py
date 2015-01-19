@@ -493,6 +493,34 @@ def get_flow_stats(dp, waiters, flow={}):
     return flows
 
 
+def get_aggregate_flow_stats(dp, waiters, flow={}):
+    table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
+    flags = int(flow.get('flags', 0))
+    out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
+    out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
+    cookie = int(flow.get('cookie', 0))
+    cookie_mask = int(flow.get('cookie_mask', 0))
+    match = to_match(dp, flow.get('match', {}))
+
+    stats = dp.ofproto_parser.OFPAggregateStatsRequest(
+        dp, flags, table_id, out_port, out_group, cookie, cookie_mask,
+        match)
+
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    flows = []
+    for msg in msgs:
+        stats = msg.body
+        s = {'packet_count': stats.packet_count,
+             'byte_count': stats.byte_count,
+             'flow_count': stats.flow_count}
+        flows.append(s)
+    flows = {str(dp.id): flows}
+
+    return flows
+
+
 def get_port_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPPortStatsRequest(
         dp, 0, dp.ofproto.OFPP_ANY)
