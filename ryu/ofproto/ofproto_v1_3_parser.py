@@ -48,6 +48,7 @@ from ryu.lib import mac
 from ryu import utils
 from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
 from . import ether
+from . import nicira_ext
 from . import ofproto_parser
 from . import ofproto_common
 from . import ofproto_v1_3 as ofproto
@@ -3225,12 +3226,12 @@ class OFPActionExperimenter(OFPAction):
     experimenter     Experimenter ID
     ================ ======================================================
     """
-    def __init__(self, experimenter, data=None, type_=None, len_=None):
+
+    def __init__(self, experimenter):
         super(OFPActionExperimenter, self).__init__()
+        self.type = ofproto.OFPAT_EXPERIMENTER
         self.experimenter = experimenter
-        self.data = data
-        self.len = (utils.round_up(len(data), 8) +
-                    ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
+        self.len = None
 
     @classmethod
     def parser(cls, buf, offset):
@@ -3238,13 +3239,36 @@ class OFPActionExperimenter(OFPAction):
             ofproto.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR, buf, offset)
         data = buf[(offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
                     ): offset + len_]
-        return cls(experimenter, data)
+        if experimenter == ofproto_common.NX_EXPERIMENTER_ID:
+            obj = NXAction.parse(data)
+        else:
+            obj = OFPActionExperimenterUnknown(experimenter, data)
+        obj.len = len_
+        return obj
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.OFP_ACTION_EXPERIMENTER_HEADER_PACK_STR,
                       buf, offset, self.type, self.len, self.experimenter)
-        if self.data:
-            buf += self.data
+
+
+class OFPActionExperimenterUnknown(OFPActionExperimenter):
+    def __init__(self, experimenter, data=None, type_=None, len_=None):
+        super(OFPActionExperimenterUnknown,
+              self).__init__(experimenter=experimenter)
+        self.data = data
+
+    def serialize(self, buf, offset):
+        # fixup
+        data = self.data
+        if data is None:
+            data = bytearray()
+        self.len = (utils.round_up(len(data), 8) +
+                    ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE)
+        super(OFPActionExperimenterUnknown, self).serialize(buf, offset)
+        msg_pack_into('!%ds' % len(self.data),
+                      buf,
+                      offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE,
+                      self.data)
 
 
 class OFPBucket(StringifyMixin):
@@ -6014,3 +6038,11 @@ class OFPSetAsync(MsgBase):
                       self.packet_in_mask[0], self.packet_in_mask[1],
                       self.port_status_mask[0], self.port_status_mask[1],
                       self.flow_removed_mask[0], self.flow_removed_mask[1])
+
+
+import nx_actions
+
+nx_actions.generate(
+    'ryu.ofproto.ofproto_v1_3',
+    'ryu.ofproto.ofproto_v1_3_parser'
+)
