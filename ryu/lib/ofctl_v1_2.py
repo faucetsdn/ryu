@@ -410,8 +410,8 @@ def get_desc_stats(dp, waiters):
 
 def get_queue_stats(dp, waiters):
     ofp = dp.ofproto
-    stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, 0, ofp.OFPP_ANY,
-                                                   ofp.OFPQ_ALL)
+    stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, ofp.OFPP_ANY,
+                                                   ofp.OFPQ_ALL, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 
