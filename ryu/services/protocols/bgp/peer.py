@@ -594,7 +594,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 continue
             elif block:
                 # path wasn't blocked, but must be blocked by this update
-                path = sent_route.path.clone(for_withdrawal=True)
+                path = path.clone(for_withdrawal=True)
                 LOG.debug('withdraw %s because of in filter update'
                           % nlri_str)
             else:
@@ -617,7 +617,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 continue
             elif block:
                 # path wasn't blocked, but must be blocked by this update
-                withdraw_clone = sent_route.path.clone(for_withdrawal=True)
+                withdraw_clone = path.clone(for_withdrawal=True)
                 outgoing_route = OutgoingRoute(withdraw_clone)
                 LOG.debug('send withdraw %s because of out filter update'
                           % nlri_str)
