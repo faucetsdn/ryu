@@ -93,5 +93,3 @@ class BMPStation(app_manager.RyuApp):
 
         self.logger.debug("BMP client disconnected, ip=%s, port=%s" % addr)
         sock.close()
-        self.output_fd.close()
-        self.failed_dump_fd.close()
