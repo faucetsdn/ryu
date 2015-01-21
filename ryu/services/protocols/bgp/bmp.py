@@ -89,7 +89,6 @@ class BMPClient(Activity):
     def on_adj_rib_in_changed(self, data):
         peer = data['peer']
         path = data['received_route']
-        update_msg = peer._construct_update(path)
         msg = self._construct_route_monitoring(peer, path)
         self._send(msg)
 
@@ -97,11 +96,6 @@ class BMPClient(Activity):
         peer = data['peer']
         msg = self._construct_peer_up_notification(peer)
         self._send(msg)
-
-        for path in peer._adj_rib_in.itervalues():
-            update_msg = peer._construct_update(path)
-            msg = self._construct_route_monitoring(peer, path)
-            self._send(msg)
 
     def on_adj_down(self, data):
         peer = data['peer']
@@ -237,7 +231,6 @@ class BMPClient(Activity):
             self._send(msg)
 
             for path in peer._adj_rib_in.itervalues():
-                update_msg = peer._construct_update(path)
                 msg = self._construct_route_monitoring(peer, path)
                 self._send(msg)
 
