@@ -22,6 +22,11 @@ import socket
 import logging
 from calendar import timegm
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
+from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
+from ryu.lib.packet.bgp import BGPUpdate
+from ryu.lib.packet.bgp import BGPPathAttributeNextHop
+from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
+from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
 
 LOG = logging.getLogger('bgpspeaker.bmp')
 
@@ -159,7 +164,37 @@ class BMPClient(Activity):
                                            peer_bgp_id=peer_bgp_id,
                                            timestamp=0)
 
-    def _construct_route_monitoring(self, peer, path):
+    def _construct_update(self, path):
+        # Get copy of path's path attributes.
+        new_pathattr = [attr for attr in path.pathattr_map.itervalues()]
+
+        if path.is_withdraw:
+            if isinstance(path, Ipv4Path):
+                return BGPUpdate(withdrawn_routes=[path.nlri],
+                                 path_attributes=new_pathattr)
+            else:
+                mpunreach_attr = BGPPathAttributeMpUnreachNLRI(
+                    path.route_family.afi, path.route_family.safi, [path.nlri]
+                )
+                new_pathattr.append(mpunreach_attr)
+        else:
+            if isinstance(path, Ipv4Path):
+                nexthop_attr = BGPPathAttributeNextHop(path.nexthop)
+                new_pathattr.append(nexthop_attr)
+                return BGPUpdate(nlri=[path.nlri],
+                                 path_attributes=new_pathattr)
+            else:
+                mpnlri_attr = BGPPathAttributeMpReachNLRI(
+                    path.route_family.afi,
+                    path.route_family.safi,
+                    path.nexthop,
+                    [path.nlri]
+                )
+                new_pathattr.append(mpnlri_attr)
+
+        return BGPUpdate(path_attributes=new_pathattr)
+
+    def _construct_route_monitoring(self, peer, route):
         if peer.is_mpbgp_cap_valid(bgp.RF_IPv4_VPN) or \
                 peer.is_mpbgp_cap_valid(bgp.RF_IPv6_VPN):
             peer_type = bmp.BMP_PEER_TYPE_L3VPN
@@ -171,9 +206,9 @@ class BMPClient(Activity):
         peer_bgp_id = peer.protocol.recv_open_msg.bgp_identifier
         peer_address, _ = peer.protocol._remotename
 
-        bgp_update = peer._construct_update(path)
-        is_post_policy = not path.filtered
-        timestamp = timegm(path.timestamp)
+        bgp_update = self._construct_update(route.path)
+        is_post_policy = not route.filtered
+        timestamp = timegm(route.timestamp)
 
         msg = bmp.BMPRouteMonitoring(bgp_update=bgp_update,
                                      peer_type=peer_type,
