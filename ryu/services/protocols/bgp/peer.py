@@ -1466,8 +1466,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
             received_route = ReceivedRoute(w_path, self, block)
             nlri_str = w_nlri.formatted_nlri_str
-            self._adj_rib_in[nlri_str] = received_route
-            self._signal_bus.adj_rib_in_changed(self, received_route)
+
+            if nlri_str in self._adj_rib_in:
+                del self._adj_rib_in[nlri_str]
+                self._signal_bus.adj_rib_in_changed(self, received_route)
 
             if not block:
                 # Update appropriate table with withdraws.
@@ -1622,8 +1624,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
             received_route = ReceivedRoute(w_path, self, block)
             nlri_str = w_nlri.formatted_nlri_str
-            self._adj_rib_in[nlri_str] = received_route
-            self._signal_bus.adj_rib_in_changed(self, received_route)
+
+            if nlri_str in self._adj_rib_in:
+                del self._adj_rib_in[nlri_str]
+                self._signal_bus.adj_rib_in_changed(self, received_route)
 
             if not block:
                 # Update appropriate table with withdraws.
