@@ -102,7 +102,7 @@ class SentRoutes(Command):
             aspath = path.get('as_path')
             origin = path.get('origin')
             if origin:
-                aspath.append(origin)
+                aspath = aspath + [origin]
 
             next_hop = path.get('nexthop')
             med = path.get('metric')
