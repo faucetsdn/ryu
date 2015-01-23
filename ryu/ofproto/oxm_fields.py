@@ -54,63 +54,7 @@ import itertools
 import struct
 import ofproto_common
 from ofproto_parser import msg_pack_into
-
-from ryu.lib import addrconv
-
-
-class TypeDescr(object):
-    pass
-
-
-class IntDescr(TypeDescr):
-    def __init__(self, size):
-        self.size = size
-
-    def to_user(self, bin):
-        i = 0
-        for x in xrange(self.size):
-            c = bin[:1]
-            i = i * 256 + ord(c)
-            bin = bin[1:]
-        return i
-
-    def from_user(self, i):
-        bin = ''
-        for x in xrange(self.size):
-            bin = chr(i & 255) + bin
-            i /= 256
-        return bin
-
-Int1 = IntDescr(1)
-Int2 = IntDescr(2)
-Int3 = IntDescr(3)
-Int4 = IntDescr(4)
-Int8 = IntDescr(8)
-
-
-class MacAddr(TypeDescr):
-    size = 6
-    to_user = addrconv.mac.bin_to_text
-    from_user = addrconv.mac.text_to_bin
-
-
-class IPv4Addr(TypeDescr):
-    size = 4
-    to_user = addrconv.ipv4.bin_to_text
-    from_user = addrconv.ipv4.text_to_bin
-
-
-class IPv6Addr(TypeDescr):
-    size = 16
-    to_user = addrconv.ipv6.bin_to_text
-    from_user = addrconv.ipv6.text_to_bin
-
-
-class UnknownType(TypeDescr):
-    import base64
-
-    to_user = staticmethod(base64.b64encode)
-    from_user = staticmethod(base64.b64decode)
+from ryu.lib import type_desc
 
 
 OFPXMC_NXM_0 = 0  # Nicira Extended Match (NXM_OF_)
@@ -219,7 +163,7 @@ def _get_field_info_by_name(name_to_field, name):
         t = f.type
         num = f.num
     except KeyError:
-        t = UnknownType
+        t = type_desc.UnknownType
         if name.startswith('field_'):
             num = int(name.split('_')[1])
         else:
@@ -254,7 +198,7 @@ def _get_field_info_by_number(num_to_field, n):
         t = f.type
         name = f.name
     except KeyError:
-        t = UnknownType
+        t = type_desc.UnknownType
         name = 'field_%d' % (n,)
     return name, t
 
