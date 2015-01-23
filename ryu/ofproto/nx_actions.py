@@ -17,9 +17,11 @@
 import struct
 
 from ryu import utils
+from ryu.lib import type_desc
 from ryu.ofproto import nicira_ext
 from ryu.ofproto import ofproto_common
 from ryu.ofproto.ofproto_parser import msg_pack_into
+from ryu.ofproto.ofproto_parser import StringifyMixin
 
 
 def generate(ofp_name, ofpp_name):
@@ -29,6 +31,116 @@ def generate(ofp_name, ofpp_name):
 
     ofp = sys.modules[ofp_name]
     ofpp = sys.modules[ofpp_name]
+
+    class _NXFlowSpec(StringifyMixin):
+        _hdr_fmt_str = '!H'  # 2 bit 0s, 1 bit src, 2 bit dst, 11 bit n_bits
+        _dst_type = None
+        _subclasses = {}
+
+        def __init__(self, src, dst, n_bits):
+            self.src = src
+            self.dst = dst
+            self.n_bits = n_bits
+
+        @classmethod
+        def register(cls, subcls):
+            assert issubclass(subcls, cls)
+            assert subcls._dst_type not in cls._subclasses
+            cls._subclasses[subcls._dst_type] = subcls
+
+        @classmethod
+        def parse(cls, buf):
+            (hdr,) = struct.unpack_from(cls._hdr_fmt_str, buf, 0)
+            rest = buf[struct.calcsize(cls._hdr_fmt_str):]
+            if hdr == 0:
+                return None, rest  # all-0 header is no-op for padding
+            src_type = (hdr >> 13) & 0x1
+            dst_type = (hdr >> 11) & 0x3
+            n_bits = hdr & 0x3ff
+            subcls = cls._subclasses[dst_type]
+            if src_type == 0:  # subfield
+                src = cls._parse_subfield(rest)
+                rest = rest[6:]
+            elif src_type == 1:  # immediate
+                src_len = (n_bits + 15) / 16 * 2
+                src_bin = rest[:src_len]
+                src = type_desc.IntDescr(size=src_len).to_user(src_bin)
+                rest = rest[src_len:]
+            if dst_type == 0:  # match
+                dst = cls._parse_subfield(rest)
+                rest = rest[6:]
+            elif dst_type == 1:  # load
+                dst = cls._parse_subfield(rest)
+                rest = rest[6:]
+            elif dst_type == 2:  # output
+                dst = ''  # empty
+            return subcls(src=src, dst=dst, n_bits=n_bits), rest
+
+        def serialize(self):
+            buf = bytearray()
+            if isinstance(self.src, tuple):
+                src_type = 0  # subfield
+            else:
+                src_type = 1  # immediate
+            # header
+            val = (src_type << 13) | (self._dst_type << 11) | self.n_bits
+            msg_pack_into(self._hdr_fmt_str, buf, 0, val)
+            # src
+            if src_type == 0:  # subfield
+                buf += self._serialize_subfield(self.src)
+            elif src_type == 1:  # immediate
+                src_len = (self.n_bits + 15) / 16 * 2
+                buf += type_desc.IntDescr(size=src_len).from_user(self.src)
+            # dst
+            if self._dst_type == 0:  # match
+                buf += self._serialize_subfield(self.dst)
+            elif self._dst_type == 1:  # load
+                buf += self._serialize_subfield(self.dst)
+            elif self._dst_type == 2:  # output
+                pass  # empty
+            return buf
+
+        @staticmethod
+        def _parse_subfield(buf):
+            (n, len) = ofp.oxm_parse_header(buf, 0)
+            assert len == 4  # only 4-bytes NXM/OXM are defined
+            field = ofp.oxm_to_user_header(n)
+            rest = buf[len:]
+            (ofs,) = struct.unpack_from('!H', rest, 0)
+            return (field, ofs)
+
+        @staticmethod
+        def _serialize_subfield(subfield):
+            (field, ofs) = subfield
+            buf = bytearray()
+            n = ofp.oxm_from_user_header(field)
+            ofp.oxm_serialize_header(n, buf, 0)
+            assert len(buf) == 4  # only 4-bytes NXM/OXM are defined
+            msg_pack_into('!H', buf, 4, ofs)
+            return buf
+
+    class NXFlowSpecMatch(_NXFlowSpec):
+        # Add a match criteria
+        # an example of the corresponding ovs-ofctl syntax:
+        #    NXM_OF_VLAN_TCI[0..11]
+        _dst_type = 0
+
+    class NXFlowSpecLoad(_NXFlowSpec):
+        # Add NXAST_REG_LOAD actions
+        # an example of the corresponding ovs-ofctl syntax:
+        #    NXM_OF_ETH_DST[]=NXM_OF_ETH_SRC[]
+        _dst_type = 1
+
+    class NXFlowSpecOutput(_NXFlowSpec):
+        # Add an OFPAT_OUTPUT action
+        # an example of the corresponding ovs-ofctl syntax:
+        #    output:NXM_OF_IN_PORT[]
+        _dst_type = 2
+
+        def __init__(self, src, n_bits, dst=''):
+            assert dst == ''
+            super(NXFlowSpecOutput, self).__init__(src=src, dst=dst,
+                                                   n_bits=n_bits)
 
     class NXAction(ofpp.OFPActionExperimenter):
         _fmt_str = '!H'  # subtype
@@ -141,11 +253,18 @@ def generate(ofp_name, ofpp_name):
     add_attr('NXAction', NXAction)
     add_attr('NXActionUnknown', NXActionUnknown)
 
-    actions = [
+    classes = [
         'NXActionRegMove',
+        '_NXFlowSpec',  # exported for testing
+        'NXFlowSpecMatch',
+        'NXFlowSpecLoad',
+        'NXFlowSpecOutput',
     ]
     vars = locals()
-    for a in actions:
-        cls = vars[a]
-        add_attr(a, cls)
-        NXAction.register(cls)
+    for name in classes:
+        cls = vars[name]
+        add_attr(name, cls)
+        if issubclass(cls, NXAction):
+            NXAction.register(cls)
+        if issubclass(cls, _NXFlowSpec):
+            _NXFlowSpec.register(cls)
