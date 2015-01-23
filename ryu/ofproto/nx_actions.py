@@ -247,6 +247,88 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
                           bytes(data))
 
+    class NXActionLearn(NXAction):
+        subtype = nicira_ext.NXAST_LEARN
+
+        # idle_timeout, hard_timeout, priority, cookie, flags,
+        # table_id, pad, fin_idle_timeout, fin_hard_timeout
+        _fmt_str = '!HHHQHBxHH'
+        # Followed by flow_mod_specs
+
+        def __init__(self,
+                     table_id,
+                     specs,
+                     idle_timeout=0,
+                     hard_timeout=0,
+                     priority=ofp.OFP_DEFAULT_PRIORITY,
+                     cookie=0,
+                     flags=0,
+                     fin_idle_timeout=0,
+                     fin_hard_timeout=0,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionLearn, self).__init__()
+            self.idle_timeout = idle_timeout
+            self.hard_timeout = hard_timeout
+            self.priority = priority
+            self.cookie = cookie
+            self.flags = flags
+            self.table_id = table_id
+            self.fin_idle_timeout = fin_idle_timeout
+            self.fin_hard_timeout = fin_hard_timeout
+            self.specs = specs
+
+        @classmethod
+        def parse(cls, buf):
+            (idle_timeout,
+             hard_timeout,
+             priority,
+             cookie,
+             flags,
+             table_id,
+             fin_idle_timeout,
+             fin_hard_timeout,) = struct.unpack_from(
+                NXActionLearn._fmt_str, buf, 0)
+            rest = buf[struct.calcsize(NXActionLearn._fmt_str):]
+            # specs
+            specs = []
+            while len(rest) > 0:
+                spec, rest = _NXFlowSpec.parse(rest)
+                if spec is None:
+                    continue
+                specs.append(spec)
+            return cls(idle_timeout=idle_timeout,
+                       hard_timeout=hard_timeout,
+                       priority=priority,
+                       cookie=cookie,
+                       flags=flags,
+                       table_id=table_id,
+                       fin_idle_timeout=fin_idle_timeout,
+                       fin_hard_timeout=fin_hard_timeout,
+                       specs=specs)
+
+        def serialize(self, buf, offset):
+            # fixup
+            data = bytearray()
+            msg_pack_into(NXActionLearn._fmt_str, data, 0,
+                          self.idle_timeout,
+                          self.hard_timeout,
+                          self.priority,
+                          self.cookie,
+                          self.flags,
+                          self.table_id,
+                          self.fin_idle_timeout,
+                          self.fin_hard_timeout)
+            for spec in self.specs:
+                data += spec.serialize()
+            payload_offset = (
+                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
+                struct.calcsize(NXAction._fmt_str)
+            )
+            self.len = utils.round_up(payload_offset + len(data), 8)
+            super(NXActionLearn, self).serialize(buf, offset)
+            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
+                          bytes(data))
+
     def add_attr(k, v):
         setattr(ofpp, k, v)
 
@@ -255,6 +337,7 @@ def generate(ofp_name, ofpp_name):
 
     classes = [
         'NXActionRegMove',
+        'NXActionLearn',
         '_NXFlowSpec',  # exported for testing
         'NXFlowSpecMatch',
         'NXFlowSpecLoad',
