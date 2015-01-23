@@ -64,7 +64,6 @@ def generate(ofp_name, ofpp_name):
     class NXActionUnknown(NXAction):
         def __init__(self, subtype, data=None,
                      type_=None, len_=None, experimenter=None):
-            self.subtype = subtype
             super(NXActionUnknown, self).__init__()
             self.data = data
 
@@ -93,8 +92,6 @@ def generate(ofp_name, ofpp_name):
         def __init__(self, src_field, dst_field, n_bits, src_ofs=0, dst_ofs=0,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionRegMove, self).__init__()
-            self.experimenter = ofproto_common.NX_EXPERIMENTER_ID
-            self.subtype = self.subtype
             self.n_bits = n_bits
             self.src_ofs = src_ofs
             self.dst_ofs = dst_ofs
