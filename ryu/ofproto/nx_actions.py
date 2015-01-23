@@ -145,11 +145,11 @@ def generate(ofp_name, ofpp_name):
     class NXAction(ofpp.OFPActionExperimenter):
         _fmt_str = '!H'  # subtype
         _subtypes = {}
-        experimenter = ofproto_common.NX_EXPERIMENTER_ID
+        _experimenter = ofproto_common.NX_EXPERIMENTER_ID
 
         def __init__(self):
-            super(NXAction, self).__init__(experimenter=self.experimenter)
-            self.subtype = self.subtype
+            super(NXAction, self).__init__(experimenter=self._experimenter)
+            self.subtype = self._subtype
 
         @classmethod
         def parse(cls, buf):
@@ -170,8 +170,8 @@ def generate(ofp_name, ofpp_name):
 
         @classmethod
         def register(cls, subtype_cls):
-            assert subtype_cls.subtype is not cls._subtypes
-            cls._subtypes[subtype_cls.subtype] = subtype_cls
+            assert subtype_cls._subtype is not cls._subtypes
+            cls._subtypes[subtype_cls._subtype] = subtype_cls
 
     class NXActionUnknown(NXAction):
         def __init__(self, subtype, data=None,
@@ -197,7 +197,7 @@ def generate(ofp_name, ofpp_name):
             buf += data
 
     class NXActionRegMove(NXAction):
-        subtype = nicira_ext.NXAST_REG_MOVE
+        _subtype = nicira_ext.NXAST_REG_MOVE
         _fmt_str = '!HHH'  # n_bits, src_ofs, dst_ofs
         # Followed by OXM fields (src, dst) and padding to 8 bytes boundary
 
@@ -248,7 +248,7 @@ def generate(ofp_name, ofpp_name):
                           bytes(data))
 
     class NXActionLearn(NXAction):
-        subtype = nicira_ext.NXAST_LEARN
+        _subtype = nicira_ext.NXAST_LEARN
 
         # idle_timeout, hard_timeout, priority, cookie, flags,
         # table_id, pad, fin_idle_timeout, fin_hard_timeout
