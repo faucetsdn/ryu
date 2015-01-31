@@ -266,6 +266,7 @@ class NonVrfPathProcessingMixin(object):
                 sent_route.sent_peer.enque_outgoing_msg(outgoing_route)
                 LOG.debug('Sending withdrawal to %s for %s' %
                           (sent_route.sent_peer, outgoing_route))
+                self._sent_routes = {}
 
 
 class Destination(object):
