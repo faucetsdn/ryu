@@ -1,3 +1,4 @@
+from __future__ import division
 from operator import attrgetter
 
 from ryu.app import simple_switch_13
@@ -51,15 +52,20 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
 
     def _save_stats(self, dist, key, value, length):
         if key not in dist:
-                dist[key] = [(0), (0)]  # TODO bug
-        else:
-            dist[key].append(value)
-            if len(dist[key]) > length:
-                dist[key].pop()
-        print dist
+                dist[key] = []
+        dist[key].append(value)
 
-    def _get_speed(self, now, pre, perio):
-        return (now-pre)/perio
+        if len(dist[key]) > length:
+            dist[key].pop(0)
+
+    def _get_speed(self, now, pre, period):
+        return (now-pre)/period/8
+
+    def _get_time(self, sec, nsec):
+        return sec + nsec/(10**9)
+
+    def _get_period(self, n_sec, n_nsec, p_sec, p_nsec):
+        return self._get_time(n_sec, n_nsec) - self._get_time(p_sec, p_nsec)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
@@ -83,9 +89,28 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
 
             key = (
                 stat.match['in_port'], stat.match['eth_dst'],
-                stat.instructions[0].actions[0].port)
-            value = (stat.packet_count, stat.byte_count)
+                stat.instructions[0].actions[0].port,)
+            value = (
+                stat.packet_count, stat.byte_count,
+                stat.duration_sec, stat.duration_nsec)
             self._save_stats(self.flow_stats, key, value, 5)
+
+            # Get flow's speed.
+            pre = 0
+            period = self.sleep
+            tmp = self.flow_stats[key]
+            if len(tmp) > 1:
+                pre = tmp[-2][1]
+                period = self._get_period(
+                    tmp[-1][2], tmp[-1][3],
+                    tmp[-2][2], tmp[-2][3])
+                # print "flow period: ", period
+
+            speed = self._get_speed(
+                self.flow_stats[key][-1][1], pre, period)
+
+            self._save_stats(self.flow_speed, key, speed, 5)
+            print '\n Flow Speed:\n', self.flow_speed
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
@@ -104,10 +129,24 @@ class SimpleMonitor(simple_switch_13.SimpleSwitch13):
             #                  stat.tx_packets, stat.tx_bytes, stat.tx_errors)
 
             key = (ev.msg.datapath.id, stat.port_no)
-            value = (stat.rx_packets, stat.rx_bytes, stat.rx_errors)
+            value = (
+                stat.rx_packets, stat.rx_bytes, stat.rx_errors,
+                stat.duration_sec, stat.duration_nsec)
+
             self._save_stats(self.port_stats, key, value, 5)
-            # TODO get speed
+
+            # Get port speed.
+            pre = 0
+            period = self.sleep
+            tmp = self.port_stats[key]
+            if len(tmp) > 1:
+                pre = tmp[-2][1]
+                period = self._get_period(
+                    tmp[-1][3], tmp[-1][4],
+                    tmp[-2][3], tmp[-2][4])
+
             speed = self._get_speed(
-                self.port_stats[key][-1][0],
-                self.port_stats[key][-2][0], self.sleep)
-            print 'speed:%d\n' % speed
+                self.port_stats[key][-1][1], pre, period)
+
+            self._save_stats(self.port_speed, key, speed, 5)
+            print '\n Speed:\n', self.port_speed
