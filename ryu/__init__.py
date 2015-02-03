@@ -14,5 +14,5 @@
 # limitations under the License.
 
 
-version_info = (3, 17)
+version_info = (3, 18)
 version = '.'.join(map(str, version_info))
