@@ -12,6 +12,9 @@ from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_INCOMPLETE
 
 LOG = logging.getLogger('bgpspeaker.operator.commands.show.neighbor')
 
@@ -101,6 +104,14 @@ class SentRoutes(Command):
             path = v.get('path')
             aspath = path.get('as_path')
             origin = path.get('origin')
+
+            if origin == BGP_ATTR_ORIGIN_IGP:
+                origin = 'i'
+            elif origin == BGP_ATTR_ORIGIN_EGP:
+                origin = 'e'
+            elif origin == BGP_ATTR_ORIGIN_INCOMPLETE:
+                origin = '?'
+
             if origin:
                 aspath = aspath + [origin]
 
