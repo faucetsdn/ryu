@@ -384,8 +384,8 @@ class Activity(object):
 
                 count += 1
             else:
-                self._spawn(name, self._listen_socket_loop,
-                            listen_sockets[sa], conn_handle)
+                server = self._spawn(name, self._listen_socket_loop,
+                                     listen_sockets[sa], conn_handle)
         return server, listen_sockets
 
     def _connect_tcp(self, peer_addr, conn_handler, time_out=None,
