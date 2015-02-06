@@ -1177,7 +1177,7 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('pbb_isid', 37, type_desc.Int3),
     oxm_fields.OpenFlowBasic('tunnel_id', 38, type_desc.Int8),
     oxm_fields.OpenFlowBasic('ipv6_exthdr', 39, type_desc.Int2),
-    oxm_fields.ONFExperimenter('pbb_uca', 2560, type_desc.Int1),
+    oxm_fields.OldONFExperimenter('pbb_uca', 2560, type_desc.Int1),
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
 

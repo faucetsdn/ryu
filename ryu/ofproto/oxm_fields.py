@@ -95,11 +95,12 @@ class _Experimenter(_OxmClass):
         self.num = (self.experimenter_id, self.oxm_type)
 
 
-class ONFExperimenter(_Experimenter):
+class OldONFExperimenter(_Experimenter):
+    # This class is for the old version of EXT-256
     experimenter_id = ofproto_common.ONF_EXPERIMENTER_ID
 
     def __init__(self, name, num, type_):
-        super(ONFExperimenter, self).__init__(name, 0, type_)
+        super(OldONFExperimenter, self).__init__(name, 0, type_)
         self.num = (self.experimenter_id, num)
         self.exp_type = num
 
@@ -264,7 +265,8 @@ def _parse_header_impl(mod, buf, offset):
                                         offset + hdr_len)
         exp_hdr_len = struct.calcsize(exp_hdr_pack_str)
         assert exp_hdr_len == 4
-        if exp_id == ofproto_common.ONF_EXPERIMENTER_ID:
+        oxm_field = oxm_type & 0x7f
+        if exp_id == ofproto_common.ONF_EXPERIMENTER_ID and oxm_field == 0:
             # XXX
             # This block implements EXT-256 style experimenter OXM.
             onf_exp_type_pack_str = '!H'
@@ -319,7 +321,7 @@ def _make_exp_hdr(mod, n):
     if isinstance(desc, _Experimenter):  # XXX
         (exp_id, exp_type) = n
         assert desc.experimenter_id == exp_id
-        if isinstance(desc, ONFExperimenter):  # XXX
+        if isinstance(desc, OldONFExperimenter):  # XXX
             # XXX
             # This block implements EXT-256 style experimenter OXM.
             exp_hdr_pack_str = '!IH'  # experimenter_id, exp_type
