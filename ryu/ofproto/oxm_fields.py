@@ -95,6 +95,10 @@ class _Experimenter(_OxmClass):
         self.num = (self.experimenter_id, self.oxm_type)
 
 
+class ONFExperimenter(_Experimenter):
+    experimenter_id = ofproto_common.ONF_EXPERIMENTER_ID
+
+
 class OldONFExperimenter(_Experimenter):
     # This class is for the old version of EXT-256
     experimenter_id = ofproto_common.ONF_EXPERIMENTER_ID
