@@ -491,6 +491,29 @@ class BGPSpeaker(object):
         show['format'] = format
         return call('operator.show', **show)
 
+    def neighbor_get(self, routetype, address, format='json'):
+        """ This method returns the BGP adj-RIB-in information in a json
+        format.
+
+        ``routetype`` This parameter is necessary for only received-routes
+        and sent-routes.
+
+          received-routes : paths received and not withdrawn by given peer
+
+          sent-routes : paths sent and not withdrawn to given peer
+
+        ``address`` specifies the IP address of the peer. It must be
+        the string representation of an IP address.
+
+        """
+        show = {}
+        if routetype == 'sent-routes' or routetype == 'received-routes':
+            show['params'] = ['neighbor', routetype, address, 'all']
+        else:
+            show['params'] = ['neighbor', 'received-routes', address, 'all']
+        show['format'] = format
+        return call('operator.show', **show)
+
     def _set_filter(self, filter_type, address, filters):
         assert filter_type in ('in', 'out'),\
             'filter type must be \'in\' or \'out\''
