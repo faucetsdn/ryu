@@ -24,7 +24,7 @@
 #   value and mask are on-wire bytes.
 #   mask is None if no mask.
 
-# There are three type of OXM/NXM headers.
+# There are two types of OXM/NXM headers.
 #
 # 32-bit OXM/NXM header
 # +-------------------------------+-------------+-+---------------+
@@ -37,18 +37,28 @@
 # +-------------------------------+-------------+-+---------------+
 # | experimenter ID                                               |
 # +---------------------------------------------------------------+
+
+# NOTE: EXT-256 had a variation of experimenter OXM header.
+# It has been rectified since then.  Currently this implementation
+# supports only the old version.
 #
-# ONF EXT-256 style experimenter OXM header
+# ONF EXT-256 (old, exp_type = 2560)
 # +-------------------------------+-------------+-+---------------+
 # | class (OFPXMC_EXPERIMENTER)   | ?????       |m| length        |
 # +-------------------------------+-------------+-+---------------+
 # | experimenter ID (ONF_EXPERIMENTER_ID)                         |
-# +-------------------------------+-------------------------------+
-# | exp_type                      |
-# +-------------------------------+
+# +-------------------------------+---------------+---------------+
+# | exp_type (PBB_UCA=2560)       | pbb_uca       |
+# +-------------------------------+---------------+
 #
-# Note: According to blp@nicira, EXT-256 will be rectified.
-# https://www.mail-archive.com/dev%40openvswitch.org/msg37644.html
+# ONF EXT-256 (new, oxm_field = 41)
+# +-------------------------------+-------------+-+---------------+
+# | class (OFPXMC_EXPERIMENTER)   | PBB_UCA=41  |m| length        |
+# +-------------------------------+-------------+-+---------------+
+# | experimenter ID (ONF_EXPERIMENTER_ID)                         |
+# +-------------------------------+---------------+---------------+
+# | reserved, should be zero      | pbb_uca       |
+# +-------------------------------+---------------+
 
 import itertools
 import struct
