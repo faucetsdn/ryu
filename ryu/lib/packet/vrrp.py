@@ -70,14 +70,14 @@ VRRP v3 packet format
 import struct
 
 from ryu.lib.packet import ethernet
+from ryu.lib.packet import ether_types as ether
+from ryu.lib.packet import in_proto as inet
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import ipv6
 from ryu.lib.packet import packet
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import packet_utils
 from ryu.lib.packet import vlan
-from ryu.ofproto import ether
-from ryu.ofproto import inet
 from ryu.lib import addrconv
 
 

@@ -15,8 +15,8 @@
 
 import struct
 
-from ryu.ofproto import ether
 from ryu.lib import addrconv
+from . import ether_types as ether
 from . import packet_base
 
 ARP_HW_TYPE_ETHERNET = 1  # ethernet hardware type

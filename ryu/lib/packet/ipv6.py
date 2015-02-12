@@ -21,7 +21,7 @@ from . import icmpv6
 from . import tcp
 from . import udp
 from . import sctp
-from ryu.ofproto import inet
+from . import in_proto as inet
 from ryu.lib import addrconv
 from ryu.lib import stringify
 

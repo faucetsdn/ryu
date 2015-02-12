@@ -17,7 +17,7 @@ import struct
 from . import packet_base
 from . import vlan
 from . import mpls
-from ryu.ofproto import ether
+from . import ether_types as ether
 from ryu.lib import addrconv
 
 

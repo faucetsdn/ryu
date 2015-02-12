@@ -25,7 +25,7 @@ from . import slow
 from . import llc
 from . import pbb
 from . import cfm
-from ryu.ofproto import ether
+from . import ether_types as ether
 
 
 @six.add_metaclass(abc.ABCMeta)

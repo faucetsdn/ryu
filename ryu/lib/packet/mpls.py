@@ -18,7 +18,7 @@ import socket
 from . import packet_base
 from . import packet_utils
 from . import ipv4
-from ryu.ofproto import ether
+from . import ether_types as ether
 
 
 class mpls(packet_base.PacketBase):

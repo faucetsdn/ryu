@@ -23,7 +23,7 @@ from . import udp
 from . import tcp
 from . import sctp
 from . import ospf
-from ryu.ofproto import inet
+from . import in_proto as inet
 from ryu.lib import addrconv
 
 

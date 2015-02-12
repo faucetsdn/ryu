@@ -15,7 +15,6 @@
 
 import struct
 from ryu.lib.packet import packet_base
-from ryu.ofproto import ether
 
 
 class itag(packet_base.PacketBase):
