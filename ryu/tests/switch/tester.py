@@ -51,6 +51,7 @@ from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4
+from ryu.ofproto import ofproto_v1_5
 
 
 """ Required test network:
@@ -287,13 +288,15 @@ class OfTester(app_manager.RyuApp):
         def __get_version(opt):
             vers = {
                 'openflow13': ofproto_v1_3.OFP_VERSION,
-                'openflow14': ofproto_v1_4.OFP_VERSION
+                'openflow14': ofproto_v1_4.OFP_VERSION,
+                'openflow15': ofproto_v1_5.OFP_VERSION
             }
             ver = vers.get(opt.lower())
             if ver is None:
                 self.logger.error(
                     '%s is not supported. '
-                    'Supported versions are openflow13 and openflow14.',
+                    'Supported versions are openflow13, '
+                    'openflow14 and openflow15.',
                     opt)
                 self._test_end()
             return ver
@@ -360,7 +363,8 @@ class OfTester(app_manager.RyuApp):
     def _register_sw(self, dp):
         vers = {
             ofproto_v1_3.OFP_VERSION: 'openflow13',
-            ofproto_v1_4.OFP_VERSION: 'openflow14'
+            ofproto_v1_4.OFP_VERSION: 'openflow14',
+            ofproto_v1_5.OFP_VERSION: 'openflow15'
         }
         if dp.id == self.target_dpid:
             if dp.ofproto.OFP_VERSION != OfTester.target_ver:

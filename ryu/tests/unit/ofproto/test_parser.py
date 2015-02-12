@@ -26,6 +26,7 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
+from ryu.ofproto import ofproto_v1_5
 import json
 
 
@@ -116,6 +117,36 @@ implemented = {
         ofproto_v1_4.OFPT_REQUESTFORWARD: (False, True),
         ofproto_v1_4.OFPT_BUNDLE_CONTROL: (False, True),
         ofproto_v1_4.OFPT_BUNDLE_ADD_MESSAGE: (False, True),
+    },
+    6: {
+        ofproto_v1_5.OFPT_HELLO: (True, False),
+        ofproto_v1_5.OFPT_FEATURES_REQUEST: (False, True),
+        ofproto_v1_5.OFPT_FEATURES_REPLY: (True, False),
+        ofproto_v1_5.OFPT_GET_CONFIG_REQUEST: (False, True),
+        ofproto_v1_5.OFPT_GET_CONFIG_REPLY: (True, False),
+        ofproto_v1_5.OFPT_SET_CONFIG: (False, True),
+        ofproto_v1_5.OFPT_PACKET_IN: (True, False),
+        ofproto_v1_5.OFPT_FLOW_REMOVED: (True, False),
+        ofproto_v1_5.OFPT_PORT_STATUS: (True, False),
+        ofproto_v1_5.OFPT_PACKET_OUT: (False, True),
+        ofproto_v1_5.OFPT_FLOW_MOD: (False, True),
+        ofproto_v1_5.OFPT_GROUP_MOD: (False, True),
+        ofproto_v1_5.OFPT_PORT_MOD: (False, True),
+        ofproto_v1_5.OFPT_METER_MOD: (False, True),
+        ofproto_v1_5.OFPT_TABLE_MOD: (False, True),
+        ofproto_v1_5.OFPT_MULTIPART_REQUEST: (False, True),
+        ofproto_v1_5.OFPT_MULTIPART_REPLY: (True, False),
+        ofproto_v1_5.OFPT_BARRIER_REQUEST: (False, True),
+        ofproto_v1_5.OFPT_ROLE_REQUEST: (False, True),
+        ofproto_v1_5.OFPT_ROLE_REPLY: (True, False),
+        ofproto_v1_5.OFPT_GET_ASYNC_REQUEST: (False, True),
+        ofproto_v1_5.OFPT_GET_ASYNC_REPLY: (True, False),
+        ofproto_v1_5.OFPT_SET_ASYNC: (False, True),
+        ofproto_v1_5.OFPT_ROLE_STATUS: (True, False),
+        ofproto_v1_5.OFPT_TABLE_STATUS: (True, False),
+        ofproto_v1_5.OFPT_REQUESTFORWARD: (False, True),
+        ofproto_v1_5.OFPT_BUNDLE_CONTROL: (False, True),
+        ofproto_v1_5.OFPT_BUNDLE_ADD_MESSAGE: (False, True),
     },
 }
 

@@ -22,6 +22,8 @@ from . import ofproto_v1_3
 from . import ofproto_v1_3_parser
 from . import ofproto_v1_4
 from . import ofproto_v1_4_parser
+from . import ofproto_v1_5
+from . import ofproto_v1_5_parser
 
 
 _versions = {
@@ -29,6 +31,7 @@ _versions = {
     ofproto_v1_2.OFP_VERSION: (ofproto_v1_2, ofproto_v1_2_parser),
     ofproto_v1_3.OFP_VERSION: (ofproto_v1_3, ofproto_v1_3_parser),
     ofproto_v1_4.OFP_VERSION: (ofproto_v1_4, ofproto_v1_4_parser),
+    ofproto_v1_5.OFP_VERSION: (ofproto_v1_5, ofproto_v1_5_parser),
 }
 
 

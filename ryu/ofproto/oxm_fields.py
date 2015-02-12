@@ -70,6 +70,7 @@ from ryu.lib import type_desc
 OFPXMC_NXM_0 = 0  # Nicira Extended Match (NXM_OF_)
 OFPXMC_NXM_1 = 1  # Nicira Extended Match (NXM_NX_)
 OFPXMC_OPENFLOW_BASIC = 0x8000
+OFPXMC_PACKET_REGS = 0x8001
 OFPXMC_EXPERIMENTER = 0xffff
 
 
@@ -85,6 +86,10 @@ class _OxmClass(object):
 
 class OpenFlowBasic(_OxmClass):
     _class = OFPXMC_OPENFLOW_BASIC
+
+
+class PacketRegs(_OxmClass):
+    _class = OFPXMC_PACKET_REGS
 
 
 class _Experimenter(_OxmClass):
