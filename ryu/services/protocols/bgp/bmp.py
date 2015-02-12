@@ -173,18 +173,8 @@ class BMPClient(Activity):
                 new_pathattr.append(mpunreach_attr)
         else:
             if isinstance(path, Ipv4Path):
-                nexthop_attr = BGPPathAttributeNextHop(path.nexthop)
-                new_pathattr.append(nexthop_attr)
                 return BGPUpdate(nlri=[path.nlri],
                                  path_attributes=new_pathattr)
-            else:
-                mpnlri_attr = BGPPathAttributeMpReachNLRI(
-                    path.route_family.afi,
-                    path.route_family.safi,
-                    path.nexthop,
-                    [path.nlri]
-                )
-                new_pathattr.append(mpnlri_attr)
 
         return BGPUpdate(path_attributes=new_pathattr)
 
