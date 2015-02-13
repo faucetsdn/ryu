@@ -154,7 +154,7 @@ class RyuApp(object):
         self.event_handlers = {}        # ev_cls -> handlers:list
         self.observers = {}     # ev_cls -> observer-name -> states:set
         self.threads = []
-        self.events = hub.Queue(128)
+        self.events = hub.Queue(-1)
         if hasattr(self.__class__, 'LOGGER_NAME'):
             self.logger = logging.getLogger(self.__class__.LOGGER_NAME)
         else:
