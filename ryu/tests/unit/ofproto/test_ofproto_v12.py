@@ -630,7 +630,7 @@ class TestOfprot12(unittest.TestCase):
     def test_enum_ofp_switch_config_failed_code(self):
         eq_(OFPSCFC_BAD_FLAGS, 0)
         eq_(OFPSCFC_BAD_LEN, 1)
-        eq_(OFPQCFC_EPERM, 2)
+        eq_(OFPSCFC_EPERM, 2)
 
     def test_enum_ofp_role_request_failed_code(self):
         eq_(OFPRRFC_STALE, 0)

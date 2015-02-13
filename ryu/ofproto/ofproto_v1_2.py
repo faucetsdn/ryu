@@ -738,7 +738,13 @@ OFPQOFC_EPERM = 2           # Permissions error.
 # enum ofp_switch_config_failed_code
 OFPSCFC_BAD_FLAGS = 0       # Specified flags is invalid.
 OFPSCFC_BAD_LEN = 1         # Specified len is invalid.
-OFPQCFC_EPERM = 2           # Permissions error.
+OFPQCFC_EPERM = 2           # Permissions error (depracated).
+                            # New or updated Ryu applications shall use
+                            # OFPSCFC_EPERM. The variable name is a typo of
+                            # in specifications before v1.3.1 (EXT-208).
+OFPSCFC_EPERM = 2           # Permissions error.
+                            # Ported back to ofproto_v1_2 for consistency with
+                            # later OF specs (EXT-208).
 
 # enum ofp_role_request_failed_code
 OFPRRFC_STALE = 0           # Stale Message: old generation_id.

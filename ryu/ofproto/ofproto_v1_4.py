@@ -850,7 +850,7 @@ OFPQOFC_EPERM = 2           # Permissions error.
 # enum ofp_switch_config_failed_code
 OFPSCFC_BAD_FLAGS = 0       # Specified flags is invalid.
 OFPSCFC_BAD_LEN = 1         # Specified len is invalid.
-OFPQCFC_EPERM = 2           # Permissions error.
+OFPSCFC_EPERM = 2           # Permissions error.
 
 # enum ofp_role_request_failed_code
 OFPRRFC_STALE = 0           # Stale Message: old generation_id.

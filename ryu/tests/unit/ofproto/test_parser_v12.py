@@ -742,7 +742,7 @@ class TestOFPErrorMsg(unittest.TestCase):
 
     def test_parser_p10_2(self):
         type_ = ofproto.OFPET_SWITCH_CONFIG_FAILED
-        code = ofproto.OFPQCFC_EPERM
+        code = ofproto.OFPSCFC_EPERM
         data = 'Error Message.'
         self._test_parser(type_, code, data)
 
@@ -1196,7 +1196,7 @@ class TestOFPErrorMsg(unittest.TestCase):
 
     def test_serialize_p10_2(self):
         self._test_serialize_p(ofproto.OFPET_SWITCH_CONFIG_FAILED,
-                               ofproto.OFPQCFC_EPERM)
+                               ofproto.OFPSCFC_EPERM)
 
     def test_serialize_p11_0(self):
         self._test_serialize_p(ofproto.OFPET_ROLE_REQUEST_FAILED,
