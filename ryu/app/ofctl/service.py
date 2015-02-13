@@ -91,6 +91,13 @@ class OfctlService(app_manager.RyuApp):
             info = self._switches[id]
         except KeyError:
             return
+        # make sure no more msg can be inserted
+        (xids, info.xids) = (info.xids, None)
+        for xid, req in xids.items():
+            if req.reply_cls is not None:
+                self._unobserve_msg(req.reply_cls)
+            rep = event.Reply(exception=exception.OFDead())
+            self.reply_to_request(req, rep)
         if info.datapath is datapath:
             self.logger.debug('forget info %s' % (info,))
             self._switches.pop(id)
@@ -107,20 +114,27 @@ class OfctlService(app_manager.RyuApp):
         rep = event.Reply(result=datapath)
         self.reply_to_request(req, rep)
 
-    @set_ev_cls(event.SendMsgRequest, MAIN_DISPATCHER)
+    @set_ev_cls(event.SendMsgRequest, [])
     def _handle_send_msg(self, req):
         if req.reply_cls is not None:
             self._observe_msg(req.reply_cls)
 
         msg = req.msg
         datapath = msg.datapath
+        si = self._switches.get(datapath.id, None)
+        if (si is None or
+                datapath.state not in [CONFIG_DISPATCHER, MAIN_DISPATCHER] or
+                si.datapath != datapath):
+            rep = event.Reply(exception=exception.OFDead())
+            self.reply_to_request(req, rep)
+            return
+
         datapath.set_xid(msg)
         xid = msg.xid
         barrier = datapath.ofproto_parser.OFPBarrierRequest(datapath)
         datapath.set_xid(barrier)
         barrier_xid = barrier.xid
 
-        si = self._switches[datapath.id]
         assert xid not in si.results
         assert xid not in si.xids
         assert barrier_xid not in si.barriers

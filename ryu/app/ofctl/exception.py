@@ -31,6 +31,15 @@ class UnexpectedMultiReply(_ExceptionBase):
     message = 'Unexpected Multi replies %(result)s'
 
 
+class OFDead(_ExceptionBase):
+    """Connection to switch is closed."""
+
+    message = 'OpenFlow connection closed'
+
+    def __init__(self):
+        super(OFDead, self).__init__(result=None)
+
+
 class OFError(_ExceptionBase):
     """OFPErrorMsg is received."""
 
