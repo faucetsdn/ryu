@@ -29,6 +29,7 @@ from ryu.ofproto import ether
 from ryu.ofproto.ofproto_parser import MsgBase
 from ryu import utils
 from ryu.lib import addrconv
+from ryu.lib import pack_utils
 
 LOG = logging.getLogger('test_ofproto_v12')
 
@@ -6673,12 +6674,11 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_parse_unknown_field(self):
         buf = bytearray()
-        ofproto_parser.msg_pack_into('!HH', buf, 0, ofproto.OFPMT_OXM,
-                                     4 + 6)
+        pack_utils.msg_pack_into('!HH', buf, 0, ofproto.OFPMT_OXM, 4 + 6)
         header = ofproto.oxm_tlv_header(36, 2)
-        ofproto_parser.msg_pack_into('!IH', buf, 4, header, 1)
+        pack_utils.msg_pack_into('!IH', buf, 4, header, 1)
         header = ofproto.OXM_OF_ETH_TYPE
-        ofproto_v1_2_parser.msg_pack_into('!IH', buf, 10, header, 1)
+        pack_utils.msg_pack_into('!IH', buf, 10, header, 1)
 
         match = OFPMatch()
         res = match.parser(str(buf), 0)

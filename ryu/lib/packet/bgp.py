@@ -29,13 +29,13 @@ import copy
 import netaddr
 import numbers
 
-from ryu.ofproto.ofproto_parser import msg_pack_into
 from ryu.lib.stringify import StringifyMixin
 from ryu.lib.packet import afi as addr_family
 from ryu.lib.packet import safi as subaddr_family
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
+from ryu.lib.pack_utils import msg_pack_into
 
 BGP_MSG_OPEN = 1
 BGP_MSG_UPDATE = 2

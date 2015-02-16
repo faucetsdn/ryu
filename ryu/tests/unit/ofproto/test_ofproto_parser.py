@@ -223,43 +223,6 @@ class TestMsgBase(unittest.TestCase):
         ok_(self._test_serialize())
 
 
-class TestMsgPackInto(unittest.TestCase):
-    """ Test case for ofproto_parser.msg_pack_into
-    """
-
-    def _test_msg_pack_into(self, offset_type='e'):
-        fmt = '!HH'
-        len_ = struct.calcsize(fmt)
-        buf = bytearray(len_)
-        offset = len_
-        arg1 = 1
-        arg2 = 2
-
-        if offset_type == 'l':
-            offset += 1
-        elif offset_type == 'g':
-            offset -= 1
-
-        ofproto_parser.msg_pack_into(fmt, buf, offset, arg1, arg2)
-
-        check_offset = len(buf) - len_
-        res = struct.unpack_from(fmt, buffer(buf), check_offset)
-
-        eq_(arg1, res[0])
-        eq_(arg2, res[1])
-
-        return True
-
-    def test_msg_pack_into(self):
-        ok_(self._test_msg_pack_into())
-
-    def test_msg_pack_into_less(self):
-        ok_(self._test_msg_pack_into('l'))
-
-    def test_msg_pack_into_greater(self):
-        ok_(self._test_msg_pack_into('g'))
-
-
 class TestMsgStrAttr(unittest.TestCase):
     """ Test case for ofproto_parser.msg_str_attr
     """

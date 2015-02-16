@@ -63,7 +63,7 @@
 import itertools
 import struct
 import ofproto_common
-from ofproto_parser import msg_pack_into
+from ryu.lib.pack_utils import msg_pack_into
 from ryu.lib import type_desc
 
 

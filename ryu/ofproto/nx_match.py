@@ -20,7 +20,7 @@ import itertools
 
 from ryu import exception
 from ryu.lib import mac
-from . import ofproto_parser
+from ryu.lib.pack_utils import msg_pack_into
 from . import ofproto_v1_0
 from . import inet
 
@@ -440,7 +440,7 @@ class MFField(object):
         return cls(header, value, mask)
 
     def _put(self, buf, offset, value):
-        ofproto_parser.msg_pack_into(self.pack_str, buf, offset, value)
+        msg_pack_into(self.pack_str, buf, offset, value)
         return self.n_bytes
 
     def putw(self, buf, offset, value, mask):
@@ -459,8 +459,7 @@ class MFField(object):
             return self.putw(buf, offset, value, mask)
 
     def _putv6(self, buf, offset, value):
-        ofproto_parser.msg_pack_into(self.pack_str, buf, offset,
-                                     *value)
+        msg_pack_into(self.pack_str, buf, offset, *value)
         return self.n_bytes
 
     def putv6(self, buf, offset, value, mask):
@@ -1092,7 +1091,7 @@ def serialize_nxm_match(rule, buf, offset):
 
     # Pad
     pad_len = round_up(offset) - offset
-    ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset)
+    msg_pack_into("%dx" % pad_len, buf, offset)
 
     # The returned length, the match_len, does not include the pad
     return offset - old_offset
@@ -1146,6 +1145,6 @@ class NXMatch(object):
                  self.hasmask(), self.length()))
 
     def put_header(self, buf, offset):
-        ofproto_parser.msg_pack_into(ofproto_v1_0.NXM_HEADER_PACK_STRING,
-                                     buf, offset, self.header)
+        msg_pack_into(ofproto_v1_0.NXM_HEADER_PACK_STRING,
+                      buf, offset, self.header)
         return struct.calcsize(ofproto_v1_0.NXM_HEADER_PACK_STRING)

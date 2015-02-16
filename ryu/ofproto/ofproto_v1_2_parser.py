@@ -23,8 +23,9 @@ import itertools
 
 from ryu.lib import addrconv
 from ryu.lib import mac
+from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
-from ofproto_parser import StringifyMixin, MsgBase, msg_pack_into, msg_str_attr
+from ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
 from . import ether
 from . import ofproto_parser
 from . import ofproto_v1_2 as ofproto
@@ -1082,7 +1083,7 @@ class OFPInstructionActions(OFPInstruction):
 
         self.len = action_offset - offset
         pad_len = utils.round_up(self.len, 8) - self.len
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, action_offset)
+        msg_pack_into("%dx" % pad_len, buf, action_offset)
         self.len += pad_len
 
         msg_pack_into(ofproto.OFP_INSTRUCTION_ACTIONS_PACK_STR,
@@ -1508,7 +1509,7 @@ class OFPActionSetField(OFPAction):
         self.len = utils.round_up(4 + len_, 8)
         msg_pack_into('!HH', buf, offset, self.type, self.len)
         pad_len = self.len - (4 + len_)
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset + 4 + len_)
+        msg_pack_into("%dx" % pad_len, buf, offset + 4 + len_)
 
     # XXX old api compat
     def serialize_old(self, buf, offset):
@@ -1519,7 +1520,7 @@ class OFPActionSetField(OFPAction):
         msg_pack_into('!HH', buf, offset, self.type, self.len)
         self.field.serialize(buf, offset + 4)
         offset += len_
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, offset)
+        msg_pack_into("%dx" % pad_len, buf, offset)
 
     # XXX old api compat
     def _composed_with_old_api(self):
@@ -3561,7 +3562,7 @@ class OFPMatch(StringifyMixin):
         self.length = length
 
         pad_len = utils.round_up(length, 8) - length
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
+        msg_pack_into("%dx" % pad_len, buf, field_offset)
 
         return length + pad_len
 
@@ -3766,7 +3767,7 @@ class OFPMatch(StringifyMixin):
         msg_pack_into('!HH', buf, offset, ofproto.OFPMT_OXM, length)
 
         pad_len = utils.round_up(length, 8) - length
-        ofproto_parser.msg_pack_into("%dx" % pad_len, buf, field_offset)
+        msg_pack_into("%dx" % pad_len, buf, field_offset)
 
         return length + pad_len
 
@@ -4073,11 +4074,11 @@ class OFPMatchField(StringifyMixin):
             self.put(buf, offset, self.value)
 
     def _put_header(self, buf, offset):
-        ofproto_parser.msg_pack_into('!I', buf, offset, self.header)
+        msg_pack_into('!I', buf, offset, self.header)
         self.length = 4
 
     def _put(self, buf, offset, value):
-        ofproto_parser.msg_pack_into(self.pack_str, buf, offset, value)
+        msg_pack_into(self.pack_str, buf, offset, value)
         self.length += self.n_bytes
 
     def put_w(self, buf, offset, value, mask):
@@ -4090,8 +4091,7 @@ class OFPMatchField(StringifyMixin):
         self._put(buf, offset + self.length, value)
 
     def _putv6(self, buf, offset, value):
-        ofproto_parser.msg_pack_into(self.pack_str, buf, offset,
-                                     *value)
+        msg_pack_into(self.pack_str, buf, offset, *value)
         self.length += self.n_bytes
 
     def putv6(self, buf, offset, value, mask=None):

@@ -212,21 +212,6 @@ class MsgInMsgBase(MsgBase):
                                                   **additional_args)
 
 
-def msg_pack_into(fmt, buf, offset, *args):
-    if len(buf) < offset:
-        buf += bytearray(offset - len(buf))
-
-    if len(buf) == offset:
-        buf += struct.pack(fmt, *args)
-        return
-
-    needed_len = offset + struct.calcsize(fmt)
-    if len(buf) < needed_len:
-        buf += bytearray(needed_len - len(buf))
-
-    struct.pack_into(fmt, buf, offset, *args)
-
-
 def namedtuple(typename, fields, **kwargs):
     class _namedtuple(StringifyMixin,
                       collections.namedtuple(typename, fields, **kwargs)):

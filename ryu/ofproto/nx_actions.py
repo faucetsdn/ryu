@@ -20,7 +20,7 @@ from ryu import utils
 from ryu.lib import type_desc
 from ryu.ofproto import nicira_ext
 from ryu.ofproto import ofproto_common
-from ryu.ofproto.ofproto_parser import msg_pack_into
+from ryu.lib.pack_utils import msg_pack_into
 from ryu.ofproto.ofproto_parser import StringifyMixin
 
 
