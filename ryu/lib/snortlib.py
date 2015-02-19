@@ -17,10 +17,9 @@
 import os
 import logging
 
-from ryu.lib import hub
+from ryu.lib import hub, alert
 from ryu.base import app_manager
 from ryu.controller import event
-import alert
 
 
 BUFSIZE = alert.AlertPkt._ALERTPKT_SIZE
@@ -78,24 +77,41 @@ class SnortLib(app_manager.RyuApp):
 
         self.nwsock = hub.socket.socket(hub.socket.AF_INET,
                                         hub.socket.SOCK_STREAM)
+        self.nwsock.setsockopt(hub.socket.SOL_SOCKET,
+                               hub.socket.SO_REUSEADDR, 1)
         self.nwsock.bind(('0.0.0.0', port))
         self.nwsock.listen(5)
 
-        hub.spawn(self._recv_loop_nw_sock)
+        hub.spawn(self._accept_loop_nw_sock)
 
-    def _recv_loop_nw_sock(self):
+    def _accept_loop_nw_sock(self):
         self.logger.info("Network socket server start listening...")
         while True:
             conn, addr = self.nwsock.accept()
             self.logger.info("Connected with %s", addr[0])
-            data = conn.recv(BUFSIZE, hub.socket.MSG_WAITALL)
+            hub.spawn(self._recv_loop_nw_sock, conn, addr)
 
-            if len(data) == BUFSIZE:
+    def _recv_loop_nw_sock(self, conn, addr):
+        data = str()
+        while True:
+            data += conn.recv(BUFSIZE, hub.socket.MSG_WAITALL)
+
+            if len(data) == 0:
+                self.logger.info("Disconnected from %s", addr[0])
+                break
+            elif len(data) == BUFSIZE:
                 msg = alert.AlertPkt.parser(data)
                 if msg:
                     self.send_event_to_observers(EventAlert(msg))
-            else:
-                self.logger.debug(len(data))
+            elif len(data) > BUFSIZE:
+                self.logger.debug("Over BUFSIZE data received: %d (>%d)",
+                                  len(data), BUFSIZE)
+            elif len(data) < BUFSIZE:
+                self.logger.debug("Short BUFSIZE data received: %d (<%d)",
+                                  len(data), BUFSIZE)
+                continue
+
+            data = str()
 
     def _set_logger(self):
         """change log format."""
