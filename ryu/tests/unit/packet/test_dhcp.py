@@ -205,3 +205,56 @@ class Test_dhcp_offer(unittest.TestCase):
         jsondict = self.dh.to_jsondict()
         dh = dhcp.dhcp.from_jsondict(jsondict['dhcp'])
         eq_(str(self.dh), str(dh))
+
+
+class Test_dhcp_offer_with_hlen_zero(unittest.TestCase):
+
+    op = dhcp.DHCP_BOOT_REPLY
+    chaddr = 'aa:aa:aa:aa:aa:aa'
+    htype = 1
+    hlen = 6
+    hops = 0
+    xid = 1
+    secs = 0
+    flags = 1
+    ciaddr = '192.168.10.10'
+    yiaddr = '192.168.20.20'
+    siaddr = '192.168.30.30'
+    giaddr = '192.168.40.40'
+    sname = 'abc'
+    boot_file = ''
+
+    option_list = [
+        dhcp.option(dhcp.DHCP_MESSAGE_TYPE_OPT, '\x02', 1),
+        dhcp.option(dhcp.DHCP_SUBNET_MASK_OPT, '\xff\xff\xff\x00', 4),
+        dhcp.option(dhcp.DHCP_GATEWAY_ADDR_OPT, '\xc0\xa8\x0a\x09', 4),
+        dhcp.option(dhcp.DHCP_DNS_SERVER_ADDR_OPT, '\xc0\xa8\x0a\x09', 4),
+        dhcp.option(dhcp.DHCP_IP_ADDR_LEASE_TIME_OPT, '\x00\x03\xf4\x80', 4),
+        dhcp.option(dhcp.DHCP_RENEWAL_TIME_OPT, '\x00\x01\xfa\x40', 4),
+        dhcp.option(dhcp.DHCP_REBINDING_TIME_OPT, '\x00\x03\x75\xf0', 4),
+        dhcp.option(dhcp.DHCP_SERVER_IDENTIFIER_OPT, '\xc0\xa8\x0a\x09', 4)]
+    magic_cookie = '99.130.83.99'
+    options = dhcp.options(option_list=option_list, options_len=50,
+                           magic_cookie=magic_cookie)
+
+    dh = dhcp.dhcp(op, chaddr, options, htype=htype, hlen=0,
+                   hops=hops, xid=xid, secs=secs, flags=flags,
+                   ciaddr=ciaddr, yiaddr=yiaddr, siaddr=siaddr,
+                   giaddr=giaddr, sname=sname, boot_file=boot_file)
+
+    def test_init(self):
+        eq_(self.op, self.dh.op)
+        eq_(self.htype, self.dh.htype)
+        eq_(self.hlen, self.dh.hlen)
+        eq_(self.hops, self.dh.hops)
+        eq_(self.xid, self.dh.xid)
+        eq_(self.secs, self.dh.secs)
+        eq_(self.flags, self.dh.flags)
+        eq_(self.ciaddr, self.dh.ciaddr)
+        eq_(self.yiaddr, self.dh.yiaddr)
+        eq_(self.siaddr, self.dh.siaddr)
+        eq_(self.giaddr, self.dh.giaddr)
+        eq_(self.chaddr, self.dh.chaddr)
+        eq_(self.sname, self.dh.sname)
+        eq_(self.boot_file, self.dh.boot_file)
+        eq_(str(self.options), str(self.dh.options))

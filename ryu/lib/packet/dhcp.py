@@ -154,7 +154,7 @@ class dhcp(packet_base.PacketBase):
         self.op = op
         self.htype = htype
         if hlen == 0:
-            self.hlen = len(chaddr)
+            self.hlen = len(addrconv.mac.text_to_bin(chaddr))
         else:
             self.hlen = hlen
         self.hops = hops
