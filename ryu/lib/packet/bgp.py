@@ -276,7 +276,7 @@ class BadMsg(BgpExc):
         self.data = struct.pack('B', msg_type)
 
     def __str__(self):
-        return '<BadMsg %d>' % (self.msg,)
+        return '<BadMsg %d>' % (self.msg_type,)
 
 # ============================================================================
 # OPEN Message Errors
