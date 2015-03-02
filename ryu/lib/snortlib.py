@@ -92,26 +92,21 @@ class SnortLib(app_manager.RyuApp):
             hub.spawn(self._recv_loop_nw_sock, conn, addr)
 
     def _recv_loop_nw_sock(self, conn, addr):
-        data = str()
+        buf = str()
         while True:
-            data += conn.recv(BUFSIZE, hub.socket.MSG_WAITALL)
-
-            if len(data) == 0:
+            ret = conn.recv(BUFSIZE)
+            if len(ret) == 0:
                 self.logger.info("Disconnected from %s", addr[0])
                 break
-            elif len(data) == BUFSIZE:
+
+            buf += ret
+            while len(buf) >= BUFSIZE:
+                # self.logger.debug("Received buffer size: %d", len(buf))
+                data = buf[:BUFSIZE]
                 msg = alert.AlertPkt.parser(data)
                 if msg:
                     self.send_event_to_observers(EventAlert(msg))
-            elif len(data) > BUFSIZE:
-                self.logger.debug("Over BUFSIZE data received: %d (>%d)",
-                                  len(data), BUFSIZE)
-            elif len(data) < BUFSIZE:
-                self.logger.debug("Short BUFSIZE data received: %d (<%d)",
-                                  len(data), BUFSIZE)
-                continue
-
-            data = str()
+                buf = buf[BUFSIZE:]
 
     def _set_logger(self):
         """change log format."""
