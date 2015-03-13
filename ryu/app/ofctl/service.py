@@ -109,18 +109,26 @@ class OfctlService(app_manager.RyuApp):
 
     @set_ev_cls(event.SendMsgRequest, MAIN_DISPATCHER)
     def _handle_send_msg(self, req):
+        msg = req.msg
+        datapath = msg.datapath
+
+        try:
+            si = self._switches[datapath.id]
+        except KeyError:
+            self.logger.error('unknown dpid %s' % (datapath.id,))
+            rep = event.Reply(exception=exception.
+                              InvalidDatapath(result=datapath.id))
+            self.reply_to_request(req, rep)
+            return
+
         if req.reply_cls is not None:
             self._observe_msg(req.reply_cls)
 
-        msg = req.msg
-        datapath = msg.datapath
         datapath.set_xid(msg)
         xid = msg.xid
         barrier = datapath.ofproto_parser.OFPBarrierRequest(datapath)
         datapath.set_xid(barrier)
         barrier_xid = barrier.xid
-
-        si = self._switches[datapath.id]
         assert xid not in si.results
         assert xid not in si.xids
         assert barrier_xid not in si.barriers

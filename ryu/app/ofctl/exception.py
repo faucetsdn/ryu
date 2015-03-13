@@ -35,3 +35,12 @@ class OFError(_ExceptionBase):
     """OFPErrorMsg is received."""
 
     message = 'OpenFlow errors %(result)s'
+
+
+class InvalidDatapath(_ExceptionBase):
+    """Datapath is invalid.
+
+    This can happen when the bridge disconnects.
+    """
+
+    message = 'Datapath Invalid %(result)s'
