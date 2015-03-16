@@ -477,7 +477,7 @@ class BgpProtocol(Protocol, Activity):
                 self._signal_bus.bgp_notification_received(self._peer, msg)
             # If we receive notification message
             LOG.error('Received notification message, hence closing '
-                      'connection %s' % msg)
+                      'connection %s', msg)
             self._socket.close()
             return
 
@@ -503,7 +503,7 @@ class BgpProtocol(Protocol, Activity):
         neg_timer = min(self._holdtime, peer_holdtime)
         if neg_timer < self._holdtime:
             LOG.info('Negotiated hold time (%s) is lower then '
-                     'configured/default (%s).' % (neg_timer, self._holdtime))
+                     'configured/default (%s).', neg_timer, self._holdtime)
         # We use negotiated timer value.
         self._holdtime = neg_timer
         self._keepalive = self._create_timer('Keepalive Timer',
@@ -514,7 +514,7 @@ class BgpProtocol(Protocol, Activity):
         self._expiry = self._create_timer('Holdtime Timer', self._expired)
         self._expiry.start(self._holdtime, now=False)
         LOG.debug('Started keep-alive and expire timer for negotiated hold'
-                  'time %s' % self._holdtime)
+                  'time %s', self._holdtime)
 
     def _expired(self):
         """Hold timer expired event handler.

@@ -358,7 +358,7 @@ class VrfDest(Destination):
         # delete these withdraws.
         if not self._known_path_list:
             LOG.debug('Found %s withdrawals for path(s) that did not get'
-                      ' installed.' % len(self._withdraw_list))
+                      ' installed.', len(self._withdraw_list))
             del (self._withdraw_list[:])
             return
 
@@ -380,13 +380,13 @@ class VrfDest(Destination):
                 # We do no have any match for this withdraw.
             if not match:
                 LOG.debug('No matching path for withdraw found, may be path '
-                          'was not installed into table: %s' %
+                          'was not installed into table: %s',
                           withdraw)
             # If we have partial match.
         if len(matches) != len(self._withdraw_list):
             LOG.debug('Did not find match for some withdrawals. Number of '
-                      'matches(%s), number of withdrawals (%s)' %
-                      (len(matches), len(self._withdraw_list)))
+                      'matches(%s), number of withdrawals (%s)',
+                      len(matches), len(self._withdraw_list))
 
         # Clear matching paths and withdrawals.
         for match in matches:
@@ -416,7 +416,7 @@ class VrfDest(Destination):
             for old_path in old_paths:
                 known_paths.remove(old_path)
                 LOG.debug('Implicit withdrawal of old path, since we have'
-                          ' learned new path from same source: %s' % old_path)
+                          ' learned new path from same source: %s', old_path)
 
     def _validate_path(self, path):
         if not path or not hasattr(path, 'label_list'):

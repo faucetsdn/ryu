@@ -780,7 +780,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 rr_req = BGPRouteRefresh(route_family.afi, route_family.safi)
                 self.enque_outgoing_msg(rr_req)
                 LOG.debug('Enqueued Route Refresh message to '
-                          'peer %s for rf: %s' % (self, route_family))
+                          'peer %s for rf: %s', self, route_family)
 
     def enque_end_of_rib(self, route_family):
         # MP_UNREACH_NLRI Attribute.
@@ -865,7 +865,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     if path.route_family == RF_IPv6_VPN:
                         next_hop = self._ipv4_mapped_ipv6(next_hop)
                     LOG.debug('using %s as a next_hop address instead'
-                              ' of path.nexthop %s' % (next_hop, path.nexthop))
+                              ' of path.nexthop %s', next_hop, path.nexthop)
                 else:
                     next_hop = path.nexthop
 
@@ -1064,8 +1064,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
                 if bind_addr:
                     LOG.debug('%s trying to connect from'
-                              '%s to %s' % (self, bind_addr,
-                                            peer_address))
+                              '%s to %s', self, bind_addr, peer_address)
                 else:
                     LOG.debug('%s trying to connect to %s', self, peer_address)
                 tcp_conn_timeout = self._common_conf.tcp_conn_timeout
@@ -1078,9 +1077,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                                              password=password)
                 except socket.error:
                     self.state.bgp_state = const.BGP_FSM_ACTIVE
-                    LOG.debug('Socket could not be created in time (%s secs),'
-                              ' reason %s' % (tcp_conn_timeout,
-                                              traceback.format_exc()))
+                    if LOG.isEnabledFor(logging.DEBUG):
+                        LOG.debug('Socket could not be created in time'
+                                  ' (%s secs), reason %s', tcp_conn_timeout,
+                                  traceback.format_exc())
                     LOG.info('Will try to reconnect to %s after %s secs: %s',
                              self._neigh_conf.ip_address,
                              self._common_conf.bgp_conn_retry_time,
@@ -1139,8 +1139,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # If existing protocol is already established, we raise exception.
             if self.state.bgp_state != const.BGP_FSM_IDLE:
                 LOG.debug('Currently in %s state, hence will send collision'
-                          ' Notification to close this protocol.'
-                          % self.state.bgp_state)
+                          ' Notification to close this protocol.',
+                          self.state.bgp_state)
                 self._send_collision_err_and_stop(proto)
                 return
 
@@ -1149,8 +1149,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 ('Tried to bind second protocol that is not colliding with '
                  'first/bound protocol')
             LOG.debug('Currently have one protocol in %s state and '
-                      'another protocol in %s state' %
-                      (self._protocol.state, proto.state))
+                      'another protocol in %s state',
+                      self._protocol.state, proto.state)
             # Protocol that is already bound
             first_protocol = self._protocol
             assert ((first_protocol.is_reactive and not proto.is_reactive) or
@@ -1241,7 +1241,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         if not (mp_reach_attr or mp_unreach_attr):
             if not self.is_mpbgp_cap_valid(RF_IPv4_UC):
                 LOG.error('Got UPDATE message with un-available'
-                          ' afi/safi %s' % RF_IPv4_UC)
+                          ' afi/safi %s', RF_IPv4_UC)
             nlri_list = update_msg.nlri
             if len(nlri_list) > 0:
                 # Check for missing well-known mandatory attributes.
@@ -1271,7 +1271,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not self.is_mpbgp_cap_valid(mp_unreach_attr.route_family):
                 LOG.error('Got UPDATE message with un-available afi/safi for'
                           ' MP_UNREACH path attribute (non-negotiated'
-                          ' afi/safi) %s' % mp_unreach_attr.route_family)
+                          ' afi/safi) %s', mp_unreach_attr.route_family)
                 # raise bgp.OptAttrError()
 
         if mp_reach_attr:
@@ -1280,7 +1280,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not self.is_mpbgp_cap_valid(mp_reach_attr.route_family):
                 LOG.error('Got UPDATE message with un-available afi/safi for'
                           ' MP_UNREACH path attribute (non-negotiated'
-                          ' afi/safi) %s' % mp_reach_attr.route_family)
+                          ' afi/safi) %s', mp_reach_attr.route_family)
                 # raise bgp.OptAttrError()
 
             # Check for missing well-known mandatory attributes.
@@ -1302,9 +1302,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if (not mp_reach_attr.next_hop or
                     (mp_reach_attr.next_hop == self.host_bind_ip)):
                 LOG.error('Nexthop of received UPDATE msg. (%s) same as local'
-                          ' interface address %s.' %
-                          (mp_reach_attr.next_hop,
-                           self.host_bind_ip))
+                          ' interface address %s.',
+                          mp_reach_attr.next_hop,
+                          self.host_bind_ip)
                 return False
 
         return True
@@ -1377,7 +1377,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Check if AS_PATH has loops.
         if aspath.has_local_as(self._common_conf.local_as):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
-                      ' UPDATE. %s' % update_msg)
+                      ' UPDATE. %s', update_msg)
             return
 
         next_hop = update_msg.get_path_attr(BGP_ATTR_TYPE_NEXT_HOP).value
@@ -1503,7 +1503,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Check if AS_PATH has loops.
         if aspath.has_local_as(self._common_conf.local_as):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
-                      ' UPDATE. %s' % update_msg)
+                      ' UPDATE. %s', update_msg)
             return
 
         if msg_rf in (RF_IPv4_VPN, RF_IPv6_VPN):
@@ -1513,7 +1513,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Check if we have at-least one RT is of interest to us.
             if not ext_comm_attr:
                 LOG.info('Missing Extended Communities Attribute. '
-                         'Ignoring paths from this UPDATE: %s' % update_msg)
+                         'Ignoring paths from this UPDATE: %s', update_msg)
                 return
 
             msg_rts = ext_comm_attr.rt_list
@@ -1521,7 +1521,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # extract any paths.
             if not msg_rts:
                 LOG.info('Received route with no RTs. Ignoring paths in this'
-                         ' UPDATE: %s' % update_msg)
+                         ' UPDATE: %s', update_msg)
                 return
 
             # If none of the RTs in the message are of interest, we do not
@@ -1530,8 +1530,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             if not interested_rts.intersection(msg_rts):
                 LOG.info('Received route with RT %s that is of no interest to'
                          ' any VRFs or Peers %s.'
-                         ' Ignoring paths from this UPDATE: %s' %
-                         (msg_rts, interested_rts, update_msg))
+                         ' Ignoring paths from this UPDATE: %s',
+                         msg_rts, interested_rts, update_msg)
                 return
 
         next_hop = mpreach_nlri_attr.next_hop
@@ -1745,7 +1745,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Check if peer has asked for route-refresh for af that was advertised
         if not self._protocol.is_route_family_adv(rr_af):
             LOG.info('Peer asked for route - refresh for un - advertised '
-                     'address - family % s' % str(rr_af))
+                     'address - family %s', rr_af)
             return
 
         self._fire_route_refresh(rr_af)
@@ -1802,7 +1802,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Start timer for sending initial updates
         self._rtc_eor_timer.start(const.RTC_EOR_DEFAULT_TIME, now=False)
         LOG.debug('Scheduled sending of initial Non-RTC UPDATEs after:'
-                  ' %s sec' % const.RTC_EOR_DEFAULT_TIME)
+                  ' %s sec', const.RTC_EOR_DEFAULT_TIME)
 
     def _unschedule_sending_init_updates(self):
         """Un-schedules sending of initial updates
@@ -1813,7 +1813,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             - False if timer was already stopped and nothing was done
         """
         LOG.debug('Un-scheduling sending of initial Non-RTC UPDATEs'
-                  ' (init. UPDATEs already sent: %s)' %
+                  ' (init. UPDATEs already sent: %s)',
                   self._sent_init_non_rtc_update)
         if self._rtc_eor_timer:
             self._rtc_eor_timer.stop()
@@ -1866,14 +1866,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # We do not send anything to peer who is not in established state.
         if not self.in_established():
             LOG.debug('Skipping sending path as peer is not in '
-                      'ESTABLISHED state %s' % path)
+                      'ESTABLISHED state %s', path)
             return
 
         # Check if this session is available for given paths afi/safi
         path_rf = path.route_family
         if not self.is_mpbgp_cap_valid(path_rf):
             LOG.debug('Skipping sending path as %s route family is not'
-                      ' available for this session' % path_rf)
+                      ' available for this session', path_rf)
             return
 
         # If RTC capability is available and path afi/saif is other than  RT
@@ -1886,8 +1886,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # peer
             if rtfilter and not path.has_rts_in(rtfilter):
                 LOG.debug('Skipping sending path as rffilter %s and path '
-                          'rts %s have no RT in common' %
-                          (rtfilter, path.get_rts()))
+                          'rts %s have no RT in common',
+                          rtfilter, path.get_rts())
                 return
 
         # Transmit side loop detection: We check if leftmost AS matches
@@ -1946,7 +1946,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # UPDATE to any peers
                 if comm_attr_na:
                     LOG.debug('Path has community attr. NO_ADVERTISE = %s'
-                              '. Hence not advertising to peer' %
+                              '. Hence not advertising to peer',
                               comm_attr_na)
                     return
 
@@ -1962,7 +1962,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 if ((comm_attr_nes or comm_attr_ne) and
                         (self.remote_as != self._core_service.asn)):
                     LOG.debug('Skipping sending UPDATE to peer: %s as per '
-                              'community attribute configuration' % self)
+                              'community attribute configuration', self)
                     return
 
             # Construct OutgoingRoute specific for this peer and put it in

@@ -79,8 +79,8 @@ class BMPStation(app_manager.RyuApp):
                     buf = buf[len_:]
                     self.failed_pkt_count += 1
                     self.logger.error("failed to parse: %s"
-                                      " (total fail count: %d)" %
-                                      (e, self.failed_pkt_count))
+                                      " (total fail count: %d)",
+                                      e, self.failed_pkt_count)
                 else:
                     t = time.strftime("%Y %b %d %H:%M:%S", time.localtime())
                     self.logger.debug("%s | %s | %s\n", t, addr[0], msg)

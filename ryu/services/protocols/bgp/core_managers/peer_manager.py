@@ -256,7 +256,7 @@ class PeerManager(object):
             # UPDATE to any peers
             if comm_attr_na:
                 LOG.debug('New best path has community attr. NO_ADVERTISE = %s'
-                          '. Hence not advertising to any peer' % comm_attr_na)
+                          '. Hence not advertising to any peer', comm_attr_na)
                 return
 
         qualified_peers = self._collect_peers_of_interest(

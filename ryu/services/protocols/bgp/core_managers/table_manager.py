@@ -325,7 +325,7 @@ class TableCoreManager(object):
                     rt_specific_tables.remove(vrf_table)
                 except KeyError:
                     LOG.debug('Did not find table listed as interested '
-                              'for its import RT: %s' % rt)
+                              'for its import RT: %s', rt)
                 if len(rt_specific_tables) == 0:
                     rts_with_no_table.add(rt)
 

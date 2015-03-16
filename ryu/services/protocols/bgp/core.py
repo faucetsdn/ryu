@@ -263,8 +263,8 @@ class CoreService(Factory, Activity):
             # If interested RTs for a peer changes
             if new_rts or old_rts:
                 LOG.debug('RT Filter for peer %s updated: '
-                          'Added RTs %s, Removed Rts %s' %
-                          (peer.ip_address, new_rts, old_rts))
+                          'Added RTs %s, Removed Rts %s',
+                          peer.ip_address, new_rts, old_rts)
                 self._on_update_rt_filter(peer, new_rts, old_rts)
                 # Update to new RT filters
         self._peer_manager.set_peer_to_rtfilter_map(new_peer_to_rtfilter_map)
@@ -437,8 +437,8 @@ class CoreService(Factory, Activity):
         # 2) If this neighbor is not enabled according to configuration.
         if not peer or not peer.enabled:
             LOG.debug('Closed connection %s %s:%s as it is not a recognized'
-                      ' peer.' % ('from' if bgp_proto.is_reactive else 'to',
-                                  peer_addr, peer_port))
+                      ' peer.', 'from' if bgp_proto.is_reactive else 'to',
+                      peer_addr, peer_port)
             # Send connection rejected notification as per RFC
             code = BGP_ERROR_CEASE
             subcode = BGP_ERROR_SUB_CONNECTION_RESET
@@ -446,7 +446,7 @@ class CoreService(Factory, Activity):
         elif bgp_proto.is_reactive and \
                 peer.connect_mode is CONNECT_MODE_ACTIVE:
             LOG.debug('Closed connection from %s:%s as connect_mode is'
-                      ' configured ACTIVE.' % (peer_addr, peer_port))
+                      ' configured ACTIVE.', peer_addr, peer_port)
             # Send connection rejected notification as per RFC
             code = BGP_ERROR_CEASE
             subcode = BGP_ERROR_SUB_CONNECTION_RESET
@@ -454,8 +454,8 @@ class CoreService(Factory, Activity):
         elif not (peer.in_idle() or peer.in_active() or peer.in_connect()):
             LOG.debug('Closing connection to %s:%s as we have connection'
                       ' in state other than IDLE or ACTIVE,'
-                      ' i.e. connection resolution' %
-                      (peer_addr, peer_port))
+                      ' i.e. connection resolution',
+                      peer_addr, peer_port)
             # Send Connection Collision Resolution notification as per RFC.
             code = BGP_ERROR_CEASE
             subcode = BGP_ERROR_SUB_CONNECTION_COLLISION_RESOLUTION

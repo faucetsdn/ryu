@@ -342,7 +342,7 @@ class Activity(object):
             sock, client_address = s.accept()
             client_address, port = self.get_remotename(sock)
             LOG.debug('Connect request received from client for port'
-                      ' %s:%s' % (client_address, port))
+                      ' %s:%s', client_address, port)
             client_name = self.name + '_client@' + client_address
             self._asso_socket_map[client_name] = sock
             self._spawn(client_name, conn_handle, sock)
