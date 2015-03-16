@@ -170,7 +170,7 @@ class RpcSession(Activity):
             # Wait for request/response/notification from peer.
             msg_buff = self._recv()
             if len(msg_buff) == 0:
-                LOG.info('Peer %r disconnected.' % self._socket)
+                LOG.info('Peer %r disconnected.', self._socket)
                 break
             messages = self.feed_and_get_messages(msg_buff)
             for msg in messages:
@@ -186,7 +186,7 @@ class RpcSession(Activity):
                 elif msg[0] == RPC_MSG_NOTIFY:
                     _handle_notification(msg)
                 else:
-                    LOG.error('Invalid message type: %r' % msg)
+                    LOG.error('Invalid message type: %r', msg)
                 self.pause(0)
 
     def _process_outgoing_msg(self, sink_iter):
@@ -362,15 +362,15 @@ def _handle_response(response):
 
 
 def _handle_notification(notification):
-    LOG.debug('Notification from NetworkController<<: %s %s' %
-              (notification[RPC_IDX_NTF_SYM], notification[RPC_IDX_NTF_PARAM]))
+    LOG.debug('Notification from NetworkController<<: %s %s',
+              notification[RPC_IDX_NTF_SYM], notification[RPC_IDX_NTF_PARAM])
     operation, params = notification[1], notification[2]
     return api.base.call(operation, **params[0])
 
 
 def _handle_request(request):
-    LOG.debug('Request from NetworkController<<: %s %s' %
-              (request[RPC_IDX_REQ_SYM], request[RPC_IDX_REQ_PARAM]))
+    LOG.debug('Request from NetworkController<<: %s %s',
+              request[RPC_IDX_REQ_SYM], request[RPC_IDX_REQ_PARAM])
     operation, params = request[2], request[3]
     kwargs = {}
     if len(params) > 0:

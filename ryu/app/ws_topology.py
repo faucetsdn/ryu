@@ -92,7 +92,7 @@ class WebSocketTopology(app_manager.RyuApp):
             try:
                 getattr(rpc_server, func_name)(msg)
             except SocketError:
-                self.logger.debug('WebSocket disconnected: %s' % rpc_client.ws)
+                self.logger.debug('WebSocket disconnected: %s', rpc_client.ws)
                 disconnected_clients.append(rpc_client)
             except InvalidReplyError as e:
                 self.logger.error(e)

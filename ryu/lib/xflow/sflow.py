@@ -82,8 +82,8 @@ class sFlowV5(object):
             pack_str = cls._PACK_STR_IPV6
             min_len = cls._MIN_LEN_V6
         else:
-            LOG.info("Unknown address_type. sFlowV5.address_type=%d"
-                     % address_type)
+            LOG.info("Unknown address_type. sFlowV5.address_type=%d",
+                     address_type)
             return None
 
         (version, address_type, agent_address, sub_agent_id, sequence_number,
@@ -137,8 +137,8 @@ class sFlowV5Sample(object):
             # TODO:
             # sample_format == 3    : Expanded Flow Sample
             # sample_format == 4    : Expanded Counter Sample
-            LOG.info("Unknown format. sFlowV5Sample.sample_format=%d"
-                     % sample_format)
+            LOG.info("Unknown format. sFlowV5Sample.sample_format=%d",
+                     sample_format)
             pack_str = '!%sc' % sample_length
             sample = struct.unpack_from(pack_str, buf, offset)
 
@@ -240,8 +240,8 @@ class sFlowV5FlowRecord(object):
             # flow_data_format == 1010 : Extended MPLS FEC
             # flow_data_format == 1011 : Extended MPLS LVP FEC
             # flow_data_format == 1012 : Extended VLAN tunnel
-            LOG.info("Unknown format. sFlowV5FlowRecord.flow_data_format=%d"
-                     % flow_data_format)
+            LOG.info("Unknown format. sFlowV5FlowRecord.flow_data_format=%d",
+                     flow_data_format)
             pack_str = '!%sc' % flow_data_length
             flow_data = struct.unpack_from(pack_str, buf, offset)
 

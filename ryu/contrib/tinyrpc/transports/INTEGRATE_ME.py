@@ -78,7 +78,7 @@ def rpc_server(socket, protocol, dispatcher):
             log.exception(e)
             continue
 
-        log.debug('Received message %s from %r' % (message[-1], message[0]))
+        log.debug('Received message %s from %r', message[-1], message[0])
 
         # assuming protocol is threadsafe and dispatcher is theadsafe, as long
         # as its immutable
@@ -91,11 +91,11 @@ def rpc_server(socket, protocol, dispatcher):
                 response = e.error_respond()
             else:
                 response = dispatcher.dispatch(request)
-                log.debug('Response okay: %r' % response)
+                log.debug('Response okay: %r', response)
 
             # send reply
             message[-1] = response.serialize()
-            log.debug('Replying %s to %r' % (message[-1], message[0]))
+            log.debug('Replying %s to %r', message[-1], message[0])
             socket.send_multipart(message)
 
         gevent.spawn(handle_client, message)

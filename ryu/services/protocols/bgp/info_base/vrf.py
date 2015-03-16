@@ -64,7 +64,7 @@ class VrfTable(Table):
 
     def init_import_maps(self, import_maps):
         LOG.debug(
-            "Initializing import maps (%s) for %s" % (import_maps, repr(self))
+            "Initializing import maps (%s) for %r", import_maps, self
         )
         del self._import_maps[:]
         importmap_manager = self._core_service.importmap_manager
@@ -306,7 +306,7 @@ class VrfDest(Destination):
             tm.learn_path(gpath)
 
     def _new_best_path(self, best_path):
-        LOG.debug('New best path selected for destination %s' % (self))
+        LOG.debug('New best path selected for destination %s', self)
 
         old_best_path = self._best_path
         assert (best_path != old_best_path)
@@ -335,8 +335,8 @@ class VrfDest(Destination):
             gpath = best_path.clone_to_vpn(self._route_dist)
             tm = self._core_service.table_manager
             tm.learn_path(gpath)
-            LOG.debug('VRF table %s has new best path: %s' %
-                      (self._route_dist, self.best_path))
+            LOG.debug('VRF table %s has new best path: %s',
+                      self._route_dist, self.best_path)
 
     def _remove_withdrawals(self):
         """Removes withdrawn paths.
@@ -348,7 +348,7 @@ class VrfDest(Destination):
         stopped by the same policies.
         """
 
-        LOG.debug('Removing %s withdrawals' % len(self._withdraw_list))
+        LOG.debug('Removing %s withdrawals', len(self._withdraw_list))
 
         # If we have not withdrawals, we have nothing to do.
         if not self._withdraw_list:

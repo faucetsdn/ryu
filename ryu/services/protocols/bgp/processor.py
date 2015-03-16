@@ -365,7 +365,7 @@ def _cmp_by_origin(path1, path2):
         elif origin.value == BGP_ATTR_ORIGIN_INCOMPLETE:
             return 1
         else:
-            LOG.error('Invalid origin value encountered %s.' % origin)
+            LOG.error('Invalid origin value encountered %s.', origin)
             return 0
 
     origin1 = path1.get_pattr(BGP_ATTR_TYPE_ORIGIN)

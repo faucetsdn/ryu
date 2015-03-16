@@ -117,7 +117,7 @@ def to_actions(dp, acts):
                     parser.OFPInstructionWriteMetadata(
                         metadata, metadata_mask))
             else:
-                LOG.error('Unknown action type: %s' % action_type)
+                LOG.error('Unknown action type: %s', action_type)
 
     inst.append(parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
                                              actions))

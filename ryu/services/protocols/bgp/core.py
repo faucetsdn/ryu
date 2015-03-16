@@ -269,8 +269,7 @@ class CoreService(Factory, Activity):
                 # Update to new RT filters
         self._peer_manager.set_peer_to_rtfilter_map(new_peer_to_rtfilter_map)
         self._rt_mgr.peer_to_rtfilter_map = new_peer_to_rtfilter_map
-        LOG.debug('Updated RT filters: %s' %
-                  (str(self._rt_mgr.peer_to_rtfilter_map)))
+        LOG.debug('Updated RT filters: %s', self._rt_mgr.peer_to_rtfilter_map)
         # Update interested RTs i.e. RTs on the path that will be installed
         # into global tables
         self._rt_mgr.update_interested_rts()
@@ -289,8 +288,8 @@ class CoreService(Factory, Activity):
             self._spawn('rt_filter_chg_%s' % peer,
                         self._rt_mgr.on_rt_filter_chg_sync_peer,
                         peer, new_rts, old_rts, table)
-            LOG.debug('RT Filter change handler launched for route_family %s'
-                      % table.route_family)
+            LOG.debug('RT Filter change handler launched for route_family %s',
+                      table.route_family)
 
     def _compute_rtfilter_map(self):
         """Returns neighbor's RT filter (permit/allow filter based on RT).
@@ -471,8 +470,7 @@ class CoreService(Factory, Activity):
         if (host, port) in self.bmpclients:
             bmpclient = self.bmpclients[(host, port)]
             if bmpclient.started:
-                LOG.warn("bmpclient is already running for %s:%s" % (host,
-                                                                     port))
+                LOG.warn("bmpclient is already running for %s:%s", host, port)
                 return False
         bmpclient = BMPClient(self, host, port)
         self.bmpclients[(host, port)] = bmpclient
@@ -481,7 +479,7 @@ class CoreService(Factory, Activity):
 
     def stop_bmp(self, host, port):
         if (host, port) not in self.bmpclients:
-            LOG.warn("no bmpclient is running for %s:%s" % (host, port))
+            LOG.warn("no bmpclient is running for %s:%s", host, port)
             return False
 
         bmpclient = self.bmpclients[(host, port)]

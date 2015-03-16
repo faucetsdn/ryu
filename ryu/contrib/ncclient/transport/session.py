@@ -38,30 +38,30 @@ class Session(Thread):
         self._server_capabilities = None # yet
         self._id = None # session-id
         self._connected = False # to be set/cleared by subclass implementation
-        logger.debug('%r created: client_capabilities=%r' %
-                     (self, self._client_capabilities))
+        logger.debug('%r created: client_capabilities=%r',
+                     self, self._client_capabilities)
 
     def _dispatch_message(self, raw):
         try:
             root = parse_root(raw)
         except Exception as e:
-            logger.error('error parsing dispatch message: %s' % e)
+            logger.error('error parsing dispatch message: %s', e)
             return
         with self._lock:
             listeners = list(self._listeners)
         for l in listeners:
-            logger.debug('dispatching message to %r: %s' % (l, raw))
+            logger.debug('dispatching message to %r: %s', l, raw)
             l.callback(root, raw) # no try-except; fail loudly if you must!
     
     def _dispatch_error(self, err):
         with self._lock:
             listeners = list(self._listeners)
         for l in listeners:
-            logger.debug('dispatching error to %r' % l)
+            logger.debug('dispatching error to %r', l)
             try: # here we can be more considerate with catching exceptions
                 l.errback(err) 
             except Exception as e:
-                logger.warning('error dispatching to %r: %r' % (l, e))
+                logger.warning('error dispatching to %r: %r', l, e)
 
     def _post_connect(self):
         "Greeting stuff"
@@ -88,8 +88,8 @@ class Session(Thread):
             raise error[0]
         #if ':base:1.0' not in self.server_capabilities:
         #    raise MissingCapabilityError(':base:1.0')
-        logger.info('initialized: session-id=%s | server_capabilities=%s' %
-                    (self._id, self._server_capabilities))
+        logger.info('initialized: session-id=%s | server_capabilities=%s',
+                    self._id, self._server_capabilities)
 
     def add_listener(self, listener):
         """Register a listener that will be notified of incoming messages and
@@ -97,7 +97,7 @@ class Session(Thread):
 
         :type listener: :class:`SessionListener`
         """
-        logger.debug('installing listener %r' % listener)
+        logger.debug('installing listener %r', listener)
         if not isinstance(listener, SessionListener):
             raise SessionError("Listener must be a SessionListener type")
         with self._lock:
@@ -109,7 +109,7 @@ class Session(Thread):
 
         :type listener: :class:`SessionListener`
         """
-        logger.debug('discarding listener %r' % listener)
+        logger.debug('discarding listener %r', listener)
         with self._lock:
             self._listeners.discard(listener)
 
@@ -134,7 +134,7 @@ class Session(Thread):
         """Send the supplied *message* (xml string) to NETCONF server."""
         if not self.connected:
             raise TransportError('Not connected to NETCONF server')
-        logger.debug('queueing %s' % message)
+        logger.debug('queueing %s', message)
         self._q.put(message)
 
     ### Properties

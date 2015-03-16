@@ -171,7 +171,7 @@ class RyuBGPSpeaker(RyuApp):
         call('core.start', waiter=waiter, **common_settings)
         waiter.wait()
 
-        LOG.debug('Core started %s' % CORE_MANAGER.started)
+        LOG.debug('Core started %s', CORE_MANAGER.started)
         # Core manager started add configured neighbor and vrfs
         if CORE_MANAGER.started:
             # Add neighbors.
@@ -194,7 +194,7 @@ class RyuBGPSpeaker(RyuApp):
             try:
                 bgp_neighbor[neighbors.IP_ADDRESS] = ip
                 call('neighbor.create', **bgp_neighbor)
-                LOG.debug('Added neighbor %s' % ip)
+                LOG.debug('Added neighbor %s', ip)
             except RuntimeConfigError as re:
                 LOG.error(re)
                 LOG.error(traceback.format_exc())
@@ -211,7 +211,7 @@ class RyuBGPSpeaker(RyuApp):
             try:
                 vrf[vrfs.VRF_NAME] = vrfname
                 call('vrf.create', **vrf)
-                LOG.debug('Added vrf  %s' % str(vrf))
+                LOG.debug('Added vrf  %s', vrf)
             except RuntimeConfigError as e:
                 LOG.error(e)
                 continue
@@ -226,7 +226,7 @@ class RyuBGPSpeaker(RyuApp):
         for prefix in networks:
             try:
                 call('network.add', prefix=prefix)
-                LOG.debug('Added network %s' % str(prefix))
+                LOG.debug('Added network %s', prefix)
             except RuntimeConfigError as e:
                 LOG.error(e)
                 continue

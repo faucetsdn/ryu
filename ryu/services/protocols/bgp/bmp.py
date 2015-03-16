@@ -72,9 +72,9 @@ class BMPClient(Activity):
                                   self._handle_bmp_session)
             except socket.error:
                     self._connect_retry_event.set()
-                    LOG.info('Will try to reconnect to %s after %s secs: %s' %
-                             (self.server_address, self._connect_retry_time,
-                              self._connect_retry_event.is_set()))
+                    LOG.info('Will try to reconnect to %s after %s secs: %s',
+                             self.server_address, self._connect_retry_time,
+                             self._connect_retry_event.is_set())
 
             self.pause(self._connect_retry_time)
 

@@ -115,7 +115,7 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def check_channel_pty_request(self, chan, term, width, height,
                                   pixelwidth, pixelheight, modes):
-        LOG.debug("termtype: %s" % (term, ))
+        LOG.debug("termtype: %s", term)
         self.TERM = term
         return True
 
@@ -161,7 +161,7 @@ Hello, this is Ryu BGP speaker (version %s).
         elif c == 'D':
             self._movcursor(self.curpos - 1)
         else:
-            LOG.error("unknown CSI sequence. do nothing: %c" % c)
+            LOG.error("unknown CSI sequence. do nothing: %c", c)
 
     def _handle_esc_seq(self):
         c = self.chan.recv(1)
@@ -317,7 +317,7 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def _execute_cmd(self, cmds):
         result, cmd = self.root(cmds)
-        LOG.debug("result: %s" % str(result))
+        LOG.debug("result: %s", result)
         self.prompted = False
         self._startnewline()
         output = result.value.replace('\n', '\n\r').rstrip()
@@ -351,7 +351,7 @@ Hello, this is Ryu BGP speaker (version %s).
             if len(c) == 0:
                 break
 
-            LOG.debug("ord:%d, hex:0x%x" % (ord(c), ord(c)))
+            LOG.debug("ord:%d, hex:0x%x", ord(c), ord(c))
             self.promptlen = len(self.PROMPT) if self.prompted else 0
             if c == '?':
                 cmpleter = self.root
@@ -448,9 +448,9 @@ Hello, this is Ryu BGP speaker (version %s).
                     LOG.debug("blank buf. just start a new line.")
                 self._startnewline()
 
-            LOG.debug("curpos: %d, buf: %s, prompted: %s" % (self.curpos,
-                                                             self.buf,
-                                                             self.prompted))
+            LOG.debug("curpos: %d, buf: %s, prompted: %s", self.curpos,
+                                                           self.buf,
+                                                           self.prompted)
 
         LOG.info("session end")
 

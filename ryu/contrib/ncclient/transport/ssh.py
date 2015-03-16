@@ -218,8 +218,8 @@ class SSHSession(Session):
             for cls in (paramiko.RSAKey, paramiko.DSSKey):
                 try:
                     key = cls.from_private_key_file(key_filename, password)
-                    logger.debug("Trying key %s from %s" %
-                              (hexlify(key.get_fingerprint()), key_filename))
+                    logger.debug("Trying key %s from %s",
+                              hexlify(key.get_fingerprint()), key_filename)
                     self._transport.auth_publickey(username, key)
                     return
                 except Exception as e:
@@ -229,7 +229,7 @@ class SSHSession(Session):
         if allow_agent:
             for key in paramiko.Agent().get_keys():
                 try:
-                    logger.debug("Trying SSH agent key %s" %
+                    logger.debug("Trying SSH agent key %s",
                                  hexlify(key.get_fingerprint()))
                     self._transport.auth_publickey(username, key)
                     return
@@ -256,8 +256,8 @@ class SSHSession(Session):
         for cls, filename in keyfiles:
             try:
                 key = cls.from_private_key_file(filename, password)
-                logger.debug("Trying discovered key %s in %s" %
-                          (hexlify(key.get_fingerprint()), filename))
+                logger.debug("Trying discovered key %s in %s",
+                          hexlify(key.get_fingerprint()), filename)
                 self._transport.auth_publickey(username, key)
                 return
             except Exception as e:

@@ -320,7 +320,7 @@ class BgpProtocol(Protocol, Activity):
             # We should get default marker since we are not supporting any
             # authentication.
             if (auth != BgpProtocol.MESSAGE_MARKER):
-                LOG.error('Invalid message marker received: %s' % auth)
+                LOG.error('Invalid message marker received: %s', auth)
                 raise bgp.NotSync()
 
             # Check if we have valid bgp message length.
@@ -372,8 +372,8 @@ class BgpProtocol(Protocol, Activity):
         self._send_with_lock(notification)
         self._signal_bus.bgp_error(self._peer, code, subcode, reason)
         if len(self._localname):
-            LOG.error('Sent notification to %r >> %s' % (self._localname,
-                                                         notification))
+            LOG.error('Sent notification to %r >> %s', self._localname,
+                                                       notification)
         self._socket.close()
 
     def _send_with_lock(self, msg):
@@ -393,12 +393,11 @@ class BgpProtocol(Protocol, Activity):
         self._send_with_lock(msg)
 
         if msg.type == BGP_MSG_NOTIFICATION:
-            LOG.error('Sent notification to %s >> %s' %
-                      (self._remotename, msg))
+            LOG.error('Sent notification to %s >> %s', self._remotename, msg)
 
             self._signal_bus.bgp_notification_sent(self._peer, msg)
         else:
-            LOG.debug('Sent msg to %s >> %s' % (self._remotename, msg))
+            LOG.debug('Sent msg to %s >> %s', self._remotename, msg)
 
     def stop(self):
         Activity.stop(self)
@@ -430,7 +429,7 @@ class BgpProtocol(Protocol, Activity):
         message except for *Open* and *Notification* message. On receiving
         *Notification* message we close connection with peer.
         """
-        LOG.debug('Received msg from %s << %s' % (self._remotename, msg))
+        LOG.debug('Received msg from %s << %s', self._remotename, msg)
 
         # If we receive open message we try to bind to protocol
         if (msg.type == BGP_MSG_OPEN):
@@ -520,7 +519,7 @@ class BgpProtocol(Protocol, Activity):
     def _expired(self):
         """Hold timer expired event handler.
         """
-        LOG.info('Negotiated hold time %s expired.' % self._holdtime)
+        LOG.info('Negotiated hold time %s expired.', self._holdtime)
         code = BGP_ERROR_HOLD_TIMER_EXPIRED
         subcode = BGP_ERROR_SUB_HOLD_TIMER_EXPIRED
         self.send_notification(code, subcode)

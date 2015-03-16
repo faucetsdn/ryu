@@ -138,8 +138,8 @@ class RouteTargetManager(object):
             self.add_rt_nlri(removed_rt, is_withdraw=True)
 
     def on_rt_filter_chg_sync_peer(self, peer, new_rts, old_rts, table):
-        LOG.debug('RT Filter changed for peer %s, new_rts %s, old_rts %s ' %
-                  (peer, new_rts, old_rts))
+        LOG.debug('RT Filter changed for peer %s, new_rts %s, old_rts %s ',
+                  peer, new_rts, old_rts)
         for dest in table.itervalues():
             # If this destination does not have best path, we ignore it
             if not dest.best_path:
@@ -195,8 +195,8 @@ class RouteTargetManager(object):
         # Update current interested RTs for next iteration
         self._global_interested_rts = curr_global_rts
 
-        LOG.debug('Global Interested RT changed, new RTs %s, removed RTs %s' %
-                  (new_global_rts, removed_global_rts))
+        LOG.debug('Global Interested RT changed, new RTs %s, removed RTs %s',
+                  new_global_rts, removed_global_rts)
         tm = self._core_service.table_manager
         tm.on_interesting_rts_change(new_global_rts, removed_global_rts)
 

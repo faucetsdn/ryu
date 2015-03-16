@@ -62,8 +62,8 @@ class PeerManager(object):
 
         Cleans up the paths in global tables that was received from this peer.
         """
-        LOG.debug('Cleaning obsolete paths whose source/version: %s/%s' %
-                  (peer.ip_address, peer.version_num))
+        LOG.debug('Cleaning obsolete paths whose source/version: %s/%s',
+                  peer.ip_address, peer.version_num)
         # Launch clean-up for each global tables.
         self._table_manager.clean_stale_routes(peer)
 
@@ -158,8 +158,8 @@ class PeerManager(object):
         requests are ignored. Raises appropriate error in other cases. If
         `peer_ip` is equal to 'all' makes refresh request to all valid peers.
         """
-        LOG.debug('Route refresh requested for peer %s and route families %s'
-                  % (peer_ip, route_families))
+        LOG.debug('Route refresh requested for peer %s and route families %s',
+                  peer_ip, route_families)
         if not SUPPORTED_GLOBAL_RF.intersection(route_families):
             raise ValueError('Given route family(s) % is not supported.' %
                              route_families)

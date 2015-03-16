@@ -115,7 +115,7 @@ def hex_array(data):
     try:
         return to_hex[type(data)](data)
     except KeyError:
-        LOG.exception('%s is invalid data type' % type(data))
+        LOG.exception('%s is invalid data type', type(data))
         return None
 
 

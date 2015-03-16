@@ -41,14 +41,14 @@ class BMPStation(app_manager.RyuApp):
 
     def start(self):
         super(BMPStation, self).start()
-        self.logger.debug("listening on %s:%s" % (self.server_host,
-                                                  self.server_port))
+        self.logger.debug("listening on %s:%s", self.server_host,
+                                                self.server_port)
 
         return hub.spawn(StreamServer((self.server_host, self.server_port),
                                       self.loop).serve_forever)
 
     def loop(self, sock, addr):
-        self.logger.debug("BMP client connected, ip=%s, port=%s" % addr)
+        self.logger.debug("BMP client connected, ip=%s, port=%s", addr)
         is_active = True
         buf = bytearray()
         required_len = bmp.BMPMessage._HDR_LEN
@@ -62,7 +62,7 @@ class BMPStation(app_manager.RyuApp):
             while len(buf) >= required_len:
                 version, len_, _ = bmp.BMPMessage.parse_header(buf)
                 if version != bmp.VERSION:
-                    self.logger.error("unsupported bmp version: %d" % version)
+                    self.logger.error("unsupported bmp version: %d", version)
                     is_active = False
                     break
 
@@ -83,7 +83,7 @@ class BMPStation(app_manager.RyuApp):
                                       (e, self.failed_pkt_count))
                 else:
                     t = time.strftime("%Y %b %d %H:%M:%S", time.localtime())
-                    self.logger.debug("%s | %s | %s\n" % (t, addr[0], msg))
+                    self.logger.debug("%s | %s | %s\n", t, addr[0], msg)
                     self.output_fd.write("%s | %s | %s\n\n" % (t, addr[0],
                                                                msg))
                     self.output_fd.flush()
@@ -91,5 +91,5 @@ class BMPStation(app_manager.RyuApp):
 
                 required_len = bmp.BMPMessage._HDR_LEN
 
-        self.logger.debug("BMP client disconnected, ip=%s, port=%s" % addr)
+        self.logger.debug("BMP client disconnected, ip=%s, port=%s", addr)
         sock.close()

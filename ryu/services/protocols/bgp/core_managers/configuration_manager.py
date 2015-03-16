@@ -66,8 +66,7 @@ class ConfigurationManager(CommonConfListener, VrfsConfListener,
         # import new rts
         if re_import:
             LOG.debug(
-                "RE-importing prefixes from VPN table to VRF %s"
-                % repr(vrf_table)
+                "RE-importing prefixes from VPN table to VRF %r", vrf_table
             )
             self._table_manager.import_all_vpn_paths_to_vrf(vrf_table)
         else:

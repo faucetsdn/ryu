@@ -186,7 +186,7 @@ class RPCReplyListener(SessionListener): # internal use
                 with self._lock:
                     try:
                         rpc = self._id2rpc[id] # the corresponding rpc
-                        logger.debug("Delivering to %r" % rpc)
+                        logger.debug("Delivering to %r", rpc)
                         rpc.deliver_reply(raw)
                     except KeyError:
                         raise OperationError("Unknown 'message-id': %s", id)
@@ -269,14 +269,14 @@ class RPC(object):
         
         *op* is the operation to be requested as an :class:`~xml.etree.ElementTree.Element`
         """
-        logger.info('Requesting %r' % self.__class__.__name__)
+        logger.info('Requesting %r', self.__class__.__name__)
         req = self._wrap(op)
         self._session.send(req)
         if self._async:
             logger.debug('Async request, returning %r', self)
             return self
         else:
-            logger.debug('Sync request, will wait for timeout=%r' % self._timeout)
+            logger.debug('Sync request, will wait for timeout=%r', self._timeout)
             self._event.wait(self._timeout)
             if self._event.isSet():
                 if self._error:

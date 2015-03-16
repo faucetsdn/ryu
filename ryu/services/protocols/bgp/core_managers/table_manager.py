@@ -91,7 +91,7 @@ class TableCoreManager(object):
                 vpn_clone = best_path.clone_to_vpn(vrf_conf.route_dist,
                                                    for_withdrawal=True)
                 self.learn_path(vpn_clone)
-        LOG.debug('VRF with RD %s marked for removal' % vrf_conf.route_dist)
+        LOG.debug('VRF with RD %s marked for removal', vrf_conf.route_dist)
 
     def import_all_vpn_paths_to_vrf(self, vrf_table, import_rts=None):
         """Imports Vpnv4/6 paths from Global/VPN table into given Vrfv4/6
@@ -302,8 +302,8 @@ class TableCoreManager(object):
                         path.nexthop,
                         gen_lbl=True
                     )
-        LOG.debug('Re-installed NC paths with current policy for table %s.' %
-                  str(vrf_table))
+        LOG.debug('Re-installed NC paths with current policy for table %s.',
+                  vrf_table)
 
     def _remove_links_to_vrf_table(self, vrf_table):
         """Removes any links to given `vrf_table`."""
@@ -361,8 +361,8 @@ class TableCoreManager(object):
             self._tables[table_id] = vrf_table
 
         assert vrf_table is not None
-        LOG.debug('Added new VrfTable with rd: %s and add_fmly: %s' %
-                  (vrf_conf.route_dist, route_family))
+        LOG.debug('Added new VrfTable with rd: %s and add_fmly: %s',
+                  vrf_conf.route_dist, route_family)
 
         import_rts = vrf_conf.import_rts
         # If VRF is configured with import RT, we put this table
@@ -381,8 +381,8 @@ class TableCoreManager(object):
                 table_set = set()
                 self._tables_for_rt[rt_rf_id] = table_set
             table_set.add(vrf_table)
-            LOG.debug('Added VrfTable %s to import RT table list: %s' %
-                      (vrf_table, rt))
+            LOG.debug('Added VrfTable %s to import RT table list: %s',
+                      vrf_table, rt)
 
     def _clean_global_uninteresting_paths(self):
         """Marks paths that do not have any route targets of interest
@@ -398,7 +398,7 @@ class TableCoreManager(object):
         """
         uninteresting_dest_count = 0
         interested_rts = self._rt_mgr.global_interested_rts
-        LOG.debug('Cleaning uninteresting paths. Global interested RTs %s' %
+        LOG.debug('Cleaning uninteresting paths. Global interested RTs %s',
                   interested_rts)
         for route_family in [RF_IPv4_VPN, RF_IPv6_VPN, RF_RTC_UC]:
             # TODO(PH): We currently do not install RT_NLRI paths based on
@@ -409,8 +409,8 @@ class TableCoreManager(object):
             uninteresting_dest_count += \
                 table.clean_uninteresting_paths(interested_rts)
 
-        LOG.debug('Found %s number of destinations had uninteresting paths.' %
-                  str(uninteresting_dest_count))
+        LOG.debug('Found %s number of destinations had uninteresting paths.',
+                  uninteresting_dest_count)
 
     def import_single_vpn_path_to_all_vrfs(self, vpn_path, path_rts=None):
         """Imports *vpnv4_path* to qualifying VRF tables.
@@ -420,11 +420,11 @@ class TableCoreManager(object):
         """
         assert (vpn_path.route_family in
                 (Vpnv4Path.ROUTE_FAMILY, Vpnv6Path.ROUTE_FAMILY))
-        LOG.debug('Importing path %s to qualifying VRFs' % vpn_path)
+        LOG.debug('Importing path %s to qualifying VRFs', vpn_path)
 
         # If this path has no RTs we are done.
         if not path_rts:
-            LOG.info('Encountered a path with no RTs: %s' % vpn_path)
+            LOG.info('Encountered a path with no RTs: %s', vpn_path)
             return
 
         # We match path RTs with all VRFs that are interested in them.
@@ -454,7 +454,7 @@ class TableCoreManager(object):
                             dest_changed(update_vrf_dest)
         else:
             # If we do not have any VRF with import RT that match with path RT
-            LOG.debug('No VRF table found that imports RTs: %s' % path_rts)
+            LOG.debug('No VRF table found that imports RTs: %s', path_rts)
 
     def add_to_vrf(self, route_dist, prefix, next_hop, route_family):
         """Adds `prefix` to VRF identified by `route_dist` with given

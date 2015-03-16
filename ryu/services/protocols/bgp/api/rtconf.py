@@ -88,7 +88,7 @@ def update_neighbor(neigh_ip_address, changes):
 def _update_med(neigh_ip_address, value):
     neigh_conf = _get_neighbor_conf(neigh_ip_address)
     neigh_conf.multi_exit_disc = value
-    LOG.info('MED value for neigh: %s updated to %s' % (neigh_conf, value))
+    LOG.info('MED value for neigh: %s updated to %s', neigh_conf, value)
     return True
 
 
