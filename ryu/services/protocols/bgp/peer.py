@@ -739,7 +739,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             elif isinstance(outgoing_msg, BGPUpdate):
                 self._protocol.send(outgoing_msg)
                 LOG.debug('Update %s>> %s', self._neigh_conf.ip_address,
-                                            outgoing_msg)
+                          outgoing_msg)
                 self.state.incr(PeerCounterNames.SENT_UPDATES)
 
     def request_route_refresh(self, *route_families):

@@ -311,7 +311,8 @@ class VRRPV2StateMaster(VRRPState):
         # In fact this can be happned due to event scheduling
         vrrp_router = self.vrrp_router
         vrrp_router.logger.debug('%s master_down %s %s',
-            self.__class__.__name__, ev.__class__.__name__, vrrp_router.state)
+                                 self.__class__.__name__,
+                                 ev.__class__.__name__, vrrp_router.state)
 
     def _adver(self):
         vrrp_router = self.vrrp_router
@@ -399,7 +400,8 @@ class VRRPV2StateBackup(VRRPState):
         # In fact this can be happned due to event scheduling
         vrrp_router = self.vrrp_router
         vrrp_router.logger.debug('%s adver %s %s',
-            self.__class__.__name__, ev.__class__.__name__, vrrp_router.state)
+                                 self.__class__.__name__,
+                                 ev.__class__.__name__, vrrp_router.state)
 
     def preempt_delay(self, ev):
         self.vrrp_router.logger.warn('%s preempt_delay',
@@ -514,7 +516,8 @@ class VRRPV3StateMaster(VRRPState):
         # In fact this can be happned due to event scheduling
         vrrp_router = self.vrrp_router
         vrrp_router.logger.debug('%s master_down %s %s',
-            self.__class__.__name__, ev.__class__.__name__, vrrp_router.state)
+                                 self.__class__.__name__,
+                                 ev.__class__.__name__, vrrp_router.state)
 
     def _adver(self):
         vrrp_router = self.vrrp_router
@@ -614,7 +617,8 @@ class VRRPV3StateBackup(VRRPState):
         # In fact this can be happned due to event scheduling
         vrrp_router = self.vrrp_router
         vrrp_router.logger.debug('adver %s %s %s',
-            self.__class__.__name__, ev.__class__.__name__, vrrp_router.state)
+                                 self.__class__.__name__,
+                                 ev.__class__.__name__, vrrp_router.state)
 
     def preempt_delay(self, ev):
         self.vrrp_router.logger.warn('%s preempt_delay',

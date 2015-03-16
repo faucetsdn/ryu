@@ -373,7 +373,7 @@ class BgpProtocol(Protocol, Activity):
         self._signal_bus.bgp_error(self._peer, code, subcode, reason)
         if len(self._localname):
             LOG.error('Sent notification to %r >> %s', self._localname,
-                                                       notification)
+                      notification)
         self._socket.close()
 
     def _send_with_lock(self, msg):

@@ -42,7 +42,7 @@ class BMPStation(app_manager.RyuApp):
     def start(self):
         super(BMPStation, self).start()
         self.logger.debug("listening on %s:%s", self.server_host,
-                                                self.server_port)
+                          self.server_port)
 
         return hub.spawn(StreamServer((self.server_host, self.server_port),
                                       self.loop).serve_forever)

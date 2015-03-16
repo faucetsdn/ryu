@@ -449,8 +449,7 @@ Hello, this is Ryu BGP speaker (version %s).
                 self._startnewline()
 
             LOG.debug("curpos: %d, buf: %s, prompted: %s", self.curpos,
-                                                           self.buf,
-                                                           self.prompted)
+                      self.buf, self.prompted)
 
         LOG.info("session end")
 
