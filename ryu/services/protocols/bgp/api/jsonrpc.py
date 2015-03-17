@@ -15,7 +15,6 @@
 
 
 import json
-from webob import Response
 from ryu.base import app_manager
 from ryu.lib import hub
 from ryu.app.wsgi import route, websocket, ControllerBase, WSGIApplication
