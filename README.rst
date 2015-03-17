@@ -33,6 +33,21 @@ After writing your application, just type::
    % ryu-manager yourapp.py
 
 
+Optional Requirements
+=====================
+
+Some functionalities of ryu requires extra packages:
+
+- OF-Config requires lxml
+- NETCONF requires paramiko
+- BGP speaker (net_cntl) requires paramiko
+
+If you want to use the functionalities, please install requirements::
+
+    % pip install lxml
+    % pip install paramiko
+
+
 Support
 =======
 Ryu Official site is `<http://osrg.github.io/ryu/>`_.

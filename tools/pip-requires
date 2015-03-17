@@ -1,9 +1,7 @@
 eventlet
-lxml  # OF-Config
 msgpack-python>=0.3.0  # RPC library, BGP speaker(net_cntl)
 netaddr
 oslo.config>=1.2.0
-paramiko  # NETCONF, BGP speaker
 routes  # wsgi
 six>=1.4.0
 webob>=1.2  # wsgi
