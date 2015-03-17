@@ -4,7 +4,6 @@ import struct
 import netaddr
 from struct import *
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 
 from ryu.lib import ip
 

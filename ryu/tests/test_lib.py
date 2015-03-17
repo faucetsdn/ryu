@@ -9,7 +9,6 @@ import logging
 from nose import result
 from nose import core
 from nose import config
-from nose.plugins.skip import SkipTest
 
 
 class _AnsiColorizer(object):

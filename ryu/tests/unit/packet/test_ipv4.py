@@ -20,7 +20,6 @@ import logging
 import struct
 from struct import *
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
 from ryu.lib.packet import packet_utils
 from ryu.lib.packet.ethernet import ethernet

@@ -19,7 +19,6 @@ import logging
 import inspect
 
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 from ryu.lib.packet import mpls
 
 

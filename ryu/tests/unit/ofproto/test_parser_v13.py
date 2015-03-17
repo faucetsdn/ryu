@@ -20,7 +20,6 @@ import logging
 import socket
 from struct import *
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto.ofproto_v1_3_parser import *
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_3

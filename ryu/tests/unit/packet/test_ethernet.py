@@ -21,7 +21,6 @@ import struct
 import netaddr
 from struct import *
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet

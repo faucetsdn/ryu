@@ -20,7 +20,6 @@ import inspect
 import struct
 
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 from ryu.lib import addrconv
 from ryu.lib import ip
 from ryu.lib.packet import ipv6

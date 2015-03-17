@@ -21,7 +21,6 @@ import struct
 import array
 import inspect
 from nose.tools import *
-from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
 from ryu.lib.packet import *
 from ryu.lib import addrconv

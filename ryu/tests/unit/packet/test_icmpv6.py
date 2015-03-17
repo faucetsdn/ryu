@@ -21,7 +21,6 @@ import struct
 import inspect
 
 from nose.tools import ok_, eq_, nottest, raises
-from nose.plugins.skip import Skip, SkipTest
 from ryu.ofproto import ether, inet
 from ryu.lib.packet.ethernet import ethernet
 from ryu.lib.packet.packet import Packet
