@@ -1628,7 +1628,7 @@ Description of Match on request messages
         mpls_bos        MPLS BoS bit (int)                                 {"mpls_bos": 1, "eth_type": 34888}
         pbb_isid        PBB I-SID (int)                                    {"pbb_isid": 5, "eth_type": 35047}
         tunnel_id       Logical Port Metadata (int)                        {"tunnel_id": 7}
-        ipv6_exthdr     IPv6 Extension Header pseudo-field (int)           {"ipv6_exthdr": 3, "eth_type": 34525}
+        ipv6_exthdr     IPv6 Extension Header pseudo-field (string)        {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
         =============== ================================================== =======================================================================================================
 
     .. NOTE::
