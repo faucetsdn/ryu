@@ -62,8 +62,8 @@ def _to_match_ip(value):
         return value, None
 
 
-def _to_match_metadata(value):
-    if '/' in value:
+def _to_match_masked_int(value):
+    if isinstance(value, str) and '/' in value:
         value = value.split('/')
         return _str_to_int(value[0]), _str_to_int(value[1])
     else:
@@ -270,17 +270,17 @@ class Test_ofctl(unittest.TestCase):
             elif key == 'vlan_vid':
                 eq_(expected_value['vlan_vid'][value]['to_match'], field_value)
                 return
-            elif key == 'metadata':
-                # Metadata
-                meta, mask = _to_match_metadata(value)
+            elif key == 'metadata' or key == 'ipv6_exthdr':
+                # Metadata or IPv6 Extension Header pseudo-field
+                value, mask = _to_match_masked_int(value)
                 if mask is not None:
                     # with mask
-                    meta &= mask
-                    eq_(meta, field_value[0])
+                    value &= mask
+                    eq_(value, field_value[0])
                     eq_(mask, field_value[1])
                 else:
                     # without mask
-                    eq_(meta, field_value)
+                    eq_(value, field_value)
                 return
             else:
                 eq_(value, field_value)
@@ -348,18 +348,18 @@ class Test_ofctl(unittest.TestCase):
             elif key == 'dl_vlan':
                 eq_(expected_value['vlan_vid'][value]['to_str'], field_value)
                 return
-            elif key == 'metadata':
-                # Metadata
-                meta, mask = _to_match_metadata(value)
+            elif key == 'metadata' or key == 'ipv6_exthdr':
+                # Metadata or IPv6 Extension Header pseudo-field
+                value, mask = _to_match_masked_int(value)
                 if mask is not None:
                     # with mask
                     field_value = field_value.split('/')
-                    meta &= mask
-                    eq_(str(meta), field_value[0])
+                    value &= mask
+                    eq_(str(value), field_value[0])
                     eq_(str(mask), field_value[1])
                 else:
                     # without mask
-                    eq_(str(meta), field_value)
+                    eq_(str(value), field_value)
                 return
             else:
                 eq_(value, field_value)
@@ -617,6 +617,8 @@ class test_data_v1_3(test_data_v1_2):
                 {'pbb_isid': 5, 'eth_type': 0x88E7},
                 {'tunnel_id': 7},
                 {'ipv6_exthdr': 3, 'eth_type': 0x86dd},
+                {'ipv6_exthdr': "0x40", 'eth_type': 0x86dd},
+                {'ipv6_exthdr': "0x40/0x1F0", 'eth_type': 0x86dd},
             ]
         )
 
