@@ -14,8 +14,6 @@
 # limitations under the License.
 
 import base64
-import struct
-import socket
 import logging
 import netaddr
 
@@ -24,7 +22,6 @@ from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
 from ryu.lib import hub
-from ryu.lib import mac
 
 
 LOG = logging.getLogger('ryu.lib.ofctl_v1_3')
@@ -387,7 +384,7 @@ def match_to_str(ofmatch):
 
 
 def match_masked_int_to_str(value, mask):
-    return ('%d/%d' % (value, mask) if mask else '%d' % value)
+    return '%d/%d' % (value, mask) if mask else '%d' % value
 
 
 def match_vid_to_str(value, mask):

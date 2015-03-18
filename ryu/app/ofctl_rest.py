@@ -140,7 +140,7 @@ class StatsController(ControllerBase):
     def get_dpids(self, req, **_kwargs):
         dps = self.dpset.dps.keys()
         body = json.dumps(dps)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_desc_stats(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -158,7 +158,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(desc)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_flow_stats(self, req, dpid, **_kwargs):
         if req.body == '':
@@ -185,7 +185,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(flows)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_aggregate_flow_stats(self, req, dpid, **_kwargs):
         if req.body == '':
@@ -230,7 +230,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(ports)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_queue_stats(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -266,7 +266,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(meters)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_meter_config(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -284,7 +284,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(meters)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_meter_stats(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -302,7 +302,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(meters)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_group_features(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -514,18 +514,11 @@ class StatsController(ControllerBase):
 
         port_no = int(port_config.get('port_no', 0))
         port_info = self.dpset.port_state[int(dpid)].get(port_no)
-
-        if 'hw_addr' not in port_config:
-            if port_info is not None:
-                port_config['hw_addr'] = port_info.hw_addr
-            else:
-                return Response(status=404)
-
-        if 'advertise' not in port_config:
-            if port_info is not None:
-                port_config['advertise'] = port_info.advertised
-            else:
-                return Response(status=404)
+        if port_info:
+            port_config.setdefault('hw_addr', port_info.hw_addr)
+            port_config.setdefault('advertise', port_info.advertised)
+        else:
+            return Response(status=404)
 
         dp = self.dpset.get(int(dpid))
         if dp is None:
