@@ -307,7 +307,7 @@ class VSCtlContext(object):
     @staticmethod
     def port_is_fake_bridge(ovsrec_port):
         return (ovsrec_port.fake_bridge and
-                ovsrec_port.tag >= 0 and ovsrec_port.tab <= 4095)
+                ovsrec_port.tag >= 0 and ovsrec_port.tag <= 4095)
 
     def _populate_cache(self, ovsrec_bridges):
         if self.cache_valid:
@@ -690,7 +690,7 @@ class VSCtlContext(object):
             ovsrec_port.name = br_name
             ovsrec_port.interfaces = [ovsrec_iface]
             ovsrec_port.fake_bridge = True
-            ovsrec_port.tag = [vlan]
+            ovsrec_port.tag = vlan
 
             self.bridge_insert_port(parent.br_cfg, ovsrec_port)
 
