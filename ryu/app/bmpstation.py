@@ -48,7 +48,8 @@ class BMPStation(app_manager.RyuApp):
                                       self.loop).serve_forever)
 
     def loop(self, sock, addr):
-        self.logger.debug("BMP client connected, ip=%s, port=%s", addr)
+        self.logger.debug("BMP client connected, ip=%s, port=%s", addr[0],
+                          addr[1])
         is_active = True
         buf = bytearray()
         required_len = bmp.BMPMessage._HDR_LEN
@@ -91,5 +92,7 @@ class BMPStation(app_manager.RyuApp):
 
                 required_len = bmp.BMPMessage._HDR_LEN
 
-        self.logger.debug("BMP client disconnected, ip=%s, port=%s", addr)
+        self.logger.debug("BMP client disconnected, ip=%s, port=%s", addr[0],
+                          addr[1])
+
         sock.close()
