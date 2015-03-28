@@ -71,7 +71,7 @@ class SimpleMonitor(app_manager.RyuApp):
             dist[key].pop(0)
 
     def _get_speed(self, now, pre, period):
-        return (now-pre)/period/8
+        return (now-pre)/period
 
     def _get_time(self, sec, nsec):
         return sec + nsec/(10**9)
