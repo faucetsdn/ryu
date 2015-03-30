@@ -251,23 +251,25 @@ def to_match(dp, attrs):
 
     kwargs = {}
     for key, value in attrs.items():
-        if key in convert:
-            value = convert[key](value)
         if key in keys:
             # For old field name
             key = keys[key]
-        if key == 'tp_src' or key == 'tp_dst':
-            # TCP/UDP port
-            conv = {inet.IPPROTO_TCP: {'tp_src': 'tcp_src',
-                                       'tp_dst': 'tcp_dst'},
-                    inet.IPPROTO_UDP: {'tp_src': 'udp_src',
-                                       'tp_dst': 'udp_dst'}}
-            ip_proto = attrs.get('nw_proto', attrs.get('ip_proto', 0))
-            key = conv[ip_proto][key]
-            kwargs[key] = value
+        if key in convert:
+            value = convert[key](value)
+            if key == 'tp_src' or key == 'tp_dst':
+                # TCP/UDP port
+                conv = {inet.IPPROTO_TCP: {'tp_src': 'tcp_src',
+                                           'tp_dst': 'tcp_dst'},
+                        inet.IPPROTO_UDP: {'tp_src': 'udp_src',
+                                           'tp_dst': 'udp_dst'}}
+                ip_proto = attrs.get('nw_proto', attrs.get('ip_proto', 0))
+                key = conv[ip_proto][key]
+                kwargs[key] = value
+            else:
+                # others
+                kwargs[key] = value
         else:
-            # others
-            kwargs[key] = value
+            LOG.error('Unknown match field: %s', key)
 
     return dp.ofproto_parser.OFPMatch(**kwargs)
 
