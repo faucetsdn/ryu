@@ -897,6 +897,19 @@ class Match(object):
                  REST_NW_PROTO_ICMP: inet.IPPROTO_ICMP,
                  REST_NW_PROTO_ICMPV6: inet.IPPROTO_ICMPV6}}
 
+    _MATCHES = [REST_IN_PORT,
+                REST_SRC_MAC,
+                REST_DST_MAC,
+                REST_DL_TYPE,
+                REST_DL_VLAN,
+                REST_SRC_IP,
+                REST_DST_IP,
+                REST_SRC_IPV6,
+                REST_DST_IPV6,
+                REST_NW_PROTO,
+                REST_TP_SRC,
+                REST_TP_DST]
+
     @staticmethod
     def to_openflow(rest):
 
@@ -1002,7 +1015,7 @@ class Match(object):
                     match.setdefault(key, Match._CONVERT[key][value])
                 else:
                     raise ValueError('Invalid rule parameter. : key=%s' % key)
-            else:
+            elif key in Match._MATCHES:
                 match.setdefault(key, value)
 
         return match
