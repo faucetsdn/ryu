@@ -1,0 +1,46 @@
+{
+   "OFPPacketIn": {
+      "buffer_id": 200, 
+      "cookie": 0, 
+      "data": "aG9nZQ==", 
+      "match": {
+         "OFPMatch": {
+            "length": 40, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "in_port", 
+                     "mask": null, 
+                     "value": 43981
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tunnel_id", 
+                     "mask": null, 
+                     "value": 50000
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_src", 
+                     "mask": null, 
+                     "value": "192.168.2.3"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_dst", 
+                     "mask": null, 
+                     "value": "192.168.2.4"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "reason": 0, 
+      "table_id": 100, 
+      "total_len": 1000
+   }
+}
