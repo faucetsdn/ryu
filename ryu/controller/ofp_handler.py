@@ -20,6 +20,7 @@ Basic OpenFlow handling including negotiation.
 
 import itertools
 import logging
+import warnings
 
 import ryu.base.app_manager
 
@@ -224,8 +225,10 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
     def multipart_reply_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
-        for port in msg.body:
-            datapath.ports[port.port_no] = port
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            for port in msg.body:
+                datapath.ports[port.port_no] = port
 
         if msg.flags & datapath.ofproto.OFPMPF_REPLY_MORE:
             return
