@@ -69,7 +69,7 @@ def et_tostring_pp(tree):
 def validate(tree):
     schema = ET.XMLSchema(file=of_config.OF_CONFIG_1_1_1_XSD)
     if not schema(tree):
-        print schema.error_log
+        print(schema.error_log)
 
 
 class Cmd(cmd.Cmd):
@@ -82,19 +82,19 @@ class Cmd(cmd.Cmd):
         try:
             peer = args[0]
         except:
-            print "argument error"
+            print("argument error")
             return
         try:
             p = peers[peer]
         except KeyError:
-            print "unknown peer", peer
+            print("unknown peer " + peer)
             return
         try:
             f(p, args[1:])
-        except RPCError, e:
-            print "RPC Error", e
+        except RPCError as e:
+            print("RPC Error " + e)
         except EOFError:
-            print "disconnected"
+            print("disconnected")
 
     def _complete_peer(self, text, line, _begidx, _endidx):
         if len((line + 'x').split()) >= 3:
@@ -107,7 +107,7 @@ class Cmd(cmd.Cmd):
 
         def f(p, args):
             for i in p.netconf.server_capabilities:
-                print i
+                print(i)
 
         self._request(line, f)
 
@@ -119,7 +119,7 @@ class Cmd(cmd.Cmd):
             result = p.raw_get()
             tree = ET.fromstring(result)
             validate(tree)
-            print et_tostring_pp(tree)
+            print(et_tostring_pp(tree))
 
         self._request(line, f)
 
@@ -131,12 +131,12 @@ class Cmd(cmd.Cmd):
             try:
                 source = args[0]
             except:
-                print "argument error"
+                print("argument error")
                 return
             result = p.raw_get_config(source)
             tree = ET.fromstring(result)
             validate(tree)
-            print et_tostring_pp(tree)
+            print(et_tostring_pp(tree))
 
         self._request(line, f)
 
@@ -146,7 +146,7 @@ class Cmd(cmd.Cmd):
         """
 
         def f(p, args):
-            print p.get()
+            print(p.get())
 
         self._request(line, f)
 
@@ -156,7 +156,7 @@ class Cmd(cmd.Cmd):
         """
 
         def f(p, args):
-            print p.commit()
+            print(p.commit())
 
         self._request(line, f)
 
@@ -166,7 +166,7 @@ class Cmd(cmd.Cmd):
         """
 
         def f(p, args):
-            print p.discard_changes()
+            print(p.discard_changes())
 
         self._request(line, f)
 
@@ -179,9 +179,9 @@ class Cmd(cmd.Cmd):
             try:
                 source = args[0]
             except:
-                print "argument error"
+                print("argument error")
                 return
-            print p.get_config(source)
+            print(p.get_config(source))
 
         self._request(line, f)
 
@@ -194,9 +194,9 @@ class Cmd(cmd.Cmd):
             try:
                 source = args[0]
             except:
-                print "argument error"
+                print("argument error")
                 return
-            print p.delete_config(source)
+            print(p.delete_config(source))
 
         self._request(line, f)
 
@@ -209,9 +209,9 @@ class Cmd(cmd.Cmd):
             try:
                 source, target = args
             except:
-                print "argument error"
+                print("argument error")
                 return
-            print p.copy_config(source, target)
+            print(p.copy_config(source, target))
 
         self._request(line, f)
 
@@ -222,7 +222,7 @@ class Cmd(cmd.Cmd):
         def f(p, args):
             o = p.get()
             for p in o.resources.port:
-                print p.resource_id, p.name, p.number
+                print(p.resource_id + " " + p.name + " " + p.number)
 
         self._request(line, f)
 
@@ -242,20 +242,20 @@ class Cmd(cmd.Cmd):
             try:
                 source, port = args
             except:
-                print "argument error"
+                print("argument error")
                 return
             o = p.get_config(source)
             for p in o.resources.port:
                 if p.resource_id != port:
                     continue
-                print p.resource_id
+                print(p.resource_id)
                 conf = p.configuration
                 for k in self._port_settings:
                     try:
                         v = getattr(conf, k)
                     except AttributeError:
                         continue
-                    print k, v
+                    print(k + " " + v)
 
         self._request(line, f)
 
@@ -269,8 +269,8 @@ class Cmd(cmd.Cmd):
             try:
                 target, port, key, value = args
             except:
-                print "argument error"
-                print args
+                print("argument error")
+                print(args)
                 return
 
             # get switch id
@@ -290,12 +290,12 @@ class Cmd(cmd.Cmd):
                     )
                 )
             except TypeError:
-                print "argument error"
+                print("argument error")
                 return
             try:
                 p.edit_config(target, capable_switch)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
         self._request(line, f)
 
@@ -307,7 +307,7 @@ class Cmd(cmd.Cmd):
             o = p.get()
             if o.resources.queue:
                 for q in o.resources.queue:
-                    print q.resource_id, q.port
+                    print(q.resource_id + " " + q.port)
 
         self._request(line, f)
 
@@ -326,20 +326,20 @@ class Cmd(cmd.Cmd):
             try:
                 source, queue = args
             except:
-                print "argument error"
+                print("argument error")
                 return
             o = p.get_config(source)
             for q in o.resources.queue:
                 if q.resource_id != queue:
                     continue
-                print q.resource_id
+                print(q.resource_id)
                 conf = q.properties
                 for k in self._queue_settings:
                     try:
                         v = getattr(conf, k)
                     except AttributeError:
                         continue
-                    print k, v
+                    print(k + " " + v)
 
         self._request(line, f)
 
@@ -353,8 +353,8 @@ max-rate 100
             try:
                 target, queue, key, value = args
             except:
-                print "argument error"
-                print args
+                print("argument error")
+                print(args)
                 return
 
             # get switch id
@@ -374,12 +374,12 @@ max-rate 100
                     )
                 )
             except TypeError:
-                print "argument error"
+                print("argument error")
                 return
             try:
                 p.edit_config(target, capable_switch)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
         self._request(line, f)
 
@@ -392,8 +392,8 @@ max-rate 100
             try:
                 target, lsw, queue = args
             except:
-                print "argument error"
-                print args
+                print("argument error")
+                print(args)
                 return
 
             # get switch id
@@ -417,12 +417,12 @@ max-rate 100
                     )
                 )
             except TypeError:
-                print "argument error"
+                print("argument error")
                 return
             try:
                 p.edit_config(target, capable_switch)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
         self._request(line, f)
 
@@ -433,7 +433,7 @@ max-rate 100
         def f(p, args):
             o = p.get()
             for s in o.logical_switches.switch:
-                print s.id, s.datapath_id
+                print(s.id + " " + s.datapath_id)
 
         self._request(line, f)
 
@@ -445,22 +445,22 @@ max-rate 100
             try:
                 (lsw,) = args
             except:
-                print "argument error"
+                print("argument error")
                 return
             o = p.get()
             for s in o.logical_switches.switch:
                 if s.id != lsw:
                     continue
-                print s.id
-                print 'datapath-id', s.datapath_id
+                print(s.id)
+                print('datapath-id ' + s.datapath_id)
                 if s.resources.queue:
-                    print 'queues:'
+                    print('queues:')
                     for q in s.resources.queue:
-                        print '\t', q
+                        print('\t ' + q)
                 if s.resources.port:
-                    print 'ports:'
+                    print('ports:')
                     for p in s.resources.port:
-                        print '\t', p
+                        print('\t ' + p)
 
         self._request(line, f)
 
@@ -476,19 +476,19 @@ max-rate 100
             try:
                 source, lsw = args
             except:
-                print "argument error"
+                print("argument error")
                 return
             o = p.get_config(source)
             for l in o.logical_switches.switch:
                 if l.id != lsw:
                     continue
-                print l.id
+                print(l.id)
                 for k in self._lsw_settings:
                     try:
                         v = getattr(l, k)
                     except AttributeError:
                         continue
-                    print k, v
+                    print(k + " " + v)
 
         self._request(line, f)
 
@@ -502,7 +502,7 @@ lost-connection-behavior failStandaloneMode
             try:
                 target, lsw, key, value = args
             except:
-                print "argument error"
+                print("argument error")
                 return
 
             # get switch id
@@ -520,12 +520,12 @@ lost-connection-behavior failStandaloneMode
                     )
                 )
             except TypeError:
-                print "argument error"
+                print("argument error")
                 return
             try:
                 p.edit_config(target, capable_switch)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
         self._request(line, f)
 

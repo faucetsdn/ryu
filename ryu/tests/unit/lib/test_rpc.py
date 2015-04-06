@@ -277,7 +277,7 @@ class Test_rpc(unittest.TestCase):
         try:
             c.call("err", [obj])
             raise Exception("unexpected")
-        except rpc.RPCError, e:
+        except rpc.RPCError as e:
             assert e.get_value() == obj
 
     def test_0_call_error_notification(self):
@@ -292,7 +292,7 @@ class Test_rpc(unittest.TestCase):
         try:
             c.call("err", [obj])
             raise Exception("unexpected")
-        except rpc.RPCError, e:
+        except rpc.RPCError as e:
             assert e.get_value() == obj
         assert len(l) == 1
         n = l.pop(0)

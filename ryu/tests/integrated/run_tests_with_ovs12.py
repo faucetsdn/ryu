@@ -96,7 +96,7 @@ class TestWithOVS12(unittest.TestCase):
                 time.sleep(1)
                 continue
 
-            print "ryu-manager: %s" % line
+            print("ryu-manager: %s" % line)
             if line.find('TEST_FINISHED') != -1:
                 ok_(line.find('Completed=[True]') != -1)
                 p.terminate()

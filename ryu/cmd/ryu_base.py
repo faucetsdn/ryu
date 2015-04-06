@@ -61,7 +61,7 @@ class SubCommand(object):
 def main():
     try:
         base_conf(project='ryu', version='ryu %s' % version)
-    except cfg.RequiredOptError, e:
+    except cfg.RequiredOptError as e:
         base_conf.print_help()
         raise SystemExit(1)
     subcmd_name = base_conf.subcommand

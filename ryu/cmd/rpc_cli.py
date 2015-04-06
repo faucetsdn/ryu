@@ -70,13 +70,13 @@ class Peer(object):
         try:
             self.connect()
             assert self.client
-        except Exception, e:
+        except Exception as e:
             if verbose:
-                print "connection failure", e
+                print("connection failure " + e)
             raise EOFError
 
     def notification(self, n):
-        print "NOTIFICATION from", self._name, n
+        print("NOTIFICATION from " + self._name + " " + n)
 
     def call(self, method, params):
         return self._do(lambda: self.client.call(method, params))
@@ -96,9 +96,9 @@ class Peer(object):
         try:
             return g()
         except EOFError:
-            print "disconnected.  trying to connect..."
+            print("disconnected.  trying to connect...")
             self.try_to_connect(verbose=True)
-            print "connected.  retrying the request..."
+            print("connected.  retrying the request...")
             return g()
 
 
@@ -123,19 +123,19 @@ class Cmd(cmd.Cmd):
             method = args[1]
             params = eval(args[2])
         except:
-            print "argument error"
+            print("argument error")
             return
         try:
             p = peers[peer]
         except KeyError:
-            print "unknown peer", peer
+            print("unknown peer " + peer)
             return
         try:
             f(p, method, params)
-        except rpc.RPCError, e:
-            print "RPC ERROR", e
+        except rpc.RPCError as e:
+            print("RPC ERROR " + e)
         except EOFError:
-            print "disconnected"
+            print("disconnected")
 
     def _complete_peer(self, text, line, _begidx, _endidx):
         if len((line + 'x').split()) >= 3:
@@ -150,7 +150,7 @@ class Cmd(cmd.Cmd):
 
         def f(p, method, params):
             result = p.call(method, params)
-            print "RESULT", result
+            print("RESULT " + result)
 
         self._request(line, f)
 
@@ -187,7 +187,7 @@ class Cmd(cmd.Cmd):
                     p.client.peek_notification()
                 except EOFError:
                     p.client = None
-                    print "disconnected", k
+                    print("disconnected " + k)
 
     @staticmethod
     def _save_termios():

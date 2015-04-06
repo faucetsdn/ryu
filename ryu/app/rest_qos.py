@@ -400,7 +400,7 @@ class QoSController(ControllerBase):
         try:
             f_ofs = QoS(dp, CONF)
             f_ofs.set_default_flow()
-        except OFPUnknownVersion, message:
+        except OFPUnknownVersion as message:
             QoSController._LOGGER.info('dpid=%s: %s',
                                        dpid_str, message)
             return
@@ -515,7 +515,7 @@ class QoSController(ControllerBase):
         try:
             dps = self._OFS_LIST.get_ofs(switchid)
             vid = QoSController._conv_toint_vlanid(vlan_id)
-        except ValueError, message:
+        except ValueError as message:
             return Response(status=400, body=str(message))
 
         msgs = []
@@ -526,7 +526,7 @@ class QoSController(ControllerBase):
                     msg = function(rest, vid, waiters)
                 else:
                     msg = function(rest, vid)
-            except ValueError, message:
+            except ValueError as message:
                 return Response(status=400, body=str(message))
             msgs.append(msg)
 
@@ -699,7 +699,7 @@ class QoS(object):
                 self.ovs_bridge.set_qos(port_name, type=queue_type,
                                         max_rate=parent_max_rate,
                                         queues=queue_config)
-            except Exception, msg:
+            except Exception as msg:
                 raise ValueError(msg)
 
         msg = {'result': 'success',

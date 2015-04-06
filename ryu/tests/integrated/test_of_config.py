@@ -262,7 +262,7 @@ class OFConfigClient(app_manager.RyuApp):
     def _set_ports_down(self):
         """try to set all ports down with etree operation"""
         tree = self._do_get()
-        print lxml.etree.tostring(tree, pretty_print=True)
+        print(lxml.etree.tostring(tree, pretty_print=True))
 
         qname = lxml.etree.QName(tree.tag)
         ns = qname.namespace

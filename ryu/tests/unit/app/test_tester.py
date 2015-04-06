@@ -41,7 +41,7 @@ for modname, moddef in sys.modules.iteritems():
     for (clsname, clsdef, ) in inspect.getmembers(moddef):
         if not inspect.isclass(clsdef):
             continue
-        exec 'from %s import %s' % (modname, clsname)
+        exec('from %s import %s' % (modname, clsname))
 
 from ryu.base import app_manager
 from ryu.controller import handler

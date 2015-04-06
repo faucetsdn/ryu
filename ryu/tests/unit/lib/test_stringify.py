@@ -25,7 +25,7 @@ from ryu.lib import stringify
 
 class C1(stringify.StringifyMixin):
     def __init__(self, a, c):
-        print "init", a, c
+        print("init " + a + " " + c)
         self.a = a
         self._b = 'B'
         self.c = c

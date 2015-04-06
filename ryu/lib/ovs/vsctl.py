@@ -1876,27 +1876,27 @@ def schema_print(schema_location, prefix):
     json = ovs.json.from_file(schema_location)
     schema = ovs.db.schema.DbSchema.from_json(json)
 
-    print '# Do NOT edit.'
-    print '# This is automatically generated.'
-    print '# created based on version %s' % (schema.version or 'unknown')
-    print ''
-    print ''
-    print '%s_DB_NAME = \'%s\'' % (prefix, schema.name)
+    print('# Do NOT edit.')
+    print('# This is automatically generated.')
+    print('# created based on version %s' % (schema.version or 'unknown'))
+    print('')
+    print('')
+    print('%s_DB_NAME = \'%s\'' % (prefix, schema.name))
     for table in sorted(schema.tables.values(),
                         key=operator.attrgetter('name')):
-        print ''
-        print '%s_TABLE_%s = \'%s\'' % (prefix,
-                                        table.name.upper(), table.name)
+        print('')
+        print('%s_TABLE_%s = \'%s\'' % (prefix,
+                                        table.name.upper(), table.name))
         for column in sorted(table.columns.values(),
                              key=operator.attrgetter('name')):
-            print '%s_%s_COL_%s = \'%s\'' % (prefix, table.name.upper(),
+            print('%s_%s_COL_%s = \'%s\'' % (prefix, table.name.upper(),
                                              column.name.upper(),
-                                             column.name)
+                                             column.name))
 
 
 def main():
     if len(sys.argv) <= 2:
-        print 'Usage: %s <schema file> <prefix>' % sys.argv[0]
+        print('Usage: %s <schema file> <prefix>' % sys.argv[0])
 
     location = sys.argv[1]
     prefix = sys.argv[2]

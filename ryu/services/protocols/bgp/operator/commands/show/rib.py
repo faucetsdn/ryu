@@ -55,7 +55,7 @@ class Rib(RibBase):
                 for family in self.supported_families:
                     ret[family] = self.api.get_single_rib_routes(family)
                 return CommandsResponse(STATUS_OK, ret)
-            except ActivityException, e:
+            except ActivityException as e:
                 return CommandsResponse(STATUS_ERROR, e)
 
         @classmethod

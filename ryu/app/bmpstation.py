@@ -73,7 +73,7 @@ class BMPStation(app_manager.RyuApp):
 
                 try:
                     msg, rest = bmp.BMPMessage.parser(buf)
-                except Exception, e:
+                except Exception as e:
                     pkt = buf[:len_]
                     self.failed_dump_fd.write(pkt)
                     self.failed_dump_fd.flush()
