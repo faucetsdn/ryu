@@ -137,6 +137,25 @@ bundle_ctrl(enum ofputil_protocol proto)
     return ofputil_encode_bundle_ctrl_reply(&oh, &msg);
 }
 
+struct ofpbuf *
+bundle_add(enum ofputil_protocol proto)
+{
+    struct ofputil_bundle_add_msg msg;
+    struct ofpbuf *fm;
+    struct ofpbuf *add;
+
+    memset(&msg, 0, sizeof(msg));
+    msg.bundle_id = 99999999;
+    msg.flags = OFPBF_ATOMIC;
+    fm = flow_mod(proto);
+    clear_xid(fm);
+    msg.msg = fm->data;
+    add = ofputil_encode_bundle_add(
+        ofputil_protocol_to_ofp_version(proto), &msg);
+    ofpbuf_delete(fm);
+    return add;
+}
+
 struct protocol_version {
     const char *name;
     const char *dir_name;
@@ -162,6 +181,7 @@ const struct message messages[] = {
     M(packet_in),
     M(flow_mod),
     M(bundle_ctrl),
+    M(bundle_add),
 };
 
 #if !defined(__arraycount)
