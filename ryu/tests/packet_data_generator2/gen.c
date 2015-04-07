@@ -77,6 +77,22 @@ packet_in(enum ofputil_protocol proto)
     return ofputil_encode_packet_in(&pin, proto, NXPIF_OPENFLOW10);
 }
 
+struct ofpbuf *
+bundle_ctrl(enum ofputil_protocol proto)
+{
+    struct ofputil_bundle_ctrl_msg msg;
+    struct ofp_header oh;
+
+    memset(&oh, 0, sizeof(oh));
+    oh.xid = 0;
+    oh.version = ofputil_protocol_to_ofp_version(proto);
+    memset(&msg, 0, sizeof(msg));
+    msg.bundle_id = 99999999;
+    msg.type = OFPBCT_OPEN_REPLY;
+    msg.flags = OFPBF_ATOMIC;
+    return ofputil_encode_bundle_ctrl_reply(&oh, &msg);
+}
+
 struct protocol_version {
     const char *name;
     const char *dir_name;
@@ -100,6 +116,7 @@ struct message {
 
 const struct message messages[] = {
     M(packet_in),
+    M(bundle_ctrl),
 };
 
 #if !defined(__arraycount)
