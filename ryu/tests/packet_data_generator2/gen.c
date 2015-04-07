@@ -25,6 +25,21 @@
 #include <stdio.h>
 
 void
+clear_xid(struct ofpbuf *buf)
+{
+    /*
+     * some of libofproto message encoding routines automatically
+     * allocate XID for the message.  e.g. ofputil_encode_flow_mod
+     * zero-out the XID so that test_parser can perform a simple
+     * bit-wise comparison.
+     */
+
+    struct ofp_header *oh = ofpbuf_at_assert(buf, 0, sizeof(*oh));
+
+    oh->xid = htonl(0);
+}
+
+void
 dump_ofpbuf(const char *name, const struct ofpbuf *buf)
 {
     FILE *fp;
@@ -172,6 +187,7 @@ main(int argc, char *argv[])
             snprintf(name, sizeof(name),
                 "../packet_data/%s/libofproto-%s-%s.packet",
                 p->dir_name, p->name, m->name);
+            clear_xid(buf);
             dump_ofpbuf(name, buf);
             ofpbuf_delete(buf);
         }
