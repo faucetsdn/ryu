@@ -18,6 +18,7 @@
 
 #include <lib/ofpbuf.h>
 #include <lib/ofp-actions.h>
+#include <lib/ofp-msgs.h>
 #include <lib/ofp-util.h>
 #include <lib/packets.h>
 
@@ -56,6 +57,14 @@ dump_ofpbuf(const char *name, const struct ofpbuf *buf)
     if (fclose(fp) != 0) {
         err(1, "fclose");
     }
+}
+
+void
+dump_message(const char *name, struct ofpbuf *buf)
+{
+
+    ofpmsg_update_length(buf);
+    dump_ofpbuf(name, buf);
 }
 
 void
@@ -208,7 +217,7 @@ main(int argc, char *argv[])
                 "../packet_data/%s/libofproto-%s-%s.packet",
                 p->dir_name, p->name, m->name);
             clear_xid(buf);
-            dump_ofpbuf(name, buf);
+            dump_message(name, buf);
             ofpbuf_delete(buf);
         }
     }
