@@ -28,6 +28,7 @@ import itertools
 import logging
 import sys
 import os
+import gc
 
 from ryu import cfg
 from ryu import utils
@@ -344,6 +345,10 @@ class AppManager(object):
             hub.joinall(services)
         finally:
             app_mgr.close()
+            for t in services:
+                t.kill()
+            hub.joinall(services)
+            gc.collect()
 
     @staticmethod
     def get_instance():
@@ -511,5 +516,7 @@ class AppManager(object):
                 self._close(app)
             close_dict.clear()
 
-        close_all(self.applications)
+        for app_name in list(self.applications.keys()):
+            self.uninstantiate(app_name)
+        assert not self.applications
         close_all(self.contexts)
