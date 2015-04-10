@@ -62,13 +62,13 @@ class SimpleSwitchSnort(app_manager.RyuApp):
         # for p in pkt.protocols:
         #     if hasattr(p, 'protocol_name') is False:
         #         break
-        #     print('p: ' + p.protocol_name)
+        #     print('p: %s' % p.protocol_name)
 
     @set_ev_cls(snortlib.EventAlert, MAIN_DISPATCHER)
     def _dump_alert(self, ev):
         msg = ev.msg
 
-        print('alertmsg: ' + ''.join(msg.alertmsg))
+        print('alertmsg: %s' % ''.join(msg.alertmsg))
 
         self.packet_print(msg.pkt)
 

@@ -72,11 +72,11 @@ class Peer(object):
             assert self.client
         except Exception as e:
             if verbose:
-                print("connection failure " + e)
+                print("connection failure %s" % e)
             raise EOFError
 
     def notification(self, n):
-        print("NOTIFICATION from " + self._name + " " + n)
+        print("NOTIFICATION from %s %s" % (self._name, n))
 
     def call(self, method, params):
         return self._do(lambda: self.client.call(method, params))
@@ -128,12 +128,12 @@ class Cmd(cmd.Cmd):
         try:
             p = peers[peer]
         except KeyError:
-            print("unknown peer " + peer)
+            print("unknown peer %s" % peer)
             return
         try:
             f(p, method, params)
         except rpc.RPCError as e:
-            print("RPC ERROR " + e)
+            print("RPC ERROR %s" % e)
         except EOFError:
             print("disconnected")
 
@@ -150,7 +150,7 @@ class Cmd(cmd.Cmd):
 
         def f(p, method, params):
             result = p.call(method, params)
-            print("RESULT " + result)
+            print("RESULT %s" % result)
 
         self._request(line, f)
 
@@ -187,7 +187,7 @@ class Cmd(cmd.Cmd):
                     p.client.peek_notification()
                 except EOFError:
                     p.client = None
-                    print("disconnected " + k)
+                    print("disconnected %s" % k)
 
     @staticmethod
     def _save_termios():

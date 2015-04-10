@@ -30,7 +30,7 @@ class Test_Parser_OFPMatch(unittest.TestCase):
             ofproto_v1_3_parser: ofproto_v1_3}
 
     def __init__(self, methodName):
-        print('init ' + methodName)
+        print('init %s' % methodName)
         super(Test_Parser_OFPMatch, self).__init__(methodName)
 
     def setUp(self):

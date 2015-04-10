@@ -30,7 +30,7 @@ from struct import unpack
 
 class Test_Parser_Compat(unittest.TestCase):
     def __init__(self, methodName):
-        print('init ' + methodName)
+        print('init %s' % methodName)
         super(Test_Parser_Compat, self).__init__(methodName)
 
     def setUp(self):

@@ -200,7 +200,7 @@ class Test_bgp(unittest.TestCase):
         dir = '../packet_data/bgp4/'
 
         for f in files:
-            print('testing ' + f)
+            print('testing %s' % f)
             binmsg = open(dir + f).read()
             msg, rest = bgp.BGPMessage.parser(binmsg)
             binmsg2 = msg.serialize()

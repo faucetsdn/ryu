@@ -87,12 +87,12 @@ class Cmd(cmd.Cmd):
         try:
             p = peers[peer]
         except KeyError:
-            print("unknown peer " + peer)
+            print("unknown peer %s" % peer)
             return
         try:
             f(p, args[1:])
         except RPCError as e:
-            print("RPC Error " + e)
+            print("RPC Error %s" % e)
         except EOFError:
             print("disconnected")
 
@@ -222,7 +222,7 @@ class Cmd(cmd.Cmd):
         def f(p, args):
             o = p.get()
             for p in o.resources.port:
-                print(p.resource_id + " " + p.name + " " + p.number)
+                print('%s %s %s' % (p.resource_id, p.name, p.number))
 
         self._request(line, f)
 
@@ -255,7 +255,7 @@ class Cmd(cmd.Cmd):
                         v = getattr(conf, k)
                     except AttributeError:
                         continue
-                    print(k + " " + v)
+                    print('%s %s' % (k, v))
 
         self._request(line, f)
 
@@ -307,7 +307,7 @@ class Cmd(cmd.Cmd):
             o = p.get()
             if o.resources.queue:
                 for q in o.resources.queue:
-                    print(q.resource_id + " " + q.port)
+                    print('%s %s' % (q.resource_id, q.port))
 
         self._request(line, f)
 
@@ -339,7 +339,7 @@ class Cmd(cmd.Cmd):
                         v = getattr(conf, k)
                     except AttributeError:
                         continue
-                    print(k + " " + v)
+                    print('%s %s' % (k, v))
 
         self._request(line, f)
 
@@ -433,7 +433,7 @@ max-rate 100
         def f(p, args):
             o = p.get()
             for s in o.logical_switches.switch:
-                print(s.id + " " + s.datapath_id)
+                print('%s %s' % (s.id, s.datapath_id))
 
         self._request(line, f)
 
@@ -452,15 +452,15 @@ max-rate 100
                 if s.id != lsw:
                     continue
                 print(s.id)
-                print('datapath-id ' + s.datapath_id)
+                print('datapath-id %s' % s.datapath_id)
                 if s.resources.queue:
                     print('queues:')
                     for q in s.resources.queue:
-                        print('\t ' + q)
+                        print('\t %s' % q)
                 if s.resources.port:
                     print('ports:')
                     for p in s.resources.port:
-                        print('\t ' + p)
+                        print('\t %s' % p)
 
         self._request(line, f)
 
@@ -488,7 +488,7 @@ max-rate 100
                         v = getattr(l, k)
                     except AttributeError:
                         continue
-                    print(k + " " + v)
+                    print('%s %s' % (k, v))
 
         self._request(line, f)
 

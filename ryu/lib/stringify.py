@@ -303,9 +303,9 @@ class StringifyMixin(object):
             return cls(**dict(kwargs, **additional_args))
         except TypeError:
             # debug
-            print("CLS " + cls)
-            print("ARG " + dict_)
-            print("KWARG " + kwargs)
+            print("CLS %s" % cls)
+            print("ARG %s" % dict_)
+            print("KWARG %s" % kwargs)
             raise
 
     @classmethod
