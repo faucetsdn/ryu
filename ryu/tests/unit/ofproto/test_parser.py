@@ -251,9 +251,9 @@ def _add_tests():
             method_name = ('test_' + file).replace('-', '_').replace('.', '_')
 
             def _run(self, name, wire_msg, json_str):
-                print ('processing %s ...' % name)
+                print('processing %s ...' % name)
                 self._test_msg(name, wire_msg, json_str)
-            print ('adding %s ...' % method_name)
+            print('adding %s ...' % method_name)
             f = functools.partial(_run, name=method_name, wire_msg=wire_msg,
                                   json_str=json_str)
             f.func_name = method_name

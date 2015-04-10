@@ -659,10 +659,10 @@ def _add_tests_actions(cls):
         method_name = 'test_' + str(cls.ver) + '_' + act["type"] + '_action'
 
         def _run(self, name, act, cls):
-            print ('processing %s ...' % name)
+            print('processing %s ...' % name)
             cls_ = Test_ofctl(name)
             cls_._test_actions(act, cls)
-        print ('adding %s ...' % method_name)
+        print('adding %s ...' % method_name)
         func = functools.partial(_run, name=method_name, act=act, cls=cls)
         func.func_name = method_name
         func.__name__ = method_name
@@ -678,10 +678,10 @@ def _add_tests_match(cls):
                     value) + str(type(value)) + '_match'
 
             def _run(self, name, attr, cls):
-                print ('processing %s ...' % name)
+                print('processing %s ...' % name)
                 cls_ = Test_ofctl(name)
                 cls_._test_to_match(attr, cls)
-            print ('adding %s ...' % method_name)
+            print('adding %s ...' % method_name)
             func = functools.partial(
                 _run, name=method_name, attr=attr, cls=cls)
             func.func_name = method_name

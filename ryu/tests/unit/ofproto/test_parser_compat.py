@@ -144,9 +144,9 @@ def _add_tests():
                         method_name = 'test_' + mod + '_ofpmatch_compat'
 
                         def _run(self, name, ofpp):
-                            print ('processing %s ...' % name)
+                            print('processing %s ...' % name)
                             self._test(name, ofpp)
-                        print ('adding %s ...' % method_name)
+                        print('adding %s ...' % method_name)
                         f = functools.partial(_run, name=method_name,
                                               ofpp=ofpp)
                         f.func_name = method_name

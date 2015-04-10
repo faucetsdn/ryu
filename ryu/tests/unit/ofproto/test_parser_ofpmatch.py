@@ -227,9 +227,9 @@ def _add_tests():
                         method_name = method_name.replace(' ', '_')
 
                         def _run(self, name, ofpp, d, domask):
-                            print ('processing %s ...' % name)
+                            print('processing %s ...' % name)
                             self._test(name, ofpp, d, domask)
-                        print ('adding %s ...' % method_name)
+                        print('adding %s ...' % method_name)
                         f = functools.partial(_run, name=method_name,
                                               ofpp=ofpp, d=d, domask=domask)
                         f.func_name = method_name
