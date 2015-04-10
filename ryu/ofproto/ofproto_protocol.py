@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import ofproto_v1_0
-from . import ofproto_v1_0_parser
-from . import ofproto_v1_2
-from . import ofproto_v1_2_parser
-from . import ofproto_v1_3
-from . import ofproto_v1_3_parser
-from . import ofproto_v1_4
-from . import ofproto_v1_4_parser
-from . import ofproto_v1_5
-from . import ofproto_v1_5_parser
+from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ofproto_v1_0_parser
+from ryu.ofproto import ofproto_v1_2
+from ryu.ofproto import ofproto_v1_2_parser
+from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3_parser
+from ryu.ofproto import ofproto_v1_4
+from ryu.ofproto import ofproto_v1_4_parser
+from ryu.ofproto import ofproto_v1_5
+from ryu.ofproto import ofproto_v1_5_parser
 
 
 _versions = {

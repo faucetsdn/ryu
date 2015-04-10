@@ -25,7 +25,7 @@ from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
-from ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase, msg_str_attr
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase, msg_str_attr
 from . import ether
 from . import ofproto_parser
 from . import ofproto_common

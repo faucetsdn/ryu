@@ -17,7 +17,6 @@ import unittest
 import logging
 import netaddr
 import functools
-import new
 
 from nose.tools import *
 
@@ -666,8 +665,7 @@ def _add_tests_actions(cls):
         func = functools.partial(_run, name=method_name, act=act, cls=cls)
         func.func_name = method_name
         func.__name__ = method_name
-        im = new.instancemethod(func, None, Test_ofctl)
-        setattr(Test_ofctl, method_name, im)
+        setattr(Test_ofctl, method_name, func)
 
 
 def _add_tests_match(cls):
@@ -686,8 +684,7 @@ def _add_tests_match(cls):
                 _run, name=method_name, attr=attr, cls=cls)
             func.func_name = method_name
             func.__name__ = method_name
-            im = new.instancemethod(func, None, Test_ofctl)
-            setattr(Test_ofctl, method_name, im)
+            setattr(Test_ofctl, method_name, func)
 
 
 """ Test case """

@@ -47,7 +47,7 @@ from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
-from ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
 from . import ether
 from . import nicira_ext
 from . import ofproto_parser
@@ -829,9 +829,9 @@ class OFPMatch(StringifyMixin):
             #   OFPMatch(eth_src=('ff:ff:ff:00:00:00'), eth_type=0x800,
             #            ipv4_src='10.0.0.1')
             kwargs = dict(ofproto.oxm_normalize_user(k, v) for
-                          (k, v) in kwargs.iteritems())
+                          (k, v) in kwargs.items())
             fields = [ofproto.oxm_from_user(k, v) for (k, v)
-                      in kwargs.iteritems()]
+                      in kwargs.items()]
             # assumption: sorting by OXM type values makes fields
             # meet ordering requirements (eg. eth_type before ipv4_src)
             fields.sort()
@@ -6039,7 +6039,7 @@ class OFPSetAsync(MsgBase):
                       self.flow_removed_mask[0], self.flow_removed_mask[1])
 
 
-import nx_actions
+from ryu.ofproto import nx_actions
 
 nx_actions.generate(
     'ryu.ofproto.ofproto_v1_3',

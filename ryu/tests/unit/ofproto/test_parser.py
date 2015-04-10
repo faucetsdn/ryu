@@ -227,7 +227,6 @@ def _add_tests():
     import os
     import os.path
     import fnmatch
-    import new
     import functools
 
     this_dir = os.path.dirname(sys.modules[__name__].__file__)
@@ -258,7 +257,6 @@ def _add_tests():
                                   json_str=json_str)
             f.func_name = method_name
             f.__name__ = method_name
-            im = new.instancemethod(f, None, Test_Parser)
-            setattr(Test_Parser, method_name, im)
+            setattr(Test_Parser, method_name, f)
 
 _add_tests()

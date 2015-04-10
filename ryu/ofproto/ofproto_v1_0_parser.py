@@ -21,7 +21,7 @@ Decoder/Encoder implementations of OpenFlow 1.0.
 import struct
 import binascii
 
-from ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
 from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into

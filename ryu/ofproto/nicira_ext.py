@@ -19,7 +19,7 @@
 
 from struct import calcsize
 
-from ofproto_common import OFP_HEADER_SIZE
+from ryu.ofproto.ofproto_common import OFP_HEADER_SIZE
 
 # Action subtypes
 NXAST_RESUBMIT = 1

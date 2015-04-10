@@ -62,7 +62,6 @@ class Test_Parser_OFPMatch(unittest.TestCase):
 
 
 def _add_tests():
-    import new
     import functools
     import itertools
 
@@ -235,7 +234,6 @@ def _add_tests():
                         f.func_name = method_name
                         f.__name__ = method_name
                         cls = Test_Parser_OFPMatch
-                        im = new.instancemethod(f, None, cls)
-                        setattr(cls, method_name, im)
+                        setattr(cls, method_name, f)
 
 _add_tests()

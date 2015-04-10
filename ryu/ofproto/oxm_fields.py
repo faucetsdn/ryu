@@ -62,7 +62,7 @@
 
 import itertools
 import struct
-import ofproto_common
+from ryu.ofproto import ofproto_common
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.lib import type_desc
 
@@ -138,7 +138,6 @@ class NiciraExtended1(_OxmClass):
 
 def generate(modname):
     import sys
-    import string
     import functools
 
     mod = sys.modules[modname]
@@ -147,7 +146,7 @@ def generate(modname):
         setattr(mod, k, v)
 
     for i in mod.oxm_types:
-        uk = string.upper(i.name)
+        uk = i.name.upper()
         if isinstance(i.num, tuple):
             continue
         oxm_class = i.num >> 7

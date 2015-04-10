@@ -592,4 +592,4 @@ def nxm_nx_reg_w(idx):
 
 NXM_HEADER_PACK_STRING = '!I'
 
-from nicira_ext import *  # For API compat
+from ryu.ofproto.nicira_ext import *  # For API compat
