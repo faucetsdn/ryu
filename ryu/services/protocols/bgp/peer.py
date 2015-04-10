@@ -1198,7 +1198,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         def flatten(L):
             if isinstance(L, list):
-                for i in xrange(len(L)):
+                for i in range(len(L)):
                     for e in flatten(L[i]):
                         yield e
             else:

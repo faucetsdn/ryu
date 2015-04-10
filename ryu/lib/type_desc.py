@@ -28,7 +28,7 @@ class IntDescr(TypeDescr):
 
     def to_user(self, bin):
         i = 0
-        for x in xrange(self.size):
+        for x in range(self.size):
             c = bin[:1]
             i = i * 256 + ord(c)
             bin = bin[1:]
@@ -36,7 +36,7 @@ class IntDescr(TypeDescr):
 
     def from_user(self, i):
         bin = ''
-        for x in xrange(self.size):
+        for x in range(self.size):
             bin = chr(i & 255) + bin
             i /= 256
         return bin

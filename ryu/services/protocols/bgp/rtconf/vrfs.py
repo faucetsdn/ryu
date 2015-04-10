@@ -388,7 +388,7 @@ class VrfConf(ConfWithId, ConfWithStats):
 class VrfsConf(BaseConf):
     """Container for all VRF configurations."""
 
-    ADD_VRF_CONF_EVT, REMOVE_VRF_CONF_EVT = xrange(2)
+    ADD_VRF_CONF_EVT, REMOVE_VRF_CONF_EVT = range(2)
 
     VALID_EVT = frozenset([ADD_VRF_CONF_EVT, REMOVE_VRF_CONF_EVT])
 

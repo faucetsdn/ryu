@@ -116,7 +116,7 @@ class VRRPCommon(app_manager.RyuApp):
 
         step = 5
         instances = {}
-        for vrid in xrange(1, 256, step):
+        for vrid in range(1, 256, step):
             if vrid == _VRID:
                 continue
             print("vrid %s" % vrid)

@@ -194,7 +194,7 @@ def _add_tests():
     flatten = lambda l: reduce(flatten_one, l, [])
 
     for ofpp in ofpps:
-        for n in xrange(1, 3):
+        for n in range(1, 3):
             for C in itertools.combinations(L[ofpp], n):
                 l = [1]
                 keys = []

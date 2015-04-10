@@ -4,7 +4,7 @@ import logging
 import pprint
 import re
 
-(STATUS_OK, STATUS_ERROR) = xrange(2)
+(STATUS_OK, STATUS_ERROR) = range(2)
 
 CommandsResponse = namedtuple('CommandsResponse', ['status', 'value'])
 
