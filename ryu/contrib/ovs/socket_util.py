@@ -58,7 +58,7 @@ def make_unix_socket(style, nonblock, bind_path, connect_path):
                 if sys.hexversion >= 0x02060000:
                     os.fchmod(sock.fileno(), 0o700)
                 else:
-                    os.chmod("/dev/fd/%d" % sock.fileno(), 0700)
+                    os.chmod("/dev/fd/%d" % sock.fileno(), 0o700)
             except OSError as e:
                 pass
         if connect_path is not None:
