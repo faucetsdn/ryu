@@ -109,6 +109,9 @@ class Packet(object):
         self.add_protocol(trailer)
         return self
 
+    def __truediv__(self, trailer):
+        return self.__div__(trailer)
+
     def __iter__(self):
         return iter(self.protocols)
 
@@ -143,3 +146,4 @@ def _PacketBase__div__(self, trailer):
     return pkt
 
 packet_base.PacketBase.__div__ = _PacketBase__div__
+packet_base.PacketBase.__truediv__ = _PacketBase__div__
