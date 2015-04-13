@@ -14,6 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+try:
+    # Python 3
+    from functools import reduce
+except ImportError:
+    # Python 2
+    pass
+
 import sys
 import unittest
 from nose.tools import eq_
