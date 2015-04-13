@@ -16,8 +16,6 @@
 
 from ryu.lib import addrconv
 
-import itertools
-
 # string representation
 HADDR_PATTERN = r'([0-9a-f]{2}:){5}[0-9a-f]{2}'
 
@@ -55,4 +53,4 @@ def haddr_to_bin(string):
 
 def haddr_bitand(addr, mask):
     return ''.join(chr(ord(a) & ord(m)) for (a, m)
-                   in itertools.izip(addr, mask))
+                   in zip(addr, mask))
