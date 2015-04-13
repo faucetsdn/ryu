@@ -16,11 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import numbers
 import time
 import unittest
 from nose.tools import raises
+import six
 
 from ryu.lib import hub
 hub.patch()
@@ -111,7 +111,7 @@ class Test_rpc(unittest.TestCase):
 
     def test_0_call_int2(self):
         c = rpc.Client(self._client_sock)
-        obj = sys.maxint
+        obj = six.MAXSIZE
         assert isinstance(obj, int)
         result = c.call("resp", [obj])
         assert result == obj
@@ -119,7 +119,7 @@ class Test_rpc(unittest.TestCase):
 
     def test_0_call_int3(self):
         c = rpc.Client(self._client_sock)
-        obj = - sys.maxint - 1
+        obj = - six.MAXSIZE - 1
         assert isinstance(obj, int)
         result = c.call("resp", [obj])
         assert result == obj
