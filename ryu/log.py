@@ -23,7 +23,11 @@ import logging.config
 import logging.handlers
 import os
 import sys
-import ConfigParser
+
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 
 
 CONF = cfg.CONF
