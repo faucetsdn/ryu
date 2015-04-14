@@ -36,21 +36,21 @@ class Test_addrconv(unittest.TestCase):
         eq_(conv.bin_to_text(bin_value), text_value)
 
     def test_ipv4(self):
-        self._test_conv(addrconv.ipv4, '0.0.0.0', '\x00\x00\x00\x00')
-        self._test_conv(addrconv.ipv4, '127.0.0.1', '\x7f\x00\x00\x01')
-        self._test_conv(addrconv.ipv4, '255.255.0.0', '\xff\xff\x00\x00')
+        self._test_conv(addrconv.ipv4, '0.0.0.0', b'\x00\x00\x00\x00')
+        self._test_conv(addrconv.ipv4, '127.0.0.1', b'\x7f\x00\x00\x01')
+        self._test_conv(addrconv.ipv4, '255.255.0.0', b'\xff\xff\x00\x00')
 
     def test_ipv6(self):
         self._test_conv(addrconv.ipv6, 'ff02::1',
-                        ('\xff\x02\x00\x00\x00\x00\x00\x00'
-                         '\x00\x00\x00\x00\x00\x00\x00\x01'))
+                        (b'\xff\x02\x00\x00\x00\x00\x00\x00'
+                         b'\x00\x00\x00\x00\x00\x00\x00\x01'))
         self._test_conv(addrconv.ipv6, 'fe80::f00b:a4ff:fe7d:f8ea',
-                        ('\xfe\x80\x00\x00\x00\x00\x00\x00'
-                         '\xf0\x0b\xa4\xff\xfe\x7d\xf8\xea'))
+                        (b'\xfe\x80\x00\x00\x00\x00\x00\x00'
+                         b'\xf0\x0b\xa4\xff\xfe\x7d\xf8\xea'))
         self._test_conv(addrconv.ipv6, '::',
-                        ('\x00\x00\x00\x00\x00\x00\x00\x00'
-                         '\x00\x00\x00\x00\x00\x00\x00\x00'))
+                        (b'\x00\x00\x00\x00\x00\x00\x00\x00'
+                         b'\x00\x00\x00\x00\x00\x00\x00\x00'))
 
     def test_mac(self):
         self._test_conv(addrconv.mac, 'f2:0b:a4:01:0a:23',
-                        '\xf2\x0b\xa4\x01\x0a\x23')
+                        b'\xf2\x0b\xa4\x01\x0a\x23')

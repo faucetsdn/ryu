@@ -72,7 +72,7 @@ class Test_mac(unittest.TestCase):
         """ len(hexes) = 6 (False)
         """
         addr = 'aa:aa:aa:aa:aa:aa'
-        val = '\xaa\xaa\xaa\xaa\xaa\xaa'
+        val = b'\xaa\xaa\xaa\xaa\xaa\xaa'
 
         res = mac.haddr_to_bin(addr)
 

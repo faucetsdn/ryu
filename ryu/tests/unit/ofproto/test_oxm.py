@@ -171,7 +171,7 @@ class Test_OXM(unittest.TestCase):
         self._test(user, on_wire, 10)
 
     def test_basic_unknown_nomask(self):
-        user = ('field_100', 'aG9nZWhvZ2U=')
+        user = ('field_100', b'aG9nZWhvZ2U=')
         on_wire = (
             b'\x00\x00\xc8\x08'
             b'hogehoge'
@@ -179,7 +179,7 @@ class Test_OXM(unittest.TestCase):
         self._test(user, on_wire, 4)
 
     def test_basic_unknown_mask(self):
-        user = ('field_100', ('aG9nZWhvZ2U=', 'ZnVnYWZ1Z2E='))
+        user = ('field_100', (b'aG9nZWhvZ2U=', b'ZnVnYWZ1Z2E='))
         on_wire = (
             b'\x00\x00\xc9\x10'
             b'hogehoge'
