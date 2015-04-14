@@ -275,12 +275,12 @@ class vrrp(packet_base.PacketBase):
 
         self.checksum = checksum
         self.ip_addresses = ip_addresses
-        assert len(ip_addresses) == self.count_ip
+        assert len(list(ip_addresses)) == self.count_ip
 
         self.auth_type = auth_type
         self.auth_data = auth_data
 
-        self._is_ipv6 = is_ipv6(self.ip_addresses[0])
+        self._is_ipv6 = is_ipv6(list(self.ip_addresses)[0])
         self.identification = 0         # used for ipv4 identification
 
     def checksum_ok(self, ipvx, vrrp_buf):
