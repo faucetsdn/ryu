@@ -16,6 +16,13 @@
 
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+try:
+    # Python 3
+    from imp import reload
+except ImportError:
+    # Python 2
+    pass
+
 import unittest
 import logging
 from nose.tools import eq_

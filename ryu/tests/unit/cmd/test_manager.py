@@ -19,6 +19,13 @@ import unittest
 import mock
 from nose.tools import eq_, raises
 
+try:
+    # Python 3
+    from imp import reload
+except ImportError:
+    # Python 2
+    pass
+
 from ryu.cmd.manager import main
 
 
