@@ -215,8 +215,8 @@ def _add_tests():
                         if domask:
                             values = [(value, cls.generate_mask())
                                       for (cls, value)
-                                      in itertools.izip(clss, values)]
-                        d = dict(itertools.izip(keys, values))
+                                      in zip(clss, values)]
+                        d = dict(zip(keys, values))
                         mod = ofpp.__name__.split('.')[-1]
                         method_name = 'test_' + mod
                         if domask:
