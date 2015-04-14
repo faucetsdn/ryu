@@ -21,6 +21,7 @@ import struct
 import array
 import inspect
 from nose.tools import *
+import six
 from ryu.ofproto import ether, inet
 from ryu.lib.packet import *
 from ryu.lib import addrconv
@@ -1483,13 +1484,14 @@ class TestPacket(unittest.TestCase):
                              if k in llc_values])
         llc_str = '%s(%s)' % (llc.llc.__name__, _llc_str)
 
+        _long = int if six.PY3 else long
         bpdu_values = {'flags': 0,
-                       'root_priority': long(32768),
-                       'root_system_id_extension': long(0),
+                       'root_priority': _long(32768),
+                       'root_system_id_extension': _long(0),
                        'root_mac_address': self.src_mac,
                        'root_path_cost': 0,
-                       'bridge_priority': long(32768),
-                       'bridge_system_id_extension': long(0),
+                       'bridge_priority': _long(32768),
+                       'bridge_system_id_extension': _long(0),
                        'bridge_mac_address': self.dst_mac,
                        'port_priority': 128,
                        'port_number': 4,

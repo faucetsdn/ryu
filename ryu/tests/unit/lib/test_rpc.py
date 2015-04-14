@@ -128,7 +128,8 @@ class Test_rpc(unittest.TestCase):
     def test_0_call_long(self):
         c = rpc.Client(self._client_sock)
         obj = 0xffffffffffffffff  # max value for msgpack
-        assert isinstance(obj, long)
+        _long = int if six.PY3 else long
+        assert isinstance(obj, _long)
         result = c.call("resp", [obj])
         assert result == obj
         assert isinstance(result, type(obj))
