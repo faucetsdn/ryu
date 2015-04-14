@@ -38,7 +38,7 @@ class IntDescr(TypeDescr):
         bin = ''
         for x in range(self.size):
             bin = chr(i & 255) + bin
-            i /= 256
+            i //= 256
         return bin
 
 Int1 = IntDescr(1)

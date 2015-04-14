@@ -62,7 +62,7 @@ def generate(ofp_name, ofpp_name):
                 src = cls._parse_subfield(rest)
                 rest = rest[6:]
             elif src_type == 1:  # immediate
-                src_len = (n_bits + 15) / 16 * 2
+                src_len = (n_bits + 15) // 16 * 2
                 src_bin = rest[:src_len]
                 src = type_desc.IntDescr(size=src_len).to_user(src_bin)
                 rest = rest[src_len:]
@@ -89,7 +89,7 @@ def generate(ofp_name, ofpp_name):
             if src_type == 0:  # subfield
                 buf += self._serialize_subfield(self.src)
             elif src_type == 1:  # immediate
-                src_len = (self.n_bits + 15) / 16 * 2
+                src_len = (self.n_bits + 15) // 16 * 2
                 buf += type_desc.IntDescr(size=src_len).from_user(self.src)
             # dst
             if self._dst_type == 0:  # match

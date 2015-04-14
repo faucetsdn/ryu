@@ -412,7 +412,7 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[24:]))
 
         eq_(res[0], icmpv6.ND_OPTION_SLA)
-        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_sla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
     def test_json(self):
@@ -535,7 +535,7 @@ class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solicit):
         res = struct.unpack(icmpv6.nd_option_tla._PACK_STR, str(buf[24:]))
 
         eq_(res[0], icmpv6.ND_OPTION_TLA)
-        eq_(res[1], len(icmpv6.nd_option_tla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_tla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
 
@@ -695,7 +695,7 @@ class Test_icmpv6_router_solicit(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[8:]))
 
         eq_(res[0], icmpv6.ND_OPTION_SLA)
-        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_sla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
     def test_json(self):
@@ -760,7 +760,7 @@ class Test_icmpv6_router_advert(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[16:]))
 
         eq_(res[0], icmpv6.ND_OPTION_SLA)
-        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_sla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
         # with nd_option_pi
@@ -821,13 +821,13 @@ class Test_icmpv6_router_advert(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[16:24]))
 
         eq_(res[0], icmpv6.ND_OPTION_SLA)
-        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_sla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
         res = struct.unpack(icmpv6.nd_option_pi._PACK_STR, str(buf[24:]))
 
         eq_(res[0], icmpv6.ND_OPTION_PI)
-        eq_(res[1], len(icmpv6.nd_option_pi()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_pi()) // 8)
         eq_(res[2], 0)
         eq_(res[3], 0)
         eq_(res[4], 0)
@@ -859,7 +859,7 @@ class Test_icmpv6_nd_option_la(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf))
 
         eq_(res[0], icmpv6.ND_OPTION_SLA)
-        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_sla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
         # with nd_neighbor
@@ -884,7 +884,7 @@ class Test_icmpv6_nd_option_la(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_tla._PACK_STR, str(buf[24:]))
 
         eq_(res[0], icmpv6.ND_OPTION_TLA)
-        eq_(res[1], len(icmpv6.nd_option_tla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_tla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
         # with nd_router_solicit
@@ -908,7 +908,7 @@ class Test_icmpv6_nd_option_la(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_sla._PACK_STR, str(buf[8:]))
 
         eq_(res[0], icmpv6.ND_OPTION_SLA)
-        eq_(res[1], len(icmpv6.nd_option_sla()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_sla()) // 8)
         eq_(res[2], addrconv.mac.text_to_bin('00:00:00:00:00:00'))
 
 
@@ -926,7 +926,7 @@ class Test_icmpv6_nd_option_pi(unittest.TestCase):
         res = struct.unpack(icmpv6.nd_option_pi._PACK_STR, str(buf))
 
         eq_(res[0], icmpv6.ND_OPTION_PI)
-        eq_(res[1], len(icmpv6.nd_option_pi()) / 8)
+        eq_(res[1], len(icmpv6.nd_option_pi()) // 8)
         eq_(res[2], 0)
         eq_(res[3], 0)
         eq_(res[4], 0)
@@ -1720,7 +1720,7 @@ class Test_mldv2_report_group(unittest.TestCase):
 
     def setUp_with_aux(self):
         self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
-        self.aux_len = len(self.aux) / 4
+        self.aux_len = len(self.aux) // 4
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address, self.srcs,
             self.aux)
@@ -1733,7 +1733,7 @@ class Test_mldv2_report_group(unittest.TestCase):
         self.srcs = ['fe80::1', 'fe80::2', 'fe80::3']
         self.num = len(self.srcs)
         self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
-        self.aux_len = len(self.aux) / 4
+        self.aux_len = len(self.aux) // 4
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address, self.srcs,
             self.aux)
@@ -1928,7 +1928,7 @@ class Test_mldv2_report_group(unittest.TestCase):
     @raises
     def test_aux_len_larger_than_aux(self):
         self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
-        self.aux_len = len(self.aux) / 4 + 1
+        self.aux_len = len(self.aux) // 4 + 1
         self.buf = struct.pack(
             icmpv6.mldv2_report_group._PACK_STR, self.type_, self.aux_len,
             self.num, addrconv.ipv6.text_to_bin(self.address))
@@ -1941,7 +1941,7 @@ class Test_mldv2_report_group(unittest.TestCase):
     @raises
     def test_aux_len_smaller_than_aux(self):
         self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
-        self.aux_len = len(self.aux) / 4 - 1
+        self.aux_len = len(self.aux) // 4 - 1
         self.buf = struct.pack(
             icmpv6.mldv2_report_group._PACK_STR, self.type_, self.aux_len,
             self.num, addrconv.ipv6.text_to_bin(self.address))

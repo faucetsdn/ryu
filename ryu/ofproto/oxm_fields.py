@@ -290,7 +290,7 @@ def _parse_header_impl(mod, buf, offset):
         exp_hdr_len = 0
     value_len = oxm_length - exp_hdr_len
     if oxm_hasmask:
-        value_len /= 2
+        value_len //= 2
     assert value_len > 0
     field_len = hdr_len + oxm_length
     total_hdr_len = hdr_len + exp_hdr_len
