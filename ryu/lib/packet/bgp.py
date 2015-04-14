@@ -29,6 +29,13 @@ import copy
 import netaddr
 import numbers
 
+try:
+    # Python 3
+    from functools import reduce
+except ImportError:
+    # Python 2
+    pass
+
 from ryu.lib.stringify import StringifyMixin
 from ryu.lib.packet import afi as addr_family
 from ryu.lib.packet import safi as subaddr_family

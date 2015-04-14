@@ -19,6 +19,13 @@ RFC 2328 OSPF version 2
 
 import struct
 
+try:
+    # Python 3
+    from functools import reduce
+except ImportError:
+    # Python 2
+    pass
+
 from ryu.lib.stringify import StringifyMixin
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import packet_utils
