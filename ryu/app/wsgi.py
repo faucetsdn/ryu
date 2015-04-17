@@ -23,12 +23,16 @@ from ryu import cfg
 from ryu.lib import hub
 from routes import Mapper
 from routes.util import URLGenerator
+
+import ryu.contrib
+ryu.contrib.update_module_path()
 from tinyrpc.server import RPCServer
 from tinyrpc.dispatch import RPCDispatcher
 from tinyrpc.dispatch import public as rpc_public
 from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 from tinyrpc.transports import ServerTransport, ClientTransport
 from tinyrpc.client import RPCClient
+ryu.contrib.restore_module_path()
 
 CONF = cfg.CONF
 CONF.register_cli_opts([

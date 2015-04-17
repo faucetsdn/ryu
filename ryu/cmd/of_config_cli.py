@@ -24,6 +24,7 @@
 #     (Cmd) raw_get sw1
 
 import ryu.contrib
+ryu.contrib.update_module_path()
 
 from ryu import cfg
 

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import ryu.contrib
+ryu.contrib.update_module_path()
 
 from ryu import cfg
 from ryu import utils

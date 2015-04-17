@@ -30,6 +30,7 @@
 #     (Cmd)
 
 import ryu.contrib
+ryu.contrib.update_module_path()
 
 from ryu import cfg
 

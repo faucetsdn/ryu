@@ -27,6 +27,7 @@ hub.patch(thread=False)
 # NOTE: this modifies sys.path and thus affects the following imports.
 # eg. oslo.config.cfg.
 import ryu.contrib
+ryu.contrib.update_module_path()
 
 from ryu import cfg
 import logging
