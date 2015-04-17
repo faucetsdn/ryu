@@ -119,9 +119,8 @@ class Stream(object):
         raise NotImplementedError("This method must be overrided by subclass")
 
     @staticmethod
-    def open_block(args):
+    def open_block((error, stream)):
         """Blocks until a Stream completes its connection attempt, either
-        (error, stream) = args 
         succeeding or failing.  (error, stream) should be the tuple returned by
         Stream.open().  Returns a tuple of the same form.
 
@@ -197,7 +196,7 @@ class Stream(object):
 
         try:
             return (0, self.socket.recv(n))
-        except socket.error as e:
+        except socket.error, e:
             return (ovs.socket_util.get_exception_errno(e), "")
 
     def send(self, buf):
@@ -219,7 +218,7 @@ class Stream(object):
 
         try:
             return self.socket.send(buf)
-        except socket.error as e:
+        except socket.error, e:
             return -ovs.socket_util.get_exception_errno(e)
 
     def run(self):
@@ -290,7 +289,7 @@ class PassiveStream(object):
 
         try:
             sock.listen(10)
-        except socket.error as e:
+        except socket.error, e:
             vlog.err("%s: listen: %s" % (name, os.strerror(e.error)))
             sock.close()
             return e.error, None
@@ -318,7 +317,7 @@ class PassiveStream(object):
                 sock, addr = self.socket.accept()
                 ovs.socket_util.set_nonblocking(sock)
                 return 0, Stream(sock, "unix:%s" % addr, 0)
-            except socket.error as e:
+            except socket.error, e:
                 error = ovs.socket_util.get_exception_errno(e)
                 if error != errno.EAGAIN:
                     # XXX rate-limit
