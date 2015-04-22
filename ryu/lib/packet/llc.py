@@ -250,7 +250,6 @@ class ControlFormatS(stringify.StringifyMixin):
         (control,) = struct.unpack_from(cls._PACK_STR, buf)
 
         assert (control >> 8) & 0b11 == cls.TYPE
-        assert (control >> 12) & 0b1111 == 0
 
         supervisory_function = (control >> 10) & 0b11
         pf_bit = (control >> 8) & 0b1
