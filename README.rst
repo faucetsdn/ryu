@@ -40,7 +40,7 @@ Some functionalities of ryu requires extra packages:
 
 - OF-Config requires lxml
 - NETCONF requires paramiko
-- BGP speaker (net_cntl) requires paramiko
+- BGP speaker (ssh console) requires paramiko
 
 If you want to use the functionalities, please install requirements::
 
