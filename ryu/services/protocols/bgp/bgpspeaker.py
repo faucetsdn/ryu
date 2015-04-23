@@ -18,7 +18,6 @@
 
 import netaddr
 from ryu.lib import hub
-from ryu.services.protocols.bgp.operator import ssh
 
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
@@ -161,6 +160,8 @@ class BGPSpeaker(object):
         self._peer_down_handler = peer_down_handler
         self._peer_up_handler = peer_up_handler
         if ssh_console:
+            from ryu.services.protocols.bgp.operator import ssh
+
             hub.spawn(ssh.SSH_CLI_CONTROLLER.start)
 
     def _notify_peer_down(self, peer):
