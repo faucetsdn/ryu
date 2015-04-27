@@ -239,9 +239,11 @@ def _add_tests():
         'of14',
         'of15',
     ]
+    cases = set()
     for ver in ofvers:
         pdir = packet_data_dir + '/' + ver
         jdir = json_dir + '/' + ver
+        n_added = 0
         for file in os.listdir(pdir):
             if not fnmatch.fnmatch(file, '*.packet'):
                 continue
@@ -258,5 +260,10 @@ def _add_tests():
             f.func_name = method_name
             f.__name__ = method_name
             setattr(Test_Parser, method_name, f)
+            cases.add(method_name)
+            n_added += 1
+        assert n_added > 0
+    assert (cases ==
+            set(unittest.defaultTestLoader.getTestCaseNames(Test_Parser)))
 
 _add_tests()
