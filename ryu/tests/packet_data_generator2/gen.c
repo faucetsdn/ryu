@@ -187,9 +187,9 @@ struct message {
 
 const struct message messages[] = {
     M(packet_in,
-      ((const struct protocol_version *[]){&p15, NULL})),
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(flow_mod,
-      ((const struct protocol_version *[]){&p15, NULL})),
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(bundle_ctrl,
       ((const struct protocol_version *[]){&p15, NULL})),
     M(bundle_add,
