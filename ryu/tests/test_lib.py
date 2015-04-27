@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import gettext
 import os
 import unittest
