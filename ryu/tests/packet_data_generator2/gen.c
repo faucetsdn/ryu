@@ -174,23 +174,26 @@ struct protocol_version {
 #define P(v) {.name = "OFP" #v, .dir_name = "of" #v, \
               .version = OFP ## v ## _VERSION,}
 
-const struct protocol_version protocols[] = {
-    P(15),
-};
-
+const struct protocol_version p13 = P(13);
+const struct protocol_version p15 = P(15);
 
 struct message {
     const char *name;
     struct ofpbuf *(*gen)(enum ofputil_protocol);
+    const struct protocol_version **protocols;
 };
 
-#define M(m) {.name = #m, .gen = m,}
+#define M(m, p) {.name = #m, .gen = m, .protocols = p,}
 
 const struct message messages[] = {
-    M(packet_in),
-    M(flow_mod),
-    M(bundle_ctrl),
-    M(bundle_add),
+    M(packet_in,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    M(flow_mod,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    M(bundle_ctrl,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    M(bundle_add,
+      ((const struct protocol_version *[]){&p15, NULL})),
 };
 
 #if !defined(__arraycount)
@@ -203,19 +206,24 @@ main(int argc, char *argv[])
     struct ofpbuf *buf;
     unsigned int i, j;
 
-    for (j = 0; j < __arraycount(protocols); j++) {
-        const struct protocol_version * const p = &protocols[j];
-        const enum ofputil_protocol proto =
-            ofputil_protocol_from_ofp_version(p->version);
+    for (i = 0; i < __arraycount(messages); i++) {
+        const struct message * const m = &messages[i];
+        char name[255];
 
-        for (i = 0; i < __arraycount(messages); i++) {
-            const struct message * const m = &messages[i];
-            char name[255];
+        for (j = 0;; j++) {
+            const struct protocol_version * const p = m->protocols[j];
+
+            if (p == NULL) {
+                break;
+            }
+            const enum ofputil_protocol proto =
+                ofputil_protocol_from_ofp_version(p->version);
 
             buf = (*m->gen)(proto);
             snprintf(name, sizeof(name),
                 "../packet_data/%s/libofproto-%s-%s.packet",
                 p->dir_name, p->name, m->name);
+            printf("generating %s ...\n", name);
             clear_xid(buf);
             dump_message(name, buf);
             ofpbuf_delete(buf);
