@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2013,2014,2015 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2013,2014,2015 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
