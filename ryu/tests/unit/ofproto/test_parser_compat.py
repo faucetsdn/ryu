@@ -139,18 +139,18 @@ def _add_tests():
 
     ofpps = [ofproto_v1_2_parser, ofproto_v1_3_parser]
     for ofpp in ofpps:
-                        mod = ofpp.__name__.split('.')[-1]
-                        method_name = 'test_' + mod + '_ofpmatch_compat'
+        mod = ofpp.__name__.split('.')[-1]
+        method_name = 'test_' + mod + '_ofpmatch_compat'
 
-                        def _run(self, name, ofpp):
-                            print('processing %s ...' % name)
-                            self._test(name, ofpp)
-                        print('adding %s ...' % method_name)
-                        f = functools.partial(_run, name=method_name,
-                                              ofpp=ofpp)
-                        f.func_name = method_name
-                        f.__name__ = method_name
-                        cls = Test_Parser_Compat
-                        setattr(cls, method_name, f)
+        def _run(self, name, ofpp):
+            print('processing %s ...' % name)
+            self._test(name, ofpp)
+        print('adding %s ...' % method_name)
+        f = functools.partial(_run, name=method_name,
+                              ofpp=ofpp)
+        f.func_name = method_name
+        f.__name__ = method_name
+        cls = Test_Parser_Compat
+        setattr(cls, method_name, f)
 
 _add_tests()
