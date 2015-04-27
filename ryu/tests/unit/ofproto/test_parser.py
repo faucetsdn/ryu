@@ -27,6 +27,7 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
 from ryu.ofproto import ofproto_v1_5
+from ryu.tests import test_lib
 import json
 
 
@@ -257,9 +258,7 @@ def _add_tests():
             print('adding %s ...' % method_name)
             f = functools.partial(_run, name=method_name, wire_msg=wire_msg,
                                   json_str=json_str)
-            f.func_name = method_name
-            f.__name__ = method_name
-            setattr(Test_Parser, method_name, f)
+            test_lib.add_method(Test_Parser, method_name, f)
             cases.add(method_name)
             n_added += 1
         assert n_added > 0
