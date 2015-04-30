@@ -21,6 +21,7 @@ Planned to be replaced by ryu/topology.
 """
 
 import logging
+import warnings
 
 from ryu.base import app_manager
 from ryu.controller import event
@@ -121,9 +122,11 @@ class DPSet(app_manager.RyuApp):
         if dp.id not in self.port_state:
             self.port_state[dp.id] = PortState()
             ev = EventDP(dp, True)
-            for port in dp.ports.values():
-                self._port_added(dp, port)
-                ev.ports.append(port)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                for port in dp.ports.values():
+                    self._port_added(dp, port)
+                    ev.ports.append(port)
             self.send_event_to_observers(ev)
 
     def _unregister(self, dp):
