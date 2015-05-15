@@ -27,9 +27,86 @@
                            }
                         }
                      }
+                  }, 
+                  {
+                     "NXActionLearn": {
+                        "cookie": 0, 
+                        "experimenter": 8992, 
+                        "fin_hard_timeout": 0, 
+                        "fin_idle_timeout": 0, 
+                        "flags": 0, 
+                        "hard_timeout": 300, 
+                        "idle_timeout": 0, 
+                        "len": 96, 
+                        "priority": 1, 
+                        "specs": [
+                           {
+                              "NXFlowSpecMatch": {
+                                 "dst": [
+                                    "vlan_vid", 
+                                    0
+                                 ], 
+                                 "n_bits": 12, 
+                                 "src": [
+                                    "vlan_vid", 
+                                    0
+                                 ]
+                              }
+                           }, 
+                           {
+                              "NXFlowSpecMatch": {
+                                 "dst": [
+                                    "eth_dst_nxm", 
+                                    0
+                                 ], 
+                                 "n_bits": 48, 
+                                 "src": [
+                                    "eth_src_nxm", 
+                                    0
+                                 ]
+                              }
+                           }, 
+                           {
+                              "NXFlowSpecLoad": {
+                                 "dst": [
+                                    "vlan_vid", 
+                                    0
+                                 ], 
+                                 "n_bits": 12, 
+                                 "src": 0
+                              }
+                           }, 
+                           {
+                              "NXFlowSpecLoad": {
+                                 "dst": [
+                                    "tunnel_id_nxm", 
+                                    0
+                                 ], 
+                                 "n_bits": 64, 
+                                 "src": [
+                                    "tunnel_id_nxm", 
+                                    0
+                                 ]
+                              }
+                           }, 
+                           {
+                              "NXFlowSpecOutput": {
+                                 "dst": "", 
+                                 "n_bits": 32, 
+                                 "src": [
+                                    "in_port", 
+                                    0
+                                 ]
+                              }
+                           }
+                        ], 
+                        "subtype": 16, 
+                        "table_id": 99, 
+                        "type": 65535
+                     }
                   }
                ], 
-               "len": 32, 
+               "len": 128, 
                "type": 4
             }
          }, 
