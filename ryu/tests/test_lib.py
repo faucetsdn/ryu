@@ -58,7 +58,6 @@ class _AnsiColorizer(object):
                     curses.setupterm()
                     return curses.tigetnum("colors") > 2
             except:
-                raise
                 # guess false in case of error
                 return False
     supported = classmethod(supported)
