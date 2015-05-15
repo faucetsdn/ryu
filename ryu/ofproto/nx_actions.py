@@ -200,6 +200,12 @@ def generate(ofp_name, ofpp_name):
         _subtype = nicira_ext.NXAST_REG_MOVE
         _fmt_str = '!HHH'  # n_bits, src_ofs, dst_ofs
         # Followed by OXM fields (src, dst) and padding to 8 bytes boundary
+        _TYPE = {
+            'ascii': [
+                'src_field',
+                'dst_field',
+            ]
+        }
 
         def __init__(self, src_field, dst_field, n_bits, src_ofs=0, dst_ofs=0,
                      type_=None, len_=None, experimenter=None, subtype=None):
