@@ -336,6 +336,7 @@ def generate(ofp_name, ofpp_name):
                           bytes(data))
 
     def add_attr(k, v):
+        v.__module__ = ofpp.__name__  # Necessary for stringify stuff
         setattr(ofpp, k, v)
 
     add_attr('NXAction', NXAction)
