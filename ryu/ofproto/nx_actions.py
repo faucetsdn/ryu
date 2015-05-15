@@ -36,6 +36,12 @@ def generate(ofp_name, ofpp_name):
         _hdr_fmt_str = '!H'  # 2 bit 0s, 1 bit src, 2 bit dst, 11 bit n_bits
         _dst_type = None
         _subclasses = {}
+        _TYPE = {
+            'nx-flow-spec-field': [
+                'src',
+                'dst',
+            ]
+        }
 
         def __init__(self, src, dst, n_bits):
             self.src = src

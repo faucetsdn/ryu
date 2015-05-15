@@ -76,9 +76,28 @@ class Utf8StringType(TypeDescr):
         return v.encode('utf-8')
 
 
+class NXFlowSpecFieldType(TypeDescr):
+    # ("field_name", 0) <-> ["field_name", 0]
+
+    @staticmethod
+    def encode(v):
+        if not isinstance(v, tuple):
+            return v
+        field, ofs = v
+        return [AsciiStringType.encode(field), ofs]
+
+    @staticmethod
+    def decode(v):
+        if not isinstance(v, list):
+            return v
+        field, ofs = v
+        return (AsciiStringType.decode(field), ofs)
+
+
 _types = {
     'ascii': AsciiStringType,
     'utf-8': Utf8StringType,
+    'nx-flow-spec-field': NXFlowSpecFieldType,  # XXX this should not be here
 }
 
 
