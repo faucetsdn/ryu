@@ -19,7 +19,7 @@ import imp
 import logging
 import traceback
 from os import path
-from oslo.config import cfg
+from oslo_config import cfg
 
 from ryu.lib import hub
 from ryu.base.app_manager import RyuApp

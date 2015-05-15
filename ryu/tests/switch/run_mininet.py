@@ -10,7 +10,7 @@ from mininet.node import OVSSwitch
 from mininet.node import UserSwitch
 from mininet.term import makeTerm
 
-from oslo.config import cfg
+from oslo_config import cfg
 from ryu import version
 
 if '__main__' == __name__:
