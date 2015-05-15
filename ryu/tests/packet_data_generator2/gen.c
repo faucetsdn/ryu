@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 
+#include <lib/learn.h>
 #include <lib/ofpbuf.h>
 #include <lib/ofp-actions.h>
 #include <lib/ofp-msgs.h>
 #include <lib/ofp-util.h>
 #include <lib/packets.h>
 
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 
@@ -108,6 +110,22 @@ flow_mod(enum ofputil_protocol proto)
     struct ofpbuf acts;
     struct ofpact_ipv4 *a_set_field;
     struct ofpact_goto_table *a_goto;
+    char *error;
+
+    /*
+     * Taken from neutron OVS-agent,
+     * modified for OF>=1.3. (NXM -> OXM)
+     * NOTE(yamamoto): This needs to be writable.  learn_parse() modifies it.
+     */
+    char learn_args[] =
+        "table=99,"
+        "priority=1,"
+        "hard_timeout=300,"
+        "OXM_OF_VLAN_VID[0..11],"
+        "OXM_OF_ETH_DST[]=OXM_OF_ETH_SRC[],"
+        "load:0->OXM_OF_VLAN_VID[],"
+        "load:OXM_OF_TUNNEL_ID[]->OXM_OF_TUNNEL_ID[],"
+        "output:OXM_OF_IN_PORT[]";
 
     memset(&fm, 0, sizeof(fm));
     fm.command = OFPFC_ADD;
@@ -122,6 +140,8 @@ flow_mod(enum ofputil_protocol proto)
     ofpact_put_STRIP_VLAN(&acts);
     a_set_field = ofpact_put_SET_IPV4_DST(&acts);
     a_set_field->ipv4 = inet_addr("192.168.2.9");
+    error = learn_parse(learn_args, &acts);
+    assert(error == NULL);
     a_goto = ofpact_put_GOTO_TABLE(&acts);
     a_goto->table_id = 100;
 
