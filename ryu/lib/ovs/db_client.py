@@ -17,6 +17,9 @@
 import logging
 import os
 
+import ryu.contrib
+ryu.contrib.update_module_path()
+
 from ovs import (jsonrpc,
                  stream)
 from ovs import util as ovs_util

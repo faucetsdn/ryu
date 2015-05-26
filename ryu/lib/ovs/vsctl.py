@@ -22,6 +22,9 @@ import os
 import sys
 import weakref
 
+import ryu.contrib
+ryu.contrib.update_module_path()
+
 import ovs.db.data
 import ovs.db.types
 import ovs.poller
