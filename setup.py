@@ -26,5 +26,5 @@ import ryu.hooks
 
 ryu.hooks.save_orig()
 setuptools.setup(name='ryu',
-                 setup_requires=['pbr'],
+                 setup_requires=['pbr<1.0'],
                  pbr=True)
