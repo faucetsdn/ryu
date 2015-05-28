@@ -48,6 +48,47 @@ Int4 = IntDescr(4)
 Int8 = IntDescr(8)
 
 
+def _split_str(s, n):
+    """
+    split string into list of strings by specified number.
+    """
+    length = len(s)
+    return [s[i:i + n] for i in range(0, length, n)]
+
+
+class IntDescrMlt(TypeDescr):
+    def __init__(self, length, num):
+        self.length = length
+        self.num = num
+        self.size = length * num
+
+    def to_user(self, bin):
+        assert len(bin) == self.size
+        lb = _split_str(bin, self.length)
+        li = []
+        for b in lb:
+            i = 0
+            for x in range(self.length):
+                c = b[:1]
+                i = i * 256 + ord(c)
+                b = b[1:]
+            li.append(i)
+        return tuple(li)
+
+    def from_user(self, li):
+        assert len(li) == self.num
+        bin = ''
+        for i in li:
+            b = ''
+            for x in range(self.length):
+                b = chr(i & 255) + b
+                i //= 256
+            bin += b
+        return bin
+
+Int4Double = IntDescrMlt(4, 2)
+
+
 class MacAddr(TypeDescr):
     size = 6
     to_user = addrconv.mac.bin_to_text

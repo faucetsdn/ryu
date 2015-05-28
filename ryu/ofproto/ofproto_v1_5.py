@@ -20,8 +20,7 @@ OpenFlow 1.5 definitions.
 
 from ryu.lib import type_desc
 from ryu.ofproto import oxm_fields
-# TODO: oxs_fields
-# from ryu.ofproto import oxs_fields
+from ryu.ofproto import oxs_fields
 
 from struct import calcsize
 
@@ -450,12 +449,27 @@ assert calcsize(OFP_STATS_PACK_STR) == OFP_STATS_SIZE
 OFPXSC_OPENFLOW_BASIC = 0x8002  # Basic stats class for OpenFlow
 OFPXSC_EXPERIMENTER = 0xFFFF    # Experimenter class
 
-# enum oxs_ofb_stat_fields
-OFPXST_OFB_DURATION = 0         # Time flow entry has been alive.
-OFPXST_OFB_IDLE_TIME = 1        # Time flow entry has been idle.
-OFPXST_OFB_FLOW_COUNT = 3       # Number of aggregated flow entries.
-OFPXST_OFB_PACKET_COUNT = 4     # Number of packets in flow entry.
-OFPXST_OFB_BYTE_COUNT = 5       # Number of bytes in flow entry.
+
+def _oxs_tlv_header(class_, field, reserved, length):
+    return (class_ << 16) | (field << 9) | (reserved << 8) | length
+
+
+def oxs_tlv_header(field, length):
+    return _oxs_tlv_header(OFPXSC_OPENFLOW_BASIC, field, 0, length)
+
+
+def oxs_tlv_header_extract_length(header):
+    return header & 0xff
+
+oxs_types = [
+    oxs_fields.OpenFlowBasic('duration', 0, type_desc.Int4Double),
+    oxs_fields.OpenFlowBasic('idle_time', 1, type_desc.Int4Double),
+    oxs_fields.OpenFlowBasic('flow_count', 3, type_desc.Int4),
+    oxs_fields.OpenFlowBasic('packet_count', 4, type_desc.Int8),
+    oxs_fields.OpenFlowBasic('byte_count', 5, type_desc.Int8),
+]
+
+oxs_fields.generate(__name__)
 
 # enum ofp_action_type
 OFPAT_OUTPUT = 0            # Output to switch port.
