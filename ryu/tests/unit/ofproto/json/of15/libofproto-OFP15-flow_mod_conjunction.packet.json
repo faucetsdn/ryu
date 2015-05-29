@@ -1,0 +1,101 @@
+{
+   "OFPFlowMod": {
+      "buffer_id": 0, 
+      "command": 0, 
+      "cookie": 1311768467463790320, 
+      "cookie_mask": 18446744073709551615, 
+      "flags": 0, 
+      "hard_timeout": 0, 
+      "idle_timeout": 0, 
+      "importance": 39032, 
+      "instructions": [
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "NXActionConjunction": {
+                        "clause": 1, 
+                        "experimenter": 8992, 
+                        "id": 11259375, 
+                        "len": 16, 
+                        "n_clauses": 2, 
+                        "subtype": 34, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "len": 24, 
+               "type": 4
+            }
+         }
+      ], 
+      "match": {
+         "OFPMatch": {
+            "length": 70, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "in_port", 
+                     "mask": null, 
+                     "value": 43981
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "aa:bb:cc:99:88:77"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_type", 
+                     "mask": null, 
+                     "value": 2048
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "vlan_vid", 
+                     "mask": null, 
+                     "value": 5095
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv4_dst", 
+                     "mask": null, 
+                     "value": "192.168.2.1"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tunnel_id", 
+                     "mask": null, 
+                     "value": 50000
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_src", 
+                     "mask": null, 
+                     "value": "192.168.2.3"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_dst", 
+                     "mask": null, 
+                     "value": "192.168.2.4"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "out_group": 0, 
+      "out_port": 0, 
+      "priority": 0, 
+      "table_id": 4
+   }
+}
