@@ -341,6 +341,45 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
                           bytes(data))
 
+    class NXActionConjunction(NXAction):
+        _subtype = nicira_ext.NXAST_CONJUNCTION
+
+        # clause, n_clauses, id
+        _fmt_str = '!BBI'
+
+        def __init__(self,
+                     clause,
+                     n_clauses,
+                     id_,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionConjunction, self).__init__()
+            self.clause = clause
+            self.n_clauses = n_clauses
+            self.id = id_
+
+        @classmethod
+        def parse(cls, buf):
+            (clause,
+             n_clauses,
+             id_,) = struct.unpack_from(
+                NXActionConjunction._fmt_str, buf, 0)
+            return cls(clause, n_clauses, id_)
+
+        def serialize(self, buf, offset):
+            data = bytearray()
+            msg_pack_into(NXActionConjunction._fmt_str, data, 0,
+                          self.clause,
+                          self.n_clauses,
+                          self.id)
+            payload_offset = (
+                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
+                struct.calcsize(NXAction._fmt_str)
+            )
+            self.len = utils.round_up(payload_offset + len(data), 8)
+            super(NXActionConjunction, self).serialize(buf, offset)
+            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
+                          bytes(data))
+
     def add_attr(k, v):
         v.__module__ = ofpp.__name__  # Necessary for stringify stuff
         setattr(ofpp, k, v)
@@ -351,6 +390,7 @@ def generate(ofp_name, ofpp_name):
     classes = [
         'NXActionRegMove',
         'NXActionLearn',
+        'NXActionConjunction',
         '_NXFlowSpec',  # exported for testing
         'NXFlowSpecMatch',
         'NXFlowSpecLoad',
