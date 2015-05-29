@@ -151,6 +151,63 @@ flow_mod(enum ofputil_protocol proto)
 }
 
 struct ofpbuf *
+flow_mod_match_conj(enum ofputil_protocol proto)
+{
+    struct ofputil_flow_mod fm;
+    struct ofpbuf acts;
+    struct ofpact_ipv4 *a_set_field;
+    struct ofpact_goto_table *a_goto;
+
+    memset(&fm, 0, sizeof(fm));
+    fm.command = OFPFC_ADD;
+    fm.table_id = 3;
+    fm.new_cookie = htonll(0x123456789abcdef0);
+    fm.cookie_mask = OVS_BE64_MAX;
+    fm.importance = 0x9878;
+
+    match_init_catchall(&fm.match);
+    match_set_conj_id(&fm.match, 0xabcdef);
+
+    ofpbuf_init(&acts, 64);
+    ofpact_put_STRIP_VLAN(&acts);
+    a_set_field = ofpact_put_SET_IPV4_DST(&acts);
+    a_set_field->ipv4 = inet_addr("192.168.2.9");
+    a_goto = ofpact_put_GOTO_TABLE(&acts);
+    a_goto->table_id = 100;
+
+    fm.ofpacts = acts.data;
+    fm.ofpacts_len = acts.size;
+    return ofputil_encode_flow_mod(&fm, proto);
+}
+
+struct ofpbuf *
+flow_mod_conjunction(enum ofputil_protocol proto)
+{
+    struct ofputil_flow_mod fm;
+    struct ofpbuf acts;
+    struct ofpact_conjunction *a_conj;
+
+    memset(&fm, 0, sizeof(fm));
+    fm.command = OFPFC_ADD;
+    fm.table_id = 4;
+    fm.new_cookie = htonll(0x123456789abcdef0);
+    fm.cookie_mask = OVS_BE64_MAX;
+    fm.importance = 0x9878;
+
+    fill_match(&fm.match);
+
+    ofpbuf_init(&acts, 64);
+    a_conj = ofpact_put_CONJUNCTION(&acts);
+    a_conj->id = 0xabcdef;
+    a_conj->clause = 1;
+    a_conj->n_clauses = 2;
+
+    fm.ofpacts = acts.data;
+    fm.ofpacts_len = acts.size;
+    return ofputil_encode_flow_mod(&fm, proto);
+}
+
+struct ofpbuf *
 bundle_ctrl(enum ofputil_protocol proto)
 {
     struct ofputil_bundle_ctrl_msg msg;
@@ -209,6 +266,10 @@ const struct message messages[] = {
     M(packet_in,
       ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(flow_mod,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(flow_mod_match_conj,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(flow_mod_conjunction,
       ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(bundle_ctrl,
       ((const struct protocol_version *[]){&p15, NULL})),
