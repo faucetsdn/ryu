@@ -83,7 +83,7 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def _find_ssh_server_key(self):
         if CONF["ssh_hostkey"]:
-            return paramiko.RSAKey.from_private_key_file(ssh_hostkey)
+            return paramiko.RSAKey.from_private_key_file(CONF["ssh_hostkey"])
         elif os.path.exists("/etc/ssh_host_rsa_key"):
             # OSX
             return paramiko.RSAKey.from_private_key_file(
