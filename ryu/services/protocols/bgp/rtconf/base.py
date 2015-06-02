@@ -600,10 +600,10 @@ def validate_cap_mbgp_ipv4(cmv4):
 
 
 @validate(name=CAP_MBGP_IPV6)
-def validate_cap_mbgp_ipv4(cmv6):
+def validate_cap_mbgp_ipv6(cmv6):
     if cmv6 not in (True, False):
         raise ConfigTypeError(desc='Invalid Enhanced Refresh capability '
-                              'settings: %s boolean value expected' % cmv4)
+                              'settings: %s boolean value expected' % cmv6)
 
     return cmv6
 

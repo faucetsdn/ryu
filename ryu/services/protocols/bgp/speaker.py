@@ -143,7 +143,7 @@ class BgpProtocol(Protocol, Activity):
                              '`BgpProtocol`')
 
         # Compare protocol connection end point's addresses
-        if (self._remotename[0] == other_protoco._remotename[0] and
+        if (self._remotename[0] == other_protocol._remotename[0] and
                 self._localname[0] == other_protocol._localname[0]):
             return True
 

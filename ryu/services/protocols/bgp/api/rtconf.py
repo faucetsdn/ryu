@@ -152,8 +152,8 @@ def get_neighbor_out_filter(neigh_ip_address):
 
 @RegisterWithArgChecks(name='neighbor.out_filter.set',
                        req_args=[neighbors.IP_ADDRESS, neighbors.OUT_FILTER])
-def set_neighbor_in_filter(neigh_ip_address, filters):
-    """Returns a neighbor in_filter for given ip address if exists."""
+def set_neighbor_out_filter(neigh_ip_address, filters):
+    """Returns a neighbor out_filter for given ip address if exists."""
     core = CORE_MANAGER.get_core_service()
     peer = core.peer_manager.get_by_addr(neigh_ip_address)
     peer.out_filters = filters
