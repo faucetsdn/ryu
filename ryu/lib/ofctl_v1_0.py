@@ -206,18 +206,46 @@ def to_match(dp, attrs):
 
 
 def match_to_str(m):
-    return {'dl_dst': haddr_to_str(m.dl_dst),
-            'dl_src': haddr_to_str(m.dl_src),
-            'dl_type': m.dl_type,
-            'dl_vlan': m.dl_vlan,
-            'dl_vlan_pcp': m.dl_vlan_pcp,
-            'in_port': m.in_port,
-            'nw_dst': nw_dst_to_str(m.wildcards, m.nw_dst),
-            'nw_proto': m.nw_proto,
-            'nw_tos': m.nw_tos,
-            'nw_src': nw_src_to_str(m.wildcards, m.nw_src),
-            'tp_src': m.tp_src,
-            'tp_dst': m.tp_dst}
+
+    match = {}
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_IN_PORT:
+        match['in_port'] = m.in_port
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_DL_SRC:
+        match['dl_src'] = haddr_to_str(m.dl_src)
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_DL_DST:
+        match['dl_dst'] = haddr_to_str(m.dl_dst)
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_DL_VLAN:
+        match['dl_vlan'] = m.dl_vlan
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_DL_VLAN_PCP:
+        match['dl_vlan_pcp'] = m.dl_vlan_pcp
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_DL_TYPE:
+        match['dl_type'] = m.dl_type
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_NW_TOS:
+        match['nw_tos'] = m.nw_tos
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_NW_PROTO:
+        match['nw_proto'] = m.nw_proto
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_NW_SRC_ALL:
+        match['nw_src'] = nw_src_to_str(m.wildcards, m.nw_src)
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_NW_DST_ALL:
+        match['nw_dst'] = nw_dst_to_str(m.wildcards, m.nw_dst)
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_TP_SRC:
+        match['tp_src'] = m.tp_src
+
+    if ~m.wildcards & ofproto_v1_0.OFPFW_TP_DST:
+        match['tp_dst'] = m.tp_dst
+
+    return match
 
 
 def nw_src_to_str(wildcards, addr):
