@@ -275,7 +275,7 @@ class Activity(object):
                 LOG.debug('%s: Stopping child thread %s',
                           self.name, thread_name)
                 thread.kill()
-                del self._child_thread_map[thread_name]
+                self._child_thread_map.pop(thread_name, None)
 
     def _close_asso_sockets(self):
         """Closes all the sockets linked to this activity.
@@ -375,11 +375,13 @@ class Activity(object):
         server = None
         for sa in listen_sockets.keys():
             name = self.name + '_server@' + str(sa[0])
+            self._asso_socket_map[name] = listen_sockets[sa]
             if count == 0:
                 import eventlet
                 server = eventlet.spawn(self._listen_socket_loop,
                                         listen_sockets[sa], conn_handle)
 
+                self._child_thread_map[name] = server
                 count += 1
             else:
                 server = self._spawn(name, self._listen_socket_loop,
