@@ -716,7 +716,7 @@ class VSCtlContext(object):
         else:
             key = None
         if value is not None:
-            LOG.debug("columns %s", table_schema.columns.keys())
+            LOG.debug("columns %s", list(table_schema.columns.keys()))
             type_ = table_schema.columns[column].type
             value = datum_from_string(type_, value)
             LOG.debug("column %s value %s", column, value)
@@ -752,7 +752,7 @@ class VSCtlContext(object):
         if not vsctl_row_id.name_column:
             if record_id != '.':
                 return None
-            values = self.idl.tables[vsctl_row_id.table].rows.values()
+            values = list(self.idl.tables[vsctl_row_id.table].rows.values())
             if not values or len(values) > 2:
                 return None
             referrer = values[0]
@@ -940,7 +940,7 @@ class VSCtl(object):
         txn.add_comment('ovs-vsctl')  # TODO:XXX add operation name. args
         ovs_rows = idl_.tables[vswitch_idl.OVSREC_TABLE_OPEN_VSWITCH].rows
         if ovs_rows:
-            ovs_ = ovs_rows.values()[0]
+            ovs_ = list(ovs_rows.values())[0]
         else:
             # XXX add verification that table is empty
             ovs_ = txn.insert(

@@ -257,7 +257,7 @@ class BaseConfigurator(object):
         kwargs = dict([(k, config[k]) for k in config if valid_ident(k)])
         result = c(**kwargs)
         if props:
-            for name, value in props.items():
+            for name, value in list(props.items()):
                 setattr(result, name, value)
         return result
 
@@ -366,7 +366,7 @@ class DictConfigurator(BaseConfigurator):
                 # which were in the previous configuration but
                 # which are not in the new configuration.
                 root = logging.root
-                existing = root.manager.loggerDict.keys()
+                existing = list(root.manager.loggerDict.keys())
                 # The list needs to be sorted so that we can
                 # avoid disabling child loggers of explicitly
                 # named loggers. With a sorted list it is easier

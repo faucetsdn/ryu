@@ -207,7 +207,7 @@ class RyuBGPSpeaker(RyuApp):
         All valid VRFs are loaded.
         """
         vpns_conf = routing_settings.setdefault('vpns', {})
-        for vrfname, vrf in vpns_conf.iteritems():
+        for vrfname, vrf in vpns_conf.items():
             try:
                 vrf[vrfs.VRF_NAME] = vrfname
                 call('vrf.create', **vrf)

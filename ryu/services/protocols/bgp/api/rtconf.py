@@ -72,7 +72,7 @@ def update_neighbor_enabled(neigh_ip_address, enabled):
                        req_args=[neighbors.IP_ADDRESS, neighbors.CHANGES])
 def update_neighbor(neigh_ip_address, changes):
     rets = []
-    for k, v in changes.iteritems():
+    for k, v in changes.items():
         if k == neighbors.MULTI_EXIT_DISC:
             rets.append(_update_med(neigh_ip_address, v))
 

@@ -282,7 +282,7 @@ class CoreService(Factory, Activity):
             - `new_rts`: (set) of new RTs that peer is interested in.
             - `old_rts`: (set) of RTs that peers is no longer interested in.
         """
-        for table in self._table_manager._global_tables.itervalues():
+        for table in self._table_manager._global_tables.values():
             if table.route_family == RF_RTC_UC:
                 continue
             self._spawn('rt_filter_chg_%s' % peer,
@@ -313,7 +313,7 @@ class CoreService(Factory, Activity):
         # Check if we have to use all paths or just best path
         if self._common_config.max_path_ext_rtfilter_all:
             # We have to look at all paths for a RtDest
-            for rtcdest in self._table_manager.get_rtc_table().itervalues():
+            for rtcdest in self._table_manager.get_rtc_table().values():
                 known_path_list = rtcdest.known_path_list
                 for path in known_path_list:
                     neigh = path.source
@@ -328,7 +328,7 @@ class CoreService(Factory, Activity):
             # We iterate over all destination of the RTC table and for iBGP
             # peers we use all known paths' RTs for RT filter and for eBGP
             # peers we only consider best-paths' RTs for RT filter
-            for rtcdest in self._table_manager.get_rtc_table().itervalues():
+            for rtcdest in self._table_manager.get_rtc_table().values():
                 path = rtcdest.best_path
                 # If this destination does not have any path, we continue
                 if not path:

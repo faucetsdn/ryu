@@ -63,7 +63,7 @@ class Rib(RibBase):
             if resp.status == STATUS_ERROR:
                 return RibBase.cli_resp_formatter(resp)
             ret = cls._format_family_header()
-            for family, data in resp.value.iteritems():
+            for family, data in resp.value.items():
                 ret += 'Family: {0}\n'.format(family)
                 ret += cls._format_family(data)
             return ret

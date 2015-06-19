@@ -110,7 +110,7 @@ def get_unknow_opttrans_attr(path):
     """
     path_attrs = path.pathattr_map
     unknown_opt_tran_attrs = {}
-    for _, attr in path_attrs.iteritems():
+    for _, attr in path_attrs.items():
         if (isinstance(attr, BGPPathAttributeUnknown) and
                 attr.is_optional_transitive()):
             unknown_opt_tran_attrs[attr.type_code] = attr

@@ -404,7 +404,7 @@ class VrfsConf(BaseConf):
     def vrf_confs(self):
         """Returns a list of configured `VrfConf`s
         """
-        return self._vrfs_by_rd_rf.values()
+        return list(self._vrfs_by_rd_rf.values())
 
     @property
     def vrf_interested_rts(self):

@@ -70,7 +70,7 @@ class Routes(Command, RouteFormatterMixin):
             if resp.status == STATUS_ERROR:
                 return Command.cli_resp_formatter(resp)
             ret = cls._format_family_header()
-            for family, data in resp.value.iteritems():
+            for family, data in resp.value.items():
                 ret += 'VPN: {0}\n'.format(family)
                 ret += cls._format_family(data)
             return ret
@@ -130,7 +130,7 @@ class Summary(Command, CountRoutesMixin):
             vrf_confs = self.api.get_vrfs_conf()
             view = ConfDictView(vrf_confs)
             encoded = view.encode()
-            for vrf_key, conf in encoded.iteritems():
+            for vrf_key, conf in encoded.items():
                 vrf_name, vrf_rf = vrf_key
                 conf['routes_count'] = self._count_routes(
                     vrf_name,
@@ -138,7 +138,7 @@ class Summary(Command, CountRoutesMixin):
                 )
 
             encoded = dict([(str(k), v)
-                            for k, v in encoded.iteritems()])
+                            for k, v in encoded.items()])
             return CommandsResponse(
                 STATUS_OK,
                 encoded

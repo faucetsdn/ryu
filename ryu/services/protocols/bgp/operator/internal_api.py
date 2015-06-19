@@ -47,7 +47,7 @@ class InternalApi(object):
         vrf_name = vrf_name.encode('ascii', 'ignore')
 
         route_count = \
-            len([d for d in vrf.itervalues() if d.best_path])
+            len([d for d in vrf.values() if d.best_path])
         return {str((vrf_name, vrf_rf)): route_count}
 
     def get_vrfs_conf(self):
@@ -56,7 +56,7 @@ class InternalApi(object):
     def get_all_vrf_routes(self):
         vrfs = self._get_vrf_tables()
         ret = {}
-        for (vrf_id, vrf_rf), table in sorted(vrfs.iteritems()):
+        for (vrf_id, vrf_rf), table in sorted(vrfs.items()):
             ret[str((vrf_id, vrf_rf))] = self._get_single_vrf_routes(table)
         return ret
 
@@ -64,10 +64,10 @@ class InternalApi(object):
         vrf = self._get_vrf_table(vrf_id, vrf_rf)
         if not vrf:
             raise WrongParamError('wrong vpn name %s' % str((vrf_id, vrf_rf)))
-        return [self._dst_to_dict(d) for d in vrf.itervalues()]
+        return [self._dst_to_dict(d) for d in vrf.values()]
 
     def _get_single_vrf_routes(self, vrf_table):
-        return [self._dst_to_dict(d) for d in vrf_table.itervalues()]
+        return [self._dst_to_dict(d) for d in vrf_table.values()]
 
     def _get_vrf_table(self, vrf_name, vrf_rf):
         return CORE_MANAGER.get_core_service()\
@@ -92,7 +92,7 @@ class InternalApi(object):
         gtable = table_manager.get_global_table_by_route_family(rf)
         if gtable is not None:
             return [self._dst_to_dict(dst)
-                    for dst in sorted(gtable.itervalues())]
+                    for dst in sorted(gtable.values())]
         else:
             return []
 

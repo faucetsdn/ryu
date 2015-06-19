@@ -387,7 +387,7 @@ class Bridge(object):
         values = self._DEFAULT_VALUE
         for key, value in bridge_conf.items():
             values[key] = value
-        system_id = dp.ports.values()[0].hw_addr
+        system_id = list(dp.ports.values())[0].hw_addr
 
         self.bridge_id = BridgeId(values['priority'],
                                   values['sys_ext_id'],

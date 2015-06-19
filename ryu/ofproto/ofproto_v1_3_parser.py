@@ -845,7 +845,7 @@ class OFPMatch(StringifyMixin):
         return key in dict(self._fields2)
 
     def iteritems(self):
-        return dict(self._fields2).iteritems()
+        return iter(dict(self._fields2).items())
 
     def get(self, key, default=None):
         return dict(self._fields2).get(key, default)
@@ -1533,7 +1533,7 @@ class OFPMatchField(StringifyMixin):
     @classmethod
     def cls_to_header(cls, cls_, hasmask):
         # XXX efficiency
-        inv = dict((v, k) for k, v in cls._FIELDS_HEADERS.iteritems()
+        inv = dict((v, k) for k, v in cls._FIELDS_HEADERS.items()
                    if (((k >> 8) & 1) != 0) == hasmask)
         return inv[cls_]
 
@@ -3061,7 +3061,7 @@ class OFPActionSetField(OFPAction):
         else:
             # new api
             assert len(kwargs) == 1
-            key = kwargs.keys()[0]
+            key = list(kwargs.keys())[0]
             value = kwargs[key]
             assert isinstance(key, (str, unicode))
             assert not isinstance(value, tuple)  # no mask

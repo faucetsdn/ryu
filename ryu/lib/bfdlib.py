@@ -426,8 +426,8 @@ class BFDSession(object):
         # Authentication Section
         auth_cls = None
         if self._auth_type:
-            auth_key_id = self._auth_keys.keys()[
-                random.randint(0, len(self._auth_keys.keys()) - 1)]
+            auth_key_id = list(self._auth_keys.keys())[
+                random.randint(0, len(list(self._auth_keys.keys())) - 1)]
             auth_key = self._auth_keys[auth_key_id]
 
             if self._auth_type == bfd.BFD_AUTH_SIMPLE_PASS:

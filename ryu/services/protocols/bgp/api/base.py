@@ -181,7 +181,7 @@ class RegisterWithArgChecks(object):
 
             # Collect optional arguments.
             opt_items = {}
-            for opt_arg, opt_value in kwargs.iteritems():
+            for opt_arg, opt_value in kwargs.items():
                 if opt_arg in self._opt_args:
                     opt_items[opt_arg] = opt_value
 

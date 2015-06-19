@@ -43,7 +43,7 @@ base_conf = cfg.ConfigOpts()
 base_conf.register_cli_opt(cfg.StrOpt('subcommand', positional=True,
                                       required=True,
                                       help='[%s]' % '|'.join(
-                                          subcommands.keys())))
+                                          list(subcommands.keys()))))
 base_conf.register_cli_opt(RemainderOpt('subcommand_args', default=[],
                                         positional=True,
                                         help='subcommand specific arguments'))

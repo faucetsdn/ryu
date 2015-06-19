@@ -65,7 +65,7 @@ def _likely_same(a, b):
 
 def _find_loaded_module(modpath):
     # copy() to avoid RuntimeError: dictionary changed size during iteration
-    for k, m in sys.modules.copy().iteritems():
+    for k, m in sys.modules.copy().items():
         if k == '__main__':
             continue
         if not hasattr(m, '__file__'):

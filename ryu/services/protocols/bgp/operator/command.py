@@ -117,7 +117,7 @@ class Command(object):
             if not isinstance(val, list):
                 val = [val]
             for line in val:
-                for k, v in line.iteritems():
+                for k, v in line.items():
                     if isinstance(v, dict):
                         ret += cls.cli_resp_line_template.format(
                             k, '\n' + pprint.pformat(v)
@@ -194,7 +194,7 @@ class Command(object):
             ret.append(self._quick_help())
 
         if len(self.subcommands) > 0:
-            for k, _ in sorted(self.subcommands.iteritems()):
+            for k, _ in sorted(self.subcommands.items()):
                 command_path, param_help, cmd_help = \
                     self._instantiate_subcommand(k)._quick_help(nested=True)
                 if command_path or param_help or cmd_help:
@@ -245,7 +245,7 @@ class TextFilter(object):
                 iterator = enumerate(action_resp_value)
             else:
                 resp = dict(action_resp_value)
-                iterator = action_resp_value.iteritems()
+                iterator = iter(action_resp_value.items())
 
             remove = []
 
@@ -258,7 +258,7 @@ class TextFilter(object):
                         if key not in remove]
             else:
                 resp = dict([(key, value)
-                             for key, value in resp.iteritems()
+                             for key, value in resp.items()
                              if key not in remove])
 
             return resp

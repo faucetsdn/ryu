@@ -51,12 +51,12 @@ class Test_Parser_OFPMatch(unittest.TestCase):
         if domask:
             d = dict(self._ofp[ofpp].oxm_normalize_user(k, uv)
                      for (k, uv)
-                     in d.iteritems())
+                     in d.items())
         match = ofpp.OFPMatch(**d)
         b = bytearray()
         match.serialize(b, 0)
         match2 = match.parser(buffer(b), 0)
-        for k, v in d.iteritems():
+        for k, v in d.items():
             ok_(k in match)
             ok_(k in match2)
             eq_(match[k], v)

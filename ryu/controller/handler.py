@@ -82,7 +82,7 @@ def register_instance(i):
     for _k, m in inspect.getmembers(i, inspect.ismethod):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
         if _has_caller(m):
-            for ev_cls, c in m.callers.iteritems():
+            for ev_cls, c in m.callers.items():
                 i.register_handler(ev_cls, m)
 
 
@@ -90,7 +90,7 @@ def get_dependent_services(cls):
     services = []
     for _k, m in inspect.getmembers(cls, inspect.ismethod):
         if _has_caller(m):
-            for ev_cls, c in m.callers.iteritems():
+            for ev_cls, c in m.callers.items():
                 service = getattr(sys.modules[ev_cls.__module__],
                                   '_SERVICE_NAME', None)
                 if service:

@@ -30,7 +30,7 @@ from ryu import cfg
 
 # import all packet libraries.
 PKT_LIB_PATH = 'ryu.lib.packet'
-for modname, moddef in sys.modules.iteritems():
+for modname, moddef in sys.modules.items():
     if not modname.startswith(PKT_LIB_PATH) or not moddef:
         continue
     for (clsname, clsdef, ) in inspect.getmembers(moddef):
@@ -882,7 +882,7 @@ class OfTester(app_manager.RyuApp):
                             'ipv6_flabel': 20,
                             'ipv6_exthdr': 9}
             match_fields = list()
-            for key, united_value in match.iteritems():
+            for key, united_value in match.items():
                 if isinstance(united_value, tuple):
                     (value, mask) = united_value
                     # look up oxm_fields.TypeDescr to get mask length.
@@ -1308,7 +1308,7 @@ class TestFile(stringify.StringifyMixin):
                 if v[k] == port_name:
                     v[k] = CONF['test-switch'][port_name]
         if isinstance(val, dict):
-            for k, v in val.iteritems():
+            for k, v in val.items():
                 if k == "OFPActionOutput":
                     if 'port' in v:
                         __replace_port_name("port", v)

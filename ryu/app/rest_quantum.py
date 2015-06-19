@@ -57,7 +57,7 @@ class QuantumController(ControllerBase):
         self.ifaces = data
 
     def list_ifaces(self, _req, **_kwargs):
-        body = json.dumps(self.ifaces.keys())
+        body = json.dumps(list(self.ifaces.keys()))
         return Response(content_type='application/json', body=body)
 
     def delete_iface(self, _req, iface_id, **_kwargs):

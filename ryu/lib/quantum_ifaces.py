@@ -61,7 +61,7 @@ class QuantumIfaces(app_manager.RyuApp, dict):
         return self[iface_id]
 
     def list_keys(self, iface_id):
-        return self[iface_id].keys()
+        return list(self[iface_id].keys())
 
     def get_key(self, iface_id, key):
         return self[iface_id][key]

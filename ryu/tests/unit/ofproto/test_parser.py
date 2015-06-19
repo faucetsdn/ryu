@@ -206,7 +206,7 @@ class Test_Parser(unittest.TestCase):
                     return map(f, d)
                 if isinstance(d, dict):
                     d2 = {}
-                    for k, v in d.iteritems():
+                    for k, v in d.items():
                         if k in names:
                             continue
                         d2[k] = f(v)

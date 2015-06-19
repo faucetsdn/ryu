@@ -36,7 +36,7 @@ class PeerManager(object):
 
     @property
     def iterpeers(self):
-        return self._peers.itervalues()
+        return iter(self._peers.values())
 
     def set_peer_to_rtfilter_map(self, new_map):
         self._peer_to_rtfilter_map = new_map
@@ -69,7 +69,7 @@ class PeerManager(object):
 
     def _get_non_rtc_peers(self):
         non_rtc_peer_list = set()
-        for peer in self._peers.itervalues():
+        for peer in self._peers.values():
             if (peer.in_established() and
                     not peer.is_mpbgp_cap_valid(RF_RTC_UC)):
                 non_rtc_peer_list.add(peer)
@@ -81,7 +81,7 @@ class PeerManager(object):
     def get_peers_in_established(self):
         """Returns list of peers in established state."""
         est_peers = []
-        for peer in self._peers.itervalues():
+        for peer in self._peers.values():
             if peer.in_established:
                 est_peers.append(peer)
         return est_peers
@@ -107,7 +107,7 @@ class PeerManager(object):
             route_family
         )
 
-        for destination in table.itervalues():
+        for destination in table.values():
             # Check if this destination's sent - routes include this peer.
             # i.e. check if this destinations was advertised and enqueue
             # the path only if it was. If the current best-path has not been
@@ -139,7 +139,7 @@ class PeerManager(object):
         Skips making request to peer that have valid RTC capability.
         """
         assert route_family != RF_RTC_UC
-        for peer in self._peers.itervalues():
+        for peer in self._peers.values():
             # First check if peer is in established state
             if (peer.in_established and
                 # Check if peer has valid capability for given address
@@ -199,7 +199,7 @@ class PeerManager(object):
         peer_rtc_as = neigh_conf.rtc_as
         # Iterate over all RT_NLRI destination communicate qualifying RT_NLRIs
         rtc_table = self._table_manager.get_rtc_table()
-        for dest in rtc_table.itervalues():
+        for dest in rtc_table.values():
             best_path = dest.best_path
             # Ignore a destination that currently does not have best path
             if not best_path:
@@ -231,7 +231,7 @@ class PeerManager(object):
             if route_family == RF_RTC_UC:
                 continue
             if peer.is_mbgp_cap_valid(route_family):
-                for dest in table.itervalues():
+                for dest in table.values():
                     if dest.best_path:
                         peer.communicate_path(dest.best_path)
 
@@ -290,7 +290,7 @@ class PeerManager(object):
             # Peers that have RTC capability and have common RT with the path
             # also qualify
             peer_to_rtfilter_map = self._peer_to_rtfilter_map
-            for peer, rt_filter in peer_to_rtfilter_map.iteritems():
+            for peer, rt_filter in peer_to_rtfilter_map.items():
                 # Ignore Network Controller (its not a BGP peer)
                 if peer is None:
                     continue

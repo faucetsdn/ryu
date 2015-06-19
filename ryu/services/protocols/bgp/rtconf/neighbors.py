@@ -121,7 +121,7 @@ def validate_enabled(enabled):
 
 @validate(name=CHANGES)
 def validate_changes(changes):
-    for k, v in changes.iteritems():
+    for k, v in changes.items():
         if k not in (MULTI_EXIT_DISC, ENABLED, CONNECT_MODE):
             raise ConfigValueError(desc="Unknown field to change: %s" % k)
 
@@ -219,7 +219,7 @@ def valid_filter(filter_):
         raise ConfigTypeError(desc='Invalid filter type: %s, supported filter'
                               ' types are %s'
                               % (filter_['type'],
-                                 SUPPORTED_FILTER_VALIDATORS.keys()))
+                                 list(SUPPORTED_FILTER_VALIDATORS.keys())))
 
     return SUPPORTED_FILTER_VALIDATORS[filter_['type']](filter_)
 
@@ -627,7 +627,7 @@ class NeighborsConf(BaseConf):
         """Returns current RTC AS configured for current neighbors.
         """
         rtc_as_set = set()
-        for neigh in self._neighbors.itervalues():
+        for neigh in self._neighbors.values():
             rtc_as_set.add(neigh.rtc_as)
         return rtc_as_set
 
@@ -670,7 +670,7 @@ class NeighborsConf(BaseConf):
     @property
     def settings(self):
         return [neighbor.settings for _, neighbor in
-                self._neighbors.iteritems()]
+                self._neighbors.items()]
 
 
 class NeighborConfListener(ConfWithIdListener, ConfWithStatsListener):

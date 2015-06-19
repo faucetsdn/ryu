@@ -153,7 +153,7 @@ class StringifyMixin(object):
         assert isinstance(dict_, dict)
         if len(dict_) != 1:
             return False
-        k = dict_.keys()[0]
+        k = list(dict_.keys())[0]
         if not isinstance(k, (bytes, unicode)):
             return False
         for p in cls._class_prefixes:
@@ -167,7 +167,7 @@ class StringifyMixin(object):
     @classmethod
     def _get_type(cls, k):
         if hasattr(cls, '_TYPE'):
-            for t, attrs in cls._TYPE.iteritems():
+            for t, attrs in cls._TYPE.items():
                 if k in attrs:
                     return _types[t]
         return None
@@ -249,7 +249,7 @@ class StringifyMixin(object):
     @classmethod
     def obj_from_jsondict(cls, jsondict, **additional_args):
         assert len(jsondict) == 1
-        for k, v in jsondict.iteritems():
+        for k, v in jsondict.items():
             obj_cls = cls.cls_from_jsondict_key(k)
             return obj_cls.from_jsondict(v, **additional_args)
 

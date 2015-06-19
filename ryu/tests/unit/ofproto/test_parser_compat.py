@@ -131,7 +131,7 @@ class Test_Parser_Compat(unittest.TestCase):
         # a parsed object can be inspected by old and new api
 
         check(ofpp.OFPMatch.parser(buffer(new_buf), 0))
-        check(ofpp.OFPMatch.from_jsondict(new_jsondict.values()[0]))
+        check(ofpp.OFPMatch.from_jsondict(list(new_jsondict.values())[0]))
 
 
 def _add_tests():

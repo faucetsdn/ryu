@@ -166,7 +166,7 @@ class Neighbor(Command):
                                 [{'ip_addr': k,
                                   'as_num': str(v['remote_as']),
                                   'bgp_state': v['stats']['bgp_state']}
-                                 for k, v in ret.iteritems()])
+                                 for k, v in ret.items()])
 
     @classmethod
     def cli_resp_formatter(cls, resp):

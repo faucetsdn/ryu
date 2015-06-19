@@ -288,7 +288,7 @@ class PortDataState(dict):
             curr = curr[self._NEXT]
 
     def clear(self):
-        for node in self._map.itervalues():
+        for node in self._map.values():
             del node[:]
         root = self._root
         root[:] = [root, root, None]
@@ -486,7 +486,7 @@ class Switches(app_manager.RyuApp):
     def _get_switch(self, dpid):
         if dpid in self.dps:
             switch = Switch(self.dps[dpid])
-            for ofpport in self.port_state[dpid].itervalues():
+            for ofpport in self.port_state[dpid].values():
                 switch.add_port(ofpport)
             return switch
 
@@ -843,7 +843,7 @@ class Switches(app_manager.RyuApp):
         switches = []
         if dpid is None:
             # reply all list
-            for dp in self.dps.itervalues():
+            for dp in self.dps.values():
                 switches.append(self._get_switch(dp.id))
         elif dpid in self.dps:
             switches.append(self._get_switch(dpid))

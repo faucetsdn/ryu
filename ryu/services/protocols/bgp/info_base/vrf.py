@@ -102,7 +102,7 @@ class VrfTable(Table):
 
         remote_route_count = 0
         local_route_count = 0
-        for dest in self.itervalues():
+        for dest in self.values():
             for path in dest.known_path_list:
                 if (hasattr(path.source, 'version_num')
                         or path.source == VPN_TABLE):
@@ -115,7 +115,7 @@ class VrfTable(Table):
                 LOCAL_ROUTES: local_route_count}
 
     def import_vpn_paths_from_table(self, vpn_table, import_rts=None):
-        for vpn_dest in vpn_table.itervalues():
+        for vpn_dest in vpn_table.values():
             vpn_path = vpn_dest.best_path
             if not vpn_path:
                 continue
@@ -187,7 +187,7 @@ class VrfTable(Table):
 
     def apply_import_maps(self):
         changed_dests = []
-        for dest in self.itervalues():
+        for dest in self.values():
             assert isinstance(dest, VrfDest)
             for import_map in self._import_maps:
                 for path in dest.known_path_list:

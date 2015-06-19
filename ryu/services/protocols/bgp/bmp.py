@@ -160,7 +160,7 @@ class BMPClient(Activity):
 
     def _construct_update(self, path):
         # Get copy of path's path attributes.
-        new_pathattr = [attr for attr in path.pathattr_map.itervalues()]
+        new_pathattr = [attr for attr in path.pathattr_map.values()]
 
         if path.is_withdraw:
             if isinstance(path, Ipv4Path):
@@ -220,7 +220,7 @@ class BMPClient(Activity):
             msg = self._construct_peer_up_notification(peer)
             self._send(msg)
 
-            for path in peer._adj_rib_in.itervalues():
+            for path in peer._adj_rib_in.values():
                 msg = self._construct_route_monitoring(peer, path)
                 self._send(msg)
 

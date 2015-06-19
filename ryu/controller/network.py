@@ -62,7 +62,7 @@ class Networks(dict):
         self.send_event = f
 
     def list_networks(self):
-        return self.keys()
+        return list(self.keys())
 
     def has_network(self, network_id):
         return network_id in self
@@ -183,7 +183,7 @@ class DPIDs(dict):
 
     def get_ports(self, dpid, network_id=None, mac_address=None):
         if network_id is None:
-            return self.get(dpid, {}).values()
+            return list(self.get(dpid, {}).values())
         if mac_address is None:
             return [p for p in self.get(dpid, {}).values()
                     if p.network_id == network_id]

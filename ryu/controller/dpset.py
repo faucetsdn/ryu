@@ -166,7 +166,7 @@ class DPSet(app_manager.RyuApp):
 
             [ (dpid_A, Datapath_A), (dpid_B, Datapath_B), ... ]
         """
-        return self.dps.items()
+        return list(self.dps.items())
 
     def _port_added(self, datapath, port):
         self.port_state[datapath.id].add(port.port_no, port)
@@ -239,7 +239,7 @@ class DPSet(app_manager.RyuApp):
         instances for the given Datapath ID.
         Raises KeyError if no such a datapath connected to this controller.
         """
-        return self.port_state[dpid].values()
+        return list(self.port_state[dpid].values())
 
 
 handler.register_service('ryu.controller.dpset')

@@ -182,7 +182,7 @@ class Cmd(cmd.Cmd):
         self._peek_notification()
 
     def _peek_notification(self):
-        for k, p in peers.iteritems():
+        for k, p in peers.items():
             if p.client:
                 try:
                     p.client.peek_notification()

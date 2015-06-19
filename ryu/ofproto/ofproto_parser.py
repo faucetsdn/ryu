@@ -104,7 +104,7 @@ def ofp_msg_from_jsondict(dp, jsondict):
     """
     parser = dp.ofproto_parser
     assert len(jsondict) == 1
-    for k, v in jsondict.iteritems():
+    for k, v in jsondict.items():
         cls = getattr(parser, k)
         assert issubclass(cls, MsgBase)
         return cls.from_jsondict(v, datapath=dp)

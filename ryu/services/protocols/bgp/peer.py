@@ -175,7 +175,7 @@ class PeerState(object):
 
     def _remember_last_bgp_error(self, identifier, data):
         self._last_bgp_error = dict([(k, v)
-                                     for k, v in data.iteritems()
+                                     for k, v in data.items()
                                      if k != 'peer'])
 
     @property
@@ -584,7 +584,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
     def on_update_in_filter(self):
         LOG.debug('on_update_in_filter fired')
-        for received_path in self._adj_rib_in.itervalues():
+        for received_path in self._adj_rib_in.values():
             LOG.debug('received_path: %s', received_path)
             path = received_path.path
             nlri_str = path.nlri.formatted_nlri_str
@@ -606,7 +606,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
     def on_update_out_filter(self):
         LOG.debug('on_update_out_filter fired')
-        for sent_path in self._adj_rib_out.itervalues():
+        for sent_path in self._adj_rib_out.values():
             LOG.debug('sent_path: %s', sent_path)
             path = sent_path.path
             nlri_str = path.nlri.formatted_nlri_str
@@ -631,7 +631,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     def on_update_attribute_maps(self):
         # resend sent_route in case of filter matching
         LOG.debug('on_update_attribute_maps fired')
-        for sent_path in self._adj_rib_out.itervalues():
+        for sent_path in self._adj_rib_out.values():
             LOG.debug('resend path: %s', sent_path)
             path = sent_path.path
             self.enque_outgoing_msg(OutgoingRoute(path))
@@ -837,7 +837,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 new_pathattr.append(mpunreach_attr)
         elif self.is_route_server_client:
             nlri_list = [path.nlri]
-            for pathattr in path.pathattr_map.itervalues():
+            for pathattr in path.pathattr_map.values():
                 new_pathattr.append(pathattr)
         else:
             # Supported and un-supported/unknown attributes.
@@ -1204,7 +1204,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             else:
                 yield L
         opts = list(flatten(
-            self._neigh_conf.get_configured_capabilites().values()))
+            list(self._neigh_conf.get_configured_capabilites().values())))
         open_msg = BGPOpen(
             my_as=asnum,
             bgp_identifier=bgpid,
@@ -1844,11 +1844,11 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         LOG.debug('Communicating current best path for all afi/safi except'
                   ' 1/132')
         # We will enqueue best path from all global destination.
-        for route_family, table in global_tables.iteritems():
+        for route_family, table in global_tables.items():
             if route_family == RF_RTC_UC:
                 continue
             if self.is_mbgp_cap_valid(route_family):
-                for dest in table.itervalues():
+                for dest in table.values():
                     if dest.best_path:
                         self.communicate_path(dest.best_path)
 

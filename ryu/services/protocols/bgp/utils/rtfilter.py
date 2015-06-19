@@ -140,7 +140,7 @@ class RouteTargetManager(object):
     def on_rt_filter_chg_sync_peer(self, peer, new_rts, old_rts, table):
         LOG.debug('RT Filter changed for peer %s, new_rts %s, old_rts %s ',
                   peer, new_rts, old_rts)
-        for dest in table.itervalues():
+        for dest in table.values():
             # If this destination does not have best path, we ignore it
             if not dest.best_path:
                 continue

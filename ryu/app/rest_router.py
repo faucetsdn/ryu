@@ -482,7 +482,7 @@ class Router(dict):
         vlan_routers = []
 
         if vlan_id == REST_ALL:
-            vlan_routers = self.values()
+            vlan_routers = list(self.values())
         else:
             vlan_id = int(vlan_id)
             if (vlan_id != VLANID_NONE and

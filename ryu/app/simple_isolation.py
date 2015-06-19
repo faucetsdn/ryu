@@ -108,7 +108,7 @@ class SimpleIsolation(app_manager.RyuApp):
         self.logger.debug("dpid %s in_port %d src %s dst %s ports %s",
                           datapath.id, msg.in_port,
                           haddr_to_str(src), haddr_to_str(dst),
-                          self.nw.dpids.get(datapath.id, {}).items())
+                          list(self.nw.dpids.get(datapath.id, {}).items()))
         for port_no in self.nw.filter_ports(datapath.id, msg.in_port,
                                             nw_id, NW_ID_EXTERNAL):
             self.logger.debug("port_no %s", port_no)

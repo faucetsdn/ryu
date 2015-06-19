@@ -85,7 +85,7 @@ class TableCoreManager(object):
 
         # Withdraw the best-path whose source was NC since it may have been
         # exported to VPN table.
-        for destination in vrf_table.itervalues():
+        for destination in vrf_table.values():
             best_path = destination.best_path
             if best_path and best_path.source is None:
                 vpn_clone = best_path.clone_to_vpn(vrf_conf.route_dist,
@@ -294,7 +294,7 @@ class TableCoreManager(object):
         adds new path with path attributes as per current VRF configuration.
         """
         assert vrf_table
-        for dest in vrf_table.itervalues():
+        for dest in vrf_table.values():
             for path in dest.known_path_list:
                 if path.source is None:
                     vrf_table.insert_vrf_path(

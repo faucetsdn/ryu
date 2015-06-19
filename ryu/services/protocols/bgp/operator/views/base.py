@@ -122,7 +122,7 @@ class OperatorDetailView(OperatorAbstractView):
 
     def encode(self):
         return {field_name: field.get(self._obj)
-                for field_name, field in self._fields.iteritems()
+                for field_name, field in self._fields.items()
                 if isinstance(field, fields.DataField)}
 
     def rel(self, field_name):
@@ -153,7 +153,7 @@ class OperatorListView(OperatorAbstractView):
     def encode(self):
         return RdyToFlattenList(
             [{field_name: field.get(obj)
-              for field_name, field in self._fields.iteritems()
+              for field_name, field in self._fields.items()
               if isinstance(field, fields.DataField)}
              for obj in self.model]
         )
@@ -175,28 +175,28 @@ class OperatorDictView(OperatorAbstractView):
     def combine_related(self, field_name):
         f = self._fields[field_name]
         return CombinedViewsWrapper(RdyToFlattenList(
-            map(lambda obj: f.retrieve_and_wrap(obj), self.model.itervalues()))
+            map(lambda obj: f.retrieve_and_wrap(obj), self.model.values()))
         )
 
     def get_field(self, field_name):
         f = self._fields[field_name]
         return RdyToFlattenDict(
-            {key: f.get(obj) for key, obj in self.model.iteritems()}
+            {key: f.get(obj) for key, obj in self.model.items()}
         )
 
     def encode(self):
         return RdyToFlattenDict(
             {key: {field_name: field.get(obj)
-                   for field_name, field in self._fields.iteritems()
+                   for field_name, field in self._fields.items()
                    if isinstance(field, fields.DataField)}
-             for key, obj in self.model.iteritems()}
+             for key, obj in self.model.items()}
         )
 
     @property
     def model(self):
         if self._filter_func is not None:
             new_model = RdyToFlattenDict()
-            for k, v in self._obj.iteritems():
+            for k, v in self._obj.items():
                 if self._filter_func(k, v):
                     new_model[k] = v
             return new_model
@@ -282,7 +282,7 @@ def create_dict_view_class(detail_view_class, name):
     if 'encode' in dir(detail_view_class):
         def encode(self):
             return RdyToFlattenDict({key: detail_view_class(obj).encode()
-                                     for key, obj in self.model.iteritems()})
+                                     for key, obj in self.model.items()})
 
     return _create_collection_view(
         detail_view_class, name, encode, OperatorDictView
