@@ -6266,7 +6266,7 @@ class OFPBundleAddMsg(MsgInMsgBase):
         self.buf += tail_buf
 
 
-import nx_actions
+from . import nx_actions
 
 nx_actions.generate(
     'ryu.ofproto.ofproto_v1_5',
