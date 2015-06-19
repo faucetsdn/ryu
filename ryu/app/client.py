@@ -18,9 +18,9 @@
 # This module is *not* used by ryu-manager.
 # Imported and used by OpenStack Ryu plug-in and agent.
 
-import httplib
+import http.client
 import json
-import urlparse
+import urllib.parse
 
 
 def ignore_http_not_found(func):
@@ -30,9 +30,9 @@ def ignore_http_not_found(func):
     """
     try:
         func()
-    except httplib.HTTPException as e:
+    except http.client.HTTPException as e:
         res = e.args[0]
-        if res.status != httplib.NOT_FOUND:
+        if res.status != http.client.NOT_FOUND:
             raise
 
 
@@ -40,13 +40,13 @@ class RyuClientBase(object):
     def __init__(self, version, address):
         super(RyuClientBase, self).__init__()
         self.version = version
-        res = urlparse.SplitResult('', address, '', '', '')
+        res = urllib.parse.SplitResult('', address, '', '', '')
         self.host = res.hostname
         self.port = res.port
         self.url_prefix = '/' + self.version + '/'
 
     def _do_request(self, method, action, body=None):
-        conn = httplib.HTTPConnection(self.host, self.port)
+        conn = http.client.HTTPConnection(self.host, self.port)
         url = self.url_prefix + action
         headers = {}
         if body is not None:
@@ -54,13 +54,13 @@ class RyuClientBase(object):
             headers['Content-Type'] = 'application/json'
         conn.request(method, url, body, headers)
         res = conn.getresponse()
-        if res.status in (httplib.OK,
-                          httplib.CREATED,
-                          httplib.ACCEPTED,
-                          httplib.NO_CONTENT):
+        if res.status in (http.client.OK,
+                          http.client.CREATED,
+                          http.client.ACCEPTED,
+                          http.client.NO_CONTENT):
             return res
 
-        raise httplib.HTTPException(
+        raise http.client.HTTPException(
             res, 'code %d reason %s' % (res.status, res.reason),
             res.getheaders(), res.read())
 

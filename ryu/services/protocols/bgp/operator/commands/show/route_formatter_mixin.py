@@ -1,4 +1,4 @@
-import StringIO
+import io
 
 
 class RouteFormatterMixin(object):
@@ -17,7 +17,7 @@ class RouteFormatterMixin(object):
 
     @classmethod
     def _format_family(cls, dest_list):
-        msg = StringIO.StringIO()
+        msg = io.StringIO()
 
         def _append_path_info(buff, path, is_best, show_prefix):
             aspath = path.get('aspath')
