@@ -44,10 +44,10 @@ class Test_cfm(unittest.TestCase):
         self.cc_message_mep_id = 4
         self.cc_message_md_name_format = 4
         self.cc_message_md_name_length = 0
-        self.cc_message_md_name = "hoge"
+        self.cc_message_md_name = b"hoge"
         self.cc_message_short_ma_name_format = 2
         self.cc_message_short_ma_name_length = 0
-        self.cc_message_short_ma_name = "pakeratta"
+        self.cc_message_short_ma_name = b"pakeratta"
         self.cc_message_md_name_txfcf = 11
         self.cc_message_md_name_rxfcb = 22
         self.cc_message_md_name_txfcb = 33
@@ -397,10 +397,10 @@ class Test_cc_message(unittest.TestCase):
         self.mep_id = 2
         self.md_name_format = cfm.cc_message._MD_FMT_CHARACTER_STRING
         self.md_name_length = 3
-        self.md_name = "foo"
+        self.md_name = b"foo"
         self.short_ma_name_format = 2
         self.short_ma_name_length = 8
-        self.short_ma_name = "hogehoge"
+        self.short_ma_name = b"hogehoge"
         self.tlvs = [
         ]
         self.end_tlv = 0
@@ -984,11 +984,11 @@ class Test_sender_id_tlv(unittest.TestCase):
         self.length = 10
         self.chassis_id_length = 1
         self.chassis_id_subtype = 3
-        self.chassis_id = "\x0a"
+        self.chassis_id = b"\x0a"
         self.ma_domain_length = 2
-        self.ma_domain = "\x04\x05"
+        self.ma_domain = b"\x04\x05"
         self.ma_length = 3
-        self.ma = "\x01\x02\x03"
+        self.ma = b"\x01\x02\x03"
         self.ins = cfm.sender_id_tlv(
             self.length,
             self.chassis_id_length,
@@ -1212,7 +1212,7 @@ class Test_data_tlv(unittest.TestCase):
     def setUp(self):
         self._type = cfm.CFM_DATA_TLV
         self.length = 3
-        self.data_value = "\x01\x02\x03"
+        self.data_value = b"\x01\x02\x03"
         self.ins = cfm.data_tlv(
             self.length,
             self.data_value
@@ -1495,9 +1495,9 @@ class Test_organization_specific_tlv(unittest.TestCase):
     def setUp(self):
         self._type = cfm.CFM_ORGANIZATION_SPECIFIC_TLV
         self.length = 10
-        self.oui = "\xff\x12\x34"
+        self.oui = b"\xff\x12\x34"
         self.subtype = 3
-        self.value = "\x01\x02\x0f\x0e\x0d\x0c"
+        self.value = b"\x01\x02\x0f\x0e\x0d\x0c"
         self.ins = cfm.organization_specific_tlv(self.length,
                                                  self.oui,
                                                  self.subtype,
@@ -1566,7 +1566,7 @@ class Test_organization_specific_tlv(unittest.TestCase):
                                  str(buf))
         eq_(res[0], cfm.CFM_ORGANIZATION_SPECIFIC_TLV)
         eq_(res[1], 4)
-        eq_(res[2], "\x00\x00\x00")
+        eq_(res[2], b"\x00\x00\x00")
         eq_(res[3], 0)
 
 
@@ -1579,7 +1579,7 @@ class Test_reply_ingress_tlv(unittest.TestCase):
         self.mac_address = 'aa:bb:cc:56:34:12'
         self.port_id_length = 3
         self.port_id_subtype = 2
-        self.port_id = "\x01\x04\x09"
+        self.port_id = b"\x01\x04\x09"
         self.ins = cfm.reply_ingress_tlv(self.length, self.action,
                                          self.mac_address,
                                          self.port_id_length,
@@ -1673,7 +1673,7 @@ class Test_reply_egress_tlv(unittest.TestCase):
         self.mac_address = 'aa:bb:cc:56:34:12'
         self.port_id_length = 3
         self.port_id_subtype = 2
-        self.port_id = "\x01\x04\x09"
+        self.port_id = b"\x01\x04\x09"
         self.ins = cfm.reply_egress_tlv(self.length,
                                         self.action,
                                         self.mac_address,

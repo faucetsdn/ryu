@@ -57,7 +57,7 @@ class Test_ipv6(unittest.TestCase):
     def setUp_with_hop_opts(self):
         self.opt1_type = 5
         self.opt1_len = 2
-        self.opt1_data = '\x00\x00'
+        self.opt1_data = b'\x00\x00'
         self.opt2_type = 1
         self.opt2_len = 0
         self.opt2_data = None
@@ -86,7 +86,7 @@ class Test_ipv6(unittest.TestCase):
     def setUp_with_dst_opts(self):
         self.opt1_type = 5
         self.opt1_len = 2
-        self.opt1_data = '\x00\x00'
+        self.opt1_data = b'\x00\x00'
         self.opt2_type = 1
         self.opt2_len = 0
         self.opt2_data = None
@@ -167,7 +167,7 @@ class Test_ipv6(unittest.TestCase):
         self.auth_size = 4
         self.auth_spi = 256
         self.auth_seq = 1
-        self.auth_data = '\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
+        self.auth_data = b'\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
         self.auth = ipv6.auth(
             self.auth_nxt, self.auth_size, self.auth_spi, self.auth_seq,
             self.auth_data)
@@ -188,7 +188,7 @@ class Test_ipv6(unittest.TestCase):
     def setUp_with_multi_headers(self):
         self.opt1_type = 5
         self.opt1_len = 2
-        self.opt1_data = '\x00\x00'
+        self.opt1_data = b'\x00\x00'
         self.opt2_type = 1
         self.opt2_len = 0
         self.opt2_data = None
@@ -204,7 +204,7 @@ class Test_ipv6(unittest.TestCase):
         self.auth_size = 4
         self.auth_spi = 256
         self.auth_seq = 1
-        self.auth_data = '\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
+        self.auth_data = b'\xa0\xe7\xf8\xab\xf9\x69\x1a\x8b\xf3\x9f\x7c\xae'
         self.auth = ipv6.auth(
             self.auth_nxt, self.auth_size, self.auth_spi, self.auth_seq,
             self.auth_data)
@@ -510,9 +510,9 @@ class Test_hop_opts(unittest.TestCase):
         self.nxt = 0
         self.size = 8
         self.data = [
-            ipv6.option(5, 2, '\x00\x00'),
+            ipv6.option(5, 2, b'\x00\x00'),
             ipv6.option(1, 0, None),
-            ipv6.option(0xc2, 4, '\x00\x01\x00\x00'),
+            ipv6.option(0xc2, 4, b'\x00\x01\x00\x00'),
             ipv6.option(1, 0, None),
         ]
         self.hop = ipv6.hop_opts(self.nxt, self.size, self.data)
@@ -591,9 +591,9 @@ class Test_dst_opts(unittest.TestCase):
         self.nxt = 60
         self.size = 8
         self.data = [
-            ipv6.option(5, 2, '\x00\x00'),
+            ipv6.option(5, 2, b'\x00\x00'),
             ipv6.option(1, 0, None),
-            ipv6.option(0xc2, 4, '\x00\x01\x00\x00'),
+            ipv6.option(0xc2, 4, b'\x00\x01\x00\x00'),
             ipv6.option(1, 0, None),
         ]
         self.dst = ipv6.dst_opts(self.nxt, self.size, self.data)
@@ -662,7 +662,7 @@ class Test_dst_opts(unittest.TestCase):
 
         eq_(res[0], 6)
         eq_(res[1], 0)
-        opt = ipv6.option(type_=1, len_=4, data='\x00\x00\x00\x00')
+        opt = ipv6.option(type_=1, len_=4, data=b'\x00\x00\x00\x00')
         eq_(str(buf[2:]), opt.serialize())
 
 
@@ -670,7 +670,7 @@ class Test_option(unittest.TestCase):
 
     def setUp(self):
         self.type_ = 5
-        self.data = '\x00\x00'
+        self.data = b'\x00\x00'
         self.len_ = len(self.data)
         self.opt = ipv6.option(self.type_, self.len_, self.data)
         self.form = '!BB%ds' % self.len_
@@ -1068,7 +1068,7 @@ class Test_auth(unittest.TestCase):
         self.size = 4
         self.spi = 256
         self.seq = 1
-        self.data = '\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8'
+        self.data = b'\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8'
         self.auth = ipv6.auth(
             self.nxt, self.size, self.spi, self.seq, self.data)
         self.form = '!BB2xII12s'

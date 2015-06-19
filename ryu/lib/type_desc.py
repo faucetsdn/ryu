@@ -15,6 +15,8 @@
 # limitations under the License.
 
 
+import six
+
 from ryu.lib import addrconv
 
 
@@ -35,9 +37,9 @@ class IntDescr(TypeDescr):
         return i
 
     def from_user(self, i):
-        bin = ''
+        bin = b''
         for x in range(self.size):
-            bin = chr(i & 255) + bin
+            bin = six.int2byte(i & 255) + bin
             i //= 256
         return bin
 

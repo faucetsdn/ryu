@@ -206,7 +206,7 @@ class opt_header(header):
         buf = bytearray(buf)
         if self.data is None:
             self.data = [option(type_=1, len_=4,
-                                data='\x00\x00\x00\x00')]
+                                data=b'\x00\x00\x00\x00')]
         for opt in self.data:
             buf.extend(opt.serialize())
         return buf
@@ -565,7 +565,7 @@ class auth(header):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, nxt=inet.IPPROTO_TCP, size=2, spi=0, seq=0,
-                 data='\x00\x00\x00\x00'):
+                 data=b'\x00\x00\x00\x00'):
         super(auth, self).__init__(nxt)
         assert data is not None
         self.size = size

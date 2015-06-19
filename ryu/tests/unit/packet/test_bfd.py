@@ -85,7 +85,7 @@ class TestBFD(unittest.TestCase):
                               + '\x3c\xc1\x6a\x00\x69\x23'
 
         # BFD Key chain {auth_key_id: auth_key/password}
-        self.auth_keys = {2: "secret"}
+        self.auth_keys = {2: b"secret"}
 
     def tearDown(self):
         pass

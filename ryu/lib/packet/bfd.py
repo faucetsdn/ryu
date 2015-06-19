@@ -511,8 +511,7 @@ class KeyedMD5(BFDAuth):
         auth_hdr_bin = self.serialize_hdr()
         auth_data_bin = struct.pack(self._PACK_STR, self.auth_key_id, 0,
                                     self.seq, self.auth_key +
-                                    ''.join(['\x00' *
-                                            (len(self.auth_key) - 16)]))
+                                    (b'\x00' * (len(self.auth_key) - 16)))
 
         h = hashlib.md5()
         h.update(bfd_bin + auth_hdr_bin + auth_data_bin)
@@ -551,7 +550,7 @@ class KeyedMD5(BFDAuth):
         auth_hdr_bin = self.serialize_hdr()
         auth_data_bin = struct.pack(self._PACK_STR, self.auth_key_id, 0,
                                     self.seq, auth_key +
-                                    ''.join(['\x00' * (len(auth_key) - 16)]))
+                                    (b'\x00' * (len(auth_key) - 16)))
 
         h = hashlib.md5()
         h.update(bfd_bin + auth_hdr_bin + auth_data_bin)
@@ -662,8 +661,7 @@ class KeyedSHA1(BFDAuth):
         auth_hdr_bin = self.serialize_hdr()
         auth_data_bin = struct.pack(self._PACK_STR, self.auth_key_id, 0,
                                     self.seq, self.auth_key +
-                                    ''.join(['\x00' *
-                                            (len(self.auth_key) - 20)]))
+                                    (b'\x00' * (len(self.auth_key) - 20)))
 
         h = hashlib.sha1()
         h.update(bfd_bin + auth_hdr_bin + auth_data_bin)
@@ -702,7 +700,7 @@ class KeyedSHA1(BFDAuth):
         auth_hdr_bin = self.serialize_hdr()
         auth_data_bin = struct.pack(self._PACK_STR, self.auth_key_id, 0,
                                     self.seq, auth_key +
-                                    ''.join(['\x00' * (len(auth_key) - 20)]))
+                                    (b'\x00' * (len(auth_key) - 20)))
 
         h = hashlib.sha1()
         h.update(bfd_bin + auth_hdr_bin + auth_data_bin)
