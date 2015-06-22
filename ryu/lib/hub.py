@@ -32,7 +32,7 @@ if HUB_TYPE == 'eventlet':
     import eventlet.semaphore
     import eventlet.timeout
     import eventlet.wsgi
-    from ryu.contrib._eventlet import websocket
+    from eventlet import websocket
     import greenlet
     import ssl
     import socket

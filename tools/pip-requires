@@ -1,4 +1,4 @@
-eventlet
+eventlet>=0.15
 msgpack-python>=0.3.0  # RPC library, BGP speaker(net_cntl)
 netaddr
 oslo.config>=1.6.0
