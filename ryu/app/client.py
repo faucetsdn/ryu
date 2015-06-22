@@ -18,9 +18,9 @@
 # This module is *not* used by ryu-manager.
 # Imported and used by OpenStack Ryu plug-in and agent.
 
-import http.client
+from six.moves import http_client
 import json
-import urllib.parse
+from six.moves import urllib_parse
 
 
 def ignore_http_not_found(func):
@@ -30,9 +30,9 @@ def ignore_http_not_found(func):
     """
     try:
         func()
-    except http.client.HTTPException as e:
+    except http_client.HTTPException as e:
         res = e.args[0]
-        if res.status != http.client.NOT_FOUND:
+        if res.status != http_client.NOT_FOUND:
             raise
 
 
@@ -40,13 +40,13 @@ class RyuClientBase(object):
     def __init__(self, version, address):
         super(RyuClientBase, self).__init__()
         self.version = version
-        res = urllib.parse.SplitResult('', address, '', '', '')
+        res = urllib_parse.SplitResult('', address, '', '', '')
         self.host = res.hostname
         self.port = res.port
         self.url_prefix = '/' + self.version + '/'
 
     def _do_request(self, method, action, body=None):
-        conn = http.client.HTTPConnection(self.host, self.port)
+        conn = http_client.HTTPConnection(self.host, self.port)
         url = self.url_prefix + action
         headers = {}
         if body is not None:
@@ -54,13 +54,13 @@ class RyuClientBase(object):
             headers['Content-Type'] = 'application/json'
         conn.request(method, url, body, headers)
         res = conn.getresponse()
-        if res.status in (http.client.OK,
-                          http.client.CREATED,
-                          http.client.ACCEPTED,
-                          http.client.NO_CONTENT):
+        if res.status in (http_client.OK,
+                          http_client.CREATED,
+                          http_client.ACCEPTED,
+                          http_client.NO_CONTENT):
             return res
 
-        raise http.client.HTTPException(
+        raise http_client.HTTPException(
             res, 'code %d reason %s' % (res.status, res.reason),
             res.getheaders(), res.read())
 
