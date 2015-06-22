@@ -460,7 +460,7 @@ class igmpv3_report_group(stringify.StringifyMixin):
                 self.aux = str(self.aux)
             buf.extend(self.aux)
             if 0 == self.aux_len:
-                self.aux_len = len(self.aux) / 4
+                self.aux_len = len(self.aux) // 4
                 struct.pack_into('!B', buf, 1, self.aux_len)
         return str(buf)
 

@@ -95,7 +95,7 @@ def import_module(modname):
 
 
 def round_up(x, y):
-    return ((x + y - 1) / y) * y
+    return ((x + y - 1) // y) * y
 
 
 def _str_to_hex(data):

@@ -355,7 +355,7 @@ class vrrp(packet_base.PacketBase):
                            inet.IPPROTO_VRRP, VRRP_IPV6_HOP_LIMIT,
                            primary_ip_address, VRRP_IPV6_DST_ADDRESS)
         else:
-            header_length = ipv4.ipv4._MIN_LEN / 4      # XXX _MIN_LEN
+            header_length = ipv4.ipv4._MIN_LEN // 4      # XXX _MIN_LEN
             total_length = 0
             tos = 0xc0  # set tos to internetwork control
             identification = self.get_identification()
@@ -574,7 +574,7 @@ class vrrpv3(vrrp):
         max_adver_int &= VRRP_V3_MAX_ADVER_INT_MASK
 
         offset = cls._MIN_LEN
-        address_len = (len(buf) - offset) / count_ip
+        address_len = (len(buf) - offset) // count_ip
         # Address version (IPv4 or IPv6) is determined by network layer
         # header type.
         # Unfortunately it isn't available. Guess it by vrrp packet length.

@@ -6638,10 +6638,10 @@ class TestOFPMatch(unittest.TestCase):
 
         res = list(unpack_from(fmt, str(buf), 0)[3:])
         if type(value) is list:
-            res_value = res[:calcsize(pack_str) / 2]
+            res_value = res[:calcsize(pack_str) // 2]
             eq_(res_value, value)
             if mask:
-                res_mask = res[calcsize(pack_str) / 2:]
+                res_mask = res[calcsize(pack_str) // 2:]
                 eq_(res_mask, mask)
         else:
             res_value = res.pop(0)
@@ -7547,7 +7547,7 @@ class TestOFPMatchField(unittest.TestCase):
         res = OFPMatchField(header)
 
         eq_(res.header, header)
-        eq_(res.n_bytes, (header & 0xff) / 2)
+        eq_(res.n_bytes, (header & 0xff) // 2)
         eq_(res.length, 0)
 
     def test_init_hasmask_false(self):

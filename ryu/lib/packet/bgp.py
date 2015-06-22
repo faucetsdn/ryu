@@ -735,14 +735,14 @@ class _AddrPrefix(StringifyMixin):
     def parser(cls, buf):
         (length, ) = struct.unpack_from(cls._PACK_STR, buffer(buf))
         rest = buf[struct.calcsize(cls._PACK_STR):]
-        byte_length = (length + 7) / 8
+        byte_length = (length + 7) // 8
         addr = cls._from_bin(rest[:byte_length])
         rest = rest[byte_length:]
         return cls(length=length, addr=addr), rest
 
     def serialize(self):
         # fixup
-        byte_length = (self.length + 7) / 8
+        byte_length = (self.length + 7) // 8
         bin_addr = self._to_bin(self.addr)
         if (self.length % 8) == 0:
             bin_addr = bin_addr[:byte_length]

@@ -785,7 +785,7 @@ def oxm_tlv_header_extract_hasmask(header):
 
 def oxm_tlv_header_extract_length(header):
     if oxm_tlv_header_extract_hasmask(header):
-        length = (header & 0xff) / 2
+        length = (header & 0xff) // 2
     else:
         length = header & 0xff
     return length

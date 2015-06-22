@@ -41,7 +41,7 @@ class Memory(Command):
 
             # Total size in MB
 
-            total_size = total_size / 1000000
+            total_size = total_size // 1000000
             ret = {
                 'unreachable': unreachable,
                 'total': total_size,
@@ -49,7 +49,7 @@ class Memory(Command):
 
             for class_name, s in size.items():
                 # Calculate size in MB
-                size_mb = s / 1000000
+                size_mb = s // 1000000
                 # We are only interested in class which take-up more than a MB
                 if size_mb > 0:
                     ret['summary'].append(

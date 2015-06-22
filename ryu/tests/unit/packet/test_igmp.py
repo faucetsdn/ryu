@@ -738,7 +738,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
 
     def setUp_with_aux(self):
         self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
-        self.aux_len = len(self.aux) / 4
+        self.aux_len = len(self.aux) // 4
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
                         addrconv.ipv4.text_to_bin(self.address))
@@ -751,7 +751,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
         self.srcs = ['192.168.1.1', '192.168.1.2', '192.168.1.3']
         self.num = len(self.srcs)
         self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
-        self.aux_len = len(self.aux) / 4
+        self.aux_len = len(self.aux) // 4
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
                         addrconv.ipv4.text_to_bin(self.address))
@@ -936,7 +936,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
     @raises
     def test_aux_len_larger_than_aux(self):
         self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
-        self.aux_len = len(self.aux) / 4 + 1
+        self.aux_len = len(self.aux) // 4 + 1
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
                         addrconv.ipv4.text_to_bin(self.address))
@@ -949,7 +949,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
     @raises
     def test_aux_len_smaller_than_aux(self):
         self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
-        self.aux_len = len(self.aux) / 4 - 1
+        self.aux_len = len(self.aux) // 4 - 1
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
                         addrconv.ipv4.text_to_bin(self.address))

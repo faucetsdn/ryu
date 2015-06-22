@@ -1605,7 +1605,7 @@ class NXTPacketIn(NiciraHeader):
                    - ofproto.NICIRA_HEADER_SIZE)
 
         match = nx_match.NXMatch.parser(buf, offset, match_len)
-        offset += (match_len + 7) / 8 * 8
+        offset += (match_len + 7) // 8 * 8
         frame = buf[offset:]
         if total_len < len(frame):
             frame = frame[:total_len]

@@ -1105,7 +1105,7 @@ def nxm_put(buf, offset, header, rule):
 
 
 def round_up(length):
-    return (length + 7) / 8 * 8  # Round up to a multiple of 8
+    return (length + 7) // 8 * 8  # Round up to a multiple of 8
 
 
 class NXMatch(object):

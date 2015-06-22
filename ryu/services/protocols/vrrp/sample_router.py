@@ -377,14 +377,14 @@ class RouterIPV4OpenFlow(RouterIPV4):
     # _ARP_TABLE > _DROP_TABLE
     # to gurantee that responding arp can be disabled
     _ARP_TABLE = 0
-    _ARP_PRIORITY = _DROP_PRIORITY / 2
+    _ARP_PRIORITY = _DROP_PRIORITY // 2
 
     # it must be that
     # _ROUTEING_TABLE < _ARP_TABLE or
     # _ROUTING_TABLE > _ARP_TABLE
     # to gurantee that routing can be disabled
     _ROUTING_TABLE = 0
-    _ROUTING_PRIORITY = _ARP_PRIORITY / 2
+    _ROUTING_PRIORITY = _ARP_PRIORITY // 2
 
     def __init__(self, *args, **kwargs):
         super(RouterIPV4OpenFlow, self).__init__(*args, **kwargs)

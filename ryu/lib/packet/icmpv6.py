@@ -449,7 +449,7 @@ class nd_option_la(nd_option):
         if mod:
             buf.extend(bytearray(8 - mod))
         if 0 == self.length:
-            self.length = len(buf) / 8
+            self.length = len(buf) // 8
             struct.pack_into('!B', buf, 1, self.length)
         return str(buf)
 
@@ -607,7 +607,7 @@ class nd_option_pi(nd_option):
             res1, self.val_l, self.pre_l, self.res2,
             addrconv.ipv6.text_to_bin(self.prefix)))
         if 0 == self.length:
-            self.length = len(hdr) / 8
+            self.length = len(hdr) // 8
             struct.pack_into('!B', hdr, 1, self.length)
         return str(hdr)
 
@@ -933,7 +933,7 @@ class mldv2_report_group(stringify.StringifyMixin):
                 self.aux = str(self.aux)
             buf.extend(self.aux)
             if 0 == self.aux_len:
-                self.aux_len = len(self.aux) / 4
+                self.aux_len = len(self.aux) // 4
                 struct.pack_into('!B', buf, 1, self.aux_len)
         return str(buf)
 

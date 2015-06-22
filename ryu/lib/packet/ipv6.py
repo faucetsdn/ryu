@@ -462,7 +462,7 @@ class routing_type3(header):
     def serialize(self):
         if self.size == 0:
             self.size = ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                         (16 - self.cmpe) + self._pad) / 8
+                         (16 - self.cmpe) + self._pad) // 8
         buf = struct.pack(self._PACK_STR, self.nxt, self.size,
                           self.type_, self.seg, (self.cmpi << 4) | self.cmpe,
                           self._pad << 4)
