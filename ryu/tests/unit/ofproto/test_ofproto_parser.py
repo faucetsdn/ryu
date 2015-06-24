@@ -15,6 +15,8 @@
 
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+import six
+
 import binascii
 import unittest
 from nose.tools import *
@@ -26,6 +28,9 @@ from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 
 import logging
 LOG = logging.getLogger(__name__)
+
+if six.PY3:
+    buffer = bytes
 
 
 class TestOfproto_Parser(unittest.TestCase):

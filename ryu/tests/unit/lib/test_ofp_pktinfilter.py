@@ -84,7 +84,7 @@ class Test_packet_in_filter(unittest.TestCase):
 
     def test_pkt_in_filter_truncated(self):
         datapath = ProtocolDesc(version=ofproto_v1_3.OFP_VERSION)
-        truncated_data = buffer('')
+        truncated_data = ''
         pkt_in = ofproto_v1_3_parser.OFPPacketIn(datapath,
                                                  data=truncated_data)
         ev = ofp_event.EventOFPPacketIn(pkt_in)

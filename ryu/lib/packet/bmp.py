@@ -17,11 +17,13 @@
 BGP Monitoring Protocol draft-ietf-grow-bmp-07
 """
 
+import six
+import struct
+
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib.packet.bgp import BGPMessage
 from ryu.lib import addrconv
-import struct
 
 VERSION = 3
 
@@ -132,7 +134,7 @@ class BMPMessage(packet_base.PacketBase, _TypeDisp):
             raise stream_parser.StreamParser.TooSmallException(
                 '%d < %d' % (len(buf), cls._HDR_LEN))
         (version, len_, type_) = struct.unpack_from(cls._HDR_PACK_STR,
-                                                    buffer(buf))
+                                                    six.binary_type(buf))
 
         return version, len_, type_
 
@@ -229,7 +231,7 @@ class BMPPeerMessage(BMPMessage):
         (peer_type, peer_flags, peer_distinguisher,
          peer_address, peer_as, peer_bgp_id,
          timestamp1, timestamp2) = struct.unpack_from(cls._PEER_HDR_PACK_STR,
-                                                      buffer(buf))
+                                                      six.binary_type(buf))
 
         rest = buf[struct.calcsize(cls._PEER_HDR_PACK_STR):]
 
@@ -239,11 +241,11 @@ class BMPPeerMessage(BMPMessage):
             is_post_policy = False
 
         if peer_flags & (1 << 7):
-            peer_address = addrconv.ipv6.bin_to_text(buffer(peer_address))
+            peer_address = addrconv.ipv6.bin_to_text(peer_address)
         else:
-            peer_address = addrconv.ipv4.bin_to_text(buffer(peer_address[:4]))
+            peer_address = addrconv.ipv4.bin_to_text(peer_address[:4])
 
-        peer_bgp_id = addrconv.ipv4.bin_to_text(buffer(peer_bgp_id))
+        peer_bgp_id = addrconv.ipv4.bin_to_text(peer_bgp_id)
 
         timestamp = float(timestamp1) + timestamp2 * (10 ** -6)
 
@@ -385,7 +387,7 @@ class BMPStatisticsReport(BMPPeerMessage):
     def parser(cls, buf):
         kwargs, rest = super(BMPStatisticsReport, cls).parser(buf)
 
-        stats_count, = struct.unpack_from('!I', buffer(rest))
+        stats_count, = struct.unpack_from('!I', six.binary_type(rest))
 
         buf = rest[struct.calcsize('!I'):]
 
@@ -395,7 +397,8 @@ class BMPStatisticsReport(BMPPeerMessage):
             if len(buf) < cls._MIN_LEN:
                 raise stream_parser.StreamParser.TooSmallException(
                     '%d < %d' % (len(buf), cls._MIN_LEN))
-            (type_, len_) = struct.unpack_from(cls._TLV_PACK_STR, buffer(buf))
+            (type_, len_) = struct.unpack_from(cls._TLV_PACK_STR,
+                                               six.binary_type(buf))
 
             if len(buf) < (cls._MIN_LEN + len_):
                 raise stream_parser.StreamParser.TooSmallException(
@@ -410,10 +413,10 @@ class BMPStatisticsReport(BMPPeerMessage):
                type_ == BMP_STAT_TYPE_INV_UPDATE_DUE_TO_AS_PATH_LOOP or \
                type_ == BMP_STAT_TYPE_INV_UPDATE_DUE_TO_ORIGINATOR_ID or \
                type_ == BMP_STAT_TYPE_INV_UPDATE_DUE_TO_AS_CONFED_LOOP:
-                value, = struct.unpack_from('!I', buffer(value))
+                value, = struct.unpack_from('!I', six.binary_type(value))
             elif type_ == BMP_STAT_TYPE_ADJ_RIB_IN or \
                     type_ == BMP_STAT_TYPE_LOC_RIB:
-                value, = struct.unpack_from('!Q', buffer(value))
+                value, = struct.unpack_from('!Q', six.binary_type(value))
 
             buf = buf[cls._MIN_LEN + len_:]
 
@@ -491,13 +494,13 @@ class BMPPeerDownNotification(BMPPeerMessage):
     @classmethod
     def parser(cls, buf):
         kwargs, buf = super(BMPPeerDownNotification, cls).parser(buf)
-        reason, = struct.unpack_from('!B', buffer(buf))
+        reason, = struct.unpack_from('!B', six.binary_type(buf))
         buf = buf[struct.calcsize('!B'):]
 
         if reason == BMP_PEER_DOWN_REASON_LOCAL_BGP_NOTIFICATION:
             data, rest = BGPMessage.parser(buf)
         elif reason == BMP_PEER_DOWN_REASON_LOCAL_NO_NOTIFICATION:
-            data = struct.unpack_from('!H', buffer(buf))
+            data = struct.unpack_from('!H', six.binary_type(buf))
         elif reason == BMP_PEER_DOWN_REASON_REMOTE_BGP_NOTIFICATION:
             data, rest = BGPMessage.parser(buf)
         elif reason == BMP_PEER_DOWN_REASON_REMOTE_NO_NOTIFICATION:
@@ -591,9 +594,7 @@ class BMPPeerUpNotification(BMPPeerMessage):
         kwargs, rest = super(BMPPeerUpNotification, cls).parser(buf)
 
         (local_address, local_port,
-         remote_port) = struct.unpack_from(cls._PACK_STR, buffer(rest))
-
-        local_address = buffer(local_address)
+         remote_port) = struct.unpack_from(cls._PACK_STR, six.binary_type(rest))
 
         if '.' in kwargs['peer_address']:
             local_address = addrconv.ipv4.bin_to_text(local_address[:4])
@@ -665,7 +666,8 @@ class BMPInitiation(BMPMessage):
             if len(buf) < cls._MIN_LEN:
                 raise stream_parser.StreamParser.TooSmallException(
                     '%d < %d' % (len(buf), cls._MIN_LEN))
-            (type_, len_) = struct.unpack_from(cls._TLV_PACK_STR, buffer(buf))
+            (type_, len_) = struct.unpack_from(cls._TLV_PACK_STR,
+                                               six.binary_type(buf))
 
             if len(buf) < (cls._MIN_LEN + len_):
                 raise stream_parser.StreamParser.TooSmallException(
@@ -728,7 +730,8 @@ class BMPTermination(BMPMessage):
             if len(buf) < cls._MIN_LEN:
                 raise stream_parser.StreamParser.TooSmallException(
                     '%d < %d' % (len(buf), cls._MIN_LEN))
-            (type_, len_) = struct.unpack_from(cls._TLV_PACK_STR, buffer(buf))
+            (type_, len_) = struct.unpack_from(cls._TLV_PACK_STR,
+                                               six.binary_type(buf))
 
             if len(buf) < (cls._MIN_LEN + len_):
                 raise stream_parser.StreamParser.TooSmallException(
@@ -738,7 +741,7 @@ class BMPTermination(BMPMessage):
             if type_ == BMP_TERM_TYPE_STRING:
                 value = value.decode('utf-8')
             elif type_ == BMP_TERM_TYPE_REASON:
-                value, = struct.unpack_from('!H', buffer(value))
+                value, = struct.unpack_from('!H', six.binary_type(value))
 
             buf = buf[cls._MIN_LEN + len_:]
 

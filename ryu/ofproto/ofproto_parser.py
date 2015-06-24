@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 import base64
 import collections
 import logging
@@ -29,11 +31,16 @@ from . import ofproto_common
 
 LOG = logging.getLogger('ryu.ofproto.ofproto_parser')
 
+# This is merely for API compatibility on python2
+if six.PY3:
+    buffer = bytes
+
 
 def header(buf):
     assert len(buf) >= ofproto_common.OFP_HEADER_SIZE
     # LOG.debug('len %d bufsize %d', len(buf), ofproto.OFP_HEADER_SIZE)
-    return struct.unpack_from(ofproto_common.OFP_HEADER_PACK_STR, buffer(buf))
+    return struct.unpack_from(ofproto_common.OFP_HEADER_PACK_STR,
+                              six.binary_type(buf))
 
 
 _MSG_PARSERS = {}

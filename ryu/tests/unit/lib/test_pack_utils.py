@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import unittest
+import six
 import struct
 
 from nose.tools import ok_, eq_
@@ -41,7 +42,7 @@ class TestMsgPackInto(unittest.TestCase):
         pack_utils.msg_pack_into(fmt, buf, offset, arg1, arg2)
 
         check_offset = len(buf) - len_
-        res = struct.unpack_from(fmt, buffer(buf), check_offset)
+        res = struct.unpack_from(fmt, six.binary_type(buf), check_offset)
 
         eq_(arg1, res[0])
         eq_(arg2, res[1])
