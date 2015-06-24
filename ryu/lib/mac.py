@@ -14,7 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 from ryu.lib import addrconv
+
+if six.PY3:
+    _ord = int
+else:
+    _ord = ord
 
 # string representation
 HADDR_PATTERN = r'([0-9a-f]{2}:){5}[0-9a-f]{2}'
@@ -28,7 +35,7 @@ UNICAST = '01:00:00:00:00:00'
 
 
 def is_multicast(addr):
-    return bool(ord(addr[0]) & 0x01)
+    return bool(_ord(addr[0]) & 0x01)
 
 
 def haddr_to_str(addr):
@@ -52,5 +59,5 @@ def haddr_to_bin(string):
 
 
 def haddr_bitand(addr, mask):
-    return ''.join(chr(ord(a) & ord(m)) for (a, m)
-                   in zip(addr, mask))
+    return b''.join(six.int2byte(_ord(a) & _ord(m)) for (a, m)
+                    in zip(addr, mask))

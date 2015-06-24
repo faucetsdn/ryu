@@ -24,11 +24,17 @@
 #   mask is None if no mask.
 
 import itertools
+import six
 import struct
 
 from ryu.ofproto import ofproto_common
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.lib import type_desc
+
+if six.PY3:
+    _ord = int
+else:
+    _ord = ord
 
 # 'OFPXXC_EXPERIMENTER' has not corresponding field in the specification.
 # This is transparently value for Experimenter class ID for OXM/OXS.
@@ -122,7 +128,7 @@ def _normalize_user(oxx, mod, k, uv):
         return (k, uv)
     # apply mask
     if m is not None:
-        v = ''.join(chr(ord(x) & ord(y)) for (x, y) in itertools.izip(v, m))
+        v = b''.join(six.int2byte(_ord(x) & _ord(y)) for (x, y) in zip(v, m))
     try:
         to_user = getattr(mod, oxx + '_to_user')
         (k2, uv2) = to_user(n, v, m)
