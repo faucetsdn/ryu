@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import sys
 import unittest
 from nose.tools import eq_
@@ -145,7 +146,10 @@ def _add_tests():
 
         def _run(self, name, ofpp):
             print('processing %s ...' % name)
-            self._test(name, ofpp)
+            if six.PY3:
+                self._test(self, name, ofpp)
+            else:
+                self._test(name, ofpp)
         print('adding %s ...' % method_name)
         f = functools.partial(_run, name=method_name,
                               ofpp=ofpp)

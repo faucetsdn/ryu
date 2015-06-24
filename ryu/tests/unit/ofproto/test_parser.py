@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import sys
 import unittest
 from nose.tools import eq_
@@ -188,7 +189,7 @@ class Test_Parser(unittest.TestCase):
                                      wire_msg)
             json_dict2 = self._msg_to_jsondict(msg)
             # XXXdebug code
-            open(('/tmp/%s.json' % name), 'wb').write(json.dumps(json_dict2))
+            open(('/tmp/%s.json' % name), 'w').write(json.dumps(json_dict2))
             eq_(json_dict, json_dict2)
 
         # json -> OFPxxx -> json
@@ -247,12 +248,15 @@ def _add_tests():
             if not fnmatch.fnmatch(file, '*.packet'):
                 continue
             wire_msg = open(pdir + '/' + file, 'rb').read()
-            json_str = open(jdir + '/' + file + '.json', 'rb').read()
+            json_str = open(jdir + '/' + file + '.json', 'r').read()
             method_name = ('test_' + file).replace('-', '_').replace('.', '_')
 
             def _run(self, name, wire_msg, json_str):
                 print('processing %s ...' % name)
-                self._test_msg(name, wire_msg, json_str)
+                if six.PY3:
+                    self._test_msg(self, name, wire_msg, json_str)
+                else:
+                    self._test_msg(name, wire_msg, json_str)
             print('adding %s ...' % method_name)
             f = functools.partial(_run, name=method_name, wire_msg=wire_msg,
                                   json_str=json_str)

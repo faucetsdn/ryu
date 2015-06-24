@@ -17,6 +17,7 @@
 import gettext
 import os
 import unittest
+import six
 import sys
 import types
 import logging
@@ -262,4 +263,8 @@ def add_method(cls, method_name, method):
     """Add the method to the class dynamically, keeping unittest/nose happy."""
     method.func_name = method_name
     method.__name__ = method_name
-    setattr(cls, method_name, types.MethodType(method, None, cls))
+    if six.PY3:
+        methodtype = types.MethodType(method, cls)
+    else:
+        methodtype = types.MethodType(method, None, cls)
+    setattr(cls, method_name, methodtype)
