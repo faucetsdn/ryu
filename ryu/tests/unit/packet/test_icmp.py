@@ -56,12 +56,12 @@ class Test_icmp(unittest.TestCase):
     def setUp_with_echo(self):
         self.echo_id = 13379
         self.echo_seq = 1
-        self.echo_data = '\x30\x0e\x09\x00\x00\x00\x00\x00' \
-            + '\x10\x11\x12\x13\x14\x15\x16\x17' \
-            + '\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' \
-            + '\x20\x21\x22\x23\x24\x25\x26\x27' \
-            + '\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f' \
-            + '\x30\x31\x32\x33\x34\x35\x36\x37'
+        self.echo_data = b'\x30\x0e\x09\x00\x00\x00\x00\x00' \
+            + b'\x10\x11\x12\x13\x14\x15\x16\x17' \
+            + b'\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' \
+            + b'\x20\x21\x22\x23\x24\x25\x26\x27' \
+            + b'\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f' \
+            + b'\x30\x31\x32\x33\x34\x35\x36\x37'
         self.data = icmp.echo(
             id_=self.echo_id, seq=self.echo_seq, data=self.echo_data)
 
@@ -224,7 +224,7 @@ class Test_icmp(unittest.TestCase):
 
         eq_(res[0], 8)
         eq_(res[1], 0)
-        eq_(buf[4:], '\x00\x00\x00\x00')
+        eq_(buf[4:], b'\x00\x00\x00\x00')
 
         # with data
         ic = icmp.icmp(type_=icmp.ICMP_DEST_UNREACH, data=icmp.dest_unreach())
@@ -233,7 +233,7 @@ class Test_icmp(unittest.TestCase):
 
         eq_(res[0], 3)
         eq_(res[1], 0)
-        eq_(buf[4:], '\x00\x00\x00\x00')
+        eq_(buf[4:], b'\x00\x00\x00\x00')
 
     def test_json(self):
         jsondict = self.ic.to_jsondict()
@@ -258,12 +258,12 @@ class Test_echo(unittest.TestCase):
     def setUp(self):
         self.id_ = 13379
         self.seq = 1
-        self.data = '\x30\x0e\x09\x00\x00\x00\x00\x00' \
-            + '\x10\x11\x12\x13\x14\x15\x16\x17' \
-            + '\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' \
-            + '\x20\x21\x22\x23\x24\x25\x26\x27' \
-            + '\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f' \
-            + '\x30\x31\x32\x33\x34\x35\x36\x37'
+        self.data = b'\x30\x0e\x09\x00\x00\x00\x00\x00' \
+            + b'\x10\x11\x12\x13\x14\x15\x16\x17' \
+            + b'\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' \
+            + b'\x20\x21\x22\x23\x24\x25\x26\x27' \
+            + b'\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f' \
+            + b'\x30\x31\x32\x33\x34\x35\x36\x37'
         self.echo = icmp.echo(
             self.id_, self.seq, self.data)
         self.buf = struct.pack('!HH', self.id_, self.seq)

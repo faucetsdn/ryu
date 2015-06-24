@@ -44,10 +44,10 @@ class TestPacket(unittest.TestCase):
     src_port = 50001
     dst_port = 50002
     src_ip_bin = addrconv.ipv4.text_to_bin(src_ip)
-    payload = '\x06\x06\x47\x50\x00\x00\x00\x00' \
-        + '\xcd\xc5\x00\x00\x00\x00\x00\x00' \
-        + '\x10\x11\x12\x13\x14\x15\x16\x17' \
-        + '\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
+    payload = b'\x06\x06\x47\x50\x00\x00\x00\x00' \
+        + b'\xcd\xc5\x00\x00\x00\x00\x00\x00' \
+        + b'\x10\x11\x12\x13\x14\x15\x16\x17' \
+        + b'\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
 
     def get_protocols(self, pkt):
         protocols = {}
@@ -79,14 +79,14 @@ class TestPacket(unittest.TestCase):
         # ethernet !6s6sH
         e_buf = self.dst_mac_bin \
             + self.src_mac_bin \
-            + '\x08\x06'
+            + b'\x08\x06'
 
         # arp !HHBBH6sI6sI
-        a_buf = '\x00\x01' \
-            + '\x08\x00' \
-            + '\x06' \
-            + '\x04' \
-            + '\x00\x02' \
+        a_buf = b'\x00\x01' \
+            + b'\x08\x00' \
+            + b'\x06' \
+            + b'\x04' \
+            + b'\x00\x02' \
             + self.src_mac_bin \
             + self.src_ip_bin \
             + self.dst_mac_bin \
@@ -170,18 +170,18 @@ class TestPacket(unittest.TestCase):
         # ethernet !6s6sH
         e_buf = self.dst_mac_bin \
             + self.src_mac_bin \
-            + '\x81\x00'
+            + b'\x81\x00'
 
         # vlan !HH
-        v_buf = '\xF0\x03' \
-            + '\x08\x06'
+        v_buf = b'\xF0\x03' \
+            + b'\x08\x06'
 
         # arp !HHBBH6sI6sI
-        a_buf = '\x00\x01' \
-            + '\x08\x00' \
-            + '\x06' \
-            + '\x04' \
-            + '\x00\x02' \
+        a_buf = b'\x00\x01' \
+            + b'\x08\x00' \
+            + b'\x06' \
+            + b'\x04' \
+            + b'\x00\x02' \
             + self.src_mac_bin \
             + self.src_ip_bin \
             + self.dst_mac_bin \
@@ -286,25 +286,25 @@ class TestPacket(unittest.TestCase):
         # ethernet !6s6sH
         e_buf = self.dst_mac_bin \
             + self.src_mac_bin \
-            + '\x08\x00'
+            + b'\x08\x00'
 
         # ipv4 !BBHHHBBHII
-        ip_buf = '\x45' \
-            + '\x01' \
-            + '\x00\x3C' \
-            + '\x00\x03' \
-            + '\x20\x04' \
-            + '\x40' \
-            + '\x11' \
-            + '\x00\x00' \
+        ip_buf = b'\x45' \
+            + b'\x01' \
+            + b'\x00\x3C' \
+            + b'\x00\x03' \
+            + b'\x20\x04' \
+            + b'\x40' \
+            + b'\x11' \
+            + b'\x00\x00' \
             + self.src_ip_bin \
             + self.dst_ip_bin
 
         # udp !HHHH
-        u_buf = '\x19\x0F' \
-            + '\x1F\x90' \
-            + '\x00\x28' \
-            + '\x00\x00'
+        u_buf = b'\x19\x0F' \
+            + b'\x1F\x90' \
+            + b'\x00\x28' \
+            + b'\x00\x00'
 
         buf = e_buf + ip_buf + u_buf + self.payload
 
@@ -413,7 +413,7 @@ class TestPacket(unittest.TestCase):
         ip = ipv4.ipv4(4, 5, 0, 0, 0, 0, 0, 64, inet.IPPROTO_TCP, 0,
                        self.src_ip, self.dst_ip)
         t = tcp.tcp(0x190F, 0x1F90, 0x123, 1, 6, 0b101010, 2048, 0, 0x6f,
-                    '\x01\x02')
+                    b'\x01\x02')
 
         p = packet.Packet()
         p.add_protocol(e)
@@ -425,31 +425,31 @@ class TestPacket(unittest.TestCase):
         # ethernet !6s6sH
         e_buf = self.dst_mac_bin \
             + self.src_mac_bin \
-            + '\x08\x00'
+            + b'\x08\x00'
 
         # ipv4 !BBHHHBBHII
-        ip_buf = '\x45' \
-            + '\x00' \
-            + '\x00\x4C' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\x40' \
-            + '\x06' \
-            + '\x00\x00' \
+        ip_buf = b'\x45' \
+            + b'\x00' \
+            + b'\x00\x4C' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x40' \
+            + b'\x06' \
+            + b'\x00\x00' \
             + self.src_ip_bin \
             + self.dst_ip_bin
 
         # tcp !HHIIBBHHH + option
-        t_buf = '\x19\x0F' \
-            + '\x1F\x90' \
-            + '\x00\x00\x01\x23' \
-            + '\x00\x00\x00\x01' \
-            + '\x60' \
-            + '\x2A' \
-            + '\x08\x00' \
-            + '\x00\x00' \
-            + '\x00\x6F' \
-            + '\x01\x02\x00\x00'
+        t_buf = b'\x19\x0F' \
+            + b'\x1F\x90' \
+            + b'\x00\x00\x01\x23' \
+            + b'\x00\x00\x00\x01' \
+            + b'\x60' \
+            + b'\x2A' \
+            + b'\x08\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x6F' \
+            + b'\x01\x02\x00\x00'
 
         buf = e_buf + ip_buf + t_buf + self.payload
 
@@ -574,34 +574,34 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv4.text_to_bin('0.0.0.0')
 
         # ethernet !6s6sH
-        e_buf = '\xff\xff\xff\xff\xff\xff' \
-            + '\x00\x00\x00\x00\x00\x00' \
-            + '\x08\x00'
+        e_buf = b'\xff\xff\xff\xff\xff\xff' \
+            + b'\x00\x00\x00\x00\x00\x00' \
+            + b'\x08\x00'
 
         # ipv4 !BBHHHBBHII
-        ip_buf = '\x45' \
-            + '\x00' \
-            + '\x00\x50' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\xff' \
-            + '\x84' \
-            + '\x00\x00' \
+        ip_buf = b'\x45' \
+            + b'\x00' \
+            + b'\x00\x50' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\xff' \
+            + b'\x84' \
+            + b'\x00\x00' \
             + ipaddr \
             + ipaddr
 
         # sctp !HHII + chunk_data !BBHIHHI + payload
-        s_buf = '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00' \
-            + '\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
+        s_buf = b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00' \
+            + b'\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
             + self.payload
 
         buf = e_buf + ip_buf + s_buf
@@ -730,28 +730,28 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv4.text_to_bin('0.0.0.0')
 
         # ethernet !6s6sH
-        e_buf = '\xff\xff\xff\xff\xff\xff' \
-            + '\x00\x00\x00\x00\x00\x00' \
-            + '\x08\x00'
+        e_buf = b'\xff\xff\xff\xff\xff\xff' \
+            + b'\x00\x00\x00\x00\x00\x00' \
+            + b'\x08\x00'
 
         # ipv4 !BBHHHBBHII
-        ip_buf = '\x45' \
-            + '\x00' \
-            + '\x00\x1c' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\xff' \
-            + '\x01' \
-            + '\x00\x00' \
+        ip_buf = b'\x45' \
+            + b'\x00' \
+            + b'\x00\x1c' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\xff' \
+            + b'\x01' \
+            + b'\x00\x00' \
             + ipaddr \
             + ipaddr
 
         # icmp !BBH + echo !HH
-        ic_buf = '\x08' \
-            + '\x00' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00'
+        ic_buf = b'\x08' \
+            + b'\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00'
 
         buf = e_buf + ip_buf + ic_buf
 
@@ -864,24 +864,24 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = '\xff\xff\xff\xff\xff\xff' \
-            + '\x00\x00\x00\x00\x00\x00' \
-            + '\x86\xdd'
+        e_buf = b'\xff\xff\xff\xff\xff\xff' \
+            + b'\x00\x00\x00\x00\x00\x00' \
+            + b'\x86\xdd'
 
         # ipv6 !IHBB16s16s'
-        ip_buf = '\x60\x00\x00\x00' \
-            + '\x00\x00' \
-            + '\x11' \
-            + '\xff' \
-            + '\x00\x00' \
+        ip_buf = b'\x60\x00\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x11' \
+            + b'\xff' \
+            + b'\x00\x00' \
             + ipaddr \
             + ipaddr
 
         # udp !HHHH
-        u_buf = '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x28' \
-            + '\x00\x00'
+        u_buf = b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x28' \
+            + b'\x00\x00'
 
         buf = e_buf + ip_buf + u_buf + self.payload
 
@@ -977,7 +977,7 @@ class TestPacket(unittest.TestCase):
         # build packet
         e = ethernet.ethernet(ethertype=ether.ETH_TYPE_IPV6)
         ip = ipv6.ipv6()
-        t = tcp.tcp(option='\x01\x02')
+        t = tcp.tcp(option=b'\x01\x02')
 
         p = e / ip / t / self.payload
         p.serialize()
@@ -985,30 +985,30 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = '\xff\xff\xff\xff\xff\xff' \
-            + '\x00\x00\x00\x00\x00\x00' \
-            + '\x86\xdd'
+        e_buf = b'\xff\xff\xff\xff\xff\xff' \
+            + b'\x00\x00\x00\x00\x00\x00' \
+            + b'\x86\xdd'
 
         # ipv6 !IHBB16s16s'
-        ip_buf = '\x60\x00\x00\x00' \
-            + '\x00\x00' \
-            + '\x06' \
-            + '\xff' \
-            + '\x00\x00' \
+        ip_buf = b'\x60\x00\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x06' \
+            + b'\xff' \
+            + b'\x00\x00' \
             + ipaddr \
             + ipaddr
 
         # tcp !HHIIBBHHH + option
-        t_buf = '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x60' \
-            + '\x00' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\x01\x02\x00\x00'
+        t_buf = b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x60' \
+            + b'\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x01\x02\x00\x00'
 
         buf = e_buf + ip_buf + t_buf + self.payload
 
@@ -1123,31 +1123,31 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = '\xff\xff\xff\xff\xff\xff' \
-            + '\x00\x00\x00\x00\x00\x00' \
-            + '\x86\xdd'
+        e_buf = b'\xff\xff\xff\xff\xff\xff' \
+            + b'\x00\x00\x00\x00\x00\x00' \
+            + b'\x86\xdd'
 
         # ipv6 !IHBB16s16s'
-        ip_buf = '\x60\x00\x00\x00' \
-            + '\x00\x00' \
-            + '\x84' \
-            + '\xff' \
-            + '\x00\x00' \
+        ip_buf = b'\x60\x00\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x84' \
+            + b'\xff' \
+            + b'\x00\x00' \
             + ipaddr \
             + ipaddr
 
         # sctp !HHII + chunk_data !BBHIHHI + payload
-        s_buf = '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00' \
-            + '\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00' \
-            + '\x00\x00\x00\x00' \
+        s_buf = b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00' \
+            + b'\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x00\x00\x00\x00' \
             + self.payload
 
         buf = e_buf + ip_buf + s_buf
@@ -1266,23 +1266,23 @@ class TestPacket(unittest.TestCase):
         ipaddr = addrconv.ipv6.text_to_bin('::')
 
         # ethernet !6s6sH
-        e_buf = '\xff\xff\xff\xff\xff\xff' \
-            + '\x00\x00\x00\x00\x00\x00' \
-            + '\x86\xdd'
+        e_buf = b'\xff\xff\xff\xff\xff\xff' \
+            + b'\x00\x00\x00\x00\x00\x00' \
+            + b'\x86\xdd'
 
         # ipv6 !IHBB16s16s'
-        ip_buf = '\x60\x00\x00\x00' \
-            + '\x00\x00' \
-            + '\x3a' \
-            + '\xff' \
-            + '\x00\x00' \
+        ip_buf = b'\x60\x00\x00\x00' \
+            + b'\x00\x00' \
+            + b'\x3a' \
+            + b'\xff' \
+            + b'\x00\x00' \
             + ipaddr \
             + ipaddr
 
         # icmpv6 !BBH
-        ic_buf = '\x00' \
-            + '\x00' \
-            + '\x00\x00'
+        ic_buf = b'\x00' \
+            + b'\x00' \
+            + b'\x00\x00'
 
         buf = e_buf + ip_buf + ic_buf
 
@@ -1395,26 +1395,26 @@ class TestPacket(unittest.TestCase):
         p.serialize()
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac + self.src_mac + '\x05\xdc'
+        e_buf = self.dst_mac + self.src_mac + b'\x05\xdc'
 
         # llc !BBB
-        l_buf = ('\x42'
-                 '\x42'
-                 '\x03')
+        l_buf = (b'\x42'
+                 b'\x42'
+                 b'\x03')
 
         # bpdu !HBBBQIQHHHHH
-        b_buf = ('\x00\x00'
-                 '\x00'
-                 '\x00'
-                 '\x00'
-                 '\x80\x64\xaa\xaa\xaa\xaa\xaa\xaa'
-                 '\x00\x00\x00\x04'
-                 '\x80\x64\xbb\xbb\xbb\xbb\xbb\xbb'
-                 '\x80\x04'
-                 '\x01\x00'
-                 '\x14\x00'
-                 '\x02\x00'
-                 '\x0f\x00')
+        b_buf = (b'\x00\x00'
+                 b'\x00'
+                 b'\x00'
+                 b'\x00'
+                 b'\x80\x64\xaa\xaa\xaa\xaa\xaa\xaa'
+                 b'\x00\x00\x00\x04'
+                 b'\x80\x64\xbb\xbb\xbb\xbb\xbb\xbb'
+                 b'\x80\x04'
+                 b'\x01\x00'
+                 b'\x14\x00'
+                 b'\x02\x00'
+                 b'\x0f\x00')
 
         buf = e_buf + l_buf + b_buf
 

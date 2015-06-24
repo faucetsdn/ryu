@@ -105,7 +105,7 @@ class RunTest(tester.TestFlowBase):
             return val == 0
         elif type_ == 'mac':
             for v in val:
-                if v != '\x00':
+                if v != b'\x00':
                     return False
             return True
         elif type_ == 'ipv6':

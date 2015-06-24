@@ -123,9 +123,9 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(self.giaddr, res.giaddr)
         eq_(self.chaddr, res.chaddr)
         # sname is 64 byte length. rest of data is filled by '\x00'.
-        eq_(self.sname.ljust(64, '\x00'), res.sname)
+        eq_(self.sname.ljust(64, b'\x00'), res.sname)
         # boof_file is 128 byte length. rest of data is filled by '\x00'.
-        eq_(self.boot_file.ljust(128, '\x00'), res.boot_file)
+        eq_(self.boot_file.ljust(128, b'\x00'), res.boot_file)
         eq_(str(self.options), str(res.options))
 
     def test_parser_corrupted(self):
@@ -152,9 +152,9 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(self.giaddr, addrconv.ipv4.bin_to_text(res[10]))
         eq_(self.chaddr, addrconv.mac.bin_to_text(res[11][:6]))
         # sname is 64 byte length. rest of data is filled by '\x00'.
-        eq_(self.sname.ljust(64, '\x00'), res[12])
+        eq_(self.sname.ljust(64, b'\x00'), res[12])
         # boof_file is 128 byte length. rest of data is filled by '\x00'.
-        eq_(self.boot_file.ljust(128, '\x00'), res[13])
+        eq_(self.boot_file.ljust(128, b'\x00'), res[13])
         options = dhcp.options.parser(
             buf[struct.calcsize(dhcp.dhcp._DHCP_PACK_STR):])
         eq_(str(self.options), str(options))
@@ -225,14 +225,14 @@ class Test_dhcp_offer_with_hlen_zero(unittest.TestCase):
     boot_file = ''
 
     option_list = [
-        dhcp.option(dhcp.DHCP_MESSAGE_TYPE_OPT, '\x02', 1),
-        dhcp.option(dhcp.DHCP_SUBNET_MASK_OPT, '\xff\xff\xff\x00', 4),
-        dhcp.option(dhcp.DHCP_GATEWAY_ADDR_OPT, '\xc0\xa8\x0a\x09', 4),
-        dhcp.option(dhcp.DHCP_DNS_SERVER_ADDR_OPT, '\xc0\xa8\x0a\x09', 4),
-        dhcp.option(dhcp.DHCP_IP_ADDR_LEASE_TIME_OPT, '\x00\x03\xf4\x80', 4),
-        dhcp.option(dhcp.DHCP_RENEWAL_TIME_OPT, '\x00\x01\xfa\x40', 4),
-        dhcp.option(dhcp.DHCP_REBINDING_TIME_OPT, '\x00\x03\x75\xf0', 4),
-        dhcp.option(dhcp.DHCP_SERVER_IDENTIFIER_OPT, '\xc0\xa8\x0a\x09', 4)]
+        dhcp.option(dhcp.DHCP_MESSAGE_TYPE_OPT, b'\x02', 1),
+        dhcp.option(dhcp.DHCP_SUBNET_MASK_OPT, b'\xff\xff\xff\x00', 4),
+        dhcp.option(dhcp.DHCP_GATEWAY_ADDR_OPT, b'\xc0\xa8\x0a\x09', 4),
+        dhcp.option(dhcp.DHCP_DNS_SERVER_ADDR_OPT, b'\xc0\xa8\x0a\x09', 4),
+        dhcp.option(dhcp.DHCP_IP_ADDR_LEASE_TIME_OPT, b'\x00\x03\xf4\x80', 4),
+        dhcp.option(dhcp.DHCP_RENEWAL_TIME_OPT, b'\x00\x01\xfa\x40', 4),
+        dhcp.option(dhcp.DHCP_REBINDING_TIME_OPT, b'\x00\x03\x75\xf0', 4),
+        dhcp.option(dhcp.DHCP_SERVER_IDENTIFIER_OPT, b'\xc0\xa8\x0a\x09', 4)]
     magic_cookie = '99.130.83.99'
     options = dhcp.options(option_list=option_list, options_len=50,
                            magic_cookie=magic_cookie)

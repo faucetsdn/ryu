@@ -38,7 +38,7 @@ class Test_mac(unittest.TestCase):
         pass
 
     def test_mac_is_multicast(self):
-        addr = '\x01\x23\x45\x67\x89\x0a'
+        addr = b'\x01\x23\x45\x67\x89\x0a'
         val = True
 
         res = mac.is_multicast(addr)
@@ -47,7 +47,7 @@ class Test_mac(unittest.TestCase):
 
     def test_mac_haddr_to_str(self):
         addr = 'aa:aa:aa:aa:aa:aa'
-        val = '\xaa\xaa\xaa\xaa\xaa\xaa'
+        val = b'\xaa\xaa\xaa\xaa\xaa\xaa'
 
         res = mac.haddr_to_str(val)
 
@@ -64,7 +64,7 @@ class Test_mac(unittest.TestCase):
 
     @raises(AssertionError)
     def test_mac_haddr_to_str_assert(self):
-        val = '\xaa\xaa\xaa\xaa\xaa'
+        val = b'\xaa\xaa\xaa\xaa\xaa'
 
         res = mac.haddr_to_str(val)
 
@@ -86,9 +86,9 @@ class Test_mac(unittest.TestCase):
         res = mac.haddr_to_bin(addr)
 
     def test_mac_haddr_bitand(self):
-        addr = '\xaa\xaa\xaa\xaa\xaa\xaa'
-        mask = '\xff\xff\xff\x00\x00\x00'
-        val = '\xaa\xaa\xaa\x00\x00\x00'
+        addr = b'\xaa\xaa\xaa\xaa\xaa\xaa'
+        mask = b'\xff\xff\xff\x00\x00\x00'
+        val = b'\xaa\xaa\xaa\x00\x00\x00'
 
         res = mac.haddr_bitand(addr, mask)
 

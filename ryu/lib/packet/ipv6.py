@@ -451,11 +451,11 @@ class routing_type3(header):
             form_e = "%ds" % adrs_len_e
             while data < (header_len - (adrs_len_e + pad)):
                 (adr, ) = struct.unpack_from(form_i, buf[data:])
-                adr = ('\x00' * cmpi) + adr
+                adr = (b'\x00' * cmpi) + adr
                 adrs.append(addrconv.ipv6.bin_to_text(adr))
                 data += adrs_len_i
             (adr, ) = struct.unpack_from(form_e, buf[data:])
-            adr = ('\x00' * cmpe) + adr
+            adr = (b'\x00' * cmpe) + adr
             adrs.append(addrconv.ipv6.bin_to_text(adr))
         return cls(nxt, size, type_, seg, cmpi, cmpe, adrs)
 

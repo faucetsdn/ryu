@@ -26,7 +26,7 @@ def carry_around_add(a, b):
 
 def checksum(data):
     if len(data) % 2:
-        data += '\x00'
+        data += b'\x00'
 
     data = str(data)    # input can be bytearray.
     s = sum(array.array('H', data))

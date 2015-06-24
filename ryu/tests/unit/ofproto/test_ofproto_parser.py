@@ -169,7 +169,7 @@ class TestMsgBase(unittest.TestCase):
         version = ofproto_v1_0.OFP_VERSION
         msg_len = ofproto_v1_0.OFP_HEADER_SIZE
         xid = 2183948390
-        data = '\x00\x01\x02\x03'
+        data = b'\x00\x01\x02\x03'
 
         fmt = ofproto_v1_0.OFP_HEADER_PACK_STR
         buf = struct.pack(fmt, version, msg_type, msg_len, xid) \

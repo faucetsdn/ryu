@@ -606,7 +606,7 @@ def get_rf(afi, safi):
 
 def pad(bin, len_):
     assert len(bin) <= len_
-    return bin + (len_ - len(bin)) * '\0'
+    return bin + b'\0' * (len_ - len(bin))
 
 
 class _RouteDistinguisher(StringifyMixin, _TypeDisp, _Value):
@@ -2060,7 +2060,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         self.next_hop_len = len(self._next_hop_bin)
 
         if RouteFamily(self.afi, self.safi) in (RF_IPv4_VPN, RF_IPv6_VPN):
-            empty_label_stack = '\x00' * self._rd_length
+            empty_label_stack = b'\x00' * self._rd_length
             next_hop_len = len(self._next_hop_bin) + len(empty_label_stack)
             next_hop_bin = empty_label_stack
             next_hop_bin += self._next_hop_bin

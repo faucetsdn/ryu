@@ -135,7 +135,7 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
         # };
         group_req = struct.pack('I', self.ifindex)
         # padding to gr_group. This is environment dependent
-        group_req += '\x00' * (struct.calcsize('P') - struct.calcsize('I'))
+        group_req += b'\x00' * (struct.calcsize('P') - struct.calcsize('I'))
         if self.config.is_ipv6:
             # struct sockaddr_in6 {
             #     sa_family_t     sin6_family;   /* AF_INET6 */
@@ -171,7 +171,7 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
             sockaddr += struct.pack('!H', 0)
             sockaddr += addrconv.ipv4.text_to_bin(vrrp.VRRP_IPV4_DST_ADDRESS)
 
-        sockaddr += '\x00' * (SS_MAXSIZE - len(sockaddr))
+        sockaddr += b'\x00' * (SS_MAXSIZE - len(sockaddr))
         group_req += sockaddr
 
         self.ip_socket.setsockopt(family, join_leave, group_req)

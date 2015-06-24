@@ -49,7 +49,7 @@ class Test_icmpv6_header(unittest.TestCase):
     type_ = 255
     code = 0
     csum = 207
-    buf = '\xff\x00\x00\xcf'
+    buf = b'\xff\x00\x00\xcf'
     icmp = icmpv6.icmpv6(type_, code, 0)
 
     def setUp(self):
@@ -112,8 +112,8 @@ class Test_icmpv6_echo_request(unittest.TestCase):
     csum = 0xa572
     id_ = 0x7620
     seq = 0
-    data = '\x01\xc9\xe7\x36\xd3\x39\x06\x00'
-    buf = '\x80\x00\xa5\x72\x76\x20\x00\x00'
+    data = b'\x01\xc9\xe7\x36\xd3\x39\x06\x00'
+    buf = b'\x80\x00\xa5\x72\x76\x20\x00\x00'
 
     def setUp(self):
         pass
@@ -128,7 +128,7 @@ class Test_icmpv6_echo_request(unittest.TestCase):
         eq_(echo.data, None)
 
     def _test_parser(self, data=None):
-        buf = self.buf + str(data or '')
+        buf = self.buf + (data or b'')
         msg, n, _ = icmpv6.icmpv6.parser(buf)
 
         eq_(msg.type_, self.type_)
@@ -146,7 +146,7 @@ class Test_icmpv6_echo_request(unittest.TestCase):
         self._test_parser(self.data)
 
     def _test_serialize(self, echo_data=None):
-        buf = self.buf + str(echo_data or '')
+        buf = self.buf + (echo_data or b'')
         src_ipv6 = '3ffe:507:0:1:200:86ff:fe05:80da'
         dst_ipv6 = '3ffe:501:0:1001::2'
         prev = ipv6(6, 0, 0, len(buf), 64, 255, src_ipv6, dst_ipv6)
@@ -227,7 +227,7 @@ class Test_icmpv6_echo_reply(Test_icmpv6_echo_request):
     def setUp(self):
         self.type_ = 129
         self.csum = 0xa472
-        self.buf = '\x81\x00\xa4\x72\x76\x20\x00\x00'
+        self.buf = b'\x81\x00\xa4\x72\x76\x20\x00\x00'
 
     def test_default_args(self):
         prev = ipv6(nxt=inet.IPPROTO_ICMPV6)
@@ -256,10 +256,10 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
     nd_type = 1
     nd_length = 1
     nd_hw_src = '00:60:97:07:69:ea'
-    data = '\x01\x01\x00\x60\x97\x07\x69\xea'
-    buf = '\x87\x00\x95\x2d\x00\x00\x00\x00' \
-        + '\x3f\xfe\x05\x07\x00\x00\x00\x01' \
-        + '\x02\x00\x86\xff\xfe\x05\x80\xda'
+    data = b'\x01\x01\x00\x60\x97\x07\x69\xea'
+    buf = b'\x87\x00\x95\x2d\x00\x00\x00\x00' \
+        + b'\x3f\xfe\x05\x07\x00\x00\x00\x01' \
+        + b'\x02\x00\x86\xff\xfe\x05\x80\xda'
     src_ipv6 = '3ffe:507:0:1:200:86ff:fe05:80da'
     dst_ipv6 = '3ffe:501:0:1001::2'
 
@@ -276,7 +276,7 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
         eq_(nd.option, None)
 
     def _test_parser(self, data=None):
-        buf = self.buf + str(data or '')
+        buf = self.buf + (data or b'')
         msg, n, _ = icmpv6.icmpv6.parser(buf)
 
         eq_(msg.type_, self.type_)
@@ -435,10 +435,10 @@ class Test_icmpv6_neighbor_advert(Test_icmpv6_neighbor_solicit):
         self.nd_length = 1
         self.nd_data = None
         self.nd_hw_src = '00:60:97:07:69:ea'
-        self.data = '\x02\x01\x00\x60\x97\x07\x69\xea'
-        self.buf = '\x88\x00\xb8\xba\xe0\x00\x00\x00' \
-            + '\x3f\xfe\x05\x07\x00\x00\x00\x01' \
-            + '\x02\x60\x97\xff\xfe\x07\x69\xea'
+        self.data = b'\x02\x01\x00\x60\x97\x07\x69\xea'
+        self.buf = b'\x88\x00\xb8\xba\xe0\x00\x00\x00' \
+            + b'\x3f\xfe\x05\x07\x00\x00\x00\x01' \
+            + b'\x02\x60\x97\xff\xfe\x07\x69\xea'
 
     def test_serialize_with_data(self):
         nd_opt = icmpv6.nd_option_tla(self.nd_length, self.nd_hw_src)
@@ -548,8 +548,8 @@ class Test_icmpv6_router_solicit(unittest.TestCase):
     nd_type = 1
     nd_length = 1
     nd_hw_src = '12:2d:a5:6d:bc:0f'
-    data = '\x00\x00\x00\x00\x01\x01\x12\x2d\xa5\x6d\xbc\x0f'
-    buf = '\x85\x00\x97\xd9'
+    data = b'\x00\x00\x00\x00\x01\x01\x12\x2d\xa5\x6d\xbc\x0f'
+    buf = b'\x85\x00\x97\xd9'
     src_ipv6 = '3ffe:507:0:1:200:86ff:fe05:80da'
     dst_ipv6 = '3ffe:501:0:1001::2'
 
@@ -565,7 +565,7 @@ class Test_icmpv6_router_solicit(unittest.TestCase):
         eq_(rs.option, None)
 
     def _test_parser(self, data=None):
-        buf = self.buf + str(data or '')
+        buf = self.buf + (data or b'')
         msg, n, _ = icmpv6.icmpv6.parser(buf)
 
         eq_(msg.type_, self.type_)
@@ -975,9 +975,9 @@ class Test_icmpv6_membership_query(unittest.TestCase):
     csum = 0xb5a4
     maxresp = 10000
     address = 'ff08::1'
-    buf = '\x82\x00\xb5\xa4\x27\x10\x00\x00' \
-        + '\xff\x08\x00\x00\x00\x00\x00\x00' \
-        + '\x00\x00\x00\x00\x00\x00\x00\x01'
+    buf = b'\x82\x00\xb5\xa4\x27\x10\x00\x00' \
+        + b'\xff\x08\x00\x00\x00\x00\x00\x00' \
+        + b'\x00\x00\x00\x00\x00\x00\x00\x01'
 
     def setUp(self):
         pass
@@ -1075,9 +1075,9 @@ class Test_icmpv6_membership_report(Test_icmpv6_membership_query):
     csum = 0xb4a4
     maxresp = 10000
     address = 'ff08::1'
-    buf = '\x83\x00\xb4\xa4\x27\x10\x00\x00' \
-        + '\xff\x08\x00\x00\x00\x00\x00\x00' \
-        + '\x00\x00\x00\x00\x00\x00\x00\x01'
+    buf = b'\x83\x00\xb4\xa4\x27\x10\x00\x00' \
+        + b'\xff\x08\x00\x00\x00\x00\x00\x00' \
+        + b'\x00\x00\x00\x00\x00\x00\x00\x01'
 
     def test_json(self):
         ic1 = icmpv6.icmpv6(
@@ -1094,9 +1094,9 @@ class Test_icmpv6_membership_done(Test_icmpv6_membership_query):
     csum = 0xb3a4
     maxresp = 10000
     address = 'ff08::1'
-    buf = '\x84\x00\xb3\xa4\x27\x10\x00\x00' \
-        + '\xff\x08\x00\x00\x00\x00\x00\x00' \
-        + '\x00\x00\x00\x00\x00\x00\x00\x01'
+    buf = b'\x84\x00\xb3\xa4\x27\x10\x00\x00' \
+        + b'\xff\x08\x00\x00\x00\x00\x00\x00' \
+        + b'\x00\x00\x00\x00\x00\x00\x00\x01'
 
     def test_json(self):
         ic1 = icmpv6.icmpv6(
@@ -1123,10 +1123,10 @@ class Test_mldv2_query(unittest.TestCase):
     mld = icmpv6.mldv2_query(
         maxresp, address, s_flg, qrv, qqic, num, srcs)
 
-    buf = '\x82\x00\xb5\xa4\x27\x10\x00\x00' \
-        + '\xff\x08\x00\x00\x00\x00\x00\x00' \
-        + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-        + '\x02\x0a\x00\x00'
+    buf = b'\x82\x00\xb5\xa4\x27\x10\x00\x00' \
+        + b'\xff\x08\x00\x00\x00\x00\x00\x00' \
+        + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+        + b'\x02\x0a\x00\x00'
 
     def setUp(self):
         pass
@@ -1137,14 +1137,14 @@ class Test_mldv2_query(unittest.TestCase):
         self.mld = icmpv6.mldv2_query(
             self.maxresp, self.address, self.s_flg, self.qrv, self.qqic,
             self.num, self.srcs)
-        self.buf = '\x82\x00\xb5\xa4\x27\x10\x00\x00' \
-            + '\xff\x08\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\x02\x0a\x00\x02' \
-            + '\xff\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xff\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x02'
+        self.buf = b'\x82\x00\xb5\xa4\x27\x10\x00\x00' \
+            + b'\xff\x08\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\x02\x0a\x00\x02' \
+            + b'\xff\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xff\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x02'
 
     def tearDown(self):
         pass
@@ -1393,7 +1393,7 @@ class Test_mldv2_report(unittest.TestCase):
 
     mld = icmpv6.mldv2_report(record_num, records)
 
-    buf = '\x8f\x00\xb5\xa4\x00\x00\x00\x00'
+    buf = b'\x8f\x00\xb5\xa4\x00\x00\x00\x00'
 
     def setUp(self):
         pass
@@ -1405,37 +1405,37 @@ class Test_mldv2_report(unittest.TestCase):
             icmpv6.MODE_IS_INCLUDE, 0, 2, 'ff00::2',
             ['fe80::1', 'fe80::2'])
         self.record3 = icmpv6.mldv2_report_group(
-            icmpv6.MODE_IS_INCLUDE, 1, 0, 'ff00::3', [], 'abc\x00')
+            icmpv6.MODE_IS_INCLUDE, 1, 0, 'ff00::3', [], b'abc\x00')
         self.record4 = icmpv6.mldv2_report_group(
             icmpv6.MODE_IS_INCLUDE, 2, 2, 'ff00::4',
-            ['fe80::1', 'fe80::2'], 'abcde\x00\x00\x00')
+            ['fe80::1', 'fe80::2'], b'abcde\x00\x00\x00')
         self.records = [self.record1, self.record2, self.record3,
                         self.record4]
         self.record_num = len(self.records)
         self.mld = icmpv6.mldv2_report(self.record_num, self.records)
-        self.buf = '\x8f\x00\xb5\xa4\x00\x00\x00\x04' \
-            + '\x01\x00\x00\x00' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\x01\x00\x00\x02' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x02' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x02' \
-            + '\x01\x01\x00\x00' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x03' \
-            + '\x61\x62\x63\x00' \
-            + '\x01\x02\x00\x02' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x04' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x02' \
-            + '\x61\x62\x63\x64\x65\x00\x00\x00'
+        self.buf = b'\x8f\x00\xb5\xa4\x00\x00\x00\x04' \
+            + b'\x01\x00\x00\x00' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\x01\x00\x00\x02' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x02' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x02' \
+            + b'\x01\x01\x00\x00' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x03' \
+            + b'\x61\x62\x63\x00' \
+            + b'\x01\x02\x00\x02' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x04' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x02' \
+            + b'\x61\x62\x63\x64\x65\x00\x00\x00'
 
     def tearDown(self):
         pass
@@ -1579,10 +1579,10 @@ class Test_mldv2_report(unittest.TestCase):
             icmpv6.MODE_IS_INCLUDE, 0, 2, 'ff00::2',
             ['fe80::1', 'fe80::2'])
         self.record3 = icmpv6.mldv2_report_group(
-            icmpv6.MODE_IS_INCLUDE, 1, 0, 'ff00::3', [], 'abc\x00')
+            icmpv6.MODE_IS_INCLUDE, 1, 0, 'ff00::3', [], b'abc\x00')
         self.record4 = icmpv6.mldv2_report_group(
             icmpv6.MODE_IS_INCLUDE, 2, 2, 'ff00::4',
-            ['fe80::1', 'fe80::2'], 'abcde\x00\x00\x00')
+            ['fe80::1', 'fe80::2'], b'abcde\x00\x00\x00')
         self.records = [self.record1, self.record2, self.record3,
                         self.record4]
         self.record_num = len(self.records) + 1
@@ -1603,10 +1603,10 @@ class Test_mldv2_report(unittest.TestCase):
             icmpv6.MODE_IS_INCLUDE, 0, 2, 'ff00::2',
             ['fe80::1', 'fe80::2'])
         self.record3 = icmpv6.mldv2_report_group(
-            icmpv6.MODE_IS_INCLUDE, 1, 0, 'ff00::3', [], 'abc\x00')
+            icmpv6.MODE_IS_INCLUDE, 1, 0, 'ff00::3', [], b'abc\x00')
         self.record4 = icmpv6.mldv2_report_group(
             icmpv6.MODE_IS_INCLUDE, 2, 2, 'ff00::4',
-            ['fe80::1', 'fe80::2'], 'abcde\x00\x00\x00')
+            ['fe80::1', 'fe80::2'], b'abcde\x00\x00\x00')
         self.records = [self.record1, self.record2, self.record3,
                         self.record4]
         self.record_num = len(self.records) - 1
@@ -1696,9 +1696,9 @@ class Test_mldv2_report_group(unittest.TestCase):
     aux = None
     mld = icmpv6.mldv2_report_group(
         type_, aux_len, num, address, srcs, aux)
-    buf = '\x01\x00\x00\x00' \
-        + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-        + '\x00\x00\x00\x00\x00\x00\x00\x01'
+    buf = b'\x01\x00\x00\x00' \
+        + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+        + b'\x00\x00\x00\x00\x00\x00\x00\x01'
 
     def setUp(self):
         pass
@@ -1709,45 +1709,45 @@ class Test_mldv2_report_group(unittest.TestCase):
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address, self.srcs,
             self.aux)
-        self.buf = '\x01\x00\x00\x03' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x02' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x03'
+        self.buf = b'\x01\x00\x00\x03' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x02' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x03'
 
     def setUp_with_aux(self):
-        self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
+        self.aux = b'\x01\x02\x03\x04\x05\x06\x07\x08'
         self.aux_len = len(self.aux) // 4
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address, self.srcs,
             self.aux)
-        self.buf = '\x01\x02\x00\x00' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\x01\x02\x03\x04\x05\x06\x07\x08'
+        self.buf = b'\x01\x02\x00\x00' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\x01\x02\x03\x04\x05\x06\x07\x08'
 
     def setUp_with_srcs_and_aux(self):
         self.srcs = ['fe80::1', 'fe80::2', 'fe80::3']
         self.num = len(self.srcs)
-        self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
+        self.aux = b'\x01\x02\x03\x04\x05\x06\x07\x08'
         self.aux_len = len(self.aux) // 4
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address, self.srcs,
             self.aux)
-        self.buf = '\x01\x02\x00\x03' \
-            + '\xff\x00\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x01' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x02' \
-            + '\xfe\x80\x00\x00\x00\x00\x00\x00' \
-            + '\x00\x00\x00\x00\x00\x00\x00\x03' \
-            + '\x01\x02\x03\x04\x05\x06\x07\x08'
+        self.buf = b'\x01\x02\x00\x03' \
+            + b'\xff\x00\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x01' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x02' \
+            + b'\xfe\x80\x00\x00\x00\x00\x00\x00' \
+            + b'\x00\x00\x00\x00\x00\x00\x00\x03' \
+            + b'\x01\x02\x03\x04\x05\x06\x07\x08'
 
     def tearDown(self):
         pass
@@ -1928,7 +1928,7 @@ class Test_mldv2_report_group(unittest.TestCase):
 
     @raises
     def test_aux_len_larger_than_aux(self):
-        self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
+        self.aux = b'\x01\x02\x03\x04\x05\x06\x07\x08'
         self.aux_len = len(self.aux) // 4 + 1
         self.buf = struct.pack(
             icmpv6.mldv2_report_group._PACK_STR, self.type_, self.aux_len,
@@ -1941,7 +1941,7 @@ class Test_mldv2_report_group(unittest.TestCase):
 
     @raises
     def test_aux_len_smaller_than_aux(self):
-        self.aux = '\x01\x02\x03\x04\x05\x06\x07\x08'
+        self.aux = b'\x01\x02\x03\x04\x05\x06\x07\x08'
         self.aux_len = len(self.aux) // 4 - 1
         self.buf = struct.pack(
             icmpv6.mldv2_report_group._PACK_STR, self.type_, self.aux_len,
@@ -1984,7 +1984,7 @@ class Test_mldv2_report_group(unittest.TestCase):
         eq_(src3, addrconv.ipv6.text_to_bin(srcs[2]))
 
         # aux without aux_len
-        rep = icmpv6.mldv2_report_group(aux='\x01\x02\x03')
+        rep = icmpv6.mldv2_report_group(aux=b'\x01\x02\x03')
         buf = rep.serialize()
         res = struct.unpack_from(
             icmpv6.mldv2_report_group._PACK_STR, str(buf))
@@ -1993,7 +1993,7 @@ class Test_mldv2_report_group(unittest.TestCase):
         eq_(res[1], 1)
         eq_(res[2], 0)
         eq_(res[3], addrconv.ipv6.text_to_bin('::'))
-        eq_(buf[icmpv6.mldv2_report_group._MIN_LEN:], '\x01\x02\x03\x00')
+        eq_(buf[icmpv6.mldv2_report_group._MIN_LEN:], b'\x01\x02\x03\x00')
 
     def test_json(self):
         jsondict = self.mld.to_jsondict()

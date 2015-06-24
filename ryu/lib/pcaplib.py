@@ -104,7 +104,7 @@ class PcapFileHdr(object):
     """
     _FILE_HDR_FMT = None
 
-    def __init__(self, magic='\xd4\xc3\xb2\xa1', version_major=2,
+    def __init__(self, magic=b'\xd4\xc3\xb2\xa1', version_major=2,
                  version_minor=4, thiszone=0, sigfigs=0, snaplen=0,
                  linktype=0):
         self.magic = magic
@@ -117,11 +117,11 @@ class PcapFileHdr(object):
 
     @classmethod
     def parser(cls, buf):
-        if buf[:4] == '\xa1\xb2\xc3\xd4':
+        if buf[:4] == b'\xa1\xb2\xc3\xd4':
             # Big Endian
             cls._FILE_HDR_FMT = '>IHHIIII'
             byteorder = '>'
-        elif buf[:4] == '\xd4\xc3\xb2\xa1':
+        elif buf[:4] == b'\xd4\xc3\xb2\xa1':
             # Little Endian
             cls._FILE_HDR_FMT = '<IHHIIII'
             byteorder = '<'

@@ -180,7 +180,7 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPNotification(error_code=3, error_subcode=4, data="bar"),
             bgp.BGPNotification(error_code=5, error_subcode=6, data="baz"),
         ]
-        binmsgs = ''.join([bytes(msg.serialize()) for msg in msgs])
+        binmsgs = b''.join([bytes(msg.serialize()) for msg in msgs])
         sp = bgp.StreamParser()
         results = []
         for b in binmsgs:

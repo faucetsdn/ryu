@@ -933,7 +933,7 @@ class NXActionLearn(NXActionHeader):
         self.table_id = table_id
         self.fin_idle_timeout = fin_idle_timeout
         self.fin_hard_timeout = fin_hard_timeout
-        self.spec = spec + bytearray('\x00' * pad_len)
+        self.spec = spec + bytearray(b'\x00' * pad_len)
 
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.NX_ACTION_LEARN_PACK_STR, buf, offset,

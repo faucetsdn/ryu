@@ -79,11 +79,11 @@ class IntDescrMlt(TypeDescr):
 
     def from_user(self, li):
         assert len(li) == self.num
-        bin = ''
+        bin = b''
         for i in li:
-            b = ''
+            b = b''
             for x in range(self.length):
-                b = chr(i & 255) + b
+                b = six.int2byte(i & 255) + b
                 i //= 256
             bin += b
         return bin

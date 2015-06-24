@@ -33,15 +33,15 @@ class TestOFPPhyPort(unittest.TestCase):
     # OFP_PHY_PORT_PACK_STR
     # '!H6s16sIIIIII'... port_no, hw_addr, name, config, state
     #                    curr, advertised, supported, peer
-    port_no = {'buf': '\xe7\x6b', 'val': 59243}
+    port_no = {'buf': b'\xe7\x6b', 'val': 59243}
     hw_addr = '52:54:54:10:20:99'
     name = 'name'.ljust(16)
-    config = {'buf': '\x84\xb6\x8c\x53', 'val': 2226555987}
-    state = {'buf': '\x64\x07\xfb\xc9', 'val': 1678244809}
-    curr = {'buf': '\xa9\xe8\x0a\x2b', 'val': 2850556459}
-    advertised = {'buf': '\x78\xb9\x7b\x72', 'val': 2025421682}
-    supported = {'buf': '\x7e\x65\x68\xad', 'val': 2120575149}
-    peer = {'buf': '\xa4\x5b\x8b\xed', 'val': 2757463021}
+    config = {'buf': b'\x84\xb6\x8c\x53', 'val': 2226555987}
+    state = {'buf': b'\x64\x07\xfb\xc9', 'val': 1678244809}
+    curr = {'buf': b'\xa9\xe8\x0a\x2b', 'val': 2850556459}
+    advertised = {'buf': b'\x78\xb9\x7b\x72', 'val': 2025421682}
+    supported = {'buf': b'\x7e\x65\x68\xad', 'val': 2120575149}
+    peer = {'buf': b'\xa4\x5b\x8b\xed', 'val': 2757463021}
 
     buf = port_no['buf'] \
         + addrconv.mac.text_to_bin(hw_addr) \
@@ -102,21 +102,21 @@ class TestOFPMatch(unittest.TestCase):
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-    in_port = {'buf': '\x37\x8b', 'val': 14219}
-    dl_src = '\x52\x54\x54\x10\x20\x99'
-    dl_dst = '\x61\x31\x50\x6d\xc9\xe5'
-    dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-    dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-    nw_tos = {'buf': '\xde', 'val': 222}
-    nw_proto = {'buf': '\xe5', 'val': 229}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-    tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-    tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+    wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+    in_port = {'buf': b'\x37\x8b', 'val': 14219}
+    dl_src = b'\x52\x54\x54\x10\x20\x99'
+    dl_dst = b'\x61\x31\x50\x6d\xc9\xe5'
+    dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+    dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+    nw_tos = {'buf': b'\xde', 'val': 222}
+    nw_proto = {'buf': b'\xe5', 'val': 229}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+    tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+    tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     buf = wildcards['buf'] \
         + in_port['buf'] \
@@ -226,9 +226,9 @@ class TestOFPActionHeader(unittest.TestCase):
 
     # OFP_ACTION_HEADER_PACK_STR
     # '!HH4x'...type, len, zfill
-    type = {'buf': '\x00\x02', 'val': ofproto.OFPAT_SET_VLAN_PCP}
-    len = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_HEADER_SIZE}
-    zfill = '\x00' * 4
+    type = {'buf': b'\x00\x02', 'val': ofproto.OFPAT_SET_VLAN_PCP}
+    len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_HEADER_SIZE}
+    zfill = b'\x00' * 4
 
     buf = type['buf'] \
         + len['buf'] \
@@ -263,10 +263,10 @@ class TestOFPActionOutput(unittest.TestCase):
 
     # OFP_ACTION_OUTPUT_PACK_STR
     # '!HHHH'...type, len, port, max_len
-    type_ = {'buf': '\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
-    port = {'buf': '\x19\xce', 'val': 6606}
-    max_len = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    type_ = {'buf': b'\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    port = {'buf': b'\x19\xce', 'val': 6606}
+    max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -293,7 +293,7 @@ class TestOFPActionOutput(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x01', 'val': 1}
+        type_ = {'buf': b'\x00\x01', 'val': 1}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -304,7 +304,7 @@ class TestOFPActionOutput(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -332,10 +332,10 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
     # OFP_ACTION_VLAN_VID_PACK_STR
     # '!HHH2x'...type, len, vlan_vid, zfill
-    type_ = {'buf': '\x00\x01', 'val': ofproto.OFPAT_SET_VLAN_VID}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_VLAN_VID_SIZE}
-    vlan_vid = {'buf': '\x3c\x0e', 'val': 15374}
-    zfill = '\x00' * 2
+    type_ = {'buf': b'\x00\x01', 'val': ofproto.OFPAT_SET_VLAN_VID}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_VLAN_VID_SIZE}
+    vlan_vid = {'buf': b'\x3c\x0e', 'val': 15374}
+    zfill = b'\x00' * 2
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -360,7 +360,7 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x02', 'val': 2}
+        type_ = {'buf': b'\x00\x02', 'val': 2}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -371,7 +371,7 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -398,10 +398,10 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
     # OFP_ACTION_VLAN_PCP_PACK_STR
     # '!HHB3x'...type, len, vlan_pcp, zfill
-    type_ = {'buf': '\x00\x02', 'val': ofproto.OFPAT_SET_VLAN_PCP}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_VLAN_PCP_SIZE}
-    vlan_pcp = {'buf': '\x1c', 'val': 28}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\x00\x02', 'val': ofproto.OFPAT_SET_VLAN_PCP}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_VLAN_PCP_SIZE}
+    vlan_pcp = {'buf': b'\x1c', 'val': 28}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -425,7 +425,7 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x01', 'val': 1}
+        type_ = {'buf': b'\x00\x01', 'val': 1}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -436,7 +436,7 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -463,9 +463,9 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
     # OFP_ACTION_HEADER_PACK_STR
     # '!HH4x'...type, len, zfill
-    type_ = {'buf': '\x00\x03', 'val': ofproto.OFPAT_STRIP_VLAN}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_HEADER_SIZE}
-    zfill = '\x00' * 4
+    type_ = {'buf': b'\x00\x03', 'val': ofproto.OFPAT_STRIP_VLAN}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_HEADER_SIZE}
+    zfill = b'\x00' * 4
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -487,7 +487,7 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x01', 'val': 1}
+        type_ = {'buf': b'\x00\x01', 'val': 1}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -497,7 +497,7 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -512,10 +512,10 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
     # OFP_ACTION_DL_ADDR_PACK_STR
     # '!HH6s6x'...type, len, dl_addr, zfill
-    type_ = {'buf': '\x00\x04', 'val': ofproto.OFPAT_SET_DL_SRC}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.OFP_ACTION_DL_ADDR_SIZE}
-    dl_addr = '\x0e\xde\x27\xce\xc6\xcf'
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\x00\x04', 'val': ofproto.OFPAT_SET_DL_SRC}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.OFP_ACTION_DL_ADDR_SIZE}
+    dl_addr = b'\x0e\xde\x27\xce\xc6\xcf'
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -538,7 +538,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
         eq_(self.dl_addr, res.dl_addr)
 
     def test_parser_type_dst(self):
-        type_ = {'buf': '\x00\x05', 'val': ofproto.OFPAT_SET_DL_DST}
+        type_ = {'buf': b'\x00\x05', 'val': ofproto.OFPAT_SET_DL_DST}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -550,7 +550,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x06', 'val': 6}
+        type_ = {'buf': b'\x00\x06', 'val': 6}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -560,7 +560,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
         buf = self.type_['buf'] \
             + len_['buf'] \
             + self.dl_addr \
@@ -586,10 +586,10 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
     # OFP_ACTION_DL_ADDR_PACK_STR
     # '!HH6s6x'...type, len, dl_addr, zfill
-    type_ = {'buf': '\x00\x05', 'val': ofproto.OFPAT_SET_DL_DST}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.OFP_ACTION_DL_ADDR_SIZE}
-    dl_addr = '\x37\x48\x38\x9a\xf4\x28'
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\x00\x05', 'val': ofproto.OFPAT_SET_DL_DST}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.OFP_ACTION_DL_ADDR_SIZE}
+    dl_addr = b'\x37\x48\x38\x9a\xf4\x28'
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -612,7 +612,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
         eq_(self.dl_addr, res.dl_addr)
 
     def test_parser_type_src(self):
-        type_ = {'buf': '\x00\x04', 'val': ofproto.OFPAT_SET_DL_SRC}
+        type_ = {'buf': b'\x00\x04', 'val': ofproto.OFPAT_SET_DL_SRC}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -624,7 +624,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x06', 'val': 6}
+        type_ = {'buf': b'\x00\x06', 'val': 6}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -634,7 +634,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
         buf = self.type_['buf'] \
             + len_['buf'] \
             + self.dl_addr \
@@ -660,9 +660,9 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
     # OFP_ACTION_NW_ADDR_PACK_STR
     # '!HHI'...type, len, nw_addr
-    type_ = {'buf': '\x00\x06', 'val': ofproto.OFPAT_SET_NW_SRC}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_NW_ADDR_SIZE}
-    nw_addr = {'buf': '\xc0\xa8\x7a\x0a', 'val': 3232266762}
+    type_ = {'buf': b'\x00\x06', 'val': ofproto.OFPAT_SET_NW_SRC}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_NW_ADDR_SIZE}
+    nw_addr = {'buf': b'\xc0\xa8\x7a\x0a', 'val': 3232266762}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -684,7 +684,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
         eq_(self.nw_addr['val'], res.nw_addr)
 
     def test_parser_dst(self):
-        type_ = {'buf': '\x00\x07', 'val': ofproto.OFPAT_SET_NW_DST}
+        type_ = {'buf': b'\x00\x07', 'val': ofproto.OFPAT_SET_NW_DST}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -695,7 +695,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x05', 'val': 5}
+        type_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -705,7 +705,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x10', 'val': 16}
+        len_ = {'buf': b'\x00\x10', 'val': 16}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -731,9 +731,9 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
     # OFP_ACTION_NW_ADDR_PACK_STR
     # '!HHI'...type, len, nw_addr
-    type_ = {'buf': '\x00\x07', 'val': ofproto.OFPAT_SET_NW_DST}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_NW_ADDR_SIZE}
-    nw_addr = {'buf': '\xc0\xa8\x7a\x0a', 'val': 3232266762}
+    type_ = {'buf': b'\x00\x07', 'val': ofproto.OFPAT_SET_NW_DST}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_NW_ADDR_SIZE}
+    nw_addr = {'buf': b'\xc0\xa8\x7a\x0a', 'val': 3232266762}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -755,7 +755,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
         eq_(self.nw_addr['val'], res.nw_addr)
 
     def test_parser_src(self):
-        type_ = {'buf': '\x00\x06', 'val': ofproto.OFPAT_SET_NW_SRC}
+        type_ = {'buf': b'\x00\x06', 'val': ofproto.OFPAT_SET_NW_SRC}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -766,7 +766,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x05', 'val': 5}
+        type_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -776,7 +776,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x10', 'val': 16}
+        len_ = {'buf': b'\x00\x10', 'val': 16}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -802,10 +802,10 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
     # OFP_ACTION_NW_TOS_PACK_STR
     # '!HHB3x'...type, len, tos, zfill
-    type_ = {'buf': '\x00\x08', 'val': ofproto.OFPAT_SET_NW_TOS}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_NW_TOS_SIZE}
-    tos = {'buf': '\xb6', 'val': 182}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\x00\x08', 'val': ofproto.OFPAT_SET_NW_TOS}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_NW_TOS_SIZE}
+    tos = {'buf': b'\xb6', 'val': 182}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -829,7 +829,7 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x05', 'val': 5}
+        type_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -840,7 +840,7 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -867,10 +867,10 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
     # OFP_ACTION_TP_PORT_PACK_STR
     # '!HHH2x'...type, len, tp, zfill
-    type_ = {'buf': '\x00\x09', 'val': ofproto.OFPAT_SET_TP_SRC}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_TP_PORT_SIZE}
-    tp = {'buf': '\x07\xf1', 'val': 2033}
-    zfill = '\x00' * 2
+    type_ = {'buf': b'\x00\x09', 'val': ofproto.OFPAT_SET_TP_SRC}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_TP_PORT_SIZE}
+    tp = {'buf': b'\x07\xf1', 'val': 2033}
+    zfill = b'\x00' * 2
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -893,7 +893,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
         eq_(self.tp['val'], res.tp)
 
     def test_parser_dst(self):
-        type_ = {'buf': '\x00\x0a', 'val': ofproto.OFPAT_SET_TP_DST}
+        type_ = {'buf': b'\x00\x0a', 'val': ofproto.OFPAT_SET_TP_DST}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -905,7 +905,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x07', 'val': 7}
+        type_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -916,7 +916,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -943,10 +943,10 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
     # OFP_ACTION_TP_PORT_PACK_STR
     # '!HHH2x'...type, len, tp, zfill
-    type_ = {'buf': '\x00\x0a', 'val': ofproto.OFPAT_SET_TP_DST}
-    len_ = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_TP_PORT_SIZE}
-    tp = {'buf': '\x06\x6d', 'val': 1645}
-    zfill = '\x00' * 2
+    type_ = {'buf': b'\x00\x0a', 'val': ofproto.OFPAT_SET_TP_DST}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_TP_PORT_SIZE}
+    tp = {'buf': b'\x06\x6d', 'val': 1645}
+    zfill = b'\x00' * 2
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -969,7 +969,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
         eq_(self.tp['val'], res.tp)
 
     def test_parser_src(self):
-        type_ = {'buf': '\x00\x09', 'val': ofproto.OFPAT_SET_TP_SRC}
+        type_ = {'buf': b'\x00\x09', 'val': ofproto.OFPAT_SET_TP_SRC}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -981,7 +981,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x10', 'val': 16}
+        type_ = {'buf': b'\x00\x10', 'val': 16}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -992,7 +992,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -1019,11 +1019,11 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
     # OFP_ACTION_ENQUEUE_PACK_STR
     # '!HHH6xI'...type_, len_, port, zfill, queue_id
-    type_ = {'buf': '\x00\x0b', 'val': ofproto.OFPAT_ENQUEUE}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.OFP_ACTION_ENQUEUE_SIZE}
-    port = {'buf': '\x04\x55', 'val': 1109}
-    zfill = '\x00' * 6
-    queue_id = {'buf': '\x0a\x5b\x03\x5e', 'val': 173736798}
+    type_ = {'buf': b'\x00\x0b', 'val': ofproto.OFPAT_ENQUEUE}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.OFP_ACTION_ENQUEUE_SIZE}
+    port = {'buf': b'\x04\x55', 'val': 1109}
+    zfill = b'\x00' * 6
+    queue_id = {'buf': b'\x0a\x5b\x03\x5e', 'val': 173736798}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1051,7 +1051,7 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x0a', 'val': 10}
+        type_ = {'buf': b'\x00\x0a', 'val': 10}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -1063,7 +1063,7 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x05', 'val': 5}
+        len_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -1092,13 +1092,13 @@ class TestNXActionResubmit(unittest.TestCase):
 
     # NX_ACTION_RESUBMIT_PACK_STR
     # '!HHIHHB3x'...type, len, vendor, subtype, in_port, table, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_RESUBMIT_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': 8992}
-    subtype = {'buf': '\x00\x01', 'val': 1}
-    in_port = {'buf': '\x0a\x4c', 'val': 2636}
-    table = {'buf': '\x52', 'val': 82}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_RESUBMIT_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20', 'val': 8992}
+    subtype = {'buf': b'\x00\x01', 'val': 1}
+    in_port = {'buf': b'\x0a\x4c', 'val': 2636}
+    table = {'buf': b'\x52', 'val': 82}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1148,13 +1148,13 @@ class TestNXActionResubmitTable(unittest.TestCase):
 
     # NX_ACTION_RESUBMIT_PACK_STR
     # '!HHIHHB3x'...type, len, vendor, subtype, in_port, table, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_RESUBMIT_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': 8992}
-    subtype = {'buf': '\x00\x0e', 'val': 14}
-    in_port = {'buf': '\x0a\x4c', 'val': 2636}
-    table = {'buf': '\x52', 'val': 82}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_RESUBMIT_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20', 'val': 8992}
+    subtype = {'buf': b'\x00\x0e', 'val': 14}
+    in_port = {'buf': b'\x0a\x4c', 'val': 2636}
+    table = {'buf': b'\x52', 'val': 82}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1205,12 +1205,12 @@ class TestNXActionSetTunnel(unittest.TestCase):
 
     # NX_ACTION_SET_TUNNEL_PACK_STR
     # '!HHIH2xI'...type, len, vendor, subtype, zfill, tun_id
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': 8992}
-    subtype = {'buf': '\x00\x02', 'val': 2}
-    zfill = '\x00' * 2
-    tun_id = {'buf': '\x01\x6f\x01\xd0', 'val': 24052176}
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20', 'val': 8992}
+    subtype = {'buf': b'\x00\x02', 'val': 2}
+    zfill = b'\x00' * 2
+    tun_id = {'buf': b'\x01\x6f\x01\xd0', 'val': 24052176}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1258,13 +1258,13 @@ class TestNXActionSetQueue(unittest.TestCase):
 
     # NX_ACTION_SET_QUEUE_PACK_STR
     # '!HHIH2xI'...type, len, vendor, subtype, zfill, queue_id
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x04', 'val': ofproto.NXAST_SET_QUEUE}
-    zfill = '\x00' * 2
-    queue_id = {'buf': '\xde\xbe\xc5\x18', 'val': 3737044248}
+    subtype = {'buf': b'\x00\x04', 'val': ofproto.NXAST_SET_QUEUE}
+    zfill = b'\x00' * 2
+    queue_id = {'buf': b'\xde\xbe\xc5\x18', 'val': 3737044248}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1312,12 +1312,12 @@ class TestNXActionPopQueue(unittest.TestCase):
 
     # NX_ACTION_POP_QUEUE_PACK_STR
     # '!HHIH6x'...type, len, vendor, subtype, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x05', 'val': ofproto.NXAST_POP_QUEUE}
-    zfill = '\x00' * 6
+    subtype = {'buf': b'\x00\x05', 'val': ofproto.NXAST_POP_QUEUE}
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1366,16 +1366,16 @@ class TestNXActionRegMove(unittest.TestCase):
     # NX_ACTION_REG_MOVE_PACK_STR
     # '!HHIHHHHII'...type_, len_, vendor, subtype, n_bits,
     #                src_ofs, dst_ofs, src, dst
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x06', 'val': ofproto.NXAST_REG_MOVE}
-    n_bits = {'buf': '\x3d\x98', 'val': 15768}
-    src_ofs = {'buf': '\xf3\xa3', 'val': 62371}
-    dst_ofs = {'buf': '\xdc\x67', 'val': 56423}
-    src = {'buf': '\x15\x68\x60\xfd', 'val': 359162109}
-    dst = {'buf': '\x9f\x9f\x88\x26', 'val': 2678032422}
+    subtype = {'buf': b'\x00\x06', 'val': ofproto.NXAST_REG_MOVE}
+    n_bits = {'buf': b'\x3d\x98', 'val': 15768}
+    src_ofs = {'buf': b'\xf3\xa3', 'val': 62371}
+    dst_ofs = {'buf': b'\xdc\x67', 'val': 56423}
+    src = {'buf': b'\x15\x68\x60\xfd', 'val': 359162109}
+    dst = {'buf': b'\x9f\x9f\x88\x26', 'val': 2678032422}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1443,14 +1443,14 @@ class TestNXActionRegLoad(unittest.TestCase):
     # NX_ACTION_REG_LOAD_PACK_STR
     # '!HHIHHIQ'...type_, len_, vendor, subtype,
     #              ofs_nbits, dst, value
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x07', 'val': ofproto.NXAST_REG_LOAD}
-    ofs_nbits = {'buf': '\x3d\x98', 'val': 15768}
-    dst = {'buf': '\x9f\x9f\x88\x26', 'val': 2678032422}
-    value = {'buf': '\x33\x51\xcd\x43\x25\x28\x18\x99',
+    subtype = {'buf': b'\x00\x07', 'val': ofproto.NXAST_REG_LOAD}
+    ofs_nbits = {'buf': b'\x3d\x98', 'val': 15768}
+    dst = {'buf': b'\x9f\x9f\x88\x26', 'val': 2678032422}
+    value = {'buf': b'\x33\x51\xcd\x43\x25\x28\x18\x99',
              'val': 3697962457317775513}
 
     buf = type_['buf'] \
@@ -1508,13 +1508,13 @@ class TestNXActionSetTunnel64(unittest.TestCase):
 
     # NX_ACTION_SET_TUNNEL64_PACK_STR
     # '!HHIH6xQ'...type, len, vendor, subtype, zfill, tun_id
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x18', 'val': ofproto.NX_ACTION_SET_TUNNEL64_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_SET_TUNNEL64_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x09', 'val': ofproto.NXAST_SET_TUNNEL64}
-    zfill = '\x00' * 6
-    tun_id = {'buf': '\x6e\x01\xa6\xea\x7e\x36\x1d\xd9',
+    subtype = {'buf': b'\x00\x09', 'val': ofproto.NXAST_SET_TUNNEL64}
+    zfill = b'\x00' * 6
+    tun_id = {'buf': b'\x6e\x01\xa6\xea\x7e\x36\x1d\xd9',
               'val': 7926800345218817497}
 
     buf = type_['buf'] \
@@ -1564,20 +1564,20 @@ class TestNXActionMultipath(unittest.TestCase):
     # NX_ACTION_MULTIPATH_PACK_STR
     # '!HHIHHH2xHHI2xHI'...type, len, vendor, subtype, fields, basis, zfill
     #                      algorithm, max_link, arg, zfill, ofs_nbits, dst
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_MULTIPATH_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_MULTIPATH_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x0a', 'val': ofproto.NXAST_MULTIPATH}
-    fields = {'buf': '\x6d\xf5', 'val': 28149}
-    basis = {'buf': '\x7c\x0a', 'val': 31754}
-    zfill0 = '\x00' * 2
-    algorithm = {'buf': '\x82\x1d', 'val': 33309}
-    max_link = {'buf': '\x06\x2b', 'val': 1579}
-    arg = {'buf': '\x18\x79\x41\xc8', 'val': 410599880}
-    zfill1 = '\x00' * 2
-    ofs_nbits = {'buf': '\xa9\x9a', 'val': 43418}
-    dst = {'buf': '\xb9\x2f\x16\x64', 'val': 3106870884}
+    subtype = {'buf': b'\x00\x0a', 'val': ofproto.NXAST_MULTIPATH}
+    fields = {'buf': b'\x6d\xf5', 'val': 28149}
+    basis = {'buf': b'\x7c\x0a', 'val': 31754}
+    zfill0 = b'\x00' * 2
+    algorithm = {'buf': b'\x82\x1d', 'val': 33309}
+    max_link = {'buf': b'\x06\x2b', 'val': 1579}
+    arg = {'buf': b'\x18\x79\x41\xc8', 'val': 410599880}
+    zfill1 = b'\x00' * 2
+    ofs_nbits = {'buf': b'\xa9\x9a', 'val': 43418}
+    dst = {'buf': b'\xb9\x2f\x16\x64', 'val': 3106870884}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1655,21 +1655,21 @@ class TestNXActionBundle(unittest.TestCase):
     # '!HHIHHHHIHHI4x'...type, len, vendor, subtype, algorithm,
     #                    fields, basis, slave_type, n_slaves,
     #                    ofs_nbits, dst, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_BUNDLE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_BUNDLE_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x0c', 'val': ofproto.NXAST_BUNDLE}
-    algorithm = {'buf': '\x51\xa7', 'val': 20903}
-    fields = {'buf': '\xf8\xef', 'val': 63727}
-    basis = {'buf': '\xfd\x6f', 'val': 64879}
-    slave_type = {'buf': '\x7c\x51\x0f\xe0', 'val': 2085687264}
-    n_slaves = {'buf': '\x00\x02', 'val': 2}
-    ofs_nbits = {'buf': '\xec\xf7', 'val': 60663}
-    dst = {'buf': '\x50\x7c\x75\xfe', 'val': 1350333950}
-    zfill = '\x00' * 4
+    subtype = {'buf': b'\x00\x0c', 'val': ofproto.NXAST_BUNDLE}
+    algorithm = {'buf': b'\x51\xa7', 'val': 20903}
+    fields = {'buf': b'\xf8\xef', 'val': 63727}
+    basis = {'buf': b'\xfd\x6f', 'val': 64879}
+    slave_type = {'buf': b'\x7c\x51\x0f\xe0', 'val': 2085687264}
+    n_slaves = {'buf': b'\x00\x02', 'val': 2}
+    ofs_nbits = {'buf': b'\xec\xf7', 'val': 60663}
+    dst = {'buf': b'\x50\x7c\x75\xfe', 'val': 1350333950}
+    zfill = b'\x00' * 4
 
-    slaves_buf = ('\x00\x01', '\x00\x02')
+    slaves_buf = (b'\x00\x01', b'\x00\x02')
     slaves_val = (1, 2)
 
     _len = len_['val'] + len(slaves_val) * 2
@@ -1774,21 +1774,21 @@ class TestNXActionBundleLoad(unittest.TestCase):
     # '!HHIHHHHIHHI4x'...type, len, vendor, subtype, algorithm,
     #                    fields, basis, slave_type, n_slaves,
     #                    ofs_nbits, dst, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_BUNDLE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_BUNDLE_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x0d', 'val': ofproto.NXAST_BUNDLE_LOAD}
-    algorithm = {'buf': '\x83\x15', 'val': 33557}
-    fields = {'buf': '\xc2\x7a', 'val': 49786}
-    basis = {'buf': '\x86\x18', 'val': 34328}
-    slave_type = {'buf': '\x18\x42\x0b\x55', 'val': 406981461}
-    n_slaves = {'buf': '\x00\x02', 'val': 2}
-    ofs_nbits = {'buf': '\xd2\x9d', 'val': 53917}
-    dst = {'buf': '\x37\xfe\xb3\x60', 'val': 939438944}
-    zfill = '\x00' * 4
+    subtype = {'buf': b'\x00\x0d', 'val': ofproto.NXAST_BUNDLE_LOAD}
+    algorithm = {'buf': b'\x83\x15', 'val': 33557}
+    fields = {'buf': b'\xc2\x7a', 'val': 49786}
+    basis = {'buf': b'\x86\x18', 'val': 34328}
+    slave_type = {'buf': b'\x18\x42\x0b\x55', 'val': 406981461}
+    n_slaves = {'buf': b'\x00\x02', 'val': 2}
+    ofs_nbits = {'buf': b'\xd2\x9d', 'val': 53917}
+    dst = {'buf': b'\x37\xfe\xb3\x60', 'val': 939438944}
+    zfill = b'\x00' * 4
 
-    slaves_buf = ('\x00\x01', '\x00\x02')
+    slaves_buf = (b'\x00\x01', b'\x00\x02')
     slaves_val = (1, 2)
 
     _len = len_['val'] + len(slaves_val) * 2
@@ -1892,15 +1892,15 @@ class TestNXActionAutopath(unittest.TestCase):
     # NX_ACTION_AUTOPATH_PACK_STR
     # '!HHIHHII4x'...type, len, vendor, subtype, ofs_nbits,
     #                dst, id_, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x0b', 'val': ofproto.NXAST_AUTOPATH}
-    ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
-    dst = {'buf': '\xf8\x55\x74\x95', 'val': 4166349973}
-    id_ = {'buf': '\x02\x2d\x37\xed', 'val': 36517869}
-    zfill = '\x00' * 4
+    subtype = {'buf': b'\x00\x0b', 'val': ofproto.NXAST_AUTOPATH}
+    ofs_nbits = {'buf': b'\xfe\x78', 'val': 65144}
+    dst = {'buf': b'\xf8\x55\x74\x95', 'val': 4166349973}
+    id_ = {'buf': b'\x02\x2d\x37\xed', 'val': 36517869}
+    zfill = b'\x00' * 4
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1964,15 +1964,15 @@ class TestNXActionOutputReg(unittest.TestCase):
     # NX_ACTION_OUTPUT_REG_PACK_STR
     # '!HHIHHIH6x'...type, len, vendor, subtype, ofs_nbits,
     #                    src, max_len, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x0f', 'val': ofproto.NXAST_OUTPUT_REG}
-    ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
-    src = {'buf': '\x5e\x3a\x04\x26', 'val': 1580860454}
-    max_len = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
-    zfill = '\x00' * 6
+    subtype = {'buf': b'\x00\x0f', 'val': ofproto.NXAST_OUTPUT_REG}
+    ofs_nbits = {'buf': b'\xfe\x78', 'val': 65144}
+    src = {'buf': b'\x5e\x3a\x04\x26', 'val': 1580860454}
+    max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -2035,12 +2035,12 @@ class TestNXActionExit(unittest.TestCase):
 
     # NX_ACTION_HEADER_PACK_STR
     # '!HHIH'...type, len, vendor, subtype
-    type_ = {'buf': '\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto.NX_ACTION_HEADER_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_HEADER_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
               'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': '\x00\x11', 'val': ofproto.NXAST_EXIT}
-    zfill = '\x00' * 6
+    subtype = {'buf': b'\x00\x11', 'val': ofproto.NXAST_EXIT}
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -2131,51 +2131,51 @@ class TestOFPFlowStats(unittest.TestCase):
 
     # OFP_FLOW_STATS_0_PACK_STR
     # '!HBx'...length, table_id, zfill
-    length = {'buf': '\x00\x58', 'val': 88}
-    length_append_action = {'buf': '\x00\x60', 'val': 96}
-    table_id = {'buf': '\x51', 'val': 81}
-    zfill_0 = '\x00'
+    length = {'buf': b'\x00\x58', 'val': 88}
+    length_append_action = {'buf': b'\x00\x60', 'val': 96}
+    table_id = {'buf': b'\x51', 'val': 81}
+    zfill_0 = b'\x00'
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...
-    match = '\x97\x7c\xa6\x1e' \
-        + '\x5e\xa0' \
-        + '\x7a\x3e\xed\x30\x4a\x90' \
-        + '\x96\x8e\x67\xbe\x2f\xe2' \
-        + '\xb1\x81' \
-        + '\xbe' \
-        + '\x00' \
-        + '\x01\xab' \
-        + '\x42' \
-        + '\xfe' \
-        + '\x00\x00' \
-        + '\xa4\x5d\x5c\x42' \
-        + '\xa2\x5c\x2e\x05' \
-        + '\x5a\x94' \
-        + '\x64\xd4'
+    match = b'\x97\x7c\xa6\x1e' \
+        + b'\x5e\xa0' \
+        + b'\x7a\x3e\xed\x30\x4a\x90' \
+        + b'\x96\x8e\x67\xbe\x2f\xe2' \
+        + b'\xb1\x81' \
+        + b'\xbe' \
+        + b'\x00' \
+        + b'\x01\xab' \
+        + b'\x42' \
+        + b'\xfe' \
+        + b'\x00\x00' \
+        + b'\xa4\x5d\x5c\x42' \
+        + b'\xa2\x5c\x2e\x05' \
+        + b'\x5a\x94' \
+        + b'\x64\xd4'
 
     # OFP_FLOW_STATS_1_PACK_STR
     # '!IIHHH6xQQQ'...duration_sec, duration_nsec, priority,
     #                 idle_timeout, hard_timeout, zfill,
     #                 cookie, packet_count, byte_count
-    duration_sec = {'buf': '\x94\x19\xb3\xd2', 'val': 2484712402}
-    duration_nsec = {'buf': '\xee\x66\xcf\x7c', 'val': 3999715196}
-    priority = {'buf': '\xe1\xc0', 'val': 57792}
-    idle_timeout = {'buf': '\x8e\x10', 'val': 36368}
-    hard_timeout = {'buf': '\xd4\x99', 'val': 54425}
-    zfill_1 = '\x00\x00\x00\x00\x00\x00'
-    cookie = {'buf': '\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
+    duration_sec = {'buf': b'\x94\x19\xb3\xd2', 'val': 2484712402}
+    duration_nsec = {'buf': b'\xee\x66\xcf\x7c', 'val': 3999715196}
+    priority = {'buf': b'\xe1\xc0', 'val': 57792}
+    idle_timeout = {'buf': b'\x8e\x10', 'val': 36368}
+    hard_timeout = {'buf': b'\xd4\x99', 'val': 54425}
+    zfill_1 = b'\x00\x00\x00\x00\x00\x00'
+    cookie = {'buf': b'\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
               'val': 793171083674290912}
-    packet_count = {'buf': '\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
+    packet_count = {'buf': b'\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
                     'val': 5142202600015232219}
-    byte_count = {'buf': '\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
+    byte_count = {'buf': b'\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
                   'val': 2659740543924820419}
 
     # <action>_PACK_STR...type_, len_ [others...]
-    type = {'buf': '\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
-    len = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
-    port = {'buf': '\x59\x2a', 'val': 22826}
-    max_len = {'buf': '\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    type = {'buf': b'\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
+    len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    port = {'buf': b'\x59\x2a', 'val': 22826}
+    max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
     action = (type, len, port, max_len)
 
     ACTION_TYPE = 0
@@ -2247,12 +2247,12 @@ class TestOFPAggregateStats(unittest.TestCase):
 
     # OFP_AGGREGATE_STATS_REPLY_PACK_STR
     # '!QQI4x'...packet_count, byte_count, flow_count, zfill
-    packet_count = {'buf': '\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
+    packet_count = {'buf': b'\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
                     'val': 4869829337189623773}
-    byte_count = {'buf': '\x36\xda\x2d\x80\x2a\x95\x35\xdd',
+    byte_count = {'buf': b'\x36\xda\x2d\x80\x2a\x95\x35\xdd',
                   'val': 3952521651464517085}
-    flow_count = {'buf': '\xc3\x0d\xc3\xed', 'val': 3272459245}
-    zfill = '\x00' * 4
+    flow_count = {'buf': b'\xc3\x0d\xc3\xed', 'val': 3272459245}
+    zfill = b'\x00' * 4
 
     buf = packet_count['buf'] \
         + byte_count['buf'] \
@@ -2290,15 +2290,15 @@ class TestOFPTableStats(unittest.TestCase):
     # OFP_TABLE_STATS_PACK_STR
     # '!B3x32sIIIQQ'...table_id, zfill, name, wildcards, max_entries,
     #                  active_count, lookup_count, matched_count
-    table_id = {'buf': '\x5b', 'val': 91}
-    zfill = '\x00' * 3
+    table_id = {'buf': b'\x5b', 'val': 91}
+    zfill = b'\x00' * 3
     name = 'name'.ljust(32)
-    wildcards = {'buf': '\xc5\xaf\x6e\x12', 'val': 3316608530}
-    max_entries = {'buf': '\x95\x6c\x78\x4d', 'val': 2506913869}
-    active_count = {'buf': '\x78\xac\xa8\x1e', 'val': 2024581150}
-    lookup_count = {'buf': '\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
+    wildcards = {'buf': b'\xc5\xaf\x6e\x12', 'val': 3316608530}
+    max_entries = {'buf': b'\x95\x6c\x78\x4d', 'val': 2506913869}
+    active_count = {'buf': b'\x78\xac\xa8\x1e', 'val': 2024581150}
+    lookup_count = {'buf': b'\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
                     'val': 4620020561814017052}
-    matched_count = {'buf': '\x27\x35\x02\xb6\xc5\x5e\x17\x65',
+    matched_count = {'buf': b'\x27\x35\x02\xb6\xc5\x5e\x17\x65',
                      'val': 2825167325263435621}
 
     buf = table_id['buf'] \
@@ -2354,31 +2354,31 @@ class TestOFPPortStats(unittest.TestCase):
     #                       rx_bytes, tx_bytes, rx_dropped, tx_dropped,
     #                       rx_errors, tx_errors, rx_frame_err,
     #                       rx_over_err, rx_crc_err, collisions
-    port_no = {'buf': '\xe7\x6b', 'val': 59243}
-    zfill = '\x00' * 6
-    rx_packets = {'buf': '\x53\x44\x36\x61\xc4\x86\xc0\x37',
+    port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+    zfill = b'\x00' * 6
+    rx_packets = {'buf': b'\x53\x44\x36\x61\xc4\x86\xc0\x37',
                   'val': 5999980397101236279}
-    tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+    tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                   'val': 2856480458895760962}
-    rx_bytes = {'buf': '\x55\xa1\x38\x60\x43\x97\x0d\x89',
+    rx_bytes = {'buf': b'\x55\xa1\x38\x60\x43\x97\x0d\x89',
                 'val': 6170274950576278921}
-    tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+    tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                 'val': 8638420181865882538}
-    rx_dropped = {'buf': '\x60\xe6\x20\x01\x24\xda\x4e\x5a',
+    rx_dropped = {'buf': b'\x60\xe6\x20\x01\x24\xda\x4e\x5a',
                   'val': 6982303461569875546}
-    tx_dropped = {'buf': '\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
+    tx_dropped = {'buf': b'\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
                   'val': 661287462113808071}
-    rx_errors = {'buf': '\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
+    rx_errors = {'buf': b'\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
                  'val': 3422231811478788365}
-    tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+    tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                  'val': 6283093430376743019}
-    rx_frame_err = {'buf': '\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
+    rx_frame_err = {'buf': b'\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
                     'val': 876072919806406283}
-    rx_over_err = {'buf': '\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
+    rx_over_err = {'buf': b'\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
                    'val': 6525873760178941600}
-    rx_crc_err = {'buf': '\x73\x3a\x71\x17\xd6\x74\x69\x47',
+    rx_crc_err = {'buf': b'\x73\x3a\x71\x17\xd6\x74\x69\x47',
                   'val': 8303073210207070535}
-    collisions = {'buf': '\x2f\x52\x0c\x79\x96\x03\x6e\x79',
+    collisions = {'buf': b'\x2f\x52\x0c\x79\x96\x03\x6e\x79',
                   'val': 3409801584220270201}
 
     buf = port_no['buf'] \
@@ -2455,14 +2455,14 @@ class TestOFPQueueStats(unittest.TestCase):
 
     # OFP_QUEUE_STATS_PACK_STR
     # '!H2xIQQQ...port_no, queue_id, tx_bytes, tx_packets, tx_errors
-    port_no = {'buf': '\xe7\x6b', 'val': 59243}
-    zfill = '\x00' * 2
-    queue_id = {'buf': '\x2a\xa8\x7f\x32', 'val': 715685682}
-    tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+    port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+    zfill = b'\x00' * 2
+    queue_id = {'buf': b'\x2a\xa8\x7f\x32', 'val': 715685682}
+    tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                 'val': 8638420181865882538}
-    tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+    tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                   'val': 2856480458895760962}
-    tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+    tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                  'val': 6283093430376743019}
 
     c = OFPQueueStats(port_no['val'],
@@ -2531,9 +2531,9 @@ class TestOFPQueuePropNone(unittest.TestCase):
 
     # OFP_QUEUE_PROP_HEADER_PACK_STR
     # '!HH4x'...property_, len_
-    property = {'buf': '\x00\x00', 'val': ofproto.OFPQT_NONE}
-    len = {'buf': '\x00\x08', 'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
-    zfill = '\x00' * 4
+    property = {'buf': b'\x00\x00', 'val': ofproto.OFPQT_NONE}
+    len = {'buf': b'\x00\x08', 'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
+    zfill = b'\x00' * 4
 
     c = OFPQueuePropNone()
 
@@ -2568,9 +2568,9 @@ class TestOFPQueuePropMinRate(unittest.TestCase):
 
     # OFP_QUEUE_PROP_MIN_RATE_PACK_STR
     # '!H6x'...rate
-    rate = {'buf': '\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
-    len = {'buf': '\x00\x10', 'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
-    zfill = '\x00' * 6
+    rate = {'buf': b'\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
+    len = {'buf': b'\x00\x10', 'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
+    zfill = b'\x00' * 6
 
     buf = rate['buf'] \
         + zfill
@@ -2604,10 +2604,10 @@ class TestOFPPacketQueue(unittest.TestCase):
 
     # OFP_PACKET_QUEUE_PQCK_STR
     # '!IH2x'...queue_id, len_, zfill
-    queue_id = {'buf': '\x4d\x4b\x3a\xd1', 'val': 1296775889}
-    len_ = {'buf': '\x00\x08',
+    queue_id = {'buf': b'\x4d\x4b\x3a\xd1', 'val': 1296775889}
+    len_ = {'buf': b'\x00\x08',
             'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
-    zfill = '\x00' * 2
+    zfill = b'\x00' * 2
 
     buf = queue_id['buf'] \
         + len_['buf'] \
@@ -2634,14 +2634,14 @@ class TestOFPPacketQueue(unittest.TestCase):
     def test_parser_append_prop(self):
         # OFP_QUEUE_PROP_HEADER_PACK_STR + OFP_QUEUE_PROP_MIN_RATE_PACK_STR
         # '!HH4xH6x'...type, len, zfill, rate, zfill
-        len_ = {'buf': '\x00\x10',
+        len_ = {'buf': b'\x00\x10',
                 'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
-        a_type = {'buf': '\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
-        a_len = {'buf': '\x00\x10',
+        a_type = {'buf': b'\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
+        a_len = {'buf': b'\x00\x10',
                  'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
-        a_zfill0 = '\x00' * 4
-        a_rate = {'buf': '\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
-        a_zfill1 = '\x00' * 6
+        a_zfill0 = b'\x00' * 4
+        a_rate = {'buf': b'\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
+        a_zfill1 = b'\x00' * 6
 
         buf = self.queue_id['buf'] \
             + len_['buf'] \
@@ -2682,7 +2682,7 @@ class TestOFPHello(unittest.TestCase):
         msg_type = ofproto.OFPT_HELLO
         msg_len = ofproto.OFP_HEADER_SIZE
         xid = 2183948390
-        data = '\x00\x01\x02\x03'
+        data = b'\x00\x01\x02\x03'
 
         fmt = ofproto.OFP_HEADER_PACK_STR
         buf = struct.pack(fmt, version, msg_type, msg_len, xid) \
@@ -2724,13 +2724,13 @@ class TestOFPErrorMsg(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x01', 'val': ofproto.OFPT_ERROR}
-        msg_len = {'buf': '\x00\x0c',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x01', 'val': ofproto.OFPT_ERROR}
+        msg_len = {'buf': b'\x00\x0c',
                    'val': ofproto.OFP_ERROR_MSG_SIZE}
-        xid = {'buf': '\x87\x8b\x26\x7c', 'val': 2274043516}
-        type = {'buf': '\xab\x3e', 'val': 43838}
-        code = {'buf': '\x5d\x3c', 'val': 23868}
+        xid = {'buf': b'\x87\x8b\x26\x7c', 'val': 2274043516}
+        type = {'buf': b'\xab\x3e', 'val': 43838}
+        code = {'buf': b'\x5d\x3c', 'val': 23868}
         data = 'Error Message.'
 
         buf = version['buf'] \
@@ -2805,11 +2805,11 @@ class TestOFPEchoRequest(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x02', 'val': ofproto.OFPT_ECHO_REQUEST}
-        msg_len = {'buf': '\x00\x08',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x02', 'val': ofproto.OFPT_ECHO_REQUEST}
+        msg_len = {'buf': b'\x00\x08',
                    'val': ofproto.OFP_HEADER_SIZE}
-        xid = {'buf': '\x84\x47\xef\x3f', 'val': 2219306815}
+        xid = {'buf': b'\x84\x47\xef\x3f', 'val': 2219306815}
         data = 'Request Message.'
 
         buf = version['buf'] \
@@ -2873,11 +2873,11 @@ class TestOFPEchoReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x03', 'val': ofproto.OFPT_ECHO_REPLY}
-        msg_len = {'buf': '\x00\x08',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x03', 'val': ofproto.OFPT_ECHO_REPLY}
+        msg_len = {'buf': b'\x00\x08',
                    'val': ofproto.OFP_HEADER_SIZE}
-        xid = {'buf': '\x6e\x21\x3e\x62', 'val': 1847672418}
+        xid = {'buf': b'\x6e\x21\x3e\x62', 'val': 1847672418}
         data = 'Reply Message.'
 
         buf = version['buf'] \
@@ -2941,12 +2941,12 @@ class TestOFPVendor(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x04', 'val': ofproto.OFPT_VENDOR}
-        msg_len = {'buf': '\x00\x0c',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x04', 'val': ofproto.OFPT_VENDOR}
+        msg_len = {'buf': b'\x00\x0c',
                    'val': ofproto.OFP_VENDOR_HEADER_SIZE}
-        xid = {'buf': '\x05\x45\xdf\x18', 'val': 88465176}
-        vendor = {'buf': '\x53\xea\x25\x3e', 'val': 1407853886}
+        xid = {'buf': b'\x05\x45\xdf\x18', 'val': 88465176}
+        vendor = {'buf': b'\x53\xea\x25\x3e', 'val': 1407853886}
         data = 'Vendor Message.'
 
         buf = version['buf'] \
@@ -2975,7 +2975,7 @@ class TestOFPVendor(unittest.TestCase):
             ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        vendor = {'buf': '\x38\x4b\xf9\x6c', 'val': 944503148}
+        vendor = {'buf': b'\x38\x4b\xf9\x6c', 'val': 944503148}
         data = 'Reply Message.'
 
         c = OFPVendor(Datapath)
@@ -3068,7 +3068,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
         pass
 
     def test_init(self):
-        flow_format = {'buf': '\xdc\x6b\xf5\x24', 'val': 3698062628}
+        flow_format = {'buf': b'\xdc\x6b\xf5\x24', 'val': 3698062628}
 
         c = NXTSetFlowFormat(object, flow_format['val'])
         eq_(flow_format['val'], c.format)
@@ -3082,7 +3082,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
             ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        flow_format = {'buf': '\x5a\x4e\x59\xad', 'val': 1515084205}
+        flow_format = {'buf': b'\x5a\x4e\x59\xad', 'val': 1515084205}
 
         c = NXTSetFlowFormat(Datapath, flow_format['val'])
         c.serialize()
@@ -3114,19 +3114,19 @@ class TestNXTFlowMod(unittest.TestCase):
     # NX_FLOW_MOD_PACK_STR
     # '!Q4HI3H6x'...cokkie, command, idle_timeout, head_timeout,
     #               priority, buffer_id, out_port, flags, rule, zfill
-    cookie = {'buf': '\x04\x56\x27\xad\xbd\x43\xd6\x83',
+    cookie = {'buf': b'\x04\x56\x27\xad\xbd\x43\xd6\x83',
               'val': 312480851306993283}
-    command = {'buf': '\x61\xaa', 'val': 25002}
-    idle_timeout = {'buf': '\x4e\xff', 'val': 20223}
-    hard_timeout = {'buf': '\x80\x16', 'val': 32790}
-    priority = {'buf': '\x70\x5f', 'val': 28767}
-    buffer_id = {'buf': '\x7b\x97\x3a\x09', 'val': 2073508361}
-    out_port = {'buf': '\x11\x7d', 'val': 4477}
-    flags = {'buf': '\x5c\xb9', 'val': 23737}
+    command = {'buf': b'\x61\xaa', 'val': 25002}
+    idle_timeout = {'buf': b'\x4e\xff', 'val': 20223}
+    hard_timeout = {'buf': b'\x80\x16', 'val': 32790}
+    priority = {'buf': b'\x70\x5f', 'val': 28767}
+    buffer_id = {'buf': b'\x7b\x97\x3a\x09', 'val': 2073508361}
+    out_port = {'buf': b'\x11\x7d', 'val': 4477}
+    flags = {'buf': b'\x5c\xb9', 'val': 23737}
     rule = nx_match.ClsRule()
-    zfill = '\x00' * 6
+    zfill = b'\x00' * 6
 
-    port = {'buf': '\x2a\xe0', 'val': 10976}
+    port = {'buf': b'\x2a\xe0', 'val': 10976}
     actions = [OFPActionOutput(port['val'])]
 
     def _get_obj(self, append_action=False):
@@ -3258,7 +3258,7 @@ class TestNXTRoleRequest(unittest.TestCase):
 
     # NX_ROLE_PACK_STR
     # '!I'...role
-    role = {'buf': '\x62\x81\x27\x61', 'val': 1652631393}
+    role = {'buf': b'\x62\x81\x27\x61', 'val': 1652631393}
 
     class Datapath(object):
         ofproto = ofproto  # copy to class attribute
@@ -3309,8 +3309,8 @@ class TestNXTFlowModTableId(unittest.TestCase):
 
     # NX_FLOW_MOD_TABLE_ID_PACK_STR
     # '!B7x'...set_, zfill
-    set_ = {'buf': '\x71', 'val': 113}
-    zfill = '\x00' * 7
+    set_ = {'buf': b'\x71', 'val': 113}
+    zfill = b'\x00' * 7
 
     class Datapath(object):
         ofproto = ofproto  # copy to class attribute
@@ -3374,36 +3374,36 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x06', 'val': ofproto.OFPT_FEATURES_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x06', 'val': ofproto.OFPT_FEATURES_REPLY}
         msg_len_val = ofproto.OFP_SWITCH_FEATURES_SIZE \
             + ofproto.OFP_PHY_PORT_SIZE
-        msg_len = {'buf': '\x00\x4c', 'val': msg_len_val}
-        xid = {'buf': '\xcc\x0a\x41\xd4', 'val': 3423224276}
+        msg_len = {'buf': b'\x00\x4c', 'val': msg_len_val}
+        xid = {'buf': b'\xcc\x0a\x41\xd4', 'val': 3423224276}
 
         # OFP_SWITCH_FEATURES_PACK_STR
         # '!QIB3xII'...datapath_id, n_buffers, n_tables,
         #              zfill, capabilities, actions
-        datapath_id = {'buf': '\x11\xa3\x72\x63\x61\xde\x39\x81',
+        datapath_id = {'buf': b'\x11\xa3\x72\x63\x61\xde\x39\x81',
                        'val': 1270985291017894273}
-        n_buffers = {'buf': '\x80\x14\xd7\xf6', 'val': 2148849654}
-        n_tables = {'buf': '\xe4', 'val': 228}
-        zfill = '\x00' * 3
-        capabilities = {'buf': '\x69\x4f\xe4\xc2', 'val': 1766843586}
-        actions = {'buf': '\x78\x06\xd9\x0c', 'val': 2013714700}
+        n_buffers = {'buf': b'\x80\x14\xd7\xf6', 'val': 2148849654}
+        n_tables = {'buf': b'\xe4', 'val': 228}
+        zfill = b'\x00' * 3
+        capabilities = {'buf': b'\x69\x4f\xe4\xc2', 'val': 1766843586}
+        actions = {'buf': b'\x78\x06\xd9\x0c', 'val': 2013714700}
 
         # OFP_PHY_PORT_PACK_STR
         # '!H6s16sIIIIII'... port_no, hw_addr, name, config, state
         #                    curr, advertised, supported, peer
-        port_no = {'buf': '\xe7\x6b', 'val': 59243}
+        port_no = {'buf': b'\xe7\x6b', 'val': 59243}
         hw_addr = '3c:d1:2b:8d:3f:d6'
         name = 'name'.ljust(16)
-        config = {'buf': '\x84\xb6\x8c\x53', 'val': 2226555987}
-        state = {'buf': '\x64\x07\xfb\xc9', 'val': 1678244809}
-        curr = {'buf': '\xa9\xe8\x0a\x2b', 'val': 2850556459}
-        advertised = {'buf': '\x78\xb9\x7b\x72', 'val': 2025421682}
-        supported = {'buf': '\x7e\x65\x68\xad', 'val': 2120575149}
-        peer = {'buf': '\xa4\x5b\x8b\xed', 'val': 2757463021}
+        config = {'buf': b'\x84\xb6\x8c\x53', 'val': 2226555987}
+        state = {'buf': b'\x64\x07\xfb\xc9', 'val': 1678244809}
+        curr = {'buf': b'\xa9\xe8\x0a\x2b', 'val': 2850556459}
+        advertised = {'buf': b'\x78\xb9\x7b\x72', 'val': 2025421682}
+        supported = {'buf': b'\x7e\x65\x68\xad', 'val': 2120575149}
+        peer = {'buf': b'\xa4\x5b\x8b\xed', 'val': 2757463021}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3479,27 +3479,27 @@ class TestOFPPortStatus(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x0c', 'val': ofproto.OFPT_PORT_STATUS}
-        msg_len = {'buf': '\x00\x40',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0c', 'val': ofproto.OFPT_PORT_STATUS}
+        msg_len = {'buf': b'\x00\x40',
                    'val': ofproto.OFP_PORT_STATUS_SIZE}
-        xid = {'buf': '\x06\x27\x8b\x7b', 'val': 103254907}
+        xid = {'buf': b'\x06\x27\x8b\x7b', 'val': 103254907}
 
         # OFP_PORT_STATUS_PACK_STR
         # '!B7xH6s16sIIIIII'...reason, zfill, port_no, hw_addr,
         #                      name, config, state, curr,
         #                      advertised, supported, peer
-        reason = {'buf': '\x71', 'val': 113}
-        zfill = '\x00' * 7
-        port_no = {'buf': '\x48\xd8', 'val': 18648}
+        reason = {'buf': b'\x71', 'val': 113}
+        zfill = b'\x00' * 7
+        port_no = {'buf': b'\x48\xd8', 'val': 18648}
         hw_addr = '41:f7:a3:52:8f:6b'
         name = 'name'.ljust(16)
-        config = {'buf': '\xae\x73\x90\xec', 'val': 2926809324}
-        state = {'buf': '\x41\x37\x32\x1d', 'val': 1094136349}
-        curr = {'buf': '\xa9\x47\x13\x2c', 'val': 2840007468}
-        advertised = {'buf': '\xce\x6b\x4a\x87', 'val': 3463137927}
-        supported = {'buf': '\xb8\x06\x65\xa1', 'val': 3087426977}
-        peer = {'buf': '\x6a\x11\x52\x39', 'val': 1779520057}
+        config = {'buf': b'\xae\x73\x90\xec', 'val': 2926809324}
+        state = {'buf': b'\x41\x37\x32\x1d', 'val': 1094136349}
+        curr = {'buf': b'\xa9\x47\x13\x2c', 'val': 2840007468}
+        advertised = {'buf': b'\xce\x6b\x4a\x87', 'val': 3463137927}
+        supported = {'buf': b'\xb8\x06\x65\xa1', 'val': 3087426977}
+        peer = {'buf': b'\x6a\x11\x52\x39', 'val': 1779520057}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3567,20 +3567,20 @@ class TestOFPPacketIn(unittest.TestCase):
         pass
 
     def _test_parser(self, padding=False):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x0a', 'val': ofproto.OFPT_PACKET_IN}
-        msg_len = {'buf': '\x00\x14',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a', 'val': ofproto.OFPT_PACKET_IN}
+        msg_len = {'buf': b'\x00\x14',
                    'val': ofproto.OFP_PACKET_IN_SIZE}
-        xid = {'buf': '\xd0\x23\x8c\x34', 'val': 3491990580}
+        xid = {'buf': b'\xd0\x23\x8c\x34', 'val': 3491990580}
 
         # OFP_PACKET_IN_PACK_STR
         # '!IHHBx2x'...buffer_id, total_len,
         #              in_port, reason, zfill, data
-        buffer_id = {'buf': '\xae\x73\x90\xec', 'val': 2926809324}
-        total_len = {'buf': '\x00\x10', 'val': 16}
-        in_port = {'buf': '\x08\x42', 'val': 2114}
-        reason = {'buf': '\x43', 'val': 67}
-        zfill = '\x00' * 1
+        buffer_id = {'buf': b'\xae\x73\x90\xec', 'val': 2926809324}
+        total_len = {'buf': b'\x00\x10', 'val': 16}
+        in_port = {'buf': b'\x08\x42', 'val': 2114}
+        reason = {'buf': b'\x43', 'val': 67}
+        zfill = b'\x00' * 1
         if padding:
             data = 'PACKET IN'.ljust(20)
         else:
@@ -3647,16 +3647,16 @@ class TestOFPGetConfigReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x0a', 'val': ofproto.OFPT_GET_CONFIG_REPLY}
-        msg_len = {'buf': '\x00\x14',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a', 'val': ofproto.OFPT_GET_CONFIG_REPLY}
+        msg_len = {'buf': b'\x00\x14',
                    'val': ofproto.OFP_SWITCH_CONFIG_SIZE}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         # OFP_SWITCH_CONFIG_PACK_STR
         # '!HH'...flags, miss_send_len
-        flags = {'buf': '\xa0\xe2', 'val': 41186}
-        miss_send_len = {'buf': '\x36\x0e', 'val': 13838}
+        flags = {'buf': b'\xa0\xe2', 'val': 41186}
+        miss_send_len = {'buf': b'\x36\x0e', 'val': 13838}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3704,11 +3704,11 @@ class TestOFPBarrierReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x13', 'val': ofproto.OFPT_BARRIER_REPLY}
-        msg_len = {'buf': '\x00\x08',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x13', 'val': ofproto.OFPT_BARRIER_REPLY}
+        msg_len = {'buf': b'\x00\x08',
                    'val': ofproto.OFP_HEADER_SIZE}
-        xid = {'buf': '\x66\xc4\xc3\xac', 'val': 1724171180}
+        xid = {'buf': b'\x66\xc4\xc3\xac', 'val': 1724171180}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3752,11 +3752,11 @@ class TestOFPFlowRemoved(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x0a', 'val': ofproto.OFPT_FLOW_REMOVED}
-        msg_len = {'buf': '\x00\x14',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a', 'val': ofproto.OFPT_FLOW_REMOVED}
+        msg_len = {'buf': b'\x00\x14',
                    'val': ofproto.OFP_FLOW_REMOVED_SIZE}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3767,21 +3767,21 @@ class TestOFPFlowRemoved(unittest.TestCase):
         # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
         #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
         #                         nw_src, nw_dst, tp_src, tp_dst
-        wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-        in_port = {'buf': '\x37\x8b', 'val': 14219}
-        dl_src = '\x7f\x85\xc4\x70\x12\xda'
-        dl_dst = '\x0a\x51\x17\x58\xb0\xbb'
-        dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-        dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-        zfill0 = '\x00'
-        dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-        nw_tos = {'buf': '\xde', 'val': 222}
-        nw_proto = {'buf': '\xe5', 'val': 229}
-        zfil11 = '\x00' * 2
-        nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-        nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-        tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-        tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+        wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+        in_port = {'buf': b'\x37\x8b', 'val': 14219}
+        dl_src = b'\x7f\x85\xc4\x70\x12\xda'
+        dl_dst = b'\x0a\x51\x17\x58\xb0\xbb'
+        dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+        dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+        zfill0 = b'\x00'
+        dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+        nw_tos = {'buf': b'\xde', 'val': 222}
+        nw_proto = {'buf': b'\xe5', 'val': 229}
+        zfil11 = b'\x00' * 2
+        nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+        nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+        tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+        tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
         buf += wildcards['buf'] \
             + in_port['buf'] \
@@ -3803,18 +3803,18 @@ class TestOFPFlowRemoved(unittest.TestCase):
         # '!QHBxIIH2xQQ'...cookie, priority, reason, zfill,
         #                  duration_sec, duration_nsec, idle_timeout,
         #                  zfill, packet_count, byte_count
-        cookie = {'buf': '\x02\x79\xba\x00\xef\xab\xee\x44',
+        cookie = {'buf': b'\x02\x79\xba\x00\xef\xab\xee\x44',
                   'val': 178378173441633860}
-        priority = {'buf': '\x02\xce', 'val': 718}
-        reason = {'buf': '\xa9', 'val': 169}
-        zfill0 = '\x00' * 1
-        duration_sec = {'buf': '\x86\x24\xa3\xba', 'val': 2250548154}
-        duration_nsec = {'buf': '\x94\x94\xc2\x23', 'val': 2492776995}
-        idle_timeout = {'buf': '\xeb\x7c', 'val': 60284}
-        zfill1 = '\x00' * 2
-        packet_count = {'buf': '\x5a\x0d\xf2\x03\x8e\x0a\xbb\x8d',
+        priority = {'buf': b'\x02\xce', 'val': 718}
+        reason = {'buf': b'\xa9', 'val': 169}
+        zfill0 = b'\x00' * 1
+        duration_sec = {'buf': b'\x86\x24\xa3\xba', 'val': 2250548154}
+        duration_nsec = {'buf': b'\x94\x94\xc2\x23', 'val': 2492776995}
+        idle_timeout = {'buf': b'\xeb\x7c', 'val': 60284}
+        zfill1 = b'\x00' * 2
+        packet_count = {'buf': b'\x5a\x0d\xf2\x03\x8e\x0a\xbb\x8d',
                         'val': 6489108735192644493}
-        byte_count = {'buf': '\x65\xc8\xd3\x72\x51\xb5\xbb\x7c',
+        byte_count = {'buf': b'\x65\xc8\xd3\x72\x51\xb5\xbb\x7c',
                       'val': 7334344481123449724}
 
         buf += cookie['buf'] \
@@ -3889,13 +3889,13 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x0a',
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a',
                     'val': ofproto.OFPT_QUEUE_GET_CONFIG_REPLY}
         msg_len_val = ofproto.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
             + ofproto.OFP_PACKET_QUEUE_SIZE
-        msg_len = {'buf': '\x00\x14', 'val': msg_len_val}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        msg_len = {'buf': b'\x00\x14', 'val': msg_len_val}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3904,18 +3904,18 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
 
         # OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR
         # '!H6x'...port, zfill
-        port = {'buf': '\xfe\x66', 'val': 65126}
-        zfill = '\x00' * 6
+        port = {'buf': b'\xfe\x66', 'val': 65126}
+        zfill = b'\x00' * 6
 
         buf += port['buf'] \
             + zfill
 
         # OFP_PACKET_QUEUE_PQCK_STR
         # '!IH2x'...queue_id, len_, zfill
-        queue_id = {'buf': '\x4d\x4b\x3a\xd1', 'val': 1296775889}
-        len_ = {'buf': '\x00\x08',
+        queue_id = {'buf': b'\x4d\x4b\x3a\xd1', 'val': 1296775889}
+        len_ = {'buf': b'\x00\x08',
                 'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
-        zfill = '\x00' * 2
+        zfill = b'\x00' * 2
 
         buf += queue_id['buf'] \
             + len_['buf'] \
@@ -3964,12 +3964,12 @@ class TestOFPDescStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
             + ofproto.OFP_DESC_STATS_SIZE
-        msg_len = {'buf': '\x04\x38', 'val': msg_len_val}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        msg_len = {'buf': b'\x04\x38', 'val': msg_len_val}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3978,8 +3978,8 @@ class TestOFPDescStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x00', 'val': ofproto.OFPST_DESC}
-        flags = {'buf': '\x30\xd9', 'val': 12505}
+        type_ = {'buf': b'\x00\x00', 'val': ofproto.OFPST_DESC}
+        flags = {'buf': b'\x30\xd9', 'val': 12505}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4047,12 +4047,12 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
             + ofproto.OFP_FLOW_STATS_SIZE
-        msg_len = {'buf': '\x00\x64', 'val': msg_len_val}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        msg_len = {'buf': b'\x00\x64', 'val': msg_len_val}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4061,8 +4061,8 @@ class TestOFPFlowStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x01', 'val': ofproto.OFPST_FLOW}
-        flags = {'buf': '\x95\xf4', 'val': 38388}
+        type_ = {'buf': b'\x00\x01', 'val': ofproto.OFPST_FLOW}
+        flags = {'buf': b'\x95\xf4', 'val': 38388}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4070,9 +4070,9 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         # stats_type_cls = OFPFlowStats
         # OFP_FLOW_STATS_0_PACK_STR
         # '!HBx'...length, table_id, zfill
-        length = {'buf': '\x00\x60', 'val': 96}
-        table_id = {'buf': '\x51', 'val': 81}
-        zfill = '\x00'
+        length = {'buf': b'\x00\x60', 'val': 96}
+        table_id = {'buf': b'\x51', 'val': 81}
+        zfill = b'\x00'
 
         buf += length['buf'] \
             + table_id['buf'] \
@@ -4080,21 +4080,21 @@ class TestOFPFlowStatsReply(unittest.TestCase):
 
         # OFP_MATCH_PACK_STR
         # '!IH6s6sHBxHBB2xIIHH'...
-        match = '\x97\x7c\xa6\x1e' \
-            + '\x5e\xa0' \
-            + '\x70\x17\xdc\x80\x59\x9e' \
-            + '\x79\xc6\x56\x87\x92\x28' \
-            + '\xb1\x81' \
-            + '\xbe' \
-            + '\x00' \
-            + '\x01\xab' \
-            + '\x42' \
-            + '\xfe' \
-            + '\x00\x00' \
-            + '\xa4\x5d\x5c\x42' \
-            + '\xa2\x5c\x2e\x05' \
-            + '\x5a\x94' \
-            + '\x64\xd4'
+        match = b'\x97\x7c\xa6\x1e' \
+            + b'\x5e\xa0' \
+            + b'\x70\x17\xdc\x80\x59\x9e' \
+            + b'\x79\xc6\x56\x87\x92\x28' \
+            + b'\xb1\x81' \
+            + b'\xbe' \
+            + b'\x00' \
+            + b'\x01\xab' \
+            + b'\x42' \
+            + b'\xfe' \
+            + b'\x00\x00' \
+            + b'\xa4\x5d\x5c\x42' \
+            + b'\xa2\x5c\x2e\x05' \
+            + b'\x5a\x94' \
+            + b'\x64\xd4'
 
         buf += match
 
@@ -4102,17 +4102,17 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         # '!IIHHH6xQQQ'...duration_sec, duration_nsec, priority,
         #                 idle_timeout, hard_timeout, zfill,
         #                 cookie, packet_count, byte_count
-        duration_sec = {'buf': '\x94\x19\xb3\xd2', 'val': 2484712402}
-        duration_nsec = {'buf': '\xee\x66\xcf\x7c', 'val': 3999715196}
-        priority = {'buf': '\xe1\xc0', 'val': 57792}
-        idle_timeout = {'buf': '\x8e\x10', 'val': 36368}
-        hard_timeout = {'buf': '\xd4\x99', 'val': 54425}
-        zfill = '\x00' * 6
-        cookie = {'buf': '\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
+        duration_sec = {'buf': b'\x94\x19\xb3\xd2', 'val': 2484712402}
+        duration_nsec = {'buf': b'\xee\x66\xcf\x7c', 'val': 3999715196}
+        priority = {'buf': b'\xe1\xc0', 'val': 57792}
+        idle_timeout = {'buf': b'\x8e\x10', 'val': 36368}
+        hard_timeout = {'buf': b'\xd4\x99', 'val': 54425}
+        zfill = b'\x00' * 6
+        cookie = {'buf': b'\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
                   'val': 793171083674290912}
-        packet_count = {'buf': '\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
+        packet_count = {'buf': b'\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
                         'val': 5142202600015232219}
-        byte_count = {'buf': '\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
+        byte_count = {'buf': b'\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
                       'val': 2659740543924820419}
 
         buf += duration_sec['buf']
@@ -4126,11 +4126,11 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         buf += byte_count['buf']
 
         # <action>_PACK_STR...type_, len_ [others...]
-        type = {'buf': '\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
-        len = {'buf': '\x00\x08',
+        type = {'buf': b'\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
+        len = {'buf': b'\x00\x08',
                'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
-        port = {'buf': '\x59\x2a', 'val': 22826}
-        max_len = {'buf': '\x00\x08',
+        port = {'buf': b'\x59\x2a', 'val': 22826}
+        max_len = {'buf': b'\x00\x08',
                    'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
 
         buf += type['buf'] \
@@ -4197,12 +4197,12 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
             + ofproto.OFP_AGGREGATE_STATS_REPLY_SIZE
-        msg_len = {'buf': '\x00\x4c', 'val': msg_len_val}
-        xid = {'buf': '\xc6\xd6\xce\x38', 'val': 3335966264}
+        msg_len = {'buf': b'\x00\x4c', 'val': msg_len_val}
+        xid = {'buf': b'\xc6\xd6\xce\x38', 'val': 3335966264}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4211,8 +4211,8 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x02', 'val': ofproto.OFPST_AGGREGATE}
-        flags = {'buf': '\x65\x66', 'val': 25958}
+        type_ = {'buf': b'\x00\x02', 'val': ofproto.OFPST_AGGREGATE}
+        flags = {'buf': b'\x65\x66', 'val': 25958}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4220,12 +4220,12 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         # stats_type_cls = OFPAggregateStats
         # OFP_AGGREGATE_STATS_REPLY_PACK_STR
         # '!QQI4x'...packet_count, byte_count, flow_count, zfill
-        packet_count = {'buf': '\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
+        packet_count = {'buf': b'\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
                         'val': 4869829337189623773}
-        byte_count = {'buf': '\x36\xda\x2d\x80\x2a\x95\x35\xdd',
+        byte_count = {'buf': b'\x36\xda\x2d\x80\x2a\x95\x35\xdd',
                       'val': 3952521651464517085}
-        flow_count = {'buf': '\xc3\x0d\xc3\xed', 'val': 3272459245}
-        zfill = '\x00' * 4
+        flow_count = {'buf': b'\xc3\x0d\xc3\xed', 'val': 3272459245}
+        zfill = b'\x00' * 4
 
         buf += packet_count['buf'] \
             + byte_count['buf'] \
@@ -4277,12 +4277,12 @@ class TestOFPTableStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
             + ofproto.OFP_TABLE_STATS_SIZE
-        msg_len = {'buf': '\x00\x4c', 'val': msg_len_val}
-        xid = {'buf': '\xd6\xb4\x8d\xe6', 'val': 3602157030}
+        msg_len = {'buf': b'\x00\x4c', 'val': msg_len_val}
+        xid = {'buf': b'\xd6\xb4\x8d\xe6', 'val': 3602157030}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4291,8 +4291,8 @@ class TestOFPTableStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x03', 'val': ofproto.OFPST_TABLE}
-        flags = {'buf': '\xb3\xf0', 'val': 46064}
+        type_ = {'buf': b'\x00\x03', 'val': ofproto.OFPST_TABLE}
+        flags = {'buf': b'\xb3\xf0', 'val': 46064}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4301,15 +4301,15 @@ class TestOFPTableStatsReply(unittest.TestCase):
         # OFP_TABLE_STATS_PACK_STR
         # '!B3x32sIIIQQ'...table_id, zfill, name, wildcards, max_entries,
         #                  active_count, lookup_count, matched_count
-        table_id = {'buf': '\x5b', 'val': 91}
-        zfill = '\x00' * 3
+        table_id = {'buf': b'\x5b', 'val': 91}
+        zfill = b'\x00' * 3
         name = 'name'.ljust(32)
-        wildcards = {'buf': '\xc5\xaf\x6e\x12', 'val': 3316608530}
-        max_entries = {'buf': '\x95\x6c\x78\x4d', 'val': 2506913869}
-        active_count = {'buf': '\x78\xac\xa8\x1e', 'val': 2024581150}
-        lookup_count = {'buf': '\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
+        wildcards = {'buf': b'\xc5\xaf\x6e\x12', 'val': 3316608530}
+        max_entries = {'buf': b'\x95\x6c\x78\x4d', 'val': 2506913869}
+        active_count = {'buf': b'\x78\xac\xa8\x1e', 'val': 2024581150}
+        lookup_count = {'buf': b'\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
                         'val': 4620020561814017052}
-        matched_count = {'buf': '\x27\x35\x02\xb6\xc5\x5e\x17\x65',
+        matched_count = {'buf': b'\x27\x35\x02\xb6\xc5\x5e\x17\x65',
                          'val': 2825167325263435621}
 
         buf += table_id['buf'] \
@@ -4370,12 +4370,12 @@ class TestOFPPortStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
             + ofproto.OFP_PORT_STATS_SIZE
-        msg_len = {'buf': '\x00\x74', 'val': msg_len_val}
-        xid = {'buf': '\xc2\xaf\x3d\xff', 'val': 3266264575}
+        msg_len = {'buf': b'\x00\x74', 'val': msg_len_val}
+        xid = {'buf': b'\xc2\xaf\x3d\xff', 'val': 3266264575}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4384,8 +4384,8 @@ class TestOFPPortStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x04', 'val': ofproto.OFPST_PORT}
-        flags = {'buf': '\xda\xde', 'val': 56030}
+        type_ = {'buf': b'\x00\x04', 'val': ofproto.OFPST_PORT}
+        flags = {'buf': b'\xda\xde', 'val': 56030}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4396,31 +4396,31 @@ class TestOFPPortStatsReply(unittest.TestCase):
         #                       rx_bytes, tx_bytes, rx_dropped, tx_dropped,
         #                       rx_errors, tx_errors, rx_frame_err,
         #                       rx_over_err, rx_crc_err, collisions
-        port_no = {'buf': '\xe7\x6b', 'val': 59243}
-        zfill = '\x00' * 6
-        rx_packets = {'buf': '\x53\x44\x36\x61\xc4\x86\xc0\x37',
+        port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+        zfill = b'\x00' * 6
+        rx_packets = {'buf': b'\x53\x44\x36\x61\xc4\x86\xc0\x37',
                       'val': 5999980397101236279}
-        tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+        tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                       'val': 2856480458895760962}
-        rx_bytes = {'buf': '\x55\xa1\x38\x60\x43\x97\x0d\x89',
+        rx_bytes = {'buf': b'\x55\xa1\x38\x60\x43\x97\x0d\x89',
                     'val': 6170274950576278921}
-        tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+        tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                     'val': 8638420181865882538}
-        rx_dropped = {'buf': '\x60\xe6\x20\x01\x24\xda\x4e\x5a',
+        rx_dropped = {'buf': b'\x60\xe6\x20\x01\x24\xda\x4e\x5a',
                       'val': 6982303461569875546}
-        tx_dropped = {'buf': '\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
+        tx_dropped = {'buf': b'\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
                       'val': 661287462113808071}
-        rx_errors = {'buf': '\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
+        rx_errors = {'buf': b'\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
                      'val': 3422231811478788365}
-        tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+        tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                      'val': 6283093430376743019}
-        rx_frame_err = {'buf': '\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
+        rx_frame_err = {'buf': b'\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
                         'val': 876072919806406283}
-        rx_over_err = {'buf': '\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
+        rx_over_err = {'buf': b'\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
                        'val': 6525873760178941600}
-        rx_crc_err = {'buf': '\x73\x3a\x71\x17\xd6\x74\x69\x47',
+        rx_crc_err = {'buf': b'\x73\x3a\x71\x17\xd6\x74\x69\x47',
                       'val': 8303073210207070535}
-        collisions = {'buf': '\x2f\x52\x0c\x79\x96\x03\x6e\x79',
+        collisions = {'buf': b'\x2f\x52\x0c\x79\x96\x03\x6e\x79',
                       'val': 3409801584220270201}
 
         buf += port_no['buf'] \
@@ -4493,12 +4493,12 @@ class TestOFPQueueStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
             + ofproto.OFP_QUEUE_STATS_SIZE
-        msg_len = {'buf': '\x00\x2c', 'val': msg_len_val}
-        xid = {'buf': '\x19\xfc\x28\x6c', 'val': 435955820}
+        msg_len = {'buf': b'\x00\x2c', 'val': msg_len_val}
+        xid = {'buf': b'\x19\xfc\x28\x6c', 'val': 435955820}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4507,8 +4507,8 @@ class TestOFPQueueStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x05', 'val': ofproto.OFPST_QUEUE}
-        flags = {'buf': '\x3b\x2b', 'val': 15147}
+        type_ = {'buf': b'\x00\x05', 'val': ofproto.OFPST_QUEUE}
+        flags = {'buf': b'\x3b\x2b', 'val': 15147}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4516,14 +4516,14 @@ class TestOFPQueueStatsReply(unittest.TestCase):
         # stats_type_cls = OFPQueueStats
         # OFP_QUEUE_STATS_PACK_STR
         # '!H2xIQQQ...port_no, queue_id, tx_bytes, tx_packets, tx_errors
-        port_no = {'buf': '\xe7\x6b', 'val': 59243}
-        zfill = '\x00' * 2
-        queue_id = {'buf': '\x2a\xa8\x7f\x32', 'val': 715685682}
-        tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+        port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+        zfill = b'\x00' * 2
+        queue_id = {'buf': b'\x2a\xa8\x7f\x32', 'val': 715685682}
+        tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                     'val': 8638420181865882538}
-        tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+        tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                       'val': 2856480458895760962}
-        tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+        tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                      'val': 6283093430376743019}
 
         buf += port_no['buf'] \
@@ -4580,12 +4580,12 @@ class TestOFPVendorStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
         # ofproto.OFP_STATS_MSG_SIZE + len(specific_data)
-        msg_len = {'buf': '\x00\x18',
+        msg_len = {'buf': b'\x00\x18',
                    'val': ofproto.OFP_STATS_MSG_SIZE + 12}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4594,8 +4594,8 @@ class TestOFPVendorStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\xff\xff', 'val': ofproto.OFPST_VENDOR}
-        flags = {'buf': '\x30\xd9', 'val': 12505}
+        type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPST_VENDOR}
+        flags = {'buf': b'\x30\xd9', 'val': 12505}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4716,8 +4716,8 @@ class TestOFPSetConfig(unittest.TestCase):
 
     # OFP_SWITCH_CONFIG_PACK_STR
     # '!HH'...flags, miss_send_len
-    flags = {'buf': '\xa0\xe2', 'val': 41186}
-    miss_send_len = {'buf': '\x36\x0e', 'val': 13838}
+    flags = {'buf': b'\xa0\xe2', 'val': 41186}
+    miss_send_len = {'buf': b'\x36\x0e', 'val': 13838}
 
     c = OFPSetConfig(Datapath,
                      flags['val'],
@@ -4854,35 +4854,35 @@ class TestOFPFlowMod(unittest.TestCase):
     # OFP_FLOW_MOD_PACK_STR0
     # '!QHHHHIHH'...cookie, command, idle_timeout, hard_timeout,
     #               priority, buffer_id, out_port, flags
-    cookie = {'buf': '\x1d\x86\xce\x6e\x8d\xc0\xbe\xa8',
+    cookie = {'buf': b'\x1d\x86\xce\x6e\x8d\xc0\xbe\xa8',
               'val': 2127614848199081640}
-    command = {'buf': '\xe1\x55', 'val': 57685}
-    idle_timeout = {'buf': '\xf3\x6d', 'val': 62317}
-    hard_timeout = {'buf': '\x1c\xc5', 'val': 7365}
-    priority = {'buf': '\x9c\xe3', 'val': 40163}
-    buffer_id = {'buf': '\xf0\xa1\x80\x33', 'val': 4037115955}
-    out_port = {'buf': '\xfe\x0d', 'val': 65037}
-    flags = {'buf': '\x00\x87', 'val': 135}
+    command = {'buf': b'\xe1\x55', 'val': 57685}
+    idle_timeout = {'buf': b'\xf3\x6d', 'val': 62317}
+    hard_timeout = {'buf': b'\x1c\xc5', 'val': 7365}
+    priority = {'buf': b'\x9c\xe3', 'val': 40163}
+    buffer_id = {'buf': b'\xf0\xa1\x80\x33', 'val': 4037115955}
+    out_port = {'buf': b'\xfe\x0d', 'val': 65037}
+    flags = {'buf': b'\x00\x87', 'val': 135}
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-    in_port = {'buf': '\x37\x8b', 'val': 14219}
-    dl_src = '\xdf\xcf\xe1\x5d\xcf\xc0'
-    dl_dst = '\x76\xb3\xfb\xc6\x21\x2f'
-    dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-    dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-    nw_tos = {'buf': '\xde', 'val': 222}
-    nw_proto = {'buf': '\xe5', 'val': 229}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-    tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-    tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+    wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+    in_port = {'buf': b'\x37\x8b', 'val': 14219}
+    dl_src = b'\xdf\xcf\xe1\x5d\xcf\xc0'
+    dl_dst = b'\x76\xb3\xfb\xc6\x21\x2f'
+    dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+    dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+    nw_tos = {'buf': b'\xde', 'val': 222}
+    nw_proto = {'buf': b'\xe5', 'val': 229}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+    tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+    tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     match = OFPMatch(wildcards['val'],
                      in_port['val'],
@@ -5051,8 +5051,8 @@ class TestOFPQueueGetConfigRequest(unittest.TestCase):
 
     # OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR
     # '!H2x'...port, zfill
-    port = {'buf': '\xa0\xe2', 'val': 41186}
-    zfill = '\x00' * 2
+    port = {'buf': b'\xa0\xe2', 'val': 41186}
+    zfill = b'\x00' * 2
 
     c = OFPQueueGetConfigRequest(Datapath,
                                  port['val'])
@@ -5097,7 +5097,7 @@ class TestOFPDescStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     c = OFPDescStatsRequest(Datapath, flags['val'])
 
@@ -5147,27 +5147,27 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-    in_port = {'buf': '\x37\x8b', 'val': 14219}
-    dl_src = '\x58\xd0\x8a\x69\xa4\xfc'
-    dl_dst = '\xb6\xe2\xef\xb1\xa6\x2d'
-    dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-    dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-    nw_tos = {'buf': '\xde', 'val': 222}
-    nw_proto = {'buf': '\xe5', 'val': 229}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-    tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-    tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+    wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+    in_port = {'buf': b'\x37\x8b', 'val': 14219}
+    dl_src = b'\x58\xd0\x8a\x69\xa4\xfc'
+    dl_dst = b'\xb6\xe2\xef\xb1\xa6\x2d'
+    dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+    dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+    nw_tos = {'buf': b'\xde', 'val': 222}
+    nw_proto = {'buf': b'\xe5', 'val': 229}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+    tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+    tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     match = OFPMatch(wildcards['val'],
                      in_port['val'],
@@ -5185,9 +5185,9 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
 
     # OFP_FLOW_STATS_REQUEST_ID_PORT_STR
     # '!BxH'...table_id, zfill, out_port
-    table_id = {'buf': '\xd1', 'val': 209}
-    zfill = '\x00' * 1
-    out_port = {'buf': '\xe4\x9a', 'val': 58522}
+    table_id = {'buf': b'\xd1', 'val': 209}
+    zfill = b'\x00' * 1
+    out_port = {'buf': b'\xe4\x9a', 'val': 58522}
 
     c = OFPFlowStatsRequest(Datapath,
                             flags['val'],
@@ -5268,27 +5268,27 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xea\x66\x4a\xd4', 'val': 3932572372}
-    in_port = {'buf': '\x64\xac', 'val': 25772}
-    dl_src = '\x90\x13\x60\x5e\x20\x4d'
-    dl_dst = '\xb5\x5d\x14\x5e\xb9\x22'
-    dl_vlan = {'buf': '\x8b\xeb', 'val': 35819}
-    dl_vlan_pcp = {'buf': '\xe8', 'val': 232}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\62\xc9', 'val': 25289}
-    nw_tos = {'buf': '\xb5', 'val': 181}
-    nw_proto = {'buf': '\xc4', 'val': 196}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\xb7\xd1\xb7\xef', 'val': 3083974639}
-    nw_dst = {'buf': '\x7c\xc6\x18\x15', 'val': 2093357077}
-    tp_src = {'buf': '\x26\x9a', 'val': 9882}
-    tp_dst = {'buf': '\x7a\x89', 'val': 31369}
+    wildcards = {'buf': b'\xea\x66\x4a\xd4', 'val': 3932572372}
+    in_port = {'buf': b'\x64\xac', 'val': 25772}
+    dl_src = b'\x90\x13\x60\x5e\x20\x4d'
+    dl_dst = b'\xb5\x5d\x14\x5e\xb9\x22'
+    dl_vlan = {'buf': b'\x8b\xeb', 'val': 35819}
+    dl_vlan_pcp = {'buf': b'\xe8', 'val': 232}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\62\xc9', 'val': 25289}
+    nw_tos = {'buf': b'\xb5', 'val': 181}
+    nw_proto = {'buf': b'\xc4', 'val': 196}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\xb7\xd1\xb7\xef', 'val': 3083974639}
+    nw_dst = {'buf': b'\x7c\xc6\x18\x15', 'val': 2093357077}
+    tp_src = {'buf': b'\x26\x9a', 'val': 9882}
+    tp_dst = {'buf': b'\x7a\x89', 'val': 31369}
 
     match = OFPMatch(wildcards['val'],
                      in_port['val'],
@@ -5306,9 +5306,9 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
 
     # OFP_FLOW_STATS_REQUEST_ID_PORT_STR
     # '!BxH'...table_id, zfill, out_port
-    table_id = {'buf': '\xd1', 'val': 209}
-    zfill = '\x00' * 1
-    out_port = {'buf': '\xb5\xe8', 'val': 46568}
+    table_id = {'buf': b'\xd1', 'val': 209}
+    zfill = b'\x00' * 1
+    out_port = {'buf': b'\xb5\xe8', 'val': 46568}
 
     c = OFPAggregateStatsRequest(Datapath,
                                  flags['val'],
@@ -5389,7 +5389,7 @@ class TestOFPTableStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     c = OFPTableStatsRequest(Datapath, flags['val'])
 
@@ -5439,11 +5439,11 @@ class TestOFPPortStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_PORT_STATS_REQUEST_PACK_STR
     # '!H6x'...port_no, zfill
-    port_no = {'buf': '\x6d\x27', 'val': 27943}
+    port_no = {'buf': b'\x6d\x27', 'val': 27943}
 
     c = OFPPortStatsRequest(Datapath,
                             flags['val'],
@@ -5500,12 +5500,12 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_QUEUE_STATS_REQUEST_PACK_STR
     # '!HxxI'...port_no, zfill, zfill, queue_id
-    port_no = {'buf': '\x0c\x2d', 'val': 3117}
-    queue_id = {'buf': '\x1b\xe6\xba\x36', 'val': 468105782}
+    port_no = {'buf': b'\x0c\x2d', 'val': 3117}
+    queue_id = {'buf': b'\x1b\xe6\xba\x36', 'val': 468105782}
 
     c = OFPQueueStatsRequest(Datapath,
                              flags['val'],
@@ -5565,11 +5565,11 @@ class TestOFPVendorStatsRequest(unittest.TestCase):
         ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_VENDOR_STATS_MSG_PACK_STR
     # '!I'...vendor
-    vendor = {'buf': '\xff\xff\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    vendor = {'buf': b'\xff\xff\xff\xff', 'val': ofproto.OFPAT_VENDOR}
 
     specific_data = 'specific_data'
 

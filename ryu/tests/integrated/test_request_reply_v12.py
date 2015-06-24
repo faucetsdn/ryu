@@ -467,10 +467,10 @@ class RunTest(tester.TestFlowBase):
         a2 = dp.ofproto_parser.OFPActionOutput(2, 1500)
 
         # table_id, cookie, priority, dl_dst, action)
-        tables = {0: [0xffff, 10, '\xee' * 6, a1],
-                  1: [0xff00, 10, '\xee' * 6, a2],
-                  2: [0xf000, 100, '\xee' * 6, a1],
-                  3: [0x0000, 10, '\xff' * 6, a1]}
+        tables = {0: [0xffff, 10, b'\xee' * 6, a1],
+                  1: [0xff00, 10, b'\xee' * 6, a2],
+                  2: [0xf000, 100, b'\xee' * 6, a1],
+                  3: [0x0000, 10, b'\xff' * 6, a1]}
 
         self._verify = tables
         for table_id, val in tables.items():
@@ -546,7 +546,7 @@ class RunTest(tester.TestFlowBase):
         self._verify[3][3] = action
 
         match = dp.ofproto_parser.OFPMatch()
-        match.set_dl_dst('\xff' * 6)
+        match.set_dl_dst(b'\xff' * 6)
         table_id = 3
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY,
                       actions=[action], table_id=table_id, match=match)
@@ -565,7 +565,7 @@ class RunTest(tester.TestFlowBase):
         self._verify[2][3] = action
 
         match = dp.ofproto_parser.OFPMatch()
-        match.set_dl_dst('\xee' * 6)
+        match.set_dl_dst(b'\xee' * 6)
         priority = 100
         table_id = 2
         self.mod_flow(dp, command=dp.ofproto.OFPFC_MODIFY_STRICT,
@@ -653,7 +653,7 @@ class RunTest(tester.TestFlowBase):
         del self._verify[3]
 
         match = dp.ofproto_parser.OFPMatch()
-        match.set_dl_dst('\xff' * 6)
+        match.set_dl_dst(b'\xff' * 6)
         self.mod_flow(dp, command=dp.ofproto.OFPFC_DELETE,
                       table_id=dp.ofproto.OFPTT_ALL, match=match)
 
@@ -686,7 +686,7 @@ class RunTest(tester.TestFlowBase):
         del self._verify[2]
 
         match = dp.ofproto_parser.OFPMatch()
-        match.set_dl_dst('\xee' * 6)
+        match.set_dl_dst(b'\xee' * 6)
         priority = 100
         self.mod_flow(dp, command=dp.ofproto.OFPFC_DELETE_STRICT,
                       table_id=dp.ofproto.OFPTT_ALL,

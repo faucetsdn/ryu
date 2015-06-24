@@ -41,8 +41,8 @@ class Test_stringify(unittest.TestCase):
 
     def test_jsondict(self):
         j = {'C1': {'a': 'QUFB', 'c': 'Q0ND'}}
-        eq_(j['C1']['a'], base64.b64encode('AAA'))
-        eq_(j['C1']['c'], base64.b64encode('CCC'))
+        eq_(j['C1']['a'], base64.b64encode(b'AAA'))
+        eq_(j['C1']['c'], base64.b64encode(b'CCC'))
         c = C1(a='AAA', c='CCC')
         c2 = C1.from_jsondict(j['C1'])
         eq_(c.__class__, c2.__class__)

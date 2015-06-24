@@ -19,8 +19,8 @@ from ryu.lib import addrconv
 # string representation
 HADDR_PATTERN = r'([0-9a-f]{2}:){5}[0-9a-f]{2}'
 
-DONTCARE = '\x00' * 6
-BROADCAST = '\xff' * 6
+DONTCARE = b'\x00' * 6
+BROADCAST = b'\xff' * 6
 DONTCARE_STR = '00:00:00:00:00:00'
 BROADCAST_STR = 'ff:ff:ff:ff:ff:ff'
 MULTICAST = 'fe:ff:ff:ff:ff:ff'

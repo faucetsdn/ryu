@@ -1826,7 +1826,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
             port_no = i
 
             fmt = ofproto.OFP_PORT_PACK_STR
-            buf += pack(fmt, port_no, '\x00' * 6, '\x00' * 16, 0, 0, 0,
+            buf += pack(fmt, port_no, b'\x00' * 6, b'\x00' * 16, 0, 0, 0,
                         0, 0, 0, 0, 0)
 
         res = OFPSwitchFeatures.parser(object, version, msg_type,
@@ -2091,7 +2091,7 @@ class TestOFPPacketIn(unittest.TestCase):
         buf += str(buf_match)
 
         # data
-        buf += '\x00' * 2
+        buf += b'\x00' * 2
         buf += data
 
         res = OFPPacketIn.parser(object, version, msg_type, msg_len,
@@ -4984,7 +4984,7 @@ class TestOFPTableStats(unittest.TestCase):
         res = OFPTableStats.parser(buf, 0)
 
         eq_(table_id, res.table_id)
-        eq_(name, res.name.replace('\x00', ''))
+        eq_(name, res.name.replace(b'\x00', ''))
         eq_(match, res.match)
         eq_(wildcards, res.wildcards)
         eq_(write_actions, res.write_actions)

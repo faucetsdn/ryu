@@ -171,7 +171,7 @@ Hello, this is Ryu BGP speaker (version %s).
             LOG.error("non CSI sequence. do nothing")
 
     def _send_csi_seq(self, cmd):
-        self.chan.send('\x1b[' + cmd)
+        self.chan.send(b'\x1b[' + cmd)
 
     def _movcursor(self, curpos):
         if self.prompted and curpos < len(self.PROMPT):

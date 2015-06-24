@@ -107,7 +107,7 @@ class Test_hub(unittest.TestCase):
 
         def _child(s1):
             hub.sleep(0.5)
-            s1.send("hoge")
+            s1.send(b"hoge")
 
         s1, s2 = socket.socketpair()
         with hub.Timeout(1):

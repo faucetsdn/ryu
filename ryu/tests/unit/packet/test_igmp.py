@@ -461,10 +461,10 @@ class Test_igmpv3_report(unittest.TestCase):
             MODE_IS_INCLUDE, 0, 2, '225.0.0.2',
             ['172.16.10.10', '172.16.10.27'])
         self.record3 = igmpv3_report_group(
-            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], 'abc\x00')
+            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], b'abc\x00')
         self.record4 = igmpv3_report_group(
             MODE_IS_INCLUDE, 2, 2, '225.0.0.4',
-            ['172.16.10.10', '172.16.10.27'], 'abcde\x00\x00\x00')
+            ['172.16.10.10', '172.16.10.27'], b'abcde\x00\x00\x00')
         self.records = [self.record1, self.record2, self.record3,
                         self.record4]
         self.record_num = len(self.records)
@@ -615,10 +615,10 @@ class Test_igmpv3_report(unittest.TestCase):
             MODE_IS_INCLUDE, 0, 2, '225.0.0.2',
             ['172.16.10.10', '172.16.10.27'])
         self.record3 = igmpv3_report_group(
-            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], 'abc\x00')
+            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], b'abc\x00')
         self.record4 = igmpv3_report_group(
             MODE_IS_INCLUDE, 1, 2, '225.0.0.4',
-            ['172.16.10.10', '172.16.10.27'], 'abc\x00')
+            ['172.16.10.10', '172.16.10.27'], b'abc\x00')
         self.records = [self.record1, self.record2, self.record3,
                         self.record4]
         self.record_num = len(self.records) + 1
@@ -640,10 +640,10 @@ class Test_igmpv3_report(unittest.TestCase):
             MODE_IS_INCLUDE, 0, 2, '225.0.0.2',
             ['172.16.10.10', '172.16.10.27'])
         self.record3 = igmpv3_report_group(
-            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], 'abc\x00')
+            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], b'abc\x00')
         self.record4 = igmpv3_report_group(
             MODE_IS_INCLUDE, 1, 2, '225.0.0.4',
-            ['172.16.10.10', '172.16.10.27'], 'abc\x00')
+            ['172.16.10.10', '172.16.10.27'], b'abc\x00')
         self.records = [self.record1, self.record2, self.record3,
                         self.record4]
         self.record_num = len(self.records) - 1
@@ -679,10 +679,10 @@ class Test_igmpv3_report(unittest.TestCase):
             MODE_IS_INCLUDE, 0, 2, '225.0.0.2',
             ['172.16.10.10', '172.16.10.27'])
         record3 = igmpv3_report_group(
-            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], 'abc\x00')
+            MODE_IS_INCLUDE, 1, 0, '225.0.0.3', [], b'abc\x00')
         record4 = igmpv3_report_group(
             MODE_IS_INCLUDE, 1, 2, '225.0.0.4',
-            ['172.16.10.10', '172.16.10.27'], 'abc\x00')
+            ['172.16.10.10', '172.16.10.27'], b'abc\x00')
         records = [record1, record2, record3, record4]
         g = igmpv3_report(records=records)
         prev.serialize(g, None)
@@ -738,7 +738,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
             self.srcs, self.aux)
 
     def setUp_with_aux(self):
-        self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
+        self.aux = b'\x01\x02\x03\x04\x05\x00\x00\x00'
         self.aux_len = len(self.aux) // 4
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
@@ -751,7 +751,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
     def setUp_with_srcs_and_aux(self):
         self.srcs = ['192.168.1.1', '192.168.1.2', '192.168.1.3']
         self.num = len(self.srcs)
-        self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
+        self.aux = b'\x01\x02\x03\x04\x05\x00\x00\x00'
         self.aux_len = len(self.aux) // 4
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
@@ -936,7 +936,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
 
     @raises
     def test_aux_len_larger_than_aux(self):
-        self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
+        self.aux = b'\x01\x02\x03\x04\x05\x00\x00\x00'
         self.aux_len = len(self.aux) // 4 + 1
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
@@ -949,7 +949,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
 
     @raises
     def test_aux_len_smaller_than_aux(self):
-        self.aux = '\x01\x02\x03\x04\x05\x00\x00\x00'
+        self.aux = b'\x01\x02\x03\x04\x05\x00\x00\x00'
         self.aux_len = len(self.aux) // 4 - 1
         self.buf = pack(igmpv3_report_group._PACK_STR, self.type_,
                         self.aux_len, self.num,
@@ -997,4 +997,4 @@ class Test_igmpv3_report_group(unittest.TestCase):
         eq_(res[1], 2)
         eq_(res[2], 0)
         eq_(res[3], addrconv.ipv4.text_to_bin('0.0.0.0'))
-        eq_(buf[igmpv3_report_group._MIN_LEN:], 'abcde\x00\x00\x00')
+        eq_(buf[igmpv3_report_group._MIN_LEN:], b'abcde\x00\x00\x00')

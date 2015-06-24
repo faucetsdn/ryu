@@ -461,7 +461,7 @@ class Test_ipv6(unittest.TestCase):
         ip = ipv6.ipv6(
             nxt=0, ext_hdrs=[
                 ipv6.hop_opts(58, 0, [
-                    ipv6.option(5, 2, '\x00\x00'),
+                    ipv6.option(5, 2, b'\x00\x00'),
                     ipv6.option(1, 0, None)])])
         buf = ip.serialize(bytearray(), None)
         res = struct.unpack(ipv6.ipv6._PACK_STR + '8s', str(buf))
@@ -472,7 +472,7 @@ class Test_ipv6(unittest.TestCase):
         eq_(res[3], 255)
         eq_(res[4], addrconv.ipv6.text_to_bin('10::10'))
         eq_(res[5], addrconv.ipv6.text_to_bin('20::20'))
-        eq_(res[6], '\x3a\x00\x05\x02\x00\x00\x01\x00')
+        eq_(res[6], b'\x3a\x00\x05\x02\x00\x00\x01\x00')
 
     def test_json(self):
         jsondict = self.ip.to_jsondict()
@@ -560,13 +560,13 @@ class Test_hop_opts(unittest.TestCase):
         opt4 = ipv6.option.parser(str(buf[offset:]))
         eq_(5, opt1.type_)
         eq_(2, opt1.len_)
-        eq_('\x00\x00', opt1.data)
+        eq_(b'\x00\x00', opt1.data)
         eq_(1, opt2.type_)
         eq_(0, opt2.len_)
         eq_(None, opt2.data)
         eq_(0xc2, opt3.type_)
         eq_(4, opt3.len_)
-        eq_('\x00\x01\x00\x00', opt3.data)
+        eq_(b'\x00\x01\x00\x00', opt3.data)
         eq_(1, opt4.type_)
         eq_(0, opt4.len_)
         eq_(None, opt4.data)
@@ -581,7 +581,7 @@ class Test_hop_opts(unittest.TestCase):
 
         eq_(res[0], 6)
         eq_(res[1], 0)
-        opt = ipv6.option(type_=1, len_=4, data='\x00\x00\x00\x00')
+        opt = ipv6.option(type_=1, len_=4, data=b'\x00\x00\x00\x00')
         eq_(str(buf[2:]), opt.serialize())
 
 
@@ -641,13 +641,13 @@ class Test_dst_opts(unittest.TestCase):
         opt4 = ipv6.option.parser(str(buf[offset:]))
         eq_(5, opt1.type_)
         eq_(2, opt1.len_)
-        eq_('\x00\x00', opt1.data)
+        eq_(b'\x00\x00', opt1.data)
         eq_(1, opt2.type_)
         eq_(0, opt2.len_)
         eq_(None, opt2.data)
         eq_(0xc2, opt3.type_)
         eq_(4, opt3.len_)
-        eq_('\x00\x01\x00\x00', opt3.data)
+        eq_(b'\x00\x01\x00\x00', opt3.data)
         eq_(1, opt4.type_)
         eq_(0, opt4.len_)
         eq_(None, opt4.data)
@@ -1110,7 +1110,7 @@ class Test_auth(unittest.TestCase):
         size = 5
         auth = ipv6.auth(
             0, size, 256, 1,
-            '\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8\xf8\xf8\xf8\xf8')
+            b'\x21\xd3\xa9\x5c\x5f\xfd\x4d\x18\x46\x22\xb9\xf8\xf8\xf8\xf8\xf8')
         eq_((size + 2) * 4, len(auth))
 
     def test_default_args(self):
@@ -1124,4 +1124,4 @@ class Test_auth(unittest.TestCase):
         eq_(res[1], 2)
         eq_(res[2], 0)
         eq_(res[3], 0)
-        eq_(buf[ipv6.auth._MIN_LEN:], '\x00\x00\x00\x00')
+        eq_(buf[ipv6.auth._MIN_LEN:], b'\x00\x00\x00\x00')

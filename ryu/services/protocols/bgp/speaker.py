@@ -90,8 +90,8 @@ def nofitication_factory(code, subcode):
 class BgpProtocol(Protocol, Activity):
     """Protocol that handles BGP messages.
     """
-    MESSAGE_MARKER = ('\xff\xff\xff\xff\xff\xff\xff\xff'
-                      '\xff\xff\xff\xff\xff\xff\xff\xff')
+    MESSAGE_MARKER = (b'\xff\xff\xff\xff\xff\xff\xff\xff'
+                      b'\xff\xff\xff\xff\xff\xff\xff\xff')
 
     def __init__(self, socket, signal_bus, is_reactive_conn=False):
         # Validate input.

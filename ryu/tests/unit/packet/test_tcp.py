@@ -43,7 +43,7 @@ class Test_tcp(unittest.TestCase):
     window_size = 2048
     csum = 12345
     urgent = 128
-    option = '\x01\x02\x03\x04'
+    option = b'\x01\x02\x03\x04'
 
     t = tcp(src_port, dst_port, seq, ack, offset, bits,
             window_size, csum, urgent, option)
@@ -119,7 +119,7 @@ class Test_tcp(unittest.TestCase):
     def test_serialize_option(self):
         offset = 6
         csum = 0
-        option = '\x01\x02'
+        option = b'\x01\x02'
 
         src_ip = '192.168.10.1'
         dst_ip = '192.168.100.1'
@@ -154,7 +154,7 @@ class Test_tcp(unittest.TestCase):
         eq_(res[8], 0)
 
         # with option, without offset
-        t = tcp(option='\x01\x02\x03')
+        t = tcp(option=b'\x01\x02\x03')
         buf = t.serialize(bytearray(), prev)
         res = struct.unpack(tcp._PACK_STR + '4s', buf)
 
@@ -166,10 +166,10 @@ class Test_tcp(unittest.TestCase):
         eq_(res[5], 0)
         eq_(res[6], 0)
         eq_(res[8], 0)
-        eq_(res[9], '\x01\x02\x03\x00')
+        eq_(res[9], b'\x01\x02\x03\x00')
 
         # with option, with long offset
-        t = tcp(offset=7, option='\x01\x02\x03')
+        t = tcp(offset=7, option=b'\x01\x02\x03')
         buf = t.serialize(bytearray(), prev)
         res = struct.unpack(tcp._PACK_STR + '8s', buf)
 
@@ -181,7 +181,7 @@ class Test_tcp(unittest.TestCase):
         eq_(res[5], 0)
         eq_(res[6], 0)
         eq_(res[8], 0)
-        eq_(res[9], '\x01\x02\x03\x00\x00\x00\x00\x00')
+        eq_(res[9], b'\x01\x02\x03\x00\x00\x00\x00\x00')
 
     def test_json(self):
         jsondict = self.t.to_jsondict()

@@ -150,7 +150,7 @@ class Test_slow(unittest.TestCase):
         assert None != last
 
     def test_invalid_subtype(self):
-        invalid_buf = "\xff" + self.buf[1:]
+        invalid_buf = b'\xff' + self.buf[1:]
         (instance, nexttype, last) = slow.parser(invalid_buf)
         assert None == instance
         assert None == nexttype
