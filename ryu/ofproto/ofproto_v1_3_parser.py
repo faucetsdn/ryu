@@ -1436,7 +1436,7 @@ class OFPMatch(StringifyMixin):
     def set_ipv6_src_masked(self, src, mask):
         self._wc.ft_set(ofproto.OFPXMT_OFB_IPV6_SRC)
         self._wc.ipv6_src_mask = mask
-        self._flow.ipv6_src = [x & y for (x, y) in itertools.izip(src, mask)]
+        self._flow.ipv6_src = [x & y for (x, y) in zip(src, mask)]
 
     def set_ipv6_dst(self, dst):
         self._wc.ft_set(ofproto.OFPXMT_OFB_IPV6_DST)
@@ -1445,7 +1445,7 @@ class OFPMatch(StringifyMixin):
     def set_ipv6_dst_masked(self, dst, mask):
         self._wc.ft_set(ofproto.OFPXMT_OFB_IPV6_DST)
         self._wc.ipv6_dst_mask = mask
-        self._flow.ipv6_dst = [x & y for (x, y) in itertools.izip(dst, mask)]
+        self._flow.ipv6_dst = [x & y for (x, y) in zip(dst, mask)]
 
     def set_ipv6_flabel(self, flabel):
         self.set_ipv6_flabel_masked(flabel, UINT32_MAX)

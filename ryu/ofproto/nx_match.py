@@ -263,14 +263,14 @@ class ClsRule(object):
 
     def set_ipv6_src_masked(self, src, mask):
         self.wc.ipv6_src_mask = mask
-        self.flow.ipv6_src = [x & y for (x, y) in itertools.izip(src, mask)]
+        self.flow.ipv6_src = [x & y for (x, y) in zip(src, mask)]
 
     def set_ipv6_src(self, src):
         self.flow.ipv6_src = src
 
     def set_ipv6_dst_masked(self, dst, mask):
         self.wc.ipv6_dst_mask = mask
-        self.flow.ipv6_dst = [x & y for (x, y) in itertools.izip(dst, mask)]
+        self.flow.ipv6_dst = [x & y for (x, y) in zip(dst, mask)]
 
     def set_ipv6_dst(self, dst):
         self.flow.ipv6_dst = dst
@@ -278,7 +278,7 @@ class ClsRule(object):
     def set_nd_target_masked(self, target, mask):
         self.wc.nd_target_mask = mask
         self.flow.nd_target = [x & y for (x, y) in
-                               itertools.izip(target, mask)]
+                               zip(target, mask)]
 
     def set_nd_target(self, target):
         self.flow.nd_target = target
