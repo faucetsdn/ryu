@@ -49,7 +49,7 @@ class Test_Parser_OFPStats(unittest.TestCase):
         b = bytearray()
         stats.serialize(b, 0)
         stats2 = stats.parser(six.binary_type(b), 0)
-        for k, v in d.iteritems():
+        for k, v in d.items():
             ok_(k in stats)
             ok_(k in stats2)
             eq_(stats[k], v)

@@ -858,7 +858,7 @@ class OFPStats(StringifyMixin):
             self.fields = _ordered_fields
         else:
             fields = [ofproto.oxs_from_user(k, v) for (k, v)
-                      in kwargs.iteritems()]
+                      in kwargs.items()]
             # sort by OXS type values
             fields.sort()
             # No mask
@@ -923,7 +923,7 @@ class OFPStats(StringifyMixin):
         return key in dict(self.fields)
 
     def iteritems(self):
-        return dict(self.fields).iteritems()
+        return dict(self.fields).items()
 
     def get(self, key, default=None):
         return dict(self.fields).get(key, default)
