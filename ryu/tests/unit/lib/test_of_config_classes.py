@@ -20,7 +20,7 @@ from nose.tools import ok_
 
 import sys
 import lxml.etree as ET
-from xml_compare import xml_compare
+from formencode.doctest_xml_compare import xml_compare
 
 from ryu.lib.of_config import classes as ofc
 
