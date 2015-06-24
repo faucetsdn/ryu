@@ -19,6 +19,7 @@ import itertools
 import logging
 import operator
 import os
+import six
 import sys
 import weakref
 
@@ -761,7 +762,7 @@ class VSCtlContext(object):
             for ovsrec_row in self.idl.tables[
                     vsctl_row_id.table].rows.values():
                 name = getattr(ovsrec_row, vsctl_row_id.name_column)
-                assert type(name) in (list, str, unicode)
+                assert type(name) in (list, str, six.text_type)
                 if type(name) != list and name == record_id:
                     if (referrer):
                         vsctl_fatal('multiple rows in %s match "%s"' %

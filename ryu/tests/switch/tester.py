@@ -21,6 +21,7 @@ import math
 import netaddr
 import os
 import signal
+import six
 import sys
 import time
 import traceback
@@ -1326,7 +1327,7 @@ class TestFile(stringify.StringifyMixin):
             try:
                 json_list = json.loads(buf)
                 for test_json in json_list:
-                    if isinstance(test_json, unicode):
+                    if isinstance(test_json, six.text_type):
                         self.description = test_json
                     else:
                         self._normalize_test_json(test_json)

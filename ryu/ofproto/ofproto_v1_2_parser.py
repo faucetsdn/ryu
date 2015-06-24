@@ -18,6 +18,7 @@
 Decoder/Encoder implementations of OpenFlow 1.2.
 """
 
+import six
 import struct
 import itertools
 
@@ -1481,7 +1482,7 @@ class OFPActionSetField(OFPAction):
             assert len(kwargs) == 1
             key = list(kwargs.keys())[0]
             value = kwargs[key]
-            assert isinstance(key, (str, unicode))
+            assert isinstance(key, (str, six.text_type))
             assert not isinstance(value, tuple)  # no mask
             self.key = key
             self.value = value

@@ -1,5 +1,6 @@
 import json
 import logging
+import six
 import time
 
 from datetime import datetime
@@ -15,7 +16,7 @@ class ApgwFormatter(logging.Formatter):
             'timestamp': datetime.utcfromtimestamp(
                 time.time()
             ).strftime(self.LOG_TIME_FORMAT),
-            'msg': unicode(record.msg),
+            'msg': six.text_type(record.msg),
             'level': record.levelname
 
         }

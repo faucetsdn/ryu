@@ -19,6 +19,7 @@
 import base64
 import collections
 import inspect
+import six
 
 
 # Some arguments to __init__ is mungled in order to avoid name conflicts
@@ -59,7 +60,7 @@ class TypeDescr(object):
 class AsciiStringType(TypeDescr):
     @staticmethod
     def encode(v):
-        return unicode(v, 'ascii')
+        return six.text_type(v, 'ascii')
 
     @staticmethod
     def decode(v):
@@ -69,7 +70,7 @@ class AsciiStringType(TypeDescr):
 class Utf8StringType(TypeDescr):
     @staticmethod
     def encode(v):
-        return unicode(v, 'utf-8')
+        return six.text_type(v, 'utf-8')
 
     @staticmethod
     def decode(v):
@@ -154,7 +155,7 @@ class StringifyMixin(object):
         if len(dict_) != 1:
             return False
         k = list(dict_.keys())[0]
-        if not isinstance(k, (bytes, unicode)):
+        if not isinstance(k, (bytes, six.text_type)):
             return False
         for p in cls._class_prefixes:
             if k.startswith(p):
@@ -186,7 +187,7 @@ class StringifyMixin(object):
     @classmethod
     def _get_default_encoder(cls, encode_string):
         def _encode(v):
-            if isinstance(v, (bytes, unicode)):
+            if isinstance(v, (bytes, six.text_type)):
                 json_value = encode_string(v)
             elif isinstance(v, list):
                 json_value = map(_encode, v)
@@ -268,7 +269,7 @@ class StringifyMixin(object):
     @classmethod
     def _get_default_decoder(cls, decode_string):
         def _decode(json_value, **additional_args):
-            if isinstance(json_value, (bytes, unicode)):
+            if isinstance(json_value, (bytes, six.text_type)):
                 v = decode_string(json_value)
             elif isinstance(json_value, list):
                 v = map(_decode, json_value)
