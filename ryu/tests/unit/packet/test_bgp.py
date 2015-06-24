@@ -201,7 +201,7 @@ class Test_bgp(unittest.TestCase):
 
         for f in files:
             print('testing %s' % f)
-            binmsg = open(dir + f).read()
+            binmsg = open(dir + f, 'rb').read()
             msg, rest = bgp.BGPMessage.parser(binmsg)
             binmsg2 = msg.serialize()
             eq_(binmsg, binmsg2)
