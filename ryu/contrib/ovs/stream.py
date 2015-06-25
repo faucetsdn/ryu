@@ -354,8 +354,7 @@ Stream.register_method("unix", UnixStream)
 class TCPStream(Stream):
     @staticmethod
     def _open(suffix, dscp):
-        error, sock = ovs.socket_util.inet_open_active(socket.SOCK_STREAM,
-                                                       suffix, 0, dscp)
+        error, sock = ovs.socket_util.inet_open_active_stream(suffix, 0, dscp)
         if not error:
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return error, sock

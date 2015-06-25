@@ -83,10 +83,20 @@ def check_connection_completion(sock):
     else:
         return errno.EAGAIN
 
-
 def inet_parse_active(target, default_port):
-    address = target.split(":")
+    """Splits the given target ip-address at the last occuring ':' to
+    separate address from port. Ipv6 addresses may be given with square
+    brackets at the beginning and the end.
+
+    example:
+    ipv4 target: "tcp:127.0.0.1:6632"
+    ipv6 target: "tcp:[2001:DB8:0:0::1]:6632"
+    """
+    address = target.rsplit(":",1)
     host_name = address[0]
+    host_name = host_name.rstrip("]")
+    host_name = host_name.lstrip("[")
+
     if not host_name:
         raise ValueError("%s: bad peer name format" % target)
     if len(address) >= 2:
@@ -96,7 +106,6 @@ def inet_parse_active(target, default_port):
     else:
         raise ValueError("%s: port number must be specified" % target)
     return (host_name, port)
-
 
 def inet_open_active(style, target, default_port, dscp):
     address = inet_parse_active(target, default_port)
@@ -118,6 +127,20 @@ def inet_open_active(style, target, default_port, dscp):
         sock.close()
         return get_exception_errno(e), None
 
+def inet_open_active_stream(target, default_port, dscp):
+    address = inet_parse_active(target, default_port)
+    try:
+        sock = socket.create_connection(address)
+    except socket.error, e:
+        return get_exception_errno(e), None
+
+    try:
+        set_nonblocking(sock)
+        set_dscp(sock, dscp)
+        return 0, sock
+    except socket.error, e:
+        sock.close()
+        return get_exception_errno(e), None
 
 def get_socket_error(sock):
     """Returns the errno value associated with 'socket' (0 if no error) and
