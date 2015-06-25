@@ -17,10 +17,14 @@
 
 import unittest
 import logging
-from nose.tools import *
 
-from ryu.app.wsgi import ControllerBase, WSGIApplication, route
+import nose
+from nose.tools import eq_
 from webob.response import Response
+
+from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import WSGIApplication
+from ryu.app.wsgi import route
 from ryu.lib import dpid as dpidlib
 
 LOG = logging.getLogger('test_wsgi')
@@ -61,7 +65,7 @@ class Test_wsgi(unittest.TestCase):
         r = self.wsgi_app({'REQUEST_METHOD': 'GET',
                            'PATH_INFO': '/test/0123456789abcdef'},
                           lambda s, _: eq_(s, '200 OK'))
-        eq_(r[0], ('0123456789abcdef'))
+        eq_(r[0], (b'0123456789abcdef'))
 
     def test_wsgi_decorator_ng_path(self):
         self.wsgi_app({'REQUEST_METHOD': 'GET',
@@ -93,4 +97,8 @@ class Test_wsgi(unittest.TestCase):
         r = self.wsgi_app({'REQUEST_METHOD': 'DELETE',
                            'PATH_INFO': '/test'},
                           lambda s, _: eq_(s, '200 OK'))
-        eq_(r[0], 'root')
+        eq_(r[0], b'root')
+
+
+if __name__ == '__main__':
+    nose.main(argv=['nosetests', '-s', '-v'], defaultTest=__file__)

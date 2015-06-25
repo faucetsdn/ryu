@@ -263,9 +263,13 @@ class WSGIApplication(object):
         return controller(req)
 
     def register(self, controller, data=None):
-        methods = inspect.getmembers(controller,
-                                     lambda v: inspect.ismethod(v) and
-                                     hasattr(v, 'routing_info'))
+        def _target_filter(attr):
+            if not inspect.ismethod(attr) and not inspect.isfunction(attr):
+                return False
+            if not hasattr(attr, 'routing_info'):
+                return False
+            return True
+        methods = inspect.getmembers(controller, _target_filter)
         for method_name, method in methods:
             routing_info = getattr(method, 'routing_info')
             name = routing_info['name']
