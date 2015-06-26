@@ -391,6 +391,7 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('pbb_uca', 41, type_desc.Int1),
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
 ]
 
 oxm_fields.generate(__name__)

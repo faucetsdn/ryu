@@ -582,6 +582,9 @@ NXM_NX_IP_ECN = nxm_header(0x0001, 28, 1)
 
 NXM_NX_IP_TTL = nxm_header(0x0001, 29, 1)
 
+NXM_NX_PKT_MARK = nxm_header(0x0001, 33, 4)
+NXM_NX_PKT_MARK_W = nxm_header_w(0x0001, 33, 4)
+
 
 def nxm_nx_reg(idx):
     return nxm_header(0x0001, idx, 4)

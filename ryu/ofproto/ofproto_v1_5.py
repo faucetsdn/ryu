@@ -434,6 +434,7 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('packet_type', 44, type_desc.Int4),
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
     oxm_fields.NiciraExtended1('conj_id', 37, type_desc.Int4),
 ]
 

@@ -90,6 +90,7 @@ class Flow(object):
         self.nw_frag = 0
         self.regs = [0] * FLOW_N_REGS
         self.ipv6_label = 0
+        self.pkt_mark = 0
 
 
 class FlowWildcards(object):
@@ -111,6 +112,7 @@ class FlowWildcards(object):
         self.regs_bits = 0
         self.regs_mask = [0] * FLOW_N_REGS
         self.wildcards = ofproto_v1_0.OFPFW_ALL
+        self.pkt_mark_mask = 0
 
 
 class ClsRule(object):
@@ -290,6 +292,10 @@ class ClsRule(object):
         self.wc.regs_mask[reg_idx] = mask
         self.flow.regs[reg_idx] = value
         self.wc.regs_bits |= (1 << reg_idx)
+
+    def set_pkt_mark_masked(self, pkt_mark, mask):
+        self.flow.pkt_mark = pkt_mark
+        self.wc.pkt_mark_mask = mask
 
     def flow_format(self):
         # Tunnel ID is only supported by NXM
@@ -914,6 +920,17 @@ class MFRegister(MFField):
                     return self._put(buf, offset, rule.flow.regs[i])
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_PKT_MARK, ofproto_v1_0.NXM_NX_PKT_MARK_W])
+class MFPktMark(MFField):
+    @classmethod
+    def make(cls, header):
+        return cls(header, MF_PACK_STRING_BE32)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.pkt_mark, rule.wc.pkt_mark_mask)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -1069,6 +1086,13 @@ def serialize_nxm_match(rule, buf, offset):
             header = ofproto_v1_0.NXM_NX_IP_FRAG
         else:
             header = ofproto_v1_0.NXM_NX_IP_FRAG_W
+        offset += nxm_put(buf, offset, header, rule)
+
+    if rule.flow.pkt_mark != 0:
+        if rule.wc.pkt_mark_mask == UINT32_MAX:
+            header = ofproto_v1_0.NXM_NX_PKT_MARK
+        else:
+            header = ofproto_v1_0.NXM_NX_PKT_MARK_W
         offset += nxm_put(buf, offset, header, rule)
 
     # Tunnel Id
