@@ -4986,7 +4986,7 @@ class OFPTableFeatureProp(StringifyMixin):
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length)
         pad_len = utils.round_up(self.length, 8) - self.length
-        return buf + bin_prop + pad_len * '\0'
+        return buf + bin_prop + pad_len * b'\0'
 
 
 class OFPTableFeaturePropUnknown(OFPTableFeatureProp):
