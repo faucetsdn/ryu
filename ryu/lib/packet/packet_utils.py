@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import array
+import six
 import socket
 import struct
 from ryu.lib import addrconv
@@ -28,7 +29,7 @@ def checksum(data):
     if len(data) % 2:
         data += b'\x00'
 
-    data = str(data)    # input can be bytearray.
+    data = six.binary_type(data)    # input can be bytearray.
     s = sum(array.array('H', data))
     s = (s & 0xffff) + (s >> 16)
     s += (s >> 16)
