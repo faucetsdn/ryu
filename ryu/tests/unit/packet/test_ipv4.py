@@ -17,6 +17,7 @@
 
 import unittest
 import logging
+import six
 import struct
 from struct import *
 from nose.tools import *
@@ -107,7 +108,7 @@ class Test_ipv4(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ip.serialize(bytearray(), None)
-        res = struct.unpack_from(ipv4._PACK_STR, str(buf))
+        res = struct.unpack_from(ipv4._PACK_STR, six.binary_type(buf))
         option = buf[ipv4._MIN_LEN:ipv4._MIN_LEN + len(self.option)]
 
         eq_(res[0], self.ver_hlen)

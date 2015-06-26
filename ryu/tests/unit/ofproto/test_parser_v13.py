@@ -17,6 +17,7 @@
 
 import unittest
 import logging
+import six
 import socket
 from struct import *
 from nose.tools import *
@@ -61,7 +62,7 @@ class TestOFPMatch(unittest.TestCase):
         if mask and len(buf) > calcsize(fmt):
             fmt += pack_str
 
-        res = list(unpack_from(fmt, str(buf), 0)[3:])
+        res = list(unpack_from(fmt, six.binary_type(buf), 0)[3:])
         if type(value) is list:
             res_value = res[:calcsize(pack_str) // 2]
             eq_(res_value, value)
@@ -79,7 +80,7 @@ class TestOFPMatch(unittest.TestCase):
                 eq_(res_mask, mask)
 
         # parser
-        res = match.parser(str(buf), 0)
+        res = match.parser(six.binary_type(buf), 0)
         eq_(res.type, ofproto.OFPMT_OXM)
         eq_(res.fields[0].header, header)
         eq_(res.fields[0].value, value)
@@ -93,7 +94,7 @@ class TestOFPMatch(unittest.TestCase):
         match2 = match.from_jsondict(jsondict["OFPMatch"])
         buf2 = bytearray()
         match2.serialize(buf2, 0)
-        eq_(str(match), str(match2))
+        eq_(six.binary_type(match), six.binary_type(match2))
         eq_(buf, buf2)
 
     # set_vlan_vid
@@ -121,12 +122,12 @@ class TestOFPMatch(unittest.TestCase):
         length = match.serialize(buf, 0)
         eq_(length, len(buf))
 
-        res = list(unpack_from(fmt, str(buf), 0)[3:])
+        res = list(unpack_from(fmt, six.binary_type(buf), 0)[3:])
         res_value = res.pop(0)
         eq_(res_value, value)
 
         # parser
-        res = match.parser(str(buf), 0)
+        res = match.parser(six.binary_type(buf), 0)
         eq_(res.type, ofproto.OFPMT_OXM)
         eq_(res.fields[0].header, header)
         eq_(res.fields[0].value, value)
@@ -138,7 +139,7 @@ class TestOFPMatch(unittest.TestCase):
         match2 = match.from_jsondict(jsondict["OFPMatch"])
         buf2 = bytearray()
         match2.serialize(buf2, 0)
-        eq_(str(match), str(match2))
+        eq_(six.binary_type(match), six.binary_type(match2))
         eq_(buf, buf2)
 
     def test_set_vlan_vid_mid(self):

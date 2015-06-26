@@ -138,7 +138,7 @@ class sctp(packet_base.PacketBase):
         if self.csum == 0:
             self.csum = self._checksum(buf)
             struct.pack_into('!I', buf, 8, self.csum)
-        return str(buf)
+        return six.binary_type(buf)
 
     def __len__(self):
         length = self._MIN_LEN

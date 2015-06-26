@@ -155,7 +155,7 @@ class Test_igmp(unittest.TestCase):
     def test_default_args(self):
         ig = igmp()
         buf = ig.serialize(bytearray(), None)
-        res = unpack_from(igmp._PACK_STR, str(buf))
+        res = unpack_from(igmp._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0x11)
         eq_(res[1], 0)
@@ -391,7 +391,7 @@ class Test_igmpv3_query(unittest.TestCase):
         g = igmpv3_query()
         prev.serialize(g, None)
         buf = g.serialize(bytearray(), prev)
-        res = unpack_from(igmpv3_query._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_query._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
         buf = str(buf)
@@ -410,10 +410,9 @@ class Test_igmpv3_query(unittest.TestCase):
         g = igmpv3_query(srcs=srcs)
         prev.serialize(g, None)
         buf = g.serialize(bytearray(), prev)
-        res = unpack_from(igmpv3_query._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_query._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
-        buf = str(buf)
 
         eq_(res[0], IGMP_TYPE_QUERY)
         eq_(res[1], 100)
@@ -423,7 +422,7 @@ class Test_igmpv3_query(unittest.TestCase):
         eq_(res[5], 0)
         eq_(res[6], len(srcs))
 
-        res = unpack_from('4s4s4s', str(buf), igmpv3_query._MIN_LEN)
+        res = unpack_from('4s4s4s', six.binary_type(buf), igmpv3_query._MIN_LEN)
 
         eq_(res[0], addrconv.ipv4.text_to_bin(srcs[0]))
         eq_(res[1], addrconv.ipv4.text_to_bin(srcs[1]))
@@ -496,7 +495,7 @@ class Test_igmpv3_report(unittest.TestCase):
         self.test_init()
 
     def test_parser(self):
-        _res = self.g.parser(str(self.buf))
+        _res = self.g.parser(six.binary_type(self.buf))
         if type(_res) is tuple:
             res = _res[0]
         else:
@@ -662,7 +661,7 @@ class Test_igmpv3_report(unittest.TestCase):
         g = igmpv3_report()
         prev.serialize(g, None)
         buf = g.serialize(bytearray(), prev)
-        res = unpack_from(igmpv3_report._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_report._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
         buf = str(buf)
@@ -687,7 +686,7 @@ class Test_igmpv3_report(unittest.TestCase):
         g = igmpv3_report(records=records)
         prev.serialize(g, None)
         buf = g.serialize(bytearray(), prev)
-        res = unpack_from(igmpv3_report._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_report._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
         buf = str(buf)
@@ -963,7 +962,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
     def test_default_args(self):
         rep = igmpv3_report_group()
         buf = rep.serialize()
-        res = unpack_from(igmpv3_report_group._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_report_group._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0)
         eq_(res[1], 0)
@@ -974,14 +973,15 @@ class Test_igmpv3_report_group(unittest.TestCase):
         srcs = ['192.168.1.1', '192.168.1.2', '192.168.1.3']
         rep = igmpv3_report_group(srcs=srcs)
         buf = rep.serialize()
-        res = unpack_from(igmpv3_report_group._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_report_group._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0)
         eq_(res[1], 0)
         eq_(res[2], len(srcs))
         eq_(res[3], addrconv.ipv4.text_to_bin('0.0.0.0'))
 
-        res = unpack_from('4s4s4s', str(buf), igmpv3_report_group._MIN_LEN)
+        res = unpack_from('4s4s4s', six.binary_type(buf),
+                          igmpv3_report_group._MIN_LEN)
 
         eq_(res[0], addrconv.ipv4.text_to_bin(srcs[0]))
         eq_(res[1], addrconv.ipv4.text_to_bin(srcs[1]))
@@ -991,7 +991,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
         aux = 'abcde'
         rep = igmpv3_report_group(aux=aux)
         buf = rep.serialize()
-        res = unpack_from(igmpv3_report_group._PACK_STR, str(buf))
+        res = unpack_from(igmpv3_report_group._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0)
         eq_(res[1], 2)

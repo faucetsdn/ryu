@@ -16,6 +16,7 @@
 
 import inspect
 import logging
+import six
 import struct
 import unittest
 from nose.tools import eq_
@@ -104,7 +105,7 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(str(self.options), str(self.dh.options))
 
     def test_parser(self):
-        _res = self.dh.parser(str(self.buf))
+        _res = self.dh.parser(self.buf)
         if type(_res) is tuple:
             res = _res[0]
         else:
@@ -137,7 +138,7 @@ class Test_dhcp_offer(unittest.TestCase):
         prev = None
         buf = self.dh.serialize(data, prev)
 
-        res = struct.unpack_from(dhcp.dhcp._DHCP_PACK_STR, str(buf))
+        res = struct.unpack_from(dhcp.dhcp._DHCP_PACK_STR, six.binary_type(buf))
 
         eq_(self.op, res[0])
         eq_(self.htype, res[1])

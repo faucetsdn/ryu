@@ -1535,7 +1535,7 @@ class OFPActionSetField(OFPAction):
             # serialize and parse to fill new fields
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(str(buf), 0)
+            o = OFPActionSetField.parser(six.binary_type(buf), 0)
         else:
             o = self
         return {
@@ -1553,7 +1553,7 @@ class OFPActionSetField(OFPAction):
         # serialize and parse to fill old attributes
         buf = bytearray()
         o.serialize(buf, 0)
-        return OFPActionSetField.parser(str(buf), 0)
+        return OFPActionSetField.parser(six.binary_type(buf), 0)
 
     # XXX old api compat
     def __str__(self):
@@ -1564,7 +1564,7 @@ class OFPActionSetField(OFPAction):
             # serialize and parse to fill new fields
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(str(buf), 0)
+            o = OFPActionSetField.parser(six.binary_type(buf), 0)
         else:
             o = self
         return super(OFPActionSetField, o).__str__()
@@ -3433,7 +3433,7 @@ class OFPMatch(StringifyMixin):
             # serialize and parse to fill OFPMatch._fields2
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPMatch.parser(str(buf), 0)
+            o = OFPMatch.parser(six.binary_type(buf), 0)
         else:
             o = self
 
@@ -3458,7 +3458,7 @@ class OFPMatch(StringifyMixin):
         # serialize and parse to fill OFPMatch.fields
         buf = bytearray()
         o.serialize(buf, 0)
-        return OFPMatch.parser(str(buf), 0)
+        return OFPMatch.parser(six.binary_type(buf), 0)
 
     def __str__(self):
         # XXX old api compat
@@ -3469,7 +3469,7 @@ class OFPMatch(StringifyMixin):
             # serialize and parse to fill OFPMatch._fields2
             buf = bytearray()
             o2.serialize(buf, 0)
-            o = OFPMatch.parser(str(buf), 0)
+            o = OFPMatch.parser(six.binary_type(buf), 0)
         else:
             o = self
         return super(OFPMatch, o).__str__()

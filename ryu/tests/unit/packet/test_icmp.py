@@ -129,7 +129,7 @@ class Test_icmp(unittest.TestCase):
         self.test_init()
 
     def test_parser(self):
-        _res = icmp.icmp.parser(str(self.buf))
+        _res = icmp.icmp.parser(six.binary_type(self.buf))
         if type(_res) is tuple:
             res = _res[0]
         else:
@@ -157,7 +157,7 @@ class Test_icmp(unittest.TestCase):
         prev = None
         buf = self.ic.serialize(data, prev)
 
-        res = struct.unpack_from(icmp.icmp._PACK_STR, str(buf))
+        res = struct.unpack_from(icmp.icmp._PACK_STR, six.binary_type(buf))
 
         eq_(self.type_, res[0])
         eq_(self.code, res[1])
@@ -170,7 +170,7 @@ class Test_icmp(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ic.serialize(data, prev)
-        echo = icmp.echo.parser(str(buf), icmp.icmp._MIN_LEN)
+        echo = icmp.echo.parser(six.binary_type(buf), icmp.icmp._MIN_LEN)
         eq_(repr(self.data), repr(echo))
 
     def test_serialize_with_dest_unreach(self):
@@ -180,7 +180,7 @@ class Test_icmp(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ic.serialize(data, prev)
-        unreach = icmp.dest_unreach.parser(str(buf), icmp.icmp._MIN_LEN)
+        unreach = icmp.dest_unreach.parser(six.binary_type(buf), icmp.icmp._MIN_LEN)
         eq_(repr(self.data), repr(unreach))
 
     def test_serialize_with_TimeExceeded(self):
@@ -190,7 +190,7 @@ class Test_icmp(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ic.serialize(data, prev)
-        te = icmp.TimeExceeded.parser(str(buf), icmp.icmp._MIN_LEN)
+        te = icmp.TimeExceeded.parser(six.binary_type(buf), icmp.icmp._MIN_LEN)
         eq_(repr(self.data), repr(te))
 
     def test_to_string(self):
@@ -221,7 +221,7 @@ class Test_icmp(unittest.TestCase):
     def test_default_args(self):
         ic = icmp.icmp()
         buf = ic.serialize(bytearray(), None)
-        res = struct.unpack(icmp.icmp._PACK_STR, str(buf[:4]))
+        res = struct.unpack(icmp.icmp._PACK_STR, six.binary_type(buf[:4]))
 
         eq_(res[0], 8)
         eq_(res[1], 0)
@@ -230,7 +230,7 @@ class Test_icmp(unittest.TestCase):
         # with data
         ic = icmp.icmp(type_=icmp.ICMP_DEST_UNREACH, data=icmp.dest_unreach())
         buf = ic.serialize(bytearray(), None)
-        res = struct.unpack(icmp.icmp._PACK_STR, str(buf[:4]))
+        res = struct.unpack(icmp.icmp._PACK_STR, six.binary_type(buf[:4]))
 
         eq_(res[0], 3)
         eq_(res[1], 0)
@@ -287,7 +287,7 @@ class Test_echo(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.echo.serialize()
-        res = struct.unpack_from('!HH', str(buf))
+        res = struct.unpack_from('!HH', six.binary_type(buf))
         eq_(self.id_, res[0])
         eq_(self.seq, res[1])
         eq_(self.data, buf[struct.calcsize('!HH'):])
@@ -295,7 +295,7 @@ class Test_echo(unittest.TestCase):
     def test_default_args(self):
         ec = icmp.echo()
         buf = ec.serialize()
-        res = struct.unpack(icmp.echo._PACK_STR, str(buf))
+        res = struct.unpack(icmp.echo._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0)
         eq_(res[1], 0)
@@ -329,7 +329,7 @@ class Test_dest_unreach(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.dest_unreach.serialize()
-        res = struct.unpack_from('!xBH', str(buf))
+        res = struct.unpack_from('!xBH', six.binary_type(buf))
         eq_(self.data_len, res[0])
         eq_(self.mtu, res[1])
         eq_(self.data, buf[struct.calcsize('!xBH'):])
@@ -337,7 +337,7 @@ class Test_dest_unreach(unittest.TestCase):
     def test_default_args(self):
         du = icmp.dest_unreach()
         buf = du.serialize()
-        res = struct.unpack(icmp.dest_unreach._PACK_STR, str(buf))
+        res = struct.unpack(icmp.dest_unreach._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0)
         eq_(res[1], 0)
@@ -368,13 +368,13 @@ class Test_TimeExceeded(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.te.serialize()
-        res = struct.unpack_from('!xBxx', str(buf))
+        res = struct.unpack_from('!xBxx', six.binary_type(buf))
         eq_(self.data_len, res[0])
         eq_(self.data, buf[struct.calcsize('!xBxx'):])
 
     def test_default_args(self):
         te = icmp.TimeExceeded()
         buf = te.serialize()
-        res = struct.unpack(icmp.TimeExceeded._PACK_STR, str(buf))
+        res = struct.unpack(icmp.TimeExceeded._PACK_STR, six.binary_type(buf))
 
         eq_(res[0], 0)

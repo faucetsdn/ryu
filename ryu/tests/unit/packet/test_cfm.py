@@ -17,6 +17,7 @@
 import unittest
 import logging
 import inspect
+import six
 import struct
 
 from nose.tools import *
@@ -227,7 +228,7 @@ class Test_cfm(unittest.TestCase):
         self.test_init()
 
     def test_parser(self):
-        _res = self.ins.parser(str(self.buf))
+        _res = self.ins.parser(six.binary_type(self.buf))
 
         if type(_res) is tuple:
             res = _res[0]
@@ -264,7 +265,7 @@ class Test_cfm(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ins.serialize(data, prev)
-        cc_message = cfm.cc_message.parser(str(buf))
+        cc_message = cfm.cc_message.parser(six.binary_type(buf))
         eq_(repr(self.message), repr(cc_message))
 
     def test_serialize_with_loopback_message(self):
@@ -273,7 +274,7 @@ class Test_cfm(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ins.serialize(data, prev)
-        loopback_message = cfm.loopback_message.parser(str(buf))
+        loopback_message = cfm.loopback_message.parser(six.binary_type(buf))
         eq_(repr(self.message), repr(loopback_message))
 
     def test_serialize_with_loopback_reply(self):
@@ -282,7 +283,7 @@ class Test_cfm(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ins.serialize(data, prev)
-        loopback_reply = cfm.loopback_reply.parser(str(buf))
+        loopback_reply = cfm.loopback_reply.parser(six.binary_type(buf))
         eq_(repr(self.message), repr(loopback_reply))
 
     def test_serialize_with_link_trace_message(self):
@@ -291,7 +292,7 @@ class Test_cfm(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ins.serialize(data, prev)
-        link_trace_message = cfm.link_trace_message.parser(str(buf))
+        link_trace_message = cfm.link_trace_message.parser(six.binary_type(buf))
         eq_(repr(self.message), repr(link_trace_message))
 
     def test_serialize_with_link_trace_reply(self):
@@ -300,7 +301,7 @@ class Test_cfm(unittest.TestCase):
         data = bytearray()
         prev = None
         buf = self.ins.serialize(data, prev)
-        link_trace_reply = cfm.link_trace_reply.parser(str(buf))
+        link_trace_reply = cfm.link_trace_reply.parser(six.binary_type(buf))
         eq_(repr(self.message), repr(link_trace_reply))
 
     def test_to_string(self):
@@ -511,7 +512,7 @@ class Test_cc_message(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -545,7 +546,7 @@ class Test_cc_message(unittest.TestCase):
             self.tlvs
         )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -580,7 +581,7 @@ class Test_cc_message(unittest.TestCase):
             self.tlvs
         )
         buf = ins.serialize()
-        res = struct.unpack_from(form, str(buf))
+        res = struct.unpack_from(form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -602,7 +603,7 @@ class Test_cc_message(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.cc_message()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.cc_message._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.cc_message._PACK_STR, six.binary_type(buf))
         eq_(res[0] >> 5, 0)
         eq_(res[0] & 0x1f, 0)
         eq_(res[1], 1)
@@ -666,7 +667,7 @@ class Test_loopback_message(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -683,7 +684,7 @@ class Test_loopback_message(unittest.TestCase):
         ins = cfm.loopback_message()
         buf = ins.serialize()
         res = struct.unpack_from(cfm.loopback_message._PACK_STR,
-                                 str(buf))
+                                 six.binary_type(buf))
         eq_(res[0] >> 5, 0)
         eq_(res[0] & 0x1f, 0)
         eq_(res[1], 3)
@@ -743,7 +744,7 @@ class Test_loopback_reply(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -759,7 +760,7 @@ class Test_loopback_reply(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.loopback_reply()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.loopback_reply._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.loopback_reply._PACK_STR, six.binary_type(buf))
         eq_(res[0] >> 5, 0)
         eq_(res[0] & 0x1f, 0)
         eq_(res[1], 2)
@@ -838,7 +839,7 @@ class Test_link_trace_message(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -857,7 +858,7 @@ class Test_link_trace_message(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.link_trace_message()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.link_trace_message._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.link_trace_message._PACK_STR, six.binary_type(buf))
         eq_(res[0] >> 5, 0)
         eq_(res[0] & 0x1f, 0)
         eq_(res[1], 5)
@@ -944,7 +945,7 @@ class Test_link_trace_reply(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self.md_lv, res[0] >> 5)
         eq_(self.version, res[0] & 0x1f)
         eq_(self.opcode, res[1])
@@ -964,7 +965,7 @@ class Test_link_trace_reply(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.link_trace_reply()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.link_trace_reply._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.link_trace_reply._PACK_STR, six.binary_type(buf))
         eq_(res[0] >> 5, 0)
         eq_(res[0] & 0x1f, 0)
         eq_(res[1], 4)
@@ -1043,7 +1044,7 @@ class Test_sender_id_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.chassis_id_length, res[2])
@@ -1062,7 +1063,7 @@ class Test_sender_id_tlv(unittest.TestCase):
         )
         buf = ins.serialize()
         form = '!BHBB1sB2sB'
-        res = struct.unpack_from(form, str(buf))
+        res = struct.unpack_from(form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(7, res[1])
         eq_(self.chassis_id_length, res[2])
@@ -1079,7 +1080,7 @@ class Test_sender_id_tlv(unittest.TestCase):
         )
         buf = ins.serialize()
         form = '!BHBB2sB3s'
-        res = struct.unpack_from(form, str(buf))
+        res = struct.unpack_from(form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(8, res[1])
         eq_(0, res[2])
@@ -1095,7 +1096,7 @@ class Test_sender_id_tlv(unittest.TestCase):
         )
         buf = ins.serialize()
         form = '!BHBB1sB'
-        res = struct.unpack_from(form, str(buf))
+        res = struct.unpack_from(form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(4, res[1])
         eq_(self.chassis_id_length, res[2])
@@ -1109,7 +1110,7 @@ class Test_sender_id_tlv(unittest.TestCase):
         )
         buf = ins.serialize()
         form = '!BHBB2sB'
-        res = struct.unpack_from(form, str(buf))
+        res = struct.unpack_from(form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(5, res[1])
         eq_(0, res[2])
@@ -1129,7 +1130,7 @@ class Test_sender_id_tlv(unittest.TestCase):
             self.ma,
         )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.chassis_id_length, res[2])
@@ -1147,7 +1148,7 @@ class Test_sender_id_tlv(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.sender_id_tlv()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.sender_id_tlv._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.sender_id_tlv._PACK_STR, six.binary_type(buf))
         eq_(res[0], cfm.CFM_SENDER_ID_TLV)
         eq_(res[1], 1)
         eq_(res[2], 0)
@@ -1189,7 +1190,7 @@ class Test_port_status_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.port_status, res[2])
@@ -1201,7 +1202,7 @@ class Test_port_status_tlv(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.port_status_tlv()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.port_status_tlv._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.port_status_tlv._PACK_STR, six.binary_type(buf))
         eq_(res[0], cfm.CFM_PORT_STATUS_TLV)
         eq_(res[1], 1)
         eq_(res[2], 2)
@@ -1243,7 +1244,7 @@ class Test_data_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.data_value, res[2])
@@ -1254,7 +1255,7 @@ class Test_data_tlv(unittest.TestCase):
             self.data_value
         )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.data_value, res[2])
@@ -1266,7 +1267,7 @@ class Test_data_tlv(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.data_tlv()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.data_tlv._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.data_tlv._PACK_STR, six.binary_type(buf))
         eq_(res[0], cfm.CFM_DATA_TLV)
         eq_(res[1], 0)
 
@@ -1307,7 +1308,7 @@ class Test_interface_status_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.interface_status, res[2])
@@ -1319,7 +1320,7 @@ class Test_interface_status_tlv(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.interface_status_tlv()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.interface_status_tlv._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.interface_status_tlv._PACK_STR, six.binary_type(buf))
         eq_(res[0], cfm.CFM_INTERFACE_STATUS_TLV)
         eq_(res[1], 1)
         eq_(res[2], 1)
@@ -1366,7 +1367,7 @@ class Test_ltm_egress_identifier_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.egress_id_ui, res[2])
@@ -1379,7 +1380,7 @@ class Test_ltm_egress_identifier_tlv(unittest.TestCase):
             self.egress_id_mac
         )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.egress_id_ui, res[2])
@@ -1393,7 +1394,7 @@ class Test_ltm_egress_identifier_tlv(unittest.TestCase):
         ins = cfm.ltm_egress_identifier_tlv()
         buf = ins.serialize()
         res = struct.unpack_from(
-            cfm.ltm_egress_identifier_tlv._PACK_STR, str(buf))
+            cfm.ltm_egress_identifier_tlv._PACK_STR, six.binary_type(buf))
         eq_(res[0], cfm.CFM_LTM_EGRESS_IDENTIFIER_TLV)
         eq_(res[1], 8)
         eq_(res[2], 0)
@@ -1449,7 +1450,7 @@ class Test_ltr_egress_identifier_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.last_egress_id_ui, res[2])
@@ -1465,7 +1466,7 @@ class Test_ltr_egress_identifier_tlv(unittest.TestCase):
                                             self.next_egress_id_mac
                                             )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.last_egress_id_ui, res[2])
@@ -1481,7 +1482,7 @@ class Test_ltr_egress_identifier_tlv(unittest.TestCase):
         ins = cfm.ltr_egress_identifier_tlv()
         buf = ins.serialize()
         res = struct.unpack_from(cfm.ltr_egress_identifier_tlv._PACK_STR,
-                                 str(buf))
+                                 six.binary_type(buf))
         eq_(res[0], cfm.CFM_LTR_EGRESS_IDENTIFIER_TLV)
         eq_(res[1], 16)
         eq_(res[2], 0)
@@ -1534,7 +1535,7 @@ class Test_organization_specific_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.oui, res[2])
@@ -1548,7 +1549,7 @@ class Test_organization_specific_tlv(unittest.TestCase):
                                             self.value
                                             )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.oui, res[2])
@@ -1563,7 +1564,7 @@ class Test_organization_specific_tlv(unittest.TestCase):
         ins = cfm.organization_specific_tlv()
         buf = ins.serialize()
         res = struct.unpack_from(cfm.organization_specific_tlv._PACK_STR,
-                                 str(buf))
+                                 six.binary_type(buf))
         eq_(res[0], cfm.CFM_ORGANIZATION_SPECIFIC_TLV)
         eq_(res[1], 4)
         eq_(res[2], b"\x00\x00\x00")
@@ -1623,7 +1624,7 @@ class Test_reply_ingress_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.action, res[2])
@@ -1641,7 +1642,7 @@ class Test_reply_ingress_tlv(unittest.TestCase):
                                     self.port_id
                                     )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.action, res[2])
@@ -1657,7 +1658,7 @@ class Test_reply_ingress_tlv(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.reply_ingress_tlv()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.reply_ingress_tlv._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.reply_ingress_tlv._PACK_STR, six.binary_type(buf))
         eq_(res[0], cfm.CFM_REPLY_INGRESS_TLV)
         eq_(res[1], 7)
         eq_(res[2], 1)
@@ -1718,7 +1719,7 @@ class Test_reply_egress_tlv(unittest.TestCase):
 
     def test_serialize(self):
         buf = self.ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.action, res[2])
@@ -1736,7 +1737,7 @@ class Test_reply_egress_tlv(unittest.TestCase):
                                    self.port_id
                                    )
         buf = ins.serialize()
-        res = struct.unpack_from(self.form, str(buf))
+        res = struct.unpack_from(self.form, six.binary_type(buf))
         eq_(self._type, res[0])
         eq_(self.length, res[1])
         eq_(self.action, res[2])
@@ -1752,7 +1753,8 @@ class Test_reply_egress_tlv(unittest.TestCase):
     def test_default_args(self):
         ins = cfm.reply_egress_tlv()
         buf = ins.serialize()
-        res = struct.unpack_from(cfm.reply_egress_tlv._PACK_STR, str(buf))
+        res = struct.unpack_from(cfm.reply_egress_tlv._PACK_STR,
+                                 six.binary_type(buf))
         eq_(res[0], cfm.CFM_REPLY_EGRESS_TLV)
         eq_(res[1], 7)
         eq_(res[2], 1)
