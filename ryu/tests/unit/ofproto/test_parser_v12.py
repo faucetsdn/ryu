@@ -2089,7 +2089,7 @@ class TestOFPPacketIn(unittest.TestCase):
         buf_match = bytearray()
         match = OFPMatch()
         match.serialize(buf_match, 0)
-        buf += str(buf_match)
+        buf += six.binary_type(buf_match)
 
         # data
         buf += b'\x00' * 2
@@ -2199,7 +2199,7 @@ class TestOFPFlowRemoved(unittest.TestCase):
         buf_match = bytearray()
         match.serialize(buf_match, 0)
 
-        buf += str(buf_match)
+        buf += six.binary_type(buf_match)
 
         res = OFPFlowRemoved.parser(object, version, msg_type,
                                     msg_len, xid, buf)
@@ -2962,7 +2962,7 @@ class TestOFPInstructionActions(unittest.TestCase):
             actions.append(action)
             buf_actions = bytearray()
             actions[a].serialize(buf_actions, 0)
-            buf += str(buf_actions)
+            buf += six.binary_type(buf_actions)
 
         res = OFPInstructionActions.parser(buf, 0)
 
@@ -4692,7 +4692,7 @@ class TestOFPFlowStats(unittest.TestCase):
         match.set_dl_type(dl_type)
         match_buf = bytearray()
         match.serialize(match_buf, 0)
-        buf += str(match_buf)
+        buf += six.binary_type(match_buf)
 
         # instructions
         # 56 + 8 + 8 * inst_cnt <= 65535
@@ -4701,7 +4701,7 @@ class TestOFPFlowStats(unittest.TestCase):
             inst = OFPInstructionGotoTable(1)
             inst_buf = bytearray()
             inst.serialize(inst_buf, 0)
-            buf += str(inst_buf)
+            buf += six.binary_type(inst_buf)
 
         # parse
         res = OFPFlowStats.parser(buf, 0)
@@ -5943,7 +5943,7 @@ class TestOFPGroupDescStats(unittest.TestCase):
             buckets.append(bucket)
             buf_buckets = bytearray()
             buckets[b].serialize(buf_buckets, 0)
-            buf += str(buf_buckets)
+            buf += six.binary_type(buf_buckets)
 
         res = OFPGroupDescStats.parser(buf, 0)
 
@@ -6655,7 +6655,7 @@ class TestOFPMatch(unittest.TestCase):
                 eq_(res_mask, mask)
 
         # parser
-        res = match.parser(str(buf), 0)
+        res = match.parser(six.binary_type(buf), 0)
         eq_(res.type, ofproto.OFPMT_OXM)
         eq_(res.fields[0].header, header)
         eq_(res.fields[0].value, value)
@@ -6681,7 +6681,7 @@ class TestOFPMatch(unittest.TestCase):
         pack_utils.msg_pack_into('!IH', buf, 10, header, 1)
 
         match = OFPMatch()
-        res = match.parser(str(buf), 0)
+        res = match.parser(six.binary_type(buf), 0)
 
     # set_in_port
     def _test_set_in_port(self, in_port):
@@ -6872,7 +6872,7 @@ class TestOFPMatch(unittest.TestCase):
         eq_(res_value, value)
 
         # parser
-        res = match.parser(str(buf), 0)
+        res = match.parser(six.binary_type(buf), 0)
         eq_(res.type, ofproto.OFPMT_OXM)
         eq_(res.fields[0].header, header)
         eq_(res.fields[0].value, value)
