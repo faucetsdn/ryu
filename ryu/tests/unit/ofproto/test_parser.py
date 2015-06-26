@@ -204,7 +204,7 @@ class Test_Parser(unittest.TestCase):
             def _remove(d, names):
                 f = lambda x: _remove(x, names)
                 if isinstance(d, list):
-                    return map(f, d)
+                    return list(map(f, d))
                 if isinstance(d, dict):
                     d2 = {}
                     for k, v in d.items():

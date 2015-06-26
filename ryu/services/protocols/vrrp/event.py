@@ -156,7 +156,7 @@ class VRRPConfig(object):
 
     def __hash__(self):
         hash((self.version, self.vrid, self.priority,
-              map(vrrp.ip_text_to_bin, self.ip_addresses),
+              list(map(vrrp.ip_text_to_bin, self.ip_addresses)),
               self.advertisement_interval, self.preempt_mode,
               self.preempt_delay, self.accept_mode, self.is_ipv6))
 

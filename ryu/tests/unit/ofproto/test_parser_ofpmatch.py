@@ -211,7 +211,7 @@ def _add_tests():
                     l = itertools.product(l, cls.generate())
                     keys.append(k)
                     clss.append(cls)
-                l = map(lambda x: flatten(x)[1:], l)
+                l = [flatten(x)[1:] for x in l]
                 for domask in [True, False]:
                     for values in l:
                         if domask:

@@ -808,10 +808,10 @@ class _LabelledAddrPrefix(_AddrPrefix):
     def _to_bin(cls, addr):
         labels = addr[0]
         rest = addr[1:]
-        labels = map(lambda x: x << 4, labels)
+        labels = [x << 4 for x in labels]
         if labels:
             labels[-1] |= 1  # bottom of stack
-        bin_labels = map(cls._label_to_bin, labels)
+        bin_labels = list(map(cls._label_to_bin, labels))
         return bytes(reduce(lambda x, y: x + y, bin_labels,
                             bytearray()) + cls._prefix_to_bin(rest))
 

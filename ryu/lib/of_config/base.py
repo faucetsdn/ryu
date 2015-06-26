@@ -92,7 +92,7 @@ class _Base(stringify.StringifyMixin):
                 continue
             if isinstance(v, list):
                 assert e.is_list
-                ele = map(convert, v)
+                ele = list(map(convert, v))
             else:
                 assert not e.is_list
                 ele = [convert(v)]
@@ -128,7 +128,7 @@ class _Base(stringify.StringifyMixin):
                     v = [v]
             else:
                 assert e.is_list
-                v = map(convert, v)
+                v = list(map(convert, v))
             k = _pythonify(e.name)
             assert k not in kwargs
             kwargs[k] = v

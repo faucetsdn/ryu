@@ -31,7 +31,7 @@ def is_valid_ipv4(ipv4):
         valid = False
     else:
         try:
-            a, b, c, d = map(lambda x: int(x), ipv4.split('.'))
+            a, b, c, d = [int(x) for x in ipv4.split('.')]
             if (a < 0 or a > 255 or b < 0 or b > 255 or c < 0 or c > 255 or
                     d < 0 or d > 255):
                 valid = False

@@ -169,7 +169,7 @@ def _add_tests():
                     l = itertools.product(l, cls.generate())
                     keys.append(k)
                     clss.append(cls)
-                l = map(lambda x: flatten(x)[1:], l)
+                l = [flatten(x)[1:] for x in l]
                 for values in l:
                     d = dict(zip(keys, values))
                     for n, uv in d.items():

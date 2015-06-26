@@ -3655,7 +3655,7 @@ class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
         desc = struct.unpack_from(ofproto.OFP_DESC_PACK_STR,
                                   buf, offset)
         desc = list(desc)
-        desc = map(lambda x: x.rstrip('\0'), desc)
+        desc = [x.rstrip('\0') for x in desc]
         stats = cls(*desc)
         stats.length = ofproto.OFP_DESC_SIZE
         return stats

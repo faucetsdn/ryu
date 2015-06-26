@@ -143,7 +143,7 @@ class OperatorListView(OperatorAbstractView):
     def combine_related(self, field_name):
         f = self._fields[field_name]
         return CombinedViewsWrapper(RdyToFlattenList(
-            map(lambda obj: f.retrieve_and_wrap(obj), self.model)
+            [f.retrieve_and_wrap(obj) for obj in self.model]
         ))
 
     def get_field(self, field_name):
@@ -175,7 +175,7 @@ class OperatorDictView(OperatorAbstractView):
     def combine_related(self, field_name):
         f = self._fields[field_name]
         return CombinedViewsWrapper(RdyToFlattenList(
-            map(lambda obj: f.retrieve_and_wrap(obj), self.model.values()))
+            [f.retrieve_and_wrap(obj) for obj in self.model.values()])
         )
 
     def get_field(self, field_name):

@@ -380,8 +380,7 @@ class AppManager(object):
         while len(app_lists) > 0:
             app_cls_name = app_lists.pop(0)
 
-            context_modules = map(lambda x: x.__module__,
-                                  self.contexts_cls.values())
+            context_modules = [x.__module__ for x in self.contexts_cls.values()]
             if app_cls_name in context_modules:
                 continue
 

@@ -190,7 +190,7 @@ class StringifyMixin(object):
             if isinstance(v, (bytes, six.text_type)):
                 json_value = encode_string(v)
             elif isinstance(v, list):
-                json_value = map(_encode, v)
+                json_value = list(map(_encode, v))
             elif isinstance(v, dict):
                 json_value = _mapdict(_encode, v)
                 # while a python dict key can be any hashable object,
@@ -272,7 +272,7 @@ class StringifyMixin(object):
             if isinstance(json_value, (bytes, six.text_type)):
                 v = decode_string(json_value)
             elif isinstance(json_value, list):
-                v = map(_decode, json_value)
+                v = list(map(_decode, json_value))
             elif isinstance(json_value, dict):
                 if cls._is_class(json_value):
                     v = cls.obj_from_jsondict(json_value, **additional_args)
