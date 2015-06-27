@@ -20,6 +20,7 @@ Decoder/Encoder implementations of OpenFlow 1.0.
 
 import struct
 import binascii
+import six
 
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
 from ryu.lib import addrconv
@@ -1877,7 +1878,7 @@ class OFPStatsReply(MsgBase):
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         type_, flags = struct.unpack_from(ofproto.OFP_STATS_MSG_PACK_STR,
-                                          buffer(buf),
+                                          six.binary_type(buf),
                                           ofproto.OFP_HEADER_SIZE)
         stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
         msg = stats_type_cls.parser_stats(
@@ -1956,7 +1957,7 @@ class OFPVendorStatsReply(OFPStatsReply):
     def parser_stats(cls, datapath, version, msg_type, msg_len, xid,
                      buf):
         (type_,) = struct.unpack_from(
-            ofproto.OFP_VENDOR_STATS_MSG_PACK_STR, buffer(buf),
+            ofproto.OFP_VENDOR_STATS_MSG_PACK_STR, six.binary_type(buf),
             ofproto.OFP_STATS_MSG_SIZE)
 
         cls_ = cls._STATS_VENDORS.get(type_)
@@ -2017,7 +2018,7 @@ class NXStatsReply(OFPStatsReply):
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf,
                offset):
         (type_,) = struct.unpack_from(
-            ofproto.NX_STATS_MSG_PACK_STR, buffer(buf), offset)
+            ofproto.NX_STATS_MSG_PACK_STR, six.binary_type(buf), offset)
         offset += ofproto.NX_STATS_MSG0_SIZE
 
         cls_ = cls._NX_STATS_TYPES.get(type_)

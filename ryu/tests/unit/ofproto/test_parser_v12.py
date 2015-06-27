@@ -137,7 +137,7 @@ class TestOFPHello(unittest.TestCase):
         eq_(msg_type, res.msg_type)
         eq_(msg_len, res.msg_len)
         eq_(xid, res.xid)
-        eq_(buffer(buf), res.buf)
+        eq_(six.binary_type(buf), six.binary_type(res.buf))
 
     def test_parser_xid_min(self):
         xid = 0
@@ -2819,7 +2819,7 @@ class TestOFPInstructionGotoTable(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], table_id)
@@ -2892,7 +2892,7 @@ class TestOFPInstructionWriteMetadata(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], metadata)
@@ -3010,7 +3010,7 @@ class TestOFPInstructionActions(unittest.TestCase):
 
         for a in range(action_cnt):
             fmt += ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(res[0], self.type_)
         eq_(res[1], len_)
@@ -3063,7 +3063,7 @@ class TestOFPActionHeader(unittest.TestCase):
         c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(res[0], type_)
         eq_(res[1], len_)
@@ -3141,7 +3141,7 @@ class TestOFPActionOutput(unittest.TestCase):
         c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_OUTPUT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], port)
@@ -3207,7 +3207,7 @@ class TestOFPActionGroup(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], group_id)
@@ -3261,7 +3261,7 @@ class TestOFPActionSetQueue(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], queue_id)
@@ -3315,7 +3315,7 @@ class TestOFPActionSetMplsTtl(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], mpls_ttl)
@@ -3350,7 +3350,7 @@ class TestOFPActionDecMplsTtl(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
 
@@ -3394,7 +3394,7 @@ class TestOFPActionSetNwTtl(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], nw_ttl)
@@ -3429,7 +3429,7 @@ class TestOFPActionDecNwTtl(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
 
@@ -3453,7 +3453,7 @@ class TestOFPActionCopyTtlOut(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
 
@@ -3480,7 +3480,7 @@ class TestOFPActionCopyTtlIn(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
 
@@ -3522,7 +3522,7 @@ class TestOFPActionPushVlan(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], ethertype)
@@ -3574,7 +3574,7 @@ class TestOFPActionPushMpls(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], ethertype)
@@ -3610,7 +3610,7 @@ class TestOFPActionPopVlan(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
 
@@ -3652,7 +3652,7 @@ class TestOFPActionPopMpls(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], ethertype)
@@ -3699,7 +3699,7 @@ class TestOFPActionSetField(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
 
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
@@ -3748,7 +3748,7 @@ class TestOFPActionExperimenter(unittest.TestCase):
         buf = bytearray()
         c.serialize(buf, 0)
 
-        res = struct.unpack(self.fmt, buffer(buf))
+        res = struct.unpack(self.fmt, six.binary_type(buf))
         eq_(res[0], self.type_)
         eq_(res[1], self.len_)
         eq_(res[2], experimenter)
@@ -3872,7 +3872,7 @@ class TestOFPBucket(unittest.TestCase):
         fmt = ofproto.OFP_BUCKET_PACK_STR
         for a in range(action_cnt):
             fmt += ofproto.OFP_ACTION_OUTPUT_PACK_STR[1:]
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(res[0], len_)
         eq_(res[1], weight)
@@ -6178,7 +6178,7 @@ class TestOFPQueuePropHeader(unittest.TestCase):
         c.serialize(buf, 0)
 
         fmt = ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(res[0], property_)
         eq_(res[1], len_)

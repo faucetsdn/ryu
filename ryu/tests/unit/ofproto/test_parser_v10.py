@@ -204,7 +204,7 @@ class TestOFPMatch(unittest.TestCase):
         c.serialize(buf, 0)
 
         fmt = ofproto.OFP_MATCH_PACK_STR
-        res = struct.unpack_from(fmt, buffer(buf))
+        res = struct.unpack_from(fmt, six.binary_type(buf))
 
         eq_(self.wildcards['val'], res[0])
         eq_(self.in_port['val'], res[1])
@@ -252,7 +252,7 @@ class TestOFPActionHeader(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type['val'], res[0])
         eq_(self.len['val'], res[1])
@@ -319,7 +319,7 @@ class TestOFPActionOutput(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_OUTPUT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -386,7 +386,7 @@ class TestOFPActionVlanVid(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_VLAN_VID_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -451,7 +451,7 @@ class TestOFPActionVlanPcp(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_VLAN_PCP_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -574,7 +574,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_DL_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -648,7 +648,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_DL_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -719,7 +719,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_NW_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -790,7 +790,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_NW_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -855,7 +855,7 @@ class TestOFPActionSetNwTos(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_NW_TOS_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -931,7 +931,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_TP_PORT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1007,7 +1007,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_TP_PORT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1079,7 +1079,7 @@ class TestOFPActionEnqueue(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.OFP_ACTION_ENQUEUE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1134,7 +1134,7 @@ class TestNXActionResubmit(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_RESUBMIT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1191,7 +1191,7 @@ class TestNXActionResubmitTable(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_RESUBMIT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1244,7 +1244,7 @@ class TestNXActionSetTunnel(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_SET_TUNNEL_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1298,7 +1298,7 @@ class TestNXActionSetQueue(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_SET_QUEUE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1352,7 +1352,7 @@ class TestNXActionPopQueue(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_POP_QUEUE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1424,7 +1424,7 @@ class TestNXActionRegMove(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_REG_MOVE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1492,7 +1492,7 @@ class TestNXActionRegLoad(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_REG_LOAD_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1549,7 +1549,7 @@ class TestNXActionSetTunnel64(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_SET_TUNNEL64_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1633,7 +1633,7 @@ class TestNXActionMultipath(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_MULTIPATH_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1752,7 +1752,7 @@ class TestNXActionBundle(unittest.TestCase):
             + ofproto.NX_ACTION_BUNDLE_PACK_STR.replace('!', '') \
             + 'HH4x'
 
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self._len, res[1])
@@ -1871,7 +1871,7 @@ class TestNXActionBundleLoad(unittest.TestCase):
             + ofproto.NX_ACTION_BUNDLE_PACK_STR.replace('!', '') \
             + 'HH4x'
 
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self._len, res[1])
@@ -1947,7 +1947,7 @@ class TestNXActionAutopath(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_AUTOPATH_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -2019,7 +2019,7 @@ class TestNXActionOutputReg(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_OUTPUT_REG_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -2075,7 +2075,7 @@ class TestNXActionExit(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = ofproto.NX_ACTION_HEADER_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -2696,7 +2696,7 @@ class TestOFPHello(unittest.TestCase):
         eq_(msg_type, res.msg_type)
         eq_(msg_len, res.msg_len)
         eq_(xid, res.xid)
-        eq_(buffer(buf), res.buf)
+        eq_(six.binary_type(buf), six.binary_type(res.buf))
 
     def test_serialize(self):
 
