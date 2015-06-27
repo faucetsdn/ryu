@@ -34,6 +34,7 @@ Please note that:
 
 
 import logging
+import six
 import time
 import random
 
@@ -228,7 +229,7 @@ class BFDSession(object):
         BFD packet receiver.
         """
         LOG.debug("[BFD][%s][RECV] BFD Control received: %s",
-                  hex(self._local_discr), str(bfd_pkt))
+                  hex(self._local_discr), six.binary_type(bfd_pkt))
         self._remote_discr = bfd_pkt.my_discr
         self._remote_state = bfd_pkt.state
         self._remote_demand_mode = bfd_pkt.flags & bfd.BFD_FLAG_DEMAND

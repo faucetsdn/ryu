@@ -16,6 +16,7 @@
 
 import os
 import logging
+import six
 
 from ryu.lib import hub, alert
 from ryu.base import app_manager
@@ -92,7 +93,7 @@ class SnortLib(app_manager.RyuApp):
             hub.spawn(self._recv_loop_nw_sock, conn, addr)
 
     def _recv_loop_nw_sock(self, conn, addr):
-        buf = str()
+        buf = six.binary_type()
         while True:
             ret = conn.recv(BUFSIZE)
             if len(ret) == 0:

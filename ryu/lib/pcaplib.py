@@ -66,6 +66,7 @@ Sample usage of reading PCAP files:
 
 """
 
+import six
 import struct
 import sys
 import time
@@ -279,7 +280,7 @@ class Writer(object):
         if ts is None:
             ts = time.time()
 
-        buf_str = str(buf)
+        buf_str = six.binary_type(buf)
         buf_str_len = len(buf_str)
         self._write_pkt_hdr(ts, buf_str_len)
         self._f.write(buf_str)

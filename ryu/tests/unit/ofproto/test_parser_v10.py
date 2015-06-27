@@ -17,6 +17,7 @@
 
 import unittest
 import logging
+import six
 from nose.tools import *
 from ryu.ofproto.ofproto_v1_0_parser import *
 from ryu.ofproto import ofproto_v1_0_parser
@@ -45,7 +46,7 @@ class TestOFPPhyPort(unittest.TestCase):
 
     buf = port_no['buf'] \
         + addrconv.mac.text_to_bin(hw_addr) \
-        + name \
+        + str.encode(name, 'ascii') \
         + config['buf'] \
         + state['buf'] \
         + curr['buf'] \
@@ -2303,7 +2304,7 @@ class TestOFPTableStats(unittest.TestCase):
 
     buf = table_id['buf'] \
         + zfill \
-        + name \
+        + str.encode(name, 'ascii') \
         + wildcards['buf'] \
         + max_entries['buf'] \
         + active_count['buf'] \
@@ -2781,7 +2782,7 @@ class TestOFPErrorMsg(unittest.TestCase):
             + ofproto.OFP_ERROR_MSG_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_ERROR, res[1])
         eq_(len(c.buf), res[2])
@@ -2851,7 +2852,7 @@ class TestOFPEchoRequest(unittest.TestCase):
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_ECHO_REQUEST, res[1])
         eq_(len(c.buf), res[2])
@@ -2919,7 +2920,7 @@ class TestOFPEchoReply(unittest.TestCase):
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_ECHO_REPLY, res[1])
         eq_(len(c.buf), res[2])
@@ -2994,7 +2995,7 @@ class TestOFPVendor(unittest.TestCase):
             + ofproto.OFP_VENDOR_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
@@ -3047,7 +3048,7 @@ class TestNiciraHeader(unittest.TestCase):
             + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
@@ -3097,7 +3098,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
             + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
             + ofproto.NX_SET_FLOW_FORMAT_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
@@ -3197,7 +3198,7 @@ class TestNXTFlowMod(unittest.TestCase):
             + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
             + ofproto.NX_FLOW_MOD_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
@@ -3228,7 +3229,7 @@ class TestNXTFlowMod(unittest.TestCase):
             + ofproto.NX_FLOW_MOD_PACK_STR.replace('!', '') \
             + ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
@@ -3292,7 +3293,7 @@ class TestNXTRoleRequest(unittest.TestCase):
             + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
             + ofproto.NX_ROLE_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
@@ -3344,7 +3345,7 @@ class TestNXTFlowModTableId(unittest.TestCase):
             + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
             + ofproto.NX_FLOW_MOD_TABLE_ID_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(self.c.buf), res[2])
@@ -4660,7 +4661,7 @@ class TestOFPFeaturesRequest(unittest.TestCase):
 
         fmt = ofproto.OFP_HEADER_PACK_STR
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_FEATURES_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
@@ -4699,7 +4700,7 @@ class TestOFPGetConfigRequest(unittest.TestCase):
 
         fmt = ofproto.OFP_HEADER_PACK_STR
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_GET_CONFIG_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
@@ -4748,7 +4749,7 @@ class TestOFPSetConfig(unittest.TestCase):
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + ofproto.OFP_SWITCH_CONFIG_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_SET_CONFIG, res[1])
         eq_(len(self.c.buf), res[2])
@@ -4815,7 +4816,7 @@ class TestOFPPacketOut(unittest.TestCase):
             + ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -4962,7 +4963,7 @@ class TestOFPFlowMod(unittest.TestCase):
             + ofproto.OFP_FLOW_MOD_PACK_STR0.replace('!', '') \
             + ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5034,7 +5035,7 @@ class TestOFPBarrierRequest(unittest.TestCase):
 
         fmt = ofproto.OFP_HEADER_PACK_STR
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_BARRIER_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
@@ -5081,7 +5082,7 @@ class TestOFPQueueGetConfigRequest(unittest.TestCase):
         b = ofproto.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR.replace('!', '')
         fmt = '!' + a + b
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
         eq_(ofproto.OFP_VERSION, res[0])
         eq_(ofproto.OFPT_QUEUE_GET_CONFIG_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
@@ -5126,7 +5127,7 @@ class TestOFPDescStatsRequest(unittest.TestCase):
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5228,7 +5229,7 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
             + ofproto.OFP_MATCH_PACK_STR.replace('!', '') \
             + ofproto.OFP_FLOW_STATS_REQUEST_ID_PORT_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5349,7 +5350,7 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
             + ofproto.OFP_MATCH_PACK_STR.replace('!', '') \
             + ofproto.OFP_FLOW_STATS_REQUEST_ID_PORT_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5418,7 +5419,7 @@ class TestOFPTableStatsRequest(unittest.TestCase):
             + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5476,7 +5477,7 @@ class TestOFPPortStatsRequest(unittest.TestCase):
             + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
             + ofproto.OFP_PORT_STATS_REQUEST_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5540,7 +5541,7 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
             + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
             + ofproto.OFP_QUEUE_STATS_REQUEST_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
@@ -5607,7 +5608,7 @@ class TestOFPVendorStatsRequest(unittest.TestCase):
             + ofproto.OFP_VENDOR_STATS_MSG_PACK_STR.replace('!', '') \
             + str(len(self.specific_data)) + 's'
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
         eq_(ofproto.OFP_VERSION, res[0])
