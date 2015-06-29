@@ -85,14 +85,14 @@ class NXFlowSpecFieldType(TypeDescr):
         if not isinstance(v, tuple):
             return v
         field, ofs = v
-        return [AsciiStringType.encode(field), ofs]
+        return [field, ofs]
 
     @staticmethod
     def decode(v):
         if not isinstance(v, list):
             return v
         field, ofs = v
-        return (AsciiStringType.decode(field), ofs)
+        return (field, ofs)
 
 
 _types = {
