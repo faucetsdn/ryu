@@ -1513,8 +1513,6 @@ class TestOFPPort(unittest.TestCase):
         max_speed = 1797291672
 
         fmt = ofproto.OFP_PORT_PACK_STR
-        buf = pack(fmt, port_no, hw_addr, name, config, state, curr,
-                   advertised, supported, peer, curr_speed, max_speed)
 
         c = OFPPort(port_no, hw_addr, name, config, state, curr,
                     advertised, supported, peer, curr_speed, max_speed)
@@ -1533,7 +1531,7 @@ class TestOFPPort(unittest.TestCase):
 
     def _test_parser(self, port_no, hw_addr, config, state, curr, advertised,
                      supported, peer, curr_speed, max_speed):
-        name = 'name'.ljust(16)
+        name = b'name'.ljust(16)
         fmt = ofproto.OFP_PORT_PACK_STR
         buf = pack(fmt, port_no, addrconv.mac.text_to_bin(hw_addr), name,
                    config, state, curr,
@@ -2348,7 +2346,7 @@ class TestOFPPortStatus(unittest.TestCase):
         #                          name, config, state, curr, advertised,
         #                          peer, curr_speed, max_speed
         hw_addr = '80:ff:9a:e3:72:85'
-        name = 'name'.ljust(16)
+        name = b'name'.ljust(16)
 
         fmt = ofproto.OFP_PORT_STATUS_PACK_STR
         buf += pack(fmt, reason, port_no, addrconv.mac.text_to_bin(hw_addr),
@@ -4977,7 +4975,8 @@ class TestOFPTableStats(unittest.TestCase):
         #    instructions, config, max_entries,
         #    active_count, lookup_count, matched_count
         fmt = ofproto.OFP_TABLE_STATS_PACK_STR
-        buf = pack(fmt, table_id, name, match, wildcards, write_actions,
+        buf = pack(fmt, table_id, name,
+                   match, wildcards, write_actions,
                    apply_actions, write_setfields, apply_setfields,
                    metadata_match, metadata_write, instructions, config,
                    max_entries, active_count, lookup_count, matched_count)
@@ -5003,7 +5002,7 @@ class TestOFPTableStats(unittest.TestCase):
 
     def test_parser_mid(self):
         table_id = 91
-        name = 'name'
+        name = b'name'
         match = 1270985291017894273
         wildcards = 3316608530
         write_actions = 2484712402
@@ -5028,7 +5027,7 @@ class TestOFPTableStats(unittest.TestCase):
     def test_parser_max(self):
         # '!B7x32sQQIIQQQQIIIIQQ'
         table_id = 0xff
-        name = 'a' * 32
+        name = b'a' * 32
         match = 0xffffffffffffffff
         wildcards = 0xffffffffffffffff
         write_actions = 0xffffffff
@@ -5052,7 +5051,7 @@ class TestOFPTableStats(unittest.TestCase):
 
     def test_parser_min(self):
         table_id = 0
-        name = ''
+        name = b''
         match = 0
         wildcards = 0
         write_actions = 0
@@ -5076,7 +5075,7 @@ class TestOFPTableStats(unittest.TestCase):
 
     def _test_parser_p(self, ofpxmt, ofpit, ofptc):
         table_id = 91
-        name = 'name'
+        name = b'name'
         match = ofpxmt
         wildcards = ofpxmt
         write_actions = 2484712402
