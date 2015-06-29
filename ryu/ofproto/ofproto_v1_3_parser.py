@@ -5520,7 +5520,7 @@ class ONFFlowMonitorRequest(StringifyMixin):
                       self.out_port, self.table_id)
         buf += bin_match
         pad_len = utils.round_up(self.match_len, 8) - self.match_len
-        buf += pad_len * '\0'
+        buf += pad_len * b'\0'
         return buf
 
 

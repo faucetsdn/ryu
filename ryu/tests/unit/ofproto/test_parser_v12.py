@@ -1502,7 +1502,7 @@ class TestOFPPort(unittest.TestCase):
         #                          peer, curr_speed, max_speed
         port_no = 1119692796
         hw_addr = 'c0:26:53:c4:29:e2'
-        name = 'name'.ljust(16)
+        name = b'name'.ljust(16)
         config = 2226555987
         state = 1678244809
         curr = 2850556459
@@ -2526,7 +2526,7 @@ class TestOFPPacketOut(unittest.TestCase):
         buffer_id = 0xffffffff
         in_port = 4294967295
         action_cnt = 1
-        data = "Message".ljust(65495)
+        data = b'Message'.ljust(65495)
         self._test_serialize(buffer_id, in_port, action_cnt, data)
 
     def test_serialize_min(self):

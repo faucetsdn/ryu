@@ -36,7 +36,7 @@ class TestOFPPhyPort(unittest.TestCase):
     #                    curr, advertised, supported, peer
     port_no = {'buf': b'\xe7\x6b', 'val': 59243}
     hw_addr = '52:54:54:10:20:99'
-    name = 'name'.ljust(16)
+    name = b'name'.ljust(16)
     config = {'buf': b'\x84\xb6\x8c\x53', 'val': 2226555987}
     state = {'buf': b'\x64\x07\xfb\xc9', 'val': 1678244809}
     curr = {'buf': b'\xa9\xe8\x0a\x2b', 'val': 2850556459}
@@ -2089,11 +2089,11 @@ class TestOFPDescStats(unittest.TestCase):
 
     # OFP_DESC_STATS_PACK_STR
     # '!256s256s256s32s256s'...mfr_desc, hw_desc, sw_desc, serial_num, dp_desc
-    mfr_desc = 'mfr_desc'.ljust(256)
-    hw_desc = 'hw_desc'.ljust(256)
-    sw_desc = 'sw_desc'.ljust(256)
-    serial_num = 'serial_num'.ljust(32)
-    dp_desc = 'dp_desc'.ljust(256)
+    mfr_desc = b'mfr_desc'.ljust(256)
+    hw_desc = b'hw_desc'.ljust(256)
+    sw_desc = b'sw_desc'.ljust(256)
+    serial_num = b'serial_num'.ljust(32)
+    dp_desc = b'dp_desc'.ljust(256)
 
     buf = mfr_desc \
         + hw_desc \
@@ -2293,7 +2293,7 @@ class TestOFPTableStats(unittest.TestCase):
     #                  active_count, lookup_count, matched_count
     table_id = {'buf': b'\x5b', 'val': 91}
     zfill = b'\x00' * 3
-    name = 'name'.ljust(32)
+    name = b'name'.ljust(32)
     wildcards = {'buf': b'\xc5\xaf\x6e\x12', 'val': 3316608530}
     max_entries = {'buf': b'\x95\x6c\x78\x4d', 'val': 2506913869}
     active_count = {'buf': b'\x78\xac\xa8\x1e', 'val': 2024581150}
@@ -2732,7 +2732,7 @@ class TestOFPErrorMsg(unittest.TestCase):
         xid = {'buf': b'\x87\x8b\x26\x7c', 'val': 2274043516}
         type = {'buf': b'\xab\x3e', 'val': 43838}
         code = {'buf': b'\x5d\x3c', 'val': 23868}
-        data = 'Error Message.'
+        data = b'Error Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2764,7 +2764,7 @@ class TestOFPErrorMsg(unittest.TestCase):
 
         type = 1306
         code = 13774
-        data = 'Error Message.'
+        data = b'Error Message.'
 
         c = OFPErrorMsg(Datapath)
         c.type = type
@@ -2811,7 +2811,7 @@ class TestOFPEchoRequest(unittest.TestCase):
         msg_len = {'buf': b'\x00\x08',
                    'val': ofproto.OFP_HEADER_SIZE}
         xid = {'buf': b'\x84\x47\xef\x3f', 'val': 2219306815}
-        data = 'Request Message.'
+        data = b'Request Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2837,7 +2837,7 @@ class TestOFPEchoRequest(unittest.TestCase):
             ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        data = 'Request Message.'
+        data = b'Request Message.'
 
         c = OFPEchoRequest(Datapath)
         c.data = data
@@ -2879,7 +2879,7 @@ class TestOFPEchoReply(unittest.TestCase):
         msg_len = {'buf': b'\x00\x08',
                    'val': ofproto.OFP_HEADER_SIZE}
         xid = {'buf': b'\x6e\x21\x3e\x62', 'val': 1847672418}
-        data = 'Reply Message.'
+        data = b'Reply Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2905,7 +2905,7 @@ class TestOFPEchoReply(unittest.TestCase):
             ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        data = 'Reply Message.'
+        data = b'Reply Message.'
 
         c = OFPEchoReply(Datapath)
         c.data = data
@@ -2948,7 +2948,7 @@ class TestOFPVendor(unittest.TestCase):
                    'val': ofproto.OFP_VENDOR_HEADER_SIZE}
         xid = {'buf': b'\x05\x45\xdf\x18', 'val': 88465176}
         vendor = {'buf': b'\x53\xea\x25\x3e', 'val': 1407853886}
-        data = 'Vendor Message.'
+        data = b'Vendor Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2977,7 +2977,7 @@ class TestOFPVendor(unittest.TestCase):
             ofproto_parser = ofproto_v1_0_parser
 
         vendor = {'buf': b'\x38\x4b\xf9\x6c', 'val': 944503148}
-        data = 'Reply Message.'
+        data = b'Reply Message.'
 
         c = OFPVendor(Datapath)
         c.vendor = vendor['val']
@@ -3030,7 +3030,7 @@ class TestNiciraHeader(unittest.TestCase):
             ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        data = 'Reply Message.'
+        data = b'Reply Message.'
         subtype = ofproto.NXT_FLOW_MOD_TABLE_ID
 
         c = NiciraHeader(Datapath, subtype)
@@ -3398,7 +3398,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         #                    curr, advertised, supported, peer
         port_no = {'buf': b'\xe7\x6b', 'val': 59243}
         hw_addr = '3c:d1:2b:8d:3f:d6'
-        name = 'name'.ljust(16)
+        name = b'name'.ljust(16)
         config = {'buf': b'\x84\xb6\x8c\x53', 'val': 2226555987}
         state = {'buf': b'\x64\x07\xfb\xc9', 'val': 1678244809}
         curr = {'buf': b'\xa9\xe8\x0a\x2b', 'val': 2850556459}
@@ -3494,7 +3494,7 @@ class TestOFPPortStatus(unittest.TestCase):
         zfill = b'\x00' * 7
         port_no = {'buf': b'\x48\xd8', 'val': 18648}
         hw_addr = '41:f7:a3:52:8f:6b'
-        name = 'name'.ljust(16)
+        name = b'name'.ljust(16)
         config = {'buf': b'\xae\x73\x90\xec', 'val': 2926809324}
         state = {'buf': b'\x41\x37\x32\x1d', 'val': 1094136349}
         curr = {'buf': b'\xa9\x47\x13\x2c', 'val': 2840007468}
@@ -3583,9 +3583,9 @@ class TestOFPPacketIn(unittest.TestCase):
         reason = {'buf': b'\x43', 'val': 67}
         zfill = b'\x00' * 1
         if padding:
-            data = 'PACKET IN'.ljust(20)
+            data = b'PACKET IN'.ljust(20)
         else:
-            data = 'PACKET IN'.ljust(16)
+            data = b'PACKET IN'.ljust(16)
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3989,11 +3989,11 @@ class TestOFPDescStatsReply(unittest.TestCase):
         # OFP_DESC_STATS_PACK_STR
         # '!256s256s256s32s256s'...mfr_desc, hw_desc, sw_desc,
         #                          serial_num, dp_desc
-        mfr_desc = 'mfr_desc'.ljust(256)
-        hw_desc = 'hw_desc'.ljust(256)
-        sw_desc = 'sw_desc'.ljust(256)
-        serial_num = 'serial_num'.ljust(32)
-        dp_desc = 'dp_desc'.ljust(256)
+        mfr_desc = b'mfr_desc'.ljust(256)
+        hw_desc = b'hw_desc'.ljust(256)
+        sw_desc = b'sw_desc'.ljust(256)
+        serial_num = b'serial_num'.ljust(32)
+        dp_desc = b'dp_desc'.ljust(256)
 
         buf += mfr_desc \
             + hw_desc \
@@ -4304,7 +4304,7 @@ class TestOFPTableStatsReply(unittest.TestCase):
         #                  active_count, lookup_count, matched_count
         table_id = {'buf': b'\x5b', 'val': 91}
         zfill = b'\x00' * 3
-        name = 'name'.ljust(32)
+        name = b'name'.ljust(32)
         wildcards = {'buf': b'\xc5\xaf\x6e\x12', 'val': 3316608530}
         max_entries = {'buf': b'\x95\x6c\x78\x4d', 'val': 2506913869}
         active_count = {'buf': b'\x78\xac\xa8\x1e', 'val': 2024581150}
@@ -4602,7 +4602,7 @@ class TestOFPVendorStatsReply(unittest.TestCase):
             + flags['buf']
 
         # stats_type_cls = OFPVendorStats
-        specific_data = 'specific_data'
+        specific_data = b'specific_data'
 
         buf += specific_data
 
@@ -4801,7 +4801,7 @@ class TestOFPPacketOut(unittest.TestCase):
     def test_serialize(self):
         buffer_id = 0xffffffff
         in_port = 0x9e07
-        data = 'Message'
+        data = b'Message'
 
         c = self._get_obj(buffer_id, in_port, data)
         c.serialize()
@@ -5572,7 +5572,7 @@ class TestOFPVendorStatsRequest(unittest.TestCase):
     # '!I'...vendor
     vendor = {'buf': b'\xff\xff\xff\xff', 'val': ofproto.OFPAT_VENDOR}
 
-    specific_data = 'specific_data'
+    specific_data = b'specific_data'
 
     c = OFPVendorStatsRequest(Datapath,
                               flags['val'],

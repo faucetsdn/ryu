@@ -109,7 +109,7 @@ class OFPPhyPort(ofproto_parser.namedtuple('OFPPhyPort', (
         i = cls._fields.index('hw_addr')
         port[i] = addrconv.mac.bin_to_text(port[i])
         i = cls._fields.index('name')
-        port[i] = port[i].rstrip('\0')
+        port[i] = port[i].rstrip(b'\0')
         return cls(*port)
 
 
@@ -1017,7 +1017,7 @@ class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
         desc = struct.unpack_from(ofproto.OFP_DESC_STATS_PACK_STR,
                                   buf, offset)
         desc = list(desc)
-        desc = [x.rstrip('\0') for x in desc]
+        desc = [x.rstrip(b'\0') for x in desc]
         stats = cls(*desc)
         stats.length = ofproto.OFP_DESC_STATS_SIZE
         return stats
@@ -1102,7 +1102,7 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
                                  buf, offset)
         tbl = list(tbl)
         i = cls._fields.index('name')
-        tbl[i] = tbl[i].rstrip('\0')
+        tbl[i] = tbl[i].rstrip(b'\0')
         stats = cls(*tbl)
         stats.length = ofproto.OFP_TABLE_STATS_SIZE
         return stats

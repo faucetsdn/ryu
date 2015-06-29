@@ -33,7 +33,7 @@ class Test_FlowSpec(unittest.TestCase):
         (o, rest) = ofpp._NXFlowSpec.parse(on_wire)
         self.assertEqual(user.to_jsondict(), o.to_jsondict())
         self.assertEqual(str(user), str(o))
-        self.assertEqual('', rest)
+        self.assertEqual(b'', rest)
 
     def test_flowspec_src_1_dst_0(self):
         user = ofpp.NXFlowSpecMatch(src=99,
@@ -48,7 +48,7 @@ class Test_FlowSpec(unittest.TestCase):
         (o, rest) = ofpp._NXFlowSpec.parse(on_wire)
         self.assertEqual(user.to_jsondict(), o.to_jsondict())
         self.assertEqual(str(user), str(o))
-        self.assertEqual('', rest)
+        self.assertEqual(b'', rest)
 
     def test_flowspec_src_0_dst_1(self):
         user = ofpp.NXFlowSpecLoad(src=('in_port', 0),
@@ -63,7 +63,7 @@ class Test_FlowSpec(unittest.TestCase):
         (o, rest) = ofpp._NXFlowSpec.parse(on_wire)
         self.assertEqual(user.to_jsondict(), o.to_jsondict())
         self.assertEqual(str(user), str(o))
-        self.assertEqual('', rest)
+        self.assertEqual(b'', rest)
 
     def test_flowspec_src_1_dst_1(self):
         user = ofpp.NXFlowSpecLoad(src=99,
@@ -78,7 +78,7 @@ class Test_FlowSpec(unittest.TestCase):
         (o, rest) = ofpp._NXFlowSpec.parse(on_wire)
         self.assertEqual(user.to_jsondict(), o.to_jsondict())
         self.assertEqual(str(user), str(o))
-        self.assertEqual('', rest)
+        self.assertEqual(b'', rest)
 
     def test_flowspec_src_0_dst_2(self):
         user = ofpp.NXFlowSpecOutput(src=('in_port', 0),
@@ -92,4 +92,4 @@ class Test_FlowSpec(unittest.TestCase):
         (o, rest) = ofpp._NXFlowSpec.parse(on_wire)
         self.assertEqual(user.to_jsondict(), o.to_jsondict())
         self.assertEqual(str(user), str(o))
-        self.assertEqual('', rest)
+        self.assertEqual(b'', rest)
