@@ -4985,7 +4985,7 @@ class TestOFPTableStats(unittest.TestCase):
         res = OFPTableStats.parser(buf, 0)
 
         eq_(table_id, res.table_id)
-        eq_(name, res.name.replace(b'\x00', ''))
+        eq_(name, res.name.replace(b'\x00', b''))
         eq_(match, res.match)
         eq_(wildcards, res.wildcards)
         eq_(write_actions, res.write_actions)
