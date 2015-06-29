@@ -188,7 +188,11 @@ class StringifyMixin(object):
     def _get_default_encoder(cls, encode_string):
         def _encode(v):
             if isinstance(v, (bytes, six.text_type)):
+                if isinstance(v, six.text_type):
+                    v = v.encode('utf-8')
                 json_value = encode_string(v)
+                if six.PY3:
+                    json_value = json_value.decode('ascii')
             elif isinstance(v, list):
                 json_value = list(map(_encode, v))
             elif isinstance(v, dict):

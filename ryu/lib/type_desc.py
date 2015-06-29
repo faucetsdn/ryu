@@ -112,5 +112,11 @@ class IPv6Addr(TypeDescr):
 class UnknownType(TypeDescr):
     import base64
 
-    to_user = staticmethod(base64.b64encode)
+    b64encode = base64.b64encode
+    if six.PY3:
+        @classmethod
+        def to_user(cls, data):
+            return cls.b64encode(data).decode('ascii')
+    else:
+        to_user = staticmethod(base64.b64encode)
     from_user = staticmethod(base64.b64decode)
