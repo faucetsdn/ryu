@@ -46,7 +46,7 @@ class TestOFPPhyPort(unittest.TestCase):
 
     buf = port_no['buf'] \
         + addrconv.mac.text_to_bin(hw_addr) \
-        + str.encode(name, 'ascii') \
+        + name \
         + config['buf'] \
         + state['buf'] \
         + curr['buf'] \
@@ -2304,7 +2304,7 @@ class TestOFPTableStats(unittest.TestCase):
 
     buf = table_id['buf'] \
         + zfill \
-        + str.encode(name, 'ascii') \
+        + name \
         + wildcards['buf'] \
         + max_entries['buf'] \
         + active_count['buf'] \
