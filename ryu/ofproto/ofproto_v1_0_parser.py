@@ -1686,7 +1686,7 @@ class OFPSwitchFeatures(MsgBase):
             ofproto.OFP_HEADER_SIZE)
 
         msg.ports = {}
-        n_ports = ((msg_len - ofproto.OFP_SWITCH_FEATURES_SIZE) /
+        n_ports = ((msg_len - ofproto.OFP_SWITCH_FEATURES_SIZE) //
                    ofproto.OFP_PHY_PORT_SIZE)
         offset = ofproto.OFP_SWITCH_FEATURES_SIZE
         for _i in range(n_ports):
