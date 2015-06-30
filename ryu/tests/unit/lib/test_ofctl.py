@@ -30,6 +30,7 @@ from ryu.lib import ofctl_v1_3
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import inet
+from ryu.tests import test_lib
 
 LOG = logging.getLogger('test_ofctl_v1_2, v1_3')
 
@@ -721,9 +722,7 @@ def _add_tests_actions(cls):
             cls_._test_actions(act, cls)
         print('adding %s ...' % method_name)
         func = functools.partial(_run, name=method_name, act=act, cls=cls)
-        func.func_name = method_name
-        func.__name__ = method_name
-        setattr(Test_ofctl, method_name, func)
+        test_lib.add_method(Test_ofctl, method_name, func)
 
 
 def _add_tests_match(cls):
@@ -740,9 +739,7 @@ def _add_tests_match(cls):
             print('adding %s ...' % method_name)
             func = functools.partial(
                 _run, name=method_name, attr=attr, cls=cls)
-            func.func_name = method_name
-            func.__name__ = method_name
-            setattr(Test_ofctl, method_name, func)
+            test_lib.add_method(Test_ofctl, method_name, func)
 
 
 """ Test case """
