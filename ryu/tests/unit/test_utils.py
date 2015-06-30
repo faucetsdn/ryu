@@ -33,13 +33,13 @@ class Test_utils(unittest.TestCase):
     def test_hex_array_string(self):
         ''' Test string conversion into array of hexes '''
         expected_result = '0x1 0x2 0x3 0x4'
-        data = '\01\02\03\04'
+        data = b'\01\02\03\04'
         eq_(expected_result, utils.hex_array(data))
 
     def test_hex_array_bytearray(self):
         ''' Test bytearray conversion into array of hexes '''
         expected_result = '0x1 0x2 0x3 0x4'
-        data = bytearray('\01\02\03\04')
+        data = bytearray(b'\01\02\03\04')
         eq_(expected_result, utils.hex_array(data))
 
     def test_hex_array_invalid(self):
