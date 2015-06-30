@@ -36,20 +36,22 @@ class Test_rpc(unittest.TestCase):
     def _handle_request(self, m):
         e = self._server_endpoint
         msgid, method, params = m
-        if method == "resp":
+        if method == b'resp':
             e.send_response(msgid, result=params[0])
-        elif method == "err":
+        elif method == b'err':
             e.send_response(msgid, error=params[0])
-        elif method == "callback":
+        elif method == b'callback':
             n, cb, v = params
             assert n > 0
             self._requests.add(e.send_request(cb, [msgid, n, cb, v]))
-        elif method == "notify1":
+        elif method == b'notify1':
             e.send_notification(params[1], params[2])
             e.send_response(msgid, result=params[0])
-        elif method == "shutdown":
+        elif method == b'shutdown':
             import socket
-            how = getattr(socket, params[0])
+            # Though six.text_type is not needed in python2, it is
+            # unconditionally applied for code simplicityp
+            how = getattr(socket, six.text_type(params[0], 'utf-8'))
             self._server_sock.shutdown(how)
             e.send_response(msgid, result=method)
         else:
@@ -58,7 +60,7 @@ class Test_rpc(unittest.TestCase):
     def _handle_notification(self, m):
         e = self._server_endpoint
         method, params = m
-        if method == "notify2":
+        if method == b'notify2':
             e.send_notification(params[0], params[1])
 
     def _handle_response(self, m):
@@ -94,8 +96,8 @@ class Test_rpc(unittest.TestCase):
 
     def test_0_call_str(self):
         c = rpc.Client(self._client_sock)
-        obj = "hoge"
-        result = c.call("resp", [obj])
+        obj = b'hoge'
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, bytes)
 
@@ -103,7 +105,7 @@ class Test_rpc(unittest.TestCase):
         c = rpc.Client(self._client_sock)
         obj = 12345
         assert isinstance(obj, int)
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, type(obj))
 
@@ -111,7 +113,7 @@ class Test_rpc(unittest.TestCase):
         c = rpc.Client(self._client_sock)
         obj = six.MAXSIZE
         assert isinstance(obj, int)
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, type(obj))
 
@@ -119,7 +121,7 @@ class Test_rpc(unittest.TestCase):
         c = rpc.Client(self._client_sock)
         obj = - six.MAXSIZE - 1
         assert isinstance(obj, int)
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, type(obj))
 
@@ -128,7 +130,7 @@ class Test_rpc(unittest.TestCase):
         obj = 0xffffffffffffffff  # max value for msgpack
         _long = int if six.PY3 else long
         assert isinstance(obj, _long)
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, type(obj))
 
@@ -137,15 +139,15 @@ class Test_rpc(unittest.TestCase):
         # NOTE: the python type of this value is int for 64-bit arch
         obj = -0x8000000000000000  # min value for msgpack
         assert isinstance(obj, numbers.Integral)
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, type(obj))
 
     @raises(TypeError)
     def test_0_call_bytearray(self):
         c = rpc.Client(self._client_sock)
-        obj = bytearray("foo")
-        result = c.call("resp", [obj])
+        obj = bytearray(b'foo')
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, bytes)
 
@@ -158,48 +160,48 @@ class Test_rpc(unittest.TestCase):
     @raises(EOFError)
     def test_1_client_shutdown_wr(self):
         c = rpc.Client(self._client_sock)
-        c.call("shutdown", ["SHUT_WR"])
+        c.call(b'shutdown', [b'SHUT_WR'])
 
     def test_1_call_True(self):
         c = rpc.Client(self._client_sock)
         obj = True
-        assert c.call("resp", [obj]) == obj
+        assert c.call(b'resp', [obj]) == obj
 
     def test_2_call_None(self):
         c = rpc.Client(self._client_sock)
         obj = None
-        assert c.call("resp", [obj]) is None
+        assert c.call(b'resp', [obj]) is None
 
     def test_2_call_False(self):
         c = rpc.Client(self._client_sock)
         obj = False
-        assert c.call("resp", [obj]) == obj
+        assert c.call(b'resp', [obj]) == obj
 
     def test_2_call_dict(self):
         c = rpc.Client(self._client_sock)
-        obj = {"hoge": 1, "fuga": 2}
-        assert c.call("resp", [obj]) == obj
+        obj = {b'hoge': 1, b'fuga': 2}
+        assert c.call(b'resp', [obj]) == obj
 
     def test_2_call_empty_dict(self):
         c = rpc.Client(self._client_sock)
         obj = {}
-        assert c.call("resp", [obj]) == obj
+        assert c.call(b'resp', [obj]) == obj
 
     def test_2_call_array(self):
         c = rpc.Client(self._client_sock)
         obj = [1, 2, 3, 4]
-        assert c.call("resp", [obj]) == obj
+        assert c.call(b'resp', [obj]) == obj
 
     def test_2_call_empty_array(self):
         c = rpc.Client(self._client_sock)
         obj = []
-        assert c.call("resp", [obj]) == obj
+        assert c.call(b'resp', [obj]) == obj
 
     def test_2_call_tuple(self):
         c = rpc.Client(self._client_sock)
         # note: msgpack library implicitly convert a tuple into a list
         obj = (1, 2, 3)
-        assert c.call("resp", [obj]) == list(obj)
+        assert c.call(b'resp', [obj]) == list(obj)
 
     @raises(TypeError)
     def test_2_call_unicode(self):
@@ -211,7 +213,7 @@ class Test_rpc(unittest.TestCase):
         # it seems to be going to change.
         # https://gist.github.com/methane/5022403
         obj = u"hoge"
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, bytes)
 
@@ -219,21 +221,21 @@ class Test_rpc(unittest.TestCase):
         import struct
         c = rpc.Client(self._client_sock)
         obj = struct.pack("100x")
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, bytes)
 
     def test_3_call_complex(self):
         c = rpc.Client(self._client_sock)
-        obj = [1, "hoge", {"foo": 1, 3: "bar"}]
-        assert c.call("resp", [obj]) == list(obj)
+        obj = [1, b'hoge', {b'foo': 1, 3: b'bar'}]
+        assert c.call(b'resp', [obj]) == list(obj)
 
     def test_4_call_large_binary(self):
         import struct
 
         c = rpc.Client(self._client_sock)
         obj = struct.pack("10000000x")
-        result = c.call("resp", [obj])
+        result = c.call(b'resp', [obj])
         assert result == obj
         assert isinstance(result, bytes)
 
@@ -243,15 +245,15 @@ class Test_rpc(unittest.TestCase):
         def callback(n):
             l.append(n)
         c = rpc.Client(self._client_sock, notification_callback=callback)
-        obj = "hogehoge"
-        robj = "fugafuga"
-        assert c.call("notify1", [robj, "notify_hoge", [obj]]) == robj
+        obj = b'hogehoge'
+        robj = b'fugafuga'
+        assert c.call(b'notify1', [robj, b'notify_hoge', [obj]]) == robj
         c.receive_notification()
         assert len(l) == 1
         n = l.pop(0)
         assert n is not None
         method, params = n
-        assert method == "notify_hoge"
+        assert method == b'notify_hoge'
         assert params[0] == obj
 
     def test_0_notification2(self):
@@ -260,21 +262,21 @@ class Test_rpc(unittest.TestCase):
         def callback(n):
             l.append(n)
         c = rpc.Client(self._client_sock, notification_callback=callback)
-        obj = "hogehogehoge"
-        c.send_notification("notify2", ["notify_hoge", [obj]])
+        obj = b'hogehogehoge'
+        c.send_notification(b'notify2', [b'notify_hoge', [obj]])
         c.receive_notification()
         assert len(l) == 1
         n = l.pop(0)
         assert n is not None
         method, params = n
-        assert method == "notify_hoge"
+        assert method == b'notify_hoge'
         assert params[0] == obj
 
     def test_0_call_error(self):
         c = rpc.Client(self._client_sock)
-        obj = "hoge"
+        obj = b'hoge'
         try:
-            c.call("err", [obj])
+            c.call(b'err', [obj])
             raise Exception("unexpected")
         except rpc.RPCError as e:
             assert e.get_value() == obj
@@ -285,18 +287,18 @@ class Test_rpc(unittest.TestCase):
         def callback(n):
             l.append(n)
         c = rpc.Client(self._client_sock, notification_callback=callback)
-        c.send_notification("notify2", ["notify_foo", []])
+        c.send_notification(b'notify2', [b'notify_foo', []])
         hub.sleep(0.5)  # give the peer a chance to run
-        obj = "hoge"
+        obj = b'hoge'
         try:
-            c.call("err", [obj])
+            c.call(b'err', [obj])
             raise Exception("unexpected")
         except rpc.RPCError as e:
             assert e.get_value() == obj
         assert len(l) == 1
         n = l.pop(0)
         method, params = n
-        assert method == "notify_foo"
+        assert method == b'notify_foo'
         assert params == []
 
     def test_4_async_call(self):
@@ -308,7 +310,7 @@ class Test_rpc(unittest.TestCase):
             e = rpc.EndPoint(self._client_sock)
             s = set()
             for i in range(1, num_calls + 1):
-                s.add(e.send_request("resp", [i]))
+                s.add(e.send_request(b'resp', [i]))
             sum = 0
             while s:
                 e.block()
@@ -338,7 +340,7 @@ class Test_rpc(unittest.TestCase):
             e = rpc.EndPoint(self._client_sock)
             s = set()
             for i in range(1, num_calls + 1):
-                s.add(e.send_request("callback", [i, "ourcallback", 0]))
+                s.add(e.send_request(b'callback', [i, b'ourcallback', 0]))
             sum = 0
             while s:
                 e.block()
@@ -357,10 +359,10 @@ class Test_rpc(unittest.TestCase):
                 r = e.get_request()
                 if r is not None:
                     msgid, method, params = r
-                    assert method == "ourcallback"
+                    assert method == b'ourcallback'
                     omsgid, n, cb, v = params
                     assert omsgid in s
-                    assert cb == "ourcallback"
+                    assert cb == b'ourcallback'
                     assert n > 0
                     e.send_response(msgid, result=[omsgid, n - 1, cb, v + 1])
             assert sum == (1 + num_calls) * num_calls / 2

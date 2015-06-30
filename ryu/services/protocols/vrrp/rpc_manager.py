@@ -62,11 +62,11 @@ class RpcVRRPManager(app_manager.RyuApp):
             error = None
             result = None
             try:
-                if target_method == "vrrp_config":
+                if target_method == b'vrrp_config':
                     result = self._config(msgid, params)
-                elif target_method == "vrrp_list":
+                elif target_method == b'vrrp_list':
                     result = self._list(msgid, params)
-                elif target_method == "vrrp_config_change":
+                elif target_method == b'vrrp_config_change':
                     result = self._config_change(msgid, params)
                 else:
                     error = 'Unknown method %s' % (target_method)
