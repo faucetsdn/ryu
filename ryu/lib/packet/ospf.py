@@ -908,7 +908,7 @@ class OSPFLSUpd(OSPFMessage):
         buf = buf[cls._PACK_LEN:]
         lsas = []
         while buf:
-            lsa, cls, buf = LSA.parser(buf)
+            lsa, _cls, buf = LSA.parser(buf)
             lsas.append(lsa)
         assert(len(lsas) == num)
         return {
