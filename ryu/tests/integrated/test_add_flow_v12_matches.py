@@ -97,7 +97,7 @@ class RunTest(tester.TestFlowBase):
         elif type_ == 'ipv6':
             v = self.ipv6_masked(value, mask)
         else:
-            raise 'Unknown type'
+            raise Exception('Unknown type')
         return v
 
     def _is_all_zero_bit(self, type_, val):
@@ -114,7 +114,7 @@ class RunTest(tester.TestFlowBase):
                     return False
             return True
         else:
-            raise 'Unknown type'
+            raise Exception('Unknown type')
 
     def _cnv_to_str(self, type_, value, mask, f_value, f_mask):
         func = None
@@ -127,7 +127,7 @@ class RunTest(tester.TestFlowBase):
         elif type_ == 'ipv6':
             func = self.ipv6_to_str
         else:
-            raise 'Unknown type'
+            raise Exception('Unknown type')
 
         if func:
             value = func(value)
