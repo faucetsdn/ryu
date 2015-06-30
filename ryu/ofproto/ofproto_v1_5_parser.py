@@ -4255,18 +4255,6 @@ class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
         return stats
 
 
-class OFPTableStats(ofproto_parser.namedtuple('OFPTableStats', (
-        'table_id', 'active_count', 'lookup_count',
-        'matched_count'))):
-    @classmethod
-    def parser(cls, buf, offset):
-        tbl = struct.unpack_from(ofproto.OFP_TABLE_STATS_PACK_STR,
-                                 buf, offset)
-        stats = cls(*tbl)
-        stats.length = ofproto.OFP_TABLE_STATS_SIZE
-        return stats
-
-
 @_set_stats_type(ofproto.OFPMP_TABLE_STATS, OFPTableStats)
 @_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
 class OFPTableStatsRequest(OFPMultipartRequest):
@@ -5547,12 +5535,6 @@ class OFPActionPopPbb(OFPAction):
     """
     def __init__(self, type_=None, len_=None):
         super(OFPActionPopPbb, self).__init__()
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_) = struct.unpack_from(
-            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
-        return cls()
 
     @classmethod
     def parser(cls, buf, offset):

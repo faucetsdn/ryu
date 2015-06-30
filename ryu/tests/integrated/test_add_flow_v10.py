@@ -115,14 +115,6 @@ class RunTest(tester.TestFlowBase):
         action = dp.ofproto_parser.OFPActionOutput(out_port)
         self.add_action(dp, [action, ])
 
-    def test_rule_set_in_port(self, dp):
-        in_port = 32
-        self._verify = ['in_port', in_port]
-
-        rule = nx_match.ClsRule()
-        rule.set_in_port(in_port)
-        self.add_rule(dp, rule)
-
     def test_action_vlan_vid(self, dp):
         vlan_vid = 2
         self._verify = [dp.ofproto.OFPAT_SET_VLAN_VID,

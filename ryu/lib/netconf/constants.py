@@ -52,8 +52,8 @@ ERROR = 'error'
 WARNING = 'warning'
 
 # error-info
-# bad-element and ok-element are defined above
-BAD_ATTRIBUTE = 'bad-attribute'
+# bad-attribute, bad-element and ok-element are defined above
+# BAD_ATTRIBUTE = 'bad-attribute'
 # BAD_ELEMENT = 'bad-element'
 # OK_ELEMENT = 'ok-element'
 ERR_ELEMENT = 'err-element'

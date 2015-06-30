@@ -3205,12 +3205,6 @@ class OFPActionPopPbb(OFPAction):
             ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
         return cls()
 
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_) = struct.unpack_from(
-            ofproto.OFP_ACTION_HEADER_PACK_STR, buf, offset)
-        return cls()
-
 
 @OFPAction.register_action_type(
     ofproto.OFPAT_EXPERIMENTER,

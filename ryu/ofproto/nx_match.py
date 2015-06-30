@@ -259,10 +259,6 @@ class ClsRule(object):
         self.wc.wildcards &= ~FWW_IPV6_LABEL
         self.flow.ipv6_label = label
 
-    def set_ipv6_label(self, label):
-        self.wc.wildcards &= ~FWW_IPV6_LABEL
-        self.flow.ipv6_label = label
-
     def set_ipv6_src_masked(self, src, mask):
         self.wc.ipv6_src_mask = mask
         self.flow.ipv6_src = [x & y for (x, y) in zip(src, mask)]
