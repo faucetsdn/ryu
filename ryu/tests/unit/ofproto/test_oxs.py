@@ -108,7 +108,7 @@ class Test_OXS(unittest.TestCase):
         self._test(user, on_wire, 4)
 
     def test_basic_unknown(self):
-        user = ('field_100', b'aG9nZWhvZ2U=')
+        user = ('field_100', 'aG9nZWhvZ2U=')
         on_wire = (
             b'\x00\x00\xc8\x08'
             b'hogehoge'
