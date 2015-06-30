@@ -679,57 +679,6 @@ class test_data_v1_2(test_data_v1_0):
                                           "OFPInstructionWriteMetadata"),
             })
 
-    def set_match_v1_2(self, parser):
-        self.supported_match.update(
-            {
-                'in_port': getattr(parser, "MTInPort"),
-                'in_phy_port': getattr(parser, "MTInPhyPort"),
-                'metadata': getattr(parser, "MTMetadata"),
-                'eth_dst': getattr(parser, "MTEthDst"),
-                'dl_dst': getattr(parser, "MTEthDst"),
-                'eth_src': getattr(parser, "MTEthSrc"),
-                'dl_src': getattr(parser, "MTEthSrc"),
-                'dl_type': getattr(parser, "MTEthType"),
-                'eth_type': getattr(parser, "MTEthType"),
-                'dl_vlan': getattr(parser, "MTVlanVid"),
-                'vlan_vid': getattr(parser, "MTVlanVid"),
-                'vlan_pcp': getattr(parser, "MTVlanPcp"),
-                'ip_dscp': getattr(parser, "MTIPDscp"),
-                'ip_ecn': getattr(parser, "MTIPECN"),
-                'nw_proto': getattr(parser, "MTIPProto"),
-                'ip_proto': getattr(parser, "MTIPProto"),
-                'nw_src': getattr(parser, "MTIPV4Src"),
-                'nw_dst': getattr(parser, "MTIPV4Dst"),
-                'ipv4_src': getattr(parser, "MTIPV4Src"),
-                'ipv4_dst': getattr(parser, "MTIPV4Dst"),
-                'tp_src': {6: getattr(parser, "MTTCPSrc"),
-                           17: getattr(parser, "MTUDPSrc")},
-                'tp_dst': {6: getattr(parser, "MTTCPDst"),
-                           17: getattr(parser, "MTUDPDst")},
-                'tcp_src': getattr(parser, "MTTCPSrc"),
-                'tcp_dst': getattr(parser, "MTTCPDst"),
-                'udp_src': getattr(parser, "MTUDPSrc"),
-                'udp_dst': getattr(parser, "MTUDPDst"),
-                'sctp_src': getattr(parser, "MTSCTPSrc"),
-                'sctp_dst': getattr(parser, "MTSCTPDst"),
-                'icmpv4_type': getattr(parser, "MTICMPV4Type"),
-                'icmpv4_code': getattr(parser, "MTICMPV4Code"),
-                'arp_op': getattr(parser, "MTArpOp"),
-                'arp_spa': getattr(parser, "MTArpSpa"),
-                'arp_tpa': getattr(parser, "MTArpTpa"),
-                'arp_sha': getattr(parser, "MTArpSha"),
-                'arp_tha': getattr(parser, "MTArpTha"),
-                'ipv6_src': getattr(parser, "MTIPv6Src"),
-                'ipv6_dst': getattr(parser, "MTIPv6Dst"),
-                'ipv6_flabel': getattr(parser, "MTIPv6Flabel"),
-                'icmpv6_type': getattr(parser, "MTICMPV6Type"),
-                'icmpv6_code': getattr(parser, "MTICMPV6Code"),
-                'ipv6_nd_target': getattr(parser, "MTIPv6NdTarget"),
-                'ipv6_nd_sll': getattr(parser, "MTIPv6NdSll"),
-                'ipv6_nd_tll': getattr(parser, "MTIPv6NdTll"),
-                'mpls_label': getattr(parser, "MTMplsLabel"),
-                'mpls_tc': getattr(parser, "MTMplsTc"),
-            })
 
 """ Test_data for of_v1_3 """
 
@@ -764,28 +713,6 @@ class test_data_v1_3(test_data_v1_2):
                 'POP_PBB': getattr(parser, "OFPActionPopPbb"),
                 'METER': getattr(parser, "OFPInstructionMeter"),
             })
-
-    def set_match_v1_3(self, parser):
-        self.set_match_v1_2(parser)
-        self.supported_match.update(
-            {
-                'mpls_bos': getattr(parser, "MTMplsBos"),
-                'pbb_isid': getattr(parser, "MTPbbIsid"),
-                'tunnel_id': getattr(parser, "MTTunnelId"),
-                'ipv6_exthdr': getattr(parser, "MTIPv6ExtHdr"),
-            })
-
-""" Test_data for of_v1_4 """
-
-# class test_data_v1_4(test_data_v1_3):
-    # def __init__(self):
-        # test_data_v1_3.__init__(self)
-
-    # def set_action_v1_4(self, parser):
-        # self.set_action_v1_3(parser)
-
-    # def set_match_v1_4(self, parser):
-        # self.set_match_v1_3(parser)
 
 
 def _add_tests_actions(cls):
@@ -836,7 +763,6 @@ _add_tests_match(cls)
 # for of12
 cls = test_data_v1_2()
 cls.set_action_v1_2(ofproto_v1_2_parser)
-cls.set_match_v1_2(ofproto_v1_2_parser)
 cls.set_ver(ofproto_v1_2.OFP_VERSION)
 cls.set_attr(ofctl_v1_2)
 cls.set_expected_value(ofproto_v1_2)
@@ -846,18 +772,8 @@ _add_tests_match(cls)
 # for of13
 cls = test_data_v1_3()
 cls.set_action_v1_3(ofproto_v1_3_parser)
-cls.set_match_v1_3(ofproto_v1_3_parser)
 cls.set_ver(ofproto_v1_3.OFP_VERSION)
 cls.set_attr(ofctl_v1_3)
 cls.set_expected_value(ofproto_v1_3)
 _add_tests_actions(cls)
 _add_tests_match(cls)
-
-# for of14
-# cls = test_data_v1_4()
-# cls.set_action_v1_4(ofproto_v1_4_parser)
-# cls.set_match_v1_4(ofproto_v1_4_parser)
-# cls.set_ver(ofproto_v1_4.OFP_VERSION)
-# cls.set_attr(ofctl_v1_4)
-# _add_tests_actions(cls)
-# _add_tests_match(cls)
