@@ -399,14 +399,31 @@ class Test_ofctl(unittest.TestCase):
 
         return field_value
 
-""" Test_data for of_v1_0 """
 
-
-class test_data_v1_0():
+class test_data_base(object):
+    # followings must be an attribute of subclass.
+    # _ofctl
+    # _ofproto
 
     def __init__(self):
+        self.ver = self._ofproto.OFP_VERSION
+        self.to_match = self._ofctl.to_match
+        self.match_to_str = self._ofctl.match_to_str
+        self.to_actions = self._ofctl.to_actions
+        self.actions_to_str = self._ofctl.actions_to_str
+
+
+class test_data_v1_0(test_data_base):
+    """ Test_data for of_v1_0 """
+    _ofctl = ofctl_v1_0
+    _ofproto = ofproto_v1_0
+    _parser = ofproto_v1_0_parser
+
+    def __init__(self):
+        super(test_data_v1_0, self).__init__()
+        self.nw_src_to_str = self._ofctl.nw_src_to_str
+        self.nw_dst_to_str = self._ofctl.nw_dst_to_str
         self.supported_action = {}
-        self.supported_match = {}
         self.act_list = [
             {'type': 'OUTPUT', 'port': 3},
             {'type': 'SET_VLAN_VID', 'vlan_vid': 5},
@@ -437,47 +454,35 @@ class test_data_v1_0():
             {'tp_src': 1},
             {'tp_dst': 2}
         ]
+        self.set_action()
 
-    def set_ver(self, ver):
-        self.ver = ver
-
-    def set_attr(self, ofctl):
-        self.to_match = getattr(ofctl, "to_match")
-        self.match_to_str = getattr(ofctl, "match_to_str")
-        self.to_actions = getattr(ofctl, "to_actions")
-        self.actions_to_str = getattr(ofctl, "actions_to_str")
-        self.nw_src_to_str = getattr(ofctl, "nw_src_to_str")
-        self.nw_dst_to_str = getattr(ofctl, "nw_dst_to_str")
-
-    def set_expected_value(self, ofproto):
-        pass
-
-    def set_action_v1_0(self, parser):
+    def set_action(self):
         self.supported_action.update(
             {
-                'OUTPUT': getattr(parser, "OFPActionOutput"),
-                'SET_VLAN_VID': getattr(parser, "OFPActionVlanVid"),
-                'SET_VLAN_PCP': getattr(parser, "OFPActionVlanPcp"),
-                'STRIP_VLAN': getattr(parser, "OFPActionStripVlan"),
-                'SET_DL_SRC': getattr(parser, "OFPActionSetDlSrc"),
-                'SET_DL_DST': getattr(parser, "OFPActionSetDlDst"),
-                'SET_NW_SRC': getattr(parser, "OFPActionSetNwSrc"),
-                'SET_NW_DST': getattr(parser, "OFPActionSetNwDst"),
-                'SET_NW_TOS': getattr(parser, "OFPActionSetNwTos"),
-                'SET_TP_SRC': getattr(parser, "OFPActionSetTpSrc"),
-                'SET_TP_DST': getattr(parser, "OFPActionSetTpDst"),
-                'ENQUEUE': getattr(parser, "OFPActionEnqueue")
+                'OUTPUT': self._parser.OFPActionOutput,
+                'SET_VLAN_VID': self._parser.OFPActionVlanVid,
+                'SET_VLAN_PCP': self._parser.OFPActionVlanPcp,
+                'STRIP_VLAN': self._parser.OFPActionStripVlan,
+                'SET_DL_SRC': self._parser.OFPActionSetDlSrc,
+                'SET_DL_DST': self._parser.OFPActionSetDlDst,
+                'SET_NW_SRC': self._parser.OFPActionSetNwSrc,
+                'SET_NW_DST': self._parser.OFPActionSetNwDst,
+                'SET_NW_TOS': self._parser.OFPActionSetNwTos,
+                'SET_TP_SRC': self._parser.OFPActionSetTpSrc,
+                'SET_TP_DST': self._parser.OFPActionSetTpDst,
+                'ENQUEUE': self._parser.OFPActionEnqueue
             })
 
 
-""" Test_data for of_v1_2 """
-
-
-class test_data_v1_2(test_data_v1_0):
+class test_data_v1_2(test_data_base):
+    """ Test_data for of_v1_2 """
+    _ofctl = ofctl_v1_2
+    _ofproto = ofproto_v1_2
+    _parser = ofproto_v1_2_parser
 
     def __init__(self):
+        super(test_data_v1_2, self).__init__()
         self.supported_action = {}
-        self.supported_match = {}
         self.act_list = [
             {'type': 'OUTPUT', 'port': 3},
             {'type': 'COPY_TTL_OUT'},
@@ -611,15 +616,29 @@ class test_data_v1_2(test_data_v1_0):
             {'mpls_label': 3, 'eth_type': 0x8848},
             {'mpls_tc': 2, 'eth_type': 0x8848}
         ]
+        self.supported_action.update(
+            {
+                'OUTPUT': self._parser.OFPActionOutput,
+                'COPY_TTL_OUT': self._parser.OFPActionCopyTtlOut,
+                'COPY_TTL_IN': self._parser.OFPActionCopyTtlIn,
+                'SET_MPLS_TTL': self._parser.OFPActionSetMplsTtl,
+                'DEC_MPLS_TTL': self._parser.OFPActionDecMplsTtl,
+                'PUSH_VLAN': self._parser.OFPActionPushVlan,
+                'POP_VLAN': self._parser.OFPActionPopVlan,
+                'PUSH_MPLS': self._parser.OFPActionPushMpls,
+                'POP_MPLS': self._parser.OFPActionPopMpls,
+                'SET_QUEUE': self._parser.OFPActionSetQueue,
+                'GROUP': self._parser.OFPActionGroup,
+                'SET_NW_TTL': self._parser.OFPActionSetNwTtl,
+                'DEC_NW_TTL': self._parser.OFPActionDecNwTtl,
+                'SET_FIELD': self._parser.OFPActionSetField,
+                'GOTO_TABLE': self._parser.OFPInstructionGotoTable,
+                'WRITE_METADATA': self._parser.OFPInstructionWriteMetadata,
+            })
+        self.set_expected_value()
 
-    def set_attr(self, ofctl):
-        self.to_match = getattr(ofctl, "to_match")
-        self.match_to_str = getattr(ofctl, "match_to_str")
-        self.to_actions = getattr(ofctl, "to_actions")
-        self.actions_to_str = getattr(ofctl, "actions_to_str")
-
-    def set_expected_value(self, ofproto):
-        vid_present = ofproto.OFPVID_PRESENT
+    def set_expected_value(self):
+        vid_present = self._ofproto.OFPVID_PRESENT
         self.expected_value = {
             "vlan_vid": {
                 0: {"to_match": 0 | vid_present, "to_str": "0"},
@@ -657,36 +676,15 @@ class test_data_v1_2(test_data_v1_0):
             }
         }
 
-    def set_action_v1_2(self, parser):
-        self.supported_action.update(
-            {
-                'OUTPUT': getattr(parser, "OFPActionOutput"),
-                'COPY_TTL_OUT': getattr(parser, "OFPActionCopyTtlOut"),
-                'COPY_TTL_IN': getattr(parser, "OFPActionCopyTtlIn"),
-                'SET_MPLS_TTL': getattr(parser, "OFPActionSetMplsTtl"),
-                'DEC_MPLS_TTL': getattr(parser, "OFPActionDecMplsTtl"),
-                'PUSH_VLAN': getattr(parser, "OFPActionPushVlan"),
-                'POP_VLAN': getattr(parser, "OFPActionPopVlan"),
-                'PUSH_MPLS': getattr(parser, "OFPActionPushMpls"),
-                'POP_MPLS': getattr(parser, "OFPActionPopMpls"),
-                'SET_QUEUE': getattr(parser, "OFPActionSetQueue"),
-                'GROUP': getattr(parser, "OFPActionGroup"),
-                'SET_NW_TTL': getattr(parser, "OFPActionSetNwTtl"),
-                'DEC_NW_TTL': getattr(parser, "OFPActionDecNwTtl"),
-                'SET_FIELD': getattr(parser, "OFPActionSetField"),
-                'GOTO_TABLE': getattr(parser, "OFPInstructionGotoTable"),
-                'WRITE_METADATA': getattr(parser,
-                                          "OFPInstructionWriteMetadata"),
-            })
-
-
-""" Test_data for of_v1_3 """
-
 
 class test_data_v1_3(test_data_v1_2):
+    """ Test_data for of_v1_3 """
+    _ofctl = ofctl_v1_3
+    _ofproto = ofproto_v1_3
+    _parser = ofproto_v1_3_parser
 
     def __init__(self):
-        test_data_v1_2.__init__(self)
+        super(test_data_v1_3, self).__init__()
         self.act_list.extend(
             [
                 {'type': 'PUSH_PBB', 'ethertype': 0x0800},
@@ -704,15 +702,13 @@ class test_data_v1_3(test_data_v1_2):
                 {'ipv6_exthdr': "0x40/0x1F0", 'eth_type': 0x86dd},
             ]
         )
-
-    def set_action_v1_3(self, parser):
-        self.set_action_v1_2(parser)
         self.supported_action.update(
             {
-                'PUSH_PBB': getattr(parser, "OFPActionPushPbb"),
-                'POP_PBB': getattr(parser, "OFPActionPopPbb"),
-                'METER': getattr(parser, "OFPInstructionMeter"),
+                'PUSH_PBB': self._parser.OFPActionPushPbb,
+                'POP_PBB': self._parser.OFPActionPopPbb,
+                'METER': self._parser.OFPInstructionMeter,
             })
+        self.set_expected_value()
 
 
 def _add_tests_actions(cls):
@@ -753,27 +749,15 @@ def _add_tests_match(cls):
 
 # for of10
 cls = test_data_v1_0()
-cls.set_action_v1_0(ofproto_v1_0_parser)
-cls.set_ver(ofproto_v1_0.OFP_VERSION)
-cls.set_attr(ofctl_v1_0)
-cls.set_expected_value(ofproto_v1_0)
 _add_tests_actions(cls)
 _add_tests_match(cls)
 
 # for of12
 cls = test_data_v1_2()
-cls.set_action_v1_2(ofproto_v1_2_parser)
-cls.set_ver(ofproto_v1_2.OFP_VERSION)
-cls.set_attr(ofctl_v1_2)
-cls.set_expected_value(ofproto_v1_2)
 _add_tests_actions(cls)
 _add_tests_match(cls)
 
 # for of13
 cls = test_data_v1_3()
-cls.set_action_v1_3(ofproto_v1_3_parser)
-cls.set_ver(ofproto_v1_3.OFP_VERSION)
-cls.set_attr(ofctl_v1_3)
-cls.set_expected_value(ofproto_v1_3)
 _add_tests_actions(cls)
 _add_tests_match(cls)
