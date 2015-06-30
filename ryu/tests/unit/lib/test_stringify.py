@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import base64
+import six
 import unittest
 from nose.tools import eq_
 
@@ -40,10 +41,15 @@ class Test_stringify(unittest.TestCase):
         pass
 
     def test_jsondict(self):
+        if six.PY3:
+            def b64encode(s):
+                return base64.b64encode(s).decode('ascii')
+        else:
+            b64encode = base64.b64encode
         j = {'C1': {'a': 'QUFB', 'c': 'Q0ND'}}
-        eq_(j['C1']['a'], base64.b64encode(b'AAA'))
-        eq_(j['C1']['c'], base64.b64encode(b'CCC'))
-        c = C1(a='AAA', c='CCC')
+        eq_(j['C1']['a'], b64encode(b'AAA'))
+        eq_(j['C1']['c'], b64encode(b'CCC'))
+        c = C1(a=b'AAA', c=b'CCC')
         c2 = C1.from_jsondict(j['C1'])
         eq_(c.__class__, c2.__class__)
         eq_(c.__dict__, c2.__dict__)
