@@ -94,7 +94,7 @@ class TestOFPMatch(unittest.TestCase):
         match2 = match.from_jsondict(jsondict["OFPMatch"])
         buf2 = bytearray()
         match2.serialize(buf2, 0)
-        eq_(six.binary_type(match), six.binary_type(match2))
+        eq_(str(match), str(match2))
         eq_(buf, buf2)
 
     # set_vlan_vid
@@ -139,7 +139,7 @@ class TestOFPMatch(unittest.TestCase):
         match2 = match.from_jsondict(jsondict["OFPMatch"])
         buf2 = bytearray()
         match2.serialize(buf2, 0)
-        eq_(six.binary_type(match), six.binary_type(match2))
+        eq_(str(match), str(match2))
         eq_(buf, buf2)
 
     def test_set_vlan_vid_mid(self):
