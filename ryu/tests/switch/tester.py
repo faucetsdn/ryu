@@ -1322,7 +1322,7 @@ class TestFile(stringify.StringifyMixin):
                 self._normalize_test_json(v)
 
     def _get_tests(self, path):
-        with open(path, 'rb') as fhandle:
+        with open(path, 'r') as fhandle:
             buf = fhandle.read()
             try:
                 json_list = json.loads(buf)
@@ -1334,7 +1334,7 @@ class TestFile(stringify.StringifyMixin):
                         self.tests.append(Test(test_json))
             except (ValueError, TypeError) as e:
                 result = (TEST_FILE_ERROR %
-                          {'file': path, 'detail': e.message})
+                          {'file': path, 'detail': str(e)})
                 self.logger.warning(result)
 
 
@@ -1349,7 +1349,7 @@ class Test(stringify.StringifyMixin):
         def __test_pkt_from_json(test):
             data = eval('/'.join(test))
             data.serialize()
-            return str(data.data)
+            return six.binary_type(data.data)
 
         def __normalize_match(ofproto, match):
             match_json = match.to_jsondict()
