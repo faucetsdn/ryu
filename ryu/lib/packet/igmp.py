@@ -252,6 +252,14 @@ class igmpv3_query(igmp):
     _PACK_STR = '!BBH4sBBH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
     MIN_LEN = _MIN_LEN
+    _TYPE = {
+        'ascii': [
+            'address'
+        ],
+        'asciilist': [
+            'srcs'
+        ]
+    }
 
     def __init__(self, msgtype=IGMP_TYPE_QUERY, maxresp=100, csum=0,
                  address='0.0.0.0', s_flg=0, qrv=2, qqic=0, num=0,
@@ -413,6 +421,14 @@ class igmpv3_report_group(stringify.StringifyMixin):
     """
     _PACK_STR = '!BBH4s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'address'
+        ],
+        'asciilist': [
+            'srcs'
+        ]
+    }
 
     def __init__(self, type_=0, aux_len=0, num=0, address='0.0.0.0',
                  srcs=None, aux=None):

@@ -524,6 +524,11 @@ class link_trace_message(link_trace):
     _ALL_PACK_LEN = struct.calcsize(_PACK_STR)
     _MIN_LEN = _ALL_PACK_LEN
     _TLV_OFFSET = 17
+    _TYPE = {
+        'ascii': [
+            'ltm_orig_addr', 'ltm_targ_addr'
+        ]
+    }
 
     def __init__(self, md_lv=0, version=CFM_VERSION,
                  use_fdb_only=1,

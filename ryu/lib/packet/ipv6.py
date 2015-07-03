@@ -413,6 +413,11 @@ class routing_type3(header):
 
     _PACK_STR = '!BBBBBB2x'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'asciilist': [
+            'adrs'
+        ]
+    }
 
     def __init__(self, nxt=inet.IPPROTO_TCP, size=0,
                  type_=3, seg=0, cmpi=0, cmpe=0, adrs=None):

@@ -692,6 +692,11 @@ class mld(stringify.StringifyMixin):
 
     _PACK_STR = '!H2x16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'address'
+        ]
+    }
 
     def __init__(self, maxresp=0, address='::'):
         self.maxresp = maxresp
@@ -749,6 +754,14 @@ class mldv2_query(mld):
 
     _PACK_STR = '!H2x16sBBH'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'address'
+        ],
+        'asciilist': [
+            'srcs'
+        ]
+    }
 
     def __init__(self, maxresp=0, address='::', s_flg=0, qrv=2,
                  qqic=0, num=0, srcs=None):
@@ -884,6 +897,14 @@ class mldv2_report_group(stringify.StringifyMixin):
     """
     _PACK_STR = '!BBH16s'
     _MIN_LEN = struct.calcsize(_PACK_STR)
+    _TYPE = {
+        'ascii': [
+            'address'
+        ],
+        'asciilist': [
+            'srcs'
+        ]
+    }
 
     def __init__(self, type_=0, aux_len=0, num=0, address='::',
                  srcs=None, aux=None):
