@@ -95,21 +95,21 @@ class TestBFD(unittest.TestCase):
         pkt = packet.Packet(buf)
         i = iter(pkt)
 
-        eq_(type(i.next()), ethernet.ethernet)
-        eq_(type(i.next()), ipv4.ipv4)
-        eq_(type(i.next()), udp.udp)
-        eq_(type(bfd.bfd.parser(i.next())[0]), bfd.bfd)
+        eq_(type(next(i)), ethernet.ethernet)
+        eq_(type(next(i)), ipv4.ipv4)
+        eq_(type(next(i)), udp.udp)
+        eq_(type(bfd.bfd.parser(next(i))[0]), bfd.bfd)
 
     def test_parse_with_auth_simple(self):
         buf = self.data_auth_simple
         pkt = packet.Packet(buf)
         i = iter(pkt)
 
-        eq_(type(i.next()), ethernet.ethernet)
-        eq_(type(i.next()), ipv4.ipv4)
-        eq_(type(i.next()), udp.udp)
+        eq_(type(next(i)), ethernet.ethernet)
+        eq_(type(next(i)), ipv4.ipv4)
+        eq_(type(next(i)), udp.udp)
 
-        bfd_obj = bfd.bfd.parser(i.next())[0]
+        bfd_obj = bfd.bfd.parser(next(i))[0]
         eq_(type(bfd_obj), bfd.bfd)
         eq_(type(bfd_obj.auth_cls), bfd.SimplePassword)
         ok_(bfd_obj.authenticate(self.auth_keys))
@@ -119,11 +119,11 @@ class TestBFD(unittest.TestCase):
         pkt = packet.Packet(buf)
         i = iter(pkt)
 
-        eq_(type(i.next()), ethernet.ethernet)
-        eq_(type(i.next()), ipv4.ipv4)
-        eq_(type(i.next()), udp.udp)
+        eq_(type(next(i)), ethernet.ethernet)
+        eq_(type(next(i)), ipv4.ipv4)
+        eq_(type(next(i)), udp.udp)
 
-        bfd_obj = bfd.bfd.parser(i.next())[0]
+        bfd_obj = bfd.bfd.parser(next(i))[0]
         eq_(type(bfd_obj), bfd.bfd)
         eq_(type(bfd_obj.auth_cls), bfd.KeyedMD5)
         ok_(bfd_obj.authenticate(self.auth_keys))
@@ -133,11 +133,11 @@ class TestBFD(unittest.TestCase):
         pkt = packet.Packet(buf)
         i = iter(pkt)
 
-        eq_(type(i.next()), ethernet.ethernet)
-        eq_(type(i.next()), ipv4.ipv4)
-        eq_(type(i.next()), udp.udp)
+        eq_(type(next(i)), ethernet.ethernet)
+        eq_(type(next(i)), ipv4.ipv4)
+        eq_(type(next(i)), udp.udp)
 
-        bfd_obj = bfd.bfd.parser(i.next())[0]
+        bfd_obj = bfd.bfd.parser(next(i))[0]
         eq_(type(bfd_obj), bfd.bfd)
         eq_(type(bfd_obj.auth_cls), bfd.KeyedSHA1)
         ok_(bfd_obj.authenticate(self.auth_keys))
