@@ -60,10 +60,17 @@ class TypeDescr(object):
 class AsciiStringType(TypeDescr):
     @staticmethod
     def encode(v):
+        # TODO: AsciiStringType data should probably be stored as
+        # text_type in class data.  This isinstance() check exists
+        # because OFPDescStats violates this.
+        if six.PY3 and isinstance(v, six.text_type):
+            return v
         return six.text_type(v, 'ascii')
 
     @staticmethod
     def decode(v):
+        if six.PY3:
+            return v
         return v.encode('ascii')
 
 
@@ -75,6 +82,16 @@ class Utf8StringType(TypeDescr):
     @staticmethod
     def decode(v):
         return v.encode('utf-8')
+
+
+class AsciiStringListType(TypeDescr):
+    @staticmethod
+    def encode(v):
+        return [AsciiStringType.encode(x) for x in v]
+
+    @staticmethod
+    def decode(v):
+        return [AsciiStringType.decode(x) for x in v]
 
 
 class NXFlowSpecFieldType(TypeDescr):
@@ -98,6 +115,7 @@ class NXFlowSpecFieldType(TypeDescr):
 _types = {
     'ascii': AsciiStringType,
     'utf-8': Utf8StringType,
+    'asciilist': AsciiStringListType,
     'nx-flow-spec-field': NXFlowSpecFieldType,  # XXX this should not be here
 }
 
@@ -112,12 +130,13 @@ class StringifyMixin(object):
 
     Currently the following types are implemented.
 
-    ===== ==========
-    Type  Descrption
-    ===== ==========
-    ascii US-ASCII
-    utf-8 UTF-8
-    ===== ==========
+    ========= =============
+    Type      Descrption
+    ========= =============
+    ascii     US-ASCII
+    utf-8     UTF-8
+    asciilist list of ascii
+    ========= =============
 
     Example::
         _TYPE = {
