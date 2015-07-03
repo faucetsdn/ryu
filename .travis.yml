@@ -5,6 +5,7 @@ python:
 env:
   - TOX_ENV=py26
   - TOX_ENV=py27
+  - TOX_ENV=py34
   - TOX_ENV=pep8
 
 install:
