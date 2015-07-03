@@ -1395,7 +1395,7 @@ class TestPacket(unittest.TestCase):
         p.serialize()
 
         # ethernet !6s6sH
-        e_buf = self.dst_mac + self.src_mac + b'\x05\xdc'
+        e_buf = self.dst_mac_bin + self.src_mac_bin + b'\x05\xdc'
 
         # llc !BBB
         l_buf = (b'\x42'

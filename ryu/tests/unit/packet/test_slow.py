@@ -15,10 +15,11 @@
 
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-import unittest
-import logging
 import copy
+import logging
 from struct import pack, unpack_from
+import unittest
+
 from nose.tools import ok_, eq_, raises
 from ryu.ofproto import ether
 from ryu.lib.packet.ethernet import ethernet
@@ -143,7 +144,8 @@ class Test_slow(unittest.TestCase):
         slow.parser(self.buf)
 
     def test_not_implemented_subtype(self):
-        not_implemented_buf = str(SLOW_SUBTYPE_MARKER) + self.buf[1:]
+        not_implemented_buf = pack(
+            slow._PACK_STR, SLOW_SUBTYPE_MARKER) + self.buf[1:]
         (instance, nexttype, last) = slow.parser(not_implemented_buf)
         assert None == instance
         assert None == nexttype
