@@ -80,6 +80,7 @@ BFD Control packet format
 import binascii
 import hashlib
 import random
+import six
 import struct
 
 from . import packet_base
@@ -240,7 +241,7 @@ class bfd(packet_base.PacketBase):
         flags = flags & 0x3f
 
         if flags & BFD_FLAG_AUTH_PRESENT:
-            (auth_type,) = struct.unpack_from('!B', buf[cls._PACK_STR_LEN])
+            auth_type = six.indexbytes(buf, cls._PACK_STR_LEN)
             auth_cls = cls._auth_parsers[auth_type].\
                 parser(buf[cls._PACK_STR_LEN:])[0]
         else:
@@ -396,8 +397,7 @@ class SimplePassword(BFDAuth):
         (auth_type, auth_len) = cls.parser_hdr(buf)
         assert auth_type == cls.auth_type
 
-        (auth_key_id,) = struct.unpack_from(cls._PACK_STR,
-                                            buf[cls._PACK_HDR_STR_LEN])
+        auth_key_id = six.indexbytes(buf, cls._PACK_HDR_STR_LEN)
 
         password = buf[cls._PACK_HDR_STR_LEN + cls._PACK_STR_LEN:auth_len]
 
