@@ -394,7 +394,6 @@ class Test_igmpv3_query(unittest.TestCase):
         res = unpack_from(igmpv3_query._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
-        buf = str(buf)
 
         eq_(res[0], IGMP_TYPE_QUERY)
         eq_(res[1], 100)
@@ -664,7 +663,6 @@ class Test_igmpv3_report(unittest.TestCase):
         res = unpack_from(igmpv3_report._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
-        buf = str(buf)
 
         eq_(res[0], IGMP_TYPE_REPORT_V3)
         eq_(res[1], checksum(buf))
@@ -689,7 +687,6 @@ class Test_igmpv3_report(unittest.TestCase):
         res = unpack_from(igmpv3_report._PACK_STR, six.binary_type(buf))
         buf = bytearray(buf)
         pack_into('!H', buf, 2, 0)
-        buf = str(buf)
 
         eq_(res[0], IGMP_TYPE_REPORT_V3)
         eq_(res[1], checksum(buf))

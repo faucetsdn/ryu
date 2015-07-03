@@ -51,7 +51,7 @@ class Test_icmp(unittest.TestCase):
 
         self.buf = bytearray(struct.pack(
             icmp.icmp._PACK_STR, self.type_, self.code, self.csum))
-        self.csum_calc = packet_utils.checksum(six.binary_type(self.buf))
+        self.csum_calc = packet_utils.checksum(self.buf)
         struct.pack_into('!H', self.buf, 2, self.csum_calc)
 
     def setUp_with_echo(self):
@@ -70,10 +70,10 @@ class Test_icmp(unittest.TestCase):
         self.code = 0
         self.ic = icmp.icmp(self.type_, self.code, self.csum, self.data)
 
-        self.buf = struct.pack(
-            icmp.icmp._PACK_STR, self.type_, self.code, self.csum)
+        self.buf = bytearray(struct.pack(
+            icmp.icmp._PACK_STR, self.type_, self.code, self.csum))
         self.buf += self.data.serialize()
-        self.csum_calc = packet_utils.checksum(str(self.buf))
+        self.csum_calc = packet_utils.checksum(self.buf)
         struct.pack_into('!H', self.buf, 2, self.csum_calc)
 
     def setUp_with_dest_unreach(self):
@@ -88,10 +88,10 @@ class Test_icmp(unittest.TestCase):
         self.code = icmp.ICMP_HOST_UNREACH_CODE
         self.ic = icmp.icmp(self.type_, self.code, self.csum, self.data)
 
-        self.buf = struct.pack(
-            icmp.icmp._PACK_STR, self.type_, self.code, self.csum)
+        self.buf = bytearray(struct.pack(
+            icmp.icmp._PACK_STR, self.type_, self.code, self.csum))
         self.buf += self.data.serialize()
-        self.csum_calc = packet_utils.checksum(str(self.buf))
+        self.csum_calc = packet_utils.checksum(self.buf)
         struct.pack_into('!H', self.buf, 2, self.csum_calc)
 
     def setUp_with_TimeExceeded(self):
@@ -104,10 +104,10 @@ class Test_icmp(unittest.TestCase):
         self.code = 0
         self.ic = icmp.icmp(self.type_, self.code, self.csum, self.data)
 
-        self.buf = struct.pack(
-            icmp.icmp._PACK_STR, self.type_, self.code, self.csum)
+        self.buf = bytearray(struct.pack(
+            icmp.icmp._PACK_STR, self.type_, self.code, self.csum))
         self.buf += self.data.serialize()
-        self.csum_calc = packet_utils.checksum(str(self.buf))
+        self.csum_calc = packet_utils.checksum(self.buf)
         struct.pack_into('!H', self.buf, 2, self.csum_calc)
 
     def test_init(self):

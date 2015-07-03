@@ -47,7 +47,7 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         pass
 
     def test_get_tlv_type(self):
-        buf = str(bytearray(b'\x02\x07\x04\x00\x04\x96\x1f\xa7\x26'))
+        buf = b'\x02\x07\x04\x00\x04\x96\x1f\xa7\x26'
         eq_(lldp.LLDPBasicTLV.get_type(buf), lldp.LLDP_TLV_CHASSIS_ID)
 
     def test_parse_without_ethernet(self):
