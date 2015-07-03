@@ -750,7 +750,8 @@ class _AddrPrefix(StringifyMixin):
             # clear trailing bits in the last octet.
             # rfc doesn't require this.
             mask = 0xff00 >> (self.length % 8)
-            last_byte = chr(six.indexbytes(bin_addr, byte_length - 1) & mask)
+            last_byte = six.int2byte(
+                six.indexbytes(bin_addr, byte_length - 1) & mask)
             bin_addr = bin_addr[:byte_length - 1] + last_byte
         self.addr = self._from_bin(bin_addr)
 
