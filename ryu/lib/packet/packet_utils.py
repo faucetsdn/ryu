@@ -26,10 +26,10 @@ def carry_around_add(a, b):
 
 
 def checksum(data):
+    data = six.binary_type(data)    # input can be bytearray.
     if len(data) % 2:
         data += b'\x00'
 
-    data = six.binary_type(data)    # input can be bytearray.
     s = sum(array.array('H', data))
     s = (s & 0xffff) + (s >> 16)
     s += (s >> 16)
