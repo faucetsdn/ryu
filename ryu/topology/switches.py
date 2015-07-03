@@ -374,8 +374,8 @@ class LLDPPacket(object):
 
         tlv_chassis_id = lldp.ChassisID(
             subtype=lldp.ChassisID.SUB_LOCALLY_ASSIGNED,
-            chassis_id=LLDPPacket.CHASSIS_ID_FMT %
-            dpid_to_str(dpid))
+            chassis_id=(LLDPPacket.CHASSIS_ID_FMT %
+                        dpid_to_str(dpid)).encode('ascii'))
 
         tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_PORT_COMPONENT,
                                   port_id=struct.pack(

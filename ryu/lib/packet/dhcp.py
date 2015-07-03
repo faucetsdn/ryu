@@ -192,7 +192,8 @@ class dhcp(packet_base.PacketBase):
                     addrconv.ipv4.bin_to_text(ciaddr),
                     addrconv.ipv4.bin_to_text(yiaddr),
                     addrconv.ipv4.bin_to_text(siaddr),
-                    addrconv.ipv4.bin_to_text(giaddr), sname, boot_file),
+                    addrconv.ipv4.bin_to_text(giaddr),
+                    sname.decode('ascii'), boot_file),
                 None, buf[length:])
 
     @classmethod
@@ -213,7 +214,7 @@ class dhcp(packet_base.PacketBase):
                            addrconv.ipv4.text_to_bin(self.siaddr),
                            addrconv.ipv4.text_to_bin(self.giaddr),
                            addrconv.mac.text_to_bin(self.chaddr),
-                           self.sname, self.boot_file, seri_opt)
+                           self.sname.encode('ascii'), self.boot_file, seri_opt)
 
 
 class options(stringify.StringifyMixin):
