@@ -41,7 +41,7 @@ class Test_dhcp_offer(unittest.TestCase):
     yiaddr = '192.168.20.20'
     siaddr = '192.168.30.30'
     giaddr = '192.168.40.40'
-    sname = b'abc'
+    sname = 'abc'
     boot_file = b''
 
     option_list = [
@@ -124,7 +124,7 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(self.giaddr, res.giaddr)
         eq_(self.chaddr, res.chaddr)
         # sname is 64 byte length. rest of data is filled by '\x00'.
-        eq_(self.sname.ljust(64, b'\x00'), res.sname)
+        eq_(self.sname.ljust(64, '\x00'), res.sname)
         # boof_file is 128 byte length. rest of data is filled by '\x00'.
         eq_(self.boot_file.ljust(128, b'\x00'), res.boot_file)
         eq_(str(self.options), str(res.options))
@@ -153,7 +153,7 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(self.giaddr, addrconv.ipv4.bin_to_text(res[10]))
         eq_(self.chaddr, addrconv.mac.bin_to_text(res[11][:6]))
         # sname is 64 byte length. rest of data is filled by '\x00'.
-        eq_(self.sname.ljust(64, b'\x00'), res[12])
+        eq_(self.sname.ljust(64, '\x00'), res[12].decode('ascii'))
         # boof_file is 128 byte length. rest of data is filled by '\x00'.
         eq_(self.boot_file.ljust(128, b'\x00'), res[13])
         options = dhcp.options.parser(

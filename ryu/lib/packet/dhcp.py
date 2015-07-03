@@ -149,7 +149,7 @@ class dhcp(packet_base.PacketBase):
     def __init__(self, op, chaddr, options, htype=_HARDWARE_TYPE_ETHERNET,
                  hlen=0, hops=0, xid=None, secs=0, flags=0,
                  ciaddr='0.0.0.0', yiaddr='0.0.0.0', siaddr='0.0.0.0',
-                 giaddr='0.0.0.0', sname=b'', boot_file=b''):
+                 giaddr='0.0.0.0', sname='', boot_file=b''):
         super(dhcp, self).__init__()
         self.op = op
         self.htype = htype
