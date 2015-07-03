@@ -63,7 +63,7 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         eq_(tlvs[1].tlv_type, lldp.LLDP_TLV_PORT_ID)
         eq_(tlvs[1].len, 4)
         eq_(tlvs[1].subtype, lldp.PortID.SUB_INTERFACE_NAME)
-        eq_(tlvs[1].port_id, '1/3')
+        eq_(tlvs[1].port_id, b'1/3')
         eq_(tlvs[2].tlv_type, lldp.LLDP_TLV_TTL)
         eq_(tlvs[2].len, 2)
         eq_(tlvs[2].ttl, 120)
@@ -89,7 +89,7 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         tlv_chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
                                         chassis_id=b'\x00\x04\x96\x1f\xa7\x26')
         tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                                  port_id='1/3')
+                                  port_id=b'1/3')
         tlv_ttl = lldp.TTL(ttl=120)
         tlv_end = lldp.End()
         tlvs = (tlv_chassis_id, tlv_port_id, tlv_ttl, tlv_end)
@@ -111,7 +111,7 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
                                         chassis_id=addrconv.mac.
                                         text_to_bin(src))
         tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                                  port_id='1/3')
+                                  port_id=b'1/3')
         tlv_ttl = lldp.TTL(ttl=120)
         tlv_end = lldp.End()
         tlvs = (tlv_chassis_id, tlv_port_id, tlv_ttl, tlv_end)
@@ -127,7 +127,7 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
                                     chassis_id=b'\x00\x04\x96\x1f\xa7\x26')
         port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                              port_id='1/3')
+                              port_id=b'1/3')
         ttl = lldp.TTL(ttl=120)
         end = lldp.End()
         tlvs = (chassis_id, port_id, ttl, end)
@@ -183,7 +183,7 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
                                     chassis_id=b'\x00\x04\x96\x1f\xa7\x26')
         port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                              port_id='1/3')
+                              port_id=b'1/3')
         ttl = lldp.TTL(ttl=120)
         end = lldp.End()
         tlvs = (chassis_id, port_id, ttl, end)
@@ -260,7 +260,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
 
         eq_(tlvs[5].tlv_type, lldp.LLDP_TLV_SYSTEM_DESCRIPTION)
         eq_(tlvs[5].system_description,
-            'Summit300-48 - Version 7.4e.1 (Build 5) '
+            b'Summit300-48 - Version 7.4e.1 (Build 5) '
             + b'by Release_Master 05/27/05 04:53:11\x00')
 
         # SystemCapabilities
@@ -304,7 +304,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
                                         chassis_id=addrconv.mac.
                                         text_to_bin(src))
         tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                                  port_id='1/1')
+                                  port_id=b'1/1')
         tlv_ttl = lldp.TTL(ttl=120)
         tlv_port_description = lldp.PortDescription(
             port_description=b'Summit300-48-Port 1001\x00')
@@ -319,7 +319,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         tlv_management_address = lldp.ManagementAddress(
             addr_subtype=0x06, addr=b'\x00\x01\x30\xf9\xad\xa0',
             intf_subtype=0x02, intf_num=1001,
-            oid='')
+            oid=b'')
         tlv_organizationally_specific = lldp.OrganizationallySpecific(
             oui=b'\x00\x12\x0f', subtype=0x02, info=b'\x07\x01\x00')
         tlv_end = lldp.End()
@@ -342,7 +342,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
                                     chassis_id=b'\x00\x01\x30\xf9\xad\xa0')
         port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                              port_id='1/1')
+                              port_id=b'1/1')
         ttl = lldp.TTL(ttl=120)
         port_desc = lldp.PortDescription(
             port_description=b'Summit300-48-Port 1001\x00')
@@ -497,7 +497,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,
                                     chassis_id=b'\x00\x01\x30\xf9\xad\xa0')
         port_id = lldp.PortID(subtype=lldp.PortID.SUB_INTERFACE_NAME,
-                              port_id='1/1')
+                              port_id=b'1/1')
         ttl = lldp.TTL(ttl=120)
         port_desc = lldp.PortDescription(
             port_description=b'Summit300-48-Port 1001\x00')

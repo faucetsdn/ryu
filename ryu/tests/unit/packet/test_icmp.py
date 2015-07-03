@@ -78,7 +78,7 @@ class Test_icmp(unittest.TestCase):
 
     def setUp_with_dest_unreach(self):
         self.unreach_mtu = 10
-        self.unreach_data = 'abc'
+        self.unreach_data = b'abc'
         self.unreach_data_len = len(self.unreach_data)
         self.data = icmp.dest_unreach(
             data_len=self.unreach_data_len, mtu=self.unreach_mtu,
@@ -95,7 +95,7 @@ class Test_icmp(unittest.TestCase):
         struct.pack_into('!H', self.buf, 2, self.csum_calc)
 
     def setUp_with_TimeExceeded(self):
-        self.te_data = 'abc'
+        self.te_data = b'abc'
         self.te_data_len = len(self.te_data)
         self.data = icmp.TimeExceeded(
             data_len=self.te_data_len, data=self.te_data)
@@ -305,7 +305,7 @@ class Test_dest_unreach(unittest.TestCase):
 
     def setUp(self):
         self.mtu = 10
-        self.data = 'abc'
+        self.data = b'abc'
         self.data_len = len(self.data)
         self.dest_unreach = icmp.dest_unreach(
             data_len=self.data_len, mtu=self.mtu, data=self.data)
@@ -346,7 +346,7 @@ class Test_dest_unreach(unittest.TestCase):
 class Test_TimeExceeded(unittest.TestCase):
 
     def setUp(self):
-        self.data = 'abc'
+        self.data = b'abc'
         self.data_len = len(self.data)
         self.te = icmp.TimeExceeded(
             data_len=self.data_len, data=self.data)

@@ -1599,7 +1599,7 @@ class BGPPathAttributeAtomicAggregate(_PathAttribute):
         return {}
 
     def serialize_value(self):
-        return ''
+        return b''
 
 
 class _BGPPathAttributeAggregatorCommon(_PathAttribute):
@@ -2014,7 +2014,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         next_hop_bin = rest[:next_hop_len]
         rest = rest[next_hop_len:]
         reserved = rest[:1]
-        assert reserved == '\0'
+        assert reserved == b'\0'
         binnlri = rest[1:]
         addr_cls = _get_addr_class(afi, safi)
         nlri = []
@@ -2068,7 +2068,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             next_hop_len = self.next_hop_len
             next_hop_bin = self._next_hop_bin
 
-        self._reserved = '\0'
+        self._reserved = b'\0'
 
         buf = bytearray()
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi,

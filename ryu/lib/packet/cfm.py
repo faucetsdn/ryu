@@ -742,11 +742,11 @@ class sender_id_tlv(tlv):
                  length=0,
                  chassis_id_length=0,
                  chassis_id_subtype=_CHASSIS_ID_MAC_ADDRESS,
-                 chassis_id="",
+                 chassis_id=b'',
                  ma_domain_length=0,
-                 ma_domain="",
+                 ma_domain=b'',
                  ma_length=0,
-                 ma=""
+                 ma=b''
                  ):
         super(sender_id_tlv, self).__init__(length)
         self._type = CFM_SENDER_ID_TLV
@@ -771,11 +771,11 @@ class sender_id_tlv(tlv):
         (type_, length, chassis_id_length) = struct.unpack_from(cls._PACK_STR,
                                                                 buf)
         chassis_id_subtype = 4
-        chassis_id = ""
+        chassis_id = b''
         ma_domain_length = 0
-        ma_domain = ""
+        ma_domain = b''
         ma_length = 0
-        ma = ""
+        ma = b''
         offset = cls._MIN_LEN
         if chassis_id_length != 0:
             (chassis_id_subtype, ) = struct.unpack_from("!B", buf, offset)
@@ -1230,7 +1230,7 @@ class reply_tlv(tlv):
          mac_address) = struct.unpack_from(cls._PACK_STR, buf)
         port_id_length = 0
         port_id_subtype = 0
-        port_id = ""
+        port_id = b''
         if length > cls._MIN_VALUE_LEN:
             (port_id_length,
              port_id_subtype) = struct.unpack_from('!2B', buf, cls._MIN_LEN)
@@ -1309,7 +1309,7 @@ class reply_ingress_tlv(reply_tlv):
                  mac_address='00:00:00:00:00:00',
                  port_id_length=0,
                  port_id_subtype=0,
-                 port_id=""
+                 port_id=b''
                  ):
         super(reply_ingress_tlv, self).__init__(length, action,
                                                 mac_address, port_id_length,
@@ -1358,7 +1358,7 @@ class reply_egress_tlv(reply_tlv):
                  mac_address='00:00:00:00:00:00',
                  port_id_length=0,
                  port_id_subtype=0,
-                 port_id=""
+                 port_id=b''
                  ):
         super(reply_egress_tlv, self).__init__(length, action,
                                                mac_address, port_id_length,

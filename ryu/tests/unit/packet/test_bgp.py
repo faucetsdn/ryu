@@ -39,11 +39,11 @@ class Test_bgp(unittest.TestCase):
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 29)
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_open2(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
-                                                      cap_value='hoge'),
+                                                      cap_value=b'hoge'),
                      bgp.BGPOptParamCapabilityGracefulRestart(flags=0,
                                                               time=120,
                                                               tuples=[]),
@@ -54,14 +54,14 @@ class Test_bgp(unittest.TestCase):
                      bgp.BGPOptParamCapabilityCarryingLabelInfo(),
                      bgp.BGPOptParamCapabilityFourOctetAsNumber(
                          as_number=1234567),
-                     bgp.BGPOptParamUnknown(type_=99, value='fuga')]
+                     bgp.BGPOptParamUnknown(type_=99, value=b'fuga')]
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.2',
                           opt_param=opt_param)
         binmsg = msg.serialize()
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         ok_(len(msg) > 29)
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_update1(self):
         msg = bgp.BGPUpdate()
@@ -69,7 +69,7 @@ class Test_bgp(unittest.TestCase):
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 23)
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_update2(self):
         withdrawn_routes = [bgp.BGPWithdrawnRoute(length=0,
@@ -105,8 +105,8 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPIPv4AddressSpecificExtendedCommunity(
                 subtype=3, ipv4_address='192.0.2.1',
                 local_administrator=65432),
-            bgp.BGPOpaqueExtendedCommunity(opaque='abcdefg'),
-            bgp.BGPUnknownExtendedCommunity(type_=99, value='abcdefg'),
+            bgp.BGPOpaqueExtendedCommunity(opaque=b'abcdefg'),
+            bgp.BGPUnknownExtendedCommunity(type_=99, value=b'abcdefg'),
         ]
         path_attributes = [
             bgp.BGPPathAttributeOrigin(value=1),
@@ -134,7 +134,7 @@ class Test_bgp(unittest.TestCase):
                                             nlri=mp_nlri2),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
-            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * 'bar')
+            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * b'bar')
         ]
         nlri = [
             bgp.BGPNLRI(length=24, addr='203.0.113.1'),
@@ -147,7 +147,7 @@ class Test_bgp(unittest.TestCase):
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         ok_(len(msg) > 23)
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_keepalive(self):
         msg = bgp.BGPKeepAlive()
@@ -155,16 +155,16 @@ class Test_bgp(unittest.TestCase):
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 19)
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_notification(self):
-        data = "hoge"
+        data = b'hoge'
         msg = bgp.BGPNotification(error_code=1, error_subcode=2, data=data)
         binmsg = msg.serialize()
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 21 + len(data))
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_route_refresh(self):
         msg = bgp.BGPRouteRefresh(afi=afi.IP, safi=safi.MPLS_VPN)
@@ -172,13 +172,13 @@ class Test_bgp(unittest.TestCase):
         msg2, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 23)
-        eq_(rest, '')
+        eq_(rest, b'')
 
     def test_stream_parser(self):
         msgs = [
-            bgp.BGPNotification(error_code=1, error_subcode=2, data="foo"),
-            bgp.BGPNotification(error_code=3, error_subcode=4, data="bar"),
-            bgp.BGPNotification(error_code=5, error_subcode=6, data="baz"),
+            bgp.BGPNotification(error_code=1, error_subcode=2, data=b'foo'),
+            bgp.BGPNotification(error_code=3, error_subcode=4, data=b'bar'),
+            bgp.BGPNotification(error_code=5, error_subcode=6, data=b'baz'),
         ]
         binmsgs = b''.join([bytes(msg.serialize()) for msg in msgs])
         sp = bgp.StreamParser()
@@ -205,17 +205,17 @@ class Test_bgp(unittest.TestCase):
             msg, rest = bgp.BGPMessage.parser(binmsg)
             binmsg2 = msg.serialize()
             eq_(binmsg, binmsg2)
-            eq_(rest, '')
+            eq_(rest, b'')
 
     def test_json1(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
-                                                      cap_value='hoge'),
+                                                      cap_value=b'hoge'),
                      bgp.BGPOptParamCapabilityRouteRefresh(),
                      bgp.BGPOptParamCapabilityMultiprotocol(
                          afi=afi.IP, safi=safi.MPLS_VPN),
                      bgp.BGPOptParamCapabilityFourOctetAsNumber(
                          as_number=1234567),
-                     bgp.BGPOptParamUnknown(type_=99, value='fuga')]
+                     bgp.BGPOptParamUnknown(type_=99, value=b'fuga')]
         msg1 = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.2',
                            opt_param=opt_param)
         jsondict = msg1.to_jsondict()
@@ -253,8 +253,8 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPIPv4AddressSpecificExtendedCommunity(
                 subtype=3, ipv4_address='192.0.2.1',
                 local_administrator=65432),
-            bgp.BGPOpaqueExtendedCommunity(opaque='abcdefg'),
-            bgp.BGPUnknownExtendedCommunity(type_=99, value='abcdefg'),
+            bgp.BGPOpaqueExtendedCommunity(opaque=b'abcdefg'),
+            bgp.BGPUnknownExtendedCommunity(type_=99, value=b'abcdefg'),
         ]
         path_attributes = [
             bgp.BGPPathAttributeOrigin(value=1),
@@ -277,7 +277,7 @@ class Test_bgp(unittest.TestCase):
                                             nlri=mp_nlri),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
-            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * 'bar')
+            bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * b'bar')
         ]
         nlri = [
             bgp.BGPNLRI(length=24, addr='203.0.113.1'),

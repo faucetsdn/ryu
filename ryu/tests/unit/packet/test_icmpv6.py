@@ -315,7 +315,7 @@ class Test_icmpv6_neighbor_solicit(unittest.TestCase):
         eq_(csum, nd_csum)
         eq_(res >> 29, self.res)
         eq_(dst, addrconv.ipv6.text_to_bin(self.dst))
-        eq_(data, '')
+        eq_(data, b'')
 
     def test_serialize_with_data(self):
         nd_opt = icmpv6.nd_option_sla(self.nd_length, self.nd_hw_src)
@@ -606,7 +606,7 @@ class Test_icmpv6_router_solicit(unittest.TestCase):
         eq_(code, self.code)
         eq_(csum, rs_csum)
         eq_(res[0], self.res)
-        eq_(data, '')
+        eq_(data, b'')
 
     def test_serialize_with_data(self):
         nd_opt = icmpv6.nd_option_sla(self.nd_length, self.nd_hw_src)

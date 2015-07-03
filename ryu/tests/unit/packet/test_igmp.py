@@ -988,7 +988,7 @@ class Test_igmpv3_report_group(unittest.TestCase):
         eq_(res[2], addrconv.ipv4.text_to_bin(srcs[2]))
 
         # aux without aux_len
-        aux = 'abcde'
+        aux = b'abcde'
         rep = igmpv3_report_group(aux=aux)
         buf = rep.serialize()
         res = unpack_from(igmpv3_report_group._PACK_STR, six.binary_type(buf))
