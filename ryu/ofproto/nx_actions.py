@@ -380,6 +380,41 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
                           bytes(data))
 
+    class NXActionResubmitTable(NXAction):
+        _subtype = nicira_ext.NXAST_RESUBMIT_TABLE
+
+        # in_port, table_id
+        _fmt_str = '!HB3x'
+
+        def __init__(self,
+                     in_port,
+                     table_id,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionResubmitTable, self).__init__()
+            self.in_port = in_port
+            self.table_id = table_id
+
+        @classmethod
+        def parse(cls, buf):
+            (in_port,
+             table_id) = struct.unpack_from(
+                NXActionResubmitTable._fmt_str, buf, 0)
+            return cls(in_port, table_id)
+
+        def serialize(self, buf, offset):
+            data = bytearray()
+            msg_pack_into(NXActionResubmitTable._fmt_str, data, 0,
+                          self.in_port,
+                          self.table_id)
+            payload_offset = (
+                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
+                struct.calcsize(NXAction._fmt_str)
+            )
+            self.len = utils.round_up(payload_offset + len(data), 8)
+            super(NXActionResubmitTable, self).serialize(buf, offset)
+            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
+                          bytes(data))
+
     def add_attr(k, v):
         v.__module__ = ofpp.__name__  # Necessary for stringify stuff
         setattr(ofpp, k, v)
@@ -391,6 +426,7 @@ def generate(ofp_name, ofpp_name):
         'NXActionRegMove',
         'NXActionLearn',
         'NXActionConjunction',
+        'NXActionResubmitTable',
         '_NXFlowSpec',  # exported for testing
         'NXFlowSpecMatch',
         'NXFlowSpecLoad',
