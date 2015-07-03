@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import inspect
+import six
 import struct
 
 from . import packet_base
@@ -72,7 +73,7 @@ class Packet(object):
                     prev = r[i + 1]
                 data = p.serialize(self.data, prev)
             else:
-                data = str(p)
+                data = six.binary_type(p)
             self.data = data + self.data
 
     def add_protocol(self, proto):

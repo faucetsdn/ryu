@@ -300,7 +300,7 @@ class chunk_init_base(chunk):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -333,7 +333,7 @@ class chunk_heartbeat_base(chunk):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -457,7 +457,7 @@ class chunk_data(chunk):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @sctp.register_chunk_type
@@ -651,7 +651,7 @@ class chunk_sack(chunk):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @sctp.register_chunk_type
@@ -813,7 +813,7 @@ class chunk_abort(chunk):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @sctp.register_chunk_type
@@ -966,7 +966,7 @@ class chunk_error(chunk):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @sctp.register_chunk_type
@@ -1026,7 +1026,7 @@ class chunk_cookie_echo(chunk):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @sctp.register_chunk_type
@@ -1230,7 +1230,7 @@ class cause_with_value(cause):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @chunk_abort.register_cause_code
@@ -1347,7 +1347,7 @@ class cause_missing_param(cause):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @chunk_abort.register_cause_code
@@ -1474,7 +1474,7 @@ class cause_unresolvable_addr(cause_with_value):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @chunk_abort.register_cause_code
@@ -1703,7 +1703,7 @@ class cause_restart_with_new_addr(cause_with_value):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @chunk_abort.register_cause_code
@@ -1803,7 +1803,7 @@ class param(stringify.StringifyMixin):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
     def __len__(self):
         length = self.length
@@ -2064,7 +2064,7 @@ class param_supported_addr(param):
         mod = len(buf) % 4
         if mod:
             buf.extend(bytearray(4 - mod))
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @chunk_init.register_param_type
@@ -2119,7 +2119,7 @@ class param_ipv4(param):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
 
 @chunk_init.register_param_type
@@ -2174,4 +2174,4 @@ class param_ipv6(param):
         if 0 == self.length:
             self.length = len(buf)
             struct.pack_into('!H', buf, 2, self.length)
-        return str(buf)
+        return six.binary_type(buf)

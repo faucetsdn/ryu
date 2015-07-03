@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import struct
 
 from . import packet_base
@@ -108,4 +109,4 @@ class tcp(packet_base.PacketBase):
             self.csum = packet_utils.checksum_ip(prev, total_length,
                                                  h + payload)
             struct.pack_into('!H', h, 16, self.csum)
-        return str(h)
+        return six.binary_type(h)

@@ -225,7 +225,7 @@ class nd_neighbor(stringify.StringifyMixin):
                 hdr.extend(self.option.serialize())
             else:
                 hdr.extend(self.option)
-        return str(hdr)
+        return six.binary_type(hdr)
 
     def __len__(self):
         length = self._MIN_LEN
@@ -294,7 +294,7 @@ class nd_router_solicit(stringify.StringifyMixin):
                 hdr.extend(self.option.serialize())
             else:
                 hdr.extend(self.option)
-        return str(hdr)
+        return six.binary_type(hdr)
 
     def __len__(self):
         length = self._MIN_LEN
@@ -379,7 +379,7 @@ class nd_router_advert(stringify.StringifyMixin):
                 hdr.extend(option.serialize())
             else:
                 hdr.extend(option)
-        return str(hdr)
+        return six.binary_type(hdr)
 
     def __len__(self):
         length = self._MIN_LEN
@@ -451,7 +451,7 @@ class nd_option_la(nd_option):
         if 0 == self.length:
             self.length = len(buf) // 8
             struct.pack_into('!B', buf, 1, self.length)
-        return str(buf)
+        return six.binary_type(buf)
 
     def __len__(self):
         length = self._MIN_LEN
@@ -609,7 +609,7 @@ class nd_option_pi(nd_option):
         if 0 == self.length:
             self.length = len(hdr) // 8
             struct.pack_into('!B', hdr, 1, self.length)
-        return str(hdr)
+        return six.binary_type(hdr)
 
 
 @icmpv6.register_icmpv6_type(ICMPV6_ECHO_REPLY, ICMPV6_ECHO_REQUEST)
@@ -790,7 +790,7 @@ class mldv2_query(mld):
         if 0 == self.num:
             self.num = len(self.srcs)
             struct.pack_into('!H', buf, 22, self.num)
-        return str(buf)
+        return six.binary_type(buf)
 
     def __len__(self):
         return self._MIN_LEN + len(self.srcs) * 16
@@ -850,7 +850,7 @@ class mldv2_report(mld):
         if 0 == self.record_num:
             self.record_num = len(self.records)
             struct.pack_into('!H', buf, 2, self.record_num)
-        return str(buf)
+        return six.binary_type(buf)
 
     def __len__(self):
         records_len = 0
@@ -930,12 +930,12 @@ class mldv2_report_group(stringify.StringifyMixin):
             mod = len(self.aux) % 4
             if mod:
                 self.aux += bytearray(4 - mod)
-                self.aux = str(self.aux)
+                self.aux = six.binary_type(self.aux)
             buf.extend(self.aux)
             if 0 == self.aux_len:
                 self.aux_len = len(self.aux) // 4
                 struct.pack_into('!B', buf, 1, self.aux_len)
-        return str(buf)
+        return six.binary_type(buf)
 
     def __len__(self):
         return self._MIN_LEN + len(self.srcs) * 16 + self.aux_len * 4

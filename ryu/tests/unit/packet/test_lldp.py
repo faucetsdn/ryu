@@ -17,6 +17,7 @@
 
 import unittest
 import logging
+import six
 import struct
 import inspect
 from nose.tools import ok_, eq_, nottest
@@ -334,7 +335,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
         pkt.serialize()
 
         # self.data has many organizationally specific TLVs
-        data = str(pkt.data[:-2])
+        data = six.binary_type(pkt.data[:-2])
         eq_(data, self.data[:len(data)])
 
     def test_to_string(self):
