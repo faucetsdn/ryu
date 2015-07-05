@@ -1200,6 +1200,15 @@ oxm_types = [
     # Prefix the name with '_' to indicate this is not intended to be used
     # in wild.
     oxm_fields.NiciraExperimenter('_dp_hash', 0, type_desc.Int4),
+
+    # Support for matching/setting NX registers 1-7
+    oxm_fields.NiciraExtended1('reg1', 1, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg2', 2, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg3', 3, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg4', 4, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg5', 5, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg6', 6, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg7', 7, type_desc.Int4),
 ]
 
 oxm_fields.generate(__name__)
