@@ -772,6 +772,13 @@ class _BinAddrPrefix(_AddrPrefix):
 
 class _LabelledAddrPrefix(_AddrPrefix):
     _LABEL_PACK_STR = '!3B'
+    # RFC3107
+    # 3. Carrying Label Mapping Information
+    # The label information carried (as part of NLRI) in the Withdrawn
+    # Routes field should be set to 0x800000.  (Of course, terminating the
+    # BGP session also withdraws all the previously advertised routes.)
+    #
+    _WITHDRAW_LABEL = 0x800000
 
     def __init__(self, length, addr, labels=[], **kwargs):
         assert isinstance(labels, list)
@@ -843,6 +850,8 @@ class _LabelledAddrPrefix(_AddrPrefix):
 
         while True:
             (label, rest) = cls._label_from_bin(rest)
+            if label == cls._WITHDRAW_LABEL:
+                break
             labels.append(label >> 4)
             if label & 1:  # bottom of stack
                 break
