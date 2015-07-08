@@ -29,7 +29,6 @@ class Network_Aware(app_manager.RyuApp):
         super(Network_Aware, self).__init__(*args, **kwargs)
         self.name = "Network_Aware"
         self.topology_api_app = self
-        self.link_list = []
 
         # links   :(src_dpid,dst_dpid)->(src_port,dst_port)
         self.link_to_port = {}
@@ -40,10 +39,10 @@ class Network_Aware(app_manager.RyuApp):
         # ports
         self.switch_port_table = {}  # dpid->port_num
 
-        # dpid->port_num (ports without link)
+        # dpid->port_num (outer ports)
         self.access_ports = {}
 
-        # dpid->port_num(ports with contain link `s port)
+        # dpid->port_num(interior ports)
         self.interior_ports = {}
         self.graph = {}
 
@@ -51,10 +50,10 @@ class Network_Aware(app_manager.RyuApp):
         self.pre_graph = {}
         self.pre_access_table = {}
 
-        self.monitor_thread = hub.spawn(self._monitor)
+        self.discover_thread = hub.spawn(self._discover)
 
     # show topo ,and get topo again
-    def _monitor(self):
+    def _discover(self):
         i = 0
         while True:
             self.show_topology()
@@ -169,7 +168,7 @@ class Network_Aware(app_manager.RyuApp):
     # show topo
     def show_topology(self):
         switch_num = len(self.graph)
-        if self.pre_graph != self.graph or IS_UPDATE:
+        if self.pre_graph != self.graph and IS_UPDATE:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -182,7 +181,7 @@ class Network_Aware(app_manager.RyuApp):
                 print ""
             self.pre_graph = self.graph
         # show link
-        if self.pre_link_to_port != self.link_to_port or IS_UPDATE:
+        if self.pre_link_to_port != self.link_to_port and IS_UPDATE:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -200,7 +199,7 @@ class Network_Aware(app_manager.RyuApp):
 
         # each dp access host
         # {(sw,port) :[host1_ip,host2_ip,host3_ip,host4_ip]}
-        if self.pre_access_table != self.access_table or IS_UPDATE:
+        if self.pre_access_table != self.access_table and IS_UPDATE:
             print "----------------Access Host-------------------"
             print '%10s' % ("switch"), '%12s' % "Host"
             if not self.access_table.keys():

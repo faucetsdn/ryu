@@ -24,13 +24,13 @@ class Shortest_Route(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
         "Network_Aware": network_aware.Network_Aware,
-        "monitor": network_monitor.network_monitor,
+        "Network_Monitor": network_monitor.Network_Monitor,
     }
 
     def __init__(self, *args, **kwargs):
         super(Shortest_Route, self).__init__(*args, **kwargs)
         self.network_aware = kwargs["Network_Aware"]
-        self.network_monitor = kwargs["monitor"]
+        self.network_monitor = kwargs["Network_Monitor"]
         self.mac_to_port = {}
         self.datapaths = {}
 

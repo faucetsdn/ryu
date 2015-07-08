@@ -12,12 +12,12 @@ from ryu.lib.packet import packet
 SLEEP_PERIOD = 10
 
 
-class network_monitor(app_manager.RyuApp):
+class Network_Monitor(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    _NAME = 'network_monitor'
+    _NAME = 'Network_Monitor'
 
     def __init__(self, *args, **kwargs):
-        super(network_monitor, self).__init__(*args, **kwargs)
+        super(Network_Monitor, self).__init__(*args, **kwargs)
 
         self.datapaths = {}
         self.port_stats = {}
