@@ -29,6 +29,7 @@ from ryu.lib.packet import arp
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import icmp
 from ryu import utils
+import socket
 
 from ryu.lib import addrconv
 import struct
@@ -59,6 +60,7 @@ class MULTIPATH_13(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         datapath = ev.msg.datapath
+        dpid = datapath.id
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
@@ -74,6 +76,7 @@ class MULTIPATH_13(app_manager.RyuApp):
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
         self.add_flow(datapath, 1, 0, match, actions)
+        self.logger.info("switch:%s connected", dpid)
 
     def add_flow(self, datapath, hard_timeout, priority, match, actions):
         ofproto = datapath.ofproto

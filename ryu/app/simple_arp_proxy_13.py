@@ -57,6 +57,7 @@ class SimpleARPProxy13(app_manager.RyuApp):
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
         self.add_flow(datapath, 0, match, actions)
+        self.logger.info("switch:%s connected", datapath.id)
 
     def add_flow(self, datapath, priority, match, actions):
         ofproto = datapath.ofproto
@@ -91,27 +92,36 @@ class SimpleARPProxy13(app_manager.RyuApp):
             return None
 
         arp_pkt = pkt.get_protocol(arp.arp)
+
         if arp_pkt:
             self.arp_table[arp_pkt.src_ip] = src  # ARP learning
+            self.logger.info(" ARP: %s -> %s", arp_pkt.src_ip, arp_pkt.dst_ip)
+            if self.arp_handler(msg):  # answer or drop
+                return None
 
         self.mac_to_port.setdefault(dpid, {})
         self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
 
         # Learn a mac address to avoid FLOOD next time.
-        self.mac_to_port[dpid][src] = in_port
-
+        if src not in self.mac_to_port[dpid]:
+            self.mac_to_port[dpid][src] = in_port
+        #print self.mac_to_port
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
+        #else:
+            #if self.arp_handler(msg):  # 1:reply or drop;  0: flood
+            #    return None
         else:
-            if self.arp_handler(msg):  # 1:reply or drop;  0: flood
-                return None
-            else:
-                out_port = ofproto.OFPP_FLOOD
+            print self.mac_to_port[dpid]
+            out_port = ofproto.OFPP_FLOOD
+            print "Flood"
 
         actions = [parser.OFPActionOutput(out_port)]
 
         # Install a flow to avoid packet_in next time
         if out_port != ofproto.OFPP_FLOOD:
+            self.logger.info(" install flow_mod:%s -> %s ", in_port, out_port)
+
             match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
             self.add_flow(datapath, 1, match, actions)
 
@@ -120,6 +130,7 @@ class SimpleARPProxy13(app_manager.RyuApp):
             data = msg.data
         out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
                                   in_port=in_port, actions=actions, data=data)
+
         datapath.send_msg(out)
 
     def arp_handler(self, msg):
@@ -137,27 +148,31 @@ class SimpleARPProxy13(app_manager.RyuApp):
             eth_src = eth.src
 
         # Break the loop for avoiding ARP broadcast storm
-        if eth_dst == mac.BROADCAST_STR and arp_pkt:
+        if eth_dst == mac.BROADCAST_STR:  # and arp_pkt:
             arp_dst_ip = arp_pkt.dst_ip
+            arp_src_ip = arp_pkt.src_ip
 
-            if (datapath.id, eth_src, arp_dst_ip) in self.sw:
-                if self.sw[(datapath.id, eth_src, arp_dst_ip)] != in_port:
+            if (datapath.id, arp_src_ip, arp_dst_ip) in self.sw:
+                # packet come back at different port.
+                if self.sw[(datapath.id, arp_src_ip, arp_dst_ip)] != in_port:
                     datapath.send_packet_out(in_port=in_port, actions=[])
                     return True
             else:
-                self.sw[(datapath.id, eth_src, arp_dst_ip)] = in_port
+                # self.sw.setdefault((datapath.id, eth_src, arp_dst_ip), None)
+                self.sw[(datapath.id, arp_src_ip, arp_dst_ip)] = in_port
+                print self.sw
+                self.mac_to_port.setdefault(datapath.id, {})
+                self.mac_to_port[datapath.id][eth_src] = in_port
 
         # Try to reply arp request
         if arp_pkt:
-            hwtype = arp_pkt.hwtype
-            proto = arp_pkt.proto
-            hlen = arp_pkt.hlen
-            plen = arp_pkt.plen
-            opcode = arp_pkt.opcode
-            arp_src_ip = arp_pkt.src_ip
-            arp_dst_ip = arp_pkt.dst_ip
-
-            if opcode == arp.ARP_REQUEST:
+            if arp_pkt.opcode == arp.ARP_REQUEST:
+                hwtype = arp_pkt.hwtype
+                proto = arp_pkt.proto
+                hlen = arp_pkt.hlen
+                plen = arp_pkt.plen
+                arp_src_ip = arp_pkt.src_ip
+                arp_dst_ip = arp_pkt.dst_ip
                 if arp_dst_ip in self.arp_table:
                     actions = [parser.OFPActionOutput(in_port)]
                     ARP_Reply = packet.Packet()
@@ -181,5 +196,6 @@ class SimpleARPProxy13(app_manager.RyuApp):
                         in_port=ofproto.OFPP_CONTROLLER,
                         actions=actions, data=ARP_Reply.data)
                     datapath.send_msg(out)
+                    print "ARP_Reply"
                     return True
         return False

@@ -45,6 +45,7 @@ SERVICE_BRICKS = {}
 
 
 def lookup_service_brick(name):
+    # LOG.info('lookup_service_brick  %s', name)
     return SERVICE_BRICKS.get(name)
 
 
@@ -455,7 +456,7 @@ class AppManager(object):
         # for now, only single instance of a given module
         # Do we need to support multiple instances?
         # Yes, maybe for slicing.
-        LOG.info('instantiating app %s of %s', app_name, cls.__name__)
+        #LOG.info('instantiating app %s of %s', app_name, cls.__name__)
 
         if hasattr(cls, 'OFP_VERSIONS') and cls.OFP_VERSIONS is not None:
             ofproto_protocol.set_app_supported_versions(cls.OFP_VERSIONS)
