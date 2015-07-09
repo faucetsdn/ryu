@@ -817,7 +817,7 @@ class _LabelledAddrPrefix(_AddrPrefix):
         labels = addr[0]
         rest = addr[1:]
         labels = [x << 4 for x in labels]
-        if labels:
+        if labels and labels[-1] != cls._WITHDRAW_LABEL:
             labels[-1] |= 1  # bottom of stack
         bin_labels = list(map(cls._label_to_bin, labels))
         return bytes(reduce(lambda x, y: x + y, bin_labels,
@@ -831,7 +831,7 @@ class _LabelledAddrPrefix(_AddrPrefix):
             while True:
                 (label, bin_) = cls._label_from_bin(bin_)
                 labels.append(label)
-                if label & 1:  # bottom of stack
+                if label & 1 or label == cls._WITHDRAW_LABEL:
                     break
             assert length > struct.calcsize(cls._LABEL_PACK_STR) * len(labels)
         except struct.error:
@@ -850,10 +850,8 @@ class _LabelledAddrPrefix(_AddrPrefix):
 
         while True:
             (label, rest) = cls._label_from_bin(rest)
-            if label == cls._WITHDRAW_LABEL:
-                break
             labels.append(label >> 4)
-            if label & 1:  # bottom of stack
+            if label & 1 or label == cls._WITHDRAW_LABEL:
                 break
         return (labels,) + cls._prefix_from_bin(rest)
 
