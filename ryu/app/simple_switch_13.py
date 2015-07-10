@@ -20,7 +20,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
-from ryu.topology.switches import LLDPPacket
+from ryu.lib.packet import ether_types
 
 
 class SimpleSwitch13(app_manager.RyuApp):
@@ -71,13 +71,6 @@ class SimpleSwitch13(app_manager.RyuApp):
             self.logger.debug("packet truncated: only %s of %s bytes",
                               ev.msg.msg_len, ev.msg.total_len)
         msg = ev.msg
-
-        try:
-            # ignore lldp packet
-            LLDPPacket.lldp_parse(msg.data)
-            return
-        except LLDPPacket.LLDPUnknownFormat:
-            pass
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -86,6 +79,9 @@ class SimpleSwitch13(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
 
+        if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+            # ignore lldp packet
+            return
         dst = eth.dst
         src = eth.src
 

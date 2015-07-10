@@ -20,7 +20,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_4
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
-from ryu.topology.switches import LLDPPacket
+from ryu.lib.packet import ether_types
 
 
 class SimpleSwitch14(app_manager.RyuApp):
@@ -62,12 +62,6 @@ class SimpleSwitch14(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
-        try:
-            # ignore lldp packet
-            LLDPPacket.lldp_parse(msg.data)
-            return
-        except LLDPPacket.LLDPUnknownFormat:
-            pass
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -76,6 +70,9 @@ class SimpleSwitch14(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
 
+        if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+            # ignore lldp packet
+            return
         dst = eth.dst
         src = eth.src
 
