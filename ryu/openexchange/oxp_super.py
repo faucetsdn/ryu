@@ -38,7 +38,7 @@ CONF = cfg.CONF
 
 #TODO: judge of controller role.
 
-
+'''
 class OXP_Controller(object):
     def __init__(self):
         super(OXP_Controller, self).__init__()
@@ -47,6 +47,7 @@ class OXP_Controller(object):
             Controller = Super_Controller()
         else:
             Controller = Domain_Controller()
+'''
 
 
 class Super_Controller(object):
@@ -101,10 +102,10 @@ def _deactivate(method):
     return deactivate
 
 
-class Domain_network(oxproto_protocol.ProtocolDesc):
+class Domain_Network(oxproto_protocol.ProtocolDesc):
     # TODO: descirpt a domain controller which used by super controller.
     def __init__(self, socket, address):
-        super(Domain_network, self).__init__()
+        super(Domain_Network, self).__init__()
         self.oxp_proto = 1
         self.oxp_parser = 1
         self.socket = socket
@@ -245,7 +246,7 @@ class Domain_network(oxproto_protocol.ProtocolDesc):
 def domain_connection_factory(socket, address):
     # TODO: receive domain connections
     LOG.info('connected domain:%s address:%s', socket, address)
-    with contextlib.closing(Domain_network(socket, address)) as domain:
+    with contextlib.closing(Domain_Network(socket, address)) as domain:
         try:
             domain.serve()
         except:

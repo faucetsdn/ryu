@@ -36,6 +36,7 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
     assert len(buf) >= msg_len
 
     #msg_parser = _MSG_PARSERS.get(version)
+    # TODO: oxp version
     msg_parser = 1
     if msg_parser is None:
         raise exception.OXPUnknownVersion(version=version)
