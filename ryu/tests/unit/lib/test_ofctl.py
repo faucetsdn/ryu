@@ -145,6 +145,31 @@ class Test_ofctl(unittest.TestCase):
             ok_(isinstance(action, cls))
             if act_type == 'OUTPUT':
                 eq_(action.port, act["port"])
+            elif act_type == 'SET_VLAN_VID':
+                eq_(action.vlan_vid, act["vlan_vid"])
+            elif act_type == 'SET_VLAN_PCP':
+                eq_(action.vlan_pcp, act["vlan_pcp"])
+            elif act_type == 'SET_DL_SRC':
+                eq_(addrconv.mac.bin_to_text(action.dl_addr),
+                    act["dl_src"])
+            elif act_type == 'SET_DL_DST':
+                eq_(addrconv.mac.bin_to_text(action.dl_addr),
+                    act["dl_dst"])
+            elif act_type == 'SET_NW_SRC':
+                ip = netaddr.ip.IPAddress(action.nw_addr)
+                eq_(str(ip), act["nw_src"])
+            elif act_type == 'SET_NW_DST':
+                ip = netaddr.ip.IPAddress(action.nw_addr)
+                eq_(str(ip), act["nw_dst"])
+            elif act_type == 'SET_NW_TOS':
+                eq_(action.tos, act["nw_tos"])
+            elif act_type == 'SET_TP_SRC':
+                eq_(action.tp, act["tp_src"])
+            elif act_type == 'SET_TP_DST':
+                eq_(action.tp, act["tp_dst"])
+            elif act_type == 'ENQUEUE':
+                eq_(action.queue_id, act["queue_id"])
+                eq_(action.port, act["port"])
             elif act_type == 'SET_MPLS_TTL':
                 eq_(action.mpls_ttl, act["mpls_ttl"])
             elif act_type in ['PUSH_VLAN', 'PUSH_MPLS',
@@ -156,9 +181,16 @@ class Test_ofctl(unittest.TestCase):
                 eq_(action.group_id, act["group_id"])
             elif act_type == 'SET_NW_TTL':
                 eq_(action.nw_ttl, act["nw_ttl"])
+            elif act_type in ['STRIP_VLAN', 'COPY_TTL_OUT',
+                              'COPY_TTL_IN', 'DEC_MPLS_TTL',
+                              'POP_VLAN', 'DEC_NW_TTL', 'POP_PBB']:
+                pass
+            else:
+                assert False
+
         # action -> str
         action_str = actions_to_str(result)
-        action_str_list = action_str[0].split(':')
+        action_str_list = action_str[0].split(':', 1)
         eq_(action_str_list[0], act_type)
         if act_type == 'GOTO_TABLE':
             eq_(int(action_str_list[1]), act["table_id"])
@@ -171,6 +203,28 @@ class Test_ofctl(unittest.TestCase):
         else:
             if act_type == 'OUTPUT':
                 eq_(int(action_str_list[1]), act["port"])
+            elif act_type == 'SET_VLAN_VID':
+                eq_(int(action_str_list[1]), act["vlan_vid"])
+            elif act_type == 'SET_VLAN_PCP':
+                eq_(int(action_str_list[1]), act["vlan_pcp"])
+            elif act_type == 'SET_DL_SRC':
+                eq_(action_str_list[1], act["dl_src"])
+            elif act_type == 'SET_DL_DST':
+                eq_(action_str_list[1], act["dl_dst"])
+            elif act_type == 'SET_NW_SRC':
+                eq_(action_str_list[1], act["nw_src"])
+            elif act_type == 'SET_NW_DST':
+                eq_(action_str_list[1], act["nw_dst"])
+            elif act_type == 'SET_NW_TOS':
+                eq_(int(action_str_list[1]), act["nw_tos"])
+            elif act_type == 'SET_TP_SRC':
+                eq_(int(action_str_list[1]), act["tp_src"])
+            elif act_type == 'SET_TP_DST':
+                eq_(int(action_str_list[1]), act["tp_dst"])
+            elif act_type == 'ENQUEUE':
+                enq = action_str_list[1].split(':')
+                eq_(int(enq[0], 10), act["port"])
+                eq_(int(enq[1], 10), act["queue_id"])
             elif act_type == 'SET_MPLS_TTL':
                 eq_(int(action_str_list[1]), act["mpls_ttl"])
             elif act_type == 'PUSH_VLAN':
@@ -190,6 +244,12 @@ class Test_ofctl(unittest.TestCase):
                 eq_(action_str_list[2].strip('} '), act["value"])
             elif act_type == 'PUSH_PBB':
                 eq_(int(action_str_list[1]), act["ethertype"])
+            elif act_type in ['STRIP_VLAN', 'COPY_TTL_OUT',
+                              'COPY_TTL_IN', 'DEC_MPLS_TTL',
+                              'POP_VLAN', 'DEC_NW_TTL', 'POP_PBB']:
+                pass
+            else:
+                assert False
 
     def _test_to_match(self, attrs, test):
         to_match = test.to_match
