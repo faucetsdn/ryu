@@ -107,7 +107,7 @@ def actions_to_str(acts):
         elif action_type == ofproto_v1_0.OFPAT_SET_TP_DST:
             buf = 'SET_TP_DST:' + str(a.tp)
         elif action_type == ofproto_v1_0.OFPAT_ENQUEUE:
-            buf = 'ENQUEUE:' + str(a.queue_id)
+            buf = 'ENQUEUE:' + str(a.port) + ":" + str(a.queue_id)
         elif action_type == ofproto_v1_0.OFPAT_VENDOR:
             buf = 'VENDOR'
         else:
