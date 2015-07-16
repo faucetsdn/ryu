@@ -29,10 +29,12 @@ from ryu.lib import addrconv, hub
 from ryu.lib.mac import DONTCARE_STR
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
 from ryu.lib.port_no import port_no_to_str
-from ryu.lib.packet import packet, ethernet, lldp
+from ryu.lib.packet import packet, ethernet
+from ryu.lib.packet import lldp, ether_types
+from ryu.lib.packet import arp, ipv4, ipv6
 from ryu.ofproto.ether import ETH_TYPE_LLDP
-from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import nx_match
+from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
@@ -156,6 +158,68 @@ class Link(object):
 
     def __str__(self):
         return 'Link: %s to %s' % (self.src, self.dst)
+
+
+class Host(object):
+    # This is data class passed by EventHostXXX
+    def __init__(self, mac, port):
+        super(Host, self).__init__()
+        self.port = port
+        self.mac = mac
+        self.ipv4 = []
+        self.ipv6 = []
+
+    def to_dict(self):
+        d = {'mac': self.mac,
+             'ipv4': self.ipv4,
+             'ipv6': self.ipv6,
+             'port': self.port.to_dict()}
+        return d
+
+    def __eq__(self, host):
+        return self.mac == host.mac and self.port == host.port
+
+    def __str__(self):
+        msg = 'Host<mac=%s, port=%s,' % (self.mac, str(self.port))
+        msg += ','.join(self.ipv4)
+        msg += ','.join(self.ipv6)
+        msg += '>'
+        return msg
+
+
+class HostState(dict):
+    # mac address -> Host class
+    def __init__(self):
+        super(HostState, self).__init__()
+
+    def add(self, host):
+        mac = host.mac
+        self.setdefault(mac, host)
+
+    def update_ip(self, host, ip_v4=None, ip_v6=None):
+        mac = host.mac
+        host = None
+        if mac in self:
+            host = self[mac]
+
+        if not host:
+            return
+
+        if ip_v4 != None and ip_v4 not in host.ipv4:
+            host.ipv4.append(ip_v4)
+
+        if ip_v6 != None and ip_v6 not in host.ipv6:
+            host.ipv6.append(ip_v6)
+
+    def get_by_dpid(self, dpid):
+        result = []
+
+        for mac in self:
+            host = self[mac]
+            if host.port.dpid == dpid:
+                result.append(host)
+
+        return result
 
 
 class PortState(dict):
@@ -451,6 +515,7 @@ class Switches(app_manager.RyuApp):
         self.port_state = {}          # datapath_id => ports
         self.ports = PortDataState()  # Port class -> PortData class
         self.links = LinkState()      # Link class -> timestamp
+        self.hosts = HostState()      # mac address -> Host class list
         self.is_active = True
 
         self.link_discovery = self.CONF.observe_links
@@ -517,6 +582,13 @@ class Switches(app_manager.RyuApp):
             rev_link = Link(dst, rev_link_dst)
             self.send_event_to_observers(event.EventLinkDelete(rev_link))
         self.ports.move_front(dst)
+
+    def _is_edge_port(self, port):
+        for link in self.links:
+            if port == link.src or port == link.dst:
+                return False
+
+        return True
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -680,7 +752,7 @@ class Switches(app_manager.RyuApp):
                       dp.ofproto.OFP_VERSION)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def packet_in_handler(self, ev):
+    def lldp_packet_in_handler(self, ev):
         if not self.link_discovery:
             return
 
@@ -737,6 +809,54 @@ class Switches(app_manager.RyuApp):
             self.lldp_event.set()
         if self.explicit_drop:
             self._drop_packet(msg)
+
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def host_discovery_packet_in_handler(self, ev):
+        msg = ev.msg
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocols(ethernet.ethernet)[0]
+
+        # ignore lldp packet
+        if eth.ethertype == ETH_TYPE_LLDP:
+            return
+
+        datapath = msg.datapath
+        dpid = datapath.id
+        port_no = -1
+
+        if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            port_no = msg.in_port
+        else:
+            port_no = msg.match['in_port']
+
+        port = self._get_port(dpid, port_no)
+
+        # can't find this port(ex: logic port)
+        if not port:
+            return
+        # ignore switch-to-switch port
+        if not self._is_edge_port(port):
+            return
+
+        host_mac = eth.src
+        host = Host(host_mac, port)
+
+        # arp packet, update both location and ip
+        if eth.ethertype == ether_types.ETH_TYPE_ARP:
+            self.hosts.add(host)
+            arp_pkt = pkt.get_protocols(arp.arp)[0]
+            self.hosts.update_ip(host, ip_v4=arp_pkt.src_ip)
+
+        # ipv4 packet, update ip only
+        elif eth.ethertype == ether_types.ETH_TYPE_IP:
+            ipv4_pkt = pkt.get_protocols(ipv4.ipv4)[0]
+            self.hosts.update_ip(host, ip_v4=ipv4_pkt.src)
+
+        # ipv6 packet, update ip only
+        elif eth.ethertype == ether_types.ETH_TYPE_IPV6:
+            # TODO: need to handle NDP
+            ipv6_pkt = pkt.get_protocols(ipv6.ipv6)[0]
+            self.hosts.update_ip(host, ip_v6=ipv6_pkt.src)
 
     def send_lldp_packet(self, port):
         try:
@@ -861,4 +981,17 @@ class Switches(app_manager.RyuApp):
         else:
             links = [link for link in self.links if link.src.dpid == dpid]
         rep = event.EventLinkReply(req.src, dpid, links)
+        self.reply_to_request(req, rep)
+
+    @set_ev_cls(event.EventHostRequest)
+    def host_request_handler(self, req):
+        dpid = req.dpid
+        hosts = []
+        if dpid is None:
+            for mac in self.hosts:
+                hosts.append(self.hosts[mac])
+        else:
+            hosts = self.hosts.get_by_dpid(dpid)
+
+        rep = event.EventHostReply(req.src, dpid, hosts)
         self.reply_to_request(req, rep)

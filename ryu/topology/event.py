@@ -126,3 +126,26 @@ class EventLinkReply(event.EventReplyBase):
     def __str__(self):
         return 'EventLinkReply<dst=%s, dpid=%s, links=%s>' % \
             (self.dst, self.dpid, len(self.links))
+
+
+class EventHostRequest(event.EventRequestBase):
+    # if dpid is None, replay all hosts
+    def __init__(self, dpid=None):
+        super(EventHostRequest, self).__init__()
+        self.dst = 'switches'
+        self.dpid = dpid
+
+    def __str__(self):
+        return 'EventHostRequest<src=%s, dpid=%s>' % \
+            (self.src, self.dpid)
+
+
+class EventHostReply(event.EventReplyBase):
+    def __init__(self, dst, dpid, hosts):
+        super(EventHostReply, self).__init__(dst)
+        self.dpid = dpid
+        self.hosts = hosts
+
+    def __str__(self):
+        return 'EventHostReply<dst=%s, dpid=%s, hosts=%s>' % \
+            (self.dst, self.dpid, len(self.hosts))

@@ -35,4 +35,12 @@ def get_all_link(app):
     return get_link(app)
 
 
+def get_host(app, dpid=None):
+    rep = app.send_request(event.EventHostRequest(dpid))
+    return rep.hosts
+
+
+def get_all_host(app):
+    return get_host(app)
+
 app_manager.require_app('ryu.topology.switches', api_style=True)
