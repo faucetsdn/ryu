@@ -1134,6 +1134,33 @@ class OFPPortDescPropOxm(OFPPortDescProp):
         return bin_ids
 
 
+@OFPPortDescProp.register_type(ofproto.OFPPDPT_RECIRCULATE)
+class OFPPortDescPropRecirculate(OFPPortDescProp):
+    _PORT_NO_PACK_STR = '!I'
+
+    def __init__(self, type_=None, length=None, port_nos=[]):
+        super(OFPPortDescPropRecirculate, self).__init__(type_, length)
+        self.port_nos = port_nos
+
+    @classmethod
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
+        nos = []
+        while rest:
+            (n,) = struct.unpack_from(cls._PORT_NO_PACK_STR, buffer(rest), 0)
+            rest = rest[struct.calcsize(cls._PORT_NO_PACK_STR):]
+            nos.append(n)
+        return cls(port_nos=nos)
+
+    def serialize_body(self):
+        bin_nos = bytearray()
+        for n in self.port_nos:
+            bin_no = bytearray()
+            msg_pack_into(self._PORT_NO_PACK_STR, bin_no, 0, n)
+            bin_nos += bin_no
+        return bin_nos
+
+
 @OFPPortDescProp.register_type(ofproto.OFPPDPT_EXPERIMENTER)
 class OFPPortDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
