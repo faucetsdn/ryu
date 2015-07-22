@@ -1111,6 +1111,29 @@ class OFPPortDescPropOptical(OFPPortDescProp):
         return optical
 
 
+@OFPPortDescProp.register_type(ofproto.OFPPDPT_PIPELINE_INPUT)
+@OFPPortDescProp.register_type(ofproto.OFPPDPT_PIPELINE_OUTPUT)
+class OFPPortDescPropOxm(OFPPortDescProp):
+    def __init__(self, type_=None, length=None, oxm_ids=[]):
+        super(OFPPortDescPropOxm, self).__init__(type_, length)
+        self.oxm_ids = oxm_ids
+
+    @classmethod
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
+        ids = []
+        while rest:
+            i, rest = OFPOxmId.parse(rest)
+            ids.append(i)
+        return cls(oxm_ids=ids)
+
+    def serialize_body(self):
+        bin_ids = bytearray()
+        for i in self.oxm_ids:
+            bin_ids += i.serialize()
+        return bin_ids
+
+
 @OFPPortDescProp.register_type(ofproto.OFPPDPT_EXPERIMENTER)
 class OFPPortDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
