@@ -1032,7 +1032,7 @@ class OFPPortDescProp(OFPPropBase):
 
 
 @OFPPortDescProp.register_type(ofproto.OFPPDPT_ETHERNET)
-class OFPPortDescPropEthernet(StringifyMixin):
+class OFPPortDescPropEthernet(OFPPortDescProp):
     def __init__(self, type_=None, length=None, curr=None, advertised=None,
                  supported=None, peer=None, curr_speed=None, max_speed=None):
         self.type = type_
@@ -1055,7 +1055,7 @@ class OFPPortDescPropEthernet(StringifyMixin):
 
 
 @OFPPortDescProp.register_type(ofproto.OFPPDPT_OPTICAL)
-class OFPPortDescPropOptical(StringifyMixin):
+class OFPPortDescPropOptical(OFPPortDescProp):
     def __init__(self, type_=None, length=None, supported=None,
                  tx_min_freq_lmda=None, tx_max_freq_lmda=None,
                  tx_grid_freq_lmda=None, rx_min_freq_lmda=None,
@@ -1095,7 +1095,7 @@ class OFPTableModProp(OFPPropBase):
 
 
 @OFPTableModProp.register_type(ofproto.OFPTMPT_EVICTION)
-class OFPTableModPropEviction(StringifyMixin):
+class OFPTableModPropEviction(OFPTableModProp):
     def __init__(self, type_=None, length=None, flags=None):
         self.type = type_
         self.length = length
@@ -1119,7 +1119,7 @@ class OFPTableModPropEviction(StringifyMixin):
 
 
 @OFPTableModProp.register_type(ofproto.OFPTMPT_VACANCY)
-class OFPTableModPropVacancy(StringifyMixin):
+class OFPTableModPropVacancy(OFPTableModProp):
     def __init__(self, type_=None, length=None, vacancy_down=None,
                  vacancy_up=None, vacancy=None):
         self.type = type_
@@ -1157,7 +1157,7 @@ class OFPQueueDescProp(OFPPropBase):
 
 
 @OFPQueueDescProp.register_type(ofproto.OFPQDPT_MIN_RATE)
-class OFPQueueDescPropMinRate(StringifyMixin):
+class OFPQueueDescPropMinRate(OFPQueueDescProp):
     def __init__(self, type_=None, length=None, rate=None):
         self.type = type_
         self.length = length
@@ -1172,7 +1172,7 @@ class OFPQueueDescPropMinRate(StringifyMixin):
 
 
 @OFPQueueDescProp.register_type(ofproto.OFPQDPT_MAX_RATE)
-class OFPQueueDescPropMaxRate(StringifyMixin):
+class OFPQueueDescPropMaxRate(OFPQueueDescProp):
     def __init__(self, type_=None, length=None, rate=None):
         self.type = type_
         self.length = length
@@ -4318,7 +4318,7 @@ class OFPPortStatsProp(OFPPropBase):
 
 
 @OFPPortStatsProp.register_type(ofproto.OFPPSPT_ETHERNET)
-class OFPPortStatsPropEthernet(StringifyMixin):
+class OFPPortStatsPropEthernet(OFPPortStatsProp):
     def __init__(self, type_=None, length=None, rx_frame_err=None,
                  rx_over_err=None, rx_crc_err=None, collisions=None):
         self.type = type_
@@ -4338,7 +4338,7 @@ class OFPPortStatsPropEthernet(StringifyMixin):
 
 
 @OFPPortStatsProp.register_type(ofproto.OFPPSPT_OPTICAL)
-class OFPPortStatsPropOptical(StringifyMixin):
+class OFPPortStatsPropOptical(OFPPortStatsProp):
     def __init__(self, type_=None, length=None, flags=None,
                  tx_freq_lmda=None, tx_offset=None, tx_grid_span=None,
                  rx_freq_lmda=None, rx_offset=None, rx_grid_span=None,
@@ -5799,7 +5799,11 @@ class OFPGroupMod(MsgBase):
             offset += b.len
 
 
-class OFPPortModPropEthernet(StringifyMixin):
+class OFPPortModProp(OFPPropBase):
+    _TYPES = {}
+
+
+class OFPPortModPropEthernet(OFPPortModProp):
     def __init__(self, type_=None, length=None, advertise=None):
         self.type = type_
         self.advertise = advertise
@@ -5815,7 +5819,7 @@ class OFPPortModPropEthernet(StringifyMixin):
         return buf
 
 
-class OFPPortModPropOptical(StringifyMixin):
+class OFPPortModPropOptical(OFPPortModProp):
     def __init__(self, type_=None, length=None, configure=None,
                  freq_lmda=None, fl_offset=None, grid_span=None,
                  tx_pwr=None):
@@ -5863,7 +5867,7 @@ class OFPPortMod(MsgBase):
                      | OFPPC_NO_FWD
                      | OFPPC_NO_PACKET_IN
     mask             Bitmap of configuration flags above to be changed
-    properties       List of ``OFPPortProp`` subclass instance
+    properties       List of ``OFPPortModProp`` subclass instance
     ================ ======================================================
 
     Example::
@@ -6070,7 +6074,7 @@ class OFPAsyncConfigProp(OFPPropBase):
 @OFPAsyncConfigProp.register_type(ofproto.OFPACPT_TABLE_STATUS_MASTER)
 @OFPAsyncConfigProp.register_type(ofproto.OFPACPT_REQUESTFORWARD_SLAVE)
 @OFPAsyncConfigProp.register_type(ofproto.OFPACPT_REQUESTFORWARD_MASTER)
-class OFPAsyncConfigPropReasons(StringifyMixin):
+class OFPAsyncConfigPropReasons(OFPAsyncConfigProp):
     def __init__(self, type_=None, length=None, mask=None):
         self.type = type_
         self.length = length
