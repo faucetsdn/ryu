@@ -5079,6 +5079,51 @@ class OFPInstructionActions(OFPInstruction):
                       buf, offset, self.type, self.len)
 
 
+@OFPInstruction.register_instruction_type([ofproto.OFPIT_STAT_TRIGGER])
+class OFPInstructionStatTrigger(OFPInstruction):
+    """
+    Statistics triggers instruction
+
+    This instruction defines a set of statistics thresholds using OXS.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Bitmap of the following flags.
+
+                     | OFPSTF_PERIODIC
+                     | OFPSTF_ONLY_FIRST
+    thresholds       Instance of ``OFPStats``
+    ================ ======================================================
+    """
+    def __init__(self, flags, thresholds, type_=None, len_=None):
+        super(OFPInstructionStatTrigger, self).__init__()
+        self.type = ofproto.OFPIT_STAT_TRIGGER
+        self.len = len_
+        self.flags = flags
+        self.thresholds = thresholds
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, flags) = struct.unpack_from(
+            ofproto.OFP_INSTRUCTION_STAT_TRIGGER_PACK_STR0, buf, offset)
+
+        # adjustment
+        offset += 8
+        thresholds = OFPStats.parser(buf, offset)
+
+        inst = cls(flags, thresholds)
+        inst.len = len_
+        return inst
+
+    def serialize(self, buf, offset):
+        stats_len = self.thresholds.serialize(buf, offset + 8)
+
+        self.len = 8 + stats_len
+        msg_pack_into(ofproto.OFP_INSTRUCTION_STAT_TRIGGER_PACK_STR0,
+                      buf, offset, self.type, self.len, self.flags)
+
+
 class OFPActionHeader(StringifyMixin):
     def __init__(self, type_, len_):
         self.type = type_
