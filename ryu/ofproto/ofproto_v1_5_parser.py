@@ -5588,6 +5588,58 @@ class OFPActionPopPbb(OFPAction):
         return cls()
 
 
+@OFPAction.register_action_type(ofproto.OFPAT_COPY_FIELD,
+                                ofproto.OFP_ACTION_COPY_FIELD_SIZE)
+class OFPActionCopyField(OFPAction):
+    """
+    Copy Field action
+
+    This action copy value between header and register.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    n_bits           Number of bits to copy.
+    src_offset       Starting bit offset in source.
+    dst_offset       Starting bit offset in destination.
+    oxm_ids          List of ``OFPOxmId`` instances.
+                     The first element of this list, src_oxm_id,
+                     identifies the field where the value is copied from.
+                     The second element of this list, dst_oxm_id,
+                     identifies the field where the value is copied to.
+                     The default is [].
+    ================ ======================================================
+    """
+    def __init__(self, n_bits=0, src_offset=0, dst_offset=0, oxm_ids=[],
+                 type_=None, len_=None):
+        super(OFPActionCopyField, self).__init__()
+        self.n_bits = n_bits
+        self.src_offset = src_offset
+        self.dst_offset = dst_offset
+        self.oxm_ids = oxm_ids
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (type_, len_, n_bits, src_offset, dst_offset) = struct.unpack_from(
+            ofproto.OFP_ACTION_COPY_FIELD_PACK_STR, buf, offset)
+        offset += ofproto.OFP_ACTION_COPY_FIELD_SIZE
+
+        rest = buf[offset:offset + len_]
+        oxm_ids = []
+        while rest:
+            i, rest = OFPOxmId.parse(rest)
+            oxm_ids.append(i)
+        return cls(n_bits, src_offset, dst_offset, oxm_ids, type_, len_)
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_ACTION_COPY_FIELD_PACK_STR, buf,
+                      offset, self.type, self.len,
+                      self.n_bits, self.src_offset, self.dst_offset)
+
+        for i in self.oxm_ids:
+            buf += i.serialize()
+
+
 @OFPAction.register_action_type(ofproto.OFPAT_METER,
                                 ofproto.OFP_ACTION_METER_SIZE)
 class OFPActionMeter(OFPAction):
