@@ -38,6 +38,10 @@
 # | experimenter ID                                               |
 # +---------------------------------------------------------------+
 
+# NOTE: OpenFlow Spec 1.5 mandates that Experimenter OXMs encode
+# the experimenter type in the oxm_field field of the OXM header
+# (EXT-380).
+
 # NOTE: EXT-256 had a variation of experimenter OXM header.
 # It has been rectified since then.  Currently this implementation
 # supports only the old version.
@@ -106,6 +110,7 @@ class _Experimenter(_OxmClass):
     def __init__(self, name, num, type_):
         super(_Experimenter, self).__init__(name, num, type_)
         self.num = (self.experimenter_id, self.oxm_type)
+        self.exp_type = self.oxm_field
 
 
 class ONFExperimenter(_Experimenter):
@@ -119,7 +124,7 @@ class OldONFExperimenter(_Experimenter):
     def __init__(self, name, num, type_):
         super(OldONFExperimenter, self).__init__(name, 0, type_)
         self.num = (self.experimenter_id, num)
-        self.exp_type = num
+        self.exp_type = 2560
 
 
 class NiciraExperimenter(_Experimenter):

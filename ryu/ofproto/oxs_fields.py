@@ -50,6 +50,10 @@
 # | length               | 8     | Length of OXS payload                      |
 # +----------------------+-------+--------------------------------------------+
 
+# Assumption: The followings can be applied for OXSs too.
+# OpenFlow Spec 1.5 mandates that Experimenter OXMs encode the experimenter
+# type in the oxm_field field of the OXM header (EXT-380).
+
 from ryu.ofproto.oxx_fields import (
     _from_user,
     _from_user_header,
@@ -94,6 +98,7 @@ class _Experimenter(_OxsClass):
     def __init__(self, name, num, type_):
         super(_Experimenter, self).__init__(name, num, type_)
         self.num = (self.experimenter_id, self.oxs_type)
+        self.exp_type = self.oxs_field
 
 
 def generate(modname):

@@ -212,15 +212,14 @@ def _make_exp_hdr(oxx, mod, n):
         (exp_id, exp_type) = n
         assert desc.experimenter_id == exp_id
         oxx_type = getattr(desc, oxx + '_type')
-        if hasattr(desc, 'exp_type'):  # XXX
+        if desc.exp_type == 2560:
             # XXX
             # This block implements EXT-256 style experimenter OXM.
-            assert desc.exp_type == 2560
             exp_hdr_pack_str = '!IH'  # experimenter_id, exp_type
             msg_pack_into(exp_hdr_pack_str, exp_hdr, 0,
                           desc.experimenter_id, desc.exp_type)
         else:
-            assert oxx_type == exp_type
+            assert oxx_type == exp_type | (OFPXXC_EXPERIMENTER << 7)
             exp_hdr_pack_str = '!I'  # experimenter_id
             msg_pack_into(exp_hdr_pack_str, exp_hdr, 0,
                           desc.experimenter_id)
