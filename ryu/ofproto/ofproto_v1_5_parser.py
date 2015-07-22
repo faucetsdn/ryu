@@ -5881,7 +5881,7 @@ class OFPPortMod(MsgBase):
                          ofp.OFPPF_1GB_FD | ofp.OFPPF_COPPER |
                          ofp.OFPPF_AUTONEG | ofp.OFPPF_PAUSE |
                          ofp.OFPPF_PAUSE_ASYM)
-            properties = ofp_parser.OFPPortModPropEthernet(advertise)
+            properties = [ofp_parser.OFPPortModPropEthernet(advertise)]
             req = ofp_parser.OFPPortMod(datapath, port_no, hw_addr, config,
                                         mask, properties)
             datapath.send_msg(req)
