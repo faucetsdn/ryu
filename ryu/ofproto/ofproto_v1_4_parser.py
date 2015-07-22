@@ -886,11 +886,11 @@ class OFPPropCommonExperimenter4ByteData(StringifyMixin):
         return buf
 
 
-class OFPPortProp(OFPPropBase):
+class OFPPortDescProp(OFPPropBase):
     _TYPES = {}
 
 
-@OFPPortProp.register_type(ofproto.OFPPDPT_ETHERNET)
+@OFPPortDescProp.register_type(ofproto.OFPPDPT_ETHERNET)
 class OFPPortDescPropEthernet(StringifyMixin):
     def __init__(self, type_=None, length=None, curr=None, advertised=None,
                  supported=None, peer=None, curr_speed=None, max_speed=None):
@@ -913,7 +913,7 @@ class OFPPortDescPropEthernet(StringifyMixin):
         return ether
 
 
-@OFPPortProp.register_type(ofproto.OFPPDPT_OPTICAL)
+@OFPPortDescProp.register_type(ofproto.OFPPDPT_OPTICAL)
 class OFPPortDescPropOptical(StringifyMixin):
     def __init__(self, type_=None, length=None, supported=None,
                  tx_min_freq_lmda=None, tx_max_freq_lmda=None,
@@ -944,7 +944,7 @@ class OFPPortDescPropOptical(StringifyMixin):
         return optical
 
 
-@OFPPortProp.register_type(ofproto.OFPPDPT_EXPERIMENTER)
+@OFPPortDescProp.register_type(ofproto.OFPPDPT_EXPERIMENTER)
 class OFPPortDescPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
@@ -1845,7 +1845,7 @@ class OFPPort(StringifyMixin):
         props = []
         rest = buf[offset + ofproto.OFP_PORT_SIZE:offset + length]
         while rest:
-            p, rest = OFPPortProp.parse(rest)
+            p, rest = OFPPortDescProp.parse(rest)
             props.append(p)
         ofpport = cls(port_no, length, hw_addr, name, config, state, props)
         return ofpport
