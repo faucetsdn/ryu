@@ -5490,11 +5490,14 @@ class OFPActionSetField(OFPAction):
 
     This action modifies a header field in the packet.
 
-    The set of keywords available for this is same as OFPMatch.
+    The set of keywords available for this is same as OFPMatch
+    which including with/without mask.
 
     Example::
 
-        set_field = OFPActionSetField(eth_src="00:00:00:00:00")
+        set_field = OFPActionSetField(eth_src="00:00:00:00:00:00")
+        set_field = OFPActionSetField(ipv4_src=("192.168.100.0",
+                                                "255.255.255.0"))
     """
     def __init__(self, field=None, **kwargs):
         super(OFPActionSetField, self).__init__()
@@ -5502,7 +5505,6 @@ class OFPActionSetField(OFPAction):
         key = list(kwargs.keys())[0]
         value = kwargs[key]
         assert isinstance(key, (str, six.text_type))
-        assert not isinstance(value, tuple)  # no mask
         self.key = key
         self.value = value
 
