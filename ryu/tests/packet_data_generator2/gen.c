@@ -98,7 +98,7 @@ packet_in(enum ofputil_protocol proto)
     pin.buffer_id = 200;
 
     fill_match(&match);
-    flow_get_metadata(&match.flow, &pin.fmd);
+    flow_get_metadata(&match.flow, &pin.flow_metadata);
 
     return ofputil_encode_packet_in(&pin, proto, NXPIF_OPENFLOW10);
 }
