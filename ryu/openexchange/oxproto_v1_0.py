@@ -61,7 +61,7 @@ assert calcsize(OXP_INTERNAL_LINK_PACK_STR) == OXP_INTERNAL_LINK_SIZE
 #   Message definition
 #
 
-# Enum ofp_type
+# Enum oxp_type
 OXPT_HELLO = 0          # Symmetric message
 OXPT_ERROR = 1          # Symmetric message
 OXPT_ECHO_REQUEST = 2   # Symmetric message
@@ -76,7 +76,7 @@ OXPT_GET_CONFIG_REPLY = 8       # Super/Domain message
 OXPT_SET_CONFIG = 9             # Super/Domain message
 
 OXPT_TOPO_REQUEST = 10          # Super/Domain message
-OXPT_TOPP_REPLY = 11            # Super/Domain message
+OXPT_TOPO_REPLY = 11            # Super/Domain message
 
 OXPT_HOST_REQUEST = 12          # Super/Domain message
 OXPT_HOST_REPLY = 13            # Super/Domain message
@@ -109,6 +109,8 @@ OXPC_CAP_HOP = 1 << 3           # Hop
 OXPC_MODEL_SIMPLIFY = 1 << 4    # Compress the packet_in message
 OXPC_MODEL_TRUST = 1 << 5       # Trust the adjacent domain network.
 
+OXPC_MODEL_DEFAULT = 24
+
 
 OXP_DOMAIN_CONFIG_PACK_STR = '!BBH'
 OXP_DOMAIN_CONFIG_SIZE = 12
@@ -116,14 +118,14 @@ assert(calcsize(OXP_DOMAIN_CONFIG_PACK_STR) + OXP_HEADER_SIZE ==
        OXP_DOMAIN_CONFIG_SIZE)
 
 # Enum oxp_capabilities
-OFPC_FLOW_STATS = 1 << 0        # Flow statistics.
-OFPC_TABLE_STATS = 1 << 1       # Table statistics.
-OFPC_PORT_STATS = 1 << 2        # Port statistics.
-OFPC_GROUP_STATS = 1 << 3       # Group statistics.
+OXPC_FLOW_STATS = 1 << 0        # Flow statistics.
+OXPC_TABLE_STATS = 1 << 1       # Table statistics.
+OXPC_PORT_STATS = 1 << 2        # Port statistics.
+OXPC_GROUP_STATS = 1 << 3       # Group statistics.
 
-OFPC_IP_REASM = 1 << 4          # Can reassemble IP fragments.
-OFPC_QUEUE_STATS = 1 << 5       # Queue statistics.
-OFPC_ARP_MATCH_IP = 1 << 6      # Match IP addresses in ARP pkts.
+OXPC_IP_REASM = 1 << 4          # Can reassemble IP fragments.
+OXPC_QUEUE_STATS = 1 << 5       # Queue statistics.
+OXPC_ARP_MATCH_IP = 1 << 6      # Match IP addresses in ARP pkts.
 
 # Enum oxp_support_Southbound protocol
 
@@ -141,7 +143,7 @@ OXPPR_DELETE = 1        # The port was removed.
 OXPPR_MODIFY = 2        # Some attribute of the port has changed.
 
 OXP_VPORT_STATUS_PACK_STR = '!B7x' + _OXP_VPORT_PACK_STR
-OXP_VPORT_STATUS_DESC_OFFSET = OFP_HEADER_SIZE + 8
+OXP_VPORT_STATUS_DESC_OFFSET = OXP_HEADER_SIZE + 8
 OXP_VPORT_STATUS_SIZE = 24
 assert (calcsize(OXP_VPORT_STATUS_PACK_STR) + OXP_HEADER_SIZE ==
         OXP_VPORT_STATUS_SIZE)
@@ -164,7 +166,7 @@ OXPBRC_BAD_EXP_TYPE = 3,            # Experimenter type not supported.
 OXPBRC_EPERM = 4,                   # Permissions error.
 OXPBRC_BAD_LEN = 5,                 # Wrong request length for type.
 
-# Enum ofp_domain_config_failed_code
+# Enum oxp_domain_config_failed_code
 OXPBRC_BAD_VERSION = 0,              # oxp_header.version not supported.
 OXPBRC_BAD_TYPE = 1,                 # oxp_header.type not supported.
 OXPBRC_BAD_EXPERIMENTER = 2,        # Experimenter id not supported
@@ -175,3 +177,8 @@ OXPBRC_BAD_LEN = 5,                  # Wrong request length for type.
 OXP_ERROR_PACK_STR = '!HH'
 OXP_ERROR_SIZE = 12
 assert calcsize(OXP_ERROR_PACK_STR) + OXP_HEADER_SIZE = OXP_ERROR_SIZE
+
+OXP_VENDOR_HEADER_PACK_STR = '!I'
+OXP_VENDOR_HEADER_SIZE = 12
+assert (calcsize(OXP_VENDOR_HEADER_PACK_STR) + OXP_HEADER_SIZE ==
+        OXP_VENDOR_HEADER_SIZE)

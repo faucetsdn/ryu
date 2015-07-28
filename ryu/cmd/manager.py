@@ -41,7 +41,7 @@ from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
 from ryu.topology import switches
-from ryu.openexchange import oxp_super
+from ryu.openexchange import oxp_controller
 
 
 CONF = cfg.CONF
@@ -74,8 +74,12 @@ def main(args=None, prog=None):
     # keep old behaivor, run ofp if no application is specified.
     if not app_lists:
         app_lists = ['ryu.controller.ofp_handler']
-    # add oxp_handler
-    #app_lists.append('ryu.openexchange.oxp_handler')
+
+    if CONF.oxp_role == 'super':
+        app_lists.append('ryu.openexchange.oxp_server_handler')
+    elif CONF.oxp_role == 'domain':
+        app_lists.append('ryu.openexchange.oxp_client_handler')
+
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
     contexts = app_mgr.create_contexts()

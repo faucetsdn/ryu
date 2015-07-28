@@ -68,6 +68,6 @@ for oxp_mods in openexchange.get_oxp_modules().values():
 class EventOXPStateChange(event.EventBase):
     def __init__(self, domain):
         super(EventOXPStateChange, self).__init__()
-        self.domain_network = domain
+        self.domain = domain
 
 handler.register_service('ryu.openexchange.oxp_handler')
