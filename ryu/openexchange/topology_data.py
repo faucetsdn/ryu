@@ -9,7 +9,7 @@ If src_domain ==dst_domain, the link will be an interallink.
 esle, it is an intralink.
 
 """
-form . import data_base
+from . import data_base
 
 
 class InteralLinks(data_base.DataBase):
@@ -34,7 +34,7 @@ class InteralLinks(data_base.DataBase):
 
 
 class IntraLinks(data_base.DataBase):
-    def __init__(self, links):
+    def __init__(self, links={}):
         self.links = links
 
     def update(self, links):

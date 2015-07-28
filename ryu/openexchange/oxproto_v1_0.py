@@ -81,10 +81,11 @@ OXPT_TOPO_REPLY = 11            # Super/Domain message
 OXPT_HOST_REQUEST = 12          # Super/Domain message
 OXPT_HOST_REPLY = 13            # Super/Domain message
 OXPT_HOST_UPDATE = 14           # Super/Domain message
+OXPT_VPORT_STATUS = 15
 
-OXPT_SBP = 17       # Southbound Protocol message
+OXPT_SBP = 16       # Southbound Protocol message
 
-OXPT_VENDOR = 18    # Vendor message
+OXPT_VENDOR = 17    # Vendor message
 
 OXP_HEADER_PACK_STR = '!BBHI'   # ! means network(=big-endian)
                                 # B = unsigned char
@@ -176,7 +177,7 @@ OXPBRC_BAD_LEN = 5,                  # Wrong request length for type.
 
 OXP_ERROR_PACK_STR = '!HH'
 OXP_ERROR_SIZE = 12
-assert calcsize(OXP_ERROR_PACK_STR) + OXP_HEADER_SIZE = OXP_ERROR_SIZE
+assert calcsize(OXP_ERROR_PACK_STR) + OXP_HEADER_SIZE == OXP_ERROR_SIZE
 
 OXP_VENDOR_HEADER_PACK_STR = '!I'
 OXP_VENDOR_HEADER_SIZE = 12

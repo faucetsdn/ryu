@@ -59,6 +59,8 @@ def _lookup_service_brick_by_mod_name(mod_name):
 
 def register_app(app):
     assert isinstance(app, RyuApp)
+    print "SERVICE_BRICKS:", SERVICE_BRICKS
+
     assert app.name not in SERVICE_BRICKS
     SERVICE_BRICKS[app.name] = app
     register_instance(app)

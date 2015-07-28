@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block head %}
+<script type="text/javascript">
+  var ws = new WebSocket("ws://{{ host }}:{{ port }}/websocket");
+  ws.onmessage = function(msg) {
+    websocket.onMessage(msg.data);
+  };
+
+  jsPlumb.ready(function(){
+    topo.setInput({host: "{{ host }}"});
+    topo.registerHandler();
+    topo.init();
+  });
+</script>
+{% endblock%}
+
+{% block body %}
+
+<div id="jquery-ui-dialog" title="Connect to controller.">
+  <form>
+  <fieldset>
+    <p>Enter the address of the controller to begin.</p>
+      <label for="jquery-ui-dialog-form-host">host</label>
+      <input type="text" name="jquery-ui-dialog-form-host" id="jquery-ui-dialog-form-host" class="text ui-widget-content ui-corner-all" />
+    </p>
+    <p>
+      <label for="jquery-ui-dialog-form-port">port</label>
+      <input type="text" name="jquery-ui-dialog-form-port" id="jquery-ui-dialog-form-port" class="text ui-widget-content ui-corner-all" />
+    </p>
+    <p id="input-err-msg"></p>
+  </fieldset>
+  </form>
+</div>
+
+<div id="link-list" class="ui-widget-content content">
+  <div class="ui-widget-header content-title">
+    <div class="content-title-text">Link status</div>
+    <div class="content-title-close ui-icon ui-icon-closethick">close</div>
+  </div>
+  <div id="link-list-body" class="content-body">
+    <table id="link-list-table">
+      <tr class="content-table-title">
+        <th class="port-no">no</th>
+        <th class="port-name">name</th>
+        <th class="port-peer">peer</th>
+      </tr>
+    </table>
+  </div>
+  <div class="content-end"></div>
+</div>
+
+<div id="flow-list" class="ui-widget-content content">
+  <div class="ui-widget-header content-title">
+    <div class="content-title-text">Flow entries</div>
+    <div class="content-title-close ui-icon ui-icon-closethick">close</div>
+  </div>
+  <div id="flow-list-body" class="content-body">
+    <table id="flow-list-table">
+    </table>
+  </div>
+  <div class="end-of-content" class="content-end"></div>
+</div>
+
+<div id="topology" class="ui-widget-content content">
+  <div class="ui-widget-header content-title">Topology</div>
+  <div class="content-body">
+    <div class="rest-status">Unconnected</div>
+  </div>
+</div>
+
+<div id="menu" class="ui-widget-content content">
+  <div class="ui-widget-header content-title">Menu</div>
+  <div id="menu-body" class="content-body">
+    <a href="javascript:void(0);"><div id="jquery-ui-dialog-opener" class="menu-item">Connect to controller</div></a>
+    <a href="javascript:void(0);"><div id="menu-redesign" class="menu-item">Refresh Topology</div></a>
+    <a href="javascript:void(0);"><div id="menu-link-status" class="menu-item">Link status</div></a>
+    <a href="javascript:void(0)"><div id="menu-flow-entries" class="menu-item">Flow entries</div></a>
+  </div>
+  <div class="content-end"></div>
+</div>
+{% endblock %}

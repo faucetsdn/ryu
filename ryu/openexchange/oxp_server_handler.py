@@ -19,7 +19,7 @@ from ryu.openexchange import oxp_event
 from ryu.openexchange.oxp_super import Super_Controller
 from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
-    MAIN_DISPATCHER
+    MAIN_DISPATCHER, DEAD_DISPATCHER
 
 from ryu.openexchange import topology_data
 from ryu.openexchange import host_data
@@ -138,6 +138,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
 
         # now send feature
         features_reqeust = domain.oxproto_parser.OXPFeaturesRequest(domain)
+        # print "features_reqeust:", features_reqeust.__class__
         domain.send_msg(features_reqeust)
 
         # now move on to config state
@@ -148,7 +149,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
     def domain_features_handler(self, ev):
         msg = ev.msg
         domain = msg.domain
-        self.logger.debug('switch features ev %s', msg)
+        self.logger.debug('domain features ev %s', msg)
 
         domain.id = msg.domain_id
 
@@ -217,12 +218,11 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         # parser the msg and save the topo data.
         msg = ev.msg
         domain = msg.domain
-        domain_id = msg.domain_id
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
 
-        self.links.domain_id = domain_id
+        self.links.domain_id = domain.id
         # link: (src_vport:1, dst_vport=2, capacities=123)
         self.links.update(msg.links)
 
@@ -231,24 +231,22 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         # parser the msg and save the host data.
         msg = ev.msg
         domain = msg.domain
-        domain_id = msg.domain_id
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
 
-        self.location.update(domain_id, msg.hosts)
+        self.location.update(domain.id, msg.hosts)
 
     @set_ev_handler(oxp_event.EventOXPHostUpdate, MAIN_DISPATCHER)
     def host_update_handler(self, ev):
         # parser the msg and save the host data.
         msg = ev.msg
         domain = msg.domain
-        domain_id = msg.domain_id
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
 
-        self.location.update(domain_id, msg.hosts)
+        self.location.update(domain.id, msg.hosts)
 
     @set_ev_handler(oxp_event.EventOXPSBP, MAIN_DISPATCHER)
     def SBP_handler(self, ev):

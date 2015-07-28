@@ -1,0 +1,367 @@
+/**
+ * Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ **/
+
+* {
+  color: #808080;
+  font-size: 12px;
+}
+html {
+  width: 100%;
+  height: 100%;
+}
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  font-family: Arial, Helvetica,"メイリオ",Meiryo,"ヒラギノ角ゴ Pro W3","Hiragino Kaku Gothic Pro","HiraKakuPro-W3",">ＭＳ Ｐゴシック","MS PGothic",sans-serif;
+}
+body a {
+  text-decoration: none;
+}
+
+
+/**
+ * header footer
+ **/
+#header {
+  width: 100%;
+  text-align: left;
+  font-size: 20px;
+  margin: 0px;
+  padding: 0px;
+  border-bottom: solid 2px #808080;
+}
+#header #ryu-logo {
+  width: 100px;
+  height: 50px;
+}
+#header #page-title {
+  font-weight: bold;
+  margin-left: 10px;
+  vertical-align: 15px;
+  font-size: 20px;
+}
+#footer {
+  position: fixed;
+  right: 10px;
+  bottom: 5px;
+  color: #808080;
+  font-size: 12px;
+  z-index: 100px;
+}
+
+
+/**
+ * main
+ **/
+#main {
+}
+
+/**
+ * input form
+ */
+#jquery-ui-dialog-table {
+}
+#jquery-ui-dialog-table th , #jquery-ui-dialog-table td {
+  border: 1px solid gray;
+}
+#input-err-msg {
+  color: red;
+  display: none;
+  -webkit-border-radius: 5px;
+}
+
+
+/**
+ * contents
+ **/
+.content {
+  position: absolute;
+  border: solid 1px #808080;
+  color: #808080;
+  padding-bottom: 1.2em;
+  -webkit-border-radius: 5px;
+}
+.content .content-title {
+  height: 15px;
+/*  font-size: 1.1em; */
+  margin: 0px;
+  padding: auto;
+  padding-left: 1.1em;
+  -webkit-border-radius: 5px;
+  background: #0070c0 url(../img/ui-bg_org_0070c0.png) 50% 50% repeat-x;
+  letter-spacing: 0.15em;
+  cursor: move;
+  color: #FFF;
+}
+.content .content-title .content-title-text {
+  color: #FFF;
+  float: left;
+}
+.content .content-title .content-title-close {
+  float: right;
+  width: 20px;
+  cursor: pointer;
+}
+.content .content-body{
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 95%;
+  white-space: nowrap;
+  -webkit-border-radius: 5px;
+}
+.content .content-end {
+  height: 0px;
+  display: none;
+}
+.content .watching {
+  margin-left: 5px;
+  color: #FFF;
+}
+
+
+/**
+ * list table
+ **/
+.content-body table {
+  margin-top: 2px;
+  padding-right: 5px;
+  width: 100%;
+  border-collapse:separate;
+  border-spacing:1px;
+}
+.content-body table th {
+  border:0.25px solid #FFFFFF;
+  background-color: #483D8B;
+  color: #FFF;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+}
+.content-body table td {
+  border:0.25px solid #FFFFFF;
+  background-color: #EEEEEE;
+  white-space: nowrap;
+}
+
+
+/**
+ * Menu
+ **/
+#menu {
+  top: 60px;
+  left: 5px;
+  width: 150px;
+  height: 100px;
+  text-align: left;
+  background-color: #EEE;
+  z-index: 100;
+}
+#menu .content-body {
+  background-color: #EEE;
+}
+#menu .menu-item {
+  text-align: left;
+  padding-left: 5%; /** width + padding-left = #demomenu.width **/
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  font-weight: bold;
+  color: #0070c0;
+  background-color: #EEE;
+  -webkit-border-radius: 5px;
+}
+
+
+/**
+ * link-list
+ **/
+#link-list {
+  top: 250px;
+  left: 5px;
+  width: 200px;
+  height: 100px;
+  text-align: left;
+}
+#link-list td {
+  text-align: center;
+}
+#link-list .peer-port-name {
+}
+#link-list .peer-switch-name {
+  padding-left: 5px;
+}
+
+
+/**
+ * flow-list
+ */
+#flow-list {
+  top: 540px;
+  left: 5px;
+  width: 825px;
+  height: 100px;
+  text-align: left;
+}
+#flow-list td {
+  padding-left: 5px;
+  line-height: 1.4;
+/*  white-space: normal; */
+/*  letter-spacing: 0.15em; */
+}
+#flow-list .flow-item-line{
+  width: 100%;
+  border-bottom: dashed 1px #808080;
+}
+#flow-list .flow-item-line .flow-item-title{
+/**
+  float: left;
+  width: 5em;
+**/
+  color: #000;
+  font-weight: bold;
+  padding-left: 0.5em;
+}
+#flow-list .flow-item-line .flow-item-value{
+/**
+  float: right;
+  width: auto;
+**/
+  padding-left: 0.5em;
+}
+/**
+ * Topology
+ **/
+#topology {
+  top: 60px;
+  left: 230px;
+  width: 600px;
+  height: 450px;
+}
+#topology .rest-status {
+  position: relative;
+  top: 0;
+  left: 0;
+  text-align: left;
+  font-weight:bold;
+  padding-left: 5px;
+}
+#topology .content-body{
+  height: 100%;
+}
+#topology .rest-status .rest-url{
+  margin-left: 10px;
+  font-size: 12px;
+  color: #808080;
+  letter-spacing: 0.15em;
+  font-weight: normal;
+}
+#topology .switch {
+  z-index: 1;
+  border: 0px solid #FFF;
+  
+}
+#topology .switch img {
+  z-index: 2;
+}
+#topology .switch-label {
+  position: relative;
+/*  font-weight:bold; */
+/*  background-color: red; */
+/*  color: white; */
+  text-align: center;
+  border: 0px solid #FFF;
+/*  height: 15px; */
+  z-index: 3;
+}
+#topology .port-no {
+  -webkit-border-radius: 10px;
+  text-align: center;
+  font-weight:bold;
+  background-color: #E6FFE9;
+  border: 1px solid #808080;
+  width: 14px;
+  height: 14px;
+  z-index: 4;
+  margin: auto auto;
+}
+
+/**
+ * scrollbar
+ **/
+.ps-container .ps-scrollbar-x {
+    position: absolute; /* please don't change 'position' */
+    bottom: 3px; /* there must be 'bottom' for ps-scrollbar-x */
+    height: 8px;
+    background-color: #aaa;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    opacity: 0;
+    filter: alpha(opacity = 0);
+    -webkit-transition: opacity.2s linear;
+    -moz-transition: opacity .2s linear;
+    transition: opacity .2s linear;
+}
+.ps-container:hover .ps-scrollbar-x {
+    opacity: 0.6;
+    filter: alpha(opacity = 60);
+}
+.ps-container .ps-scrollbar-x:hover {
+    opacity: 0.9;
+    filter: alpha(opacity = 90);
+/*    cursor:default; */
+    cursor: pointer;
+}
+.ps-container .ps-scrollbar-x.in-scrolling {
+    opacity: 0.9;
+    filter: alpha(opacity = 90);
+}
+
+.ps-container .ps-scrollbar-y {
+    position: absolute; /* please don't change 'position' */
+    right: 3px; /* there must be 'right' for ps-scrollbar-y */
+    width: 8px;
+    background-color: #aaa;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    opacity: 0;
+    filter: alpha(opacity = 0);
+    -webkit-transition: opacity.2s linear;
+    -moz-transition: opacity .2s linear;
+    transition: opacity .2s linear;
+}
+.ps-container:hover .ps-scrollbar-y {
+    opacity: 0.6;
+    filter: alpha(opacity = 60);
+}
+.ps-container .ps-scrollbar-y:hover {
+    opacity: 0.9;
+    filter: alpha(opacity = 90);
+/*    cursor: default; */
+    cursor: pointer;
+}
+.ps-container .ps-scrollbar-y.in-scrolling {
+    opacity: 0.9;
+    filter: alpha(opacity = 90);
+}

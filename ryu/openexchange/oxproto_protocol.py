@@ -16,15 +16,22 @@
 
 from . import oxproto_v1_0
 from . import oxproto_v1_0_parser
-from ryu import cfg
+# from . import oxproto_v1_0_parser_domain
+# from . import oxproto_v1_0_parser_super
+
+# from ryu import cfg
+
+
+# _parser_v1_0 = {'super': oxproto_v1_0_parser_super,
+#                'domain': oxproto_v1_0_parser_domain}
 
 _versions = {
-    oxproto_v1_0.OXP_VERSION: (oxproto_v1_0, oxproto_v1_0_parser),
+    oxproto_v1_0.OXP_VERSION: (oxproto_v1_0, oxproto_v1_0_parser)
 }
 
-CONF = cfg.CONF
+# CONF = cfg.CONF
 
-# OF versions supported by every apps in this process (intersection)
+# OX versions supported by every apps in this process (intersection)
 _supported_versions = set(_versions.keys())
 
 
@@ -48,7 +55,7 @@ class ProtocolDesc(object):
     def set_version(self, version):
         assert version in _supported_versions
         (self.oxproto, self.oxproto_parser) = _versions[version]
-        self.oxproto_parser = self.oxproto_parser + '_' + CONF.oxp_role
+        #self.oxproto_parser = _versions[version][1][CONF.oxp_role]
 
     @property
     def supported_oxp_version(self):

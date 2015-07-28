@@ -9,6 +9,9 @@ from ryu.controller import handler
 from ryu import openexchange
 from ryu import utils
 from . import event
+from ryu import cfg
+
+CONF = cfg.CONF
 
 
 class EventOXPMsgBase(event.EventBase):
@@ -52,7 +55,6 @@ def _create_oxp_msg_ev_class(msg_cls):
 
 
 def _create_oxp_msg_ev_from_module(oxp_parser):
-    # print mod
     for _k, cls in inspect.getmembers(oxp_parser, inspect.isclass):
         if not hasattr(cls, 'cls_msg_type'):
             continue
@@ -70,4 +72,10 @@ class EventOXPStateChange(event.EventBase):
         super(EventOXPStateChange, self).__init__()
         self.domain = domain
 
-handler.register_service('ryu.openexchange.oxp_handler')
+
+if CONF.oxp_role == 'super':
+    handler.register_service('ryu.openexchange.oxp_server_handler')
+elif CONF.oxp_role == 'domain':
+    handler.register_service('ryu.openexchange.oxp_client_handler')
+else:
+    pass

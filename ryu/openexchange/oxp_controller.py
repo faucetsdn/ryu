@@ -25,7 +25,7 @@ LOG = logging.getLogger('ryu.openexchange.oxp_super')
 CONF = cfg.CONF
 CONF.register_cli_opts([
     cfg.StrOpt(
-        'oxp-role', default='domain', help='open exchange role setting'),
+        'oxp-role', default='', help='open exchange role setting'),
     cfg.StrOpt(
         'oxp-server-ip', default='', help='oxp server ip'),
     cfg.IntOpt('oxp-server-port', default=oxproto.OXP_TCP_PORT,

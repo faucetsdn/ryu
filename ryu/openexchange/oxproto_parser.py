@@ -26,8 +26,8 @@ LOG = logging.getLogger('ryu.oxproto.oxproto_parser')
 
 def header(buf):
     assert len(buf) >= oxproto_common.OXP_HEADER_SIZE
-    # LOG.debug('len %d bufsize %d', len(buf), ofproto.OFP_HEADER_SIZE)
-    return struct.unpack_from(oxproto_common.OFP_HEADER_PACK_STR, buffer(buf))
+    # LOG.debug('len %d bufsize %d', len(buf), oxproto.OXP_HEADER_SIZE)
+    return struct.unpack_from(oxproto_common.OXP_HEADER_PACK_STR, buffer(buf))
 
 
 _MSG_PARSERS = {}
@@ -38,6 +38,11 @@ def register_msg_parser(version):
         _MSG_PARSERS[version] = msg_parser
         return msg_parser
     return register
+
+
+def bytearray_to_hex(data):
+    """Convert bytearray into array of hexes to be printed."""
+    return ' '.join(hex(ord(byte)) for byte in data)
 
 
 def msg(domain, version, msg_type, msg_len, xid, buf):
@@ -56,7 +61,7 @@ def msg(domain, version, msg_type, msg_len, xid, buf):
             'Encounter an error during parsing OpenFlow packet from switch.'
             'This implies switch sending a malformed OpenFlow packet.'
             'version 0x%02x msg_type %d msg_len %d xid %d buf %s',
-            version, msg_type, msg_len, xid, utils.bytearray_to_hex(buf))
+            version, msg_type, msg_len, xid, bytearray_to_hex(str(buf)))
         return None
 
 
@@ -165,7 +170,7 @@ class MsgBase(StringifyMixin):
         return msg_
 
     def _serialize_pre(self):
-        self.version = self.domain.oxproto.OFP_VERSION
+        self.version = self.domain.oxproto.OXP_VERSION
         self.msg_type = self.cls_msg_type
         self.buf = bytearray(self.domain.oxproto.OXP_HEADER_SIZE)
 

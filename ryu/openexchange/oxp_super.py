@@ -152,7 +152,7 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                 self.is_active = False
                 break
             buf += ret
-            LOG.info("msg: %s " % buf)
+            # LOG.info("msg: %s " % buf)
 
             while len(buf) >= required_len:
                 # Parser.
@@ -160,13 +160,14 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                 required_len = msg_len
                 if len(buf) < required_len:
                     break
-                print "msg:", buf
 
+                print "msg:", version, msg_type, msg_len, xid
                 #Wait for parsing
                 msg = oxproto_parser.msg(self,
                                          version, msg_type, msg_len, xid, buf)
-                # LOG.debug('queue msg %s cls %s', msg, msg.__class__)
+                # print "msg:", msg.version, msg.msg_type, msg.msg_len, msg.xid
                 if msg:
+                    LOG.info('queue msg %s cls %s', msg, msg.__class__)
                     ev = oxp_event.oxp_msg_to_ev(msg)
                     self.oxp_brick.send_event_to_observers(ev, self.state)
 
@@ -179,11 +180,6 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
 
                 buf = buf[required_len:]
                 required_len = oxproto_common.OXP_HEADER_SIZE
-
-                # We need to schedule other greenlets. Otherwise, ryu
-                # can't accept new switches or handle the existing
-                # switches. The limit is arbitrary. We need the better
-                # approach in the future.
 
                 count += 1
                 if count > 2048:
@@ -204,7 +200,7 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
 
     def set_xid(self, msg):
         self.xid += 1
-        self.xid &= self.ofproto.MAX_XID
+        self.xid &= self.oxproto.MAX_XID
         msg.set_xid(self.xid)
         return self.xid
 

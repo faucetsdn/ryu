@@ -15,11 +15,14 @@ import ryu.base.app_manager
 
 from ryu.lib import hub
 from ryu import utils
-from ryu.controller import ofp_event
+from ryu.openexchange import oxp_event
 from ryu.openexchange.oxp_domain import Domain_Controller
 from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
-    MAIN_DISPATCHER
+    MAIN_DISPATCHER, DEAD_DISPATCHER
+
+from ryu.openexchange import topology_data
+from ryu.openexchange import host_data
 
 
 # The state transition: HANDSHAKE -> CONFIG -> MAIN
@@ -133,20 +136,17 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         self.logger.debug('move onto config mode')
         domain.set_state(CONFIG_DISPATCHER)
 
-    @set_ev_handler(oxp_event.EventOXPDomainFeatures, CONFIG_DISPATCHER)
-    def domain_features_handler(self, ev):
+    @set_ev_handler(oxp_event.EventOXPFeaturesRequest, CONFIG_DISPATCHER)
+    def features_request_handler(self, ev):
         msg = ev.msg
         domain = msg.domain
-        self.logger.debug('switch features ev %s', msg)
-
-        domain.id = msg.domain_id
+        self.logger.debug('features request ev %s', msg)
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
-        set_config = oxproto_parser.OXPSetConfig(
-            domain, oxproto.OXPC_MODEL_DEFAULT, 20, 128
-        )
-        domain.send_msg(set_config)
+        # Todo:
+        # build features reply packet.
+        # domain.send_msg(set_config)
 
         ev.msg.domain.set_state(MAIN_DISPATCHER)
 
@@ -167,6 +167,7 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         self.logger.info('error msg ev %s type 0x%x code 0x%x %s',
                          msg, msg.type, msg.code, utils.hex_array(msg.data))
 
+    '''
     @set_ev_handler(oxp_event.EventOXPGetConfigReply,
                     [CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def config_reply_handler(self, ev):
@@ -206,12 +207,11 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         # parser the msg and save the topo data.
         msg = ev.msg
         domain = msg.domain
-        domain_id = msg.domain_id
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
 
-        self.links.domain_id = domain_id
+        self.links.domain_id = domain.id
         # link: (src_vport:1, dst_vport=2, capacities=123)
         self.links.update(msg.links)
 
@@ -220,24 +220,22 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         # parser the msg and save the host data.
         msg = ev.msg
         domain = msg.domain
-        domain_id = msg.domain_id
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
 
-        self.location.update(domain_id, msg.hosts)
+        self.location.update(domain.id, msg.hosts)
 
     @set_ev_handler(oxp_event.EventOXPHostUpdate, MAIN_DISPATCHER)
     def host_update_handler(self, ev):
         # parser the msg and save the host data.
         msg = ev.msg
         domain = msg.domain
-        domain_id = msg.domain_id
 
         oxproto = domain.oxproto
         oxproto_parser = domain.oxproto_parser
 
-        self.location.update(domain_id, msg.hosts)
+        self.location.update(domain.id, msg.hosts)
 
     @set_ev_handler(oxp_event.EventOXPSBP, MAIN_DISPATCHER)
     def SBP_handler(self, ev):
@@ -245,3 +243,4 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         # raise the event.
         # finish it in service or app.
         pass
+    '''

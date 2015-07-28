@@ -33,10 +33,11 @@ OXPT_TOPP_REPLY = 11            # Super/Domain message  done
 OXPT_HOST_REQUEST = 12          # Super/Domain message  done
 OXPT_HOST_REPLY = 13            # Super/Domain message  done
 OXPT_HOST_UPDATE = 14           # Super/Domain message  done
+OXPT_VPORT_STATUS = 15          # Asynchronous message
 
-OXPT_SBP = 17       # Southbound Protocol message       done
+OXPT_SBP = 16       # Southbound Protocol message       done
 
-OXPT_VENDOR = 18    # Vendor message                    done
+OXPT_VENDOR = 17    # Vendor message                    done
 ____________________________________________________
 
 Common structures
@@ -60,7 +61,7 @@ from . import oxproto_v1_0 as oxproto
 from ryu import utils
 
 import logging
-LOG = logging.getLogger('ryu.oxproto.oxproto_v1_0_parser')
+LOG = logging.getLogger('ryu.oxproto.oxproto_v1_0_parser_domain')
 
 _MSG_PARSERS = {}
 
@@ -168,25 +169,6 @@ class OXPErrorMsg(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(oxproto.OXPT_ECHO_REQUEST)
-class OXPEchoRequest(MsgBase):
-    def __init__(self, domain, data=None):
-        super(OXPEchoRequest, self).__init__(domain)
-        self.data = data
-
-    @classmethod
-    def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPEchoRequest, cls).parser(domain, version, msg_type,
-                                                msg_len, xid, buf)
-        msg.data = msg.buf[oxproto.OXP_HEADER_SIZE:]
-        return msg
-
-    def _serialize_body(self):
-        if self.data is not None:
-            self.buf += self.data
-
-
-@_register_parser
 @_set_msg_type(oxproto.OXPT_ECHO_REPLY)
 class OXPEchoReply(MsgBase):
     def __init__(self, domain, data=None):
@@ -206,16 +188,22 @@ class OXPEchoReply(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(oxproto.OXPT_FEATURES_REQUEST)
-class OXPFeaturesRequest(MsgBase):
-    def __init__(self, domain):
-        super(OXPFeaturesRequest, self).__init__(domain)
+@_set_msg_type(oxproto.OXPT_ECHO_REQUEST)
+class OXPEchoRequest(MsgBase):
+    def __init__(self, domain, data=None):
+        super(OXPEchoRequest, self).__init__(domain)
+        self.data = data
 
     @classmethod
     def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPFeaturesRequest, cls).parser(
-            domain, version, msg_type, msg_len, xid, buf)
+        msg = super(OXPEchoRequest, cls).parser(domain, version, msg_type,
+                                                msg_len, xid, buf)
+        msg.data = msg.buf[oxproto.OXP_HEADER_SIZE:]
         return msg
+
+    def _serialize_body(self):
+        if self.data is not None:
+            self.buf += self.data
 
 
 @_set_msg_type(oxproto.OXPT_FEATURES_REPLY)
@@ -235,14 +223,14 @@ class OXPDomainFeatures(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(oxproto.OXPT_GET_CONFIG_REQUEST)
-class OXPGetConfigRequest(MsgBase):
+@_set_msg_type(oxproto.OXPT_FEATURES_REQUEST)
+class OXPFeaturesRequest(MsgBase):
     def __init__(self, domain):
-        super(OXPGetConfigRequest, self).__init__(domain)
+        super(OXPFeaturesRequest, self).__init__(domain)
 
     @classmethod
     def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPGetConfigRequest, cls).parser(
+        msg = super(OXPFeaturesRequest, cls).parser(
             domain, version, msg_type, msg_len, xid, buf)
         return msg
 
@@ -260,6 +248,19 @@ class OXPGetConfigReply(MsgBase):
         msg_pack_into(oxproto.OXP_DOMAIN_CONFIG_PACK_STR, self.buf,
                       oxproto.OXP_HEADER_SIZE, self.flags,
                       self.period, self.miss_send_len)
+
+
+@_register_parser
+@_set_msg_type(oxproto.OXPT_GET_CONFIG_REQUEST)
+class OXPGetConfigRequest(MsgBase):
+    def __init__(self, domain):
+        super(OXPGetConfigRequest, self).__init__(domain)
+
+    @classmethod
+    def parser(cls, domain, version, msg_type, msg_len, xid, buf):
+        msg = super(OXPGetConfigRequest, cls).parser(
+            domain, version, msg_type, msg_len, xid, buf)
+        return msg
 
 
 @_register_parser
@@ -285,19 +286,6 @@ class OXPSetConfig(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(oxproto.OXPT_TOPO_REQUEST)
-class OXPTopoRequest(MsgBase):
-    def __init__(self, domain):
-        super(OXPTopoRequest, self).__init__(domain)
-
-    @classmethod
-    def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPTopoRequest, cls).parser(
-            domain, version, msg_type, msg_len, xid, buf)
-        return msg
-
-
-@_register_parser
 @_set_msg_type(oxproto.OXPT_TOPO_REPLY)
 class OXPTopoReply(MsgBase):
     def __init__(self, domain, links=set()):
@@ -313,20 +301,20 @@ class OXPTopoReply(MsgBase):
 
 
 @_register_parser
-@_set_msg_type(oxproto.OXPT_HOST_REQUEST)
-class OXPHostRequest(MsgBase):
+@_set_msg_type(oxproto.OXPT_TOPO_REQUEST)
+class OXPTopoRequest(MsgBase):
     def __init__(self, domain):
-        super(OXPHostRequest, self).__init__(domain)
+        super(OXPTopoRequest, self).__init__(domain)
 
     @classmethod
     def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPHostRequest, cls).parser(
+        msg = super(OXPTopoRequest, cls).parser(
             domain, version, msg_type, msg_len, xid, buf)
         return msg
 
 
 @_register_parser
-@_set_msg_type(oxproto.OXPT_TOPO_REPLY)
+@_set_msg_type(oxproto.OXPT_HOST_REPLY)
 class OXPHostReply(MsgBase):
     def __init__(self, domain, hosts=set()):
         super(OXPHostReply, self).__init__(domain)
@@ -339,7 +327,20 @@ class OXPHostReply(MsgBase):
             offset += oxproto.OXP_HOST_SIZE
 
 
-@_set_msg_type(oxproto.OXPT_TOPO_UPDATE)
+@_register_parser
+@_set_msg_type(oxproto.OXPT_HOST_REQUEST)
+class OXPHostRequest(MsgBase):
+    def __init__(self, domain):
+        super(OXPHostRequest, self).__init__(domain)
+
+    @classmethod
+    def parser(cls, domain, version, msg_type, msg_len, xid, buf):
+        msg = super(OXPHostRequest, cls).parser(
+            domain, version, msg_type, msg_len, xid, buf)
+        return msg
+
+
+@_set_msg_type(oxproto.OXPT_HOST_UPDATE)
 class OXPHostUpdate(MsgBase):
     def __init__(self, domain, hosts=set()):
         super(OXPHostUpdate, self).__init__(domain)
@@ -350,6 +351,21 @@ class OXPHostUpdate(MsgBase):
         for host in self.hosts:
             msg_pack_into(oxproto.OXP_HOST_PACK_STR, self.buf, offset, host)
             offset += oxproto.OXP_HOST_SIZE
+
+
+@_register_parser
+@_set_msg_type(oxproto.OXPT_VPORT_STATUS)
+class OXPVportStatus(MsgBase):
+    def __init__(self, domain, vport=None, reason=None):
+        super(OXPVportStatus, self).__init__(domain)
+        self.reason = reason
+        self.vport = vport
+
+    def _serialize_body(self):
+        offset = oxproto.OXP_HEADER_SIZE
+        msg_pack_into(
+            oxproto.OXP_VPORT_STATUS_PACK_STR,
+            self.buf, offset, self.reason, self.vport)
 
 
 @_register_parser
