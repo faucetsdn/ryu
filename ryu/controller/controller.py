@@ -165,6 +165,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
             ret = self.socket.recv(required_len)
             if len(ret) == 0:
                 self.is_active = False
+                self.socket.close()
                 break
             buf += ret
             while len(buf) >= required_len:
