@@ -3415,6 +3415,9 @@ class OFPMatch(StringifyMixin):
     def iteritems(self):
         return iter(dict(self._fields2).items())
 
+    def items(self):
+        return self._fields2
+
     def get(self, key, default=None):
         return dict(self._fields2).get(key, default)
 

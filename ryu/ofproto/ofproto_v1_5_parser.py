@@ -784,6 +784,9 @@ class OFPMatch(StringifyMixin):
     def iteritems(self):
         return iter(dict(self._fields2).items())
 
+    def items(self):
+        return self._fields2
+
     def get(self, key, default=None):
         return dict(self._fields2).get(key, default)
 
@@ -924,6 +927,9 @@ class OFPStats(StringifyMixin):
 
     def iteritems(self):
         return dict(self.fields).items()
+
+    def items(self):
+        return self.fields
 
     def get(self, key, default=None):
         return dict(self.fields).get(key, default)
