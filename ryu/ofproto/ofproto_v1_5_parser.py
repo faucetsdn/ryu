@@ -2744,24 +2744,33 @@ class OFPPortDescStatsRequest(OFPMultipartRequest):
     """
     Port description request message
 
-    The controller uses this message to query description of all the ports.
+    The controller uses this message to query description of one or all the ports.
 
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
     flags            Zero or ``OFPMPF_REQ_MORE``
+    port_no          Port number to read (OFPP_ANY to all ports)
     ================ ======================================================
 
     Example::
 
         def send_port_desc_stats_request(self, datapath):
+            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
+            req = ofp_parser.OFPPortDescStatsRequest(datapath, 0, ofp.OFPP_ANY)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags=0, type_=None):
+    def __init__(self, datapath, flags=0, port_no=ofproto.OFPP_ANY, type_=None):
         super(OFPPortDescStatsRequest, self).__init__(datapath, flags)
+        self.port_no = port_no
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_PORT_MULTIPART_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.port_no)
 
 
 @OFPMultipartReply.register_stats_type()
@@ -4509,7 +4518,7 @@ class OFPPortStatsRequest(OFPMultipartRequest):
         self.port_no = port_no
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto.OFP_PORT_STATS_REQUEST_PACK_STR,
+        msg_pack_into(ofproto.OFP_PORT_MULTIPART_REQUEST_PACK_STR,
                       self.buf,
                       ofproto.OFP_MULTIPART_REQUEST_SIZE,
                       self.port_no)
