@@ -39,11 +39,14 @@ class Network_Aware(app_manager.RyuApp):
         # ports
         self.switch_port_table = {}  # dpid->port_num
 
-        # dpid->port_num (outer ports)
+        # dpid->port_num (access ports)
         self.access_ports = {}
 
         # dpid->port_num(interior ports)
         self.interior_ports = {}
+
+        self.outer_ports = {}
+
         self.graph = {}
 
         self.pre_link_to_port = {}
@@ -145,9 +148,14 @@ class Network_Aware(app_manager.RyuApp):
 
     # get ports without link into access_ports
     def create_access_ports(self):
+        # we assume that the access ports include outer port.
+        # Todo: find the outer ports by filter.
         for sw in self.switch_port_table:
             self.access_ports[sw] = self.switch_port_table[
                 sw] - self.interior_ports[sw]
+
+    def create_outer_port(self):
+        pass
 
     events = [event.EventSwitchEnter,
               event.EventSwitchLeave, event.EventPortAdd,
@@ -165,10 +173,38 @@ class Network_Aware(app_manager.RyuApp):
         self.get_graph(self.link_to_port.keys())
         # self.show_topology()
 
+    def register_access_info(self, dpid, in_port, ip):
+        if in_port in self.access_ports[dpid]:
+            if (dpid, in_port) in self.access_table:
+                if ip != self.access_table[(dpid, in_port)]:
+                    self.access_table[(dpid, in_port)] = ip
+            else:
+                self.access_table[(dpid, in_port)] = ip
+
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+
+        parser = datapath.ofproto_parser
+        in_port = msg.match['in_port']
+        pkt = packet.Packet(msg.data)
+
+        eth_type = pkt.get_protocols(ethernet.ethernet)[0].ethertype
+        arp_pkt = pkt.get_protocol(arp.arp)
+        ip_pkt = pkt.get_protocol(ipv4.ipv4)
+
+        if arp_pkt:
+            arp_src_ip = arp_pkt.src_ip
+            arp_dst_ip = arp_pkt.dst_ip
+
+            # record the access info
+            self.register_access_info(datapath.id, in_port, arp_src_ip)
+
     # show topo
     def show_topology(self):
         switch_num = len(self.graph)
-        if self.pre_graph != self.graph and IS_UPDATE:
+        if self.pre_graph != self.graph or IS_UPDATE:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -181,7 +217,7 @@ class Network_Aware(app_manager.RyuApp):
                 print ""
             self.pre_graph = self.graph
         # show link
-        if self.pre_link_to_port != self.link_to_port and IS_UPDATE:
+        if self.pre_link_to_port != self.link_to_port or IS_UPDATE:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -199,7 +235,7 @@ class Network_Aware(app_manager.RyuApp):
 
         # each dp access host
         # {(sw,port) :[host1_ip,host2_ip,host3_ip,host4_ip]}
-        if self.pre_access_table != self.access_table and IS_UPDATE:
+        if self.pre_access_table != self.access_table or IS_UPDATE:
             print "----------------Access Host-------------------"
             print '%10s' % ("switch"), '%12s' % "Host"
             if not self.access_table.keys():

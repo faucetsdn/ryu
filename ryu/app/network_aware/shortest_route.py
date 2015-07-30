@@ -295,13 +295,9 @@ class Shortest_Route(app_manager.RyuApp):
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
 
-        if arp_pkt:
+        if isinstance(arp_pkt, arp.arp):
             arp_src_ip = arp_pkt.src_ip
             arp_dst_ip = arp_pkt.dst_ip
-
-            # record the access info
-            if in_port in self.access_ports[datapath.id]:
-                self.access_table[(datapath.id, in_port)] = arp_src_ip
 
             result = self.get_host_location(arp_dst_ip)
             if result:  # host record in access table.
