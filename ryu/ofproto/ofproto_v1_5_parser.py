@@ -2869,6 +2869,7 @@ class OFPQueueDescStatsRequest(OFPMultipartRequest):
     Example::
 
         def send_tablet_desc_stats_request(self, datapath):
+            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPQueueDescStatsRequest(datapath, 0,
@@ -2883,7 +2884,7 @@ class OFPQueueDescStatsRequest(OFPMultipartRequest):
         self.queue_id = queue_id
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto.OFP_QUEUE_DESC_REQUEST_PACK_STR,
+        msg_pack_into(ofproto.OFP_QUEUE_MULTIPART_REQUEST_PACK_STR,
                       self.buf,
                       ofproto.OFP_MULTIPART_REQUEST_SIZE,
                       self.port_no, self.queue_id)
@@ -2990,7 +2991,7 @@ class OFPQueueStatsRequest(OFPMultipartRequest):
         self.queue_id = queue_id
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto.OFP_QUEUE_STATS_REQUEST_PACK_STR,
+        msg_pack_into(ofproto.OFP_QUEUE_MULTIPART_REQUEST_PACK_STR,
                       self.buf,
                       ofproto.OFP_MULTIPART_REQUEST_SIZE,
                       self.port_no, self.queue_id)
