@@ -3107,7 +3107,7 @@ class OFPGroupStatsRequest(OFPMultipartRequest):
         self.group_id = group_id
 
     def _serialize_stats_body(self):
-        msg_pack_into(ofproto.OFP_GROUP_STATS_REQUEST_PACK_STR,
+        msg_pack_into(ofproto.OFP_GROUP_MULTIPART_REQUEST_PACK_STR,
                       self.buf,
                       ofproto.OFP_MULTIPART_REQUEST_SIZE,
                       self.group_id)
@@ -3186,6 +3186,7 @@ class OFPGroupDescStatsRequest(OFPMultipartRequest):
     Attribute        Description
     ================ ======================================================
     flags            Zero or ``OFPMPF_REQ_MORE``
+    group_id         ID of group to read (OFPG_ALL to all groups)
     ================ ======================================================
 
     Example::
@@ -3194,11 +3195,19 @@ class OFPGroupDescStatsRequest(OFPMultipartRequest):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            req = ofp_parser.OFPGroupDescStatsRequest(datapath, 0)
+            req = ofp_parser.OFPGroupDescStatsRequest(datapath, 0, ofp.OFPG_ALL)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, flags=0, type_=None):
+    def __init__(self, datapath, flags=0, group_id=ofproto.OFPG_ALL,
+                 type_=None):
         super(OFPGroupDescStatsRequest, self).__init__(datapath, flags)
+        self.group_id = group_id
+
+    def _serialize_stats_body(self):
+        msg_pack_into(ofproto.OFP_GROUP_MULTIPART_REQUEST_PACK_STR,
+                      self.buf,
+                      ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.group_id)
 
 
 @OFPMultipartReply.register_stats_type()
