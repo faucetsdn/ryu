@@ -3339,13 +3339,13 @@ class OFPMeterBandStats(StringifyMixin):
 
 
 class OFPMeterStats(StringifyMixin):
-    def __init__(self, meter_id=None, flow_count=None, packet_in_count=None,
+    def __init__(self, meter_id=None, ref_count=None, packet_in_count=None,
                  byte_in_count=None, duration_sec=None, duration_nsec=None,
                  band_stats=None, len_=None):
         super(OFPMeterStats, self).__init__()
         self.meter_id = meter_id
         self.len = 0
-        self.flow_count = flow_count
+        self.ref_count = ref_count
         self.packet_in_count = packet_in_count
         self.byte_in_count = byte_in_count
         self.duration_sec = duration_sec
@@ -3357,7 +3357,7 @@ class OFPMeterStats(StringifyMixin):
         meter_stats = cls()
 
         (meter_stats.meter_id, meter_stats.len,
-         meter_stats.flow_count, meter_stats.packet_in_count,
+         meter_stats.ref_count, meter_stats.packet_in_count,
          meter_stats.byte_in_count, meter_stats.duration_sec,
          meter_stats.duration_nsec) = struct.unpack_from(
             ofproto.OFP_METER_STATS_PACK_STR, buf, offset)
@@ -3432,11 +3432,11 @@ class OFPMeterStatsReply(OFPMultipartReply):
         def meter_stats_reply_handler(self, ev):
             meters = []
             for stat in ev.msg.body:
-                meters.append('meter_id=0x%08x len=%d flow_count=%d '
+                meters.append('meter_id=0x%08x len=%d ref_count=%d '
                               'packet_in_count=%d byte_in_count=%d '
                               'duration_sec=%d duration_nsec=%d '
                               'band_stats=%s' %
-                              (stat.meter_id, stat.len, stat.flow_count,
+                              (stat.meter_id, stat.len, stat.ref_count,
                                stat.packet_in_count, stat.byte_in_count,
                                stat.duration_sec, stat.duration_nsec,
                                stat.band_stats))
