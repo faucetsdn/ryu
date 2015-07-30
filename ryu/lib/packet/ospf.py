@@ -688,7 +688,7 @@ class OSPFMessage(packet_base.PacketBase, _TypeDisp):
         except:
             return None, None, buf
 
-    def serialize(self):
+    def serialize(self, payload=None, prev=None):
         tail = self.serialize_tail()
         self.length = self._HDR_LEN + len(tail)
         head = bytearray(struct.pack(self._HDR_PACK_STR, self.version,
