@@ -27,6 +27,8 @@ from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
 from ryu.openexchange import oxp_event
 
+from ryu.openexchange.controller_id import dpid_to_str
+
 from socket import IPPROTO_TCP, TCP_NODELAY
 
 import ryu.base.app_manager
@@ -107,8 +109,6 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
     # TODO: descirpt a domain controller which used by super controller.
     def __init__(self, socket, address):
         super(Domain_Network, self).__init__()
-        # self.oxproto = oxproto_v1_0            # todo use the ProtocolDesc.
-        # self.oxproto_parser = oxproto_v1_0_parser     # todo
         self.socket = socket
         self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         self.address = address
@@ -119,7 +119,7 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
         self.send_q = hub.Queue(16)
 
         self.xid = random.randint(0, self.oxproto.MAX_XID)
-        self.id = None  # controller_id is unknown yet
+        self.id = None
         self.ports = None
 
         # config info
@@ -133,7 +133,7 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
     def close(self):
         self.set_state(handler.DEAD_DISPATCHER)
 
-    def set_state(self, state):  # create OXPStateChange event.
+    def set_state(self, state):
         self.state = state
         ev = oxp_event.EventOXPStateChange(self)
         ev.state = state
@@ -152,7 +152,6 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                 self.is_active = False
                 break
             buf += ret
-            # LOG.info("msg: %s " % buf)
 
             while len(buf) >= required_len:
                 # Parser.
@@ -161,13 +160,12 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                 if len(buf) < required_len:
                     break
 
-                print "msg:", version, msg_type, msg_len, xid
                 #Wait for parsing
                 msg = oxproto_parser.msg(self,
                                          version, msg_type, msg_len, xid, buf)
-                # print "msg:", msg.version, msg.msg_type, msg.msg_len, msg.xid
+
                 if msg:
-                    LOG.info('queue msg %s cls %s', msg, msg.__class__)
+                    LOG.debug('queue msg %s cls %s', msg, msg.__class__)
                     ev = oxp_event.oxp_msg_to_ev(msg)
                     self.oxp_brick.send_event_to_observers(ev, self.state)
 
@@ -195,7 +193,6 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        # LOG.debug('send_msg %s', msg)
         self.send(msg.buf)
 
     def set_xid(self, msg):
@@ -211,7 +208,6 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                 buf = self.send_q.get()
 
                 self.socket.sendall(buf)
-                LOG.info("sendall")
         finally:
             q = self.send_q
             # first, clear self.send_q to prevent new references.
@@ -225,10 +221,8 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                 pass
 
     def serve(self):
-        # TODO: entry point
         send_thr = hub.spawn(self._send_loop)
 
-        # send hello message immediately
         hello = self.oxproto_parser.OXPHello(self)
         self.send_msg(hello)
 
@@ -240,7 +234,6 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
 
 
 def domain_connection_factory(socket, address):
-    # TODO: receive domain connections
     LOG.info('connected domain:%s address:%s', socket, address)
     with contextlib.closing(Domain_Network(socket, address)) as domain:
         try:
@@ -255,6 +248,6 @@ def domain_connection_factory(socket, address):
             if domain.id is None:
                 domain_str = "%s" % domain.id
             else:
-                domain_str = did_to_str(domain.id)
+                domain_str = dpid_to_str(domain.id)
             LOG.error("Error in the domain %s from %s", domain_str, address)
             raise

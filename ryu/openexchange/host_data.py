@@ -6,6 +6,8 @@ Date                Work
 2015/7/27           define class host.
 """
 from . import data_base
+from ryu.lib.ip import ipv4_to_bin
+from ryu.lib.ip import ipv4_to_str
 from ryu.openexchange.oxproto_v1_0 import OXPP_INACTIVE, OXPP_ACTIVE
 
 IP2HOST = {}
@@ -24,22 +26,21 @@ class Host(data_base.DataBase):
 
 
 class location(object):
-    def __init__(self, location={}):
-        # location: {domain:[ip1,ip2,...]}
-        self.location = location
+    def __init__(self, locations={}):
+        # locations: {domain:[ip1,ip2,...]}
+        self.locations = locations
 
     def update(self, domain, hosts):
         for host in hosts:
             if host.state == OXPP_ACTIVE:
-                if host.ip not in self.location[domain]:
+                if host.ip not in self.locations[domain]:
                     IP2HOST.setdefault(host.ip, None)
                     IP2HOST[host.ip] = host
 
-                    self.location[domain].insert(0, host.ip)
+                    self.locations[domain].insert(0, ipv4_to_str(host.ip))
             else:
-                # state =OXPP_INACTIVE
-                if host.ip in self.location[domain]:
-                    self.location[domain].remove(host.ip)
+                if host.ip in self.locations[domain]:
+                    self.locations[domain].remove(host.ip)
 
                     HOSTLIST.remove(IP2HOST[host.ip])
                     del IP2HOST[host.ip]

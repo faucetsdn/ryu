@@ -171,7 +171,6 @@ class Network_Aware(app_manager.RyuApp):
         self.create_interior_links(links)
         self.create_access_ports()
         self.get_graph(self.link_to_port.keys())
-        # self.show_topology()
 
     def register_access_info(self, dpid, in_port, ip):
         if in_port in self.access_ports[dpid]:

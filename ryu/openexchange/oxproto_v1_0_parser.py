@@ -210,11 +210,11 @@ class OXPEchoRequest(MsgBase):
 @_set_msg_type(oxproto.OXPT_FEATURES_REPLY)
 class OXPDomainFeatures(MsgBase):
     def __init__(self, domain, domain_id=None,
-                 proto_type=None, version=None, capabilities=None):
+                 proto_type=None, sbp_version=None, capabilities=None):
         super(OXPDomainFeatures, self).__init__(domain)
         self.domain_id = domain_id
         self.proto_type = proto_type
-        self.version = version
+        self.sbp_version = sbp_version
         self.capabilities = capabilities
 
     @classmethod
@@ -228,7 +228,7 @@ class OXPDomainFeatures(MsgBase):
 
         msg.domain_id = _id
         msg.proto_type = _type
-        msg.version = _version
+        msg.sbp_version = _version
         msg.capabilities = _capabilities
 
         return msg
@@ -390,7 +390,9 @@ class OXPHostReply(MsgBase):
     def _serialize_body(self):
         offset = oxproto.OXP_HEADER_SIZE
         for host in self.hosts:
-            msg_pack_into(oxproto.OXP_HOST_PACK_STR, self.buf, offset, host)
+            msg_pack_into(oxproto.OXP_HOST_PACK_STR,
+                          self.buf, offset, host.ip,
+                          host.mac, host.mask, host.state)
             offset += oxproto.OXP_HOST_SIZE
 
 
@@ -433,33 +435,37 @@ class OXPHostUpdate(MsgBase):
     def _serialize_body(self):
         offset = oxproto.OXP_HEADER_SIZE
         for host in self.hosts:
-            msg_pack_into(oxproto.OXP_HOST_PACK_STR, self.buf, offset, host)
+            msg_pack_into(oxproto.OXP_HOST_PACK_STR,
+                          self.buf, offset, host.ip,
+                          host.mac, host.mask, host.state)
             offset += oxproto.OXP_HOST_SIZE
 
 
 @_register_parser
 @_set_msg_type(oxproto.OXPT_VPORT_STATUS)
 class OXPVportStatus(MsgBase):
-    def __init__(self, domain, vport=None, reason=None):
+    def __init__(self, domain, reason=None, vport=None):
         super(OXPVportStatus, self).__init__(domain)
         self.reason = reason
         self.vport = vport
 
     @classmethod
     def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPHostUpdate, cls).parser(
+        msg = super(OXPVportStatus, cls).parser(
             domain, version, msg_type, msg_len, xid, buf)
 
-        msg.reason, msg.vport = struct.unpack_from(
+        msg.reason, msg.vport_no, msg.state = struct.unpack_from(
             oxproto.OXP_VPORT_STATUS_PACK_STR, msg.buf,
             oxproto.OXP_HEADER_SIZE)
+
         return msg
 
     def _serialize_body(self):
         offset = oxproto.OXP_HEADER_SIZE
         msg_pack_into(
             oxproto.OXP_VPORT_STATUS_PACK_STR,
-            self.buf, offset, self.reason, self.vport)
+            self.buf, offset, self.reason,
+            self.vport.vport_no, self.vport.state)
 
 
 @_register_parser
@@ -471,7 +477,7 @@ class OXPSBP(MsgBase):
 
     @classmethod
     def parser(cls, domain, version, msg_type, msg_len, xid, buf):
-        msg = super(OXPHostUpdate, cls).parser(
+        msg = super(OXPSBP, cls).parser(
             domain, version, msg_type, msg_len, xid, buf)
         # we don't parser the data of SBP due to no deal of model.
         # just leave it to handler.

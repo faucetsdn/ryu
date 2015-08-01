@@ -42,7 +42,7 @@ LOG = logging.getLogger(__name__)
 
 
 CONF = cfg.CONF
-"""
+
 CONF.register_cli_opts([
     cfg.BoolOpt('observe-links', default=False,
                 help='observe link discovery events.'),
@@ -51,7 +51,7 @@ CONF.register_cli_opts([
                      'to send lldp packet to controller'),
     cfg.BoolOpt('explicit-drop', default=True,
                 help='link discovery: explicitly drop lldp packet in')
-])"""
+])
 
 
 class Port(object):

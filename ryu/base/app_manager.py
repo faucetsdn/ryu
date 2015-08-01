@@ -59,7 +59,7 @@ def _lookup_service_brick_by_mod_name(mod_name):
 
 def register_app(app):
     assert isinstance(app, RyuApp)
-    print "SERVICE_BRICKS:", SERVICE_BRICKS
+    # print "SERVICE_BRICKS:", SERVICE_BRICKS
 
     assert app.name not in SERVICE_BRICKS
     SERVICE_BRICKS[app.name] = app
@@ -270,6 +270,7 @@ class RyuApp(object):
     def _event_loop(self):
         while self.is_active or not self.events.empty():
             ev, state = self.events.get()
+
             if ev == self._event_stop:
                 continue
             handlers = self.get_handlers(ev, state)
@@ -394,6 +395,7 @@ class AppManager(object):
             services = []
             for key, context_cls in cls.context_iteritems():
                 v = self.contexts_cls.setdefault(key, context_cls)
+
                 assert v == context_cls
                 context_modules.append(context_cls.__module__)
 
@@ -429,7 +431,6 @@ class AppManager(object):
                 for ev_cls, c in m.callers.iteritems():
                     if not c.ev_source:
                         continue
-
                     brick = _lookup_service_brick_by_mod_name(c.ev_source)
                     if brick:
                         brick.register_observer(ev_cls, i.name,

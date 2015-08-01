@@ -17,6 +17,8 @@ from ryu.lib import hub
 from ryu.lib.hub import StreamServer
 import eventlet
 from eventlet.green import socket
+import ryu.base.app_manager
+from ryu.controller.handler import MAIN_DISPATCHER
 
 from ryu.openexchange import oxproto
 from ryu.openexchange import oxproto_common
@@ -25,6 +27,9 @@ from ryu.openexchange import oxproto_protocol
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxp_event
 from ryu.openexchange import oxp_super
+
+from ryu.openexchange.domain import config
+from ryu.openexchange.domain import features
 
 
 LOG = logging.getLogger('ryu.lib.openexchange.oxp_domain')
@@ -54,8 +59,19 @@ class Domain_Controller(object):
         self.is_active = True
         self.super_controller = None
 
+        self.features = features.features(domain_id=1)
+        self.config = config.config()
+        self.oxp_brick = ryu.base.app_manager.lookup_service_brick('oxp_event')
+
     # entry point
     def __call__(self):
+        self.features.set_features(domain_id=CONF.oxp_domain_id,
+                                   proto_type=CONF.oxp_proto_type,
+                                   sbp_version=CONF.oxp_proto_version,
+                                   capabilities=CONF.oxp_capabilities)
+        self.config.set_config(flags=CONF.oxp_flags,
+                               period=CONF.oxp_period,
+                               miss_send_len=CONF.oxp_miss_send_len)
         self._connect()
 
     def _connect(self):

@@ -63,7 +63,7 @@ def _create_oxp_msg_ev_from_module(oxp_parser):
 
 for oxp_mods in openexchange.get_oxp_modules().values():
     oxp_parser = oxp_mods[1]
-    print 'loading module %s' % oxp_parser
+    # print 'loading module %s' % oxp_parser
     _create_oxp_msg_ev_from_module(oxp_parser)
 
 
@@ -71,6 +71,21 @@ class EventOXPStateChange(event.EventBase):
     def __init__(self, domain):
         super(EventOXPStateChange, self).__init__()
         self.domain = domain
+
+
+class EventOXPVportStateChange(event.EventBase):
+    def __init__(self, domain, vport_no, state):
+        super(EventOXPVportStateChange, self).__init__()
+        self.domain = domain
+        self.vport_no = vport_no
+        self.state = state
+
+
+class EventOXPHostStateChange(event.EventBase):
+    def __init__(self, domain, hosts):
+        super(EventOXPHostStateChange, self).__init__()
+        self.domain = domain
+        self.hosts = hosts
 
 
 if CONF.oxp_role == 'super':

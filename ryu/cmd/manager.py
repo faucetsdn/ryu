@@ -78,7 +78,9 @@ def main(args=None, prog=None):
     if CONF.oxp_role == 'super':
         app_lists.append('ryu.openexchange.oxp_server_handler')
     elif CONF.oxp_role == 'domain':
-        app_lists.append('ryu.openexchange.oxp_client_handler')
+        app_lists.extend(
+            ['ryu.openexchange.oxp_client_handler',
+             'ryu.openexchange.network.abstract'])
 
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
