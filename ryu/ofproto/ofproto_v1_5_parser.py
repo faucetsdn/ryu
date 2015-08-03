@@ -1952,8 +1952,7 @@ class OFPFlowRemoved(MsgBase):
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
-    cookie           Opaque controller-issued identifier
-    priority         Priority level of flow entry
+    table_id         ID of the table
     reason           One of the following values.
 
                      | OFPRR_IDLE_TIMEOUT
@@ -1962,14 +1961,12 @@ class OFPFlowRemoved(MsgBase):
                      | OFPRR_GROUP_DELETE
                      | OFPRR_METER_DELETE
                      | OFPRR_EVICTION
-    table_id         ID of the table
-    duration_sec     Time flow was alive in seconds
-    duration_nsec    Time flow was alive in nanoseconds beyond duration_sec
+    priority         Priority level of flow entry
     idle_timeout     Idle timeout from original flow mod
     hard_timeout     Hard timeout from original flow mod
-    packet_count     Number of packets that was associated with the flow
-    byte_count       Number of bytes that was associated with the flow
+    cookie           Opaque controller-issued identifier
     match            Instance of ``OFPMatch``
+    stats            Instance of ``OFPStats``
     ================ ======================================================
 
     Example::
@@ -1988,51 +1985,51 @@ class OFPFlowRemoved(MsgBase):
                 reason = 'DELETE'
             elif msg.reason == ofp.OFPRR_GROUP_DELETE:
                 reason = 'GROUP DELETE'
+            elif msg.reason == ofp.OFPRR_METER_DELETE:
+                reason = 'METER DELETE'
+            elif msg.reason == ofp.OFPRR_EVICTION:
+                reason = 'EVICTION'
             else:
                 reason = 'unknown'
 
             self.logger.debug('OFPFlowRemoved received: '
-                              'cookie=%d priority=%d reason=%s table_id=%d '
-                              'duration_sec=%d duration_nsec=%d '
-                              'idle_timeout=%d hard_timeout=%d '
-                              'packet_count=%d byte_count=%d match.fields=%s',
-                              msg.cookie, msg.priority, reason, msg.table_id,
-                              msg.duration_sec, msg.duration_nsec,
-                              msg.idle_timeout, msg.hard_timeout,
-                              msg.packet_count, msg.byte_count, msg.match)
+                              'table_id=%d reason=%s priority=%d '
+                              'idle_timeout=%d hard_timeout=%d cookie=%d '
+                              'match=%s stats=%s',
+                              msg.table_id, reason, msg.priority,
+                              msg.idle_timeout, msg.hard_timeout, msg.cookie,
+                              msg.match, msg.stats)
     """
-    def __init__(self, datapath, cookie=None, priority=None, reason=None,
-                 table_id=None, duration_sec=None, duration_nsec=None,
-                 idle_timeout=None, hard_timeout=None, packet_count=None,
-                 byte_count=None, match=None):
+    def __init__(self, datapath, table_id=None, reason=None, priority=None,
+                 idle_timeout=None, hard_timeout=None, cookie=None,
+                 match=None, stats=None):
         super(OFPFlowRemoved, self).__init__(datapath)
-        self.cookie = cookie
-        self.priority = priority
-        self.reason = reason
         self.table_id = table_id
-        self.duration_sec = duration_sec
-        self.duration_nsec = duration_nsec
+        self.reason = reason
+        self.priority = priority
         self.idle_timeout = idle_timeout
         self.hard_timeout = hard_timeout
-        self.packet_count = packet_count
-        self.byte_count = byte_count
+        self.cookie = cookie
         self.match = match
+        self.stats = stats
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         msg = super(OFPFlowRemoved, cls).parser(datapath, version, msg_type,
                                                 msg_len, xid, buf)
 
-        (msg.cookie, msg.priority, msg.reason,
-         msg.table_id, msg.duration_sec, msg.duration_nsec,
-         msg.idle_timeout, msg.hard_timeout, msg.packet_count,
-         msg.byte_count) = struct.unpack_from(
+        (msg.table_id, msg.reason, msg.priority, msg.idle_timeout,
+         msg.hard_timeout, msg.cookie) = struct.unpack_from(
             ofproto.OFP_FLOW_REMOVED_PACK_STR0,
             msg.buf, ofproto.OFP_HEADER_SIZE)
-
         offset = (ofproto.OFP_FLOW_REMOVED_SIZE - ofproto.OFP_MATCH_SIZE)
 
         msg.match = OFPMatch.parser(msg.buf, offset)
+        offset += utils.round_up(msg.match.length, 8)
+
+        stats_length = msg.msg_len - offset
+        if stats_length > 0:
+            msg.stats = OFPStats.parser(buf, offset)
 
         return msg
 
