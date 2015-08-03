@@ -285,6 +285,14 @@ group_desc_request(enum ofputil_protocol proto)
     return ofputil_encode_group_desc_request(0x06, group_id);
 }
 
+struct ofpbuf *
+port_desc_request(enum ofputil_protocol proto)
+{
+    uint32_t port_no = 0xbcda;
+
+    return ofputil_encode_port_desc_stats_request(0x06, port_no);
+}
+
 struct protocol_version {
     const char *name;
     const char *dir_name;
@@ -321,6 +329,8 @@ const struct message messages[] = {
     M(bundle_add,
       ((const struct protocol_version *[]){&p15, NULL})),
     M(group_desc_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    M(port_desc_request,
       ((const struct protocol_version *[]){&p15, NULL})),
 };
 
