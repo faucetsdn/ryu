@@ -1,0 +1,45 @@
+{
+    "OFPGroupDescStatsReply": {
+        "body": [
+            {
+                "OFPGroupDescStats": {
+                    "bucket_array_len": 32,
+                    "buckets": [
+                        {
+                            "OFPBucket": {
+                                "action_array_len": 16,
+                                "actions": [
+                                    {
+                                        "OFPActionOutput": {
+                                            "len": 16,
+                                            "max_len": 65509,
+                                            "port": 1,
+                                            "type": 0
+                                        }
+                                    }
+                                ],
+                                "bucket_id": 65535,
+                                "len": 32,
+                                "properties": [
+                                    {
+                                        "OFPGroupBucketPropWeight": {
+                                            "length": 8,
+                                            "type": 0,
+                                            "weight": 65535
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "group_id": 1,
+                    "length": 48,
+                    "properties": [],
+                    "type": 1
+                }
+            }
+        ],
+        "flags": 0,
+        "type": 7
+    }
+}
