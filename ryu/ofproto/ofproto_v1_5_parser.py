@@ -5807,6 +5807,15 @@ class OFPActionExperimenterUnknown(OFPActionExperimenter):
                       self.data)
 
 
+class OFPGroupProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPGroupProp.register_type(ofproto.OFPGPT_EXPERIMENTER)
+class OFPGroupPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
 @_set_msg_type(ofproto.OFPT_GROUP_MOD)
 class OFPGroupMod(MsgBase):
     """
