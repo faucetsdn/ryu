@@ -277,6 +277,14 @@ bundle_add(enum ofputil_protocol proto)
     return add;
 }
 
+struct ofpbuf *
+group_desc_request(enum ofputil_protocol proto)
+{
+    uint32_t group_id = 0xcdab;
+
+    return ofputil_encode_group_desc_request(0x06, group_id);
+}
+
 struct protocol_version {
     const char *name;
     const char *dir_name;
@@ -311,6 +319,8 @@ const struct message messages[] = {
     M(bundle_ctrl,
       ((const struct protocol_version *[]){&p15, NULL})),
     M(bundle_add,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    M(group_desc_request,
       ((const struct protocol_version *[]){&p15, NULL})),
 };
 
