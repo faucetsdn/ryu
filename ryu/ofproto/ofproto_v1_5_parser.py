@@ -5994,44 +5994,113 @@ class OFPPortMod(MsgBase):
         self.buf += bin_props
 
 
-class OFPBucket(StringifyMixin):
-    def __init__(self, weight=0, watch_port=ofproto.OFPP_ANY,
-                 watch_group=ofproto.OFPG_ANY, actions=None, len_=None):
-        super(OFPBucket, self).__init__()
+class OFPGroupBucketProp(OFPPropBase):
+    _TYPES = {}
+
+
+@OFPGroupBucketProp.register_type(ofproto.OFPGBPT_WEIGHT)
+class OFPGroupBucketPropWeight(OFPGroupBucketProp):
+    def __init__(self, type_=None, length=None, weight=None):
+        super(OFPGroupBucketPropWeight, self).__init__(type_, length)
         self.weight = weight
-        self.watch_port = watch_port
-        self.watch_group = watch_group
+
+    @classmethod
+    def parser(cls, buf):
+        prop = cls()
+        (prop.type, prop.length, prop.weight) = struct.unpack_from(
+            ofproto.OFP_GROUP_BUCKET_PROP_WEIGHT_PACK_STR, buf, 0)
+        return prop
+
+    def serialize(self):
+        # fixup
+        self.length = ofproto.OFP_GROUP_BUCKET_PROP_WEIGHT_SIZE
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_GROUP_BUCKET_PROP_WEIGHT_PACK_STR, buf, 0,
+                      self.type, self.length, self.weight)
+        return buf
+
+
+@OFPGroupBucketProp.register_type(ofproto.OFPGBPT_WATCH_PORT)
+@OFPGroupBucketProp.register_type(ofproto.OFPGBPT_WATCH_GROUP)
+class OFPGroupBucketPropWatch(OFPGroupBucketProp):
+    def __init__(self, type_=None, length=None, watch=None):
+        super(OFPGroupBucketPropWatch, self).__init__(type_, length)
+        self.watch = watch
+
+    @classmethod
+    def parser(cls, buf):
+        prop = cls()
+        (prop.type, prop.length, prop.watch) = struct.unpack_from(
+            ofproto.OFP_GROUP_BUCKET_PROP_WATCH_PACK_STR, buf, 0)
+        return prop
+
+    def serialize(self):
+        # fixup
+        self.length = ofproto.OFP_GROUP_BUCKET_PROP_WATCH_SIZE
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_GROUP_BUCKET_PROP_WATCH_PACK_STR, buf, 0,
+                      self.type, self.length, self.watch)
+        return buf
+
+
+@OFPGroupBucketProp.register_type(ofproto.OFPGBPT_EXPERIMENTER)
+class OFPGroupBucketPropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
+
+
+class OFPBucket(StringifyMixin):
+    def __init__(self, bucket_id=0, actions=[], properties=[],
+                 len_=None, action_array_len=None):
+        super(OFPBucket, self).__init__()
+        self.bucket_id = bucket_id
         self.actions = actions
+        self.properties = properties
 
     @classmethod
     def parser(cls, buf, offset):
-        (len_, weight, watch_port, watch_group) = struct.unpack_from(
+        msg = cls()
+        (msg.len, msg.action_array_len,
+         msg.bucket_id) = struct.unpack_from(
             ofproto.OFP_BUCKET_PACK_STR, buf, offset)
-        msg = cls(weight, watch_port, watch_group, [])
-        msg.len = len_
-
-        length = ofproto.OFP_BUCKET_SIZE
         offset += ofproto.OFP_BUCKET_SIZE
-        while length < msg.len:
-            action = OFPAction.parser(buf, offset)
+
+        action_buf = buf[offset:offset + msg.action_array_len]
+        msg.actions = []
+        while action_buf:
+            action = OFPAction.parser(action_buf, 0)
             msg.actions.append(action)
-            offset += action.len
-            length += action.len
+            action_buf = action_buf[action.len:]
+        offset += msg.action_array_len
+
+        rest = buf[offset:offset + msg.len]
+        msg.properties = []
+        while rest:
+            p, rest = OFPGroupBucketProp.parse(rest)
+            msg.properties.append(p)
 
         return msg
 
     def serialize(self, buf, offset):
         action_offset = offset + ofproto.OFP_BUCKET_SIZE
-        action_len = 0
+        self.action_array_len = 0
         for a in self.actions:
             a.serialize(buf, action_offset)
             action_offset += a.len
-            action_len += a.len
+            self.action_array_len += a.len
 
-        self.len = utils.round_up(ofproto.OFP_BUCKET_SIZE + action_len, 8)
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+        props_len = len(bin_props)
+
+        self.len = utils.round_up(ofproto.OFP_BUCKET_SIZE +
+                                  self.action_array_len + props_len, 8)
         msg_pack_into(ofproto.OFP_BUCKET_PACK_STR, buf, offset,
-                      self.len, self.weight, self.watch_port,
-                      self.watch_group)
+                      self.len, self.action_array_len, self.bucket_id)
+
+        buf += bin_props
 
 
 @_set_msg_type(ofproto.OFPT_ROLE_REQUEST)
