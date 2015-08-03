@@ -4070,6 +4070,57 @@ class OFPExperimenterStatsReply(OFPMultipartReply):
         super(OFPExperimenterStatsReply, self).__init__(datapath, **kwargs)
 
 
+class OFPFlowDesc(StringifyMixin):
+    def __init__(self, table_id=None, priority=None,
+                 idle_timeout=None, hard_timeout=None, flags=None,
+                 importance=None, cookie=None, match=None, stats=None,
+                 instructions=None, length=None):
+        super(OFPFlowDesc, self).__init__()
+        self.length = length
+        self.table_id = table_id
+        self.priority = priority
+        self.idle_timeout = idle_timeout
+        self.hard_timeout = hard_timeout
+        self.flags = flags
+        self.importance = importance
+        self.cookie = cookie
+        self.match = match
+        self.stats = stats
+        self.instructions = instructions
+
+    @classmethod
+    def parser(cls, buf, offset):
+        flow_desc = cls()
+
+        (flow_desc.length, flow_desc.table_id,
+         flow_desc.priority, flow_desc.idle_timeout,
+         flow_desc.hard_timeout, flow_desc.flags,
+         flow_desc.importance,
+         flow_desc.cookie) = struct.unpack_from(
+            ofproto.OFP_FLOW_DESC_0_PACK_STR, buf, offset)
+        offset += ofproto.OFP_FLOW_DESC_0_SIZE
+
+        flow_desc.match = OFPMatch.parser(buf, offset)
+        match_length = utils.round_up(flow_desc.match.length, 8)
+        offset += match_length
+
+        flow_desc.stats = OFPStats.parser(buf, offset)
+        stats_length = utils.round_up(flow_desc.stats.length, 8)
+        offset += stats_length
+
+        instructions = []
+        inst_length = (flow_desc.length - (ofproto.OFP_FLOW_DESC_0_SIZE +
+                                           match_length + stats_length))
+        while inst_length > 0:
+            inst = OFPInstruction.parser(buf, offset)
+            instructions.append(inst)
+            offset += inst.len
+            inst_length -= inst.len
+
+        flow_desc.instructions = instructions
+        return flow_desc
+
+
 class OFPFlowStats(StringifyMixin):
     def __init__(self, table_id=None, reason=None, priority=None,
                  match=None, stats=None, length=0):
@@ -4121,6 +4172,92 @@ class OFPFlowStatsRequestBase(OFPMultipartRequest):
 
         offset += ofproto.OFP_FLOW_STATS_REQUEST_0_SIZE
         self.match.serialize(self.buf, offset)
+
+
+@_set_stats_type(ofproto.OFPMP_FLOW_DESC, OFPFlowDesc)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPFlowDescStatsRequest(OFPFlowStatsRequestBase):
+    """
+    Individual flow descriptions request message
+
+    The controller uses this message to query individual flow descriptions.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    table_id         ID of table to read
+    out_port         Require matching entries to include this as an output
+                     port
+    out_group        Require matching entries to include this as an output
+                     group
+    cookie           Require matching entries to contain this cookie value
+    cookie_mask      Mask used to restrict the cookie bits that must match
+    match            Instance of ``OFPMatch``
+    ================ ======================================================
+
+    Example::
+
+        def send_flow_desc_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            cookie = cookie_mask = 0
+            match = ofp_parser.OFPMatch(in_port=1)
+            req = ofp_parser.OFPFlowDescStatsRequest(datapath, 0,
+                                                     ofp.OFPTT_ALL,
+                                                     ofp.OFPP_ANY,
+                                                     ofp.OFPG_ANY,
+                                                     cookie, cookie_mask,
+                                                     match)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, table_id=ofproto.OFPTT_ALL,
+                 out_port=ofproto.OFPP_ANY,
+                 out_group=ofproto.OFPG_ANY,
+                 cookie=0, cookie_mask=0, match=None, type_=None):
+        if match is None:
+            match = OFPMatch()
+        super(OFPFlowDescStatsRequest, self).__init__(
+            datapath, flags, table_id, out_port, out_group, cookie,
+            cookie_mask, match)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_FLOW_DESC, OFPFlowDesc)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPFlowDescStatsReply(OFPMultipartReply):
+    """
+    Individual flow descriptions reply message
+
+    The switch responds with this message to an individual flow descriptions
+    request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPFlowDesc`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPFlowDescStatsReply, MAIN_DISPATCHER)
+        def flow_desc_reply_handler(self, ev):
+            flows = []
+            for stat in ev.msg.body:
+                flows.append('table_id=%s priority=%d '
+                             'idle_timeout=%d hard_timeout=%d flags=0x%04x '
+                             'importance=%d cookie=%d match=%s '
+                             'stats=%s instructions=%s' %
+                             (stat.table_id, stat.priority,
+                              stat.idle_timeout, stat.hard_timeout,
+                              stat.flags, stat.importance,
+                              stat.cookie, stat.match,
+                              stat.stats, stat.instructions))
+            self.logger.debug('FlowDesc: %s', flows)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPFlowDescStatsReply, self).__init__(datapath, **kwargs)
 
 
 @_set_stats_type(ofproto.OFPMP_FLOW_STATS, OFPFlowStats)
