@@ -1,0 +1,24 @@
+{
+    "OFPAggregateStatsReply": {
+        "body": {
+            "OFPAggregateStats": {
+                "length": 16,
+                "stats": {
+                    "OFPStats": {
+                        "length": 12,
+                        "oxs_fields": [
+                            {
+                                "OXSTlv": {
+                                    "field": "flow_count",
+                                    "value": 1
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "flags": 0,
+        "type": 2
+    }
+}

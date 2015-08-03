@@ -1,0 +1,38 @@
+{
+    "OFPFlowRemoved": {
+        "cookie": 1234605616436508552,
+        "hard_timeout": 255,
+        "idle_timeout": 255,
+        "match": {
+            "OFPMatch": {
+                "length": 12,
+                "oxm_fields": [
+                    {
+                        "OXMTlv": {
+                            "field": "in_port",
+                            "mask": null,
+                            "value": 1
+                        }
+                    }
+                ],
+                "type": 1
+            }
+        },
+        "priority": 1,
+        "reason": 0,
+        "stats": {
+            "OFPStats": {
+                "length": 12,
+                "oxs_fields": [
+                    {
+                        "OXSTlv": {
+                            "field": "flow_count",
+                            "value": 1
+                        }
+                    }
+                ]
+            }
+        },
+        "table_id": 1
+    }
+}

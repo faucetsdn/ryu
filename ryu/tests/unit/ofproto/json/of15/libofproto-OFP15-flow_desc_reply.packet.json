@@ -1,0 +1,57 @@
+{
+    "OFPFlowDescStatsReply": {
+        "body": [
+            {
+                "OFPFlowDesc": {
+                    "cookie": 1234605616436508552,
+                    "flags": 1,
+                    "hard_timeout": 255,
+                    "idle_timeout": 255,
+                    "importance": 43690,
+                    "instructions": [
+                        {
+                            "OFPInstructionGotoTable": {
+                                "len": 8,
+                                "table_id": 2,
+                                "type": 1
+                            }
+                        }
+                    ],
+                    "length": 64,
+                    "match": {
+                        "OFPMatch": {
+                            "length": 12,
+                            "oxm_fields": [
+                                {
+                                    "OXMTlv": {
+                                        "field": "in_port",
+                                        "mask": null,
+                                        "value": 1
+                                    }
+                                }
+                            ],
+                            "type": 1
+                        }
+                    },
+                    "priority": 5,
+                    "stats": {
+                        "OFPStats": {
+                            "length": 12,
+                            "oxs_fields": [
+                                {
+                                    "OXSTlv": {
+                                        "field": "flow_count",
+                                        "value": 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "table_id": 1
+                }
+            }
+        ],
+        "flags": 0,
+        "type": 1
+    }
+}
