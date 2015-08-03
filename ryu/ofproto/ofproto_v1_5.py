@@ -666,9 +666,9 @@ OFPGC_REMOVE_BUCKET = 5     # Remove all action buckets or any specific action
                             # bucket from matching group
 
 # enum ofp_group_bucket_prop_type
-OFPGBPT_WEIGHT = 0      # Select groups only.
-OFPGBPT_WATCH_PORT = 1  # Fast failover groups only.
-OFPGBPT_WATCH_GROU = 2  # Fast failover groups only.
+OFPGBPT_WEIGHT = 0             # Select groups only.
+OFPGBPT_WATCH_PORT = 1         # Fast failover groups only.
+OFPGBPT_WATCH_GROUP = 2        # Fast failover groups only.
 OFPGBPT_EXPERIMENTER = 0xFFFF  # Experimenter defined.
 
 # struct ofp_group_bucket_prop_header
