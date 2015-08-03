@@ -5823,23 +5823,28 @@ class OFPGroupMod(MsgBase):
 
     The controller sends this message to modify the group table.
 
-    ================ ======================================================
-    Attribute        Description
-    ================ ======================================================
-    command          One of the following values.
+    ================== ======================================================
+    Attribute          Description
+    ================== ======================================================
+    command            One of the following values.
 
-                     | OFPGC_ADD
-                     | OFPGC_MODIFY
-                     | OFPGC_DELETE
-    type             One of the following values.
+                       | OFPGC_ADD
+                       | OFPGC_MODIFY
+                       | OFPGC_DELETE
+                       | OFPGC_INSERT_BUCKET
+                       | OFPGC_REMOVE_BUCKET
+    type               One of the following values.
 
-                     | OFPGT_ALL
-                     | OFPGT_SELECT
-                     | OFPGT_INDIRECT
-                     | OFPGT_FF
-    group_id         Group identifier
-    buckets          list of ``OFPBucket``
-    ================ ======================================================
+                       | OFPGT_ALL
+                       | OFPGT_SELECT
+                       | OFPGT_INDIRECT
+                       | OFPGT_FF
+    group_id           Group identifier.
+    command_bucket_id  Bucket Id used as part of OFPGC_INSERT_BUCKET and
+                       OFPGC_REMOVE_BUCKET commands execution.
+    buckets            List of ``OFPBucket`` instance
+    properties         List of ``OFPGroupProp`` instance
+    ================== ======================================================
 
     ``type`` attribute corresponds to ``type_`` parameter of __init__.
 
@@ -5860,27 +5865,40 @@ class OFPGroupMod(MsgBase):
                                             actions)]
 
             group_id = 1
+            command_bucket_id=1
             req = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
-                                         ofp.OFPGT_SELECT, group_id, buckets)
+                                         ofp.OFPGT_SELECT, group_id,
+                                         command_bucket_id, buckets)
             datapath.send_msg(req)
     """
     def __init__(self, datapath, command=ofproto.OFPGC_ADD,
-                 type_=ofproto.OFPGT_ALL, group_id=0, buckets=[]):
+                 type_=ofproto.OFPGT_ALL, group_id=0, command_bucket_id=0,
+                 buckets=[], properties=[], bucket_array_len=None):
         super(OFPGroupMod, self).__init__(datapath)
         self.command = command
         self.type = type_
         self.group_id = group_id
+        self.command_bucket_id = command_bucket_id
         self.buckets = buckets
+        self.properties = properties
 
     def _serialize_body(self):
-        msg_pack_into(ofproto.OFP_GROUP_MOD_PACK_STR, self.buf,
-                      ofproto.OFP_HEADER_SIZE,
-                      self.command, self.type, self.group_id)
-
         offset = ofproto.OFP_GROUP_MOD_SIZE
+        self.bucket_array_len = 0
         for b in self.buckets:
             b.serialize(self.buf, offset)
             offset += b.len
+            self.bucket_array_len += b.len
+
+        msg_pack_into(ofproto.OFP_GROUP_MOD_PACK_STR, self.buf,
+                      ofproto.OFP_HEADER_SIZE,
+                      self.command, self.type, self.group_id,
+                      self.bucket_array_len, self.command_bucket_id)
+
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+        self.buf += bin_props
 
 
 class OFPPortModProp(OFPPropBase):
