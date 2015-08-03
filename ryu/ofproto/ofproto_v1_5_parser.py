@@ -2065,7 +2065,7 @@ class OFPPort(StringifyMixin):
         (port_no, length, hw_addr, name, config, state) = struct.unpack_from(
             ofproto.OFP_PORT_PACK_STR, buf, offset)
         hw_addr = addrconv.mac.bin_to_text(hw_addr)
-        name = name.rstrip('\0')
+        name = name.rstrip(b'\0')
         props = []
         rest = buf[offset + ofproto.OFP_PORT_SIZE:offset + length]
         while rest:
@@ -2325,7 +2325,7 @@ class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
         desc = struct.unpack_from(ofproto.OFP_DESC_PACK_STR,
                                   buf, offset)
         desc = list(desc)
-        desc = [x.rstrip('\0') for x in desc]
+        desc = [x.rstrip(b'\0') for x in desc]
         stats = cls(*desc)
         stats.length = ofproto.OFP_DESC_SIZE
         return stats
@@ -2421,7 +2421,7 @@ class OFPTableFeaturesStats(StringifyMixin):
          table_features.max_entries
          ) = struct.unpack_from(ofproto.OFP_TABLE_FEATURES_PACK_STR,
                                 buf, offset)
-        table_features.name = name.rstrip('\0')
+        table_features.name = name.rstrip(b'\0')
 
         props = []
         rest = buf[offset + ofproto.OFP_TABLE_FEATURES_SIZE:
