@@ -8,6 +8,9 @@ Date                Work
 '''
 from ryu.openexchange.domain.setting import features
 from ryu.openexchange import controller_id
+from ryu import cfg
+
+CONF = cfg.CONF
 
 
 class features(object):
@@ -24,15 +27,19 @@ class features(object):
     def set_domain_id(self, domain_id):
         if isinstance(domain_id, str):
             self.domain_id = controller_id.str_to_dpid(domain_id)
+            CONF.oxp_domain_id = controller_id.str_to_dpid(domain_id)
 
     def set_proto_type(self, proto_type):
         self.proto_type = proto_type
+        CONF.oxp_proto_type = proto_type
 
     def set_version(self, version):
         self.sbp_version = version
+        CONF.oxp_proto_version = version
 
     def set_capabilities(self, capabilities):
         self.capabilities = capabilities
+        CONF.oxp_capabilities = capabilities
 
     def set_features(self,
                      domain_id=features['domain_id'],

@@ -207,6 +207,15 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
                                          miss_send_len=config.miss_send_len)
         domain.send_msg(reply)
 
+    @set_ev_handler(oxp_event.EventOXPSetConfig,
+                    [CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def set_config_handler(self, ev):
+        msg = ev.msg
+        domain = msg.domain
+
+        config = self.Domain_Controller.config
+        config.set_config(msg.flags, msg.period, msg.miss_send_len)
+
     @set_ev_cls(oxp_event.EventOXPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def state_change_handler(self, ev):

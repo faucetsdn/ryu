@@ -24,6 +24,7 @@ from ryu.openexchange.oxp_event import EventOXPVportStatus
 from ryu.openexchange.oxproto_v1_0 import OXPPS_LINK_DOWN, OXPPS_BLOCKED
 from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
+from ryu.openexchange.oxproto_v1_0 import OXPP_INACTIVE
 from ryu.openexchange import oxp_event
 
 IS_UPDATE = True
@@ -63,7 +64,7 @@ class Network_Aware(app_manager.RyuApp):
 
         self.outer_ports = {}
         self.outer_port_no = 1
-        self.vport = {}
+        self.vport = {'1': (1, 1), '2': (6, 1), '3': (5, 2)}
 
         self.graph = {}
 
@@ -71,16 +72,6 @@ class Network_Aware(app_manager.RyuApp):
         self.pre_graph = {}
         self.pre_access_table = {}
         self.oxp_brick = None
-        # self.sync_thread = hub.spawn(self._synchoronous(3))
-
-    # synchoronous the host data with super controller per Xs.
-    #def _synchoronous(self, seconds=5):
-    #    start = time.time()
-    #    while True:
-    #        now = time.time()
-    #        if now - start > 3:
-    #            if self.oxp_brick is not None:
-    #                self.synchronous()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -187,21 +178,32 @@ class Network_Aware(app_manager.RyuApp):
         if self.oxp_brick is None:
             self.oxp_brick = app_manager.lookup_service_brick('oxp_event')
 
+    @set_ev_cls(event.EventSwitchLeave,
+                [CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER])
+    def delete_sw(self, ev):
+        # just send hostupdate to super.
+        for key in self.access_table:
+            if ev.msg.switch.dp.id == key[0]:
+                ev = oxp_event.EventOXPHostStateChange(
+                    self, hosts=[(self.access_table[key][0],
+                                  self.access_table[key][1], OXPP_INACTIVE)])
+                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+
+    @set_ev_cls(event.EventPortDelete, MAIN_DISPATCHER)
+    def delete_host(self, ev):
+        #host leave
+        if (ev.msg.port.dpid, ev.msg.port.port_no) in self.access_table:
+            ev = oxp_event.EventOXPHostStateChange(
+                self, hosts=[(self.access_table[key][0],
+                              self.access_table[key][1], OXPP_INACTIVE)])
+            self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+
     def register_access_info(self, dpid, in_port, ip, mac):
         if in_port in self.access_ports[dpid]:
-            self.access_table[(dpid, in_port)] = ip
+            self.access_table[(dpid, in_port)] = (ip, mac)
             ev = oxp_event.EventOXPHostStateChange(
                 self, hosts=[(ip, mac, OXPP_ACTIVE)])
             self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-            # self.cache_access_table[(dpid, in_port)] = ip
-            # self.hosts.append((ip, mac, OXPP_ACTIVE))
-
-    #def synchronous(self):
-    #    if self.hosts is not None:
-    #        ev = oxp_event.EventOXPHostStateChange(self, hosts=self.hosts)
-    #        self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-    #        self.cache_access_table = {}
-    #        self.hosts = []
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -223,14 +225,6 @@ class Network_Aware(app_manager.RyuApp):
             src_mac = arp_pkt.src_mac
             self.register_access_info(
                 datapath.id, in_port, arp_src_ip, src_mac)
-
-            '''
-            Test , should be deleted.
-            '''
-            ev = oxp_event.EventOXPVportStateChange(
-                self, vport_no=self.outer_port_no, state=OXPPS_LIVE)
-            self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-
             return
         else:
             try:
@@ -254,6 +248,7 @@ class Network_Aware(app_manager.RyuApp):
                               msg.datapath.ofproto.OFP_VERSION)
                     return
 
+                # register out_port.
                 self.outer_ports[dst_dpid].add(dst_port_no)
                 self.vport[self.outer_port_no] = (dst_dpid, dst_port_no)
 

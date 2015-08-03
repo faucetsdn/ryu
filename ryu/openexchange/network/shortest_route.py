@@ -18,6 +18,7 @@ from ryu.topology.api import get_switch, get_link
 
 from ryu.openexchange.network import network_aware
 from ryu.openexchange.network import network_monitor
+from ryu.openexchange.routing_algorithm.routing_algorithm import dijkstra
 
 
 class Shortest_Route(app_manager.RyuApp):
@@ -140,7 +141,7 @@ class Shortest_Route(app_manager.RyuApp):
             dst_port = None
 
             for key in self.access_table.keys():
-                if flow_info[2] == self.access_table[key]:
+                if flow_info[2] == self.access_table[key][0]:
                     dst_port = key[1]
                     break
             actions.append(parser.OFPActionOutput(dst_port))
@@ -184,7 +185,7 @@ class Shortest_Route(app_manager.RyuApp):
             out_port = None
             actions = []
             for key in self.access_table.keys():
-                if flow_info[2] == self.access_table[key]:
+                if flow_info[2] == self.access_table[key][0]:
                     out_port = key[1]
                     break
 
@@ -211,13 +212,13 @@ class Shortest_Route(app_manager.RyuApp):
 
     def get_host_location(self, host_ip):
         for key in self.access_table:
-            if self.access_table[key] == host_ip:
+            if self.access_table[key][0] == host_ip:
                 return key
         self.logger.debug("%s location is not found." % host_ip)
         return None
 
     def get_path(self, graph, src):
-        result = self.dijkstra(graph, src)
+        result = dijkstra(graph, src)
         if result:
             path = result[1]
             return path
@@ -230,52 +231,6 @@ class Shortest_Route(app_manager.RyuApp):
         else:
             self.logger.debug("Link to port is not found.")
             return None
-
-    def dijkstra(self, graph, src):
-        if graph is None:
-            self.logger.debug("Graph is empty.")
-            return None
-        length = len(graph)
-        type_ = type(graph)
-
-        # Initiation
-        if type_ == list:
-            nodes = [i for i in xrange(length)]
-        elif type_ == dict:
-            nodes = graph.keys()
-        visited = [src]
-        path = {src: {src: []}}
-        if src not in nodes:
-            self.logger.debug("Src is not in nodes.")
-            return None
-        else:
-            nodes.remove(src)
-        distance_graph = {src: 0}
-        pre = next = src
-        no_link_value = 100000
-
-        while nodes:
-            distance = no_link_value
-            for v in visited:
-                for d in nodes:
-                    new_dist = graph[src][v] + graph[v][d]
-                    if new_dist <= distance:
-                        distance = new_dist
-                        next = d
-                        pre = v
-                        graph[src][d] = new_dist
-
-            if distance < no_link_value:
-                path[src][next] = [i for i in path[src][pre]]
-                path[src][next].append(next)
-                distance_graph[next] = distance
-                visited.append(next)
-                nodes.remove(next)
-            else:
-                self.logger.debug("Next node is not found.")
-                return None
-
-        return distance_graph, path
 
     '''
     In packet_in handler, we need to learn access_table by ARP.
@@ -340,7 +295,7 @@ class Shortest_Route(app_manager.RyuApp):
 
             if dst_location:
                 dst_sw = dst_location[0]
-            result = self.dijkstra(self.graph, src_sw)
+            result = dijkstra(self.graph, src_sw)
 
             if result:
                 path = result[1][src_sw][dst_sw]

@@ -11,6 +11,7 @@ esle, it is an intralink.
 """
 from . import data_base
 from ryu.openexchange import oxproto_v1_0
+from ryu.openexchange.oxproto_common import OXP_DEFAULT_FLAGS
 
 
 class InteralLinks(data_base.DataBase):
@@ -89,10 +90,14 @@ class Domain(data_base.DataBase):
                 (domain_id, domain_id, i.src_vport, i.dst_vport):capacities]
                 }
     """
-    def __init__(self, domain_id=None, links={}, ports=set()):
+    def __init__(self, domain_id=None, links={},
+                 ports=set(), paths={}, capabilities={}):
         self.domain_id = domain_id
         self.links = links
         self.ports = ports
+
+        self.paths = paths
+        self.capabilities = capabilities
 
     def __call__(self):
         self.get_links(self.links)
@@ -109,10 +114,18 @@ class Domain(data_base.DataBase):
                 if msg.vport_no in [key[0], key[1]]:
                     del self.links[key]
 
-    def update_link(self, links):
+    def update_link(self, domain, links):
         for i in links:
+            if OXP_DEFAULT_FLAGS == domain.flags:
+                capability = int(i.capability[0])
+            else:
+                capability = i.capability
             self.links[(
-                domain_id, domain_id, i.src_vport, i.dst_vport)] = i.capability
+                self.domain_id, self.domain_id,
+                i.src_vport, i.dst_vport)] = capability
+
+            self.ports.add(i.src_vport)
+            self.ports.add(i.dst_vport)
         return self.links
 
 

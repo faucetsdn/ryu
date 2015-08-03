@@ -53,7 +53,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         self.topo = _topo.Super_Topo()
         self.domain = {}
 
-        self.location = host_data.location()
+        self.location = host_data.Location()
 
     def start(self):
         super(OXP_Server_Handler, self).start()
@@ -161,11 +161,11 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
 
         oxproto_parser = domain.oxproto_parser
 
-        #set_config = oxproto_parser.OXPSetConfig(
-        #    domain, CONF.oxp_flags, CONF.oxp_period,
-        #    CONF.oxp_miss_send_len)
+        set_config = oxproto_parser.OXPSetConfig(
+            domain, CONF.oxp_flags, CONF.oxp_period,
+            CONF.oxp_miss_send_len)
 
-        #domain.send_msg(set_config)
+        domain.send_msg(set_config)
 
         get_config_request = oxproto_parser.OXPGetConfigRequest(domain)
         domain.send_msg(get_config_request)
@@ -205,8 +205,6 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
 
         domain.miss_send_len = msg.miss_send_len
 
-        # self.domain[domain.id] = _topo.data.Domain(domain.id=domain_id)
-
     @set_ev_cls(oxp_event.EventOXPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def state_change_handler(self, ev):
@@ -219,7 +217,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
             if domain.id not in self.topo.domains:
                 self.topo.domains.add(domain.id)
                 self.domain[domain.id] = _topo.Domain(domain_id=domain.id)
-                self.location.locations.setdefault(domain.id, [])
+                self.location.locations.setdefault(domain.id, set())
 
         elif ev.state == DEAD_DISPATCHER:
             self.topo.domains.remove(domain.id)
@@ -239,8 +237,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         # parser the msg and save the topo data.
         msg = ev.msg
         domain = msg.domain
-        self.domain[domain.id].update_link(msg.links)
-        print "topo_reply_handler: ", self.domain[domain.id].__dict__
+        self.domain[domain.id].update_link(domain, msg.links)
 
     @set_ev_handler(oxp_event.EventOXPHostReply, MAIN_DISPATCHER)
     def host_reply_handler(self, ev):
@@ -252,7 +249,6 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         oxproto_parser = domain.oxproto_parser
 
         self.location.update(domain.id, msg.hosts)
-        print "reply: ", self.location.locations
 
     @set_ev_handler(oxp_event.EventOXPHostUpdate, MAIN_DISPATCHER)
     def host_update_handler(self, ev):
@@ -264,7 +260,8 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         oxproto_parser = domain.oxproto_parser
 
         self.location.update(domain.id, msg.hosts)
-        print self.location.locations
+        topo_request = domain.oxproto_parser.OXPTopoRequest(domain)
+        domain.send_msg(topo_request)
 
     @set_ev_handler(oxp_event.EventOXPSBP, MAIN_DISPATCHER)
     def SBP_handler(self, ev):

@@ -10,9 +10,8 @@ from ryu.lib.ip import ipv4_to_bin
 from ryu.lib.ip import ipv4_to_str
 from ryu.openexchange.oxproto_v1_0 import OXPP_INACTIVE, OXPP_ACTIVE
 
-IP2HOST = {}
-HOSTLIST = []
-
+'''
+plan to delete
 
 class Host(data_base.DataBase):
     def __init__(self, ip=None, MAC=None, mask=None, state=OXPP_INACTIVE):
@@ -23,24 +22,26 @@ class Host(data_base.DataBase):
 
         IP2HOST[self.ip] = self
         HOSTLIST.append(self)
+'''
 
 
-class location(object):
+class Location(object):
     def __init__(self, locations={}):
-        # locations: {domain:[ip1,ip2,...]}
+        # locations: {domain:set([ip1,ip2,...])}
         self.locations = locations
+        self.hosts = set()
+        self.ip_host = {}
 
     def update(self, domain, hosts):
         for host in hosts:
             if host.state == OXPP_ACTIVE:
-                if host.ip not in self.locations[domain]:
-                    IP2HOST.setdefault(host.ip, None)
-                    IP2HOST[host.ip] = host
+                self.hosts.add(host)
+                self.locations[domain].add(ipv4_to_str(host.ip))
 
-                    self.locations[domain].insert(0, ipv4_to_str(host.ip))
+                self.ip_host.setdefault(host.ip, None)
+                self.ip_host[host.ip] = host
             else:
                 if host.ip in self.locations[domain]:
                     self.locations[domain].remove(host.ip)
-
-                    HOSTLIST.remove(IP2HOST[host.ip])
-                    del IP2HOST[host.ip]
+                    self.hosts.remove(hosts)
+                    del self.ip_host[host.ip]
