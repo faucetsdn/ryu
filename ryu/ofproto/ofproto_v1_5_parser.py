@@ -3157,28 +3157,37 @@ class OFPGroupStatsReply(OFPMultipartReply):
 
 
 class OFPGroupDescStats(StringifyMixin):
-    def __init__(self, type_=None, group_id=None, buckets=None, length=None):
+    def __init__(self, type_=None, group_id=None, buckets=[], properties=[],
+                 length=None, bucket_array_len=None):
         super(OFPGroupDescStats, self).__init__()
+        self.length = length
         self.type = type_
         self.group_id = group_id
+        self.bucket_array_len = bucket_array_len
         self.buckets = buckets
+        self.properties = properties
 
     @classmethod
     def parser(cls, buf, offset):
         stats = cls()
 
-        (stats.length, stats.type, stats.group_id) = struct.unpack_from(
+        (stats.length, stats.type, stats.group_id,
+         stats.bucket_array_len) = struct.unpack_from(
             ofproto.OFP_GROUP_DESC_STATS_PACK_STR, buf, offset)
         offset += ofproto.OFP_GROUP_DESC_STATS_SIZE
 
+        bucket_buf = buf[offset:offset + stats.bucket_array_len]
         stats.buckets = []
-        length = ofproto.OFP_GROUP_DESC_STATS_SIZE
-        while length < stats.length:
-            bucket = OFPBucket.parser(buf, offset)
+        while bucket_buf:
+            bucket = OFPBucket.parser(bucket_buf, 0)
             stats.buckets.append(bucket)
+            bucket_buf = bucket_buf[bucket.len:]
+        offset += stats.bucket_array_len
 
-            offset += bucket.len
-            length += bucket.len
+        rest = buf[offset:offset + stats.length]
+        while rest:
+            p, rest = OFPGroupProp.parse(rest)
+            stats.properties.append(p)
 
         return stats
 
@@ -3241,10 +3250,10 @@ class OFPGroupDescStatsReply(OFPMultipartReply):
             descs = []
             for stat in ev.msg.body:
                 descs.append('length=%d type=%d group_id=%d '
-                             'buckets=%s' %
+                             'buckets=%s properties=%' %
                              (stat.length, stat.type, stat.group_id,
-                              stat.bucket))
-            self.logger.debug('GroupDescStats: %s', groups)
+                              stat.bucket, repr(stat.properties)))
+            self.logger.debug('GroupDescStats: %s', descs)
     """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPGroupDescStatsReply, self).__init__(datapath, **kwargs)
