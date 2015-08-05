@@ -219,6 +219,10 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
                 self.domain[domain.id] = _topo.Domain(domain_id=domain.id)
                 self.location.locations.setdefault(domain.id, set())
 
+                topo_request = domain.oxproto_parser.OXPTopoRequest(domain)
+                domain.send_msg(topo_request)
+            else:
+                self.logger.info("same domain id ocurred: %s" % domain.id)
         elif ev.state == DEAD_DISPATCHER:
             self.topo.domains.remove(domain.id)
             del self.domain[domain.id]
@@ -260,8 +264,6 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         oxproto_parser = domain.oxproto_parser
 
         self.location.update(domain.id, msg.hosts)
-        topo_request = domain.oxproto_parser.OXPTopoRequest(domain)
-        domain.send_msg(topo_request)
 
     @set_ev_handler(oxp_event.EventOXPSBP, MAIN_DISPATCHER)
     def SBP_handler(self, ev):

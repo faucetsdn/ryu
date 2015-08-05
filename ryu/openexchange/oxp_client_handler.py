@@ -175,16 +175,6 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         domain.send_msg(reply)
         ev.msg.domain.set_state(MAIN_DISPATCHER)
 
-    @set_ev_handler(oxp_event.EventOXPEchoRequest,
-                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
-    def echo_request_handler(self, ev):
-        msg = ev.msg
-        domain = msg.domain
-        echo_reply = domain.oxproto_parser.OXPEchoReply(domain)
-        echo_reply.xid = msg.xid
-        echo_reply.data = msg.data
-        domain.send_msg(echo_reply)
-
     @set_ev_handler(oxp_event.EventOXPErrorMsg,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):

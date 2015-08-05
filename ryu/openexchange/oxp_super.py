@@ -165,7 +165,7 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                                          version, msg_type, msg_len, xid, buf)
 
                 if msg:
-                    LOG.debug('queue msg %s cls %s', msg, msg.__class__)
+                    LOG.info('queue msg %s cls %s', msg, msg.__class__)
                     ev = oxp_event.oxp_msg_to_ev(msg)
                     self.oxp_brick.send_event_to_observers(ev, self.state)
 

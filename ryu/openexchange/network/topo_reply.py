@@ -21,7 +21,7 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 
 from ryu.openexchange import oxp_event
-
+from ryu.openexchange.oxproto_common import OXP_MAX_PERIOD
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
@@ -55,11 +55,12 @@ class TopoReply(app_manager.RyuApp):
         self.oxproto = oxproto_v1_0
         self.topology = topology_data.Domain()
         self.monitor_thread = hub.spawn(self._monitor)
+        self.links = []
 
     def _monitor(self):
         while True:
-            hub.sleep(CONF.oxp_period)
             self.topo_reply()
+            hub.sleep(CONF.oxp_period)
 
     @set_ev_cls(oxp_event.EventOXPFeaturesRequest, CONFIG_DISPATCHER)
     def features_request_handler(self, ev):
@@ -103,8 +104,17 @@ class TopoReply(app_manager.RyuApp):
             self.topology.paths = paths
 
             return self.create_links(self.topology.ports, capabilities)
+        return None
 
     def topo_reply(self):
         links = self.get_capabilities()
-        topo_reply = self.oxparser.OXPTopoReply(self.domain, links=links)
-        self.domain.send_msg(topo_reply)
+        if links == self.links:
+            if CONF.oxp_period < OXP_MAX_PERIOD:
+                CONF.oxp_period += 1
+            else:
+                CONF.oxp_period = OXP_MAX_PERIOD
+        else:
+            self.links = links
+            topo_reply = self.oxparser.OXPTopoReply(self.domain,
+                                                    links=links)
+            self.domain.send_msg(topo_reply)

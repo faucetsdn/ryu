@@ -26,7 +26,9 @@ from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
 from ryu.openexchange.oxproto_v1_0 import OXPP_INACTIVE
 from ryu.openexchange import oxp_event
+from ryu import cfg
 
+CONF = cfg.CONF
 IS_UPDATE = True
 
 
@@ -72,6 +74,7 @@ class Network_Aware(app_manager.RyuApp):
         self.pre_graph = {}
         self.pre_access_table = {}
         self.oxp_brick = None
+        self.period = CONF.oxp_period
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -178,12 +181,16 @@ class Network_Aware(app_manager.RyuApp):
         if self.oxp_brick is None:
             self.oxp_brick = app_manager.lookup_service_brick('oxp_event')
 
+        # If the topo change, reset the CONF.oxp_period.
+        # So, topo_reply module can reply in time.
+        CONF.oxp_period = self.period
+
     @set_ev_cls(event.EventSwitchLeave,
                 [CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER])
     def delete_sw(self, ev):
         # just send hostupdate to super.
         for key in self.access_table:
-            if ev.msg.switch.dp.id == key[0]:
+            if ev.switch.dp.id == key[0]:
                 ev = oxp_event.EventOXPHostStateChange(
                     self, hosts=[(self.access_table[key][0],
                                   self.access_table[key][1], OXPP_INACTIVE)])
@@ -192,7 +199,7 @@ class Network_Aware(app_manager.RyuApp):
     @set_ev_cls(event.EventPortDelete, MAIN_DISPATCHER)
     def delete_host(self, ev):
         #host leave
-        if (ev.msg.port.dpid, ev.msg.port.port_no) in self.access_table:
+        if (ev.port.dpid, ev.port.port_no) in self.access_table:
             ev = oxp_event.EventOXPHostStateChange(
                 self, hosts=[(self.access_table[key][0],
                               self.access_table[key][1], OXPP_INACTIVE)])
@@ -200,6 +207,10 @@ class Network_Aware(app_manager.RyuApp):
 
     def register_access_info(self, dpid, in_port, ip, mac):
         if in_port in self.access_ports[dpid]:
+            if (dpid, in_port) in self.access_table:
+                if self.access_table[(dpid, in_port)] == (ip, mac):
+                    return
+
             self.access_table[(dpid, in_port)] = (ip, mac)
             ev = oxp_event.EventOXPHostStateChange(
                 self, hosts=[(ip, mac, OXPP_ACTIVE)])

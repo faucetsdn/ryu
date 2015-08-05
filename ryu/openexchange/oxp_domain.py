@@ -58,8 +58,8 @@ class Domain_Controller(object):
         self.socket = None
         self.is_active = True
         self.super_controller = None
-
-        self.features = features.features(domain_id=1)
+        self.id = CONF.oxp_domain_id
+        self.features = features.features(domain_id=self.id)
         self.config = config.config()
         self.oxp_brick = ryu.base.app_manager.lookup_service_brick('oxp_event')
 

@@ -81,7 +81,8 @@ def main(args=None, prog=None):
         app_lists.extend(
             ['ryu.openexchange.oxp_client_handler',
              'ryu.openexchange.network.abstract',
-             'ryu.openexchange.network.topo_reply'])
+             'ryu.openexchange.network.topo_reply',
+             'ryu.openexchange.network.echo_loop', ])
 
     app_mgr = AppManager.get_instance()
     app_mgr.load_apps(app_lists)
