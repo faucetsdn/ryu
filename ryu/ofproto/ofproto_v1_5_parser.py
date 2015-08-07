@@ -1283,8 +1283,51 @@ class OFPRolePropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
 
+class OFPTime(StringifyMixin):
+    def __init__(self, seconds=None, nanoseconds=None):
+        self.seconds = seconds
+        self.nanoseconds = nanoseconds
+
+    @classmethod
+    def parser(cls, buf, offset):
+        cls_ = cls()
+        (cls_.seconds, cls_.nanoseconds) = struct.unpack_from(
+            ofproto.OFP_TIME_PACK_STR, buf, offset)
+        return cls_
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_TIME_PACK_STR, buf, offset,
+                      self.seconds, self.nanoseconds)
+        return ofproto.OFP_TIME_SIZE
+
+
 class OFPBundleProp(OFPPropBase):
     _TYPES = {}
+
+
+@OFPBundleProp.register_type(ofproto.OFPBPT_TIME)
+class OFPBundlePropTime(OFPBundleProp):
+    def __init__(self, type_=None, length=None, scheduled_time=None):
+        super(OFPBundlePropTime, self).__init__(type_, length)
+        self.scheduled_time = scheduled_time
+
+    @classmethod
+    def parser(cls, buf):
+        prop = cls()
+        offset = ofproto.OFP_BUNDLE_PROP_TIME_PACK_STR0_SIZE
+        prop.scheduled_time = OFPTime.parser(buf, offset)
+        return prop
+
+    def serialize(self):
+        # fixup
+        self.length = ofproto.OFP_BUNDLE_PROP_TIME_PACK_STR_SIZE
+
+        buf = bytearray()
+        msg_pack_into(ofproto.OFP_BUNDLE_PROP_TIME_PACK_STR0, buf, 0,
+                      self.type, self.length)
+        offset = ofproto.OFP_BUNDLE_PROP_TIME_PACK_STR0_SIZE
+        self.scheduled_time.serialize(buf, offset)
+        return buf
 
 
 @OFPBundleProp.register_type(ofproto.OFPRPT_EXPERIMENTER)
