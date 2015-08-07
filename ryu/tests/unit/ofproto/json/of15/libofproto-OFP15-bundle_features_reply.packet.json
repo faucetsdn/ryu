@@ -1,0 +1,43 @@
+{
+    "OFPBundleFeaturesStatsReply": {
+        "body": {
+            "OFPBundleFeaturesStats": {
+                "capabilities": 7,
+                "properties": [
+                    {
+                        "OFPBundleFeaturesPropTime": {
+                            "length": 72,
+                            "sched_accuracy": {
+                                "OFPTime": {
+                                    "nanoseconds": 1717986918,
+                                    "seconds": 6148914691236517205
+                                }
+                            },
+                            "sched_max_future": {
+                                "OFPTime": {
+                                    "nanoseconds": 2290649224,
+                                    "seconds": 8608480567731124087
+                                }
+                            },
+                            "sched_max_past": {
+                                "OFPTime": {
+                                    "nanoseconds": 2863311530,
+                                    "seconds": 11068046444225730969
+                                }
+                            },
+                            "timestamp": {
+                                "OFPTime": {
+                                    "nanoseconds": 3435973836,
+                                    "seconds": 13527612320720337851
+                                }
+                            },
+                            "type": 1
+                        }
+                    }
+                ]
+            }
+        },
+        "flags": 0,
+        "type": 19
+    }
+}
