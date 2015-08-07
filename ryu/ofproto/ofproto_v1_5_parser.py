@@ -2663,6 +2663,10 @@ class OFPExperimenterOxmId(OFPOxmId):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_WRITE_SETFIELD_MISS)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_SETFIELD)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_SETFIELD_MISS)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_WRITE_COPYFIELD)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_WRITE_COPYFIELD_MISS)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_COPYFIELD)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_COPYFIELD_MISS)
 class OFPTableFeaturePropOxm(OFPTableFeatureProp):
     def __init__(self, type_=None, length=None, oxm_ids=[]):
         super(OFPTableFeaturePropOxm, self).__init__(type_, length)
@@ -2682,6 +2686,86 @@ class OFPTableFeaturePropOxm(OFPTableFeatureProp):
         for i in self.oxm_ids:
             bin_ids += i.serialize()
         return bin_ids
+
+
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_PACKET_TYPES)
+class OFPTableFeaturePropOxmValues(OFPTableFeatureProp):
+    def __init__(self, type_=None, length=None, _ordered_values=None,
+                 **kwargs):
+        super(OFPTableFeaturePropOxmValues, self).__init__(type_, length)
+        if _ordered_values is not None:
+            assert not kwargs
+            self.oxm_values = _ordered_values
+        else:
+            kwargs = dict(ofproto.oxm_normalize_user(k, v) for
+                          (k, v) in kwargs.items())
+            values = [ofproto.oxm_from_user(k, v) for (k, v)
+                      in kwargs.items()]
+            # assumption: sorting by OXM type values makes fields
+            # meet ordering requirements (eg. eth_type before ipv4_src)
+            values.sort()
+            self.oxm_values = [ofproto.oxm_to_user(n, v, m) for (n, v, m)
+                               in values]
+
+    @classmethod
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
+        values = []
+        while rest:
+            n, value, mask, field_len = ofproto.oxm_parse(rest, 0)
+            k, uv = ofproto.oxm_to_user(n, value, mask)
+            values.append((k, uv))
+            rest = rest[field_len:]
+        return cls(_ordered_values=values)
+
+    def serialize_body(self):
+        values = [ofproto.oxm_from_user(k, uv) for (k, uv)
+                  in self.oxm_values]
+        offset = 0
+        buf = bytearray()
+        for (n, value, mask) in values:
+            offset += ofproto.oxm_serialize(n, value, mask, buf, offset)
+        return buf
+
+    def __getitem__(self, key):
+        return dict(self.oxm_values)[key]
+
+    def __contains__(self, key):
+        return key in dict(self.oxm_values)
+
+    def iteritems(self):
+        return iter(dict(self.oxm_values).items())
+
+    def items(self):
+        return self.oxm_values
+
+    def get(self, key, default=None):
+        return dict(self.oxm_values).get(key, default)
+
+    def stringify_attrs(self):
+        yield "oxm_values", dict(self.oxm_values)
+
+    def to_jsondict(self):
+        """
+        Returns a dict expressing the OXM values.
+        """
+        body = {"oxm_values": [ofproto.oxm_to_jsondict(k, uv) for k, uv
+                               in self.oxm_values],
+                "length": self.length,
+                "type": self.type}
+        return {self.__class__.__name__: body}
+
+    @classmethod
+    def from_jsondict(cls, dict_):
+        """
+        Returns an object which is generated from a dict.
+        Exception raises:
+        KeyError -- Unknown OXM value is defined in dict
+        """
+        type_ = dict_['type']
+        values = [ofproto.oxm_from_jsondict(f) for f
+                  in dict_['oxm_values']]
+        return cls(type_=type_, _ordered_values=values)
 
 
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
