@@ -1629,14 +1629,11 @@ OFP_TIME_SIZE = 16
 assert calcsize(OFP_TIME_PACK_STR) == OFP_TIME_SIZE
 
 # struct ofp_bundle_features_prop_time
-OFP_BUNDLE_FEATURES_PROP_TIME_PACK_STR = ('!HH4x' +
-                                          _OFP_TIME_PACK_STR +
-                                          _OFP_TIME_PACK_STR +
-                                          _OFP_TIME_PACK_STR +
-                                          _OFP_TIME_PACK_STR)
+OFP_BUNDLE_FEATURES_PROP_TIME_0_PACK_STR = '!HH4x'
+OFP_BUNDLE_FEATURES_PROP_TIME_0_SIZE = 8
 OFP_BUNDLE_FEATURES_PROP_TIME_SIZE = 72
-assert (calcsize(OFP_BUNDLE_FEATURES_PROP_TIME_PACK_STR) ==
-        OFP_BUNDLE_FEATURES_PROP_TIME_SIZE)
+assert (calcsize(OFP_BUNDLE_FEATURES_PROP_TIME_0_PACK_STR) +
+        OFP_TIME_SIZE * 4 == OFP_BUNDLE_FEATURES_PROP_TIME_SIZE)
 
 # enum ofp_bundle_feature_flags
 OFPBF_TIMESTAMP = 1 << 0        # Request includes a timestamp.
