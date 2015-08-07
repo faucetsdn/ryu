@@ -2439,39 +2439,40 @@ class OFPTableFeaturesStats(StringifyMixin):
         ]
     }
 
-    def __init__(self, table_id=None, name=None, metadata_match=None,
-                 metadata_write=None, config=None, max_entries=None,
-                 properties=None, length=None):
+    def __init__(self, table_id=None, command=None, features=None, name=None,
+                 metadata_match=None, metadata_write=None, capabilities=None,
+                 max_entries=None, properties=None, length=None):
         super(OFPTableFeaturesStats, self).__init__()
-        self.length = None
+        self.length = length
         self.table_id = table_id
+        self.command = command
+        self.features = features
         self.name = name
         self.metadata_match = metadata_match
         self.metadata_write = metadata_write
-        self.config = config
+        self.capabilities = capabilities
         self.max_entries = max_entries
         self.properties = properties
 
     @classmethod
     def parser(cls, buf, offset):
-        table_features = cls()
-        (table_features.length, table_features.table_id,
-         name, table_features.metadata_match,
-         table_features.metadata_write, table_features.config,
-         table_features.max_entries
+        tbl = cls()
+        (tbl.length, tbl.table_id, tbl.command, tbl.features,
+         name, tbl.metadata_match, tbl.metadata_write,
+         tbl.capabilities, tbl.max_entries
          ) = struct.unpack_from(ofproto.OFP_TABLE_FEATURES_PACK_STR,
                                 buf, offset)
-        table_features.name = name.rstrip(b'\0')
+        tbl.name = name.rstrip(b'\0')
 
         props = []
         rest = buf[offset + ofproto.OFP_TABLE_FEATURES_SIZE:
-                   offset + table_features.length]
+                   offset + tbl.length]
         while rest:
             p, rest = OFPTableFeatureProp.parse(rest)
             props.append(p)
-        table_features.properties = props
+        tbl.properties = props
 
-        return table_features
+        return tbl
 
     def serialize(self):
         # fixup
@@ -2482,9 +2483,9 @@ class OFPTableFeaturesStats(StringifyMixin):
 
         buf = bytearray()
         msg_pack_into(ofproto.OFP_TABLE_FEATURES_PACK_STR, buf, 0,
-                      self.length, self.table_id, self.name,
-                      self.metadata_match, self.metadata_write,
-                      self.config, self.max_entries)
+                      self.length, self.table_id, self.command, self.features,
+                      self.name, self.metadata_match, self.metadata_write,
+                      self.capabilities, self.max_entries)
         return buf + bin_props
 
 
