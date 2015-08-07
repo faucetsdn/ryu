@@ -4158,6 +4158,104 @@ class OFPBundleFeaturesPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
 
+class OFPBundleFeaturesStats(ofproto_parser.namedtuple(
+        'OFPBundleFeaturesStats', ('capabilities', 'properties'))):
+    @classmethod
+    def parser(cls, buf, offset):
+        (capabilities, ) = struct.unpack_from(
+            ofproto.OFP_BUNDLE_FEATURES_PACK_STR, buf, offset)
+
+        properties = []
+        length = ofproto.OFP_BUNDLE_FEATURES_SIZE
+        rest = buf[offset + length:]
+        while rest:
+            p, rest = OFPBundleFeaturesProp.parse(rest)
+            properties.append(p)
+            length += p.length
+
+        bndl = cls(capabilities, properties)
+        # Note: length field is not defined in the specification and
+        # is specific to this implementation.
+        bndl.length = length
+        return bndl
+
+
+@_set_stats_type(ofproto.OFPMP_BUNDLE_FEATURES, OFPBundleFeaturesStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPBundleFeaturesStatsRequest(OFPMultipartRequest):
+    """
+    Bundle features request message
+
+    The controller uses this message to query a switch about its bundle
+    capabilities, including whether it supports atomic bundles, ordered
+    bundles, and scheduled bundles.
+
+    ====================== ====================================================
+    Attribute              Description
+    ====================== ====================================================
+    flags                  Zero or ``OFPMPF_REQ_MORE``
+    feature_request_flags  Bitmap of the following flags.
+
+                           | OFPBF_TIMESTAMP
+                           | OFPBF_TIME_SET_SCHED
+    properties             List of ``OFPBundleFeaturesProp`` subclass instance
+    ====================== ====================================================
+
+    Example::
+
+        def send_bundle_features_stats_request(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPBundleFeaturesStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, feature_request_flags=0,
+                 properties=[], type_=None):
+        super(OFPBundleFeaturesStatsRequest, self).__init__(datapath, flags)
+        self.feature_request_flags = feature_request_flags
+        self.properties = properties
+
+    def _serialize_stats_body(self):
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+
+        msg_pack_into(ofproto.OFP_BUNDLE_FEATURES_REQUEST_PACK_STR,
+                      self.buf, ofproto.OFP_MULTIPART_REQUEST_SIZE,
+                      self.feature_request_flags)
+        self.buf += bin_props
+
+
+@OFPMultipartReply.register_stats_type(body_single_struct=True)
+@_set_stats_type(ofproto.OFPMP_BUNDLE_FEATURES, OFPBundleFeaturesStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPBundleFeaturesStatsReply(OFPMultipartReply):
+    """
+    Bundle features reply message
+
+    The switch responds with this message to a bundle features request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             Instance of ``OFPBundleFeaturesStats``
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPBundleFeaturesStatsReply, MAIN_DISPATCHER)
+        def bundle_features_stats_reply_handler(self, ev):
+            body = ev.msg.body
+
+            self.logger.debug('OFPBundleFeaturesStats: capabilities=%0x%08x '
+                              'properties=%s',
+                              body.capabilities, repr(body.properties))
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPBundleFeaturesStatsReply, self).__init__(datapath, **kwargs)
+
+
 class OFPExperimenterMultipart(ofproto_parser.namedtuple(
                                'OFPExperimenterMultipart',
                                ('experimenter', 'exp_type', 'data'))):
