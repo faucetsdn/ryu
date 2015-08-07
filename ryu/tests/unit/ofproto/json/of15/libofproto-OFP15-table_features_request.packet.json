@@ -1,0 +1,38 @@
+{
+    "OFPTableFeaturesStatsRequest": {
+        "body": [
+            {
+                "OFPTableFeaturesStats": {
+                    "capabilities": 4,
+                    "command": 1,
+                    "features": 1,
+                    "length": 80,
+                    "max_entries": 255,
+                    "metadata_match": 18446744073709551615,
+                    "metadata_write": 18446744073709551615,
+                    "name": "table1",
+                    "properties": [
+                        {
+                            "OFPTableFeaturePropOxmValues": {
+                                "length": 14,
+                                "oxm_values": [
+                                    {
+                                        "OXMTlv": {
+                                            "field": "eth_src",
+                                            "mask": null,
+                                            "value": "aa:bb:cc:dd:ee:ff"
+                                        }
+                                    }
+                                ],
+                                "type": 22
+                            }
+                        }
+                    ],
+                    "table_id": 1
+                }
+            }
+        ],
+        "flags": 0,
+        "type": 12
+    }
+}
