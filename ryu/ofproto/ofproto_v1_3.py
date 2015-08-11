@@ -1207,6 +1207,7 @@ oxm_types = [
     oxm_fields.NiciraExperimenter('_dp_hash', 0, type_desc.Int4),
 
     # Support for matching/setting NX registers 1-7
+    oxm_fields.NiciraExtended1('reg0', 0, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg1', 1, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg2', 2, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg3', 3, type_desc.Int4),
