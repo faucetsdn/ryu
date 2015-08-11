@@ -174,6 +174,17 @@ class Test_Parser(unittest.TestCase):
         return ofproto_parser.ofp_msg_from_jsondict(dp, jsondict)
 
     def _test_msg(self, name, wire_msg, json_str):
+        def bytes_eq(buf1, buf2):
+            if buf1 != buf2:
+                msg = 'EOF in either data'
+                for i in range(0, min(len(buf1), len(buf2))):
+                    c1 = six.indexbytes(six.binary_type(buf1), i)
+                    c2 = six.indexbytes(six.binary_type(buf2), i)
+                    if c1 != c2:
+                        msg = 'differs at chr %d, %d != %d' % (i, c1, c2)
+                        break
+                assert buf1 == buf2, "%r != %r, %s" % (buf1, buf2, msg)
+
         json_dict = json.loads(json_str)
         # on-wire -> OFPxxx -> json
         (version, msg_type, msg_len, xid) = ofproto_parser.header(wire_msg)
@@ -193,11 +204,13 @@ class Test_Parser(unittest.TestCase):
             eq_(json_dict, json_dict2)
 
         # json -> OFPxxx -> json
+        xid = json_dict[list(json_dict.keys())[0]].pop('xid', None)
         msg2 = self._jsondict_to_msg(dp, json_dict)
+        msg2.set_xid(xid)
         if has_serializer:
             msg2.serialize()
             eq_(self._msg_to_jsondict(msg2), json_dict)
-            eq_(wire_msg, msg2.buf)
+            bytes_eq(wire_msg, msg2.buf)
 
             # check if "len" "length" fields can be omitted
 
@@ -216,11 +229,12 @@ class Test_Parser(unittest.TestCase):
 
             json_dict3 = _remove(json_dict, ['len', 'length'])
             msg3 = self._jsondict_to_msg(dp, json_dict3)
+            msg3.set_xid(xid)
             msg3.serialize()
-            eq_(wire_msg, msg3.buf)
+            bytes_eq(wire_msg, msg3.buf)
 
             msg2.serialize()
-            eq_(wire_msg, msg2.buf)
+            bytes_eq(wire_msg, msg2.buf)
 
 
 def _add_tests():
