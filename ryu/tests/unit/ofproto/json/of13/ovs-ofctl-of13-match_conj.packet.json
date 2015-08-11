@@ -1,0 +1,61 @@
+{
+   "OFPFlowMod": {
+      "buffer_id": 4294967295, 
+      "command": 1, 
+      "cookie": 1311768467463790320, 
+      "cookie_mask": 18446744073709551615, 
+      "flags": 0, 
+      "hard_timeout": 0, 
+      "idle_timeout": 0, 
+      "instructions": [
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "OFPActionPopVlan": {
+                        "len": 8, 
+                        "type": 18
+                     }
+                  }
+               ], 
+               "len": 16, 
+               "type": 4
+            }
+         }, 
+         {
+            "OFPInstructionGotoTable": {
+               "len": 8, 
+               "table_id": 100, 
+               "type": 1
+            }
+         }
+      ], 
+      "match": {
+         "OFPMatch": {
+            "length": 18, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "conj_id", 
+                     "mask": null, 
+                     "value": 11259375
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "vlan_vid", 
+                     "mask": null, 
+                     "value": 5330
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "out_group": 4294967295, 
+      "out_port": 4294967295, 
+      "priority": 32768, 
+      "table_id": 3, 
+      "xid": 2
+   }
+}
