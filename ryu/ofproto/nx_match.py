@@ -916,14 +916,16 @@ class MFRegister(MFField):
 
 
 @_register_make
-@_set_nxm_headers([ofproto_v1_0.NXM_NX_PKT_MARK, ofproto_v1_0.NXM_NX_PKT_MARK_W])
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_PKT_MARK,
+                   ofproto_v1_0.NXM_NX_PKT_MARK_W])
 class MFPktMark(MFField):
     @classmethod
     def make(cls, header):
         return cls(header, MF_PACK_STRING_BE32)
 
     def put(self, buf, offset, rule):
-        return self.putm(buf, offset, rule.flow.pkt_mark, rule.wc.pkt_mark_mask)
+        return self.putm(buf, offset, rule.flow.pkt_mark,
+                         rule.wc.pkt_mark_mask)
 
 
 def serialize_nxm_match(rule, buf, offset):
