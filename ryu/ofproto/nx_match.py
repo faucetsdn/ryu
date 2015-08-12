@@ -118,9 +118,25 @@ class FlowWildcards(ofproto_parser.StringifyMixin):
 class ClsRule(ofproto_parser.StringifyMixin):
     """describe a matching rule for OF 1.0 OFPMatch (and NX).
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.wc = FlowWildcards()
         self.flow = Flow()
+
+        for key, value in kwargs.items():
+            if key[:3] == 'reg':
+                register = int(key[3:] or -1)
+                self.set_reg(register, value)
+                continue
+
+            setter = getattr(self, 'set_' + key, None)
+            if not setter:
+                LOG.error('Invalid kwarg specified to ClsRule (%s)', key)
+                continue
+
+            if not isinstance(value, (tuple, list)):
+                value = (value, )
+
+            setter(*value)
 
     def set_in_port(self, port):
         self.wc.wildcards &= ~FWW_IN_PORT
