@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import struct
-import itertools
 
 from ryu import exception
 from ryu.lib import mac
