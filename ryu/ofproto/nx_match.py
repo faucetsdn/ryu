@@ -20,6 +20,7 @@ import struct
 from ryu import exception
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
+from . import ofproto_parser
 from . import ofproto_v1_0
 from . import inet
 
@@ -62,7 +63,7 @@ _MF_FIELDS = {}
 FLOW_N_REGS = 8  # ovs 1.5
 
 
-class Flow(object):
+class Flow(ofproto_parser.StringifyMixin):
     def __init__(self):
         self.in_port = 0
         self.dl_vlan = 0
@@ -92,7 +93,7 @@ class Flow(object):
         self.pkt_mark = 0
 
 
-class FlowWildcards(object):
+class FlowWildcards(ofproto_parser.StringifyMixin):
     def __init__(self):
         self.dl_src_mask = 0
         self.dl_dst_mask = 0
@@ -114,7 +115,7 @@ class FlowWildcards(object):
         self.pkt_mark_mask = 0
 
 
-class ClsRule(object):
+class ClsRule(ofproto_parser.StringifyMixin):
     """describe a matching rule for OF 1.0 OFPMatch (and NX).
     """
     def __init__(self):
