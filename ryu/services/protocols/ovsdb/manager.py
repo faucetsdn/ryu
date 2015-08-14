@@ -91,6 +91,10 @@ class OVSDB(app_manager.RyuApp):
             ev = event.EventNewOVSDBConnection(app.system_id)
             self.send_event_to_observers(ev)
 
+        else:
+            sock.shutdown(socket.SHUT_RDWR)
+            sock.close()
+
     def start(self):
         server = hub.listen((self._address, self._port))
         key = self.CONF.ovsdb.mngr_privkey or self.CONF.ctl_privkey

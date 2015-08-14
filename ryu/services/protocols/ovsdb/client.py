@@ -97,7 +97,7 @@ def discover_schemas(connection):
 def discover_system_id(idl):
     system_id = None
 
-    while system_id is None:
+    while system_id is None and idl._session.is_connected():
         idl.run()
         openvswitch = idl.tables['Open_vSwitch'].rows
 
@@ -211,6 +211,10 @@ class RemoteOvsdb(app_manager.RyuApp):
         idl = Idl(session, schemas[0])
 
         system_id = discover_system_id(idl)
+
+        if not system_id:
+            return None
+
         name = cls.instance_name(system_id)
         ovs_stream.name = name
         connection.name = name
