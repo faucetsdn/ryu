@@ -227,7 +227,19 @@ class RemoteOvsdb(app_manager.RyuApp):
         kwargs['system_id'] = system_id
 
         app_mgr = app_manager.AppManager.get_instance()
-        return app_mgr.instantiate(cls, *args, **kwargs)
+
+        old_app = app_manager.lookup_service_brick(name)
+        old_events = None
+        if old_app:
+            old_events = old_app.events
+            app_mgr.uninstantiate(name)
+
+        app = app_mgr.instantiate(cls, *args, **kwargs)
+
+        if old_events:
+            app.events = old_events
+
+        return app
 
     @classmethod
     def instance_name(cls, system_id):
