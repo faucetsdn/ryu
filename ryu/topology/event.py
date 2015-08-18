@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import logging
+from ryu.controller import handler
 from ryu.controller import event
 
 LOG = logging.getLogger(__name__)
@@ -163,3 +164,5 @@ class EventHostBase(event.EventBase):
 class EventHostAdd(EventHostBase):
     def __init__(self, host):
         super(EventHostAdd, self).__init__(host)
+
+handler.register_service('ryu.topology.switches')
