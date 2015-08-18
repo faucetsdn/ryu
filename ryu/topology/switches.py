@@ -496,7 +496,8 @@ class Switches(app_manager.RyuApp):
     _EVENTS = [event.EventSwitchEnter, event.EventSwitchLeave,
                event.EventPortAdd, event.EventPortDelete,
                event.EventPortModify,
-               event.EventLinkAdd, event.EventLinkDelete]
+               event.EventLinkAdd, event.EventLinkDelete,
+               event.EventHostAdd]
 
     DEFAULT_TTL = 120  # unused. ignored.
     LLDP_PACKET_LEN = len(LLDPPacket.lldp_packet(0, 0, DONTCARE_STR, 0))
@@ -841,18 +842,22 @@ class Switches(app_manager.RyuApp):
         host_mac = eth.src
         host = Host(host_mac, port)
 
-        # arp packet, update both location and ip
-        if eth.ethertype == ether_types.ETH_TYPE_ARP:
+        if host_mac not in self.hosts:
             self.hosts.add(host)
+            ev = event.EventHostAdd(host)
+            self.send_event_to_observers(ev)
+
+        # arp packet, update ip address
+        if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
             self.hosts.update_ip(host, ip_v4=arp_pkt.src_ip)
 
-        # ipv4 packet, update ip only
+        # ipv4 packet, update ipv4 address
         elif eth.ethertype == ether_types.ETH_TYPE_IP:
             ipv4_pkt = pkt.get_protocols(ipv4.ipv4)[0]
             self.hosts.update_ip(host, ip_v4=ipv4_pkt.src)
 
-        # ipv6 packet, update ip only
+        # ipv6 packet, update ipv6 address
         elif eth.ethertype == ether_types.ETH_TYPE_IPV6:
             # TODO: need to handle NDP
             ipv6_pkt = pkt.get_protocols(ipv6.ipv6)[0]

@@ -149,3 +149,17 @@ class EventHostReply(event.EventReplyBase):
     def __str__(self):
         return 'EventHostReply<dst=%s, dpid=%s, hosts=%s>' % \
             (self.dst, self.dpid, len(self.hosts))
+
+
+class EventHostBase(event.EventBase):
+    def __init__(self, host):
+        super(EventHostBase, self).__init__()
+        self.host = host
+
+    def __str__(self):
+        return '%s<%s>' % (self.__class__.__name__, self.host)
+
+
+class EventHostAdd(EventHostBase):
+    def __init__(self, host):
+        super(EventHostAdd, self).__init__(host)
