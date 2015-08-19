@@ -1518,6 +1518,123 @@ class OFPMatch(StringifyMixin):
         self._flow.ipv6_exthdr = hdr
 
 
+class OFPPropUnknown(StringifyMixin):
+    def __init__(self, type_=None, length=None, buf=None):
+        self.buf = buf
+
+    @classmethod
+    def parser(cls, buf):
+        return cls(buf=buf)
+
+
+class OFPPropBase(StringifyMixin):
+    _PACK_STR = '!HH'
+    # _TYPES = {} must be an attribute of subclass
+
+    def __init__(self, type_, length=None):
+        self.type = type_
+        self.length = length
+
+    @classmethod
+    def register_type(cls, type_):
+        def _register_type(subcls):
+            cls._TYPES[type_] = subcls
+            return subcls
+        return _register_type
+
+    @classmethod
+    def parse(cls, buf):
+        (type_, length) = struct.unpack_from(cls._PACK_STR, buf, 0)
+        rest = buf[utils.round_up(length, 8):]
+        try:
+            subcls = cls._TYPES[type_]
+        except KeyError:
+            subcls = OFPPropUnknown
+        prop = subcls.parser(buf)
+        prop.type = type_
+        prop.length = length
+        return prop, rest
+
+    @classmethod
+    def get_rest(cls, buf):
+        (type_, length) = struct.unpack_from(cls._PACK_STR, buf, 0)
+        offset = struct.calcsize(cls._PACK_STR)
+        return buf[offset:length]
+
+    def serialize(self):
+        # Body
+        # serialize_body should be implemented by subclass
+        body = bytearray()
+        body += self.serialize_body()
+
+        # fixup
+        self.length = len(body) + struct.calcsize(self._PACK_STR)
+
+        # Header
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length)
+        buf += body
+
+        # Pad
+        pad_len = utils.round_up(self.length, 8) - self.length
+        msg_pack_into("%dx" % pad_len, buf, len(buf))
+
+        return buf
+
+
+class OFPPropCommonExperimenter4ByteData(StringifyMixin):
+    _PACK_STR = '!HHII'
+    _EXPERIMENTER_DATA_PACK_STR = '!I'
+    _EXPERIMENTER_DATA_SIZE = 4
+
+    def __init__(self, type_=None, length=None, experimenter=None,
+                 exp_type=None, data=bytearray()):
+        self.type = type_
+        self.length = length
+        self.experimenter = experimenter
+        self.exp_type = exp_type
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf):
+        (type_, length, experimenter, exp_type) = struct.unpack_from(
+            ofproto.OFP_PROP_EXPERIMENTER_PACK_STR, buf, 0)
+
+        rest = buf[ofproto.OFP_PROP_EXPERIMENTER_SIZE:length]
+        data = []
+        while rest:
+            (d,) = struct.unpack_from(
+                cls._EXPERIMENTER_DATA_PACK_STR, rest, 0)
+            data.append(d)
+            rest = rest[cls._EXPERIMENTER_DATA_SIZE:]
+
+        return cls(type_, length, experimenter, exp_type, data)
+
+    def serialize(self):
+        offset = 0
+        bin_data = bytearray()
+        for d in self.data:
+            msg_pack_into(self._EXPERIMENTER_DATA_PACK_STR,
+                          bin_data, offset, d)
+            offset += self._EXPERIMENTER_DATA_SIZE
+
+        # fixup
+        self.length = struct.calcsize(self._PACK_STR)
+        self.length += len(bin_data)
+
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf,
+                      0, self.type, self.length, self.experimenter,
+                      self.exp_type)
+        buf += bin_data
+
+        # Pad
+        pad_len = utils.round_up(self.length, 8) - self.length
+        msg_pack_into("%dx" % pad_len, buf, len(buf))
+
+        return buf
+
+
 class OFPMatchField(StringifyMixin):
     _FIELDS_HEADERS = {}
 
