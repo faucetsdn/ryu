@@ -147,6 +147,7 @@ implemented = {
         ofproto_v1_5.OFPT_REQUESTFORWARD: (False, True),
         ofproto_v1_5.OFPT_BUNDLE_CONTROL: (True, True),
         ofproto_v1_5.OFPT_BUNDLE_ADD_MESSAGE: (False, True),
+        ofproto_v1_5.OFPT_CONTROLLER_STATUS: (True, False),
     },
 }
 
