@@ -6539,6 +6539,8 @@ class OFPRoleRequest(MsgBase):
                      | OFPCR_ROLE_EQUAL
                      | OFPCR_ROLE_MASTER
                      | OFPCR_ROLE_SLAVE
+    short_id         ID number for the controller.
+                     The default is OFPCID_UNDEFINED.
     generation_id    Master Election Generation ID
     ================ ======================================================
 
@@ -6548,20 +6550,25 @@ class OFPRoleRequest(MsgBase):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            req = ofp_parser.OFPRoleRequest(datapath, ofp.OFPCR_ROLE_EQUAL, 0)
+            req = ofp_parser.OFPRoleRequest(datapath, ofp.OFPCR_ROLE_EQUAL,
+                                            ofp.OFPCID_UNDEFINED, 0)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, role=None, generation_id=None):
+    def __init__(self, datapath, role=None, short_id=None,
+                 generation_id=None):
         super(OFPRoleRequest, self).__init__(datapath)
         self.role = role
+        self.short_id = short_id
         self.generation_id = generation_id
 
     def _serialize_body(self):
         assert self.role is not None
         assert self.generation_id is not None
+        if self.short_id is None:
+            self.short_id = ofproto.OFPCID_UNDEFINED
         msg_pack_into(ofproto.OFP_ROLE_REQUEST_PACK_STR,
                       self.buf, ofproto.OFP_HEADER_SIZE,
-                      self.role, self.generation_id)
+                      self.role, self.short_id, self.generation_id)
 
 
 @_register_parser
@@ -6581,6 +6588,8 @@ class OFPRoleReply(MsgBase):
                      | OFPCR_ROLE_EQUAL
                      | OFPCR_ROLE_MASTER
                      | OFPCR_ROLE_SLAVE
+    short_id         ID number for the controller.
+                     The default is OFPCID_UNDEFINED.
     generation_id    Master Election Generation ID
     ================ ======================================================
 
@@ -6603,12 +6612,14 @@ class OFPRoleReply(MsgBase):
                 role = 'unknown'
 
             self.logger.debug('OFPRoleReply received: '
-                              'role=%s generation_id=%d',
-                              role, msg.generation_id)
+                              'role=%s short_id=%d, generation_id=%d',
+                              role, msg.short_id, msg.generation_id)
     """
-    def __init__(self, datapath, role=None, generation_id=None):
+    def __init__(self, datapath, role=None, short_id=None,
+                 generation_id=None):
         super(OFPRoleReply, self).__init__(datapath)
         self.role = role
+        self.short_id = short_id
         self.generation_id = generation_id
 
     @classmethod
@@ -6616,7 +6627,7 @@ class OFPRoleReply(MsgBase):
         msg = super(OFPRoleReply, cls).parser(datapath, version,
                                               msg_type, msg_len, xid,
                                               buf)
-        (msg.role, msg.generation_id) = struct.unpack_from(
+        (msg.role, msg.short_id, msg.generation_id) = struct.unpack_from(
             ofproto.OFP_ROLE_REQUEST_PACK_STR, msg.buf,
             ofproto.OFP_HEADER_SIZE)
         return msg
