@@ -881,6 +881,8 @@ class OFPPropBase(StringifyMixin):
 
 class OFPPropCommonExperimenter4ByteData(StringifyMixin):
     _PACK_STR = '!HHII'
+    _EXPERIMENTER_DATA_PACK_STR = '!I'
+    _EXPERIMENTER_DATA_SIZE = 4
 
     def __init__(self, type_=None, length=None, experimenter=None,
                  exp_type=None, data=bytearray()):
@@ -894,19 +896,34 @@ class OFPPropCommonExperimenter4ByteData(StringifyMixin):
     def parser(cls, buf):
         (type_, length, experimenter, exp_type) = struct.unpack_from(
             ofproto.OFP_PROP_EXPERIMENTER_PACK_STR, buf, 0)
-        data = buf[ofproto.OFP_PROP_EXPERIMENTER_SIZE:length]
+
+        rest = buf[ofproto.OFP_PROP_EXPERIMENTER_SIZE:length]
+        data = []
+        while rest:
+            (d,) = struct.unpack_from(
+                cls._EXPERIMENTER_DATA_PACK_STR, rest, 0)
+            data.append(d)
+            rest = rest[cls._EXPERIMENTER_DATA_SIZE:]
+
         return cls(type_, length, experimenter, exp_type, data)
 
     def serialize(self):
+        offset = 0
+        bin_data = bytearray()
+        for d in self.data:
+            msg_pack_into(self._EXPERIMENTER_DATA_PACK_STR,
+                          bin_data, offset, d)
+            offset += self._EXPERIMENTER_DATA_SIZE
+
         # fixup
         self.length = struct.calcsize(self._PACK_STR)
-        self.length += len(self.data)
+        self.length += len(bin_data)
 
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf,
                       0, self.type, self.length, self.experimenter,
                       self.exp_type)
-        buf += self.data
+        buf += bin_data
 
         # Pad
         pad_len = utils.round_up(self.length, 8) - self.length
