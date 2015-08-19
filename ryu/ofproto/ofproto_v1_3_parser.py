@@ -5063,44 +5063,8 @@ class OFPTableFeaturesStats(StringifyMixin):
         return buf + bin_props
 
 
-class OFPTableFeatureProp(StringifyMixin):
-    _PACK_STR = '!HH'  # type, length
-    _TYPES = {}  # OFPTFPT_ -> class
-
-    def __init__(self, type_, length=None):
-        self.type = type_
-        self.length = length
-
-    @classmethod
-    def register_type(cls, type_):
-        def _register_type(subcls):
-            cls._TYPES[type_] = subcls
-            return subcls
-        return _register_type
-
-    @classmethod
-    def parse(cls, buf):
-        (type_, length,) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf), 0)
-        bin_prop = buf[struct.calcsize(cls._PACK_STR):length]
-        rest = buf[utils.round_up(length, 8):]
-        try:
-            subcls = cls._TYPES[type_]
-        except KeyError:
-            subcls = OFPTableFeaturePropUnknown
-        kwargs = subcls._parse_prop(bin_prop)
-        kwargs['type_'] = type_
-        kwargs['length'] = length
-        return subcls(**kwargs), rest
-
-    def serialize(self):
-        # fixup
-        bin_prop = self._serialize_prop()
-        self.length = struct.calcsize(self._PACK_STR) + len(bin_prop)
-
-        buf = bytearray()
-        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length)
-        pad_len = utils.round_up(self.length, 8) - self.length
-        return buf + bin_prop + pad_len * b'\0'
+class OFPTableFeatureProp(OFPPropBase):
+    _TYPES = {}
 
 
 class OFPTableFeaturePropUnknown(OFPTableFeatureProp):
@@ -5145,25 +5109,24 @@ class OFPInstructionId(StringifyMixin):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_INSTRUCTIONS)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_INSTRUCTIONS_MISS)
 class OFPTableFeaturePropInstructions(OFPTableFeatureProp):
-    def __init__(self, type_, instruction_ids=[], length=None):
+    def __init__(self, type_=None, length=None, instruction_ids=[]):
         super(OFPTableFeaturePropInstructions, self).__init__(type_, length)
         self.instruction_ids = instruction_ids
 
     @classmethod
-    def _parse_prop(cls, buf):
-        rest = buf
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
         ids = []
         while rest:
             i, rest = OFPInstructionId.parse(rest)
             ids.append(i)
-        return {
-            'instruction_ids': ids,
-        }
+        return cls(instruction_ids=ids)
 
-    def _serialize_prop(self):
+    def serialize_body(self):
         bin_ids = bytearray()
         for i in self.instruction_ids:
             bin_ids += i.serialize()
+
         return bin_ids
 
 
@@ -5172,24 +5135,21 @@ class OFPTableFeaturePropInstructions(OFPTableFeatureProp):
 class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
     _TABLE_ID_PACK_STR = '!B'
 
-    def __init__(self, type_, table_ids=[], length=None):
+    def __init__(self, type_=None, length=None, table_ids=[]):
         super(OFPTableFeaturePropNextTables, self).__init__(type_, length)
         self.table_ids = table_ids
 
     @classmethod
-    def _parse_prop(cls, buf):
-        rest = buf
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
         ids = []
         while rest:
-            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR,
-                                      six.binary_type(rest), 0)
+            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR, six.binary_type(rest), 0)
             rest = rest[struct.calcsize(cls._TABLE_ID_PACK_STR):]
             ids.append(i)
-        return {
-            'table_ids': ids,
-        }
+        return cls(table_ids=ids)
 
-    def _serialize_prop(self):
+    def serialize_body(self):
         bin_ids = bytearray()
         for i in self.table_ids:
             bin_id = bytearray()
@@ -5235,22 +5195,20 @@ class OFPActionId(StringifyMixin):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_ACTIONS)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_ACTIONS_MISS)
 class OFPTableFeaturePropActions(OFPTableFeatureProp):
-    def __init__(self, type_, action_ids=[], length=None):
+    def __init__(self, type_=None, length=None, action_ids=[]):
         super(OFPTableFeaturePropActions, self).__init__(type_, length)
         self.action_ids = action_ids
 
     @classmethod
-    def _parse_prop(cls, buf):
-        rest = buf
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
         ids = []
         while rest:
             i, rest = OFPActionId.parse(rest)
             ids.append(i)
-        return {
-            'action_ids': ids,
-        }
+        return cls(action_ids=ids)
 
-    def _serialize_prop(self):
+    def serialize_body(self):
         bin_ids = bytearray()
         for i in self.action_ids:
             bin_ids += i.serialize()
@@ -5345,22 +5303,20 @@ class OFPExperimenterOxmId(OFPOxmId):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_SETFIELD)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_SETFIELD_MISS)
 class OFPTableFeaturePropOxm(OFPTableFeatureProp):
-    def __init__(self, type_, oxm_ids=[], length=None):
+    def __init__(self, type_=None, length=None, oxm_ids=[]):
         super(OFPTableFeaturePropOxm, self).__init__(type_, length)
         self.oxm_ids = oxm_ids
 
     @classmethod
-    def _parse_prop(cls, buf):
-        rest = buf
+    def parser(cls, buf):
+        rest = cls.get_rest(buf)
         ids = []
         while rest:
             i, rest = OFPOxmId.parse(rest)
             ids.append(i)
-        return {
-            'oxm_ids': ids,
-        }
+        return cls(oxm_ids=ids)
 
-    def _serialize_prop(self):
+    def serialize_body(self):
         bin_ids = bytearray()
         for i in self.oxm_ids:
             bin_ids += i.serialize()
@@ -5369,51 +5325,8 @@ class OFPTableFeaturePropOxm(OFPTableFeatureProp):
 
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MISS)
-class OFPTableFeaturePropExperimenter(OFPTableFeatureProp):
-    _DATA_ELEMENT_PACK_STR = '!I'
-    _BODY_PACK_STR = '!II'
-
-    def __init__(self, type_, experimenter=None, exp_type=None,
-                 data=None, length=None):
-        self.type = type_
-        self.length = length
-        self.experimenter = experimenter
-        self.exp_type = exp_type
-        self.data = data
-
-    @classmethod
-    def _parse_prop(cls, buf):
-        (experimenter, exp_type) = struct.unpack_from(cls._BODY_PACK_STR,
-                                                      buf, 0)
-
-        # Parse trailing data, a list of 4-byte words
-        length = len(buf)
-        data = []
-        pack_size = struct.calcsize(cls._DATA_ELEMENT_PACK_STR)
-        offset = struct.calcsize(cls._BODY_PACK_STR)
-        while offset < length:
-            (word,) = struct.unpack_from(cls._DATA_ELEMENT_PACK_STR,
-                                         buf, offset)
-            data.append(word)
-            offset += pack_size
-
-        return {
-            'experimenter': experimenter,
-            'exp_type': exp_type,
-            'data': data,
-        }
-
-    def _serialize_prop(self):
-        # experimenter, exp_type
-        buf = bytearray()
-        msg_pack_into(self._BODY_PACK_STR, buf, 0, self.experimenter,
-                      self.exp_type)
-
-        # data
-        if len(self.data):
-            msg_pack_into('!%dI' % len(self.data), buf, len(buf), *self.data)
-
-        return buf
+class OFPTableFeaturePropExperimenter(OFPPropCommonExperimenter4ByteData):
+    pass
 
 
 @_set_stats_type(ofproto.OFPMP_TABLE_FEATURES, OFPTableFeaturesStats)
