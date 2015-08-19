@@ -376,6 +376,21 @@ class BGPSpeaker(object):
                  neighbors.CHANGES: attribute_param}
         call(func_name, **param)
 
+    def neighbor_state_get(self, address=None, format='json'):
+        """ This method returns the state of peer(s) in a json
+        format.
+
+        ``address`` specifies the address of a peer. If not given, the
+        state of all the peers return.
+
+        """
+        show = {}
+        show['params'] = ['neighbor', 'summary']
+        if address:
+            show['params'].append(address)
+        show['format'] = format
+        return call('operator.show', **show)
+
     def prefix_add(self, prefix, next_hop=None, route_dist=None):
         """ This method adds a new prefix to be advertized.
 
