@@ -1,0 +1,32 @@
+{
+    "OFPPacketOut": {
+        "actions": [
+            {
+                "OFPActionOutput": {
+                    "len": 16,
+                    "max_len": 65535,
+                    "port": 4294967291,
+                    "type": 0
+                }
+            }
+        ],
+        "actions_len": 16,
+        "buffer_id": 4294967295,
+        "data": "dGVzdA==",
+        "match": {
+            "OFPMatch": {
+                "length": 12,
+                "oxm_fields": [
+                    {
+                        "OXMTlv": {
+                            "field": "in_port",
+                            "mask": null,
+                            "value": 4294967040
+                        }
+                    }
+                ],
+                "type": 1
+            }
+        }
+    }
+}
