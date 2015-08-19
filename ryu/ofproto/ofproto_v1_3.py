@@ -1220,6 +1220,15 @@ oxm_types = [
 oxm_fields.generate(__name__)
 
 
+# Note: struct ofp_prop_experimenter is specific to this implementation.
+# It does not have a corresponding structure in the specification.
+# This structure defines common structure for ofp_*_prop_experimenter.
+# struct ofp_prop_experimenter
+OFP_PROP_EXPERIMENTER_PACK_STR = '!HHII'
+OFP_PROP_EXPERIMENTER_SIZE = 12
+assert (calcsize(OFP_PROP_EXPERIMENTER_PACK_STR) ==
+        OFP_PROP_EXPERIMENTER_SIZE)
+
 # define constants
 OFP_VERSION = 0x04
 OFP_TCP_PORT = 6633

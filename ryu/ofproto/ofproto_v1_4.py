@@ -1473,6 +1473,15 @@ OFP_BUNDLE_ADD_MSG_SIZE = 24
 assert (calcsize(OFP_BUNDLE_ADD_MSG_PACK_STR) + OFP_HEADER_SIZE ==
         OFP_BUNDLE_ADD_MSG_SIZE)
 
+# Note: struct ofp_prop_experimenter is specific to this implementation.
+# It does not have a corresponding structure in the specification.
+# This structure defines common structure for ofp_*_prop_experimenter.
+# struct ofp_prop_experimenter
+OFP_PROP_EXPERIMENTER_PACK_STR = '!HHII'
+OFP_PROP_EXPERIMENTER_SIZE = 12
+assert (calcsize(OFP_PROP_EXPERIMENTER_PACK_STR) ==
+        OFP_PROP_EXPERIMENTER_SIZE)
+
 # define constants
 OFP_VERSION = 0x05
 OFP_TCP_PORT = 6653

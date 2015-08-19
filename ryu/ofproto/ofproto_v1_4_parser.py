@@ -893,8 +893,8 @@ class OFPPropCommonExperimenter4ByteData(StringifyMixin):
     @classmethod
     def parser(cls, buf):
         (type_, length, experimenter, exp_type) = struct.unpack_from(
-            ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_PACK_STR, buf, 0)
-        data = buf[ofproto.OFP_TABLE_MOD_PROP_EXPERIMENTER_SIZE:length]
+            ofproto.OFP_PROP_EXPERIMENTER_PACK_STR, buf, 0)
+        data = buf[ofproto.OFP_PROP_EXPERIMENTER_SIZE:length]
         return cls(type_, length, experimenter, exp_type, data)
 
     def serialize(self):
