@@ -1,0 +1,6 @@
+{
+    "OFPControllerStatusStatsRequest": {
+        "flags": 0,
+        "type": 18
+    }
+}

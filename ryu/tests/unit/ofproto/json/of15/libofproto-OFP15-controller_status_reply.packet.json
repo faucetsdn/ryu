@@ -1,0 +1,26 @@
+{
+    "OFPControllerStatusStatsReply": {
+        "body": [
+            {
+                "OFPControllerStatusStats": {
+                    "channel_status": 1,
+                    "length": 48,
+                    "properties": [
+                        {
+                            "OFPControllerStatusPropUri": {
+                                "length": 26,
+                                "type": 0,
+                                "uri": "tls:192.168.34.23:6653"
+                            }
+                        }
+                    ],
+                    "reason": 1,
+                    "role": 1,
+                    "short_id": 65535
+                }
+            }
+        ],
+        "flags": 0,
+        "type": 18
+    }
+}
