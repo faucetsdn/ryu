@@ -8,7 +8,7 @@
                "properties": [
                   {
                      "OFPQueueDescPropExperimenter": {
-                        "data": "", 
+                        "data": [], 
                         "exp_type": 0, 
                         "experimenter": 101, 
                         "length": 12, 
@@ -40,7 +40,7 @@
                   }, 
                   {
                      "OFPQueueDescPropExperimenter": {
-                        "data": "", 
+                        "data": [], 
                         "exp_type": 0, 
                         "experimenter": 101, 
                         "length": 12, 
@@ -49,7 +49,9 @@
                   }, 
                   {
                      "OFPQueueDescPropExperimenter": {
-                        "data": "AAAAAQ==", 
+                        "data": [
+                           1
+                        ], 
                         "exp_type": 1, 
                         "experimenter": 101, 
                         "length": 16, 
@@ -58,7 +60,10 @@
                   }, 
                   {
                      "OFPQueueDescPropExperimenter": {
-                        "data": "AAAAAQAAAAI=", 
+                        "data": [
+                           1, 
+                           2
+                        ], 
                         "exp_type": 2, 
                         "experimenter": 101, 
                         "length": 20, 
