@@ -852,6 +852,32 @@ class OFPPropBase(StringifyMixin):
         prop.length = length
         return prop, rest
 
+    @classmethod
+    def get_rest(cls, buf):
+        (type_, length) = struct.unpack_from(cls._PACK_STR, buf, 0)
+        offset = struct.calcsize(cls._PACK_STR)
+        return buf[offset:length]
+
+    def serialize(self):
+        # Body
+        # serialize_body should be implemented by subclass
+        body = bytearray()
+        body += self.serialize_body()
+
+        # fixup
+        self.length = len(body) + struct.calcsize(self._PACK_STR)
+
+        # Header
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length)
+        buf += body
+
+        # Pad
+        pad_len = utils.round_up(self.length, 8) - self.length
+        msg_pack_into("%dx" % pad_len, buf, len(buf))
+
+        return buf
+
 
 class OFPPropCommonExperimenter4ByteData(StringifyMixin):
     _PACK_STR = '!HHII'
@@ -2229,32 +2255,6 @@ class OFPTableFeaturesStats(StringifyMixin):
 
 class OFPTableFeatureProp(OFPPropBase):
     _TYPES = {}
-
-    @classmethod
-    def get_rest(cls, buf):
-        (type_, length) = struct.unpack_from(cls._PACK_STR, buf, 0)
-        offset = struct.calcsize(cls._PACK_STR)
-        return buf[offset:length]
-
-    def serialize(self):
-        # Body
-        # serialize_body should be implemented by subclass
-        body = bytearray()
-        body += self.serialize_body()
-
-        # fixup
-        self.length = len(body) + struct.calcsize(self._PACK_STR)
-
-        # Header
-        buf = bytearray()
-        msg_pack_into(self._PACK_STR, buf, 0, self.type, self.length)
-        buf += body
-
-        # Pad
-        pad_len = utils.round_up(self.length, 8) - self.length
-        msg_pack_into("%dx" % pad_len, buf, len(buf))
-
-        return buf
 
 
 class OFPInstructionId(StringifyMixin):
