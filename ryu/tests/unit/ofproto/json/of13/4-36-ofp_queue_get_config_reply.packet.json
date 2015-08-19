@@ -4,7 +4,7 @@
       "queues": [
          {
             "OFPPacketQueue": {
-               "len": 48, 
+               "len": 64, 
                "port": 77, 
                "properties": [
                   {
@@ -20,6 +20,14 @@
                         "property": 2, 
                         "rate": 900
                      }
+                  },
+                  {
+                     "OFPQueuePropExperimenter": {
+                        "data": [], 
+                        "experimenter": 999, 
+                        "len": 16, 
+                        "property": 65535
+                     }
                   }
                ], 
                "queue_id": 99
@@ -27,7 +35,7 @@
          }, 
          {
             "OFPPacketQueue": {
-               "len": 48, 
+               "len": 65, 
                "port": 77, 
                "properties": [
                   {
@@ -43,9 +51,53 @@
                         "property": 2, 
                         "rate": 200
                      }
+                  },
+                  {
+                     "OFPQueuePropExperimenter": {
+                        "experimenter": 999, 
+                        "data": [
+                           1
+                        ], 
+                        "len": 17, 
+                        "property": 65535
+                     }
                   }
                ], 
                "queue_id": 88
+            }
+         },
+         {
+            "OFPPacketQueue": {
+               "len": 66, 
+               "port": 77, 
+               "properties": [
+                  {
+                     "OFPQueuePropMinRate": {
+                        "len": 16, 
+                        "property": 1, 
+                        "rate": 200
+                     }
+                  }, 
+                  {
+                     "OFPQueuePropMaxRate": {
+                        "len": 16, 
+                        "property": 2, 
+                        "rate": 400
+                     }
+                  },
+                  {
+                     "OFPQueuePropExperimenter": {
+                        "experimenter": 999, 
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "len": 18, 
+                        "property": 65535
+                     }
+                  }
+               ], 
+               "queue_id": 77
             }
          }
       ]
