@@ -5287,6 +5287,69 @@ class OFPControllerStatusStats(StringifyMixin):
         return status
 
 
+@_set_stats_type(ofproto.OFPMP_CONTROLLER_STATUS, OFPControllerStatusStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REQUEST)
+class OFPControllerStatusStatsRequest(OFPMultipartRequest):
+    """
+    Controller status multipart request message
+
+    The controller uses this message to request the status, the roles
+    and the control channels of other controllers configured on the switch.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    flags            Zero or ``OFPMPF_REQ_MORE``
+    ================ ======================================================
+
+    Example::
+
+        def send_controller_status_multipart_request(self, datapath):
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, flags=0, type_=None):
+        super(OFPControllerStatusStatsRequest,
+              self).__init__(datapath, flags)
+
+
+@OFPMultipartReply.register_stats_type()
+@_set_stats_type(ofproto.OFPMP_CONTROLLER_STATUS, OFPControllerStatusStats)
+@_set_msg_type(ofproto.OFPT_MULTIPART_REPLY)
+class OFPControllerStatusStatsReply(OFPMultipartReply):
+    """
+     Controller status multipart reply message
+
+    The switch responds with this message to a controller status
+    multipart request.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    body             List of ``OFPControllerStatus`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPControllerStatusStatsReply,
+                    MAIN_DISPATCHER)
+        def controller_status_multipart_reply_handler(self, ev):
+            status = []
+            for s in ev.msg.body:
+                status.append('short_id=%d role=%d reason=%d '
+                              'channel_status=%d properties=%s' %
+                              (s.short_id, s.role, s.reason,
+                               s.channel_status, repr(s.properties)))
+            self.logger.debug('OFPControllerStatusStatsReply received: %s',
+                              status)
+    """
+    def __init__(self, datapath, type_=None, **kwargs):
+        super(OFPControllerStatusStatsReply, self).__init__(datapath,
+                                                            **kwargs)
+
+
 @_register_parser
 @_set_msg_type(ofproto.OFPT_CONTROLLER_STATUS)
 class OFPControllerStatus(MsgBase):
