@@ -5678,18 +5678,14 @@ class OFPQueueProp(OFPQueuePropHeader):
     _QUEUE_PROP_PROPERTIES = {}
 
     @staticmethod
-    def register_queue_property(property_, len_):
+    def register_queue_property(property_):
         def _register_queue_property(cls):
-            cls.cls_property = property_
-            cls.cls_len = len_
-            OFPQueueProp._QUEUE_PROP_PROPERTIES[cls.cls_property] = cls
+            OFPQueueProp._QUEUE_PROP_PROPERTIES[property_] = cls
             return cls
         return _register_queue_property
 
-    def __init__(self):
-        cls = self.__class__
-        super(OFPQueueProp, self).__init__(cls.cls_property,
-                                           cls.cls_len)
+    def __init__(self, property_=None, len_=None):
+        super(OFPQueueProp, self).__init__(property_, len_)
 
     @classmethod
     def parser(cls, buf, offset):
@@ -5697,13 +5693,17 @@ class OFPQueueProp(OFPQueuePropHeader):
             ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR,
             buf, offset)
         cls_ = cls._QUEUE_PROP_PROPERTIES.get(property_)
-        offset += ofproto.OFP_QUEUE_PROP_HEADER_SIZE
-        return cls_.parser(buf, offset)
+        p = cls_.parser(buf, offset + ofproto.OFP_QUEUE_PROP_HEADER_SIZE)
+        p.property = property_
+        p.len = len_
+        if property_ == ofproto.OFPQT_EXPERIMENTER:
+            rest = buf[offset + ofproto.OFP_QUEUE_PROP_EXPERIMENTER_SIZE:
+                       offset + len_]
+            p.parse_experimenter_data(rest)
+        return p
 
 
-@OFPQueueProp.register_queue_property(
-    ofproto.OFPQT_MIN_RATE,
-    ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE)
+@OFPQueueProp.register_queue_property(ofproto.OFPQT_MIN_RATE)
 class OFPQueuePropMinRate(OFPQueueProp):
     def __init__(self, rate, property_=None, len_=None):
         super(OFPQueuePropMinRate, self).__init__()
@@ -5716,9 +5716,7 @@ class OFPQueuePropMinRate(OFPQueueProp):
         return cls(rate)
 
 
-@OFPQueueProp.register_queue_property(
-    ofproto.OFPQT_MAX_RATE,
-    ofproto.OFP_QUEUE_PROP_MAX_RATE_SIZE)
+@OFPQueueProp.register_queue_property(ofproto.OFPQT_MAX_RATE)
 class OFPQueuePropMaxRate(OFPQueueProp):
     def __init__(self, rate, property_=None, len_=None):
         super(OFPQueuePropMaxRate, self).__init__()
@@ -5731,7 +5729,30 @@ class OFPQueuePropMaxRate(OFPQueueProp):
         return cls(rate)
 
 
-# TODO: add ofp_queue_prop_experimenter
+@OFPQueueProp.register_queue_property(ofproto.OFPQT_EXPERIMENTER)
+class OFPQueuePropExperimenter(OFPQueueProp):
+    _EXPERIMENTER_DATA_PACK_STR = '!B'
+    _EXPERIMENTER_DATA_SIZE = 1
+
+    def __init__(self, experimenter, data=None, property_=None, len_=None):
+        super(OFPQueuePropExperimenter, self).__init__()
+        self.experimenter = experimenter
+        self.data = data
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (experimenter,) = struct.unpack_from(
+            ofproto.OFP_QUEUE_PROP_EXPERIMENTER_PACK_STR, buf, offset)
+        return cls(experimenter)
+
+    def parse_experimenter_data(self, rest):
+        data = []
+        while rest:
+            (d,) = struct.unpack_from(
+                self._EXPERIMENTER_DATA_PACK_STR, rest, 0)
+            data.append(d)
+            rest = rest[self._EXPERIMENTER_DATA_SIZE:]
+        self.data = data
 
 
 class OFPPacketQueue(StringifyMixin):
