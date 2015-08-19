@@ -2510,7 +2510,7 @@ class OFPTableFeaturePropOxm(OFPTableFeatureProp):
 
 
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
-@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER)
+@OFPTableFeatureProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MISS)
 class OFPTableFeaturePropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
