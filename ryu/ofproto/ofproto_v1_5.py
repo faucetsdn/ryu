@@ -745,9 +745,10 @@ OFPGT_FF = 3        # Fast failover group.
 OFP_NO_BUFFER = 0xffffffff  # Special buffer-id to indicate 'no buffer'
 
 # struct ofp_packet_out
-OFP_PACKET_OUT_PACK_STR = '!IH2x'
+OFP_PACKET_OUT_0_PACK_STR = '!IH2x'
+OFP_PACKET_OUT_0_SIZE = 16
 OFP_PACKET_OUT_SIZE = 24
-assert (calcsize(OFP_PACKET_OUT_PACK_STR) + OFP_MATCH_SIZE + OFP_HEADER_SIZE ==
+assert (calcsize(OFP_PACKET_OUT_0_PACK_STR) + OFP_MATCH_SIZE + OFP_HEADER_SIZE ==
         OFP_PACKET_OUT_SIZE)
 
 # enum ofp_packet_in_reason

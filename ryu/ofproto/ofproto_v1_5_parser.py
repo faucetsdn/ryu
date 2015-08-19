@@ -5443,7 +5443,8 @@ class OFPPacketOut(MsgBase):
     Attribute        Description
     ================ ======================================================
     buffer_id        ID assigned by datapath (OFP_NO_BUFFER if none)
-    in_port          Packet's input port or ``OFPP_CONTROLLER``
+    match            Instance of ``OFPMatch``
+                     (``in_port`` is mandatory in the match field)
     actions          list of OpenFlow action class
     data             Packet data
     ================ ======================================================
@@ -5454,37 +5455,46 @@ class OFPPacketOut(MsgBase):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
+            match = OFPMatch(in_port=in_port)
             actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD, 0)]
             req = ofp_parser.OFPPacketOut(datapath, buffer_id,
-                                          in_port, actions)
+                                          match, actions)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, buffer_id=None, in_port=None, actions=None,
+    def __init__(self, datapath, buffer_id=None, match=None, actions=None,
                  data=None, actions_len=None):
-        assert in_port is not None
-
         super(OFPPacketOut, self).__init__(datapath)
-        self.buffer_id = buffer_id
-        self.in_port = in_port
+        if buffer_id is None:
+            self.buffer_id = ofproto.OFP_NO_BUFFER
+        else:
+            self.buffer_id = buffer_id
         self.actions_len = 0
+        assert 'in_port' in match
+        self.match = match
         self.actions = actions
         self.data = data
 
     def _serialize_body(self):
+        # adjustment
+        offset = ofproto.OFP_PACKET_OUT_0_SIZE
+        match_len = self.match.serialize(self.buf, offset)
+        offset += match_len
+
         self.actions_len = 0
-        offset = ofproto.OFP_PACKET_OUT_SIZE
         for a in self.actions:
             a.serialize(self.buf, offset)
             offset += a.len
             self.actions_len += a.len
 
-        if self.data is not None:
-            assert self.buffer_id == 0xffffffff
+        if self.buffer_id == ofproto.OFP_NO_BUFFER:
+            assert self.data is not None
             self.buf += self.data
+        else:
+            assert self.data is None
 
-        msg_pack_into(ofproto.OFP_PACKET_OUT_PACK_STR,
+        msg_pack_into(ofproto.OFP_PACKET_OUT_0_PACK_STR,
                       self.buf, ofproto.OFP_HEADER_SIZE,
-                      self.buffer_id, self.in_port, self.actions_len)
+                      self.buffer_id, self.actions_len)
 
 
 @_set_msg_type(ofproto.OFPT_FLOW_MOD)
