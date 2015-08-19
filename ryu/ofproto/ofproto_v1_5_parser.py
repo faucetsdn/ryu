@@ -5257,6 +5257,117 @@ class OFPControllerStatusPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
 
+class OFPControllerStatusStats(StringifyMixin):
+    def __init__(self, short_id=None, role=None, reason=None,
+                 channel_status=None, properties=None, length=None):
+        super(OFPControllerStatusStats, self).__init__()
+        self.length = length
+        self.short_id = short_id
+        self.role = role
+        self.reason = reason
+        self.channel_status = channel_status
+        self.properties = properties
+
+    @classmethod
+    def parser(cls, buf, offset):
+        status = cls()
+
+        (status.length, status.short_id,
+         status.role, status.reason,
+         status.channel_status) = struct.unpack_from(
+            ofproto.OFP_CONTROLLER_STATUS_PACK_STR, buf, offset)
+        offset += ofproto.OFP_CONTROLLER_STATUS_SIZE
+
+        status.properties = []
+        rest = buf[offset:offset + status.length]
+        while rest:
+            p, rest = OFPControllerStatusProp.parse(rest)
+            status.properties.append(p)
+
+        return status
+
+
+@_register_parser
+@_set_msg_type(ofproto.OFPT_CONTROLLER_STATUS)
+class OFPControllerStatus(MsgBase):
+    """
+    Controller status message
+
+    The switch informs the controller about the status of the control
+    channel it maintains with each controller.
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    status           ``OFPControllerStatusStats`` instance
+    ================ ======================================================
+
+    Example::
+
+        @set_ev_cls(ofp_event.EventOFPControllerStatus, MAIN_DISPATCHER)
+        def table(self, ev):
+            msg = ev.msg
+            dp = msg.datapath
+            ofp = dp.ofproto
+            status = msg.status
+
+            if status.role == ofp.OFPCR_ROLE_NOCHANGE:
+                role = 'NOCHANGE'
+            elif status.role == ofp.OFPCR_ROLE_EQUAL:
+                role = 'EQUAL'
+            elif status.role == ofp.OFPCR_ROLE_MASTER:
+                role = 'MASTER'
+            elif status.role == ofp.OFPCR_ROLE_SLAVE:
+                role = 'SLAVE'
+            else:
+                role = 'unknown'
+
+            if status.reason == ofp.OFPCSR_REQUEST:
+                reason = 'REQUEST'
+            elif status.reason == ofp.OFPCSR_CHANNEL_STATUS:
+                reason = 'CHANNEL_STATUS'
+            elif status.reason == ofp.OFPCSR_ROLE:
+                reason = 'ROLE'
+            elif status.reason == ofp.OFPCSR_CONTROLLER_ADDED:
+                reason = 'CONTROLLER_ADDED'
+            elif status.reason == ofp.OFPCSR_CONTROLLER_REMOVED:
+                reason = 'CONTROLLER_REMOVED'
+            elif status.reason == ofp.OFPCSR_SHORT_ID:
+                reason = 'SHORT_ID'
+            elif status.reason == ofp.OFPCSR_EXPERIMENTER:
+                reason = 'EXPERIMENTER'
+            else:
+                reason = 'unknown'
+
+            if status.channel_status == OFPCT_STATUS_UP:
+                channel_status = 'UP'
+            if status.channel_status == OFPCT_STATUS_DOWN:
+                channel_status = 'DOWN'
+            else:
+                channel_status = 'unknown'
+
+            self.logger.debug('OFPControllerStatus received: short_id=%d'
+                              'role=%s reason=%s channel_status=%s '
+                              'properties=%s',
+                              status.short_id, role, reason, channel_status,
+                              repr(status.properties))
+    """
+    def __init__(self, datapath, status=None):
+        super(OFPControllerStatus, self).__init__(datapath)
+        self.status = status
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPControllerStatus, cls).parser(datapath, version,
+                                                     msg_type, msg_len,
+                                                     xid, buf)
+
+        msg.status = OFPControllerStatusStats.parser(msg.buf,
+                                                     ofproto.OFP_HEADER_SIZE)
+
+        return msg
+
+
 @_set_msg_type(ofproto.OFPT_PACKET_OUT)
 class OFPPacketOut(MsgBase):
     """
