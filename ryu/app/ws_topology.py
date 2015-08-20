@@ -83,6 +83,11 @@ class WebSocketTopology(app_manager.RyuApp):
         msg = ev.link.to_dict()
         self._rpc_broadcall('event_link_delete', msg)
 
+    @set_ev_cls(event.EventHostAdd)
+    def _event_host_add_handler(self, ev):
+        msg = ev.host.to_dict()
+        self._rpc_broadcall('event_host_add', msg)
+
     def _rpc_broadcall(self, func_name, msg):
         disconnected_clients = []
         for rpc_client in self.rpc_clients:
