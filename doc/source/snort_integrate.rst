@@ -5,7 +5,7 @@ Snort Intergration
 This document describes how to integrate Ryu with Snort.
 
 Overview
-====
+========
 
 There are two options can send alert to Ryu controller. The Option 1 is easier if you just want to demonstrate or test. Since Snort need very large computation power for analyzing packets you can choose Option 2 to separate them.  
 
@@ -49,15 +49,15 @@ The above depicts Ryu and Snort architecture. Ryu receives Snort alert packet vi
 
 
 Installation Snort
-====
+==================
 Snort is an open source network intrusion prevention and detectionsystem developed by Sourcefire. If you are not familiar with installing/setting up Snort, please referto snort setup guides.
 
-http://www.snort.org/docs
+http://www.snort.org/documents
 
 
 
 Configure Snort
-====
+===============
 The configuration example is below:
 
 - Add a snort rules file into ``/etc/snort/rules`` named ``Myrules.rules`` ::
@@ -75,7 +75,7 @@ Configure NIC as a promiscuous mode. ::
 
 
 Usage
-====
+=====
 **[Option 1]**
 
 1. Modify the ``simple_switch_snort.py``: ::
@@ -102,8 +102,6 @@ The incoming packets will all mirror to **port 3** which should be connect to Sn
 
 5. You can see the result under next section.
 
-
-=====
 
 **[Option 2]**
 
