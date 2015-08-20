@@ -35,6 +35,12 @@ from ryu.topology.api import get_switch, get_link, get_host
 # get the links of a switch
 # GET /v1.0/topology/links/<dpid>
 #
+# get all the hosts
+# GET /v1.0/topology/hosts
+#
+# get the hosts of a switch
+# GET /v1.0/topology/hosts/<dpid>
+#
 # where
 # <dpid>: datapath id in 16 hex
 
