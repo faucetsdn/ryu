@@ -15,10 +15,12 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import arp
 from ryu.lib.packet import lldp
+from ryu.lib.mac import DONTCARE_STR
 from ryu.lib import hub
 import ryu.base.app_manager as app_manager
 
 from ryu.topology import event, switches
+from ryu.topology.switches import Switches
 from ryu.topology.api import get_switch, get_link
 
 from ryu.openexchange.oxp_event import EventOXPVportStatus
@@ -191,42 +193,119 @@ class Network_Aware(app_manager.RyuApp):
         # just send hostupdate to super.
         for key in self.access_table:
             if ev.switch.dp.id == key[0]:
-                ev = oxp_event.EventOXPHostStateChange(
+                event = oxp_event.EventOXPHostStateChange(
                     self, hosts=[(self.access_table[key][0],
                                   self.access_table[key][1], OXPP_INACTIVE)])
-                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+                self.oxp_brick.send_event_to_observers(event, MAIN_DISPATCHER)
 
     @set_ev_cls(event.EventPortDelete, MAIN_DISPATCHER)
     def delete_host(self, ev):
         #host leave
         if (ev.port.dpid, ev.port.port_no) in self.access_table:
-            ev = oxp_event.EventOXPHostStateChange(
+            event = oxp_event.EventOXPHostStateChange(
                 self, hosts=[(self.access_table[key][0],
                               self.access_table[key][1], OXPP_INACTIVE)])
-            self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+            self.oxp_brick.send_event_to_observers(event, MAIN_DISPATCHER)
 
     def register_access_info(self, dpid, in_port, ip, mac):
+        # Todo:reduce the duplicate host update.
         if in_port in self.access_ports[dpid]:
             if (dpid, in_port) in self.access_table:
                 if self.access_table[(dpid, in_port)] == (ip, mac):
                     return
+                else:
+                    self.access_table[(dpid, in_port)] = (ip, mac)
+                    ev = oxp_event.EventOXPHostStateChange(
+                        self, hosts=[(ip, mac, OXPP_ACTIVE)])
+                    self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+                    return
+            else:
+                self.access_table.setdefault((dpid, in_port), None)
+                self.access_table[(dpid, in_port)] = (ip, mac)
+                ev = oxp_event.EventOXPHostStateChange(
+                    self, hosts=[(ip, mac, OXPP_ACTIVE)])
+                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+                return
 
-            self.access_table[(dpid, in_port)] = (ip, mac)
-            ev = oxp_event.EventOXPHostStateChange(
-                self, hosts=[(ip, mac, OXPP_ACTIVE)])
-            self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+    def _send_lldp(self, datapath, in_port, vport_no):
+        lldp_pkt = switches.LLDPPacket.lldp_packet(datapath.id, in_port,
+                                                   DONTCARE_STR,
+                                                   Switches.DEFAULT_TTL,
+                                                   vport_no=vport_no)
+        # LOG.debug('lldp sent dpid=%s, port_no=%d', dp.id, port.port_no)
+        # TODO:XXX
+        dp = datapath
+        if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            actions = [dp.ofproto_parser.OFPActionOutput(in_port)]
+            dp.send_packet_out(actions=actions, data=lldp_pkt)
+        elif dp.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
+            actions = [dp.ofproto_parser.OFPActionOutput(in_port)]
+            out = dp.ofproto_parser.OFPPacketOut(
+                datapath=dp, in_port=dp.ofproto.OFPP_CONTROLLER,
+                buffer_id=dp.ofproto.OFP_NO_BUFFER, actions=actions,
+                data=lldp_pkt)
+            dp.send_msg(out)
+        else:
+            LOG.error('cannot send lldp packet. unsupported version. %x',
+                      dp.ofproto.OFP_VERSION)
+
+    def register_outer_port(self, datapath, in_port,
+                            src_domain_id, src_vport_no):
+        # if src_domain_id is not CONF.domain_id
+        # the msg come from other domain.
+        if src_domain_id != CONF.oxp_domain_id:
+            dst_dpid = datapath.id
+            dst_port_no = in_port
+
+            # register out_port.
+            if dst_dpid not in self.outer_ports:
+                self.outer_ports.setdefault(dst_dpid, set())
+
+            if dst_port_no not in self.outer_ports[dst_dpid]:
+                self.outer_ports[dst_dpid].add(dst_port_no)
+                self.vport[self.outer_port_no] = (dst_dpid, dst_port_no)
+
+                # raise event and send to handler.
+                ev = oxp_event.EventOXPVportStateChange(
+                    domain=self,
+                    vport_no=self.outer_port_no,
+                    state=OXPPS_LIVE)
+
+                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+
+                # send lldp to neighbor.
+                self._send_lldp(datapath, in_port, self.outer_port_no)
+
+                print "self.outer_ports:", self.outer_ports
+
+                if src_vport_no != ofproto_v1_0.OFPP_NONE:
+                    dst_vport_no = None
+                    for key in self.vport:
+                        if (dst_dpid, dst_port_no) == self.vport[key]:
+                            dst_vport_no = key
+                            break
+
+                    print "Inter-Link  %s, %s : %s, %s " % (CONF.oxp_domain_id,
+                                                            dst_vport_no,
+                                                            src_domain_id,
+                                                            src_vport_no)
+                    #Todo upload the msg to super.
+
+                self.outer_port_no += 1
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
-
         parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
+
+        if datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            in_port = msg.in_port
+        elif datapath.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
+            in_port = msg.match['in_port']
+
         data = msg.data
         pkt = packet.Packet(data)
-
-        eth_type = pkt.get_protocols(ethernet.ethernet)[0].ethertype
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
 
@@ -239,54 +318,17 @@ class Network_Aware(app_manager.RyuApp):
             return
         else:
             try:
-                src_dpid, src_port_no = switches.LLDPPacket.lldp_parse(data)
+                src_dpid, src_port_no, src_domain_id, src_vport_no = \
+                    switches.LLDPPacket.oxp_lldp_parse(data)
             except switches.LLDPPacket.LLDPUnknownFormat as e:
                 # This handler can receive all the packtes which can be
                 # not-LLDP packet. Ignore it silently
                 return
+            self.register_outer_port(datapath, in_port,
+                                     src_domain_id, src_vport_no)
 
-            pkt = packet.Packet(data)
-            lldp_pkt = pkt.get_protocol(lldp.lldp)
-            ttl = lldp_pkt.tlvs[2].ttl
-            print "lldp ttl: %s" % ttl
-
-            # our defined lldp packet.
-            if ttl != switches.Switches.DEFAULT_TTL:
-                pass
-                return
-
-            # if src dpip not in self.dps, then, the port is an outer port.
-            if src_dpid not in self.switches:
-                dst_dpid = datapath.id
-                dst_port_no = None
-
-                if datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
-                    dst_port_no = msg.in_port
-                elif datapath.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
-                    dst_port_no = msg.match['in_port']
-                else:
-                    LOG.error('cannot accept LLDP. unsupported version. %x',
-                              msg.datapath.ofproto.OFP_VERSION)
-                    return
-
-                # register out_port.
-                if dst_dpid not in self.outer_ports:
-                    self.outer_ports.setdefault(dst_dpid, set())
-
-                if dst_port_no not in self.outer_ports[dst_dpid]:
-                    self.outer_ports[dst_dpid].add(dst_port_no)
-                    self.vport[self.outer_port_no] = (dst_dpid, dst_port_no)
-
-                    # raise event and send to handler.
-                    ev = oxp_event.EventOXPVportStateChange(
-                        domain=self,
-                        vport_no=self.outer_port_no,
-                        state=OXPPS_LIVE)
-
-                    self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-
-                    print "self.outer_ports:", self.outer_ports
-                    self.outer_port_no += 1
+    def discovery(self):
+        pass
 
     # show topo
     def show_topology(self):

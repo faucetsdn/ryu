@@ -40,9 +40,8 @@ from ryu import version
 from ryu.app import wsgi
 from ryu.base.app_manager import AppManager
 from ryu.controller import controller
-from ryu.topology import switches
 from ryu.openexchange import oxp_controller
-
+from ryu.topology import switches
 
 CONF = cfg.CONF
 CONF.register_cli_opts([

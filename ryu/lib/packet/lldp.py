@@ -68,6 +68,8 @@ LLDP_TLV_SYSTEM_NAME = 5                # System Name
 LLDP_TLV_SYSTEM_DESCRIPTION = 6         # System Description
 LLDP_TLV_SYSTEM_CAPABILITIES = 7        # System Capabilities
 LLDP_TLV_MANAGEMENT_ADDRESS = 8         # Management Address
+LLDP_TLV_DOMAIN_ID = 9                  # Domain id for Open Exchange Protocol
+LLDP_TLV_VPORT_ID = 10                  # vport_no for Open Exchange Protocol
 LLDP_TLV_ORGANIZATIONALLY_SPECIFIC = 127  # organizationally Specific TLVs
 
 
@@ -274,6 +276,75 @@ class TTL(LLDPBasicTLV):
 
     def serialize(self):
         return struct.pack('!HH', self.typelen, self.ttl)
+
+
+@lldp.set_tlv_type(LLDP_TLV_DOMAIN_ID)
+class DomainID(LLDPBasicTLV):
+    _PACK_STR = '!B'
+    _PACK_SIZE = struct.calcsize(_PACK_STR)
+    # subtype id(1 octet) + chassis id length(1 - 255 octet)
+    _LEN_MIN = 2
+    _LEN_MAX = 256
+
+    # Chassis ID subtype
+    SUB_CHASSIS_COMPONENT = 1   # EntPhysicalAlias (IETF RFC 4133)
+    SUB_INTERFACE_ALIAS = 2     # IfAlias (IETF RFC 2863)
+    SUB_PORT_COMPONENT = 3      # EntPhysicalAlias (IETF RFC 4133)
+    SUB_MAC_ADDRESS = 4         # MAC address (IEEE std 802)
+    SUB_NETWORK_ADDRESS = 5     # networkAddress
+    SUB_INTERFACE_NAME = 6      # IfName (IETF RFC 2863)
+    SUB_LOCALLY_ASSIGNED = 7    # local
+
+    def __init__(self, buf=None, *args, **kwargs):
+        super(DomainID, self).__init__(buf, *args, **kwargs)
+        if buf:
+            (self.subtype, ) = struct.unpack(
+                self._PACK_STR, self.tlv_info[:self._PACK_SIZE])
+            self.domain_id = self.tlv_info[self._PACK_SIZE:]
+        else:
+            self.subtype = kwargs['subtype']
+            self.domain_id = kwargs['domain_id']
+            self.len = self._PACK_SIZE + len(self.domain_id)
+            assert self._len_valid()
+            self.typelen = (self.tlv_type << LLDP_TLV_TYPE_SHIFT) | self.len
+
+    def serialize(self):
+        return struct.pack('!HB', self.typelen, self.subtype) + self.domain_id
+
+
+@lldp.set_tlv_type(LLDP_TLV_VPORT_ID)
+class VPortID(LLDPBasicTLV):
+    _PACK_STR = '!B'
+    _PACK_SIZE = struct.calcsize(_PACK_STR)
+
+    # subtype id(1 octet) + port id length(1 - 255 octet)
+    _LEN_MIN = 2
+    _LEN_MAX = 256
+
+    # VPort ID subtype
+    SUB_INTERFACE_ALIAS = 1     # ifAlias (IETF RFC 2863)
+    SUB_PORT_COMPONENT = 2      # entPhysicalAlias (IETF RFC 4133)
+    SUB_MAC_ADDRESS = 3         # MAC address (IEEE Std 802)
+    SUB_NETWORK_ADDRESS = 4     # networkAddress
+    SUB_INTERFACE_NAME = 5      # ifName (IETF RFC 2863)
+    SUB_AGENT_CIRCUIT_ID = 6    # agent circuit ID(IETF RFC 3046)
+    SUB_LOCALLY_ASSIGNED = 7    # local
+
+    def __init__(self, buf=None, *args, **kwargs):
+        super(VPortID, self).__init__(buf, *args, **kwargs)
+        if buf:
+            (self.subtype, ) = struct.unpack(
+                self._PACK_STR, self.tlv_info[:self._PACK_SIZE])
+            self.vport_id = self.tlv_info[self._PACK_SIZE:]
+        else:
+            self.subtype = kwargs['subtype']
+            self.vport_id = kwargs['vport_id']
+            self.len = self._PACK_SIZE + len(self.vport_id)
+            assert self._len_valid()
+            self.typelen = (self.tlv_type << LLDP_TLV_TYPE_SHIFT) | self.len
+
+    def serialize(self):
+        return struct.pack('!HB', self.typelen, self.subtype) + self.vport_id
 
 
 @lldp.set_tlv_type(LLDP_TLV_PORT_DESCRIPTION)
