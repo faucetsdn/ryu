@@ -851,11 +851,12 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             nlri_list = [path.nlri]
 
             # By default we use BGPS's interface IP with this peer as next_hop.
-            # TODO(PH): change to use protocol's local address.
-            # next_hop = self.host_bind_ip
             next_hop = self._session_next_hop(path)
+            if path.is_local() and path.has_nexthop():
+                next_hop = path.nexthop
+
             # If this is a iBGP peer.
-            if not self.is_ebgp_peer() and path.source is not None:
+            if not self.is_ebgp_peer() and not path.is_local():
                 # If the path came from a bgp peer and not from NC, according
                 # to RFC 4271 we should not modify next_hop.
                 # However RFC 4271 allows us to change next_hop
