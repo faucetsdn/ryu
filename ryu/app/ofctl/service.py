@@ -25,8 +25,8 @@ from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER,\
     DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 
-import event
-import exception
+from . import event
+from . import exception
 
 
 class _SwitchInfo(object):

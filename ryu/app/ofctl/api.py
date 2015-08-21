@@ -19,7 +19,7 @@
 import numbers
 
 from ryu.base import app_manager
-import event
+from . import event
 
 
 def get_datapath(app, dpid):
