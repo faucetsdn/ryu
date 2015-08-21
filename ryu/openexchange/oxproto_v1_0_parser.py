@@ -345,11 +345,12 @@ class OXPTopoReply(MsgBase):
 
     def _serialize_body(self):
         offset = oxproto.OXP_HEADER_SIZE
-        for link in self.links:
-            msg_pack_into(oxproto.OXP_INTERNAL_LINK_PACK_STR,
-                          self.buf, offset, link.src_vport,
-                          link.dst_vport, link.capability)
-            offset += oxproto.OXP_INTERNAL_LINK_SIZE
+        if self.links:
+            for link in self.links:
+                msg_pack_into(oxproto.OXP_INTERNAL_LINK_PACK_STR,
+                              self.buf, offset, link.src_vport,
+                              link.dst_vport, link.capability)
+                offset += oxproto.OXP_INTERNAL_LINK_SIZE
 
 
 @_register_parser

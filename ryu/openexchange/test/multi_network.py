@@ -100,15 +100,16 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
     for c in controller_list:
         c.start()
 
+    _No = 0
     for i in xrange(0, sw_num, sw_num/con_num):
-        _No = 0
         for j in xrange(sw_num/con_num):
             switch_list[i+j].start([controller_list[_No]])
-
         _No += 1
 
-    #print "*** Testing network"
-    #net.pingAll()
+    print "*** Setting OpenFlow version"
+    for sw in switch_list:
+        cmd = "sudo ovs-vsctl set bridge %s protocols=OpenFlow13" % sw
+        os.system(cmd)
 
     print "*** Running CLI"
     CLI(net)

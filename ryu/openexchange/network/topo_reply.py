@@ -1,5 +1,5 @@
 """
-Define the community machanism.
+Reply Topo data to super periodically.
 Author:www.muzixing.com
 
 Date                Work
@@ -115,6 +115,7 @@ class TopoReply(app_manager.RyuApp):
                 CONF.oxp_period = OXP_MAX_PERIOD
         else:
             self.links = links
-            topo_reply = self.oxparser.OXPTopoReply(self.domain,
-                                                    links=links)
-            self.domain.send_msg(topo_reply)
+            if self.domain:
+                topo_reply = self.oxparser.OXPTopoReply(self.domain,
+                                                        links=links)
+                self.domain.send_msg(topo_reply)

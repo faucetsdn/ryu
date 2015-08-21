@@ -9,11 +9,12 @@ from ryu.controller import handler
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3, ofproto_v1_0, ofproto_v1_2
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import arp
+from ryu.lib.packet import lldp
 from ryu.lib import hub
 import ryu.base.app_manager as app_manager
 
@@ -66,7 +67,7 @@ class Network_Aware(app_manager.RyuApp):
 
         self.outer_ports = {}
         self.outer_port_no = 1
-        self.vport = {'1': (1, 1), '2': (6, 1), '3': (5, 2)}
+        self.vport = {}
 
         self.graph = {}
 
@@ -126,7 +127,6 @@ class Network_Aware(app_manager.RyuApp):
             dpid = sw.dp.id
             self.switch_port_table.setdefault(dpid, set())
             self.interior_ports.setdefault(dpid, set())
-            self.outer_ports.setdefault(dpip, set())
             self.access_ports.setdefault(dpid, set())
 
             for p in sw.ports:
@@ -245,6 +245,16 @@ class Network_Aware(app_manager.RyuApp):
                 # not-LLDP packet. Ignore it silently
                 return
 
+            pkt = packet.Packet(data)
+            lldp_pkt = pkt.get_protocol(lldp.lldp)
+            ttl = lldp_pkt.tlvs[2].ttl
+            print "lldp ttl: %s" % ttl
+
+            # our defined lldp packet.
+            if ttl != switches.Switches.DEFAULT_TTL:
+                pass
+                return
+
             # if src dpip not in self.dps, then, the port is an outer port.
             if src_dpid not in self.switches:
                 dst_dpid = datapath.id
@@ -260,16 +270,23 @@ class Network_Aware(app_manager.RyuApp):
                     return
 
                 # register out_port.
-                self.outer_ports[dst_dpid].add(dst_port_no)
-                self.vport[self.outer_port_no] = (dst_dpid, dst_port_no)
+                if dst_dpid not in self.outer_ports:
+                    self.outer_ports.setdefault(dst_dpid, set())
 
-                # raise event and send to handler.
-                ev = oxp_event.EventOXPVportStateChange(
-                    vport_no=self.outer_port_no, state=OXPPS_LIVE)
-                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+                if dst_port_no not in self.outer_ports[dst_dpid]:
+                    self.outer_ports[dst_dpid].add(dst_port_no)
+                    self.vport[self.outer_port_no] = (dst_dpid, dst_port_no)
 
-                print "self.outer_ports:", self.outer_ports
-                self.outer_port_no += 1
+                    # raise event and send to handler.
+                    ev = oxp_event.EventOXPVportStateChange(
+                        domain=self,
+                        vport_no=self.outer_port_no,
+                        state=OXPPS_LIVE)
+
+                    self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+
+                    print "self.outer_ports:", self.outer_ports
+                    self.outer_port_no += 1
 
     # show topo
     def show_topology(self):

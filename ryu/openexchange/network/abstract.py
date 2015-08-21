@@ -143,6 +143,7 @@ class Abstract(app_manager.RyuApp):
             self.topology.paths = paths
 
             return self.create_links(self.topology.ports, capabilities)
+        return None
 
     def topo_reply(self):
         links = self.get_capabilities()
