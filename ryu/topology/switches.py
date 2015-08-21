@@ -803,6 +803,11 @@ class Switches(app_manager.RyuApp):
         if link not in self.links:
             self.send_event_to_observers(event.EventLinkAdd(link))
 
+            # remove hosts from edge port
+            for host in self.hosts.values():
+                if self._is_edge_port(host.port):
+                    del self.hosts[host.mac]
+
         if not self.links.update_link(src, dst):
             # reverse link is not detected yet.
             # So schedule the check early because it's very likely it's up
