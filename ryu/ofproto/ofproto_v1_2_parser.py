@@ -198,7 +198,6 @@ class OFPEchoRequest(MsgBase):
     Example::
 
         def send_echo_request(self, datapath, data):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPEchoRequest(datapath, data)
@@ -244,7 +243,6 @@ class OFPEchoReply(MsgBase):
     Example::
 
         def send_echo_reply(self, datapath, data):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             reply = ofp_parser.OFPEchoReply(datapath, data)
@@ -572,6 +570,7 @@ class OFPPacketIn(MsgBase):
         @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
         def packet_in_handler(self, ev):
             msg = ev.msg
+            dp = msg.datapath
             ofp = dp.ofproto
 
             if msg.reason == ofp.OFPR_NO_MATCH:
@@ -2284,7 +2283,6 @@ class OFPTableStatsRequest(OFPStatsRequest):
     Example::
 
         def send_table_stats_request(self, datapath):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPTableStatsRequest(datapath)
@@ -2715,7 +2713,6 @@ class OFPGroupDescStatsRequest(OFPStatsRequest):
     Example::
 
         def send_group_desc_stats_request(self, datapath):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPGroupDescStatsRequest(datapath)
@@ -2806,7 +2803,6 @@ class OFPGroupFeaturesStatsRequest(OFPStatsRequest):
     Example::
 
         def send_group_features_stats_request(self, datapath):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPGroupFeaturesStatsRequest(datapath)
@@ -3148,6 +3144,7 @@ class OFPRoleReply(MsgBase):
         @set_ev_cls(ofp_event.EventOFPRoleReply, MAIN_DISPATCHER)
         def role_reply_handler(self, ev):
             msg = ev.msg
+            dp = msg.datapath
             ofp = dp.ofproto
 
             if msg.role == ofp.OFPCR_ROLE_NOCHANGE:
