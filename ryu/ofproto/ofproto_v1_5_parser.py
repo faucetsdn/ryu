@@ -163,7 +163,6 @@ class OFPEchoRequest(MsgBase):
     Example::
 
         def send_echo_request(self, datapath, data):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPEchoRequest(datapath, data)
@@ -316,7 +315,6 @@ class OFPEchoReply(MsgBase):
     Example::
 
         def send_echo_reply(self, datapath, data):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             reply = ofp_parser.OFPEchoReply(datapath, data)
@@ -1942,6 +1940,7 @@ class OFPPacketIn(MsgBase):
         @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
         def packet_in_handler(self, ev):
             msg = ev.msg
+            dp = msg.datapath
             ofp = dp.ofproto
 
             if msg.reason == ofp.TABLE_MISS:
@@ -2274,7 +2273,7 @@ class OFPTableMod(MsgBase):
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPTableMod(datapath, 1, 3)
-            flags = ofproto.OFPTC_VACANCY_EVENTS
+            flags = ofp.OFPTC_VACANCY_EVENTS
             properties = [ofp_parser.OFPTableModPropEviction(flags)]
             req = ofp_parser.OFPTableMod(datapath, 1, 3, properties)
             datapath.send_msg(req)
@@ -2405,7 +2404,6 @@ class OFPDescStatsRequest(OFPMultipartRequest):
     Example::
 
         def send_desc_stats_request(self, datapath):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPDescStatsRequest(datapath, 0)
@@ -2928,7 +2926,7 @@ class OFPPortDescStatsReply(OFPMultipartReply):
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
-    body             List of ``OFPPortDescStats`` instance
+    body             List of ``OFPPort`` instance
     ================ ======================================================
 
     Example::
@@ -2963,7 +2961,7 @@ class OFPTableDescStatsRequest(OFPMultipartRequest):
 
     Example::
 
-        def send_tablet_desc_stats_request(self, datapath):
+        def send_table_desc_stats_request(self, datapath):
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPTableDescStatsRequest(datapath, 0)
@@ -2985,7 +2983,7 @@ class OFPTableDescStatsReply(OFPMultipartReply):
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
-    body             List of ``OFPTableDescStats`` instance
+    body             List of ``OFPTableDesc`` instance
     ================ ======================================================
 
     Example::
@@ -2996,7 +2994,7 @@ class OFPTableDescStatsReply(OFPMultipartReply):
             for p in ev.msg.body:
                 tables.append('table_id=%d config=0x%08x properties=%s' %
                              (p.table_id, p.config, repr(p.properties)))
-            self.logger.debug('OFPTableDescStatsReply received: %s', ports)
+            self.logger.debug('OFPTableDescStatsReply received: %s', tables)
     """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPTableDescStatsReply, self).__init__(datapath, **kwargs)
@@ -3020,7 +3018,7 @@ class OFPQueueDescStatsRequest(OFPMultipartRequest):
 
     Example::
 
-        def send_tablet_desc_stats_request(self, datapath):
+        def send_queue_desc_stats_request(self, datapath):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
@@ -3054,7 +3052,7 @@ class OFPQueueDescStatsReply(OFPMultipartReply):
     ================ ======================================================
     Attribute        Description
     ================ ======================================================
-    body             List of ``OFPQueueDescStats`` instance
+    body             List of ``OFPQueueDesc`` instance
     ================ ======================================================
 
     Example::
@@ -3173,7 +3171,8 @@ class OFPQueueStatsReply(OFPMultipartReply):
             for stat in ev.msg.body:
                 queues.append('port_no=%d queue_id=%d '
                               'tx_bytes=%d tx_packets=%d tx_errors=%d '
-                              'duration_sec=%d duration_nsec=%d' %
+                              'duration_sec=%d duration_nsec=%d'
+                              'properties=%s' %
                               (stat.port_no, stat.queue_id,
                                stat.tx_bytes, stat.tx_packets, stat.tx_errors,
                                stat.duration_sec, stat.duration_nsec,
@@ -3393,7 +3392,7 @@ class OFPGroupDescStatsReply(OFPMultipartReply):
             descs = []
             for stat in ev.msg.body:
                 descs.append('length=%d type=%d group_id=%d '
-                             'buckets=%s properties=%' %
+                             'buckets=%s properties=%s' %
                              (stat.length, stat.type, stat.group_id,
                               stat.bucket, repr(stat.properties)))
             self.logger.debug('GroupDescStats: %s', descs)
@@ -3436,7 +3435,6 @@ class OFPGroupFeaturesStatsRequest(OFPMultipartRequest):
     Example::
 
         def send_group_features_stats_request(self, datapath):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPGroupFeaturesStatsRequest(datapath, 0)
@@ -3867,7 +3865,7 @@ class OFPMeterFeaturesStatsReply(OFPMultipartReply):
                                 (stat.max_meter, stat.band_types,
                                  stat.capabilities, stat.max_bands,
                                  stat.max_color))
-            self.logger.debug('MeterFeaturesStats: %s', configs)
+            self.logger.debug('MeterFeaturesStats: %s', features)
     """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPMeterFeaturesStatsReply, self).__init__(datapath, **kwargs)
@@ -4048,7 +4046,7 @@ class OFPFlowMonitorRequest(OFPFlowMonitorRequestBase):
 
     Example::
 
-        def send_flow_stats_request(self, datapath):
+        def send_flow_monitor_request(self, datapath):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
@@ -4111,12 +4109,12 @@ class OFPFlowMonitorReply(OFPMultipartReply):
                     update_str += 'table_id=%d reason=%d idle_timeout=%d '
                                   'hard_timeout=%d priority=%d cookie=%d '
                                   'match=%d instructions=%s' %
-                                  (stat.table_id, stat.reason,
-                                   stat.idle_timeout, stat.hard_timeout,
-                                   stat.priority, stat.cookie,
-                                   stat.match, stat.instructions)
+                                  (update.table_id, update.reason,
+                                   update.idle_timeout, update.hard_timeout,
+                                   update.priority, update.cookie,
+                                   update.match, update.instructions)
                 elif update.event == ofp.OFPFME_ABBREV:
-                    update_str += 'xid=%d' % (stat.xid)
+                    update_str += 'xid=%d' % (update.xid)
                 flow_updates.append(update_str)
             self.logger.debug('FlowUpdates: %s', flow_updates)
     """
@@ -4757,7 +4755,6 @@ class OFPTableStatsRequest(OFPMultipartRequest):
     Example::
 
         def send_table_stats_request(self, datapath):
-            ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
             req = ofp_parser.OFPTableStatsRequest(datapath, 0)
@@ -4792,7 +4789,7 @@ class OFPTableStatsReply(OFPMultipartReply):
                               ' matched_count=%d' %
                               (stat.table_id, stat.active_count,
                                stat.lookup_count, stat.matched_count))
-             self.logger.debug('TableStats: %s', tables)
+            self.logger.debug('TableStats: %s', tables)
     """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPTableStatsReply, self).__init__(datapath, **kwargs)
@@ -4962,7 +4959,7 @@ class OFPPortStatsReply(OFPMultipartReply):
                              stat.rx_dropped, stat.tx_dropped,
                              stat.rx_errors, stat.tx_errors,
                              repr(stat.properties))
-        self.logger.debug('PortStats: %s', ports)
+            self.logger.debug('PortStats: %s', ports)
     """
     def __init__(self, datapath, type_=None, **kwargs):
         super(OFPPortStatsReply, self).__init__(datapath, **kwargs)
@@ -5213,7 +5210,7 @@ class OFPRequestForward(MsgInMsgBase):
 
     Example::
 
-        def send_bundle_add_message(self, datapath):
+        def send_request_forward_message(self, datapath):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
@@ -5578,7 +5575,7 @@ class OFPFlowMod(MsgBase):
                                         priority, buffer_id,
                                         ofp.OFPP_ANY, ofp.OFPG_ANY,
                                         ofp.OFPFF_SEND_FLOW_REM,
-                                        imporotance,
+                                        importance,
                                         match, inst)
             datapath.send_msg(req)
     """
@@ -6828,6 +6825,7 @@ class OFPRoleReply(MsgBase):
         @set_ev_cls(ofp_event.EventOFPRoleReply, MAIN_DISPATCHER)
         def role_reply_handler(self, ev):
             msg = ev.msg
+            dp = msg.datapath
             ofp = dp.ofproto
 
             if msg.role == ofp.OFPCR_ROLE_NOCHANGE:
@@ -6991,12 +6989,12 @@ class OFPSetAsync(MsgBase):
             ofp_parser = datapath.ofproto_parser
 
             properties = [ofp_parser.OFPAsyncConfigPropReasons(
-                              8, ofp_parser.OFPACPT_PACKET_IN_SLAVE,
-                              (ofp_parser.OFPR_APPLY_ACTION |
-                               ofp_parser.OFPR_INVALID_TTL)),
+                          8, ofp_parser.OFPACPT_PACKET_IN_SLAVE,
+                          (ofp_parser.OFPR_APPLY_ACTION |
+                           ofp_parser.OFPR_INVALID_TTL)),
                           ofp_parser.OFPAsyncConfigPropExperimenter(
-                              ofproto.OFPTFPT_EXPERIMENTER_MASTER,
-                              16, 100, 2, bytearray())]
+                          ofp.OFPTFPT_EXPERIMENTER_MASTER,
+                          16, 100, 2, bytearray())]
             req = ofp_parser.OFPSetAsync(datapath, properties)
             datapath.send_msg(req)
     """
