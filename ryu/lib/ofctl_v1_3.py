@@ -249,8 +249,8 @@ def to_match(dp, attrs):
                'mpls_label': int,
                'mpls_tc': int,
                'mpls_bos': int,
-               'pbb_isid': int,
-               'tunnel_id': int,
+               'pbb_isid': to_match_masked_int,
+               'tunnel_id': to_match_masked_int,
                'ipv6_exthdr': to_match_masked_int}
 
     keys = {'dl_dst': 'eth_dst',
@@ -373,20 +373,12 @@ def match_to_str(ofmatch):
         value = match_field['OXMTlv']['value']
         if key == 'dl_vlan':
             value = match_vid_to_str(value, mask)
-        elif key == 'metadata' or key == 'ipv6_exthdr':
-            value = match_masked_int_to_str(value, mask)
         else:
             if mask is not None:
-                value = value + '/' + mask
-            else:
-                value = value
+                value = str(value) + '/' + str(mask)
         match.setdefault(key, value)
 
     return match
-
-
-def match_masked_int_to_str(value, mask):
-    return '%d/%d' % (value, mask) if mask else '%d' % value
 
 
 def match_vid_to_str(value, mask):

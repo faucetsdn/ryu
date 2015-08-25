@@ -37,15 +37,11 @@ LOG = logging.getLogger('test_ofctl_v1_2, v1_3')
 """ Common Functions """
 
 
-def _str_to_int(src):
-    if isinstance(src, str):
-        if src.startswith("0x") or src.startswith("0X"):
-            dst = int(src, 16)
-        else:
-            dst = int(src)
-    else:
-        dst = src
-    return dst
+def _str_to_int(v):
+    try:
+        return int(v, 0)
+    except (ValueError, TypeError):
+        return v
 
 
 def _to_match_eth(value):
@@ -72,6 +68,12 @@ def _to_match_masked_int(value):
         return _str_to_int(value[0]), _str_to_int(value[1])
     else:
         return _str_to_int(value), None
+
+
+def _to_masked_int_str(value):
+    v, m = _to_match_masked_int(value)
+    v &= m
+    return '%d/%d' % (v, m)
 
 
 conv_of10_to_of12_dict = {
@@ -323,20 +325,16 @@ class Test_ofctl(unittest.TestCase):
                     eq_(test.expected_value['vlan_vid'][
                         value]['to_match'], field_value)
                 return
-            elif key == 'metadata' or key == 'ipv6_exthdr':
-                # Metadata or IPv6 Extension Header pseudo-field
-                value, mask = _to_match_masked_int(value)
-                if mask is not None:
+            else:
+                if isinstance(value, str) and '/' in value:
                     # with mask
+                    value, mask = _to_match_masked_int(value)
                     value &= mask
                     eq_(value, field_value[0])
                     eq_(mask, field_value[1])
                 else:
                     # without mask
-                    eq_(value, field_value)
-                return
-            else:
-                eq_(value, field_value)
+                    eq_(_str_to_int(value), field_value)
                 return
 
         for key, value in attrs.items():
@@ -403,21 +401,14 @@ class Test_ofctl(unittest.TestCase):
                     eq_(test.expected_value['vlan_vid'][
                         value]['to_str'], field_value)
                 return
-            elif key == 'metadata' or key == 'ipv6_exthdr':
-                # Metadata or IPv6 Extension Header pseudo-field
-                value, mask = _to_match_masked_int(value)
-                if mask is not None:
+            else:
+                if isinstance(value, str) and '/' in value:
                     # with mask
-                    field_value = field_value.split('/')
-                    value &= mask
-                    eq_(str(value), field_value[0])
-                    eq_(str(mask), field_value[1])
+                    value = _to_masked_int_str(value)
+                    eq_(value, field_value)
                 else:
                     # without mask
-                    eq_(str(value), field_value)
-                return
-            else:
-                eq_(value, field_value)
+                    eq_(_str_to_int(value), field_value)
                 return
 
         for key, value in attrs.items():
@@ -565,6 +556,7 @@ class test_data_v1_2(test_data_base):
         self.attr_list = [
             {'in_port': 7},
             {'in_phy_port': 5, 'in_port': 3},
+            {'metadata': 12345},
             {'metadata': '0x1212121212121212'},
             {'metadata': '0x19af28be37fa91b/0x1010101010101010'},
             {'dl_src': "aa:bb:cc:11:22:33"},
@@ -757,7 +749,11 @@ class test_data_v1_3(test_data_v1_2):
             [
                 {'mpls_bos': 3, 'eth_type': 0x8848},
                 {'pbb_isid': 5, 'eth_type': 0x88E7},
+                {'pbb_isid': "0x05", 'eth_type': 0x88E7},
+                {'pbb_isid': "0x05/0xff", 'eth_type': 0x88E7},
                 {'tunnel_id': 7},
+                {'tunnel_id': "0x07"},
+                {'tunnel_id': "0x07/0xff"},
                 {'ipv6_exthdr': 3, 'eth_type': 0x86dd},
                 {'ipv6_exthdr': "0x40", 'eth_type': 0x86dd},
                 {'ipv6_exthdr': "0x40/0x1F0", 'eth_type': 0x86dd},

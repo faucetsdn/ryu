@@ -1585,7 +1585,9 @@ Description of Match on request messages
         =============== ================================================== =======================================================================================================
         in_port         Switch input port (int)                            {"in_port": 7}
         in_phy_port     Switch physical input port (int)                   {"in_phy_port": 5, "in_port": 3}
-        metadata        Metadata passed between tables (string)            {"metadata": "0x1212121212121212"}
+        metadata        Metadata passed between tables (int or string)     {"metadata": 12345}
+
+                                                                           | {"metadata": "0x1212/0xffff"}
         dl_dst          Ethernet destination address (string)              {"dl_dst": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"}
         dl_src          Ethernet source address (string)                   {"dl_src": "aa:bb:cc:11:22:33"}
         eth_dst         Ethernet destination address (string)              {"eth_dst": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"}
@@ -1629,9 +1631,15 @@ Description of Match on request messages
         mpls_label      MPLS label (int)                                   {"mpls_label": 3, "eth_type": 34888}
         mpls_tc         MPLS Traffic Class (int)                           {"mpls_tc": 2, "eth_type": 34888}
         mpls_bos        MPLS BoS bit (int)                                 {"mpls_bos": 1, "eth_type": 34888}
-        pbb_isid        PBB I-SID (int)                                    {"pbb_isid": 5, "eth_type": 35047}
-        tunnel_id       Logical Port Metadata (int)                        {"tunnel_id": 7}
-        ipv6_exthdr     IPv6 Extension Header pseudo-field (string)        {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
+        pbb_isid        PBB I-SID (int or string)                          {"pbb_isid": 5, "eth_type": 35047}
+
+                                                                           | {"pbb_isid": "0x05/0xff", "eth_type": 35047}
+        tunnel_id       Logical Port Metadata (int or string)              {"tunnel_id": 7}
+
+                                                                           | {"tunnel_id": "0x07/0xff"}
+        ipv6_exthdr     IPv6 Extension Header pseudo-field (int or string) {"ipv6_exthdr": 3, "eth_type": 34525}
+
+                                                                           | {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
         =============== ================================================== =======================================================================================================
 
     .. NOTE::
