@@ -2087,6 +2087,18 @@ class OFPPacketIn(MsgBase):
 
         return msg
 
+    def _serialize_body(self):
+        msg_pack_into(ofproto.OFP_PACKET_IN_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.buffer_id, self.total_len, self.reason,
+                      self.table_id, self.cookie)
+        offset = ofproto.OFP_PACKET_IN_SIZE - ofproto.OFP_MATCH_SIZE
+        offset += self.match.serialize(self.buf, offset)
+        pad_len = 2
+        msg_pack_into("%dx" % pad_len, self.buf, offset)
+
+        if self.data is not None:
+            self.buf += self.data
 
 @_register_parser
 @_set_msg_type(ofproto.OFPT_FLOW_REMOVED)

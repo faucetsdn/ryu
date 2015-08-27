@@ -7,6 +7,9 @@ Date                Work
 2015/8/3            new
 2015/8/3            done
 """
+import logging
+
+LOG = logging.getLogger('ryu.openexchange.routing_algorithm')
 
 
 def floyd(graph):
@@ -64,7 +67,7 @@ def floyd_dict(graph):
 
 def dijkstra(graph, src):
     if graph is None:
-        print "Graph is empty."
+        LOG.info("[Dijkstra]: Graph is empty.")
         return None
     length = len(graph)
     type_ = type(graph)
@@ -77,7 +80,7 @@ def dijkstra(graph, src):
     visited = [src]
     path = {src: {src: []}}
     if src not in nodes:
-        print "Src is not in nodes."
+        LOG.info("[Dijkstra]:Src is not in nodes.")
         return None
     else:
         nodes.remove(src)
@@ -103,7 +106,7 @@ def dijkstra(graph, src):
             visited.append(next)
             nodes.remove(next)
         else:
-            print "Next node is not found."
+            LOG.info("Next node is not found.")
             return None
 
     return distance_graph, path

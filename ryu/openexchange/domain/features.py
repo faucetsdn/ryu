@@ -7,7 +7,7 @@ Date                Work
 
 '''
 from ryu.openexchange.domain.setting import features
-from ryu.openexchange import controller_id
+from ryu.openexchange.utils import controller_id
 from ryu import cfg
 
 CONF = cfg.CONF

@@ -75,10 +75,12 @@ def main(args=None, prog=None):
         app_lists = ['ryu.controller.ofp_handler']
 
     if CONF.oxp_role == 'super':
-        app_lists.append('ryu.openexchange.oxp_server_handler')
+        app_lists.extend(['ryu.openexchange.super.oxp_server_handler',
+                          'ryu.openexchange.super.sbp_handler'])
+
     elif CONF.oxp_role == 'domain':
         app_lists.extend(
-            ['ryu.openexchange.oxp_client_handler',
+            ['ryu.openexchange.domain.oxp_client_handler',
              'ryu.openexchange.network.abstract',
              'ryu.openexchange.network.topo_reply',
              'ryu.openexchange.network.echo_loop', ])

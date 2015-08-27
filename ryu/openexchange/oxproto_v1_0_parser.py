@@ -483,6 +483,7 @@ class OXPSBP(MsgBase):
             domain, version, msg_type, msg_len, xid, buf)
         # we don't parser the data of SBP due to no deal of model.
         # just leave it to handler.
+        msg.data = buf[oxproto.OXP_HEADER_SIZE:]
 
         return msg
 

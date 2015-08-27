@@ -43,6 +43,8 @@ class Shortest_Route(app_manager.RyuApp):
 
         # dpid->port_num (ports without link)
         self.access_ports = self.network_aware.access_ports
+        self.outer_ports = self.network_aware.outer_ports
+
         self.graph = self.network_aware.graph
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
@@ -232,79 +234,95 @@ class Shortest_Route(app_manager.RyuApp):
             self.logger.debug("Link to port is not found.")
             return None
 
-    '''
-    In packet_in handler, we need to learn access_table by ARP.
-    Therefore, the first packet from UNKOWN host MUST be ARP.
-    '''
-
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        msg = ev.msg
+    def arp_reply(self, msg, arp_pkt):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
-        pkt = packet.Packet(msg.data)
 
-        eth_type = pkt.get_protocols(ethernet.ethernet)[0].ethertype
+        arp_src_ip = arp_pkt.src_ip
+        arp_dst_ip = arp_pkt.dst_ip
+
+        result = self.get_host_location(arp_dst_ip)
+        if result:  # host record in access table.
+            datapath_dst, out_port = result[0], result[1]
+            actions = [parser.OFPActionOutput(out_port)]
+            datapath = self.datapaths[datapath_dst]
+
+            out = parser.OFPPacketOut(
+                datapath=datapath,
+                buffer_id=ofproto.OFP_NO_BUFFER, actions=actions,
+                in_port=ofproto.OFPP_CONTROLLER, data=msg.data)
+
+            datapath.send_msg(out)
+        else:       # access info is not existed. send to all host.
+            for dpid in self.access_ports:
+                for port in self.access_ports[dpid]:
+                    if (dpid, port) not in self.access_table.keys():
+                        actions = [parser.OFPActionOutput(port)]
+                        datapath = self.datapaths[dpid]
+                        out = parser.OFPPacketOut(
+                            datapath=datapath,
+                            buffer_id=ofproto.OFP_NO_BUFFER,
+                            in_port=ofproto.OFPP_CONTROLLER,
+                            actions=actions, data=msg.data)
+                        datapath.send_msg(out)
+
+    def route(self, msg, eth_type, ip_pkt):
+        ip_src = ip_pkt.src
+        ip_dst = ip_pkt.dst
+
+        result = None
+        src_sw = None
+        dst_sw = None
+
+        src_location = self.get_host_location(ip_src)
+        dst_location = self.get_host_location(ip_dst)
+
+        if src_location:
+            src_sw = src_location[0]
+
+        if dst_location:
+            dst_sw = dst_location[0]
+        result = dijkstra(self.graph, src_sw)
+
+        if result:
+            path = result[1][src_sw][dst_sw]
+            path.insert(0, src_sw)
+            #self.logger.info(
+            #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
+
+            flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
+
+            self.install_flow(path, flow_info, msg.buffer_id, msg.data)
+        else:
+            # Reflesh the topology database.
+            self.network_aware.get_topology(None)
+
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        '''
+            In packet_in handler, we need to learn access_table by ARP.
+            Therefore, the first packet from UNKOWN host MUST be ARP.
+        '''
+        msg = ev.msg
+        datapath = msg.datapath
+        in_port = msg.match['in_port']
+
+        pkt = packet.Packet(msg.data)
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
+        eth_type = pkt.get_protocols(ethernet.ethernet)[0].ethertype
+
+        if datapath.id in self.outer_ports:
+            if in_port in self.outer_ports[datapath.id]:
+                # The packet from other domain, ignore it.
+                self.logger.info(
+                    "packet from other domain: %s, %s" % (
+                        datapath.id, in_port))
+                return
 
         if isinstance(arp_pkt, arp.arp):
-            arp_src_ip = arp_pkt.src_ip
-            arp_dst_ip = arp_pkt.dst_ip
-
-            result = self.get_host_location(arp_dst_ip)
-            if result:  # host record in access table.
-                datapath_dst, out_port = result[0], result[1]
-                actions = [parser.OFPActionOutput(out_port)]
-                datapath = self.datapaths[datapath_dst]
-
-                out = parser.OFPPacketOut(
-                    datapath=datapath,
-                    buffer_id=ofproto.OFP_NO_BUFFER,
-                    in_port=ofproto.OFPP_CONTROLLER,
-                    actions=actions, data=msg.data)
-                datapath.send_msg(out)
-            else:       # access info is not existed. send to all host.
-                for dpid in self.access_ports:
-                    for port in self.access_ports[dpid]:
-                        if (dpid, port) not in self.access_table.keys():
-                            actions = [parser.OFPActionOutput(port)]
-                            datapath = self.datapaths[dpid]
-                            out = parser.OFPPacketOut(
-                                datapath=datapath,
-                                buffer_id=ofproto.OFP_NO_BUFFER,
-                                in_port=ofproto.OFPP_CONTROLLER,
-                                actions=actions, data=msg.data)
-                            datapath.send_msg(out)
+            self.arp_reply(msg, arp_pkt)
 
         if isinstance(ip_pkt, ipv4.ipv4):
-            ip_src = ip_pkt.src
-            ip_dst = ip_pkt.dst
-
-            result = None
-            src_sw = None
-            dst_sw = None
-
-            src_location = self.get_host_location(ip_src)
-            dst_location = self.get_host_location(ip_dst)
-
-            if src_location:
-                src_sw = src_location[0]
-
-            if dst_location:
-                dst_sw = dst_location[0]
-            result = dijkstra(self.graph, src_sw)
-
-            if result:
-                path = result[1][src_sw][dst_sw]
-                path.insert(0, src_sw)
-                #self.logger.info(
-                #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
-
-                flow_info = (eth_type, ip_src, ip_dst, in_port)
-                self.install_flow(path, flow_info, msg.buffer_id, msg.data)
-            else:
-                # Reflesh the topology database.
-                self.network_aware.get_topology(None)
+            self.route(msg, eth_type, ip_pkt)

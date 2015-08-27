@@ -20,7 +20,7 @@ from ryu.openexchange.network import network_monitor
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 
-from ryu.openexchange import oxp_event
+from ryu.openexchange.event import oxp_event
 from ryu.openexchange.oxproto_common import OXP_MAX_PERIOD
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
@@ -51,8 +51,7 @@ class TopoReply(app_manager.RyuApp):
         self.network = kwargs["Network_Aware"]
         self.monitor = kwargs["Network_Monitor"]
         self.domain = None
-        self.oxparser = oxproto_v1_0_parser
-        self.oxproto = oxproto_v1_0
+        self.oxparser = None
         self.topology = topology_data.Domain()
         self.monitor_thread = hub.spawn(self._monitor)
         self.links = []
@@ -62,15 +61,11 @@ class TopoReply(app_manager.RyuApp):
             self.topo_reply()
             hub.sleep(CONF.oxp_period)
 
-    @set_ev_cls(oxp_event.EventOXPFeaturesRequest, CONFIG_DISPATCHER)
-    def features_request_handler(self, ev):
-        self.logger.debug('hello ev %s', ev)
+    @set_ev_cls(oxp_event.EventOXPTopoRequest, MAIN_DISPATCHER)
+    def topo_request_handler(self, ev):
         msg = ev.msg
-        # Only to get domain.
         self.domain = msg.domain
         self.topology.domain_id = self.domain.id
-
-        self.oxproto = self.domain.oxproto
         self.oxparser = self.domain.oxproto_parser
 
     def create_links(self, vport=[], capabilities={}):

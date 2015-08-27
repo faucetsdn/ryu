@@ -423,6 +423,7 @@ class LLDPPacket(object):
         assert type(eth_pkt) == ethernet.ethernet
 
         lldp_pkt = i.next()
+
         if type(lldp_pkt) != lldp.lldp:
             raise LLDPPacket.LLDPUnknownFormat()
 

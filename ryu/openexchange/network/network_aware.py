@@ -10,6 +10,7 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_0, ofproto_v1_2
+from ryu.ofproto import ofproto_v1_3_parser
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
@@ -23,12 +24,12 @@ from ryu.topology import event, switches
 from ryu.topology.switches import Switches
 from ryu.topology.api import get_switch, get_link
 
-from ryu.openexchange.oxp_event import EventOXPVportStatus
+from ryu.openexchange.event.oxp_event import EventOXPVportStatus
 from ryu.openexchange.oxproto_v1_0 import OXPPS_LINK_DOWN, OXPPS_BLOCKED
 from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
 from ryu.openexchange.oxproto_v1_0 import OXPP_INACTIVE
-from ryu.openexchange import oxp_event
+from ryu.openexchange.event import oxp_event
 from ryu import cfg
 
 CONF = cfg.CONF
@@ -78,10 +79,15 @@ class Network_Aware(app_manager.RyuApp):
         self.pre_access_table = {}
         self.oxp_brick = None
         self.period = CONF.oxp_period
+        # use for hiding infomation to super.
+        self.fake_datapath = None
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         datapath = ev.msg.datapath
+        if self.fake_datapath is None:
+            self.fake_datapath = datapath
+
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         msg = ev.msg
@@ -139,6 +145,7 @@ class Network_Aware(app_manager.RyuApp):
             dpid = sw.dp.id
             self.switch_port_table.setdefault(dpid, set())
             self.interior_ports.setdefault(dpid, set())
+            # self.outer_ports.setdefault(dpid, set())
             self.access_ports.setdefault(dpid, set())
 
             for p in sw.ports:
@@ -190,7 +197,6 @@ class Network_Aware(app_manager.RyuApp):
     @set_ev_cls(event.EventSwitchLeave,
                 [CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER])
     def delete_sw(self, ev):
-        # just send hostupdate to super.
         for key in self.access_table:
             if ev.switch.dp.id == key[0]:
                 event = oxp_event.EventOXPHostStateChange(
@@ -200,7 +206,6 @@ class Network_Aware(app_manager.RyuApp):
 
     @set_ev_cls(event.EventPortDelete, MAIN_DISPATCHER)
     def delete_host(self, ev):
-        #host leave
         if (ev.port.dpid, ev.port.port_no) in self.access_table:
             event = oxp_event.EventOXPHostStateChange(
                 self, hosts=[(self.access_table[key][0],
@@ -226,14 +231,23 @@ class Network_Aware(app_manager.RyuApp):
                     self, hosts=[(ip, mac, OXPP_ACTIVE)])
                 self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
                 return
+        # in case the error recode of other domain's host.
+        if dpid in self.outer_ports:
+            if in_port in self.outer_ports[dpid]:
+                if (dpid, in_port) in self.access_table:
+                    ip, mac = self.access_table[(dpid, in_port)]
+
+                    ev = oxp_event.EventOXPHostStateChange(
+                        self, hosts=[(ip, mac, OXPP_INACTIVE)])
+                    self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+
+                    del self.access_table[(dpid, in_port)]
 
     def _send_lldp(self, datapath, in_port, vport_no):
         lldp_pkt = switches.LLDPPacket.lldp_packet(datapath.id, in_port,
                                                    DONTCARE_STR,
                                                    Switches.DEFAULT_TTL,
                                                    vport_no=vport_no)
-        # LOG.debug('lldp sent dpid=%s, port_no=%d', dp.id, port.port_no)
-        # TODO:XXX
         dp = datapath
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             actions = [dp.ofproto_parser.OFPActionOutput(in_port)]
@@ -249,35 +263,40 @@ class Network_Aware(app_manager.RyuApp):
             LOG.error('cannot send lldp packet. unsupported version. %x',
                       dp.ofproto.OFP_VERSION)
 
-    def register_outer_port(self, datapath, in_port,
-                            src_domain_id, src_vport_no):
-        # if src_domain_id is not CONF.domain_id
-        # the msg come from other domain.
+    def raise_sbp_packet_in_event(self, msg, vport_no, data):
+        msg.match.set_in_port(vport_no)
+        pkt_in = ofproto_v1_3_parser.OFPPacketIn(
+            self.fake_datapath, buffer_id=msg.buffer_id,
+            total_len=msg.total_len, reason=msg.reason, table_id=msg.table_id,
+            cookie=msg.cookie, match=msg.match, data=data)
+
+        ev = oxp_event.sbp_to_oxp_msg_to_ev(pkt_in)
+        self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+        return
+
+    def register_outer_port(self, msg, in_port, src_domain_id, src_vport_no):
         if src_domain_id != CONF.oxp_domain_id:
-            dst_dpid = datapath.id
+            dst_dpid = msg.datapath.id
             dst_port_no = in_port
 
             # register out_port.
             if dst_dpid not in self.outer_ports:
                 self.outer_ports.setdefault(dst_dpid, set())
-
             if dst_port_no not in self.outer_ports[dst_dpid]:
                 self.outer_ports[dst_dpid].add(dst_port_no)
                 self.vport[self.outer_port_no] = (dst_dpid, dst_port_no)
 
+                self.access_ports[dst_dpid].remove(dst_port_no)
+
                 # raise event and send to handler.
                 ev = oxp_event.EventOXPVportStateChange(
-                    domain=self,
-                    vport_no=self.outer_port_no,
-                    state=OXPPS_LIVE)
-
+                    domain=self, vport_no=self.outer_port_no, state=OXPPS_LIVE)
                 self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
 
-                # send lldp to neighbor.
-                self._send_lldp(datapath, in_port, self.outer_port_no)
+                # send lldp to neighbor domain.
+                self._send_lldp(msg.datapath, in_port, self.outer_port_no)
 
-                print "self.outer_ports:", self.outer_ports
-
+                # raise event of packet_in to send lldp to super.
                 if src_vport_no != ofproto_v1_0.OFPP_NONE:
                     dst_vport_no = None
                     for key in self.vport:
@@ -285,11 +304,10 @@ class Network_Aware(app_manager.RyuApp):
                             dst_vport_no = key
                             break
 
-                    print "Inter-Link  %s, %s : %s, %s " % (CONF.oxp_domain_id,
-                                                            dst_vport_no,
-                                                            src_domain_id,
-                                                            src_vport_no)
-                    #Todo upload the msg to super.
+                    lldp_pkt = switches.LLDPPacket.lldp_packet(
+                        src_domain_id, src_vport_no,
+                        DONTCARE_STR, Switches.DEFAULT_TTL)
+                    self.raise_sbp_packet_in_event(msg, dst_vport_no, lldp_pkt)
 
                 self.outer_port_no += 1
 
@@ -306,9 +324,11 @@ class Network_Aware(app_manager.RyuApp):
 
         data = msg.data
         pkt = packet.Packet(data)
+
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
 
+        # Dirty code. Try other way to trigger.
         if isinstance(arp_pkt, arp.arp):
             arp_src_ip = arp_pkt.src_ip
             arp_dst_ip = arp_pkt.dst_ip
@@ -321,14 +341,9 @@ class Network_Aware(app_manager.RyuApp):
                 src_dpid, src_port_no, src_domain_id, src_vport_no = \
                     switches.LLDPPacket.oxp_lldp_parse(data)
             except switches.LLDPPacket.LLDPUnknownFormat as e:
-                # This handler can receive all the packtes which can be
-                # not-LLDP packet. Ignore it silently
+                # If non-LLDP, Ignore it silently
                 return
-            self.register_outer_port(datapath, in_port,
-                                     src_domain_id, src_vport_no)
-
-    def discovery(self):
-        pass
+            self.register_outer_port(msg, in_port, src_domain_id, src_vport_no)
 
     # show topo
     def show_topology(self):
@@ -345,7 +360,6 @@ class Network_Aware(app_manager.RyuApp):
                     print '%10.0f' % j,
                 print ""
             self.pre_graph = self.graph
-        # show link
         if self.pre_link_to_port != self.link_to_port or IS_UPDATE:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),

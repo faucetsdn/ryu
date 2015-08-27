@@ -20,8 +20,9 @@ from ryu.openexchange.network import network_monitor
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 
-from ryu.openexchange import oxp_event
+from ryu.topology import event, switches
 
+from ryu.openexchange.event import oxp_event
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
@@ -111,6 +112,7 @@ class Abstract(app_manager.RyuApp):
         host_reply = self.oxparser.OXPHostReply(self.domain, hosts)
 
         self.domain.send_msg(host_reply)
+        print "host: ", self.network.access_table
 
     def create_links(self, vport=[], capabilities={}):
         links = []
@@ -153,3 +155,12 @@ class Abstract(app_manager.RyuApp):
     @set_ev_cls(oxp_event.EventOXPTopoRequest, MAIN_DISPATCHER)
     def topo_request_handler(self, ev):
         self.topo_reply()
+
+    @set_ev_cls(oxp_event.EventOXPSBPPacketIn, MAIN_DISPATCHER)
+    def sbp_packet_in_handler(self, ev):
+        msg = ev.msg
+        msg.serialize()
+
+        sbp_pkt = self.oxparser.OXPSBP(self.domain, data=msg.buf)
+        self.domain.send_msg(sbp_pkt)
+        return

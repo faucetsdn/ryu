@@ -12,7 +12,7 @@ from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER, HANDSHAKE_DISPATCHER
 
-from ryu.openexchange import oxp_event
+from ryu.openexchange.event import oxp_event
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
 
