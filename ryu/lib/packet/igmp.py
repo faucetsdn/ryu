@@ -119,6 +119,7 @@ where each Group Record has the following internal format:
 
 import six
 import struct
+from math import trunc
 
 from ryu.lib import addrconv
 from ryu.lib import stringify
@@ -209,7 +210,7 @@ class igmp(packet_base.PacketBase):
 
     def serialize(self, payload, prev):
         hdr = bytearray(struct.pack(self._PACK_STR, self.msgtype,
-                        self.maxresp, self.csum,
+                        trunc(self.maxresp), self.csum,
                         addrconv.ipv4.text_to_bin(self.address)))
 
         if self.csum == 0:
@@ -299,9 +300,9 @@ class igmpv3_query(igmp):
     def serialize(self, payload, prev):
         s_qrv = self.s_flg << 3 | self.qrv
         buf = bytearray(struct.pack(self._PACK_STR, self.msgtype,
-                        self.maxresp, self.csum,
+                        trunc(self.maxresp), self.csum,
                         addrconv.ipv4.text_to_bin(self.address),
-                        s_qrv, self.qqic, self.num))
+                        s_qrv, trunc(self.qqic), self.num))
         for src in self.srcs:
             buf.extend(struct.pack('4s', addrconv.ipv4.text_to_bin(src)))
         if 0 == self.num:
