@@ -8,6 +8,9 @@ This application helps you debug your application and get various statistics.
 
 This application supports OpenFlow version 1.0, 1.2 and 1.3.
 
+.. contents::
+   :depth: 3
+
 
 Retrieve the switch stats
 =========================
