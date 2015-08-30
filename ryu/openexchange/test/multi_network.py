@@ -31,6 +31,8 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
     switch_list = []
     host_list = []
 
+    logger = logging.getLogger('ryu.openexchange.test.multi_network')
+
     net = Mininet(controller=None, switch=OVSSwitch, link=TCLink)
 
     for i in xrange(con_num):
@@ -38,27 +40,27 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
         c = net.addController(name, controller=RemoteController,
                               port=6661 + i)
         controller_list.append(c)
-        print "*** Creating %s" % name
+        logger.info("*** Creating %s" % name)
 
-    print "*** Creating switches"
+    logger.info("*** Creating switches")
     switch_list = [net.addSwitch('s%d' % n) for n in xrange(sw_num)]
 
-    print "*** Creating hosts"
+    logger.info("*** Creating hosts")
     host_list = [net.addHost('h%d' % n) for n in xrange(host_num)]
 
-    print "*** Creating links of host2switch."
+    logger.info("*** Creating links of host2switch.")
     for i in xrange(0, sw_num):
         net.addLink(switch_list[i], host_list[i*2])
         net.addLink(switch_list[i], host_list[i*2+1])
 
-    print "*** Creating interior links of switch2switch."
+    logger.info("*** Creating interior links of switch2switch.")
     for i in xrange(0, sw_num, sw_num/con_num):
         for j in xrange(sw_num/con_num):
             for k in xrange(sw_num/con_num):
                 if j != k and j > k:
                     net.addLink(switch_list[i+j], switch_list[i+k])
 
-    print "*** Creating intra links of switch2switch."
+    logger.info("*** Creating intra links of switch2switch.")
 
     # 0-4  5-9 10-14 15-19 20-24 25-29 30-34
     # domain1 -> others
@@ -70,19 +72,19 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
     # domain2 -> others
     net.addLink(switch_list[6], switch_list[10])
     net.addLink(switch_list[8], switch_list[12])
-    net.addLink(switch_list[8], switch_list[18])
+    # net.addLink(switch_list[8], switch_list[18])
     net.addLink(switch_list[7], switch_list[25])
 
     # domain3 -> others
     net.addLink(switch_list[10], switch_list[16])
     net.addLink(switch_list[12], switch_list[16])
-    net.addLink(switch_list[10], switch_list[21])
+    # net.addLink(switch_list[10], switch_list[21])
     net.addLink(switch_list[12], switch_list[27])
 
     # domain4 -> others
     net.addLink(switch_list[16], switch_list[21])
     net.addLink(switch_list[18], switch_list[27])
-    net.addLink(switch_list[18], switch_list[31])
+    # net.addLink(switch_list[18], switch_list[31])
     net.addLink(switch_list[19], switch_list[34])
 
     # domain5 -> others
@@ -95,7 +97,7 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
 
     #domain7 has not need to add links.
 
-    print "*** Starting network"
+    logger.info("*** Starting network")
     net.build()
     for c in controller_list:
         c.start()
@@ -106,15 +108,15 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
             switch_list[i+j].start([controller_list[_No]])
         _No += 1
 
-    print "*** Setting OpenFlow version"
+    logger.debug("*** Setting OpenFlow version")
     for sw in switch_list:
         cmd = "sudo ovs-vsctl set bridge %s protocols=OpenFlow13" % sw
         os.system(cmd)
 
-    print "*** Running CLI"
+    logger.info("*** Running CLI")
     CLI(net)
 
-    print "*** Stopping network"
+    logger.info("*** Stopping network")
     net.stop()
 
 if __name__ == '__main__':

@@ -19,6 +19,7 @@ from ryu.topology.api import get_switch, get_link
 from ryu.openexchange.network import network_aware
 from ryu.openexchange.network import network_monitor
 from ryu.openexchange.routing_algorithm.routing_algorithm import dijkstra
+from ryu.openexchange.utils import utils
 
 
 class Shortest_Route(app_manager.RyuApp):
@@ -60,158 +61,6 @@ class Shortest_Route(app_manager.RyuApp):
                 self.logger.debug('unregister datapath: %016x', datapath.id)
                 del self.datapaths[datapath.id]
 
-    def add_flow(self, dp, p, match, actions, idle_timeout=0, hard_timeout=0):
-        ofproto = dp.ofproto
-        parser = dp.ofproto_parser
-
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                             actions)]
-
-        mod = parser.OFPFlowMod(datapath=dp, priority=p,
-                                idle_timeout=idle_timeout,
-                                hard_timeout=hard_timeout,
-                                match=match, instructions=inst)
-        dp.send_msg(mod)
-
-    def install_flow(self, path, flow_info, buffer_id, data):
-        '''
-            path=[dpid1, dpid2, dpid3...]
-            flow_info=(eth_type, src_ip, dst_ip, in_port)
-        '''
-        # first flow entry
-        in_port = flow_info[3]
-        assert path
-        datapath_first = self.datapaths[path[0]]
-        ofproto = datapath_first.ofproto
-        parser = datapath_first.ofproto_parser
-        out_port = ofproto.OFPP_LOCAL
-
-        # inter_link
-        if len(path) > 2:
-            for i in xrange(1, len(path) - 1):
-                port = self.get_link2port(path[i - 1], path[i])
-                port_next = self.get_link2port(path[i], path[i + 1])
-                if port:
-                    src_port, dst_port = port[1], port_next[0]
-                    datapath = self.datapaths[path[i]]
-                    ofproto = datapath.ofproto
-                    parser = datapath.ofproto_parser
-                    actions = []
-
-                    actions.append(parser.OFPActionOutput(dst_port))
-                    match = parser.OFPMatch(
-                        in_port=src_port,
-                        eth_type=flow_info[0],
-                        ipv4_src=flow_info[1],
-                        ipv4_dst=flow_info[2])
-                    self.add_flow(
-                        datapath, 1, match, actions,
-                        idle_timeout=10, hard_timeout=30)
-
-                    # inter links pkt_out
-                    msg_data = None
-                    if buffer_id == ofproto.OFP_NO_BUFFER:
-                        msg_data = data
-
-                    out = parser.OFPPacketOut(
-                        datapath=datapath, buffer_id=buffer_id,
-                        data=msg_data, in_port=src_port, actions=actions)
-
-                    datapath.send_msg(out)
-
-        if len(path) > 1:
-            # the  first flow entry
-            port_pair = self.get_link2port(path[0], path[1])
-            out_port = port_pair[0]
-
-            actions = []
-            actions.append(parser.OFPActionOutput(out_port))
-            match = parser.OFPMatch(
-                in_port=in_port,
-                eth_type=flow_info[0],
-                ipv4_src=flow_info[1],
-                ipv4_dst=flow_info[2])
-            self.add_flow(datapath_first,
-                          1, match, actions, idle_timeout=10, hard_timeout=30)
-
-            # the last hop: tor -> host
-            datapath = self.datapaths[path[-1]]
-            ofproto = datapath.ofproto
-            parser = datapath.ofproto_parser
-            actions = []
-            src_port = self.get_link2port(path[-2], path[-1])[1]
-            dst_port = None
-
-            for key in self.access_table.keys():
-                if flow_info[2] == self.access_table[key][0]:
-                    dst_port = key[1]
-                    break
-            actions.append(parser.OFPActionOutput(dst_port))
-            match = parser.OFPMatch(
-                in_port=src_port,
-                eth_type=flow_info[0],
-                ipv4_src=flow_info[1],
-                ipv4_dst=flow_info[2])
-
-            self.add_flow(
-                datapath, 1, match, actions, idle_timeout=10, hard_timeout=30)
-
-            # first pkt_out
-            actions = []
-
-            actions.append(parser.OFPActionOutput(out_port))
-            msg_data = None
-            if buffer_id == ofproto.OFP_NO_BUFFER:
-                msg_data = data
-
-            out = parser.OFPPacketOut(
-                datapath=datapath_first, buffer_id=buffer_id,
-                data=msg_data, in_port=in_port, actions=actions)
-
-            datapath_first.send_msg(out)
-
-            # last pkt_out
-            actions = []
-            actions.append(parser.OFPActionOutput(dst_port))
-            msg_data = None
-            if buffer_id == ofproto.OFP_NO_BUFFER:
-                msg_data = data
-
-            out = parser.OFPPacketOut(
-                datapath=datapath, buffer_id=buffer_id,
-                data=msg_data, in_port=src_port, actions=actions)
-
-            datapath.send_msg(out)
-
-        else:  # src and dst on the same
-            out_port = None
-            actions = []
-            for key in self.access_table.keys():
-                if flow_info[2] == self.access_table[key][0]:
-                    out_port = key[1]
-                    break
-
-            actions.append(parser.OFPActionOutput(out_port))
-            match = parser.OFPMatch(
-                in_port=in_port,
-                eth_type=flow_info[0],
-                ipv4_src=flow_info[1],
-                ipv4_dst=flow_info[2])
-            self.add_flow(
-                datapath_first, 1, match, actions,
-                idle_timeout=10, hard_timeout=30)
-
-            # pkt_out
-            msg_data = None
-            if buffer_id == ofproto.OFP_NO_BUFFER:
-                msg_data = data
-
-            out = parser.OFPPacketOut(
-                datapath=datapath_first, buffer_id=buffer_id,
-                data=msg_data, in_port=in_port, actions=actions)
-
-            datapath_first.send_msg(out)
-
     def get_host_location(self, host_ip):
         for key in self.access_table:
             if self.access_table[key][0] == host_ip:
@@ -226,13 +75,6 @@ class Shortest_Route(app_manager.RyuApp):
             return path
         self.logger.debug("Path is not found.")
         return None
-
-    def get_link2port(self, src_dpid, dst_dpid):
-        if (src_dpid, dst_dpid) in self.link_to_port:
-            return self.link_to_port[(src_dpid, dst_dpid)]
-        else:
-            self.logger.debug("Link to port is not found.")
-            return None
 
     def arp_reply(self, msg, arp_pkt):
         datapath = msg.datapath
@@ -249,9 +91,9 @@ class Shortest_Route(app_manager.RyuApp):
             datapath = self.datapaths[datapath_dst]
 
             out = parser.OFPPacketOut(
-                datapath=datapath,
-                buffer_id=ofproto.OFP_NO_BUFFER, actions=actions,
-                in_port=ofproto.OFPP_CONTROLLER, data=msg.data)
+                datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
+                actions=actions, in_port=ofproto.OFPP_CONTROLLER,
+                data=msg.data)
 
             datapath.send_msg(out)
         else:       # access info is not existed. send to all host.
@@ -261,8 +103,7 @@ class Shortest_Route(app_manager.RyuApp):
                         actions = [parser.OFPActionOutput(port)]
                         datapath = self.datapaths[dpid]
                         out = parser.OFPPacketOut(
-                            datapath=datapath,
-                            buffer_id=ofproto.OFP_NO_BUFFER,
+                            datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
                             in_port=ofproto.OFPP_CONTROLLER,
                             actions=actions, data=msg.data)
                         datapath.send_msg(out)
@@ -270,21 +111,17 @@ class Shortest_Route(app_manager.RyuApp):
     def route(self, msg, eth_type, ip_pkt):
         ip_src = ip_pkt.src
         ip_dst = ip_pkt.dst
-
-        result = None
-        src_sw = None
-        dst_sw = None
+        result = src_sw = dst_sw = None
 
         src_location = self.get_host_location(ip_src)
         dst_location = self.get_host_location(ip_dst)
 
         if src_location:
             src_sw = src_location[0]
-
         if dst_location:
             dst_sw = dst_location[0]
-        result = dijkstra(self.graph, src_sw)
 
+        result = dijkstra(self.graph, src_sw)
         if result:
             path = result[1][src_sw][dst_sw]
             path.insert(0, src_sw)
@@ -292,8 +129,9 @@ class Shortest_Route(app_manager.RyuApp):
             #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
 
             flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
-
-            self.install_flow(path, flow_info, msg.buffer_id, msg.data)
+            utils.install_flow(self.datapaths, self.link_to_port,
+                               self.access_table, path, flow_info,
+                               msg.buffer_id, msg.data)
         else:
             # Reflesh the topology database.
             self.network_aware.get_topology(None)
@@ -316,9 +154,9 @@ class Shortest_Route(app_manager.RyuApp):
         if datapath.id in self.outer_ports:
             if in_port in self.outer_ports[datapath.id]:
                 # The packet from other domain, ignore it.
-                self.logger.info(
-                    "packet from other domain: %s, %s" % (
-                        datapath.id, in_port))
+                #self.logger.info(
+                #    "packet from other domain: %s, %s" % (
+                #        datapath.id, in_port))
                 return
 
         if isinstance(arp_pkt, arp.arp):

@@ -75,7 +75,6 @@ class Topology(ryu.base.app_manager.RyuApp):
         msg = ev.msg
         domain = msg.domain
         self.topo.domains[domain.id].update_link(domain, msg.links)
-        print "Topology reply:", self.topo.domains[domain.id].__dict__
 
     @set_ev_cls(oxp_event.EventOXPHostReply, MAIN_DISPATCHER)
     def host_reply_handler(self, ev):
@@ -88,4 +87,4 @@ class Topology(ryu.base.app_manager.RyuApp):
         msg = ev.msg
         domain = msg.domain
         self.location.update(domain.id, msg.hosts)
-        print "Host reply:", self.location.locations
+        self.logger.info("Host reply: ", self.location.locations)

@@ -11,9 +11,7 @@ Plan to be replaced by CONF.
 
 import itertools
 import logging
-
 import ryu.base.app_manager
-
 from ryu.lib import hub
 from ryu import utils
 
@@ -33,8 +31,6 @@ from ryu.openexchange.super import topology
 from ryu.openexchange.super.oxp_super import Super_Controller
 
 from ryu import cfg
-
-
 CONF = cfg.CONF
 
 
@@ -57,16 +53,10 @@ class OXP_SBP_Handler(ryu.base.app_manager.RyuApp):
 
         try:
             src_domain_id, src_vport_no = switches.LLDPPacket.lldp_parse(data)
-
             if OXP_DEFAULT_FLAGS == CONF.oxp_flags & OXP_DEFAULT_FLAGS:
                 link = {(domain.id, in_port, src_domain_id, src_vport_no): 1}
                 self.topo.update_link(link)
 
         except switches.LLDPPacket.LLDPUnknownFormat as e:
             return
-
-    @set_ev_cls(oxp_event.EventOXPEchoReply,
-                [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
-    def echo_reply_handler(self, ev):
-        # print "inter-links: ", self.topo.links
-        pass
+        # Todo other packet in handler. routing request.
