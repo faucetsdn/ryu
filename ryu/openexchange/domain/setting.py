@@ -18,7 +18,7 @@ config = {'flags': CONF.oxp_flags,
 
 
 features = {'domain_id': CONF.oxp_domain_id,
-            'sbp_version': CONF.oxp_proto_version,
-            'proto_type': CONF.oxp_proto_type,
+            'sbp_version': CONF.sbp_proto_version,
+            'proto_type': CONF.sbp_proto_type,
             'capabilities': CONF.oxp_capabilities,
             }

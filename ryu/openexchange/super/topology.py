@@ -41,6 +41,7 @@ class Topology(ryu.base.app_manager.RyuApp):
         self.name = 'oxp_topology'
         self.topo = topology_data.Super_Topo()
         self.location = host_data.Location()
+        self.domains = {}
 
     @set_ev_cls(oxp_event.EventOXPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])

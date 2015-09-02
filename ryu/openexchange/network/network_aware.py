@@ -38,7 +38,6 @@ IS_UPDATE = True
 
 class Network_Aware(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    _NAME = 'network_aware'
 
     _EVENT = [oxp_event.EventOXPVportStateChange,
               oxp_event.EventOXPHostStateChange]
@@ -81,11 +80,15 @@ class Network_Aware(app_manager.RyuApp):
         self.period = CONF.oxp_period
         # use for hiding infomation to super.
         self.fake_datapath = None
+        # save the outer host for searching.
+        self.outer_hosts = set()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         datapath = ev.msg.datapath
         if self.fake_datapath is None:
+            self.fake_datapath = datapath
+        elif self.fake_datapath.ofproto != datapath.ofproto:
             self.fake_datapath = datapath
 
         ofproto = datapath.ofproto
@@ -200,37 +203,24 @@ class Network_Aware(app_manager.RyuApp):
         for key in self.access_table:
             if ev.switch.dp.id == key[0]:
                 event = oxp_event.EventOXPHostStateChange(
-                    self, hosts=[(self.access_table[key][0],
-                                  self.access_table[key][1], OXPP_INACTIVE)])
+                    self.oxp_brick.domain,
+                    hosts=[(self.access_table[key][0],
+                            self.access_table[key][1], OXPP_INACTIVE)])
+
                 self.oxp_brick.send_event_to_observers(event, MAIN_DISPATCHER)
 
     @set_ev_cls(event.EventPortDelete, MAIN_DISPATCHER)
     def delete_host(self, ev):
         if (ev.port.dpid, ev.port.port_no) in self.access_table:
             event = oxp_event.EventOXPHostStateChange(
-                self, hosts=[(self.access_table[key][0],
-                              self.access_table[key][1], OXPP_INACTIVE)])
+                self.oxp_brick.domain, hosts=[(self.access_table[key][0],
+                                               self.access_table[key][1],
+                                               OXPP_INACTIVE)])
+
             self.oxp_brick.send_event_to_observers(event, MAIN_DISPATCHER)
 
     def register_access_info(self, dpid, in_port, ip, mac):
         # Todo:reduce the duplicate host update.
-        if in_port in self.access_ports[dpid]:
-            if (dpid, in_port) in self.access_table:
-                if self.access_table[(dpid, in_port)] == (ip, mac):
-                    return
-                else:
-                    self.access_table[(dpid, in_port)] = (ip, mac)
-                    ev = oxp_event.EventOXPHostStateChange(
-                        self, hosts=[(ip, mac, OXPP_ACTIVE)])
-                    self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-                    return
-            else:
-                self.access_table.setdefault((dpid, in_port), None)
-                self.access_table[(dpid, in_port)] = (ip, mac)
-                ev = oxp_event.EventOXPHostStateChange(
-                    self, hosts=[(ip, mac, OXPP_ACTIVE)])
-                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-                return
         # in case the error recode of other domain's host.
         if dpid in self.outer_ports:
             if in_port in self.outer_ports[dpid]:
@@ -238,10 +228,32 @@ class Network_Aware(app_manager.RyuApp):
                     ip, mac = self.access_table[(dpid, in_port)]
 
                     ev = oxp_event.EventOXPHostStateChange(
-                        self, hosts=[(ip, mac, OXPP_INACTIVE)])
+                        self.oxp_brick.domain,
+                        hosts=[(ip, mac, OXPP_INACTIVE)])
+
                     self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
 
                     del self.access_table[(dpid, in_port)]
+                return
+
+        if in_port in self.access_ports[dpid]:
+            if (dpid, in_port) in self.access_table:
+                if self.access_table[(dpid, in_port)] == (ip, mac):
+                    return
+                else:
+                    self.access_table[(dpid, in_port)] = (ip, mac)
+                    ev = oxp_event.EventOXPHostStateChange(
+                        self.oxp_brick.domain, hosts=[(ip, mac, OXPP_ACTIVE)])
+                    self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+                    return
+            else:
+                self.access_table.setdefault((dpid, in_port), None)
+                self.access_table[(dpid, in_port)] = (ip, mac)
+                ev = oxp_event.EventOXPHostStateChange(
+                    self.oxp_brick.domain, hosts=[(ip, mac, OXPP_ACTIVE)])
+                self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
+                print "access_table:", self.access_table
+                return
 
     def _send_lldp(self, datapath, in_port, vport_no):
         lldp_pkt = switches.LLDPPacket.lldp_packet(datapath.id, in_port,
@@ -290,7 +302,8 @@ class Network_Aware(app_manager.RyuApp):
 
                 # raise event and send to handler.
                 ev = oxp_event.EventOXPVportStateChange(
-                    domain=self, vport_no=self.outer_port_no, state=OXPPS_LIVE)
+                    domain=self.oxp_brick.domain,
+                    vport_no=self.outer_port_no, state=OXPPS_LIVE)
                 self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
 
                 # send lldp to neighbor domain.

@@ -35,9 +35,9 @@ CONF.register_cli_opts([
 
     cfg.IntOpt('oxp-domain-id', default=oxproto_common.OXP_DEFAULT_DOMAIN_ID,
                help='openexchange domain id'),
-    cfg.IntOpt('oxp-proto-type', default=oxproto_v1_0.OXPS_OPENFLOW,
+    cfg.IntOpt('sbp-proto-type', default=oxproto_v1_0.OXPS_OPENFLOW,
                help='openexchange Southbound protocol type'),
-    cfg.IntOpt('oxp-proto-version', default=1,
+    cfg.IntOpt('sbp-proto-version', default=4,
                help='version of Southbound protocol'),
     cfg.IntOpt('oxp-capabilities',
                default=oxproto_common.OXP_DEFAULT_CAPABILITIES,

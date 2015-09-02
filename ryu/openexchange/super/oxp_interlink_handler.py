@@ -34,13 +34,13 @@ from ryu import cfg
 CONF = cfg.CONF
 
 
-class OXP_SBP_Handler(ryu.base.app_manager.RyuApp):
+class OXP_InterLink_Handler(ryu.base.app_manager.RyuApp):
 
     _CONTEXTS = {"topology": topology.Topology}
 
     def __init__(self, *args, **kwargs):
-        super(OXP_SBP_Handler, self).__init__(*args, **kwargs)
-        self.name = 'oxp_sbp_handler'
+        super(OXP_InterLink_Handler, self).__init__(*args, **kwargs)
+        self.name = 'oxp_interlink_handler'
         self.topology = kwargs["topology"]
         self.topo = self.topology.topo
 

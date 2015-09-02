@@ -66,8 +66,8 @@ class Domain_Controller(object):
     # entry point
     def __call__(self):
         self.features.set_features(domain_id=CONF.oxp_domain_id,
-                                   proto_type=CONF.oxp_proto_type,
-                                   sbp_version=CONF.oxp_proto_version,
+                                   proto_type=CONF.sbp_proto_type,
+                                   sbp_version=CONF.sbp_proto_version,
                                    capabilities=CONF.oxp_capabilities)
         self.config.set_config(flags=CONF.oxp_flags,
                                period=CONF.oxp_period,

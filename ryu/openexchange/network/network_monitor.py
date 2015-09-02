@@ -112,8 +112,7 @@ class Network_Monitor(app_manager.RyuApp):
                         stat.match['in_port'], stat.match['ipv4_dst'],
                         stat.instructions[0].actions[0].port,
                         stat.packet_count, stat.byte_count,
-                        abs(self.flow_speed[
-                            (stat.match['in_port'],
+                        abs(self.flow_speed[(stat.match['in_port'],
                             stat.match['ipv4_dst'],
                             stat.instructions[0].actions[0].port)][-1])))
             print '\n'

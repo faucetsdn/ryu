@@ -2334,7 +2334,25 @@ class OFPPacketOut(MsgBase):
         msg_pack_into(ofproto.OFP_PACKET_OUT_PACK_STR,
                       self.buf, ofproto.OFP_HEADER_SIZE,
                       self.buffer_id, self.in_port, self.actions_len)
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPPacketOut, cls).parser(datapath, version, msg_type,
+                                               msg_len, xid, buf)
+        (msg.buffer_id, msg.in_port, msg.actions_len) = struct.unpack_from(
+                                                            ofproto.OFP_PACKET_OUT_PACK_STR,
+                                                            msg.buf, ofproto.OFP_HEADER_SIZE)
+        actions = []
+        offset = ofproto.OFP_PACKET_OUT_SIZE
+        actions_len = msg.actions_len
+        while actions_len > 0:
+            a = OFPAction.parser(buf, offset)
+            actions.append(a)
+            actions_len -= a.len
+            offset += a.len
+        msg.actions = actions
+        msg.data = msg.buf[ofproto.OFP_PACKET_OUT_SIZE+msg.actions_len: ]
 
+        return msg
 
 @_set_msg_type(ofproto.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):

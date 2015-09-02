@@ -71,7 +71,7 @@ for oxp_mods in openexchange.get_oxp_modules().values():
 
 
 def _sbp_to_oxp_msg_name_to_ev_name(msg_name):
-    if CONF.oxp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
+    if CONF.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
         msg_name = msg_name[len("OFP"):]
         return 'EventOXPSBP' + msg_name
 
@@ -103,7 +103,7 @@ def _create_sbp_to_oxp_msg_ev_from_module(parser):
             continue
         _create_sbp_to_oxp_msg_ev_class(cls)
 
-if CONF.oxp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
+if CONF.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
     for ofp_mods in ofproto.get_ofp_modules().values():
         ofp_parser = ofp_mods[1]
         _create_sbp_to_oxp_msg_ev_from_module(ofp_parser)

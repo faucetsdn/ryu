@@ -33,7 +33,8 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
 
     logger = logging.getLogger('ryu.openexchange.test.multi_network')
 
-    net = Mininet(controller=None, switch=OVSSwitch, link=TCLink)
+    net = Mininet(controller=None,
+                  switch=OVSSwitch, link=TCLink, autoSetMacs=True)
 
     for i in xrange(con_num):
         name = 'controller[%s]' % str(i)
@@ -43,7 +44,7 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
         logger.info("*** Creating %s" % name)
 
     logger.info("*** Creating switches")
-    switch_list = [net.addSwitch('s%d' % n) for n in xrange(sw_num)]
+    switch_list = [net.addSwitch('s%d' % n) for n in xrange(int(sw_num))]
 
     logger.info("*** Creating hosts")
     host_list = [net.addHost('h%d' % n) for n in xrange(host_num)]

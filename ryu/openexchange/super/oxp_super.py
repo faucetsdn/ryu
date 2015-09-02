@@ -26,13 +26,11 @@ from ryu.openexchange import oxproto_protocol
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
 from ryu.openexchange.event import oxp_event
-
 from ryu.openexchange.utils.controller_id import dpid_to_str
 
 from socket import IPPROTO_TCP, TCP_NODELAY
-
 import ryu.base.app_manager
-#from eventlet.green import socket
+
 
 LOG = logging.getLogger('ryu.openexchange.oxp_super')
 CONF = cfg.CONF
@@ -105,6 +103,9 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
         self.id = None
         self.ports = None
 
+        self.sbp_proto_type = None
+        self.sbp_proto_version = None
+
         # config info
         self.period = oxproto_common.OXP_DEFAULT_PERIOD
         self.flags = oxproto_common.OXP_DEFAULT_FLAGS
@@ -148,7 +149,7 @@ class Domain_Network(oxproto_protocol.ProtocolDesc):
                                          version, msg_type, msg_len, xid, buf)
 
                 if msg:
-                    LOG.info('queue msg %s cls %s', msg, msg.__class__)
+                    # LOG.info('queue msg %s cls %s', msg, msg.__class__)
                     ev = oxp_event.oxp_msg_to_ev(msg)
                     self.oxp_brick.send_event_to_observers(ev, self.state)
 

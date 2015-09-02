@@ -17,6 +17,7 @@ from ryu.lib import hub
 from ryu import utils
 from ryu.openexchange.event import oxp_event
 from ryu.openexchange.super.oxp_super import Super_Controller
+from ryu.controller import controller
 from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
@@ -24,6 +25,8 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
 
 from ryu.openexchange import oxproto_v1_0
 from ryu.ofproto import ofproto_common, ofproto_parser
+from ryu.ofproto import ofproto_v1_0, ofproto_v1_3
+from ryu.ofproto import ofproto_v1_0_parser, ofproto_v1_3_parser
 
 from ryu.openexchange.domain import config
 from ryu import cfg
@@ -49,6 +52,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(OXP_Server_Handler, self).__init__(*args, **kwargs)
         self.name = 'oxp_event'
+        self.fake_datapath = None
 
     def start(self):
         super(OXP_Server_Handler, self).start()
@@ -148,8 +152,11 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         msg = ev.msg
         domain = msg.domain
         domain.id = msg.domain_id
+        domain.sbp_proto_type = msg.proto_type
+        domain.sbp_proto_version = msg.sbp_version
+
         oxproto_parser = domain.oxproto_parser
-        self.logger.debug('domain features ev %s', msg)
+        self.logger.info('domain features ev %s', msg)
 
         set_config = oxproto_parser.OXPSetConfig(
             domain, CONF.oxp_flags, CONF.oxp_period,
@@ -161,6 +168,22 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         domain.send_msg(get_config_request)
 
         ev.msg.domain.set_state(MAIN_DISPATCHER)
+        # build a fake datapath for parsing OF packet.
+        if self.fake_datapath is None:
+            self.fake_datapath = controller.Datapath(
+                domain.socket, domain.address)
+            print domain.sbp_proto_type, oxproto_v1_0.OXPS_OPENFLOW
+
+            if domain.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
+                print "openflow"
+                if domain.sbp_proto_version == 4:
+                    self.fake_datapath.ofproto = ofproto_v1_3
+                    self.fake_datapath.ofproto_parser = ofproto_v1_3_parser
+                    print "1.3"
+                elif domain.sbp_proto_version == 1:
+                    self.fake_datapath.ofproto = ofproto_v1_0
+                    self.fake_datapath.ofproto_parser = ofproto_v1_0_parser
+                    print "1.0"
 
     @set_ev_handler(oxp_event.EventOXPEchoRequest,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
@@ -198,7 +221,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         domain = msg.domain
         data = msg.data
 
-        if CONF.oxp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
+        if domain.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
             buf = bytearray()
             required_len = ofproto_common.OFP_HEADER_SIZE
 
@@ -207,12 +230,12 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
             buf += data
             while len(buf) >= required_len:
                 (version, msg_type, msg_len, xid) = ofproto_parser.header(buf)
-
+                self.logger.info('ofp msg %s cls %s', msg, msg.__class__)
                 required_len = msg_len
                 if len(buf) < required_len:
                     break
 
-                msg = ofproto_parser.msg(None,
+                msg = ofproto_parser.msg(self.fake_datapath,
                                          version, msg_type, msg_len, xid, buf)
                 if msg:
                     ev = oxp_event.sbp_to_oxp_msg_to_ev(msg)

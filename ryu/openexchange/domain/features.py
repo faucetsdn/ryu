@@ -31,11 +31,11 @@ class features(object):
 
     def set_proto_type(self, proto_type):
         self.proto_type = proto_type
-        CONF.oxp_proto_type = proto_type
+        CONF.sbp_proto_type = proto_type
 
     def set_version(self, version):
         self.sbp_version = version
-        CONF.oxp_proto_version = version
+        CONF.sbp_proto_version = version
 
     def set_capabilities(self, capabilities):
         self.capabilities = capabilities

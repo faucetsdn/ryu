@@ -139,7 +139,7 @@ OXPC_ARP_MATCH_IP = 1 << 6      # Match IP addresses in ARP pkts.
 # Enum oxp_support_Southbound protocol
 
 OXPS_OPENFLOW = 1 << 0
-OXPS_XMPP = 1 << 1
+OXPS_XMPP = 1 << 4
 
 OXP_DOMAIN_FEATURES_PACK_STR = '!QBB2xI'
 OXP_DOMAIN_FEATURES_SIZE = 24

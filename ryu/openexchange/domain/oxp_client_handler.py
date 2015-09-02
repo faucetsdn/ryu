@@ -16,6 +16,7 @@ import ryu.base.app_manager
 from ryu.lib import hub
 from ryu import utils
 
+from ryu.controller import controller
 from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
@@ -31,13 +32,7 @@ from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
 
 from ryu.openexchange.domain.oxp_domain import Domain_Controller
-from ryu.openexchange.database import topology_data
-from ryu.openexchange.database import host_data
 from ryu.openexchange.domain import config
-
-from ryu.openexchange.network import network_aware
-from ryu.openexchange.network import network_monitor
-from ryu.openexchange.network import shortest_route
 from ryu import cfg
 
 CONF = cfg.CONF
@@ -58,7 +53,7 @@ CONF = cfg.CONF
 
 
 class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_3.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(OXP_Client_Handler, self).__init__(*args, **kwargs)
@@ -66,6 +61,9 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         self.domain = None
         self.oxproto = oxproto_v1_0
         self.oxparser = oxproto_v1_0_parser
+        self.network_aware = ryu.base.app_manager.lookup_service_brick(
+            "Network_Aware")
+        self.fake_datapath = None
 
     def start(self):
         super(OXP_Client_Handler, self).start()
@@ -178,9 +176,22 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
                                          proto_type=features.proto_type,
                                          sbp_version=features.sbp_version,
                                          capabilities=features.capabilities)
+        print "reply ", reply.__dict__
         domain.send_msg(reply)
         ev.msg.domain.set_state(MAIN_DISPATCHER)
-
+        '''
+        # build a fake datapath for parsing OF packet.
+        if self.fake_datapath is None:
+            self.fake_datapath = controller.Datapath(
+                domain.socket, domain.address)
+            if domain.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
+                if domain.sbp_proto_version == 4:
+                    self.fake_datapath.ofproto = ofproto_v1_3
+                    self.fake_datapath.ofproto_parser = ofproto_v1_3_parser
+                elif domain.sbp_proto_version == 1:
+                    self.fake_datapath.ofproto = ofproto_v1_0
+                    self.fake_datapath.ofproto_parser = ofproto_v1_0_parser
+        '''
     @set_ev_handler(oxp_event.EventOXPErrorMsg,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):
@@ -235,7 +246,7 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
         domain = msg.domain
         data = msg.data
 
-        if CONF.oxp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
+        if CONF.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
             buf = bytearray()
             required_len = ofproto_common.OFP_HEADER_SIZE
 
@@ -248,8 +259,9 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
                 required_len = msg_len
                 if len(buf) < required_len:
                     break
-
-                msg = ofproto_parser.msg(None,
+                self.fake_datapath = self.network_aware.fake_datapath
+                print "self.fake_datapath", self.fake_datapath
+                msg = ofproto_parser.msg(self.fake_datapath,
                                          version, msg_type, msg_len, xid, buf)
                 if msg:
                     ev = oxp_event.sbp_to_oxp_msg_to_ev(msg)

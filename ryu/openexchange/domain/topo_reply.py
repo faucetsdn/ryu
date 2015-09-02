@@ -58,7 +58,8 @@ class TopoReply(app_manager.RyuApp):
 
     def _monitor(self):
         while True:
-            self.topo_reply()
+            if self.domain is not None:
+                self.topo_reply()
             hub.sleep(CONF.oxp_period)
 
     @set_ev_cls(oxp_event.EventOXPTopoRequest, MAIN_DISPATCHER)

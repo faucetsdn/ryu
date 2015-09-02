@@ -41,7 +41,7 @@ class Location(object):
                 self.ip_host.setdefault(host.ip, None)
                 self.ip_host[host.ip] = host
             else:
-                if host.ip in self.locations[domain]:
+                if host.ip in self.locations[domain_id]:
                     self.locations[domain_id].remove(host.ip)
                     self.hosts.remove(hosts)
                     del self.ip_host[host.ip]

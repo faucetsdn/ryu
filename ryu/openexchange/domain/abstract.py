@@ -53,7 +53,7 @@ class Abstract(app_manager.RyuApp):
         self.args = args
         self.network = kwargs["Network_Aware"]
         self.monitor = kwargs["Network_Monitor"]
-        self.domain = None
+        # self.domain = None
         self.oxparser = oxproto_v1_0_parser
         self.oxproto = oxproto_v1_0
         self.topology = topology_data.Domain()
@@ -62,6 +62,7 @@ class Abstract(app_manager.RyuApp):
     def vport_handler(self, ev):
         vport_no = ev.vport_no
         state = ev.state
+        domain = ev.domain
 
         reason = None
         if ev.state == OXPPS_LIVE:
@@ -71,19 +72,20 @@ class Abstract(app_manager.RyuApp):
 
         vport = self.oxparser.OXPVPort(vport_no=vport_no, state=state)
         vport_state_change = self.oxparser.OXPVportStatus(
-            self.domain, vport=vport, reason=reason)
-        self.domain.send_msg(vport_state_change)
+            domain, vport=vport, reason=reason)
+        domain.send_msg(vport_state_change)
 
     @set_ev_cls(oxp_event.EventOXPHostStateChange, MAIN_DISPATCHER)
     def host_update_handler(self, ev):
+        domain = ev.domain
         hosts = []
         for host in ev.hosts:
             h = self.oxparser.OXPHost(ip=ipv4_to_bin(host[0]),
                                       mac=haddr_to_bin(host[1]),
                                       mask=255, state=host[2])
             hosts.append(h)
-        host_update = self.oxparser.OXPHostUpdate(self.domain, hosts)
-        self.domain.send_msg(host_update)
+        host_update = self.oxparser.OXPHostUpdate(domain, hosts)
+        domain.send_msg(host_update)
 
     @set_ev_cls(oxp_event.EventOXPHostRequest, MAIN_DISPATCHER)
     def host_request_handler(self, ev):
@@ -95,8 +97,8 @@ class Abstract(app_manager.RyuApp):
                                       mac=haddr_to_bin(host_info[key][1]),
                                       mask=255, state=OXPP_ACTIVE)
             hosts.append(h)
-        host_reply = self.oxparser.OXPHostReply(self.domain, hosts)
-        self.domain.send_msg(host_reply)
+        host_reply = self.oxparser.OXPHostReply(domain, hosts)
+        domain.send_msg(host_reply)
 
     def create_links(self, vport=[], capabilities={}):
         links = []
@@ -129,25 +131,26 @@ class Abstract(app_manager.RyuApp):
             return self.create_links(self.topology.ports, capabilities)
         return None
 
-    def topo_reply(self):
+    def topo_reply(self, domain):
         links = self.get_capabilities()
-        topo_reply = self.oxparser.OXPTopoReply(self.domain, links=links)
-        self.domain.send_msg(topo_reply)
+        topo_reply = self.oxparser.OXPTopoReply(domain, links=links)
+        domain.send_msg(topo_reply)
 
     @set_ev_cls(oxp_event.EventOXPTopoRequest, MAIN_DISPATCHER)
     def topo_request_handler(self, ev):
-        self.domain = ev.msg.domain
-        self.topology.domain_id = self.domain.id
-        self.oxproto = self.domain.oxproto
-        self.oxparser = self.domain.oxproto_parser
+        domain = ev.msg.domain
+        self.topology.domain_id = domain.id
+        self.oxproto = domain.oxproto
+        self.oxparser = domain.oxproto_parser
 
-        self.topo_reply()
+        self.topo_reply(domain)
 
     @set_ev_cls(oxp_event.EventOXPSBPPacketIn, MAIN_DISPATCHER)
     def sbp_packet_in_handler(self, ev):
         msg = ev.msg
+        domain = ev.domain
         msg.serialize()
 
-        sbp_pkt = self.oxparser.OXPSBP(self.domain, data=msg.buf)
-        self.domain.send_msg(sbp_pkt)
+        sbp_pkt = self.oxparser.OXPSBP(domain, data=msg.buf)
+        domain.send_msg(sbp_pkt)
         return

@@ -76,7 +76,7 @@ class Shortest_Route(app_manager.RyuApp):
         self.logger.debug("Path is not found.")
         return None
 
-    def arp_reply(self, msg, arp_pkt):
+    def arp_forwarding(self, msg, arp_pkt):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -107,8 +107,11 @@ class Shortest_Route(app_manager.RyuApp):
                             in_port=ofproto.OFPP_CONTROLLER,
                             actions=actions, data=msg.data)
                         datapath.send_msg(out)
+            # we can not send arp to super every time.
+            self.network_aware.raise_sbp_packet_in_event(
+                msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
 
-    def route(self, msg, eth_type, ip_pkt):
+    def shortest_forwarding(self, msg, eth_type, ip_pkt):
         ip_src = ip_pkt.src
         ip_dst = ip_pkt.dst
         result = src_sw = dst_sw = None
@@ -154,13 +157,13 @@ class Shortest_Route(app_manager.RyuApp):
         if datapath.id in self.outer_ports:
             if in_port in self.outer_ports[datapath.id]:
                 # The packet from other domain, ignore it.
-                #self.logger.info(
-                #    "packet from other domain: %s, %s" % (
-                #        datapath.id, in_port))
                 return
 
+        # We implemente oxp in a big network,
+        # so we shouldn't care about the subnet and router.
+
         if isinstance(arp_pkt, arp.arp):
-            self.arp_reply(msg, arp_pkt)
+            self.arp_forwarding(msg, arp_pkt)
 
         if isinstance(ip_pkt, ipv4.ipv4):
-            self.route(msg, eth_type, ip_pkt)
+            self.shortest_forwarding(msg, eth_type, ip_pkt)
