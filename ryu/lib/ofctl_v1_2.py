@@ -163,9 +163,19 @@ def actions_to_str(instructions):
     for instruction in instructions:
         if isinstance(instruction,
                       ofproto_v1_2_parser.OFPInstructionActions):
-            for a in instruction.actions:
-                actions.append(action_to_str(a))
-
+            if instruction.type == ofproto_v1_2.OFPIT_APPLY_ACTIONS:
+                for a in instruction.actions:
+                    actions.append(action_to_str(a))
+            elif instruction.type == ofproto_v1_2.OFPIT_WRITE_ACTIONS:
+                write_actions = []
+                for a in instruction.actions:
+                    write_actions.append(action_to_str(a))
+                if write_actions:
+                    actions.append({'WRITE_ACTIONS': write_actions})
+            elif instruction.type == ofproto_v1_2.OFPIT_CLEAR_ACTIONS:
+                actions.append('CLEAR_ACTIONS')
+            else:
+                actions.append('UNKNOWN')
         elif isinstance(instruction,
                         ofproto_v1_2_parser.OFPInstructionGotoTable):
             buf = 'GOTO_TABLE:' + str(instruction.table_id)
