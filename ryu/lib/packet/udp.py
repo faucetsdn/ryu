@@ -17,6 +17,7 @@ import struct
 
 from . import packet_base
 from . import packet_utils
+from . import dhcp
 
 
 class udp(packet_base.PacketBase):
@@ -49,11 +50,17 @@ class udp(packet_base.PacketBase):
         self.csum = csum
 
     @classmethod
+    def get_packet_type(cls, src_port, dst_port):
+        if (src_port == 68 and dst_port == 67) or (src_port == 67 and dst_port == 68):
+            return dhcp.dhcp
+        return None
+
+    @classmethod
     def parser(cls, buf):
         (src_port, dst_port, total_length, csum) = struct.unpack_from(
             cls._PACK_STR, buf)
         msg = cls(src_port, dst_port, total_length, csum)
-        return msg, None, buf[msg._MIN_LEN:total_length]
+        return msg, cls.get_packet_type(src_port, dst_port), buf[msg._MIN_LEN:total_length]
 
     def serialize(self, payload, prev):
         if self.total_length == 0:
