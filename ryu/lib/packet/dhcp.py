@@ -133,6 +133,7 @@ class dhcp(packet_base.PacketBase):
                     every DHCP message).
     ============== ====================
     """
+    _MIN_LEN = 236
     _HLEN_UNPACK_STR = '!BBB'
     _HLEN_UNPACK_LEN = struct.calcsize(_HLEN_UNPACK_STR)
     _DHCP_UNPACK_STR = '!BIHH4s4s4s4s%ds%ds64s128s'
