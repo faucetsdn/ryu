@@ -54,11 +54,6 @@ class Network_Aware(app_manager.RyuApp):
         # Todo: handle the leave host.
         self.access_table = {}
 
-        # cache access_table if for reduce the number of
-        # event and oxphost update msg.
-        # self.cache_access_table = {}
-        # self.hosts = []
-
         self.switch_port_table = {}  # dpid->port_num
 
         # dpid->port_num (access ports)
@@ -78,7 +73,7 @@ class Network_Aware(app_manager.RyuApp):
         self.pre_access_table = {}
         self.oxp_brick = None
         self.period = CONF.oxp_period
-        # use for hiding infomation to super.
+        # hiding infomation to super.
         self.fake_datapath = None
         # save the outer host for searching.
         self.outer_hosts = set()
@@ -252,7 +247,7 @@ class Network_Aware(app_manager.RyuApp):
                 ev = oxp_event.EventOXPHostStateChange(
                     self.oxp_brick.domain, hosts=[(ip, mac, OXPP_ACTIVE)])
                 self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-                print "access_table:", self.access_table
+                # print "access_table:", self.access_table
                 return
 
     def _send_lldp(self, datapath, in_port, vport_no):

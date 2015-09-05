@@ -176,22 +176,9 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
                                          proto_type=features.proto_type,
                                          sbp_version=features.sbp_version,
                                          capabilities=features.capabilities)
-        print "reply ", reply.__dict__
         domain.send_msg(reply)
         ev.msg.domain.set_state(MAIN_DISPATCHER)
-        '''
-        # build a fake datapath for parsing OF packet.
-        if self.fake_datapath is None:
-            self.fake_datapath = controller.Datapath(
-                domain.socket, domain.address)
-            if domain.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
-                if domain.sbp_proto_version == 4:
-                    self.fake_datapath.ofproto = ofproto_v1_3
-                    self.fake_datapath.ofproto_parser = ofproto_v1_3_parser
-                elif domain.sbp_proto_version == 1:
-                    self.fake_datapath.ofproto = ofproto_v1_0
-                    self.fake_datapath.ofproto_parser = ofproto_v1_0_parser
-        '''
+
     @set_ev_handler(oxp_event.EventOXPErrorMsg,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):
@@ -259,9 +246,8 @@ class OXP_Client_Handler(ryu.base.app_manager.RyuApp):
                 required_len = msg_len
                 if len(buf) < required_len:
                     break
-                self.fake_datapath = self.network_aware.fake_datapath
-                print "self.fake_datapath", self.fake_datapath
-                msg = ofproto_parser.msg(self.fake_datapath,
+
+                msg = ofproto_parser.msg(self.network_aware.fake_datapath,
                                          version, msg_type, msg_len, xid, buf)
                 if msg:
                     ev = oxp_event.sbp_to_oxp_msg_to_ev(msg)

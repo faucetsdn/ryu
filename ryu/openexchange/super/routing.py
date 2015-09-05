@@ -62,18 +62,7 @@ class Route(app_manager.RyuApp):
                 self.domains[domain.id] = domain
         if ev.state == DEAD_DISPATCHER:
             del self.domains[domain.id]
-        '''
-        if self.fake_datapath is None:
-            self.fake_datapath = controller.Datapath(
-                domain.socket, domain.address)
-            if domain.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
-                if domain.sbp_proto_version == 4:
-                    self.fake_datapath.ofproto = ofproto_v1_3
-                    self.fake_datapath.ofproto_parser = ofproto_v1_3_parser
-                elif domain.sbp_proto_version == 1:
-                    self.fake_datapath.ofproto = ofproto_v1_0
-                    self.fake_datapath.ofproto_parser = ofproto_v1_0_parser
-        '''
+
     def get_host_location(self, host_ip):
         for domain_id in self.location.locations:
             if host_ip in self.location.locations[domain_id]:
@@ -129,7 +118,8 @@ class Route(app_manager.RyuApp):
         ip_src = ip_pkt.src
         ip_dst = ip_pkt.dst
         result = src_sw = dst_sw = None
-
+        print "src and dst: ", ip_src, ip_dst
+        '''
         src_domain = self.get_host_location(ip_src)
         dst_domain = self.get_host_location(ip_dst)
         # calculate the path.
@@ -147,6 +137,7 @@ class Route(app_manager.RyuApp):
         else:
             # Reflesh the topology database.
             self.network_aware.get_topology(None)
+        '''
 
     @set_ev_cls(oxp_event.EventOXPSBPPacketIn, MAIN_DISPATCHER)
     def _sbp_packet_in_handler(self, ev):
@@ -167,5 +158,4 @@ class Route(app_manager.RyuApp):
             self.arp_forwarding(domain, msg, arp_pkt)
 
         if isinstance(ip_pkt, ipv4.ipv4):
-            # self.shortest_forwarding(domain, msg, eth_type, ip_pkt)
-            pass
+            self.shortest_forwarding(domain, msg, eth_type, ip_pkt)

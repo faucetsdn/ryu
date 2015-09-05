@@ -236,7 +236,7 @@ class OXPDomainFeatures(MsgBase):
     def _serialize_body(self):
         msg_pack_into(oxproto.OXP_DOMAIN_FEATURES_PACK_STR, self.buf,
                       oxproto.OXP_HEADER_SIZE, self.domain_id,
-                      self.proto_type, self.version, self.capabilities)
+                      self.proto_type, self.sbp_version, self.capabilities)
 
 
 @_register_parser

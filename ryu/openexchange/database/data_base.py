@@ -9,4 +9,5 @@ class DataBase(object):
     """
         Define the data base of host data and topology data.
     """
-    pass
+    def __init__(self):
+        pass

@@ -25,7 +25,7 @@ class Host(data_base.DataBase):
 '''
 
 
-class Location(object):
+class Location(data_base.DataBase):
     def __init__(self, locations={}):
         # locations: {domain_id:set([ip1,ip2,...])}
         self.locations = locations

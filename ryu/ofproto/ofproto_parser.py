@@ -50,10 +50,10 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
     assert len(buf) >= msg_len
 
     msg_parser = _MSG_PARSERS.get(version)
-    # print "_MSG_PARSERS: ", _MSG_PARSERS
-    # print "msg_parser: ", msg_parser
     if msg_parser is None:
         raise exception.OFPUnknownVersion(version=version)
+
+    return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
 
     try:
         return msg_parser(datapath, version, msg_type, msg_len, xid, buf)

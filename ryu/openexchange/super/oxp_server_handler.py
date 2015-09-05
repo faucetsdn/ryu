@@ -156,7 +156,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         domain.sbp_proto_version = msg.sbp_version
 
         oxproto_parser = domain.oxproto_parser
-        self.logger.info('domain features ev %s', msg)
+        self.logger.debug('domain features ev %s', msg)
 
         set_config = oxproto_parser.OXPSetConfig(
             domain, CONF.oxp_flags, CONF.oxp_period,
@@ -172,18 +172,14 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
         if self.fake_datapath is None:
             self.fake_datapath = controller.Datapath(
                 domain.socket, domain.address)
-            print domain.sbp_proto_type, oxproto_v1_0.OXPS_OPENFLOW
 
             if domain.sbp_proto_type == oxproto_v1_0.OXPS_OPENFLOW:
-                print "openflow"
                 if domain.sbp_proto_version == 4:
                     self.fake_datapath.ofproto = ofproto_v1_3
                     self.fake_datapath.ofproto_parser = ofproto_v1_3_parser
-                    print "1.3"
                 elif domain.sbp_proto_version == 1:
                     self.fake_datapath.ofproto = ofproto_v1_0
                     self.fake_datapath.ofproto_parser = ofproto_v1_0_parser
-                    print "1.0"
 
     @set_ev_handler(oxp_event.EventOXPEchoRequest,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])

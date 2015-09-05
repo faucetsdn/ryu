@@ -22,7 +22,7 @@ from ryu.openexchange.routing_algorithm.routing_algorithm import dijkstra
 from ryu.openexchange.utils import utils
 
 
-class Shortest_Route(app_manager.RyuApp):
+class Shortest_forwarding(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
         "Network_Aware": network_aware.Network_Aware,
@@ -30,7 +30,8 @@ class Shortest_Route(app_manager.RyuApp):
     }
 
     def __init__(self, *args, **kwargs):
-        super(Shortest_Route, self).__init__(*args, **kwargs)
+        super(Shortest_forwarding, self).__init__(*args, **kwargs)
+        self.name = 'shortest_forwarding'
         self.network_aware = kwargs["Network_Aware"]
         self.network_monitor = kwargs["Network_Monitor"]
         self.mac_to_port = {}
@@ -44,7 +45,9 @@ class Shortest_Route(app_manager.RyuApp):
 
         # dpid->port_num (ports without link)
         self.access_ports = self.network_aware.access_ports
+
         self.outer_ports = self.network_aware.outer_ports
+        self.outer_hosts = set()
 
         self.graph = self.network_aware.graph
 
@@ -76,6 +79,22 @@ class Shortest_Route(app_manager.RyuApp):
         self.logger.debug("Path is not found.")
         return None
 
+    def flood(self, msg):
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        for dpid in self.access_ports:
+            for port in self.access_ports[dpid]:
+                if (dpid, port) not in self.access_table.keys():
+                    actions = [parser.OFPActionOutput(port)]
+                    datapath = self.datapaths[dpid]
+                    out = parser.OFPPacketOut(
+                        datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
+                        in_port=ofproto.OFPP_CONTROLLER,
+                        actions=actions, data=msg.data)
+                    datapath.send_msg(out)
+
     def arp_forwarding(self, msg, arp_pkt):
         datapath = msg.datapath
         ofproto = datapath.ofproto
@@ -84,6 +103,13 @@ class Shortest_Route(app_manager.RyuApp):
         arp_src_ip = arp_pkt.src_ip
         arp_dst_ip = arp_pkt.dst_ip
 
+        # dst in other domain, send to super and return.
+        if arp_dst_ip in self.outer_hosts:
+            if isinstance(msg, parser.OFPPacketIn):
+                self.network_aware.raise_sbp_packet_in_event(
+                    msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
+                return
+        # host in domain.
         result = self.get_host_location(arp_dst_ip)
         if result:  # host record in access table.
             datapath_dst, out_port = result[0], result[1]
@@ -94,31 +120,32 @@ class Shortest_Route(app_manager.RyuApp):
                 datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
                 actions=actions, in_port=ofproto.OFPP_CONTROLLER,
                 data=msg.data)
-
             datapath.send_msg(out)
-        else:       # access info is not existed. send to all host.
-            for dpid in self.access_ports:
-                for port in self.access_ports[dpid]:
-                    if (dpid, port) not in self.access_table.keys():
-                        actions = [parser.OFPActionOutput(port)]
-                        datapath = self.datapaths[dpid]
-                        out = parser.OFPPacketOut(
-                            datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                            in_port=ofproto.OFPP_CONTROLLER,
-                            actions=actions, data=msg.data)
-                        datapath.send_msg(out)
+        else:
+            self.flood(msg)
             # we can not send arp to super every time.
-            self.network_aware.raise_sbp_packet_in_event(
-                msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
+            if isinstance(msg, parser.OFPPacketIn):
+                self.network_aware.raise_sbp_packet_in_event(
+                    msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
+
+        # packet_out from super, record src.
+        if isinstance(msg, parser.OFPPacketOut):
+            for sw in self.access_table:
+                if arp_src_ip in self.access_table[sw]:
+                    return
+            self.outer_hosts.add(arp_src_ip)
 
     def shortest_forwarding(self, msg, eth_type, ip_pkt):
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
         ip_src = ip_pkt.src
         ip_dst = ip_pkt.dst
         result = src_sw = dst_sw = None
 
         src_location = self.get_host_location(ip_src)
         dst_location = self.get_host_location(ip_dst)
-
         if src_location:
             src_sw = src_location[0]
         if dst_location:
@@ -126,15 +153,21 @@ class Shortest_Route(app_manager.RyuApp):
 
         result = dijkstra(self.graph, src_sw)
         if result:
-            path = result[1][src_sw][dst_sw]
-            path.insert(0, src_sw)
-            #self.logger.info(
-            #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
+            if dst_sw:
+                path = result[1][src_sw][dst_sw]
+                path.insert(0, src_sw)
+                #self.logger.info(
+                #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
 
-            flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
-            utils.install_flow(self.datapaths, self.link_to_port,
-                               self.access_table, path, flow_info,
-                               msg.buffer_id, msg.data)
+                flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
+                utils.install_flow(self.datapaths, self.link_to_port,
+                                   self.access_table, path, flow_info,
+                                   msg.buffer_id, msg.data)
+            else:
+                if isinstance(msg, parser.OFPPacketIn):
+                    self.network_aware.raise_sbp_packet_in_event(
+                        msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
+                    print "ipv4 packet in"
         else:
             # Reflesh the topology database.
             self.network_aware.get_topology(None)
@@ -158,10 +191,8 @@ class Shortest_Route(app_manager.RyuApp):
             if in_port in self.outer_ports[datapath.id]:
                 # The packet from other domain, ignore it.
                 return
-
         # We implemente oxp in a big network,
         # so we shouldn't care about the subnet and router.
-
         if isinstance(arp_pkt, arp.arp):
             self.arp_forwarding(msg, arp_pkt)
 
