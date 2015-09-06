@@ -50,7 +50,7 @@ class Network_Aware(app_manager.RyuApp):
         # links   :(src_dpid,dst_dpid)->(src_port,dst_port)
         self.link_to_port = {}
 
-        # {(sw,port) :[host1_ip,host2_ip,host3_ip,host4_ip]}
+        # access_table: {(sw,port) :(ip, mac)}
         # Todo: handle the leave host.
         self.access_table = {}
 
@@ -170,11 +170,14 @@ class Network_Aware(app_manager.RyuApp):
         switch_list = get_switch(self.topology_api_app, None)
         self.create_port_map(switch_list)
         self.switches = self.switch_port_table.keys()
+
         links = get_link(self.topology_api_app, None)
         self.create_interior_links(links)
+
         self.create_access_ports()
         self.get_graph(self.link_to_port.keys())
         # self.show_topology()
+
         if self.oxp_brick is None:
             self.oxp_brick = app_manager.lookup_service_brick('oxp_event')
 

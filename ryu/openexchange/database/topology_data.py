@@ -19,14 +19,11 @@ class Domain(data_base.DataBase):
         class Topo describe the link and vport of domain network
         @args:  domain_id = domain id
                 link is the link from msg.
-                links: {
-                    (src_port, dst_port): capacity,
+
+                self.links: {
+                    (src_port, dst_port): capabilities,
                     ...
                     }
-                self.links:
-                [
-                ((domain_id, domain_id), (i.src_vport, i.dst_vport)):capacities
-                ]
 
                 paths: domain usage, save the intralinks' paths.
                 capabilities:domain usage, save the capabilities of intralinks.
@@ -52,7 +49,7 @@ class Domain(data_base.DataBase):
         elif msg.reason == oxproto_v1_0.OXPPR_DELETE:
             self.ports.remove((msg.vport_no, msg.state))
             for key in self.links.keys():
-                if msg.vport_no in [key[1][0], key[1][1]]:
+                if msg.vport_no in key:
                     del self.links[key]
 
     def update_link(self, domain, links):
@@ -61,9 +58,7 @@ class Domain(data_base.DataBase):
                 capability = int(i.capability[0])
             else:
                 capability = i.capability
-            self.links[(
-                (self.domain_id, self.domain_id),
-                (i.src_vport, i.dst_vport))] = capability
+            self.links[(i.src_vport, i.dst_vport)] = capability
 
             self.ports.add((i.src_vport, oxproto_v1_0.OXPPS_LIVE))
             self.ports.add((i.dst_vport, oxproto_v1_0.OXPPS_LIVE))
@@ -76,10 +71,10 @@ class Super_Topo(data_base.DataBase):
 
         @args:  domains: {id:domain, }
                 links: {
-                    ((src_domain, dst_domain), (src_port, dst_port)): capacity,
+                    (src_domain, dst_domain):(src_port, dst_port, capacity),
                     ...
                         }
-                links is interlinks.
+                links is inter-links.
     """
 
     def __init__(self, domains={}, links={}):
@@ -104,7 +99,8 @@ class Super_Topo(data_base.DataBase):
             # update inter-links
             if msg.reason == oxproto_v1_0.OXPPR_DELETE:
                 for key in self.links.keys():
-                    vport = [(key[0][0], key[1][0]), (key[0][1], key[1][1])]
+                    vport = [(key[0], self.links[key][0]),
+                             (key[1], self.links[key][1])]
                     if (msg.domain.id, msg.vport_no) in vport:
                         del self.links[key]
 

@@ -102,9 +102,9 @@ class Topology(app_manager.RyuApp):
         try:
             src_domain_id, src_vport_no = switches.LLDPPacket.lldp_parse(data)
             if OXP_DEFAULT_FLAGS == CONF.oxp_flags & OXP_DEFAULT_FLAGS:
-                link = {
-                    ((domain.id, in_port), (src_domain_id, src_vport_no)): 1}
+                link = {(domain.id, src_domain_id): (in_port, src_vport_no, 1)}
                 self.topo.update_link(link)
+
                 event = oxp_event.EventOXPLinkDiscovery(domain)
                 self.oxp_brick.send_event_to_observers(event, MAIN_DISPATCHER)
 

@@ -30,9 +30,9 @@ from ryu.openexchange.utils import utils
 from ryu.openexchange.event import oxp_event
 
 
-class Route(app_manager.RyuApp):
+class Routing(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
-        super(Route, self).__init__(*args, **kwargs)
+        super(Routing, self).__init__(*args, **kwargs)
         self.module_topo = app_manager.lookup_service_brick('oxp_topology')
         self.topology = self.module_topo.topo
         self.location = self.module_topo.location
@@ -59,25 +59,25 @@ class Route(app_manager.RyuApp):
         return None
 
     # get Adjacency matrix from inter-links.
-    def get_graph(self, link_list):
-        for src in self.domains.keys():
-            for dst in self.domains.keys():
-                self.graph.setdefault(src, {dst: float('inf')})
-                self.graph[src][dst] = float('inf')
+    def get_graph(self, link_list, nodes):
+        graph = {}
+        for src in nodes.keys():
+            for dst in nodes.keys():
+                graph.setdefault(src, {dst: float('inf')})
+                graph.setdefault(dst, {src: float('inf')})
+                graph[src][dst] = float('inf')
+                graph[dst][src] = float('inf')
                 if src == dst:
-                    self.graph[src][src] = 0
-                else:
-                    for link in link_list:
-                        if (src, dst) == link[0]:
-                            self.graph[src][dst] = link_list[link]
-                            # For dijkstra usage.
-                            self.graph[dst][src] = link_list[link]
-        return self.graph
+                    graph[src][src] = 0
+                elif (src, dst) in link_list:
+                    graph[src][dst] = link_list[(src, dst)][2]
+                    graph[dst][src] = link_list[(src, dst)][2]
+        return graph
 
     @set_ev_cls(oxp_event.EventOXPLinkDiscovery,
-                [CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER])
+                [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def get_topology(self, ev):
-        self.get_graph(self.topology.links)
+        self.graph = self.get_graph(self.topology.links, self.domains)
 
     def get_path(self, graph, src):
         result = dijkstra(graph, src)
@@ -139,15 +139,20 @@ class Route(app_manager.RyuApp):
                 path.insert(0, src_domain)
                 self.logger.info(
                     " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
-        '''
-            flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
-            utils.install_flow(self.datapaths, self.link_to_port,
-                               self.access_table, path, flow_info,
-                               msg.buffer_id, msg.data)
+
+                access_table = {}
+                for domain_id in self.location.locations:
+                    access_table[
+                        (domain_id, ofproto_v1_3.OFPP_LOCAL
+                         )] = self.location.locations[domain_id]
+
+                flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
+                utils.install_flow(self.domains, self.topology.links,
+                                   access_table, path, flow_info,
+                                   msg.buffer_id, msg.data)
         else:
             # Reflesh the topology database.
-            self.network_aware.get_topology(None)
-        '''
+            self.get_topology(None)
 
     @set_ev_cls(oxp_event.EventOXPSBPPacketIn, MAIN_DISPATCHER)
     def _sbp_packet_in_handler(self, ev):
