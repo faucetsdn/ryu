@@ -36,7 +36,6 @@ from ryu.openexchange import oxproto_v1_0_parser
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
 from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
 from ryu.openexchange import topology_data
-from ryu.openexchange.routing_algorithm.routing_algorithm import get_paths
 from ryu import cfg
 from ryu.lib import hub
 

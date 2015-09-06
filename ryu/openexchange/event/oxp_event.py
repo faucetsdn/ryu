@@ -130,6 +130,12 @@ class EventOXPHostStateChange(event.EventBase):
         self.hosts = hosts
 
 
+class EventOXPLinkDiscovery(event.EventBase):
+    def __init__(self, domain):
+        super(EventOXPLinkDiscovery, self).__init__()
+        self.domain = domain
+
+
 if CONF.oxp_role == 'super':
     handler.register_service('ryu.openexchange.super.oxp_server_handler')
 elif CONF.oxp_role == 'domain':

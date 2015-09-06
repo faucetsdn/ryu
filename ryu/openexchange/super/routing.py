@@ -38,19 +38,7 @@ class Route(app_manager.RyuApp):
         self.location = self.module_topo.location
         self.domains = {}
         self.fake_datapath = None
-
-        self.mac_to_port = {}
-        # links   :(src_dpid,dst_dpid)->(src_port,dst_port)
-        # self.link_to_port = self.network_aware.link_to_port
-
-        # {sw :[host1_ip,host2_ip,host3_ip,host4_ip]}
-        # self.access_table = self.network_aware.access_table
-
-        # dpid->port_num (ports without link)
-        # self.access_ports = self.network_aware.access_ports
-        # self.outer_ports = self.network_aware.outer_ports
-
-        # self.graph = self.network_aware.graph
+        self.graph = {}
 
     @set_ev_cls(oxp_event.EventOXPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -70,6 +58,27 @@ class Route(app_manager.RyuApp):
         self.logger.debug("%s location is not found." % host_ip)
         return None
 
+    # get Adjacency matrix from inter-links.
+    def get_graph(self, link_list):
+        for src in self.domains.keys():
+            for dst in self.domains.keys():
+                self.graph.setdefault(src, {dst: float('inf')})
+                self.graph[src][dst] = float('inf')
+                if src == dst:
+                    self.graph[src][src] = 0
+                else:
+                    for link in link_list:
+                        if (src, dst) == link[0]:
+                            self.graph[src][dst] = link_list[link]
+                            # For dijkstra usage.
+                            self.graph[dst][src] = link_list[link]
+        return self.graph
+
+    @set_ev_cls(oxp_event.EventOXPLinkDiscovery,
+                [CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER])
+    def get_topology(self, ev):
+        self.get_graph(self.topology.links)
+
     def get_path(self, graph, src):
         result = dijkstra(graph, src)
         if result:
@@ -86,7 +95,6 @@ class Route(app_manager.RyuApp):
 
         arp_src_ip = arp_pkt.src_ip
         arp_dst_ip = arp_pkt.dst_ip
-        self.logger.info("src_ip: %s, dst_ip: %s " % (arp_src_ip, arp_dst_ip))
 
         domain_id = self.get_host_location(arp_dst_ip)
         if domain_id:
@@ -117,19 +125,21 @@ class Route(app_manager.RyuApp):
     def shortest_forwarding(self, domain, msg, eth_type, ip_pkt):
         ip_src = ip_pkt.src
         ip_dst = ip_pkt.dst
-        result = src_sw = dst_sw = None
-        print "src and dst: ", ip_src, ip_dst
-        '''
+        src_domain = dst_domain = None
+
         src_domain = self.get_host_location(ip_src)
         dst_domain = self.get_host_location(ip_dst)
-        # calculate the path.
-        result = dijkstra(self.graph, src_sw)
-        if result:
-            path = result[1][src_sw][dst_sw]
-            path.insert(0, src_sw)
-            #self.logger.info(
-            #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
+        print "src and dst: ", ip_src, ip_dst, src_domain, dst_domain
 
+        # calculate the path.
+        path_dict = self.get_path(self.graph, src_domain)
+        if path_dict:
+            if dst_domain:
+                path = path_dict[src_domain][dst_domain]
+                path.insert(0, src_domain)
+                self.logger.info(
+                    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
+        '''
             flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
             utils.install_flow(self.datapaths, self.link_to_port,
                                self.access_table, path, flow_info,

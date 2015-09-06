@@ -151,10 +151,10 @@ class Shortest_forwarding(app_manager.RyuApp):
         if dst_location:
             dst_sw = dst_location[0]
 
-        result = dijkstra(self.graph, src_sw)
-        if result:
+        path_dict = self.get_path(self.graph, src_sw)
+        if path_dict:
             if dst_sw:
-                path = result[1][src_sw][dst_sw]
+                path = path_dict[src_sw][dst_sw]
                 path.insert(0, src_sw)
                 #self.logger.info(
                 #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))

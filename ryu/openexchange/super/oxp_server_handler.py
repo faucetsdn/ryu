@@ -226,7 +226,7 @@ class OXP_Server_Handler(ryu.base.app_manager.RyuApp):
             buf += data
             while len(buf) >= required_len:
                 (version, msg_type, msg_len, xid) = ofproto_parser.header(buf)
-                self.logger.info('ofp msg %s cls %s', msg, msg.__class__)
+                self.logger.debug('ofp msg %s cls %s', msg, msg.__class__)
                 required_len = msg_len
                 if len(buf) < required_len:
                     break

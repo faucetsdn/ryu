@@ -121,22 +121,12 @@ class Network_Aware(app_manager.RyuApp):
         for src in self.switches:
             for dst in self.switches:
                 self.graph.setdefault(src, {dst: float('inf')})
+                self.graph[src][dst] = float('inf')
                 if src == dst:
                     self.graph[src][src] = 0
                 elif (src, dst) in link_list:
                     self.graph[src][dst] = 1
-                else:
-                    self.graph[src][dst] = float('inf')
         return self.graph
-
-        for sw in switch_list:
-            dpid = sw.dp.id
-            self.switch_port_table.setdefault(dpid, set())
-            self.interior_ports.setdefault(dpid, set())
-            self.access_ports.setdefault(dpid, set())
-
-            for p in sw.ports:
-                self.switch_port_table[dpid].add(p.port_no)
 
     def create_port_map(self, switch_list):
         for sw in switch_list:

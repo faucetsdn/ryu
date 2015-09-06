@@ -95,10 +95,8 @@ class TopoReply(app_manager.RyuApp):
         self.topology.ports = self.network.vport.keys()
         if len(self.topology.ports):
             capabilities, paths = get_paths(self.network.graph, CONF.oxp_flags)
-
             self.topology.capabilities = capabilities
             self.topology.paths = paths
-
             return self.create_links(self.topology.ports, capabilities)
         return None
 

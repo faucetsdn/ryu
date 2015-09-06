@@ -10,8 +10,7 @@ Date                Work
 import itertools
 import logging
 
-import ryu.base.app_manager
-
+from ryu.base import app_manager
 from ryu.lib import hub
 from ryu import utils
 from ryu.openexchange.event import oxp_event
@@ -24,15 +23,17 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
 from ryu.openexchange.database import topology_data
 from ryu.openexchange.database import host_data
 from ryu.openexchange import oxproto_v1_0
-from ryu.ofproto import ofproto_common, ofproto_parser
-
 from ryu.openexchange.domain import config
+from ryu.openexchange.oxproto_common import OXP_DEFAULT_FLAGS
+
+from ryu.ofproto import ofproto_common, ofproto_parser
+from ryu.topology import switches
 from ryu import cfg
 
 CONF = cfg.CONF
 
 
-class Topology(ryu.base.app_manager.RyuApp):
+class Topology(app_manager.RyuApp):
     '''
         Collect topology data include host data and topo data.
     '''
@@ -42,6 +43,7 @@ class Topology(ryu.base.app_manager.RyuApp):
         self.topo = topology_data.Super_Topo()
         self.location = host_data.Location()
         self.domains = {}
+        self.oxp_brick = None
 
     @set_ev_cls(oxp_event.EventOXPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -60,6 +62,7 @@ class Topology(ryu.base.app_manager.RyuApp):
                 self.logger.info("Domain[%s] connected." % domain.id)
             else:
                 self.logger.info("same domain id ocurred: %s" % domain.id)
+            self.oxp_brick = app_manager.lookup_service_brick('oxp_event')
         if ev.state == DEAD_DISPATCHER:
             del self.topo.domains[domain.id]
             del self.location.locations[domain.id]
@@ -88,4 +91,22 @@ class Topology(ryu.base.app_manager.RyuApp):
         msg = ev.msg
         domain = msg.domain
         self.location.update(domain.id, msg.hosts)
-        self.logger.info("Host reply: ", self.location.locations)
+
+    @set_ev_cls(oxp_event.EventOXPSBPPacketIn, MAIN_DISPATCHER)
+    def sbp_packet_in_handler(self, ev):
+        msg = ev.msg
+        in_port = msg.match['in_port']
+        domain = ev.domain
+        data = msg.data
+
+        try:
+            src_domain_id, src_vport_no = switches.LLDPPacket.lldp_parse(data)
+            if OXP_DEFAULT_FLAGS == CONF.oxp_flags & OXP_DEFAULT_FLAGS:
+                link = {
+                    ((domain.id, in_port), (src_domain_id, src_vport_no)): 1}
+                self.topo.update_link(link)
+                event = oxp_event.EventOXPLinkDiscovery(domain)
+                self.oxp_brick.send_event_to_observers(event, MAIN_DISPATCHER)
+
+        except switches.LLDPPacket.LLDPUnknownFormat as e:
+            return

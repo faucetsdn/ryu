@@ -3,7 +3,7 @@ This file define the topology's data structure.
 Author:www.muzixing.com
 
 
-Link:((src_domain, dst_domain, src_port, dst_port): capacity)
+Link:((src_domain, dst_domain), (src_port, dst_port)): capacity
 
 If src_domain ==dst_domain, the link will be an interallink.
 esle, it is an intralink.
@@ -12,70 +12,6 @@ esle, it is an intralink.
 from . import data_base
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange.oxproto_common import OXP_DEFAULT_FLAGS
-
-'''
-class IntraLinks(data_base.DataBase):
-    def __init__(self, links={}, domain_id=None):
-        self.links = links
-        self.domain_id = domain_id
-
-    def update(self, links):
-
-            #@args:links: src_vport, dst_vport, capability
-
-        for i in links:
-            self.links[(
-                domain_id, domain_id, i.src_vport, i.dst_vport)] = i.capability
-
-    def get_links(self):
-        return self.links
-
-    def delete_links(self, links):
-        for link in links:
-            del self.links[link]
-
-    def delete_link(self, link):
-        del self.links[link]
-
-
-class InterLinks(data_base.DataBase):
-    def __init__(self, links={}):
-        self.links = links
-
-    def update(self, links):
-
-        # links: {(src_domain, dst_domain, src_port, dst_port): capacity}
-
-        # links have been formated.
-        self.links.update(links)
-
-    def get_links(self):
-        return self.links
-
-    def delete_links(self, links):
-        for link in links:
-            del self.links[link]
-
-    def delete_link(self, link):
-        del self.links[link]
-
-
-class Links(data_base.DataBase):
-    def __init__(self, interlinks=InterLinks(), intralinks=IntraLinks()):
-        self.interlinks = interlinks    # object InterallLinks
-        self.intralinks = intralinks     # object Intralinks
-        self.links = {}
-
-    def __call__(self):
-        self.merge()
-
-    def merge(self):
-        self.links.update(self.interlinks.links)
-        self.links.update(self.intralinks.links)
-
-    def get_links(self):
-        return self.links
-'''
 
 
 class Domain(data_base.DataBase):
@@ -86,9 +22,12 @@ class Domain(data_base.DataBase):
                 links: {
                     (src_port, dst_port): capacity,
                     ...
-                self.links[
-                (domain_id, domain_id, i.src_vport, i.dst_vport):capacities]
-                }
+                    }
+                self.links:
+                [
+                ((domain_id, domain_id), (i.src_vport, i.dst_vport)):capacities
+                ]
+
                 paths: domain usage, save the intralinks' paths.
                 capabilities:domain usage, save the capabilities of intralinks.
     """
@@ -113,7 +52,7 @@ class Domain(data_base.DataBase):
         elif msg.reason == oxproto_v1_0.OXPPR_DELETE:
             self.ports.remove((msg.vport_no, msg.state))
             for key in self.links.keys():
-                if msg.vport_no in [key[2], key[3]]:
+                if msg.vport_no in [key[1][0], key[1][1]]:
                     del self.links[key]
 
     def update_link(self, domain, links):
@@ -123,8 +62,8 @@ class Domain(data_base.DataBase):
             else:
                 capability = i.capability
             self.links[(
-                self.domain_id, self.domain_id,
-                i.src_vport, i.dst_vport)] = capability
+                (self.domain_id, self.domain_id),
+                (i.src_vport, i.dst_vport))] = capability
 
             self.ports.add((i.src_vport, oxproto_v1_0.OXPPS_LIVE))
             self.ports.add((i.dst_vport, oxproto_v1_0.OXPPS_LIVE))
@@ -137,7 +76,7 @@ class Super_Topo(data_base.DataBase):
 
         @args:  domains: {id:domain, }
                 links: {
-                    (src_domain, dst_domain, src_port, dst_port): capacity,
+                    ((src_domain, dst_domain), (src_port, dst_port)): capacity,
                     ...
                         }
                 links is interlinks.
@@ -165,7 +104,7 @@ class Super_Topo(data_base.DataBase):
             # update inter-links
             if msg.reason == oxproto_v1_0.OXPPR_DELETE:
                 for key in self.links.keys():
-                    vport = [(key[0], key[2]), (key[1], key[3])]
+                    vport = [(key[0][0], key[1][0]), (key[0][1], key[1][1])]
                     if (msg.domain.id, msg.vport_no) in vport:
                         del self.links[key]
 

@@ -21,21 +21,18 @@ def floyd(graph):
         for j in xrange(length):
             if i == j:
                 continue
-
             path[i].setdefault(j, [i, j])
             new_node = None
 
             for k in xrange(length):
                 if k == j:
                     continue
-
                 new_len = graph[i][k] + graph[k][j]
                 if graph[i][j] > new_len:
                     graph[i][j] = new_len
                     new_node = k
             if new_node:
                 path[i][j].insert(-1, new_node)
-
     return graph, path
 
 
@@ -54,14 +51,12 @@ def floyd_dict(graph):
             for mid in graph:
                 if mid == dst:
                     continue
-
                 new_len = graph[src][mid] + graph[mid][dst]
                 if graph[src][dst] > new_len:
                     graph[src][dst] = new_len
                     new_node = mid
             if new_node:
                 path[src][dst].insert(-1, new_node)
-
     return graph, path
 
 
@@ -77,17 +72,21 @@ def dijkstra(graph, src):
         nodes = [i for i in xrange(length)]
     elif type_ == dict:
         nodes = graph.keys()
+
     visited = [src]
     path = {src: {src: []}}
+
     if src not in nodes:
-        LOG.info("[Dijkstra]:Src is not in nodes.")
+        LOG.info("[Dijkstra]:Src[%s] is not in nodes." % src)
         return None
     else:
         nodes.remove(src)
+
     distance_graph = {src: 0}
     pre = next = src
     no_link_value = 100000
 
+    # Entire graph include non-links.
     while nodes:
         distance = no_link_value
         for v in visited:
@@ -108,7 +107,6 @@ def dijkstra(graph, src):
         else:
             LOG.info("Next node is not found.")
             return None
-
     return distance_graph, path
 
 
