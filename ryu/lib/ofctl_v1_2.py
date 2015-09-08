@@ -102,7 +102,22 @@ def to_actions(dp, acts):
             actions.append(action)
         else:
             action_type = a.get('type')
-            if action_type == 'GOTO_TABLE':
+            if action_type == 'WRITE_ACTIONS':
+                write_actions = []
+                write_acts = a.get('actions')
+                for a in write_acts:
+                    action = to_action(dp, a)
+                    if action is not None:
+                        write_actions.append(action)
+                    else:
+                        LOG.error('Unknown action type: %s', action_type)
+                if write_actions:
+                    inst.append(parser.OFPInstructionActions(ofp.OFPIT_WRITE_ACTIONS,
+                                                             write_actions))
+            elif action_type == 'CLEAR_ACTIONS':
+                inst.append(parser.OFPInstructionActions(
+                            ofp.OFPIT_CLEAR_ACTIONS, []))
+            elif action_type == 'GOTO_TABLE':
                 table_id = int(a.get('table_id'))
                 inst.append(parser.OFPInstructionGotoTable(table_id))
             elif action_type == 'WRITE_METADATA':
@@ -116,8 +131,9 @@ def to_actions(dp, acts):
             else:
                 LOG.error('Unknown action type: %s', action_type)
 
-    inst.append(parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
-                                             actions))
+    if actions:
+        inst.append(parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
+                                                 actions))
     return inst
 
 
