@@ -125,133 +125,166 @@ class Test_ofctl(unittest.TestCase):
         # str -> action
         result = to_actions(dp, act_list)
         insts = result[0]
-        if act_type in test.supported_action:
-            cls = test.supported_action[act_type]
-        else:
-            cls = None
-        if act_type == 'GOTO_TABLE':
-            ok_(isinstance(insts, cls))
-            eq_(insts.table_id, act["table_id"])
-        elif act_type == 'WRITE_METADATA':
-            ok_(isinstance(insts, cls))
-            eq_(insts.metadata, act["metadata"])
-            eq_(insts.metadata_mask, act["metadata_mask"])
-        elif act_type == 'METER':
-            ok_(isinstance(insts, cls))
-            eq_(insts.meter_id, act["meter_id"])
-        else:
-            if test.ver == ofproto_v1_0.OFP_VERSION:
-                action = insts
+
+        def equal_act(insts, act, act_type, test):
+            if act_type in test.supported_action:
+                cls = test.supported_action[act_type]
             else:
-                action = insts.actions[0]
-            ok_(isinstance(action, cls))
-            if act_type == 'OUTPUT':
-                eq_(action.port, act["port"])
-            elif act_type == 'SET_VLAN_VID':
-                eq_(action.vlan_vid, act["vlan_vid"])
-            elif act_type == 'SET_VLAN_PCP':
-                eq_(action.vlan_pcp, act["vlan_pcp"])
-            elif act_type == 'SET_DL_SRC':
-                eq_(addrconv.mac.bin_to_text(action.dl_addr),
-                    act["dl_src"])
-            elif act_type == 'SET_DL_DST':
-                eq_(addrconv.mac.bin_to_text(action.dl_addr),
-                    act["dl_dst"])
-            elif act_type == 'SET_NW_SRC':
-                ip = netaddr.ip.IPAddress(action.nw_addr)
-                eq_(str(ip), act["nw_src"])
-            elif act_type == 'SET_NW_DST':
-                ip = netaddr.ip.IPAddress(action.nw_addr)
-                eq_(str(ip), act["nw_dst"])
-            elif act_type == 'SET_NW_TOS':
-                eq_(action.tos, act["nw_tos"])
-            elif act_type == 'SET_TP_SRC':
-                eq_(action.tp, act["tp_src"])
-            elif act_type == 'SET_TP_DST':
-                eq_(action.tp, act["tp_dst"])
-            elif act_type == 'ENQUEUE':
-                eq_(action.queue_id, act["queue_id"])
-                eq_(action.port, act["port"])
-            elif act_type == 'SET_MPLS_TTL':
-                eq_(action.mpls_ttl, act["mpls_ttl"])
-            elif act_type in ['PUSH_VLAN', 'PUSH_MPLS',
-                              'POP_MPLS', 'PUSH_PBB']:
-                eq_(action.ethertype, act["ethertype"])
-            elif act_type == 'SET_QUEUE':
-                eq_(action.queue_id, act["queue_id"])
-            elif act_type == 'GROUP':
-                eq_(action.group_id, act["group_id"])
-            elif act_type == 'SET_NW_TTL':
-                eq_(action.nw_ttl, act["nw_ttl"])
-            elif act_type in ['STRIP_VLAN', 'COPY_TTL_OUT',
-                              'COPY_TTL_IN', 'DEC_MPLS_TTL',
-                              'POP_VLAN', 'DEC_NW_TTL', 'POP_PBB']:
-                pass
+                cls = None
+            if act_type == 'GOTO_TABLE':
+                ok_(isinstance(insts, cls))
+                eq_(insts.table_id, act["table_id"])
+            elif act_type == 'WRITE_METADATA':
+                ok_(isinstance(insts, cls))
+                eq_(insts.metadata, act["metadata"])
+                eq_(insts.metadata_mask, act["metadata_mask"])
+            elif act_type == 'METER':
+                ok_(isinstance(insts, cls))
+                eq_(insts.meter_id, act["meter_id"])
             else:
-                assert False
+                if test.ver == ofproto_v1_0.OFP_VERSION:
+                    action = insts
+                else:
+                    action = insts.actions[0]
+                ok_(isinstance(action, cls))
+                if act_type == 'OUTPUT':
+                    eq_(action.port, act["port"])
+                elif act_type == 'SET_VLAN_VID':
+                    eq_(action.vlan_vid, act["vlan_vid"])
+                elif act_type == 'SET_VLAN_PCP':
+                    eq_(action.vlan_pcp, act["vlan_pcp"])
+                elif act_type == 'SET_DL_SRC':
+                    eq_(addrconv.mac.bin_to_text(action.dl_addr),
+                        act["dl_src"])
+                elif act_type == 'SET_DL_DST':
+                    eq_(addrconv.mac.bin_to_text(action.dl_addr),
+                        act["dl_dst"])
+                elif act_type == 'SET_NW_SRC':
+                    ip = netaddr.ip.IPAddress(action.nw_addr)
+                    eq_(str(ip), act["nw_src"])
+                elif act_type == 'SET_NW_DST':
+                    ip = netaddr.ip.IPAddress(action.nw_addr)
+                    eq_(str(ip), act["nw_dst"])
+                elif act_type == 'SET_NW_TOS':
+                    eq_(action.tos, act["nw_tos"])
+                elif act_type == 'SET_TP_SRC':
+                    eq_(action.tp, act["tp_src"])
+                elif act_type == 'SET_TP_DST':
+                    eq_(action.tp, act["tp_dst"])
+                elif act_type == 'ENQUEUE':
+                    eq_(action.queue_id, act["queue_id"])
+                    eq_(action.port, act["port"])
+                elif act_type == 'SET_MPLS_TTL':
+                    eq_(action.mpls_ttl, act["mpls_ttl"])
+                elif act_type in ['PUSH_VLAN', 'PUSH_MPLS',
+                                  'POP_MPLS', 'PUSH_PBB']:
+                    eq_(action.ethertype, act["ethertype"])
+                elif act_type == 'SET_QUEUE':
+                    eq_(action.queue_id, act["queue_id"])
+                elif act_type == 'GROUP':
+                    eq_(action.group_id, act["group_id"])
+                elif act_type == 'SET_NW_TTL':
+                    eq_(action.nw_ttl, act["nw_ttl"])
+                elif act_type in ['STRIP_VLAN', 'COPY_TTL_OUT',
+                                  'COPY_TTL_IN', 'DEC_MPLS_TTL',
+                                  'POP_VLAN', 'DEC_NW_TTL', 'POP_PBB']:
+                    pass
+                else:
+                    assert False
+
+        if test.ver == ofproto_v1_0.OFP_VERSION:
+            equal_act(insts, act, act_type, test)
+        else:
+            if act_type == 'WRITE_ACTIONS':
+                ok_(isinstance(insts, test._parser.OFPInstructionActions))
+                eq_(insts.type, test._ofproto.OFPIT_WRITE_ACTIONS)
+                equal_act(insts, act["actions"][0], act["actions"][0]["type"], test)
+            elif act_type == 'CLEAR_ACTIONS':
+                ok_(isinstance(insts, test._parser.OFPInstructionActions))
+                eq_(insts.type, test._ofproto.OFPIT_CLEAR_ACTIONS)
+            else:
+                if act_type not in ['GOTO_TABLE', 'WRITE_METADATA', 'METER']:
+                    ok_(isinstance(insts, test._parser.OFPInstructionActions))
+                    eq_(insts.type, test._ofproto.OFPIT_APPLY_ACTIONS)
+                    equal_act(insts, act, act_type, test)
+                else:
+                    equal_act(insts, act, act_type, test)
 
         # action -> str
         action_str = actions_to_str(result)
-        action_str_list = action_str[0].split(':', 1)
-        eq_(action_str_list[0], act_type)
-        if act_type == 'GOTO_TABLE':
-            eq_(int(action_str_list[1]), act["table_id"])
-        elif act_type == 'WRITE_METADATA':
-            met = action_str_list[1].split('/')
-            eq_(int(met[0], 16), act["metadata"])
-            eq_(int(met[1], 16), act["metadata_mask"])
-        elif act_type == 'METER':
-            eq_(int(action_str_list[1]), act["meter_id"])
-        else:
-            if act_type == 'OUTPUT':
-                eq_(int(action_str_list[1]), act["port"])
-            elif act_type == 'SET_VLAN_VID':
-                eq_(int(action_str_list[1]), act["vlan_vid"])
-            elif act_type == 'SET_VLAN_PCP':
-                eq_(int(action_str_list[1]), act["vlan_pcp"])
-            elif act_type == 'SET_DL_SRC':
-                eq_(action_str_list[1], act["dl_src"])
-            elif act_type == 'SET_DL_DST':
-                eq_(action_str_list[1], act["dl_dst"])
-            elif act_type == 'SET_NW_SRC':
-                eq_(action_str_list[1], act["nw_src"])
-            elif act_type == 'SET_NW_DST':
-                eq_(action_str_list[1], act["nw_dst"])
-            elif act_type == 'SET_NW_TOS':
-                eq_(int(action_str_list[1]), act["nw_tos"])
-            elif act_type == 'SET_TP_SRC':
-                eq_(int(action_str_list[1]), act["tp_src"])
-            elif act_type == 'SET_TP_DST':
-                eq_(int(action_str_list[1]), act["tp_dst"])
-            elif act_type == 'ENQUEUE':
-                enq = action_str_list[1].split(':')
-                eq_(int(enq[0], 10), act["port"])
-                eq_(int(enq[1], 10), act["queue_id"])
-            elif act_type == 'SET_MPLS_TTL':
-                eq_(int(action_str_list[1]), act["mpls_ttl"])
-            elif act_type == 'PUSH_VLAN':
-                eq_(int(action_str_list[1]), act["ethertype"])
-            elif act_type == 'PUSH_MPLS':
-                eq_(int(action_str_list[1]), act["ethertype"])
-            elif act_type == 'POP_MPLS':
-                eq_(int(action_str_list[1]), act["ethertype"])
-            elif act_type == 'SET_QUEUE':
-                eq_(int(action_str_list[1]), act["queue_id"])
-            elif act_type == 'GROUP':
-                eq_(int(action_str_list[1]), act["group_id"])
-            elif act_type == 'SET_NW_TTL':
-                eq_(int(action_str_list[1]), act["nw_ttl"])
-            elif act_type == 'SET_FIELD':
-                eq_(action_str_list[1].strip(' {'), act["field"])
-                eq_(action_str_list[2].strip('} '), act["value"])
-            elif act_type == 'PUSH_PBB':
-                eq_(int(action_str_list[1]), act["ethertype"])
-            elif act_type in ['STRIP_VLAN', 'COPY_TTL_OUT',
-                              'COPY_TTL_IN', 'DEC_MPLS_TTL',
-                              'POP_VLAN', 'DEC_NW_TTL', 'POP_PBB']:
+
+        def equal_str(action_str, act, act_type, test):
+            action_str_list = action_str[0].split(':', 1)
+            eq_(action_str_list[0], act_type)
+
+            if act_type == 'GOTO_TABLE':
+                eq_(int(action_str_list[1]), act["table_id"])
+            elif act_type == 'WRITE_METADATA':
+                met = action_str_list[1].split('/')
+                eq_(int(met[0], 16), act["metadata"])
+                eq_(int(met[1], 16), act["metadata_mask"])
+            elif act_type == 'METER':
+                eq_(int(action_str_list[1]), act["meter_id"])
+            elif act_type == 'CLEAR_ACTIONS':
                 pass
             else:
-                assert False
+                if act_type == 'OUTPUT':
+                    eq_(int(action_str_list[1]), act["port"])
+                elif act_type == 'SET_VLAN_VID':
+                    eq_(int(action_str_list[1]), act["vlan_vid"])
+                elif act_type == 'SET_VLAN_PCP':
+                    eq_(int(action_str_list[1]), act["vlan_pcp"])
+                elif act_type == 'SET_DL_SRC':
+                    eq_(action_str_list[1], act["dl_src"])
+                elif act_type == 'SET_DL_DST':
+                    eq_(action_str_list[1], act["dl_dst"])
+                elif act_type == 'SET_NW_SRC':
+                    eq_(action_str_list[1], act["nw_src"])
+                elif act_type == 'SET_NW_DST':
+                    eq_(action_str_list[1], act["nw_dst"])
+                elif act_type == 'SET_NW_TOS':
+                    eq_(int(action_str_list[1]), act["nw_tos"])
+                elif act_type == 'SET_TP_SRC':
+                    eq_(int(action_str_list[1]), act["tp_src"])
+                elif act_type == 'SET_TP_DST':
+                    eq_(int(action_str_list[1]), act["tp_dst"])
+                elif act_type == 'ENQUEUE':
+                    enq = action_str_list[1].split(':')
+                    eq_(int(enq[0], 10), act["port"])
+                    eq_(int(enq[1], 10), act["queue_id"])
+                elif act_type == 'SET_MPLS_TTL':
+                    eq_(int(action_str_list[1]), act["mpls_ttl"])
+                elif act_type == 'PUSH_VLAN':
+                    eq_(int(action_str_list[1]), act["ethertype"])
+                elif act_type == 'PUSH_MPLS':
+                    eq_(int(action_str_list[1]), act["ethertype"])
+                elif act_type == 'POP_MPLS':
+                    eq_(int(action_str_list[1]), act["ethertype"])
+                elif act_type == 'SET_QUEUE':
+                    eq_(int(action_str_list[1]), act["queue_id"])
+                elif act_type == 'GROUP':
+                    eq_(int(action_str_list[1]), act["group_id"])
+                elif act_type == 'SET_NW_TTL':
+                    eq_(int(action_str_list[1]), act["nw_ttl"])
+                elif act_type == 'SET_FIELD':
+                    eq_(action_str_list[1].strip(' {'), act["field"])
+                    eq_(action_str_list[2].strip('} '), act["value"])
+                elif act_type == 'PUSH_PBB':
+                    eq_(int(action_str_list[1]), act["ethertype"])
+                elif act_type in ['STRIP_VLAN', 'COPY_TTL_OUT',
+                                  'COPY_TTL_IN', 'DEC_MPLS_TTL',
+                                  'POP_VLAN', 'DEC_NW_TTL', 'POP_PBB']:
+                    pass
+                else:
+                    assert False
+
+        if act_type == 'WRITE_ACTIONS':
+            action_str = action_str[0]["WRITE_ACTIONS"]
+            act = act["actions"][0]
+            act_type = act["type"]
+            equal_str(action_str, act, act_type, test)
+        else:
+            equal_str(action_str, act, act_type, test)
 
     def _test_to_match(self, attrs, test):
         to_match = test.to_match
@@ -549,6 +582,9 @@ class test_data_v1_2(test_data_base):
             {'type': 'GROUP', 'group_id': 5},
             {'type': 'SET_NW_TTL', 'nw_ttl': 64},
             {'type': 'DEC_NW_TTL'},
+            {"type": "CLEAR_ACTIONS"},
+            {"type": "WRITE_ACTIONS",
+             "actions": [{"type": "OUTPUT", "port": 4}]},
             {'type': 'GOTO_TABLE', 'table_id': 8},
             {'type': 'WRITE_METADATA', 'metadata': 8,
              'metadata_mask': (1 << 64) - 1},
