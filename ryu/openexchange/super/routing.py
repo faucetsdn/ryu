@@ -37,7 +37,6 @@ class Routing(app_manager.RyuApp):
         self.topology = self.module_topo.topo
         self.location = self.module_topo.location
         self.domains = {}
-        self.fake_datapath = None
         self.graph = {}
 
     @set_ev_cls(oxp_event.EventOXPStateChange,
@@ -64,14 +63,11 @@ class Routing(app_manager.RyuApp):
         for src in nodes.keys():
             for dst in nodes.keys():
                 graph.setdefault(src, {dst: float('inf')})
-                graph.setdefault(dst, {src: float('inf')})
                 graph[src][dst] = float('inf')
-                graph[dst][src] = float('inf')
                 if src == dst:
                     graph[src][src] = 0
                 elif (src, dst) in link_list:
                     graph[src][dst] = link_list[(src, dst)][2]
-                    graph[dst][src] = link_list[(src, dst)][2]
         return graph
 
     @set_ev_cls(oxp_event.EventOXPLinkDiscovery,
@@ -88,7 +84,6 @@ class Routing(app_manager.RyuApp):
         return None
 
     def arp_forwarding(self, domain, msg, arp_pkt):
-        # datapath = self.fake_datapath
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -101,22 +96,18 @@ class Routing(app_manager.RyuApp):
             # build packet_out pkt and put it into sbp, send to domain
             domain = self.domains[domain_id]
 
-            actions = [parser.OFPActionOutput(ofproto.OFPP_LOCAL)]
-            out = parser.OFPPacketOut(
-                datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                actions=actions, in_port=ofproto.OFPP_CONTROLLER,
-                data=msg.data)
+            out = utils._build_packet_out(
+                datapath, ofproto.OFP_NO_BUFFER,
+                ofproto.OFPP_CONTROLLER, ofproto.OFPP_LOCAL, msg.data)
             out.serialize()
 
             sbp_pkt = domain.oxproto_parser.OXPSBP(domain, data=out.buf)
             domain.send_msg(sbp_pkt)
         else:   # access info is not existed. send to all UNknow access port
             for domain in self.domains.values():
-                actions = [parser.OFPActionOutput(ofproto.OFPP_LOCAL)]
-                out = parser.OFPPacketOut(
-                    datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                    in_port=ofproto.OFPP_CONTROLLER,
-                    actions=actions, data=msg.data)
+                out = utils._build_packet_out(
+                    datapath, ofproto.OFP_NO_BUFFER,
+                    ofproto.OFPP_CONTROLLER, ofproto.OFPP_LOCAL, msg.data)
                 out.serialize()
 
                 sbp_pkt = domain.oxproto_parser.OXPSBP(domain, data=out.buf)
@@ -147,9 +138,9 @@ class Routing(app_manager.RyuApp):
                          )] = self.location.locations[domain_id]
 
                 flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
-                utils.install_flow(self.domains, self.topology.links,
-                                   access_table, path, flow_info,
-                                   msg.buffer_id, msg.data)
+                utils.oxp_install_flow(self.domains, self.topology.links,
+                                       access_table, path, flow_info,
+                                       msg)
         else:
             # Reflesh the topology database.
             self.get_topology(None)
@@ -168,7 +159,6 @@ class Routing(app_manager.RyuApp):
 
         # We implemente oxp in a big network,
         # so we shouldn't care about the subnet and router.
-
         if isinstance(arp_pkt, arp.arp):
             self.arp_forwarding(domain, msg, arp_pkt)
 

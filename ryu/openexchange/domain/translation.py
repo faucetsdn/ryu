@@ -36,6 +36,8 @@ from ryu.openexchange import oxproto_v1_0_parser
 from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
 from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
 from ryu.openexchange import topology_data
+from ryu.openexchange.utils import utils
+
 from ryu import cfg
 from ryu.lib import hub
 
@@ -60,48 +62,6 @@ class Translation(app_manager.RyuApp):
         self.buffer = buffer_data.Buffer_Data()
         self.buffer_id = 0
 
-    def flood(self, msg):
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-
-        for dpid in self.access_ports:
-            for port in self.access_ports[dpid]:
-                if (dpid, port) not in self.access_table.keys():
-                    actions = [parser.OFPActionOutput(port)]
-                    datapath = self.datapaths[dpid]
-                    out = parser.OFPPacketOut(
-                        datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                        in_port=ofproto.OFPP_CONTROLLER,
-                        actions=actions, data=msg.data)
-                    datapath.send_msg(out)
-
-    def arp_forwarding(self, msg, arp_pkt):
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-
-        arp_src_ip = arp_pkt.src_ip
-        arp_dst_ip = arp_pkt.dst_ip
-
-        result = self.get_host_location(arp_dst_ip)
-        if result:  # host record in access table.
-            datapath_dst, out_port = result[0], result[1]
-            actions = [parser.OFPActionOutput(out_port)]
-            datapath = self.datapaths[datapath_dst]
-
-            out = parser.OFPPacketOut(
-                datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                actions=actions, in_port=ofproto.OFPP_CONTROLLER,
-                data=msg.data)
-            datapath.send_msg(out)
-        else:
-            self.flood(msg)
-            # we can not send arp to super every time.
-            if isinstance(msg, parser.OFPPacketIn):
-                self.network_aware.raise_sbp_packet_in_event(
-                    msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
-
     @set_ev_cls(oxp_event.EventOXPSBPPacketOut, MAIN_DISPATCHER)
     def sbp_packet_out_handler(self, ev):
         msg = ev.msg
@@ -111,18 +71,28 @@ class Translation(app_manager.RyuApp):
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
         eth_type = pkt.get_protocols(ethernet.ethernet)[0].ethertype
-        # Flood.
+
         if msg.actions[0].port == ofproto_v1_3.OFPP_LOCAL:
+            # Flood.
             if isinstance(arp_pkt, arp.arp):
                 self.router.arp_forwarding(msg, arp_pkt)
             print "outer_hosts: ", self.router.outer_hosts
             #if isinstance(ip_pkt, ipv4.ipv4):
             #    self.shortest_forwarding(msg, eth_type, ip_pkt)
-
-            #self.buffer.setdefault(self.buffer_id, None)
-            #self.buffer[self.buffer_id]
-            # print msg.__dict__
-            # translate and packet out.
-            #sbp_pkt = self.oxparser.OXPSBP(self.domain, data=msg.buf)
-            #self.domain.send_msg(sbp_pkt)
             return
+        else:
+            # packet_out to datapath:port.
+            vport = msg.actions[0].port
+            dpid, port = self.network.vport[vport]
+            datapath = self.router.datapaths[dpid]
+            ofproto = datapath.ofproto
+            out = utils._build_packet_out(datapath, ofproto.OFP_NO_BUFFER,
+                                          ofproto.OFPP_CONTROLLER,
+                                          port, msg.data)
+
+    @set_ev_cls(oxp_event.EventOXPSBPFlowMod, MAIN_DISPATCHER)
+    def sbp_flow_mod_handler(self, ev):
+        msg = ev.msg
+        domain = ev.domain
+        print "Translate Flow_mod."
+        print msg.__dict__

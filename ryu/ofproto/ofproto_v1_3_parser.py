@@ -2462,8 +2462,7 @@ class OFPFlowMod(MsgBase):
                       self.priority, self.buffer_id, self.out_port,
                       self.out_group, self.flags)
 
-        offset = (ofproto.OFP_FLOW_MOD_SIZE -
-                  ofproto.OFP_MATCH_SIZE)
+        offset = (ofproto.OFP_FLOW_MOD_SIZE - ofproto.OFP_MATCH_SIZE)
 
         match_len = self.match.serialize(self.buf, offset)
         offset += match_len
@@ -2471,6 +2470,36 @@ class OFPFlowMod(MsgBase):
         for inst in self.instructions:
             inst.serialize(self.buf, offset)
             offset += inst.len
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPFlowMod, cls).parser(datapath, version, msg_type,
+                                            msg_len, xid, buf)
+
+        (msg.cookie, msg.cookie_mask, msg.table_id,
+         msg.command, msg.idle_timeout, msg.hard_timeout,
+         msg.priority, msg.buffer_id, msg.out_port,
+         msg.out_group, msg.flags) = \
+            struct.unpack_from(ofproto.OFP_FLOW_MOD_PACK_STR0,
+                               msg.buf, ofproto.OFP_HEADER_SIZE)
+
+        offset = (ofproto.OFP_FLOW_MOD_SIZE - ofproto.OFP_MATCH_SIZE)
+        msg.match = OFPMatch.parser(msg.buf, offset)
+
+        match_length = utils.round_up(msg.match.length, 8)
+        offset += match_length
+
+        inst_length = msg_len - offset
+        instructions = []
+        while inst_length > 0:
+            inst = OFPInstruction.parser(msg.buf, offset)
+            instructions.append(inst)
+            offset += inst.len
+            inst_length -= inst.len
+
+        msg.instructions = instructions
+
+        return msg
 
 
 class OFPInstruction(StringifyMixin):

@@ -103,7 +103,6 @@ class Network_Aware(app_manager.RyuApp):
 
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
-
         mod = parser.OFPFlowMod(datapath=dp, priority=p,
                                 idle_timeout=idle_timeout,
                                 hard_timeout=hard_timeout,

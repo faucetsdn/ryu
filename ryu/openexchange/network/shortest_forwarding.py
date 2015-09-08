@@ -87,12 +87,10 @@ class Shortest_forwarding(app_manager.RyuApp):
         for dpid in self.access_ports:
             for port in self.access_ports[dpid]:
                 if (dpid, port) not in self.access_table.keys():
-                    actions = [parser.OFPActionOutput(port)]
                     datapath = self.datapaths[dpid]
-                    out = parser.OFPPacketOut(
-                        datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                        in_port=ofproto.OFPP_CONTROLLER,
-                        actions=actions, data=msg.data)
+                    out = utils._build_packet_out(
+                        datapath, ofproto.OFP_NO_BUFFER,
+                        ofproto.OFPP_CONTROLLER, port, msg.data)
                     datapath.send_msg(out)
 
     def arp_forwarding(self, msg, arp_pkt):
@@ -113,13 +111,11 @@ class Shortest_forwarding(app_manager.RyuApp):
         result = self.get_host_location(arp_dst_ip)
         if result:  # host record in access table.
             datapath_dst, out_port = result[0], result[1]
-            actions = [parser.OFPActionOutput(out_port)]
             datapath = self.datapaths[datapath_dst]
+            out = utils._build_packet_out(datapath, ofproto.OFP_NO_BUFFER,
+                                          ofproto.OFPP_CONTROLLER,
+                                          out_port, msg.data)
 
-            out = parser.OFPPacketOut(
-                datapath=datapath, buffer_id=ofproto.OFP_NO_BUFFER,
-                actions=actions, in_port=ofproto.OFPP_CONTROLLER,
-                data=msg.data)
             datapath.send_msg(out)
         else:
             self.flood(msg)

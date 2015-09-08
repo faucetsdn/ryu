@@ -7,7 +7,7 @@ import logging
 LOG = logging.getLogger('ryu.openexchange.utils')
 
 
-def add_flow(dp, p, match, actions, idle_timeout=0, hard_timeout=0):
+def _build_flow(dp, p, match, actions, idle_timeout=0, hard_timeout=0):
     ofproto = dp.ofproto
     parser = dp.ofproto_parser
 
@@ -16,29 +16,30 @@ def add_flow(dp, p, match, actions, idle_timeout=0, hard_timeout=0):
                             idle_timeout=idle_timeout,
                             hard_timeout=hard_timeout,
                             match=match, instructions=inst)
+    return mod
+
+
+def add_flow(dp, p, match, actions, idle_timeout=0, hard_timeout=0):
+    mod = _build_flow(dp, p, match, actions, idle_timeout, hard_timeout)
     dp.send_msg(mod)
 
 
-def get_link2port(link_to_port, src_dpid, dst_dpid):
-    if (src_dpid, dst_dpid) in link_to_port:
-        return link_to_port[(src_dpid, dst_dpid)]
-    else:
-        LOG.debug("Link to port is not found.")
-        return None
-
-
-def send_packet_out(datapath, buffer_id, src_port, dst_port, data):
-    msg_data = None
+def _build_packet_out(datapath, buffer_id, src_port, dst_port, data):
     actions = []
     actions.append(datapath.ofproto_parser.OFPActionOutput(dst_port))
 
+    msg_data = None
     if buffer_id == datapath.ofproto.OFP_NO_BUFFER:
         msg_data = data
 
     out = datapath.ofproto_parser.OFPPacketOut(
         datapath=datapath, buffer_id=buffer_id,
         data=msg_data, in_port=src_port, actions=actions)
+    return out
 
+
+def send_packet_out(datapath, buffer_id, src_port, dst_port, data):
+    out = _build_packet_out(datapath, buffer_id, src_port, dst_port, data)
     datapath.send_msg(out)
 
 
@@ -54,6 +55,14 @@ def send_flow_mod(datapath, flow_info, src_port, dst_port):
     add_flow(datapath, 1, match, actions, idle_timeout=10, hard_timeout=30)
 
 
+def get_link2port(link_to_port, src_dpid, dst_dpid):
+    if (src_dpid, dst_dpid) in link_to_port:
+        return link_to_port[(src_dpid, dst_dpid)]
+    else:
+        LOG.info("Link to port is not found.")
+        return None
+
+
 def get_port(dst_ip, access_table):
     # Domain:access_table: {(sw,port) :(ip, mac)}
     # Super: access_table: {domain, OFP_LOCAL:set(ip, ip1, ip2...)}
@@ -67,7 +76,6 @@ def get_port(dst_ip, access_table):
         for key in access_table.keys():
             if dst_ip in access_table[key]:
                 dst_port = key[1]
-                print "OFP_LOCAL: ", dst_port
                 return dst_port
     # dst_ip belongs to other domain.
     return None
@@ -127,34 +135,17 @@ def install_flow(datapaths, link2port, access_table,
 '''
 
 
-def oxp_add_flow(dp, p, match, actions, idle_timeout=0, hard_timeout=0):
-    ofproto = dp.ofproto
-    parser = dp.ofproto_parser
+def oxp_send_packet_out(domain, msg, src_port, dst_port):
+    datapath = msg.datapath
+    out = _build_packet_out(
+        datapath, datapath.ofproto.OFP_NO_BUFFER, src_port, dst_port, msg.data)
+    out.serialize()
 
-    inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-    mod = parser.OFPFlowMod(datapath=dp, priority=p,
-                            idle_timeout=idle_timeout,
-                            hard_timeout=hard_timeout,
-                            match=match, instructions=inst)
-    dp.send_msg(mod)
+    sbp_pkt_out = domain.oxproto_parser.OXPSBP(domain, data=out.buf)
+    domain.send_msg(sbp_pkt_out)
 
 
-def oxp_send_packet_out(datapath, buffer_id, src_port, dst_port, data):
-    msg_data = None
-    actions = []
-    actions.append(datapath.ofproto_parser.OFPActionOutput(dst_port))
-
-    if buffer_id == datapath.ofproto.OFP_NO_BUFFER:
-        msg_data = data
-
-    out = datapath.ofproto_parser.OFPPacketOut(
-        datapath=datapath, buffer_id=buffer_id,
-        data=msg_data, in_port=src_port, actions=actions)
-
-    datapath.send_msg(out)
-
-
-def oxp_send_flow_mod(datapath, flow_info, src_port, dst_port):
+def oxp_send_flow_mod(domain, datapath, flow_info, src_port, dst_port):
     parser = datapath.ofproto_parser
     actions = []
     actions.append(parser.OFPActionOutput(dst_port))
@@ -163,11 +154,16 @@ def oxp_send_flow_mod(datapath, flow_info, src_port, dst_port):
         in_port=src_port, eth_type=flow_info[0],
         ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
 
-    add_flow(datapath, 1, match, actions, idle_timeout=10, hard_timeout=30)
+    flow = _build_flow(datapath, 1, match, actions,
+                       idle_timeout=10, hard_timeout=30)
+    flow.serialize()
+
+    sbp_flow_mod = domain.oxproto_parser.OXPSBP(domain, data=flow.buf)
+    domain.send_msg(sbp_flow_mod)
 
 
-def install_flow(domains, link2port, access_table,
-                 path, flow_info, buffer_id, data, outer_port=None):
+def oxp_install_flow(domains, link2port, access_table,
+                     path, flow_info, msg, outer_port=None):
     ''' path=[dpid1, dpid2, dpid3...]
         flow_info=(eth_type, src_ip, dst_ip, in_port)
         outer_port: port face to other domain.
@@ -176,7 +172,8 @@ def install_flow(domains, link2port, access_table,
     in_port = flow_info[3]
     first_node = domains[path[0]]
     out_port = None
-
+    dp = msg.datapath
+    # shouldn't send packet_out.
     # inter_link
     if len(path) > 2:
         for i in xrange(1, len(path) - 1):
@@ -185,14 +182,13 @@ def install_flow(domains, link2port, access_table,
             if port:
                 src_port, dst_port = port[1], port_next[0]
                 domain = domains[path[i]]
-                oxp_send_flow_mod(domain, flow_info, src_port, dst_port)
-                oxp_send_packet_out(
-                    domain, buffer_id, src_port, dst_port, data)
+                oxp_send_flow_mod(domain, dp, flow_info, src_port, dst_port)
+                oxp_send_packet_out(domain, msg, src_port, dst_port)
     if len(path) > 1:
         # the  first flow entry
         port_pair = get_link2port(link2port, path[0], path[1])
         out_port = port_pair[0]
-        oxp_send_flow_mod(first_node, flow_info, in_port, out_port)
+        oxp_send_flow_mod(first_node, dp, flow_info, in_port, out_port)
 
         # the last flow entry: tor -> host
         last_node = domains[path[-1]]
@@ -201,16 +197,16 @@ def install_flow(domains, link2port, access_table,
         if dst_port is None:
             assert outer_port
             dst_port = outer_port
-        oxp_send_flow_mod(last_node, flow_info, src_port, dst_port)
+        oxp_send_flow_mod(last_node, dp, flow_info, src_port, dst_port)
 
         # first and last pkt_out
-        oxp_send_packet_out(first_node, buffer_id, in_port, out_port, data)
-        oxp_send_packet_out(last_node, buffer_id, src_port, dst_port, data)
+        oxp_send_packet_out(first_node, msg, in_port, out_port)
+        oxp_send_packet_out(last_node, msg, src_port, dst_port)
     # src and dst on one node
     else:
         out_port = get_port(flow_info[2], access_table)
         if out_port is None:
             assert outer_port
             out_port = outer_port
-        oxp_send_flow_mod(first_node, flow_info, in_port, out_port)
-        oxp_send_packet_out(first_node, buffer_id, in_port, out_port, data)
+        oxp_send_flow_mod(first_node, dp, flow_info, in_port, out_port)
+        oxp_send_packet_out(first_node, msg, in_port, out_port, msg)
