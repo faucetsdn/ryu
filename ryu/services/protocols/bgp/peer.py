@@ -851,24 +851,18 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             nlri_list = [path.nlri]
 
             # By default we use BGPS's interface IP with this peer as next_hop.
-            next_hop = self._session_next_hop(path)
-            if path.is_local() and path.has_nexthop():
+            if self.is_ebgp_peer():
+                next_hop = self._session_next_hop(path)
+                if path.is_local() and path.has_nexthop():
+                    next_hop = path.nexthop
+            else:
                 next_hop = path.nexthop
-
-            # If this is a iBGP peer.
-            if not self.is_ebgp_peer() and not path.is_local():
-                # If the path came from a bgp peer and not from NC, according
-                # to RFC 4271 we should not modify next_hop.
-                # However RFC 4271 allows us to change next_hop
+                # RFC 4271 allows us to change next_hop
                 # if configured to announce its own ip address.
                 if self._neigh_conf.is_next_hop_self:
-                    next_hop = self.host_bind_ip
-                    if path.route_family == RF_IPv6_VPN:
-                        next_hop = self._ipv4_mapped_ipv6(next_hop)
+                    next_hop = self._session_next_hop(path)
                     LOG.debug('using %s as a next_hop address instead'
                               ' of path.nexthop %s', next_hop, path.nexthop)
-                else:
-                    next_hop = path.nexthop
 
             nexthop_attr = BGPPathAttributeNextHop(next_hop)
             assert nexthop_attr, 'Missing NEXTHOP mandatory attribute.'
