@@ -113,11 +113,8 @@ class Routing(app_manager.RyuApp):
                 sbp_pkt = domain.oxproto_parser.OXPSBP(domain, data=out.buf)
                 domain.send_msg(sbp_pkt)
 
-    def shortest_forwarding(self, domain, msg, eth_type, ip_pkt):
-        ip_src = ip_pkt.src
-        ip_dst = ip_pkt.dst
+    def shortest_forwarding(self, domain, msg, eth_type, ip_src, ip_dst):
         src_domain = dst_domain = None
-
         src_domain = self.get_host_location(ip_src)
         dst_domain = self.get_host_location(ip_dst)
         print "src and dst: ", ip_src, ip_dst, src_domain, dst_domain
@@ -163,4 +160,5 @@ class Routing(app_manager.RyuApp):
             self.arp_forwarding(domain, msg, arp_pkt)
 
         if isinstance(ip_pkt, ipv4.ipv4):
-            self.shortest_forwarding(domain, msg, eth_type, ip_pkt)
+            self.shortest_forwarding(domain, msg, eth_type,
+                                     ip_pkt.src, ip_pkt.dst)

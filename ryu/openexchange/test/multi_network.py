@@ -44,7 +44,7 @@ def multiControllerNet(con_num=7, sw_num=35, host_num=70):
         logger.info("*** Creating %s" % name)
 
     logger.info("*** Creating switches")
-    switch_list = [net.addSwitch('s%d' % n) for n in xrange(int(sw_num))]
+    switch_list = [net.addSwitch('s%d' % n) for n in xrange(1, int(sw_num)+1)]
 
     logger.info("*** Creating hosts")
     host_list = [net.addHost('h%d' % n) for n in xrange(host_num)]

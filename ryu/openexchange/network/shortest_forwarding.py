@@ -93,29 +93,24 @@ class Shortest_forwarding(app_manager.RyuApp):
                         ofproto.OFPP_CONTROLLER, port, msg.data)
                     datapath.send_msg(out)
 
-    def arp_forwarding(self, msg, arp_pkt):
+    def arp_forwarding(self, msg, src_ip, dst_ip):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-
-        arp_src_ip = arp_pkt.src_ip
-        arp_dst_ip = arp_pkt.dst_ip
-
         # dst in other domain, send to super and return.
-        if arp_dst_ip in self.outer_hosts:
+        if dst_ip in self.outer_hosts:
             if isinstance(msg, parser.OFPPacketIn):
                 self.network_aware.raise_sbp_packet_in_event(
                     msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
                 return
         # host in domain.
-        result = self.get_host_location(arp_dst_ip)
+        result = self.get_host_location(dst_ip)
         if result:  # host record in access table.
             datapath_dst, out_port = result[0], result[1]
             datapath = self.datapaths[datapath_dst]
             out = utils._build_packet_out(datapath, ofproto.OFP_NO_BUFFER,
                                           ofproto.OFPP_CONTROLLER,
                                           out_port, msg.data)
-
             datapath.send_msg(out)
         else:
             self.flood(msg)
@@ -123,22 +118,18 @@ class Shortest_forwarding(app_manager.RyuApp):
             if isinstance(msg, parser.OFPPacketIn):
                 self.network_aware.raise_sbp_packet_in_event(
                     msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
-
         # packet_out from super, record src.
         if isinstance(msg, parser.OFPPacketOut):
             for sw in self.access_table:
-                if arp_src_ip in self.access_table[sw]:
+                if src_ip in self.access_table[sw]:
                     return
-            self.outer_hosts.add(arp_src_ip)
+            self.outer_hosts.add(src_ip)
 
-    def shortest_forwarding(self, msg, eth_type, ip_pkt):
+    def shortest_forwarding(self, msg, eth_type, ip_src, ip_dst):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-
-        ip_src = ip_pkt.src
-        ip_dst = ip_pkt.dst
-        result = src_sw = dst_sw = None
+        src_sw = dst_sw = None
 
         src_location = self.get_host_location(ip_src)
         dst_location = self.get_host_location(ip_dst)
@@ -152,8 +143,6 @@ class Shortest_forwarding(app_manager.RyuApp):
             if dst_sw:
                 path = path_dict[src_sw][dst_sw]
                 path.insert(0, src_sw)
-                #self.logger.info(
-                #    " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
 
                 flow_info = (eth_type, ip_src, ip_dst, msg.match['in_port'])
                 utils.install_flow(self.datapaths, self.link_to_port,
@@ -190,7 +179,7 @@ class Shortest_forwarding(app_manager.RyuApp):
         # We implemente oxp in a big network,
         # so we shouldn't care about the subnet and router.
         if isinstance(arp_pkt, arp.arp):
-            self.arp_forwarding(msg, arp_pkt)
+            self.arp_forwarding(msg, arp_pkt.src_ip, arp_pkt.dst_ip)
 
         if isinstance(ip_pkt, ipv4.ipv4):
-            self.shortest_forwarding(msg, eth_type, ip_pkt)
+            self.shortest_forwarding(msg, eth_type, ip_pkt.src, ip_pkt.dst)

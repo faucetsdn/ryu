@@ -8,24 +8,16 @@ Date                Work
 
 from ryu.base import app_manager
 from ryu.ofproto import ofproto_v1_3
-from ryu.ofproto import ofproto_v1_0
 from ryu.controller.handler import set_ev_cls
-from ryu.controller.handler import set_ev_handler
+from ryu.controller.handler import MAIN_DISPATCHER
+
 from ryu.lib.ip import ipv4_to_bin
 from ryu.lib.ip import ipv4_to_str
 from ryu.lib.mac import haddr_to_bin
-
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import arp
-
-from ryu.openexchange.network import network_aware
-from ryu.openexchange.network import network_monitor
-from ryu.openexchange.network import shortest_forwarding
-
-from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
-from ryu.controller.handler import CONFIG_DISPATCHER
 
 from ryu.topology import event, switches
 
@@ -33,13 +25,9 @@ from ryu.openexchange.database import buffer_data
 from ryu.openexchange.event import oxp_event
 from ryu.openexchange import oxproto_v1_0
 from ryu.openexchange import oxproto_v1_0_parser
-from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
-from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
-from ryu.openexchange import topology_data
 from ryu.openexchange.utils import utils
 
 from ryu import cfg
-from ryu.lib import hub
 
 CONF = cfg.CONF
 
@@ -47,7 +35,7 @@ CONF = cfg.CONF
 class Translation(app_manager.RyuApp):
     """Translation module translate the Packet_out and Flow_mod from super."""
 
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_3.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(Translation, self).__init__(*args, **kwargs)
@@ -59,7 +47,7 @@ class Translation(app_manager.RyuApp):
         self.domain = None
         self.oxparser = oxproto_v1_0_parser
         self.oxproto = oxproto_v1_0
-        self.buffer = buffer_data.Buffer_Data()
+        self.buffer = {}
         self.buffer_id = 0
 
     @set_ev_cls(oxp_event.EventOXPSBPPacketOut, MAIN_DISPATCHER)
@@ -75,10 +63,7 @@ class Translation(app_manager.RyuApp):
         if msg.actions[0].port == ofproto_v1_3.OFPP_LOCAL:
             # Flood.
             if isinstance(arp_pkt, arp.arp):
-                self.router.arp_forwarding(msg, arp_pkt)
-            print "outer_hosts: ", self.router.outer_hosts
-            #if isinstance(ip_pkt, ipv4.ipv4):
-            #    self.shortest_forwarding(msg, eth_type, ip_pkt)
+                self.router.arp_forwarding(msg, arp_pkt.src_ip, arp_pkt.dst_ip)
             return
         else:
             # packet_out to datapath:port.
@@ -89,10 +74,67 @@ class Translation(app_manager.RyuApp):
             out = utils._build_packet_out(datapath, ofproto.OFP_NO_BUFFER,
                                           ofproto.OFPP_CONTROLLER,
                                           port, msg.data)
+            #save msg.data for flow_mod.
+            if isinstance(arp_pkt, arp.arp):
+                self.buffer[(
+                    eth_type, arp_pkt.src_ip, arp_pkt.dst_ip)] = msg.data
+            elif isinstance(ip_pkt, ipv4.ipv4):
+                self.buffer[(eth_type, ip_pkt.src, ip_pkt.dst)] = msg.data
+
+            datapath.send_msg(out)
+
+    def shortest_forwarding(self, msg, eth_type, ip_src, ip_dst):
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        src_sw = dst_sw = outer_port = data = None
+        in_port = msg.match['in_port']
+
+        src_location = self.router.get_host_location(ip_src)
+        dst_location = self.router.get_host_location(ip_dst)
+        if src_location:
+            src_sw, in_port = src_location
+        else:
+            src_sw, in_port = self.network.vport[in_port]
+
+        if dst_location:
+            dst_sw = dst_location[0]
+        else:
+            for i in msg.instructions:
+                if isinstance(i, parser.OFPInstructionActions):
+                    for action in i.actions:
+                        if isinstance(action, parser.OFPActionOutput):
+                            vport = action.port
+                            dst_sw, outer_port = self.network.vport[vport]
+                            break
+
+        path_dict = self.router.get_path(self.router.graph, src_sw)
+        if path_dict:
+            if dst_sw:
+                path = path_dict[src_sw][dst_sw]
+                path.insert(0, src_sw)
+                self.logger.info(
+                    " PATH[%s --> %s]:%s" % (ip_src, ip_dst, path))
+
+                flow_info = (eth_type, ip_src, ip_dst, in_port)
+                if (eth_type, ip_src, ip_dst) in self.buffer:
+                    data = self.buffer[(eth_type, ip_src, ip_dst)]
+                    print "data is existed."
+
+                utils.install_flow(self.router.datapaths,
+                                   self.router.link_to_port,
+                                   self.router.access_table, path, flow_info,
+                                   ofproto.OFP_NO_BUFFER, data,
+                                   outer_port=outer_port)
+                # we should save pakact_out data by buffer.id.
 
     @set_ev_cls(oxp_event.EventOXPSBPFlowMod, MAIN_DISPATCHER)
     def sbp_flow_mod_handler(self, ev):
         msg = ev.msg
         domain = ev.domain
-        print "Translate Flow_mod."
-        print msg.__dict__
+
+        ip_src = msg.match['ipv4_src']
+        ip_dst = msg.match['ipv4_dst']
+        eth_type = msg.match['eth_type']
+
+        self.shortest_forwarding(msg, eth_type, ip_src, ip_dst)
