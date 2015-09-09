@@ -20,6 +20,8 @@ OpenFlow 1.0 definitions.
 
 from struct import calcsize
 
+from ryu.ofproto import ofproto_utils
+
 
 MAX_XID = 0xffffffff
 
@@ -491,6 +493,9 @@ OFP_QUEUE_PROP_MIN_RATE_PACK_STR = '!H6x'
 OFP_QUEUE_PROP_MIN_RATE_SIZE = 16
 assert (calcsize(OFP_QUEUE_PROP_MIN_RATE_PACK_STR) +
         OFP_QUEUE_PROP_HEADER_SIZE == OFP_QUEUE_PROP_MIN_RATE_SIZE)
+
+# generate utility methods
+ofproto_utils.generate(__name__)
 
 
 def nxm_header__(vendor, field, hasmask, length):

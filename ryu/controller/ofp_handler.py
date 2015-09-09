@@ -31,6 +31,7 @@ from ryu.controller.controller import OpenFlowController
 from ryu.controller.handler import set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
+from ryu.ofproto import ofproto_parser
 
 
 # The state transition: HANDSHAKE -> CONFIG -> MAIN
@@ -249,5 +250,23 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):
         msg = ev.msg
-        self.logger.debug('error msg ev %s type 0x%x code 0x%x %s',
-                          msg, msg.type, msg.code, utils.hex_array(msg.data))
+        ofp = msg.datapath.ofproto
+        (version, msg_type, msg_len, xid) = ofproto_parser.header(msg.data)
+        self.logger.debug('EventOFPErrorMsg received.')
+        self.logger.debug(
+            'version=%s, msg_type=%s, msg_len=%s, xid=%s', hex(msg.version),
+            hex(msg.msg_type), hex(msg.msg_len), hex(msg.xid))
+        self.logger.debug(
+            ' `-- msg_type: %s', ofp.ofp_msg_type_to_str(msg.msg_type))
+        self.logger.debug(
+            "OFPErrorMsg(type=%s, code=%s, data=b'%s')", hex(msg.type),
+            hex(msg.code), utils.binary_str(msg.data))
+        self.logger.debug(
+            ' |-- type: %s', ofp.ofp_error_type_to_str(msg.type))
+        self.logger.debug(
+            ' |-- code: %s', ofp.ofp_error_code_to_str(msg.type, msg.code))
+        self.logger.debug(
+            ' `-- data: version=%s, msg_type=%s, msg_len=%s, xid=%s',
+            hex(version), hex(msg_type), hex(msg_len), hex(xid))
+        self.logger.debug(
+            '     `-- msg_type: %s', ofp.ofp_msg_type_to_str(msg_type))

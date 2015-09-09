@@ -19,6 +19,7 @@ OpenFlow 1.5 definitions.
 """
 
 from ryu.lib import type_desc
+from ryu.ofproto import ofproto_utils
 from ryu.ofproto import oxm_fields
 from ryu.ofproto import oxs_fields
 
@@ -1817,6 +1818,9 @@ OFP_PROP_EXPERIMENTER_PACK_STR = '!HHII'
 OFP_PROP_EXPERIMENTER_SIZE = 12
 assert (calcsize(OFP_PROP_EXPERIMENTER_PACK_STR) ==
         OFP_PROP_EXPERIMENTER_SIZE)
+
+# generate utility methods
+ofproto_utils.generate(__name__)
 
 # define constants
 OFP_VERSION = 0x06

@@ -19,6 +19,7 @@ OpenFlow 1.2 definitions.
 """
 
 from ryu.lib import type_desc
+from ryu.ofproto import ofproto_utils
 from ryu.ofproto import oxm_fields
 
 from struct import calcsize
@@ -831,6 +832,8 @@ oxm_types = [
 
 oxm_fields.generate(__name__)
 
+# generate utility methods
+ofproto_utils.generate(__name__)
 
 # define constants
 OFP_VERSION = 0x03
