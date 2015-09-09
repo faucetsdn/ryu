@@ -117,7 +117,6 @@ class Routing(app_manager.RyuApp):
         src_domain = dst_domain = None
         src_domain = self.get_host_location(ip_src)
         dst_domain = self.get_host_location(ip_dst)
-        print "src and dst: ", ip_src, ip_dst, src_domain, dst_domain
 
         # calculate the path.
         path_dict = self.get_path(self.graph, src_domain)
@@ -125,7 +124,7 @@ class Routing(app_manager.RyuApp):
             if dst_domain:
                 path = path_dict[src_domain][dst_domain]
                 path.insert(0, src_domain)
-                self.logger.info(
+                self.logger.debug(
                     " PATH[%s --> %s]:%s\n" % (ip_src, ip_dst, path))
 
                 access_table = {}

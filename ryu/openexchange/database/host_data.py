@@ -6,23 +6,8 @@ Date                Work
 2015/7/27           define class host.
 """
 from . import data_base
-from ryu.lib.ip import ipv4_to_bin
 from ryu.lib.ip import ipv4_to_str
-from ryu.openexchange.oxproto_v1_0 import OXPP_INACTIVE, OXPP_ACTIVE
-
-'''
-plan to delete
-
-class Host(data_base.DataBase):
-    def __init__(self, ip=None, MAC=None, mask=None, state=OXPP_INACTIVE):
-        self.ip = ip
-        self.MAC = MAC
-        self.mask = mask
-        self.state = state
-
-        IP2HOST[self.ip] = self
-        HOSTLIST.append(self)
-'''
+from ryu.openexchange.oxproto_v1_0 import OXPP_ACTIVE
 
 
 class Location(data_base.DataBase):

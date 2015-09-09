@@ -5,7 +5,7 @@ Author:www.muzixing.com
 
 Link:((src_domain, dst_domain), (src_port, dst_port)): capacity
 
-If src_domain ==dst_domain, the link will be an interallink.
+If src_domain == dst_domain, the link will be an interallink.
 esle, it is an intralink.
 
 """

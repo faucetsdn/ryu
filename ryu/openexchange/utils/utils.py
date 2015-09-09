@@ -52,7 +52,7 @@ def send_flow_mod(datapath, flow_info, src_port, dst_port):
         in_port=src_port, eth_type=flow_info[0],
         ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
 
-    add_flow(datapath, 1, match, actions, idle_timeout=10, hard_timeout=30)
+    add_flow(datapath, 1, match, actions, idle_timeout=15, hard_timeout=60)
 
 
 def get_link2port(link_to_port, src_dpid, dst_dpid):
@@ -91,7 +91,6 @@ def install_flow(datapaths, link2port, access_table,
     in_port = flow_info[3]
     first_dp = datapaths[path[0]]
     out_port = first_dp.ofproto.OFPP_LOCAL
-
     # inter_link
     if len(path) > 2:
         for i in xrange(1, len(path) - 1):
@@ -101,7 +100,7 @@ def install_flow(datapaths, link2port, access_table,
                 src_port, dst_port = port[1], port_next[0]
                 datapath = datapaths[path[i]]
                 send_flow_mod(datapath, flow_info, src_port, dst_port)
-                send_packet_out(datapath, buffer_id, src_port, dst_port, data)
+                #send_packet_out(datapath, buffer_id, src_port, dst_port, data)
     if len(path) > 1:
         # the  first flow entry
         port_pair = get_link2port(link2port, path[0], path[1])
@@ -173,7 +172,6 @@ def oxp_install_flow(domains, link2port, access_table,
     first_node = domains[path[0]]
     out_port = None
     dp = msg.datapath
-    # shouldn't send packet_out.
     # inter_link
     if len(path) > 2:
         for i in xrange(1, len(path) - 1):
@@ -182,12 +180,15 @@ def oxp_install_flow(domains, link2port, access_table,
             if port:
                 src_port, dst_port = port[1], port_next[0]
                 domain = domains[path[i]]
+                # oxp_send_packet_out(domain, msg, src_port, dst_port)
                 oxp_send_flow_mod(domain, dp, flow_info, src_port, dst_port)
-                oxp_send_packet_out(domain, msg, src_port, dst_port)
+
     if len(path) > 1:
         # the  first flow entry
         port_pair = get_link2port(link2port, path[0], path[1])
         out_port = port_pair[0]
+        # first and last pkt_out
+        oxp_send_packet_out(first_node, msg, in_port, out_port)
         oxp_send_flow_mod(first_node, dp, flow_info, in_port, out_port)
 
         # the last flow entry: tor -> host
@@ -197,16 +198,13 @@ def oxp_install_flow(domains, link2port, access_table,
         if dst_port is None:
             assert outer_port
             dst_port = outer_port
-        oxp_send_flow_mod(last_node, dp, flow_info, src_port, dst_port)
-
-        # first and last pkt_out
-        oxp_send_packet_out(first_node, msg, in_port, out_port)
         oxp_send_packet_out(last_node, msg, src_port, dst_port)
+        oxp_send_flow_mod(last_node, dp, flow_info, src_port, dst_port)
     # src and dst on one node
     else:
         out_port = get_port(flow_info[2], access_table)
         if out_port is None:
             assert outer_port
             out_port = outer_port
-        oxp_send_flow_mod(first_node, dp, flow_info, in_port, out_port)
         oxp_send_packet_out(first_node, msg, in_port, out_port, msg)
+        oxp_send_flow_mod(first_node, dp, flow_info, in_port, out_port)

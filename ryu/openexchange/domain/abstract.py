@@ -9,11 +9,9 @@ Date                Work
 
 from ryu.base import app_manager
 from ryu.ofproto import ofproto_v1_3
-from ryu.ofproto import ofproto_v1_0
 from ryu.controller.handler import set_ev_cls
 from ryu.controller.handler import set_ev_handler
 from ryu.lib.ip import ipv4_to_bin
-from ryu.lib.ip import ipv4_to_str
 from ryu.lib.mac import haddr_to_bin
 
 from ryu.openexchange.network import network_aware
@@ -31,7 +29,6 @@ from ryu.openexchange.oxproto_v1_0 import OXPPS_LIVE
 from ryu.openexchange import topology_data
 from ryu.openexchange.routing_algorithm.routing_algorithm import get_paths
 from ryu import cfg
-from ryu.lib import hub
 
 CONF = cfg.CONF
 
@@ -40,7 +37,7 @@ class Abstract(app_manager.RyuApp):
     """Abstract complete the network abstract
     and handle the network information update."""
 
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_3.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     _CONTEXTS = {
         "Network_Aware": network_aware.Network_Aware,

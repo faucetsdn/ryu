@@ -26,7 +26,6 @@ LOG = logging.getLogger('ryu.oxproto.oxproto_parser')
 
 def header(buf):
     assert len(buf) >= oxproto_common.OXP_HEADER_SIZE
-    # LOG.debug('len %d bufsize %d', len(buf), oxproto.OXP_HEADER_SIZE)
     return struct.unpack_from(oxproto_common.OXP_HEADER_PACK_STR, buffer(buf))
 
 
@@ -49,8 +48,6 @@ def msg(domain, version, msg_type, msg_len, xid, buf):
     assert len(buf) >= msg_len
 
     msg_parser = _MSG_PARSERS.get(version)
-    # print "_MSG_PARSERS: ", _MSG_PARSERS
-    # print "msg_parser: ", msg_parser
     if msg_parser is None:
         raise exception.OXPUnknownVersion(version=version)
 

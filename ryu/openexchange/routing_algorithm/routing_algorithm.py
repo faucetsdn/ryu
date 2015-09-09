@@ -64,20 +64,17 @@ def dijkstra(graph, src):
     if graph is None:
         LOG.info("[Dijkstra]: Graph is empty.")
         return None
-    length = len(graph)
-    type_ = type(graph)
-
     # Initiation
-    if type_ == list:
+    length = len(graph)
+    if isinstance(graph, list):
         nodes = [i for i in xrange(length)]
-    elif type_ == dict:
+    elif isinstance(graph, dict):
         nodes = graph.keys()
 
     visited = [src]
     path = {src: {src: []}}
-
     if src not in nodes:
-        LOG.info("[Dijkstra]:Src[%s] is not in nodes." % src)
+        LOG.debug("[Dijkstra]:Src[%s] is not in nodes." % src)
         return None
     else:
         nodes.remove(src)
@@ -105,7 +102,7 @@ def dijkstra(graph, src):
             visited.append(next)
             nodes.remove(next)
         else:
-            LOG.info("Next node is not found.")
+            LOG.debug("Next node is not found.")
             return None
     return distance_graph, path
 

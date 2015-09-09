@@ -23,7 +23,6 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER, DEAD_DISPATCHER
 
 from ryu.ofproto import ofproto_v1_3
-from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_common
 

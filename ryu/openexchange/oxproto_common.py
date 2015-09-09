@@ -24,9 +24,3 @@ OXP_DEFAULT_PROTO_TYPE = 1
 # default features information
 OXP_DEFAULT_DOMAIN_ID = 1
 OXP_DEFAULT_CAPABILITIES = 127
-
-# Vendor/Experimenter IDs
-# https://rs.opennetworking.org/wiki/display/PUBLIC/ONF+Registry
-#NX_EXPERIMENTER_ID = 0x00002320  # Nicira
-#BSN_EXPERIMENTER_ID = 0x005c16c7  # Big Switch Networks
-#ONF_EXPERIMENTER_ID = 0x4f4e4600  # OpenFlow Extensions for 1.3.X Pack 1

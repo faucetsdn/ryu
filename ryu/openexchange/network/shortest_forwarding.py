@@ -152,7 +152,6 @@ class Shortest_forwarding(app_manager.RyuApp):
                 if isinstance(msg, parser.OFPPacketIn):
                     self.network_aware.raise_sbp_packet_in_event(
                         msg, ofproto_v1_3.OFPP_LOCAL, msg.data)
-                    print "ipv4 packet in"
         else:
             # Reflesh the topology database.
             self.network_aware.get_topology(None)

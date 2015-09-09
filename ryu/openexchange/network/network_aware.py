@@ -239,7 +239,6 @@ class Network_Aware(app_manager.RyuApp):
                 ev = oxp_event.EventOXPHostStateChange(
                     self.oxp_brick.domain, hosts=[(ip, mac, OXPP_ACTIVE)])
                 self.oxp_brick.send_event_to_observers(ev, MAIN_DISPATCHER)
-                # print "access_table:", self.access_table
                 return
 
     def _send_lldp(self, datapath, in_port, vport_no):
@@ -324,17 +323,14 @@ class Network_Aware(app_manager.RyuApp):
 
         data = msg.data
         pkt = packet.Packet(data)
-
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
 
-        # Dirty code. Try other way to trigger.
+        # Dirty code. Try other trigger.
         if isinstance(arp_pkt, arp.arp):
-            arp_src_ip = arp_pkt.src_ip
-            arp_dst_ip = arp_pkt.dst_ip
+            src_ip = arp_pkt.src_ip
             src_mac = arp_pkt.src_mac
-            self.register_access_info(
-                datapath.id, in_port, arp_src_ip, src_mac)
+            self.register_access_info(datapath.id, in_port, src_ip, src_mac)
             return
         else:
             try:
