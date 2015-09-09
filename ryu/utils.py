@@ -106,6 +106,14 @@ def hex_array(data):
     return ' '.join('0x%02x' % byte for byte in bytearray(data))
 
 
+def binary_str(data):
+    """
+    Convert six.binary_type or bytearray into str to be printed.
+    """
+    # convert data into bytearray explicitly
+    return ''.join('\\x%02x' % byte for byte in bytearray(data))
+
+
 # the following functions are taken from OpenStack
 #
 # Get requirements from the first file that exists
