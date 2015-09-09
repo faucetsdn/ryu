@@ -33,7 +33,6 @@
 import inspect
 import logging
 import os
-import six
 import sys
 import re
 
@@ -99,31 +98,12 @@ def round_up(x, y):
     return ((x + y - 1) // y) * y
 
 
-def _str_to_hex(data):
-    """Convert str into array of hexes to be printed. (Python2 only)"""
-    return ' '.join(hex(ord(char)) for char in data)
-
-
-def _bytearray_to_hex(data):
-    """Convert bytearray into array of hexes to be printed.
-    In Python3, this function works for binary_types, too.
-    """
-    return ' '.join(hex(byte) for byte in data)
-
-
 def hex_array(data):
-    """Convert binary_type or bytearray into array of hexes to be printed."""
-    if six.PY3:
-        to_hex = {six.binary_type: _bytearray_to_hex,
-                  bytearray: _bytearray_to_hex}
-    else:
-        to_hex = {six.binary_type: _str_to_hex,
-                  bytearray: _bytearray_to_hex}
-    try:
-        return to_hex[type(data)](data)
-    except KeyError:
-        LOG.exception('%s is invalid data type', type(data))
-        return None
+    """
+    Convert six.binary_type or bytearray into array of hexes to be printed.
+    """
+    # convert data into bytearray explicitly
+    return ' '.join('0x%02x' % byte for byte in bytearray(data))
 
 
 # the following functions are taken from OpenStack
