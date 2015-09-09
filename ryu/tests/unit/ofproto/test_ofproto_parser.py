@@ -185,20 +185,18 @@ class TestMsgBase(unittest.TestCase):
         eq_(buffer(buf), res.buf)
 
         # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
+        list_ = ('version', 'msg_type', 'msg_len', 'xid')
         check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
+        for s in str(res).rsplit(','):
+            if '=' in s:
+                (k, v,) = s.rsplit('=')
+                if k in list_:
+                    check[k] = v
 
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(ofproto_v1_0.OFP_VERSION).find(check['version:']), 0)
-        eq_(hex(ofproto_v1_0.OFPT_HELLO).find(check['msg_type']), 0)
-        eq_(hex(xid).find(check['xid']), 0)
+        eq_(hex(ofproto_v1_0.OFP_VERSION), check['version'])
+        eq_(hex(ofproto_v1_0.OFPT_HELLO), check['msg_type'])
+        eq_(hex(msg_len), check['msg_len'])
+        eq_(hex(xid), check['xid'])
 
         return True
 

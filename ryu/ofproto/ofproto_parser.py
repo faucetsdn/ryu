@@ -171,10 +171,10 @@ class MsgBase(StringifyMixin):
 
     def __str__(self):
         def hexify(x):
-            return str(None) if x is None else '0x%x' % x
-        buf = 'version: %s msg_type %s xid %s ' % (hexify(self.version),
-                                                   hexify(self.msg_type),
-                                                   hexify(self.xid))
+            return hex(x) if isinstance(x, int) else x
+        buf = 'version=%s,msg_type=%s,msg_len=%s,xid=%s,' %\
+              (hexify(self.version), hexify(self.msg_type),
+               hexify(self.msg_len), hexify(self.xid))
         return buf + StringifyMixin.__str__(self)
 
     @classmethod
