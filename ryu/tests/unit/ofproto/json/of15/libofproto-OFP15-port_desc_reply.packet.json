@@ -1,0 +1,103 @@
+{
+   "OFPPortDescStatsReply": {
+      "body": [
+         {
+            "OFPPort": {
+               "config": 0, 
+               "hw_addr": "f2:0b:a4:d0:3f:70", 
+               "length": 168, 
+               "name": "Port7", 
+               "port_no": 7, 
+               "properties": [
+                  {
+                     "OFPPortDescPropEthernet": {
+                        "advertised": 10240, 
+                        "curr": 10248, 
+                        "curr_speed": 5000, 
+                        "length": 32, 
+                        "max_speed": 5000, 
+                        "peer": 10248, 
+                        "supported": 10248, 
+                        "type": 0
+                     }
+                  }, 
+                  {
+                     "OFPPortDescPropOptical": {
+                        "length": 40, 
+                        "rx_grid_freq_lmda": 1500, 
+                        "rx_max_freq_lmda": 2000, 
+                        "rx_min_freq_lmda": 1000, 
+                        "supported": 1, 
+                        "tx_grid_freq_lmda": 1500, 
+                        "tx_max_freq_lmda": 2000, 
+                        "tx_min_freq_lmda": 1000, 
+                        "tx_pwr_max": 2000, 
+                        "tx_pwr_min": 1000, 
+                        "type": 1
+                     }
+                  }, 
+                  {
+                     "OFPPortDescPropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPPortDescPropExperimenter": {
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPPortDescPropExperimenter": {
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "state": 4
+            }
+         }, 
+         {
+            "OFPPort": {
+               "config": 0, 
+               "hw_addr": "f2:0b:a4:7d:f8:ea", 
+               "length": 72, 
+               "name": "Port6", 
+               "port_no": 6, 
+               "properties": [
+                  {
+                     "OFPPortDescPropEthernet": {
+                        "advertised": 10240, 
+                        "curr": 10248, 
+                        "curr_speed": 5000, 
+                        "length": 32, 
+                        "max_speed": 5000, 
+                        "peer": 10248, 
+                        "supported": 10248, 
+                        "type": 0
+                     }
+                  }
+               ], 
+               "state": 4
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 13
+   }
+}

@@ -1,0 +1,18 @@
+{
+   "OFPFlowStatsRequest": {
+      "cookie": 0, 
+      "cookie_mask": 0, 
+      "flags": 0, 
+      "match": {
+         "OFPMatch": {
+            "length": 4, 
+            "oxm_fields": [], 
+            "type": 1
+         }
+      }, 
+      "out_group": 4294967295, 
+      "out_port": 4294967295, 
+      "table_id": 0, 
+      "type": 1
+   }
+}

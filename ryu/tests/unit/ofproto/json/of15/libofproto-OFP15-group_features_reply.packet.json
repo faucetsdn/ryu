@@ -1,0 +1,24 @@
+{
+   "OFPGroupFeaturesStatsReply": {
+      "body": {
+         "OFPGroupFeaturesStats": {
+            "actions": [
+               67082241, 
+               67082241, 
+               67082241, 
+               67082241
+            ], 
+            "capabilities": 5, 
+            "max_groups": [
+               16777216, 
+               16777216, 
+               16777216, 
+               16777216
+            ], 
+            "types": 15
+         }
+      }, 
+      "flags": 0, 
+      "type": 8
+   }
+}

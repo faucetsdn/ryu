@@ -1,0 +1,13 @@
+{
+   "OFPExperimenterStatsReply": {
+      "body": {
+         "OFPExperimenterMultipart": {
+            "data": "dGVzdGRhdGE5OTk5OTk5OQ==", 
+            "exp_type": 3405674359, 
+            "experimenter": 3735928495
+         }
+      }, 
+      "flags": 0, 
+      "type": 65535
+   }
+}

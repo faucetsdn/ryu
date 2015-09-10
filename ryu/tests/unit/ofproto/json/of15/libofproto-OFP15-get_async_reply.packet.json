@@ -1,0 +1,122 @@
+{
+   "OFPGetAsyncReply": {
+      "properties": [
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 0
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 1
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 2
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 3
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 4
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 5
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 6
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 7
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 24, 
+               "type": 8
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 24, 
+               "type": 9
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 10
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropReasons": {
+               "length": 8, 
+               "mask": 3, 
+               "type": 11
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropExperimenter": {
+               "data": [], 
+               "exp_type": 0, 
+               "experimenter": 101, 
+               "length": 12, 
+               "type": 65534
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropExperimenter": {
+               "data": [
+                  1
+               ], 
+               "exp_type": 1, 
+               "experimenter": 101, 
+               "length": 16, 
+               "type": 65535
+            }
+         }, 
+         {
+            "OFPAsyncConfigPropExperimenter": {
+               "data": [
+                  1, 
+                  2
+               ], 
+               "exp_type": 2, 
+               "experimenter": 101, 
+               "length": 20, 
+               "type": 65535
+            }
+         }
+      ]
+   }
+}

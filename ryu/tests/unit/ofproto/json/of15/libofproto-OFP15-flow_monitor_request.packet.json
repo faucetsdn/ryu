@@ -1,0 +1,27 @@
+{
+   "OFPFlowMonitorRequest": {
+      "command": 0, 
+      "flags": 0, 
+      "match": {
+         "OFPMatch": {
+            "length": 14, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "monitor_flags": 15, 
+      "monitor_id": 100000000, 
+      "out_group": 4294967295, 
+      "out_port": 22, 
+      "table_id": 33, 
+      "type": 16
+   }
+}

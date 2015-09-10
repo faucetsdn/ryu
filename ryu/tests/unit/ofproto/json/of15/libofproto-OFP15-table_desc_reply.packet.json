@@ -1,0 +1,83 @@
+{
+   "OFPTableDescStatsReply": {
+      "body": [
+         {
+            "OFPTableDesc": {
+               "config": 0, 
+               "length": 24, 
+               "properties": [
+                  {
+                     "OFPTableModPropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "table_id": 7
+            }
+         }, 
+         {
+            "OFPTableDesc": {
+               "config": 0, 
+               "length": 80, 
+               "properties": [
+                  {
+                     "OFPTableModPropEviction": {
+                        "flags": 0, 
+                        "length": 8, 
+                        "type": 2
+                     }
+                  }, 
+                  {
+                     "OFPTableModPropVacancy": {
+                        "length": 8, 
+                        "type": 3, 
+                        "vacancy": 0, 
+                        "vacancy_down": 0, 
+                        "vacancy_up": 0
+                     }
+                  }, 
+                  {
+                     "OFPTableModPropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPTableModPropExperimenter": {
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPTableModPropExperimenter": {
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "table_id": 8
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 14
+   }
+}

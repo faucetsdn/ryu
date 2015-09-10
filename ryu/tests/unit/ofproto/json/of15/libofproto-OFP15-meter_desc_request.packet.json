@@ -1,0 +1,7 @@
+{
+   "OFPMeterDescStatsRequest": {
+      "flags": 0,
+      "meter_id": 4294967295,
+      "type": 10
+   }
+}

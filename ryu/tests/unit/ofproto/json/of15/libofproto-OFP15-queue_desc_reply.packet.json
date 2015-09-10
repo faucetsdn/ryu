@@ -1,0 +1,81 @@
+{
+   "OFPQueueDescStatsReply": {
+      "body": [
+         {
+            "OFPQueueDesc": {
+               "len": 32, 
+               "port_no": 7, 
+               "properties": [
+                  {
+                     "OFPQueueDescPropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "queue_id": 0
+            }
+         }, 
+         {
+            "OFPQueueDesc": {
+               "len": 88, 
+               "port_no": 8, 
+               "properties": [
+                  {
+                     "OFPQueueDescPropMinRate": {
+                        "length": 8, 
+                        "rate": 300, 
+                        "type": 1
+                     }
+                  }, 
+                  {
+                     "OFPQueueDescPropMaxRate": {
+                        "length": 8, 
+                        "rate": 900, 
+                        "type": 2
+                     }
+                  }, 
+                  {
+                     "OFPQueueDescPropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPQueueDescPropExperimenter": {
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPQueueDescPropExperimenter": {
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "queue_id": 1
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 15
+   }
+}

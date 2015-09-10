@@ -1,0 +1,41 @@
+{
+   "OFPRoleStatus": {
+      "generation_id": 7, 
+      "properties": [
+         {
+            "OFPRolePropExperimenter": {
+               "data": [], 
+               "exp_type": 0, 
+               "experimenter": 101, 
+               "length": 12, 
+               "type": 65535
+            }
+         }, 
+         {
+            "OFPRolePropExperimenter": {
+               "data": [
+                  1
+               ], 
+               "exp_type": 1, 
+               "experimenter": 101, 
+               "length": 16, 
+               "type": 65535
+            }
+         }, 
+         {
+            "OFPRolePropExperimenter": {
+               "data": [
+                  1, 
+                  2
+               ], 
+               "exp_type": 2, 
+               "experimenter": 101, 
+               "length": 20, 
+               "type": 65535
+            }
+         }
+      ], 
+      "reason": 0, 
+      "role": 2
+   }
+}

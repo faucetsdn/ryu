@@ -1,0 +1,113 @@
+{
+   "OFPPortStatsReply": {
+      "body": [
+         {
+            "OFPPortStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 224, 
+               "port_no": 7, 
+               "properties": [
+                  {
+                     "OFPPortStatsPropEthernet": {
+                        "collisions": 0, 
+                        "length": 40, 
+                        "rx_crc_err": 0, 
+                        "rx_frame_err": 0, 
+                        "rx_over_err": 0, 
+                        "type": 0
+                     }
+                  }, 
+                  {
+                     "OFPPortStatsPropOptical": {
+                        "bias_current": 300, 
+                        "flags": 3, 
+                        "length": 44, 
+                        "rx_freq_lmda": 1500, 
+                        "rx_grid_span": 500, 
+                        "rx_offset": 700, 
+                        "rx_pwr": 2000, 
+                        "temperature": 273, 
+                        "tx_freq_lmda": 1500, 
+                        "tx_grid_span": 500, 
+                        "tx_offset": 700, 
+                        "tx_pwr": 2000, 
+                        "type": 1
+                     }
+                  }, 
+                  {
+                     "OFPPortStatsPropExperimenter": {
+                        "data": [], 
+                        "exp_type": 0, 
+                        "experimenter": 101, 
+                        "length": 12, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPPortStatsPropExperimenter": {
+                        "data": [
+                           1
+                        ], 
+                        "exp_type": 1, 
+                        "experimenter": 101, 
+                        "length": 16, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPPortStatsPropExperimenter": {
+                        "data": [
+                           1, 
+                           2
+                        ], 
+                        "exp_type": 2, 
+                        "experimenter": 101, 
+                        "length": 20, 
+                        "type": 65535
+                     }
+                  }
+               ], 
+               "rx_bytes": 0, 
+               "rx_dropped": 0, 
+               "rx_errors": 0, 
+               "rx_packets": 0, 
+               "tx_bytes": 336, 
+               "tx_dropped": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 4
+            }
+         }, 
+         {
+            "OFPPortStats": {
+               "duration_nsec": 0, 
+               "duration_sec": 0, 
+               "length": 120, 
+               "port_no": 6, 
+               "properties": [
+                  {
+                     "OFPPortStatsPropEthernet": {
+                        "collisions": 0, 
+                        "length": 40, 
+                        "rx_crc_err": 0, 
+                        "rx_frame_err": 0, 
+                        "rx_over_err": 0, 
+                        "type": 0
+                     }
+                  }
+               ], 
+               "rx_bytes": 336, 
+               "rx_dropped": 0, 
+               "rx_errors": 0, 
+               "rx_packets": 4, 
+               "tx_bytes": 336, 
+               "tx_dropped": 0, 
+               "tx_errors": 0, 
+               "tx_packets": 4
+            }
+         }
+      ], 
+      "flags": 0, 
+      "type": 4
+   }
+}

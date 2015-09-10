@@ -1,0 +1,62 @@
+{
+   "OFPRequestForward": {
+      "request": {
+         "OFPGroupMod": {
+            "buckets": [
+               {
+                "OFPBucket": {
+                    "action_array_len": 24,
+                    "actions": [
+                        {
+                            "OFPActionPopVlan": {
+                                "len": 8,
+                                "type": 18
+                            }
+                        },
+                        {
+                            "OFPActionSetField": {
+                                "field": {
+                                    "OXMTlv": {
+                                        "field": "ipv4_dst",
+                                        "mask": null,
+                                        "value": "192.168.2.9"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "bucket_id": 305419896,
+                    "len": 56,
+                    "properties": [
+                        {
+                            "OFPGroupBucketPropWeight": {
+                                "length": 8,
+                                "type": 0,
+                                "weight": 52428
+                            }
+                        },
+                        {
+                            "OFPGroupBucketPropWatch": {
+                                "length": 8,
+                                "type": 1,
+                                "watch": 56797
+                            }
+                        },
+                        {
+                            "OFPGroupBucketPropWatch": {
+                                "length": 8,
+                                "type": 2,
+                                "watch": 4008636142
+                            }
+                        }
+                    ]
+                }
+               }
+            ],
+            "command": 0,
+            "group_id": 1,
+            "type": 0
+         }
+      }
+   }
+}

@@ -1,0 +1,35 @@
+{
+   "OFPMeterMod": {
+      "bands": [
+         {
+            "OFPMeterBandDrop": {
+               "burst_size": 10, 
+               "len": 16, 
+               "rate": 1000, 
+               "type": 1
+            }
+         }, 
+         {
+            "OFPMeterBandDscpRemark": {
+               "burst_size": 10, 
+               "len": 16, 
+               "prec_level": 1, 
+               "rate": 1000, 
+               "type": 2
+            }
+         }, 
+         {
+            "OFPMeterBandExperimenter": {
+               "burst_size": 10, 
+               "experimenter": 999, 
+               "len": 16, 
+               "rate": 1000, 
+               "type": 65535
+            }
+         }
+      ], 
+      "command": 0, 
+      "flags": 14, 
+      "meter_id": 100
+   }
+}

@@ -1,0 +1,6 @@
+{
+   "OFPTableDescStatsRequest": {
+      "flags": 0, 
+      "type": 14
+   }
+}
