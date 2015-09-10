@@ -74,6 +74,14 @@ ryu.ofproto.ofproto_v1_4_parser
 -------------------------------
 .. automodule:: ryu.ofproto.ofproto_v1_4_parser
 
+ryu.ofproto.ofproto_v1_5
+------------------------
+.. automodule:: ryu.ofproto.ofproto_v1_5
+
+ryu.ofproto.ofproto_v1_5_parser
+-------------------------------
+.. automodule:: ryu.ofproto.ofproto_v1_5_parser
+
 
 Ryu applications
 ================
