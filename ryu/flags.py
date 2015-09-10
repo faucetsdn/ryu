@@ -50,5 +50,8 @@ CONF.register_cli_opts([
                '(default: openflow13)'),
     cfg.StrOpt('tester-version', default='openflow13',
                help='tester sw OFP version [openflow13|openflow14] '
-               '(default: openflow13)')
+               '(default: openflow13)'),
+    cfg.IntOpt('interval', default=0,
+               help='interval time in seconds of each test '
+               '(default: 0)'),
 ], group='test-switch')

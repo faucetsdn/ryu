@@ -273,6 +273,7 @@ class OfTester(app_manager.RyuApp):
         super(OfTester, self).__init__()
         self._set_logger()
 
+        self.interval = CONF['test-switch']['interval']
         self.target_dpid = self._convert_dpid(CONF['test-switch']['target'])
         self.target_send_port_1 = CONF['test-switch']['target_send_port_1']
         self.target_send_port_2 = CONF['test-switch']['target_send_port_2']
@@ -434,6 +435,7 @@ class OfTester(app_manager.RyuApp):
             result = self._test_execute(test, desc)
             report.setdefault(result, [])
             report[result].append([testfile.description, test.description])
+            hub.sleep(self.interval)
         return report
 
     def _test_execute(self, test, description):
