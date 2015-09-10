@@ -220,6 +220,23 @@ class TestOFPMatch(unittest.TestCase):
         eq_(self.tp_src['val'], res[11])
         eq_(self.tp_dst['val'], res[12])
 
+    def test_getitem(self):
+        c = self._get_obj(self.dl_src, self.dl_dst)
+
+        eq_(self.wildcards['val'], c["wildcards"])
+        eq_(self.in_port['val'], c["in_port"])
+        eq_(self.dl_src, c["dl_src"])
+        eq_(self.dl_dst, c["dl_dst"])
+        eq_(self.dl_vlan['val'], c["dl_vlan"])
+        eq_(self.dl_vlan_pcp['val'], c["dl_vlan_pcp"])
+        eq_(self.dl_type['val'], c["dl_type"])
+        eq_(self.nw_tos['val'], c["nw_tos"])
+        eq_(self.nw_proto['val'], c["nw_proto"])
+        eq_(self.nw_src['val'], c["nw_src"])
+        eq_(self.nw_dst['val'], c["nw_dst"])
+        eq_(self.tp_src['val'], c["tp_src"])
+        eq_(self.tp_dst['val'], c["tp_dst"])
+
 
 class TestOFPActionHeader(unittest.TestCase):
     """ Test case for ofproto_v1_0_parser.OFPActionHeader
