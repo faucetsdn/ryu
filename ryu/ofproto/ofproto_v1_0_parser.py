@@ -205,6 +205,27 @@ class OFPMatch(StringifyMixin):
         else:
             self.wildcards = wildcards
 
+    def __getitem__(self, name):
+        if not isinstance(name, str):
+            raise KeyError(name)
+        elif name == 'nw_src_mask':
+            _m = 32 - ((self.wildcards & ofproto.OFPFW_NW_SRC_MASK) >>
+                       ofproto.OFPFW_NW_SRC_SHIFT)
+            return 0 if _m < 0 else _m
+        elif name == 'nw_dst_mask':
+            _m = 32 - ((self.wildcards & ofproto.OFPFW_NW_DST_MASK) >>
+                       ofproto.OFPFW_NW_DST_SHIFT)
+            return 0 if _m < 0 else _m
+        elif name == 'wildcards':
+            return self.wildcards
+
+        wc_name = 'OFPFW_' + name.upper()
+        wc = getattr(ofproto, wc_name, ofproto.OFPFW_ALL)
+        if self.wildcards & ~wc:
+            return getattr(self, name)
+        else:
+            raise KeyError(name)
+
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.OFP_MATCH_PACK_STR, buf, offset,
                       self.wildcards, self.in_port, self.dl_src,
