@@ -1794,6 +1794,8 @@ Description of Actions on request messages
         GOTO_TABLE      (Instruction) Setup the next table identified by "table_id"                  {"type": "GOTO_TABLE", "table_id": 8}
         WRITE_METADATA  (Instruction) Setup the metadata field using "metadata" and "metadata_mask"  {"type": "WRITE_METADATA", "metadata": 0x3, "metadata_mask": 0x3}
         METER           (Instruction) Apply meter identified by "meter_id"                           {"type": "METER", "meter_id": 3}
+        WRITE_ACTIONS   (Instruction) Write the action(s) onto the datapath action set               {"type": "WRITE_ACTIONS", actions":[{"type":"POP_VLAN",},{ "type":"OUTPUT", "port": 2}]}
+        CLEAR_ACTIONS   (Instruction) Clears all actions from the datapath action set                {"type": "CLEAR_ACTIONS"}
         =============== ============================================================================ ==================================================================
 
 .. _example-of-set-field-action:
