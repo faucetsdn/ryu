@@ -805,7 +805,7 @@ class Switches(app_manager.RyuApp):
 
             # remove hosts from edge port
             for host in self.hosts.values():
-                if self._is_edge_port(host.port):
+                if not self._is_edge_port(host.port):
                     del self.hosts[host.mac]
 
         if not self.links.update_link(src, dst):
