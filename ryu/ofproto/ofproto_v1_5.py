@@ -923,6 +923,7 @@ OFPBAC_BAD_SET_TYPE = 13        # Unsupported type in SET_FIELD action.
 OFPBAC_BAD_SET_LEN = 14         # Length problem in SET_FIELD action.
 OFPBAC_BAD_SET_ARGUMENT = 15    # Bad arguement in SET_FIELD action.
 OFPBAC_BAD_SET_MASK = 16        # Bad mask in SET_FIELD action.
+OFPBAC_BAD_METER = 17           # Invalid meter id in meter action.
 
 # enum ofp_bad_instruction_code
 OFPBIC_UNKNOWN_INST = 0         # Unknown instruction.
