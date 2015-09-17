@@ -185,6 +185,28 @@ def _add_tests():
         ('ipv6_nd_tll', Mac),
         ('mpls_label', Int4),
         ('mpls_tc', Int1),
+        # Old ONF Experimenter --> OpenFlow Basic (OF1.4+)
+        ('pbb_uca', Int1),
+        # ONF Experimenter --> OpenFlow Basic (OF1.5+)
+        ('tcp_flags', Int2),
+        ('actset_output', Int4),
+        # Nicira Experimenter
+        ('eth_dst_nxm', Mac),
+        ('eth_src_nxm', Mac),
+        ('tunnel_id_nxm', Int8),
+        ('tun_ipv4_src', IPv4),
+        ('tun_ipv4_dst', IPv4),
+        ('pkt_mark', Int4),
+        ('conj_id', Int4),
+        ('_dp_hash', Int4),
+        ('reg0', Int4),
+        ('reg1', Int4),
+        ('reg2', Int4),
+        ('reg3', Int4),
+        ('reg4', Int4),
+        ('reg5', Int4),
+        ('reg6', Int4),
+        ('reg7', Int4),
         # Common Experimenter
         ('field_100', B64),
     ]
@@ -203,14 +225,9 @@ def _add_tests():
         ('tunnel_id', Int8),
         ('ipv6_exthdr', Int2),
     ]
-    L[ofproto_v1_4_parser] = L[ofproto_v1_3_parser] + [
-        # OpenFlow Basic (OF1.4+)
-        ('pbb_uca', Int1),
-    ]
+    L[ofproto_v1_4_parser] = L[ofproto_v1_3_parser]
     L[ofproto_v1_5_parser] = L[ofproto_v1_4_parser] + [
         # OpenFlow Basic (OF1.5+)
-        ('tcp_flags', Int2),
-        ('actset_output', Int4),
         ('packet_type', Int4),
     ]
 
