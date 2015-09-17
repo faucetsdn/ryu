@@ -312,6 +312,11 @@ Experimenter
 
     .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of12/3-16-ofp_experimenter.packet.json
 
+Port Structures
+===============
+
+.. autoclass:: OFPPort
+
 
 Flow Match Structure
 ====================

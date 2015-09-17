@@ -312,6 +312,36 @@ class OFPExperimenter(MsgBase):
 class OFPPort(ofproto_parser.namedtuple('OFPPort', (
         'port_no', 'hw_addr', 'name', 'config', 'state', 'curr',
         'advertised', 'supported', 'peer', 'curr_speed', 'max_speed'))):
+    """
+    Description of a port
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    port_no    Port number and it uniquely identifies a port within
+               a switch.
+    hw_addr    MAC address for the port.
+    name       Null-terminated string containing a human-readable name
+               for the interface.
+    config     Bitmap of port configration flags.
+
+               | OFPPC_PORT_DOWN
+               | OFPPC_NO_RECV
+               | OFPPC_NO_FWD
+               | OFPPC_NO_PACKET_IN
+    state      Bitmap of port state flags.
+
+               | OFPPS_LINK_DOWN
+               | OFPPS_BLOCKED
+               | OFPPS_LIVE
+    curr       Current features.
+    advertised Features being advertised by the port.
+    supported  Features supported by the port.
+    peer       Features advertised by peer.
+    curr_speed Current port bitrate in kbps.
+    max_speed  Max port bitrate in kbps.
+    ========== =========================================================
+    """
 
     _TYPE = {
         'ascii': [
