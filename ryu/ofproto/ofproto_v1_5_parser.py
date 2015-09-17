@@ -717,7 +717,8 @@ class OFPMatch(StringifyMixin):
                       in kwargs.items()]
             # assumption: sorting by OXM type values makes fields
             # meet ordering requirements (eg. eth_type before ipv4_src)
-            fields.sort()
+            fields.sort(
+                key=lambda x: x[0][0] if isinstance(x[0], tuple) else x[0])
             self._fields2 = [ofproto.oxm_to_user(n, v, m) for (n, v, m)
                              in fields]
 
@@ -859,7 +860,8 @@ class OFPStats(StringifyMixin):
             fields = [ofproto.oxs_from_user(k, v) for (k, v)
                       in kwargs.items()]
             # sort by OXS type values
-            fields.sort()
+            fields.sort(
+                key=lambda x: x[0][0] if isinstance(x[0], tuple) else x[0])
             # No mask
             self.fields = [ofproto.oxs_to_user(n, v, None) for (n, v, _)
                            in fields]
@@ -2231,7 +2233,8 @@ class OFPTableFeaturePropOxmValues(OFPTableFeatureProp):
                       in kwargs.items()]
             # assumption: sorting by OXM type values makes fields
             # meet ordering requirements (eg. eth_type before ipv4_src)
-            values.sort()
+            values.sort(
+                key=lambda x: x[0][0] if isinstance(x[0], tuple) else x[0])
             self.oxm_values = [ofproto.oxm_to_user(n, v, m) for (n, v, m)
                                in values]
 
