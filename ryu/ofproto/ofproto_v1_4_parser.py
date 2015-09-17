@@ -1860,6 +1860,34 @@ class OFPFlowRemoved(MsgBase):
 
 
 class OFPPort(StringifyMixin):
+
+    """
+    Description of a port
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    port_no    Port number and it uniquely identifies a port within
+               a switch.
+    length     Length of ofp_port (excluding padding).
+    hw_addr    MAC address for the port.
+    name       Null-terminated string containing a human-readable name
+               for the interface.
+    config     Bitmap of port configration flags.
+
+               | OFPPC_PORT_DOWN
+               | OFPPC_NO_RECV
+               | OFPPC_NO_FWD
+               | OFPPC_NO_PACKET_IN
+    state      Bitmap of port state flags.
+
+               | OFPPS_LINK_DOWN
+               | OFPPS_BLOCKED
+               | OFPPS_LIVE
+    properties List of ``OFPPortDescProp`` subclass instance
+    ========== =========================================================
+    """
+
     _TYPE = {
         'ascii': [
             'hw_addr',

@@ -355,7 +355,7 @@ Bundle Messages
     JSON Example:
 
     .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of14/5-70-ofp_bundle_add_msg.packet.json
- 
+
 Set Asynchronous Configuration Message
 --------------------------------------
 
@@ -435,8 +435,8 @@ Request Forward Message
     JSON Example:
 
     .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of14/5-71-ofp_requestforward.packet.json
- 
- 
+
+
 Symmetric Messages
 ==================
 
@@ -486,6 +486,11 @@ Experimenter
     JSON Example:
 
     .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of14/5-16-ofp_experimenter.packet.json
+
+Port Structures
+===============
+
+.. autoclass:: OFPPort
 
 
 Flow Match Structure
