@@ -22,14 +22,14 @@ import struct
 import binascii
 import six
 
-from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase
 from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
-from . import ofproto_common
-from . import ofproto_parser
-from . import ofproto_v1_0 as ofproto
-from . import nx_match
+from ryu.ofproto import ofproto_common
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_v1_0 as ofproto
+from ryu.ofproto import nx_match
 from ryu import utils
 
 import logging

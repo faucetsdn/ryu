@@ -20,9 +20,9 @@ import struct
 from ryu import exception
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
-from . import ofproto_parser
-from . import ofproto_v1_0
-from . import inet
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import inet
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.nx_match')

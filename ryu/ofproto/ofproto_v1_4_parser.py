@@ -20,17 +20,14 @@ Decoder/Encoder implementations of OpenFlow 1.4.
 
 import six
 import struct
-import itertools
 
 from ryu.lib import addrconv
-from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase, msg_str_attr
-from . import ether
-from . import ofproto_parser
-from . import ofproto_common
-from . import ofproto_v1_4 as ofproto
+from ryu.ofproto import ether
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_v1_4 as ofproto
 
 _MSG_PARSERS = {}
 

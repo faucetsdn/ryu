@@ -20,14 +20,13 @@ import base64
 import collections
 import logging
 import struct
-import sys
 import functools
 
 from ryu import exception
 from ryu import utils
 from ryu.lib import stringify
 
-from . import ofproto_common
+from ryu.ofproto import ofproto_common
 
 LOG = logging.getLogger('ryu.ofproto.ofproto_parser')
 

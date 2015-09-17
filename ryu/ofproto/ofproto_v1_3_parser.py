@@ -42,18 +42,17 @@ The following extensions are not implemented yet.
 
 import six
 import struct
-import itertools
 
 from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
-from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, msg_str_attr
-from . import ether
-from . import nicira_ext
-from . import ofproto_parser
-from . import ofproto_common
-from . import ofproto_v1_3 as ofproto
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase
+from ryu.ofproto import ether
+from ryu.ofproto import nx_actions
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_common
+from ryu.ofproto import ofproto_v1_3 as ofproto
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.ofproto_v1_3_parser')
@@ -6113,8 +6112,6 @@ class OFPSetAsync(MsgBase):
                       self.port_status_mask[0], self.port_status_mask[1],
                       self.flow_removed_mask[0], self.flow_removed_mask[1])
 
-
-from ryu.ofproto import nx_actions
 
 nx_actions.generate(
     'ryu.ofproto.ofproto_v1_3',

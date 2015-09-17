@@ -20,18 +20,16 @@ Decoder/Encoder implementations of OpenFlow 1.5.
 
 import six
 import struct
-import itertools
 
 from ryu.lib import addrconv
-from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
-from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase, msg_str_attr
-from . import ether
-from . import nicira_ext
-from . import ofproto_parser
-from . import ofproto_common
-from . import ofproto_v1_5 as ofproto
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase
+from ryu.ofproto import ether
+from ryu.ofproto import nx_actions
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_common
+from ryu.ofproto import ofproto_v1_5 as ofproto
 
 _MSG_PARSERS = {}
 
@@ -6657,8 +6655,6 @@ class OFPBundleAddMsg(MsgInMsgBase):
         # Finish
         self.buf += tail_buf
 
-
-from . import nx_actions
 
 nx_actions.generate(
     'ryu.ofproto.ofproto_v1_5',

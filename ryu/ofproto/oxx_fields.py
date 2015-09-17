@@ -23,7 +23,6 @@
 #   value and mask are on-wire bytes.
 #   mask is None if no mask.
 
-import itertools
 import six
 import struct
 
