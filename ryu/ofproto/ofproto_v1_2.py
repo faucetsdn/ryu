@@ -19,6 +19,7 @@ OpenFlow 1.2 definitions.
 """
 
 from ryu.lib import type_desc
+from ryu.ofproto import nx_match
 from ryu.ofproto import ofproto_utils
 from ryu.ofproto import oxm_fields
 
@@ -828,7 +829,14 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('ipv6_nd_tll', 33, type_desc.MacAddr),
     oxm_fields.OpenFlowBasic('mpls_label', 34, type_desc.Int4),
     oxm_fields.OpenFlowBasic('mpls_tc', 35, type_desc.Int1),
-]
+    # EXT-256 Old version of ONF Extension
+    oxm_fields.OldONFExperimenter('pbb_uca', 2560, type_desc.Int1),
+    # EXT-109 TCP flags match field Extension
+    oxm_fields.ONFExperimenter('tcp_flags', 42, type_desc.Int2),
+    # EXT-233 Output match Extension
+    # NOTE(yamamoto): The spec says uint64_t but I assume it's an error.
+    oxm_fields.ONFExperimenter('actset_output', 43, type_desc.Int4),
+] + nx_match.oxm_types
 
 oxm_fields.generate(__name__)
 

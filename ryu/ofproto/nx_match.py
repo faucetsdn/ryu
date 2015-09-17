@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011-2015 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 # Copyright (C) 2012 Simon Horman <horms ad verge net au>
 #
@@ -19,10 +19,12 @@ import struct
 
 from ryu import exception
 from ryu.lib import mac
+from ryu.lib import type_desc
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import inet
+from ryu.ofproto import oxm_fields
 
 import logging
 LOG = logging.getLogger('ryu.ofproto.nx_match')
@@ -1186,3 +1188,34 @@ class NXMatch(object):
         msg_pack_into(ofproto_v1_0.NXM_HEADER_PACK_STRING,
                       buf, offset, self.header)
         return struct.calcsize(ofproto_v1_0.NXM_HEADER_PACK_STRING)
+
+
+#
+# The followings are implementations for OpenFlow 1.2+
+#
+
+oxm_types = [
+    oxm_fields.NiciraExtended0('eth_dst_nxm', 1, type_desc.MacAddr),
+    oxm_fields.NiciraExtended0('eth_src_nxm', 2, type_desc.MacAddr),
+    oxm_fields.NiciraExtended1('tunnel_id_nxm', 16, type_desc.Int8),
+    oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
+    oxm_fields.NiciraExtended1('conj_id', 37, type_desc.Int4),
+
+    # The following definition is merely for testing 64-bit experimenter OXMs.
+    # Following Open vSwitch, we use dp_hash for this purpose.
+    # Prefix the name with '_' to indicate this is not intended to be used
+    # in wild.
+    oxm_fields.NiciraExperimenter('_dp_hash', 0, type_desc.Int4),
+
+    # Support for matching/setting NX registers 0-7
+    oxm_fields.NiciraExtended1('reg0', 0, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg1', 1, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg2', 2, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg3', 3, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg4', 4, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg5', 5, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg6', 6, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg7', 7, type_desc.Int4),
+]
