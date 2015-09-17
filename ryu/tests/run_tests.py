@@ -25,7 +25,7 @@ if __name__ == '__main__':
     cwd = os.getcwd()
     c = config.Config(stream=sys.stdout,
                       env=os.environ,
-                      verbosity=3,
+                      verbosity=int(os.environ.get('NOSE_VERBOSE', 3)),
                       includeExe=True,
                       traverseNamespace=True,
                       plugins=core.DefaultPluginManager())

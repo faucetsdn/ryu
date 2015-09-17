@@ -12,6 +12,6 @@ install:
   - "pip install tox"
 
 script:
-  - tox -e $TOX_ENV
+  - NOSE_VERBOSE=0 tox -e $TOX_ENV
 
 sudo: false
