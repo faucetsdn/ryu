@@ -524,6 +524,11 @@ Experimenter
 
     .. literalinclude:: ../../ryu/tests/unit/ofproto/json/of15/libofproto-OFP15-error_msg_experimenter.packet.json
 
+Port Structures
+===============
+
+.. autoclass:: OFPPort
+
 Flow Match Structure
 ====================
 
@@ -565,4 +570,8 @@ Action Structures
 .. autoclass:: OFPActionMeter
 .. autoclass:: OFPActionExperimenter
 
+Controller Status Structure
+===========================
+
+.. autoclass:: OFPControllerStatusStats
 

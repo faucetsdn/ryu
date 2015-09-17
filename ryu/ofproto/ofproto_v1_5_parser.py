@@ -2094,6 +2094,34 @@ class OFPFlowRemoved(MsgBase):
 
 
 class OFPPort(StringifyMixin):
+
+    """
+    Description of a port
+
+    ========== =========================================================
+    Attribute  Description
+    ========== =========================================================
+    port_no    Port number and it uniquely identifies a port within
+               a switch.
+    length     Length of ofp_port (excluding padding).
+    hw_addr    MAC address for the port.
+    name       Null-terminated string containing a human-readable name
+               for the interface.
+    config     Bitmap of port configration flags.
+
+               | OFPPC_PORT_DOWN
+               | OFPPC_NO_RECV
+               | OFPPC_NO_FWD
+               | OFPPC_NO_PACKET_IN
+    state      Bitmap of port state flags.
+
+               | OFPPS_LINK_DOWN
+               | OFPPS_BLOCKED
+               | OFPPS_LIVE
+    properties List of ``OFPPortDescProp`` subclass instance
+    ========== =========================================================
+    """
+
     _TYPE = {
         'ascii': [
             'hw_addr',
@@ -5272,6 +5300,38 @@ class OFPControllerStatusPropExperimenter(OFPPropCommonExperimenter4ByteData):
 
 
 class OFPControllerStatusStats(StringifyMixin):
+
+    """
+    Controller status structure
+
+    ============== =========================================================
+    Attribute      Description
+    ============== =========================================================
+    length         Length of this entry.
+    short_id       ID number which identifies the controller.
+    role           Bitmap of controller's role flags.
+
+                   | OFPCR_ROLE_NOCHANGE
+                   | OFPCR_ROLE_EQUAL
+                   | OFPCR_ROLE_MASTER
+                   | OFPCR_ROLE_SLAVE
+    reason         Bitmap of controller status reason flags.
+
+                   | OFPCSR_REQUEST
+                   | OFPCSR_CHANNEL_STATUS
+                   | OFPCSR_ROLE
+                   | OFPCSR_CONTROLLER_ADDED
+                   | OFPCSR_CONTROLLER_REMOVED
+                   | OFPCSR_SHORT_ID
+                   | OFPCSR_EXPERIMENTER
+    channel_status Bitmap of control channel status flags.
+
+                   | OFPCT_STATUS_UP
+                   | OFPCT_STATUS_DOWN
+    properties     List of ``OFPControllerStatusProp`` subclass instance
+    ============== =========================================================
+    """
+
     def __init__(self, short_id=None, role=None, reason=None,
                  channel_status=None, properties=None, length=None):
         super(OFPControllerStatusStats, self).__init__()
