@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import weakref
+from six.moves import intern
 
 dict_name = intern('_internable_dict')
 

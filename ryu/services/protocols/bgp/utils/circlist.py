@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from six.moves import intern
+
 
 class CircularListType(object):
     """Instances of this class represent a specific type of list.

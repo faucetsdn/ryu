@@ -528,7 +528,7 @@ def validate(**kwargs):
     If name is not provided we use function name as name of the validator.
     """
     def decorator(func):
-        _VALIDATORS[kwargs.pop('name', func.func_name)] = func
+        _VALIDATORS[kwargs.pop('name', func.__name__)] = func
         return func
 
     return decorator

@@ -21,9 +21,6 @@ from abc import abstractmethod
 import numbers
 import logging
 import uuid
-from types import BooleanType
-from types import IntType
-from types import LongType
 
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -645,7 +642,7 @@ def validate_cap_rtc_as(rtc_as):
 
 @validate(name=HOLD_TIME)
 def validate_hold_time(hold_time):
-    if ((hold_time is None) or (not isinstance(hold_time, IntType)) or
+    if ((hold_time is None) or (not isinstance(hold_time, int)) or
             hold_time < 10):
         raise ConfigValueError(desc='Invalid hold_time configuration value %s'
                                % hold_time)
@@ -681,7 +678,7 @@ def validate_soo_list(soo_list):
 
 @validate(name=MAX_PREFIXES)
 def validate_max_prefixes(max_prefixes):
-    if not isinstance(max_prefixes, (IntType, LongType)):
+    if not isinstance(max_prefixes, (IntType, long)):
         raise ConfigTypeError(desc='Max. prefixes value should be of type '
                               'int or long but found %s' % type(max_prefixes))
     if max_prefixes < 0:
@@ -692,7 +689,7 @@ def validate_max_prefixes(max_prefixes):
 
 @validate(name=ADVERTISE_PEER_AS)
 def validate_advertise_peer_as(advertise_peer_as):
-    if not isinstance(advertise_peer_as, BooleanType):
+    if not isinstance(advertise_peer_as, bool):
         raise ConfigTypeError(desc='Invalid type for advertise-peer-as, '
                               'expected bool got %s' %
                               type(advertise_peer_as))
