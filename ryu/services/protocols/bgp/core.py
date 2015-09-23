@@ -228,11 +228,13 @@ class CoreService(Factory, Activity):
         server_addr = (CORE_IP, self._common_config.bgp_server_port)
         waiter = kwargs.pop('waiter')
         waiter.set()
-        server_thread, sockets = self._listen_tcp(server_addr,
-                                                  self.start_protocol)
-        self.listen_sockets = sockets
-
-        server_thread.wait()
+        if self._common_config.bgp_server_port != 0:
+            server_thread, sockets = self._listen_tcp(server_addr,
+                                                      self.start_protocol)
+            self.listen_sockets = sockets
+            server_thread.wait()
+        else:
+            self.listen_sockets = {}
         processor_thread.wait()
 
     # ========================================================================

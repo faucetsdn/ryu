@@ -144,7 +144,7 @@ def validate_bgp_server_port(server_port):
     if not isinstance(server_port, numbers.Integral):
         raise ConfigTypeError(desc=('Invalid bgp sever port configuration '
                                     'value %s' % server_port))
-    if server_port <= 0 or server_port > 65535:
+    if server_port < 0 or server_port > 65535:
         raise ConfigValueError(desc='Invalid server port %s' % server_port)
 
     return server_port
