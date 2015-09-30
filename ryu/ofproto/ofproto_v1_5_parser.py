@@ -1671,6 +1671,7 @@ class OFPMultipartRequest(MsgBase):
         self._serialize_stats_body()
 
 
+@_register_parser
 @_set_msg_type(ofproto.OFPT_METER_MOD)
 class OFPMeterMod(MsgBase):
     """
@@ -1707,6 +1708,23 @@ class OFPMeterMod(MsgBase):
         self.flags = flags
         self.meter_id = meter_id
         self.bands = bands
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPMeterMod, cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+
+        (msg.command, msg.flags, msg.meter_id) = struct.unpack_from(
+            ofproto.OFP_METER_MOD_PACK_STR, buf, ofproto.OFP_HEADER_SIZE)
+        offset = ofproto.OFP_METER_MOD_SIZE
+
+        msg.bands = []
+        while offset < msg.msg_len:
+            band = OFPMeterBandHeader.parser(buf, offset)
+            msg.bands.append(band)
+            offset += band.len
+
+        return msg
 
     def _serialize_body(self):
         msg_pack_into(ofproto.OFP_METER_MOD_PACK_STR, self.buf,
@@ -4666,6 +4684,7 @@ class OFPTableStatus(MsgBase):
         return msg
 
 
+@_register_parser
 @_set_msg_type(ofproto.OFPT_REQUESTFORWARD)
 class OFPRequestForward(MsgInMsgBase):
     """
@@ -4681,36 +4700,47 @@ class OFPRequestForward(MsgInMsgBase):
     ================ ======================================================
 
     Example::
+        @set_ev_cls(ofp_event.EventOFPRequestForward, MAIN_DISPATCHER)
+        def request_forward_handler(self, ev):
+            msg = ev.msg
+            dp = msg.datapath
+            ofp = dp.ofproto
 
-        def send_request_forward_message(self, datapath):
-            ofp = datapath.ofproto
-            ofp_parser = datapath.ofproto_parser
-
-            port = 1
-            max_len = 2000
-            actions = [ofp_parser.OFPActionOutput(port, max_len)]
-
-            weight = 100
-            watch_port = 0
-            watch_group = 0
-            buckets = [ofp_parser.OFPBucket(weight, watch_port, watch_group,
-                                            actions)]
-
-            group_id = 1
-            msg = ofp_parser.OFPGroupMod(datapath, ofp.OFPGC_ADD,
-                                         ofp.OFPGT_SELECT, group_id, buckets)
-
-            req = ofp_parser.OFPRequestForward(datapath, msg)
-            datapath.send_msg(req)
+            if msg.request.msg_type == ofp.OFPT_GROUP_MOD:
+                self.logger.debug(
+                    'OFPRequestForward received: request=OFPGroupMod('
+                    'command=%d, type=%d, group_id=%d, command_bucket_id=%d, '
+                    'buckets=%s, properties=%s)',
+                    msg.request.command, msg.request.type,
+                    msg.request.group_id, msg.request.command_bucket_id,
+                    msg.request.buckets, repr(msg.request.properties))
+            elif msg.request.msg_type == ofp.OFPT_METER_MOD:
+                self.logger.debug(
+                    'OFPRequestForward received: request=OFPMeterMod('
+                    'command=%d, flags=%d, meter_id=%d, bands=%s)',
+                    msg.request.command, msg.request.flags,
+                    msg.request.meter_id, msg.request.bands)
+            else:
+                self.logger.debug(
+                    'OFPRequestForward received: request=Unknown')
     """
-    def __init__(self, datapath, request):
+    def __init__(self, datapath, request=None):
         super(OFPRequestForward, self).__init__(datapath)
-        assert(isinstance(request, OFPGroupMod) or
-               isinstance(request, OFPMeterMod))
         self.request = request
 
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPRequestForward, cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+        req_buf = buf[ofproto.OFP_HEADER_SIZE:]
+        (_ver, _type, _len, _xid) = ofproto_parser.header(req_buf)
+        msg.request = ofproto_parser.msg(
+            datapath, _ver, _type, _len, _xid, req_buf)
+        return msg
+
     def _serialize_body(self):
-        tail_buf = self.request.serialize()
+        assert isinstance(self.request, (OFPGroupMod, OFPMeterMod))
+        self.request.serialize()
         self.buf += self.request.buf
 
 
@@ -5940,6 +5970,7 @@ class OFPGroupPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
 
+@_register_parser
 @_set_msg_type(ofproto.OFPT_GROUP_MOD)
 class OFPGroupMod(MsgBase):
     """
@@ -6005,6 +6036,30 @@ class OFPGroupMod(MsgBase):
         self.command_bucket_id = command_bucket_id
         self.buckets = buckets
         self.properties = properties
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPGroupMod, cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+        (msg.command, msg.type, msg.group_id, msg.bucket_array_len,
+         msg.command_bucket_id) = struct.unpack_from(
+            ofproto.OFP_GROUP_MOD_PACK_STR, buf, ofproto.OFP_HEADER_SIZE)
+        offset = ofproto.OFP_GROUP_MOD_SIZE
+
+        bucket_buf = buf[offset:offset + msg.bucket_array_len]
+        msg.buckets = []
+        while bucket_buf:
+            bucket = OFPBucket.parser(bucket_buf, 0)
+            msg.buckets.append(bucket)
+            bucket_buf = bucket_buf[bucket.len:]
+        offset += msg.bucket_array_len
+
+        rest = buf[offset:offset + msg.msg_len]
+        while rest:
+            p, rest = OFPGroupProp.parse(rest)
+            msg.properties.append(p)
+
+        return msg
 
     def _serialize_body(self):
         offset = ofproto.OFP_GROUP_MOD_SIZE
