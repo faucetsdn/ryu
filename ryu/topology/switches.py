@@ -473,7 +473,9 @@ class LLDPPacket(object):
             raise LLDPPacket.LLDPUnknownFormat(
                 msg='unknown chassis id subtype %d' % tlv_chassis_id.subtype)
         chassis_id = tlv_chassis_id.chassis_id
-        if not chassis_id.startswith(LLDPPacket.CHASSIS_ID_PREFIX):
+        if type(LLDPPacket.CHASSIS_ID_PREFIX) is str:
+            chassis_id_prefix  = str.encode(LLDPPacket.CHASSIS_ID_PREFIX)
+        if not chassis_id.startswith(chassis_id_prefix):
             raise LLDPPacket.LLDPUnknownFormat(
                 msg='unknown chassis id format %s' % chassis_id)
         src_dpid = str_to_dpid(chassis_id[LLDPPacket.CHASSIS_ID_PREFIX_LEN:])
