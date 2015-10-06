@@ -103,7 +103,7 @@ class TestOFPMatch(unittest.TestCase):
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+    wildcards = {'buf': b'\x00\x02\x10\x00', 'val': 135168}
     in_port = {'buf': b'\x37\x8b', 'val': 14219}
     dl_src = {'buf': b'\x52\x54\x54\x10\x20\x99',
               'human': '52:54:54:10:20:99'}
