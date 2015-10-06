@@ -241,6 +241,10 @@ class OFPMatch(StringifyMixin):
         else:
             raise KeyError(name)
 
+    def __contains__(self, name):
+        wc = getattr(ofproto, 'OFPFW_' + name.upper(), 0)
+        return ~self.wildcards & wc
+
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.OFP_MATCH_PACK_STR, buf, offset,
                       self.wildcards, self.in_port, self.dl_src,
