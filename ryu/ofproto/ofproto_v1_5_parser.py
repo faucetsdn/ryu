@@ -4700,6 +4700,7 @@ class OFPRequestForward(MsgInMsgBase):
     ================ ======================================================
 
     Example::
+
         @set_ev_cls(ofp_event.EventOFPRequestForward, MAIN_DISPATCHER)
         def request_forward_handler(self, ev):
             msg = ev.msg
