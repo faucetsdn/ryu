@@ -105,8 +105,10 @@ class TestOFPMatch(unittest.TestCase):
     #                         nw_src, nw_dst, tp_src, tp_dst
     wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
     in_port = {'buf': b'\x37\x8b', 'val': 14219}
-    dl_src = b'\x52\x54\x54\x10\x20\x99'
-    dl_dst = b'\x61\x31\x50\x6d\xc9\xe5'
+    dl_src = {'buf': b'\x52\x54\x54\x10\x20\x99',
+              'human': '52:54:54:10:20:99'}
+    dl_dst = {'buf': b'\x61\x31\x50\x6d\xc9\xe5',
+              'human': '61:31:50:6d:c9:e5'}
     dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
     dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
     zfill0 = b'\x00'
@@ -114,15 +116,17 @@ class TestOFPMatch(unittest.TestCase):
     nw_tos = {'buf': b'\xde', 'val': 222}
     nw_proto = {'buf': b'\xe5', 'val': 229}
     zfil11 = b'\x00' * 2
-    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427,
+              'human': '27.109.141.75'}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400,
+              'human': '171.37.225.32'}
     tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
     tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     buf = wildcards['buf'] \
         + in_port['buf'] \
-        + dl_src \
-        + dl_dst \
+        + dl_src['buf'] \
+        + dl_dst['buf'] \
         + dl_vlan['buf'] \
         + dl_vlan_pcp['buf'] \
         + zfill0 \
@@ -158,12 +162,12 @@ class TestOFPMatch(unittest.TestCase):
         pass
 
     def test_init(self):
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
 
         eq_(self.wildcards['val'], c.wildcards)
         eq_(self.in_port['val'], c.in_port)
-        eq_(self.dl_src, c.dl_src)
-        eq_(self.dl_dst, c.dl_dst)
+        eq_(self.dl_src['buf'], c.dl_src)
+        eq_(self.dl_dst['buf'], c.dl_dst)
         eq_(self.dl_vlan['val'], c.dl_vlan)
         eq_(self.dl_vlan_pcp['val'], c.dl_vlan_pcp)
         eq_(self.dl_type['val'], c.dl_type)
@@ -180,13 +184,13 @@ class TestOFPMatch(unittest.TestCase):
         eq_(mac.DONTCARE, c.dl_dst)
 
     def test_parse(self):
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
         res = c.parse(self.buf, 0)
 
         eq_(self.wildcards['val'], res.wildcards)
         eq_(self.in_port['val'], res.in_port)
-        eq_(self.dl_src, res.dl_src)
-        eq_(self.dl_dst, res.dl_dst)
+        eq_(self.dl_src['buf'], res.dl_src)
+        eq_(self.dl_dst['buf'], res.dl_dst)
         eq_(self.dl_vlan['val'], res.dl_vlan)
         eq_(self.dl_vlan_pcp['val'], res.dl_vlan_pcp)
         eq_(self.dl_type['val'], res.dl_type)
@@ -199,7 +203,7 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_serialize(self):
         buf = bytearray()
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
 
         c.serialize(buf, 0)
 
@@ -208,8 +212,8 @@ class TestOFPMatch(unittest.TestCase):
 
         eq_(self.wildcards['val'], res[0])
         eq_(self.in_port['val'], res[1])
-        eq_(self.dl_src, res[2])
-        eq_(self.dl_dst, res[3])
+        eq_(self.dl_src['buf'], res[2])
+        eq_(self.dl_dst['buf'], res[3])
         eq_(self.dl_vlan['val'], res[4])
         eq_(self.dl_vlan_pcp['val'], res[5])
         eq_(self.dl_type['val'], res[6])
@@ -221,19 +225,19 @@ class TestOFPMatch(unittest.TestCase):
         eq_(self.tp_dst['val'], res[12])
 
     def test_getitem(self):
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
 
         eq_(self.wildcards['val'], c["wildcards"])
         eq_(self.in_port['val'], c["in_port"])
-        eq_(self.dl_src, c["dl_src"])
-        eq_(self.dl_dst, c["dl_dst"])
+        eq_(self.dl_src['human'], c["dl_src"])
+        eq_(self.dl_dst['human'], c["dl_dst"])
         eq_(self.dl_vlan['val'], c["dl_vlan"])
         eq_(self.dl_vlan_pcp['val'], c["dl_vlan_pcp"])
         eq_(self.dl_type['val'], c["dl_type"])
         eq_(self.nw_tos['val'], c["nw_tos"])
         eq_(self.nw_proto['val'], c["nw_proto"])
-        eq_(self.nw_src['val'], c["nw_src"])
-        eq_(self.nw_dst['val'], c["nw_dst"])
+        eq_(self.nw_src['human'], c["nw_src"])
+        eq_(self.nw_dst['human'], c["nw_dst"])
         eq_(self.tp_src['val'], c["tp_src"])
         eq_(self.tp_dst['val'], c["tp_dst"])
 

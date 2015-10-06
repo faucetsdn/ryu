@@ -24,6 +24,7 @@ import six
 
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase
 from ryu.lib import addrconv
+from ryu.lib import ip
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.ofproto import ofproto_common
@@ -130,6 +131,8 @@ class OFPMatch(StringifyMixin):
             self.dl_src = mac.DONTCARE
         else:
             wc &= ~ofproto.OFPFW_DL_SRC
+            if isinstance(dl_src, str) and ':' in dl_src:
+                dl_src = addrconv.mac.text_to_bin(dl_src)
             if dl_src == 0:
                 self.dl_src = mac.DONTCARE
             else:
@@ -139,6 +142,8 @@ class OFPMatch(StringifyMixin):
             self.dl_dst = mac.DONTCARE
         else:
             wc &= ~ofproto.OFPFW_DL_DST
+            if isinstance(dl_dst, str) and ':' in dl_dst:
+                dl_dst = addrconv.mac.text_to_bin(dl_dst)
             if dl_dst == 0:
                 self.dl_dst = mac.DONTCARE
             else:
@@ -179,6 +184,8 @@ class OFPMatch(StringifyMixin):
         else:
             wc &= (32 - nw_src_mask) << ofproto.OFPFW_NW_SRC_SHIFT \
                 | ~ofproto.OFPFW_NW_SRC_MASK
+            if isinstance(nw_src, str) and '.' in nw_src:
+                nw_src = ip.ipv4_to_int(nw_src)
             self.nw_src = nw_src
 
         if nw_dst is None:
@@ -186,6 +193,8 @@ class OFPMatch(StringifyMixin):
         else:
             wc &= (32 - nw_dst_mask) << ofproto.OFPFW_NW_DST_SHIFT \
                 | ~ofproto.OFPFW_NW_DST_MASK
+            if isinstance(nw_dst, str) and '.' in nw_dst:
+                nw_dst = ip.ipv4_to_int(nw_dst)
             self.nw_dst = nw_dst
 
         if tp_src is None:
@@ -219,10 +228,16 @@ class OFPMatch(StringifyMixin):
         elif name == 'wildcards':
             return self.wildcards
 
-        wc_name = 'OFPFW_' + name.upper()
-        wc = getattr(ofproto, wc_name, ofproto.OFPFW_ALL)
-        if self.wildcards & ~wc:
-            return getattr(self, name)
+        wc = getattr(ofproto, 'OFPFW_' + name.upper(), 0)
+        if ~self.wildcards & wc:
+            value = getattr(self, name)
+            if isinstance(value, six.binary_type) \
+                    and name in ['dl_src', 'dl_dst']:
+                value = addrconv.mac.bin_to_text(value)
+            elif isinstance(value, int) \
+                    and name in ['nw_src', 'nw_dst']:
+                value = ip.ipv4_to_str(value)
+            return value
         else:
             raise KeyError(name)
 
