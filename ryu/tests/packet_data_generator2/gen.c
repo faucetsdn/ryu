@@ -20,6 +20,7 @@
 #include <lib/list.h>
 #include <lib/ofpbuf.h>
 #include <lib/ofp-actions.h>
+#include <lib/ofp-errors.h>
 #include <lib/ofp-msgs.h>
 #include <lib/ofp-util.h>
 #include <lib/packets.h>
@@ -66,6 +67,28 @@ fill_match(struct match *match)
 /*
  * Controller-to-Switch Messages
  */
+
+/*
+ * Modify State Messages
+ */
+
+struct ofpbuf *
+table_mod(enum ofputil_protocol proto)
+{
+    struct ofputil_table_mod tm;
+
+    memset(&tm, 0, sizeof(tm));
+    tm.table_id = 0xff;  // OFPTT_ALL
+    // OpenFlow 1.1 and 1.2 only.
+    // For other versions, ignored on encoding.
+    tm.miss = OFPUTIL_TABLE_MISS_DEFAULT;  // Protocol default behavior.
+    // OpenFlow 1.4+ only.
+    // For other versions, ignored on encoding.
+    tm.eviction = OFPUTIL_TABLE_EVICTION_ON;    // Enable eviction.
+    tm.eviction_flags = OFPTMPEF14_IMPORTANCE;  // Using flow entry importance.
+
+    return ofputil_encode_table_mod(&tm, proto);
+}
 
 struct ofpbuf *
 flow_mod(enum ofputil_protocol proto)
@@ -206,6 +229,153 @@ group_mod(enum ofputil_protocol proto)
 }
 
 struct ofpbuf *
+port_mod(enum ofputil_protocol proto)
+{
+    struct ofputil_port_mod pm;
+    const struct eth_addr hw_addr =
+        { { { 0xaa, 0xbb, 0xcc, 0x99, 0x88, 0x77 } } };
+
+    memset(&pm, 0, sizeof(pm));
+    pm.port_no = 1;
+    pm.hw_addr = hw_addr;
+    pm.config = OFPPC_PORT_DOWN;
+    pm.mask = OFPPC_PORT_DOWN;
+    pm.advertise = 10248;  // OFPPF_100MB_FD, OFPPF_COPPER, OFPPF_AUTONEG
+
+    return ofputil_encode_port_mod(&pm, proto);
+}
+
+struct ofpbuf *
+meter_mod(enum ofputil_protocol proto)
+{
+    const int N_BANDS = 2;
+    struct ofputil_meter_mod mm;
+    struct ofputil_meter_band bands[N_BANDS];
+
+    memset(bands, 0, sizeof(*bands)*2);
+    bands[0].type = 1;         // OFPMBT_DROP
+    bands[0].rate = 1000;
+    bands[0].burst_size = 10;
+    bands[1].type = 2;         // OFPMBT_DSCP_REMARK
+    bands[1].prec_level = 1;
+    bands[1].rate = 1000;
+    bands[1].burst_size = 10;
+
+    memset(&mm, 0, sizeof(mm));
+    mm.command = 0;              // OFPMC_ADD
+    mm.meter.meter_id = 100;
+    mm.meter.flags = 14;         // OFPMF_PKTPS, OFPMF_BURST, OFPMF_STATS
+    mm.meter.n_bands = N_BANDS;
+    mm.meter.bands = bands;
+
+    return ofputil_encode_meter_mod(
+        ofputil_protocol_to_ofp_version(proto), &mm);
+}
+
+/*
+ * Multipart Messages
+ */
+
+struct ofpbuf *
+aggregate_stats_request(enum ofputil_protocol proto)
+{
+    struct ofputil_flow_stats_request fsr;
+
+    memset(&fsr, 0, sizeof(fsr));
+    fsr.aggregate = true;
+    match_init_catchall(&fsr.match);
+    fsr.out_port = OFPP_ANY;
+    fsr.out_group = OFPG_ANY;
+    fsr.table_id = OFPTT_ALL;
+    fsr.cookie = fsr.cookie_mask = htonll(0);
+
+    return ofputil_encode_flow_stats_request(&fsr, proto);
+}
+
+struct ofpbuf *
+port_stats_request(enum ofputil_protocol proto)
+{
+    uint32_t port_no = 0xffffffff;
+    return ofputil_encode_dump_ports_request(
+        ofputil_protocol_to_ofp_version(proto), port_no);
+}
+
+struct ofpbuf *
+port_desc_request(enum ofputil_protocol proto)
+{
+    uint32_t port_no = 0xbcda;
+
+    return ofputil_encode_port_desc_stats_request(
+        ofputil_protocol_to_ofp_version(proto), port_no);
+}
+
+struct ofpbuf *
+queue_stats_request(enum ofputil_protocol proto)
+{
+    struct ofputil_queue_stats_request oqsr;
+    memset(&oqsr, 0, sizeof(oqsr));
+    oqsr.port_no = 0xabcd;
+    oqsr.queue_id = 0xffffffff;
+    return ofputil_encode_queue_stats_request(
+        ofputil_protocol_to_ofp_version(proto), &oqsr);
+}
+
+struct ofpbuf *
+group_stats_request(enum ofputil_protocol proto)
+{
+    uint32_t group_id = 0xfffffffc;
+    return ofputil_encode_group_stats_request(
+        ofputil_protocol_to_ofp_version(proto), group_id);
+}
+
+struct ofpbuf *
+group_desc_request(enum ofputil_protocol proto)
+{
+    uint32_t group_id = 0xcdab;
+
+    return ofputil_encode_group_desc_request(
+        ofputil_protocol_to_ofp_version(proto), group_id);
+}
+
+struct ofpbuf *
+group_features_request(enum ofputil_protocol proto)
+{
+    return ofputil_encode_group_features_request(
+        ofputil_protocol_to_ofp_version(proto));
+}
+
+struct ofpbuf *
+meter_stats_request(enum ofputil_protocol proto)
+{
+    uint32_t meter_id = 0xffffffff;
+    return ofputil_encode_meter_request(
+        ofputil_protocol_to_ofp_version(proto),
+        OFPUTIL_METER_STATS, meter_id);
+}
+
+struct ofpbuf *
+table_desc_request(enum ofputil_protocol proto)
+{
+    return ofputil_encode_table_desc_request(
+        ofputil_protocol_to_ofp_version(proto));
+}
+
+/*
+ * Barrier Message
+ */
+
+struct ofpbuf *
+barrier_request(enum ofputil_protocol proto)
+{
+    return ofputil_encode_barrier_request(
+        ofputil_protocol_to_ofp_version(proto));
+}
+
+/*
+ * Bundle messages
+ */
+
+struct ofpbuf *
 bundle_ctrl(enum ofputil_protocol proto)
 {
     struct ofputil_bundle_ctrl_msg msg;
@@ -241,26 +411,6 @@ bundle_add(enum ofputil_protocol proto)
 }
 
 /*
- * Multipart Messages
- */
-
-struct ofpbuf *
-port_desc_request(enum ofputil_protocol proto)
-{
-    uint32_t port_no = 0xbcda;
-
-    return ofputil_encode_port_desc_stats_request(0x06, port_no);
-}
-
-struct ofpbuf *
-group_desc_request(enum ofputil_protocol proto)
-{
-    uint32_t group_id = 0xcdab;
-
-    return ofputil_encode_group_desc_request(0x06, group_id);
-}
-
-/*
  * Asynchronous Messages
  */
 
@@ -284,9 +434,151 @@ packet_in(enum ofputil_protocol proto)
     return ofputil_encode_packet_in(&pin, proto, NXPIF_OPENFLOW10);
 }
 
+struct ofpbuf *
+flow_removed(enum ofputil_protocol proto)
+{
+    struct ofputil_flow_removed fr;
+
+    memset(&fr, 0, sizeof(fr));
+    fill_match(&fr.match);
+    fr.cookie = htonll(0x123456789abcdef0);
+    fr.priority = 100;
+    fr.reason = 0;           // OFPRR_IDLE_TIMEOUT
+    fr.table_id = 1;
+    fr.duration_sec = 600;
+    fr.duration_nsec = 500;
+    fr.idle_timeout = 400;
+    fr.hard_timeout = 300;
+    fr.packet_count = 200;
+    fr.byte_count = 100;
+
+    return ofputil_encode_flow_removed(&fr, proto);
+}
+
+struct ofpbuf *
+port_status(enum ofputil_protocol proto)
+{
+    struct ofputil_port_status ps;
+
+    memset(&ps, 0, sizeof(ps));
+    ps.reason = 2;               // OFPPR_MODIFY
+    ps.desc.port_no = 1;
+    memset(&ps.desc.hw_addr, 0xff, sizeof(ps.desc.hw_addr));
+    sprintf(ps.desc.name, "eth0");
+    ps.desc.config = 0;
+    ps.desc.state = 4;
+    ps.desc.curr = 10248;        // OFPPF_100MB_FD, OFPPF_COPPER, OFPPF_AUTONEG
+    ps.desc.advertised = 10248;
+    ps.desc.supported = 10248;
+    ps.desc.peer = 10248;
+    ps.desc.curr_speed = 50000;  // kbps
+    ps.desc.max_speed = 100000;  // kbps
+
+    return ofputil_encode_port_status(&ps, proto);
+}
+
+
+struct ofpbuf *
+role_status(enum ofputil_protocol proto)
+{
+    struct ofputil_role_status rs;
+
+    memset(&rs, 0, sizeof(rs));
+    rs.role = OFPCR12_ROLE_SLAVE;       // OFPCR_ROLE_SLAVE
+    rs.reason = OFPCRR_MASTER_REQUEST;  // OFPCRR_MASTER_REQUEST
+    rs.generation_id = htonll(0x123456789abcdef0);
+
+    return ofputil_encode_role_status(&rs, proto);
+}
+
+
+struct ofpbuf *
+requestforward(enum ofputil_protocol proto)
+{
+    struct ofputil_requestforward rf;
+
+    memset(&rf, 0, sizeof(rf));
+    rf.reason = OFPRFR_GROUP_MOD;
+
+    struct ofputil_group_mod gm;
+    struct ofpbuf acts;
+    struct ofpact_ipv4 *a_set_field;
+    struct ofpact_goto_table *a_goto;
+    struct ofputil_bucket bckt;
+
+    memset(&gm, 0, sizeof(gm));
+    gm.command = OFPGC15_INSERT_BUCKET;
+    gm.type = OFPGT11_SELECT;
+    gm.group_id = 0xaaaaaaaa;
+    gm.command_bucket_id = 0xbbbbbbbb;
+
+    ofpbuf_init(&acts, 0x18);
+    ofpact_put_STRIP_VLAN(&acts);
+    a_set_field = ofpact_put_SET_IPV4_DST(&acts);
+    a_set_field->ipv4 = inet_addr("192.168.2.9");
+
+    bckt.weight = 0xcccc;
+    bckt.watch_port = 0xdddd;
+    bckt.watch_group = 0xeeeeeeee;
+    bckt.bucket_id = 0x12345678;
+    bckt.ofpacts = acts.data;
+    bckt.ofpacts_len = acts.size;
+
+    list_init(&(gm.buckets));
+    list_push_back(&(gm.buckets), &(bckt.list_node));
+
+    rf.group_mod = &gm;
+
+    return ofputil_encode_requestforward(&rf, proto);
+}
+
 /*
  * Symmetric Messages
  */
+
+struct ofpbuf *
+hello(enum ofputil_protocol proto)
+{
+    return ofputil_encode_hello(ofputil_protocols_to_version_bitmap(proto));
+}
+
+struct ofpbuf *
+echo_request(enum ofputil_protocol proto)
+{
+    return make_echo_request(ofputil_protocol_to_ofp_version(proto));
+}
+
+struct ofpbuf *
+echo_reply(enum ofputil_protocol proto)
+{
+    struct ofp_header oh;
+
+    memset(&oh, 0, sizeof(oh));
+    oh.version = ofputil_protocol_to_ofp_version(proto);
+    oh.type = 3;           // OFPT_ECHO_REPLY
+    oh.length = htons(8);  // lenght of ofp_header
+    oh.xid = 0;
+
+    return make_echo_reply(&oh);
+}
+
+struct ofpbuf *
+error_msg(enum ofputil_protocol proto)
+{
+    struct ofp_header oh;
+
+    memset(&oh, 0, sizeof(oh));
+    oh.version = ofputil_protocol_to_ofp_version(proto);
+    oh.type = 14;          // OFPT_FLOW_MOD
+    oh.length = htons(8);  // lenght of ofp_header
+    oh.xid = 0;
+
+    // OFPERR_OFPBMC_BAD_FIELD means
+    // "Unsupported field in the match."
+    //  - type: OFPET_BAD_MATCH = 4
+    //  - code: OFPBMC_BAD_FIELD = 6
+    return ofperr_encode_reply(OFPERR_OFPBMC_BAD_FIELD, &oh);
+}
 
 /*
  * Utilities
@@ -341,6 +633,13 @@ struct message {
 
 const struct message messages[] = {
     /* Controller-to-Switch Messages */
+    /* Modify State Messages */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    //  - OFP14+ Port Modification Message [EXT-154]
+    M(table_mod,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(flow_mod,
       ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(flow_mod_match_conj,
@@ -349,20 +648,200 @@ const struct message messages[] = {
       ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(group_mod,
       ((const struct protocol_version *[]){&p15, NULL})),
+    M(port_mod,
+      ((const struct protocol_version *[]){&p13, NULL})),
+    M(meter_mod,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    /* Multipart Messages */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    // - OFP10+ Desc Stats Request Message
+    // - OFP10+ Desc Stats Reply Message
+    // - OFP15+ Flow Desc Request Message [EXT-334]
+    // - OFP15+ Flow Desc Reply Message [EXT-334]
+    // - OFP15+ Flow Stats Request Message [EXT-302]
+    // - OFP15+ Flow Stats Reply Message [EXT-334]
+    // - OFP15+ Aggregate Stats Reply Message [EXT-334]
+    // - OFP14+ Port Stats Reply Message [EXT-262]
+    // - OFP14+ Port Desc Reply Message [EXT-262]
+    // - OFP14+ Queue Stats Reply Message [EXT-262]
+    // - OFP14+ Queue Desc Request Message [EXT-262]
+    // - OFP14+ Queue Desc Reply Message [EXT-262]
+    // - OFP13+ Group Stats Reply Message [EXT-102]
+    // - OFP15+ Group Desc Reply Message [EXT-350]
+    // - OFP12+ Group Features Reply Message [EXT-61]
+    // - OFP15+ Meter Stats Reply Message [EXT-374]
+    // - OFP15+ Meter Desc Request Message [EXT-302]
+    // - OFP15+ Meter Desc Reply Message [EXT-302]
+    // - OFP13+ Meter Features Stats Request Message [EXT-14]
+    // - OFP13+ Meter Features Stats Reply Message [EXT-14]
+    // - OFP15+ Controller Status Stats Request Message [EXT-454]
+    // - OFP15+ Controller Status Stats Reply Message [EXT-454]
+    // - OFP14+ Table Desc Reply Message [EXT-262]
+    // - OFP15+ Table Features Stats Request Message [EXT-306]
+    // - OFP15+ Table Features Stats Reply Message [EXT-306]
+    // - OFP14+ Flow Monitor Request Message [EXT-187]
+    // - OFP14+ Flow Monitor Reply Message [EXT-187]
+    // - OFP15+ Bundle Features Stats Request Message [EXT-340]
+    // - OFP15+ Bundle Features Stats Reply Message [EXT-340]
+    // - OFP11+ Experimenter Stats Request
+    // - OFP11+ Experimenter Stats Reply
+    // M(desc_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(desc_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(flow_desc_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(flow_desc_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(flow_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(flow_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(aggregate_stats_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(aggregate_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(port_stats_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(port_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(port_desc_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(port_desc_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(queue_stats_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(queue_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(queue_desc_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(queue_desc_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(group_stats_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(group_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(group_desc_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(group_desc_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(group_features_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(group_features_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(meter_stats_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(meter_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(meter_desc_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(meter_desc_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(meter_features_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(meter_features_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(controller_status_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(controller_status_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    M(table_desc_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(table_desc_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(table_features_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(table_features_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(flow_monitor_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(flow_monitor_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(bundle_features_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(bundle_features_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(experimenter_stats_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(experimenter_stats_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    /* Packet-Out Message */
+    // TODO:
+    // The following message are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    // - OFP15+ Packet Out Message [EXT-427]
+    // M(packet_out,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    /* Barrier Message */
+    // TODO:
+    // The following message are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    // - OFP10+ Barrier Reply Message
+    M(barrier_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(barrier_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    /* Role Request Message */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    // - OFP15+ Role Request Message [EXT-275]
+    // - OFP15+ Role Reply Message [EXT-275]
+    // M(role_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(role_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    /* Bundle messages */
     M(bundle_ctrl,
       ((const struct protocol_version *[]){&p15, NULL})),
     M(bundle_add,
       ((const struct protocol_version *[]){&p15, NULL})),
-    /* Multipart Messages */
-    M(port_desc_request,
-      ((const struct protocol_version *[]){&p15, NULL})),
-    M(group_desc_request,
-      ((const struct protocol_version *[]){&p15, NULL})),
+    /* Set Asynchronous Configuration Message */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    // - OFP14+ Set Async Message [EXT-262]
+    // - OFP14+ Get Async Request Message [EXT-262]
+    // - OFP14+ Get Async Reply Message [EXT-262]
+    // M(set_async,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(get_async_request,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
+    // M(get_async_reply,
+    //   ((const struct protocol_version *[]){&p15, NULL})),
     /* Asynchronous Messages */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.4.90,
+    // re-generate the packet data, later.
+    //  - OFP15 Flow Removed Message [EXT-334]
+    //  - OFP14+ Port Status Message [EXT-154]
+    //  - OFP14+ Table Status Message [EXT-232]
+    //  - OFP15+ Controller Status Message [EXT-454]
     M(packet_in,
       ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(flow_removed,
+      ((const struct protocol_version *[]){&p13, NULL})),
+    M(port_status,
+      ((const struct protocol_version *[]){&p13, NULL})),
+    // M(table_status,
+    //  ((const struct protocol_version *[]){&p15, NULL})),
+    M(role_status,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    M(requestforward,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    // M(controller_status,
+    //  ((const struct protocol_version *[]){&p15, NULL})),
     /* Symmetric Messages */
-    // absent
+    M(hello,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(echo_request,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(echo_reply,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(error_msg,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
 };
 
 #if !defined(__arraycount)
