@@ -529,9 +529,6 @@ class OfTester(app_manager.RyuApp):
                 TestTimeout, TestReceiveError) as err:
             result = [TEST_ERROR, str(err)]
             result_type = str(err).split(':', 1)[0]
-        except Exception:
-            result = [TEST_ERROR, RYU_INTERNAL_ERROR]
-            result_type = RYU_INTERNAL_ERROR
         finally:
             self.ingress_event = None
             for tid in self.ingress_threads:
