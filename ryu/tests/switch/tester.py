@@ -912,8 +912,8 @@ class OfTester(app_manager.RyuApp):
             value1 = getattr(stats1, attr)
             value2 = getattr(stats2, attr)
             if attr == 'instructions':
-                value1 = sorted(value1)
-                value2 = sorted(value2)
+                value1 = sorted(value1, key=lambda x: x.type)
+                value2 = sorted(value2, key=lambda x: x.type)
             elif attr == 'match':
                 value1 = sorted(__reasm_match(value1))
                 value2 = sorted(__reasm_match(value2))
