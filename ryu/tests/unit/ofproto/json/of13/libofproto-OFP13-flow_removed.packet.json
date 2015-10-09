@@ -1,0 +1,78 @@
+{
+   "OFPFlowRemoved": {
+      "byte_count": 100, 
+      "cookie": 1311768467463790320, 
+      "duration_nsec": 500, 
+      "duration_sec": 600, 
+      "hard_timeout": 300, 
+      "idle_timeout": 400, 
+      "match": {
+         "OFPMatch": {
+            "length": 70, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "in_port", 
+                     "mask": null, 
+                     "value": 43981
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "aa:bb:cc:99:88:77"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "eth_type", 
+                     "mask": null, 
+                     "value": 2048
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "vlan_vid", 
+                     "mask": null, 
+                     "value": 5095
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ipv4_dst", 
+                     "mask": null, 
+                     "value": "192.168.2.1"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tunnel_id", 
+                     "mask": null, 
+                     "value": 50000
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_src", 
+                     "mask": null, 
+                     "value": "192.168.2.3"
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "tun_ipv4_dst", 
+                     "mask": null, 
+                     "value": "192.168.2.4"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "packet_count": 200, 
+      "priority": 100, 
+      "reason": 0, 
+      "table_id": 1
+   }
+}

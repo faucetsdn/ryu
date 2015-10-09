@@ -1,0 +1,20 @@
+{
+   "OFPPortStatus": {
+      "desc": {
+         "OFPPort": {
+            "advertised": 10248, 
+            "config": 0, 
+            "curr": 10248, 
+            "curr_speed": 50000, 
+            "hw_addr": "ff:ff:ff:ff:ff:ff", 
+            "max_speed": 100000, 
+            "name": "eth0", 
+            "peer": 10248, 
+            "port_no": 1, 
+            "state": 4, 
+            "supported": 10248
+         }
+      }, 
+      "reason": 2
+   }
+}

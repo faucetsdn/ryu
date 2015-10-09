@@ -1,0 +1,9 @@
+{
+   "OFPPortMod": {
+      "advertise": 10248, 
+      "config": 1, 
+      "hw_addr": "aa:bb:cc:99:88:77", 
+      "mask": 1, 
+      "port_no": 1
+   }
+}
