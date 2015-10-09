@@ -74,7 +74,7 @@
                             "ethernet(dst=netaddr.EUI(randint(0, 2 ** 48 - 1)), src=netaddr.EUI(randint(0, 2 ** 48 - 1) & 0xfeffffffffff), ethertype=2048)",
                             "ipv4(proto=6)",
                             "tcp()",
-                            "str('\\x11' * (1500 - 54))"
+                            "bytes(b'\\x11' * (1500 - 54))"
                         ],
                         "pktps":175,
                         "duration_time":30
@@ -187,7 +187,7 @@
                             "ethernet(dst=netaddr.EUI(randint(0, 2 ** 48 - 1)), src=netaddr.EUI(randint(0, 2 ** 48 - 1) & 0xfeffffffffff), ethertype=34525)",
                             "ipv6(nxt=6)",
                             "tcp()",
-                            "str('\\x11' * (1500 - 74))"
+                            "bytes(b'\\x11' * (1500 - 74))"
                         ],
                         "pktps":175,
                         "duration_time":30
@@ -299,7 +299,7 @@
                         "data":[
                             "ethernet(dst=netaddr.EUI(randint(0, 2 ** 48 - 1)), src=netaddr.EUI(randint(0, 2 ** 48 - 1) & 0xfeffffffffff), ethertype=2054)",
                             "arp(dst_mac='22:22:22:22:22:22', src_mac='12:11:11:11:11:11')",
-                            "str('\\x11' * (1500 - 42))"
+                            "bytes(b'\\x11' * (1500 - 42))"
                         ],
                         "pktps":175,
                         "duration_time":30

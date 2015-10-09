@@ -62,12 +62,12 @@
                 "ingress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=8)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=8)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=0)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=0)"
                 ]
             }
         ]
@@ -135,13 +135,13 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=8)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=8)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=0)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=0)"
                 ]
             }
         ]
@@ -245,12 +245,12 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=8)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=8)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=0)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=0)"
                 ]
             }
         ]
@@ -353,12 +353,12 @@
                     "itag(sid=100)",
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=8)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=8)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=1, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "icmp(code=0,csum=0,data=echo(data='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL'),type_=0)"
+                    "icmp(code=0,csum=0,data=echo(data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef'),type_=0)"
                 ]
             }
         ]

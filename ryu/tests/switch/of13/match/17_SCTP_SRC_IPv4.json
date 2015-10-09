@@ -52,12 +52,12 @@
                 "ingress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -115,12 +115,12 @@
                 "ingress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "PACKET_IN":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -177,7 +177,7 @@
                 "ingress":[
                     "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2048)",
                     "ipv4(tos=65, proto=132, src='10.10.10.10', dst='10.10.20.20', ttl=127)",
-                    "sctp(chunks=[chunk_data(payload_data='abcdefghijklmnopqrstuvwxyz0123456789')], dst_port=6789, src_port=12345)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=6789, src_port=12345)"
                 ],
                 "table-miss":[
                     0
@@ -238,13 +238,13 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -303,13 +303,13 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "PACKET_IN":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
                     "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -367,7 +367,7 @@
                     "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
                     "vlan(pcp=5, cfi=0, vid=203, ethertype=2048)",
                     "ipv4(tos=65, proto=132, src='10.10.10.10', dst='10.10.20.20', ttl=127)",
-                    "sctp(chunks=[chunk_data(payload_data='abcdefghijklmnopqrstuvwxyz0123456789')], dst_port=6789, src_port=12345)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=6789, src_port=12345)"
                 ],
                 "table-miss":[
                     0
@@ -464,12 +464,12 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -564,12 +564,12 @@
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34887)",
                     "mpls(bsb=1, label=100, exp=3, ttl=64)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "PACKET_IN":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -663,7 +663,7 @@
                     "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34887)",
                     "mpls(bsb=1, label=203, exp=5, ttl=127)",
                     "ipv4(tos=65, proto=132, src='10.10.10.10', dst='10.10.20.20', ttl=127)",
-                    "sctp(chunks=[chunk_data(payload_data='abcdefghijklmnopqrstuvwxyz0123456789')], dst_port=6789, src_port=12345)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=6789, src_port=12345)"
                 ],
                 "table-miss":[
                     1
@@ -759,12 +759,12 @@
                     "itag(sid=100)",
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "egress":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -858,12 +858,12 @@
                     "itag(sid=100)",
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ],
                 "PACKET_IN":[
                     "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
                     "ipv4(tos=32, proto=132, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
-                    "sctp(chunks=[chunk_data(payload_data='0123456789abcdefghijklmnopqrstuvwxyz')], dst_port=2222, src_port=11111)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=2222, src_port=11111)"
                 ]
             }
         ]
@@ -956,7 +956,7 @@
                     "itag(sid=203)",
                     "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2048)",
                     "ipv4(tos=65, proto=132, src='10.10.10.10', dst='10.10.20.20', ttl=127)",
-                    "sctp(chunks=[chunk_data(payload_data='abcdefghijklmnopqrstuvwxyz0123456789')], dst_port=6789, src_port=12345)"
+                    "sctp(chunks=[chunk_data(payload_data=b'\\x01\\x23\\x45\\x67\\x89\\xab\\xcd\\xef')], dst_port=6789, src_port=12345)"
                 ],
                 "table-miss":[
                     1
