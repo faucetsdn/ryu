@@ -419,7 +419,7 @@ class OfTester(app_manager.RyuApp):
 
         test_report = {}
         self.logger.info('--- Test start ---')
-        test_keys = tests.keys()
+        test_keys = list(tests.keys())
         test_keys.sort()
         for file_name in test_keys:
             report = self._test_file_execute(tests[file_name])
@@ -561,7 +561,7 @@ class OfTester(app_manager.RyuApp):
     def _output_test_report(self, report):
         self.logger.info('%s--- Test report ---', os.linesep)
         error_count = 0
-        for result_type in sorted(report.keys()):
+        for result_type in sorted(list(report.keys())):
             test_descriptions = report[result_type]
             if result_type == TEST_OK:
                 continue
