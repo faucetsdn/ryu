@@ -28,6 +28,10 @@
 #include <err.h>
 #include <stdio.h>
 
+/*
+ * OpenFlow Common
+ */
+
 void
 clear_xid(struct ofpbuf *buf)
 {
@@ -41,33 +45,6 @@ clear_xid(struct ofpbuf *buf)
     struct ofp_header *oh = ofpbuf_at_assert(buf, 0, sizeof(*oh));
 
     oh->xid = htonl(0);
-}
-
-void
-dump_ofpbuf(const char *name, const struct ofpbuf *buf)
-{
-    FILE *fp;
-    size_t written;
-
-    fp = fopen(name, "wb");
-    if (fp == NULL) {
-        err(1, "fopen");
-    }
-    written = fwrite(buf->data, buf->size, 1, fp);
-    if (written != 1) {
-        err(1, "fwrite");
-    }
-    if (fclose(fp) != 0) {
-        err(1, "fclose");
-    }
-}
-
-void
-dump_message(const char *name, struct ofpbuf *buf)
-{
-
-    ofpmsg_update_length(buf);
-    dump_ofpbuf(name, buf);
 }
 
 void
@@ -86,25 +63,9 @@ fill_match(struct match *match)
     match_set_tun_id(match, htonll(50000));
 }
 
-struct ofpbuf *
-packet_in(enum ofputil_protocol proto)
-{
-    struct ofputil_packet_in pin;
-    struct match match;
-    struct ofpbuf *buf;
-
-    memset(&pin, 0, sizeof(pin));
-    pin.packet = "hoge";
-    pin.packet_len = 4;
-    pin.total_len = 1000;
-    pin.table_id = 100;
-    pin.buffer_id = 200;
-
-    fill_match(&match);
-    flow_get_metadata(&match.flow, &pin.flow_metadata);
-
-    return ofputil_encode_packet_in(&pin, proto, NXPIF_OPENFLOW10);
-}
+/*
+ * Controller-to-Switch Messages
+ */
 
 struct ofpbuf *
 flow_mod(enum ofputil_protocol proto)
@@ -279,6 +240,18 @@ bundle_add(enum ofputil_protocol proto)
     return add;
 }
 
+/*
+ * Multipart Messages
+ */
+
+struct ofpbuf *
+port_desc_request(enum ofputil_protocol proto)
+{
+    uint32_t port_no = 0xbcda;
+
+    return ofputil_encode_port_desc_stats_request(0x06, port_no);
+}
+
 struct ofpbuf *
 group_desc_request(enum ofputil_protocol proto)
 {
@@ -287,12 +260,63 @@ group_desc_request(enum ofputil_protocol proto)
     return ofputil_encode_group_desc_request(0x06, group_id);
 }
 
-struct ofpbuf *
-port_desc_request(enum ofputil_protocol proto)
-{
-    uint32_t port_no = 0xbcda;
+/*
+ * Asynchronous Messages
+ */
 
-    return ofputil_encode_port_desc_stats_request(0x06, port_no);
+struct ofpbuf *
+packet_in(enum ofputil_protocol proto)
+{
+    struct ofputil_packet_in pin;
+    struct match match;
+    struct ofpbuf *buf;
+
+    memset(&pin, 0, sizeof(pin));
+    pin.packet = "hoge";
+    pin.packet_len = 4;
+    pin.total_len = 1000;
+    pin.table_id = 100;
+    pin.buffer_id = 200;
+
+    fill_match(&match);
+    flow_get_metadata(&match.flow, &pin.flow_metadata);
+
+    return ofputil_encode_packet_in(&pin, proto, NXPIF_OPENFLOW10);
+}
+
+/*
+ * Symmetric Messages
+ */
+
+/*
+ * Utilities
+ */
+
+void
+dump_ofpbuf(const char *name, const struct ofpbuf *buf)
+{
+    FILE *fp;
+    size_t written;
+
+    fp = fopen(name, "wb");
+    if (fp == NULL) {
+        err(1, "fopen");
+    }
+    written = fwrite(buf->data, buf->size, 1, fp);
+    if (written != 1) {
+        err(1, "fwrite");
+    }
+    if (fclose(fp) != 0) {
+        err(1, "fclose");
+    }
+}
+
+void
+dump_message(const char *name, struct ofpbuf *buf)
+{
+
+    ofpmsg_update_length(buf);
+    dump_ofpbuf(name, buf);
 }
 
 struct protocol_version {
@@ -316,8 +340,7 @@ struct message {
 #define M(m, p) {.name = #m, .gen = m, .protocols = p,}
 
 const struct message messages[] = {
-    M(packet_in,
-      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    /* Controller-to-Switch Messages */
     M(flow_mod,
       ((const struct protocol_version *[]){&p13, &p15, NULL})),
     M(flow_mod_match_conj,
@@ -330,15 +353,25 @@ const struct message messages[] = {
       ((const struct protocol_version *[]){&p15, NULL})),
     M(bundle_add,
       ((const struct protocol_version *[]){&p15, NULL})),
-    M(group_desc_request,
-      ((const struct protocol_version *[]){&p15, NULL})),
+    /* Multipart Messages */
     M(port_desc_request,
       ((const struct protocol_version *[]){&p15, NULL})),
+    M(group_desc_request,
+      ((const struct protocol_version *[]){&p15, NULL})),
+    /* Asynchronous Messages */
+    M(packet_in,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    /* Symmetric Messages */
+    // absent
 };
 
 #if !defined(__arraycount)
 #define __arraycount(a) (sizeof(a) / sizeof(a[0]))
 #endif
+
+/*
+ * Main
+ */
 
 int
 main(int argc, char *argv[])
