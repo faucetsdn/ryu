@@ -953,7 +953,7 @@ class OfTester(app_manager.RyuApp):
     def _diff_packets(self, model_pkt, rcv_pkt):
         msg = []
         for rcv_p in rcv_pkt.protocols:
-            if type(rcv_p) != str:
+            if not isinstance(rcv_p, six.binary_type):
                 model_protocols = model_pkt.get_protocols(type(rcv_p))
                 if len(model_protocols) == 1:
                     model_p = model_protocols[0]
@@ -980,7 +980,7 @@ class OfTester(app_manager.RyuApp):
             else:
                 model_p = ''
                 for p in model_pkt.protocols:
-                    if type(p) == str:
+                    if isinstance(rcv_p, six.binary_type):
                         model_p = p
                         break
                 if model_p != rcv_p:
