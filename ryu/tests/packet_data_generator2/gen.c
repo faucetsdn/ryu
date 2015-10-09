@@ -73,10 +73,12 @@ dump_message(const char *name, struct ofpbuf *buf)
 void
 fill_match(struct match *match)
 {
+    const struct eth_addr dl_dst =
+        { { { 0xaa, 0xbb, 0xcc, 0x99, 0x88, 0x77 } } };
     match_init_catchall(match);
     match_set_in_port(match, 0xabcd);
     match_set_dl_vlan(match, htons(999));
-    match_set_dl_dst(match, "\xaa\xbb\xcc\x99\x88\x77");
+    match_set_dl_dst(match, dl_dst);
     match_set_dl_type(match, htons(ETH_TYPE_IP));
     match_set_nw_dst(match, inet_addr("192.168.2.1"));
     match_set_tun_src(match, inet_addr("192.168.2.3"));
