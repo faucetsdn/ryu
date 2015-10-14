@@ -46,11 +46,14 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
+from ryu.services.protocols.bgp.rtconf.base import CAP_ENHANCED_REFRESH
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
 from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
+from ryu.services.protocols.bgp.rtconf.neighbors \
+    import DEFAULT_CAP_ENHANCED_REFRESH
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
@@ -237,6 +240,7 @@ class BGPSpeaker(object):
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
+                     enable_enhanced_refresh=DEFAULT_CAP_ENHANCED_REFRESH,
                      next_hop=None, password=None, multi_exit_disc=None,
                      site_of_origins=None, is_route_server_client=False,
                      is_next_hop_self=False, local_address=None,
@@ -300,6 +304,7 @@ class BGPSpeaker(object):
         bgp_neighbor[IS_ROUTE_SERVER_CLIENT] = is_route_server_client
         bgp_neighbor[IS_NEXT_HOP_SELF] = is_next_hop_self
         bgp_neighbor[CONNECT_MODE] = connect_mode
+        bgp_neighbor[CAP_ENHANCED_REFRESH] = enable_enhanced_refresh
         # v6 advertizement is available with only v6 peering
         if netaddr.valid_ipv4(address):
             bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
