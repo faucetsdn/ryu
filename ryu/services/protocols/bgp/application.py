@@ -45,9 +45,14 @@ from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
-from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.operator import ssh
+
+try:
+    from logging.config import dictConfig
+except Exception:
+    from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
+
 
 LOG = logging.getLogger('bgpspeaker.application')
 CONF = cfg.CONF
