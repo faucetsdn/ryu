@@ -20,6 +20,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 import numbers
 import logging
+import six
 import uuid
 
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
@@ -678,7 +679,7 @@ def validate_soo_list(soo_list):
 
 @validate(name=MAX_PREFIXES)
 def validate_max_prefixes(max_prefixes):
-    if not isinstance(max_prefixes, (IntType, long)):
+    if not isinstance(max_prefixes, six.integer_types):
         raise ConfigTypeError(desc='Max. prefixes value should be of type '
                               'int or long but found %s' % type(max_prefixes))
     if max_prefixes < 0:
