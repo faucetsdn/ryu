@@ -1752,7 +1752,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # If enhanced route-refresh is valid/enabled, enqueue SOR.
             afi = af.afi
             safi = af.safi
-            sor = BGPRouteRefresh(afi, safi, reserved=1)
+            sor = BGPRouteRefresh(afi, safi, demarcation=1)
             self.enque_first_outgoing_msg(sor)
 
         # Ask core to re-send sent routes
@@ -1767,9 +1767,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         sent.
         """
         if self._protocol.is_enhanced_rr_cap_valid() and not sor.eor_sent:
-            afi = sor.route_family.afi
-            safi = sor.route_family.safi
-            eor = BGPRouteRefresh(afi, safi, reserved=2)
+            afi = sor.afi
+            safi = sor.safi
+            eor = BGPRouteRefresh(afi, safi, demarcation=2)
             self.enque_outgoing_msg(eor)
             sor.eor_sent = True
 

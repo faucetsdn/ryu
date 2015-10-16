@@ -2569,6 +2569,7 @@ class BGPRouteRefresh(BGPMessage):
         self.afi = afi
         self.safi = safi
         self.demarcation = demarcation
+        self.eor_sent = False
 
     @classmethod
     def parser(cls, buf):
