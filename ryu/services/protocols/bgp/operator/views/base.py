@@ -9,7 +9,6 @@ public. They will stay private and only "view" will access them
 (think friend-class from C++)
 """
 import logging
-import types
 
 from ryu.services.protocols.bgp.operator.views import fields
 
@@ -256,7 +255,7 @@ def _flatten(l, max_level=10):
     :return: flattened iterator
     """
     if max_level >= 0:
-        _iter = l.values() if isinstance(l, types.DictType) else l
+        _iter = l.values() if isinstance(l, dict) else l
         for el in _iter:
             if isinstance(el, RdyToFlattenCollection):
                 for sub in _flatten(el, max_level=max_level - 1):
