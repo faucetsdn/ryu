@@ -566,6 +566,102 @@ def get_table_stats(dp, waiters):
     return desc
 
 
+def get_table_features(dp, waiters):
+    stats = dp.ofproto_parser.OFPTableFeaturesStatsRequest(dp, 0, [])
+    msgs = []
+    ofproto = dp.ofproto
+    send_stats_request(dp, stats, waiters, msgs)
+
+    prop_type = {ofproto.OFPTFPT_INSTRUCTIONS: 'INSTRUCTIONS',
+                 ofproto.OFPTFPT_INSTRUCTIONS_MISS: 'INSTRUCTIONS_MISS',
+                 ofproto.OFPTFPT_NEXT_TABLES: 'NEXT_TABLES',
+                 ofproto.OFPTFPT_NEXT_TABLES_MISS: 'NEXT_TABLES_MISS',
+                 ofproto.OFPTFPT_WRITE_ACTIONS: 'WRITE_ACTIONS',
+                 ofproto.OFPTFPT_WRITE_ACTIONS_MISS: 'WRITE_ACTIONS_MISS',
+                 ofproto.OFPTFPT_APPLY_ACTIONS: 'APPLY_ACTIONS',
+                 ofproto.OFPTFPT_APPLY_ACTIONS_MISS: 'APPLY_ACTIONS_MISS',
+                 ofproto.OFPTFPT_MATCH: 'MATCH',
+                 ofproto.OFPTFPT_WILDCARDS: 'WILDCARDS',
+                 ofproto.OFPTFPT_WRITE_SETFIELD: 'WRITE_SETFIELD',
+                 ofproto.OFPTFPT_WRITE_SETFIELD_MISS: 'WRITE_SETFIELD_MISS',
+                 ofproto.OFPTFPT_APPLY_SETFIELD: 'APPLY_SETFIELD',
+                 ofproto.OFPTFPT_APPLY_SETFIELD_MISS: 'APPLY_SETFIELD_MISS',
+                 ofproto.OFPTFPT_EXPERIMENTER: 'EXPERIMENTER',
+                 ofproto.OFPTFPT_EXPERIMENTER_MISS: 'EXPERIMENTER_MISS'
+                 }
+
+    p_type_instructions = [ofproto.OFPTFPT_INSTRUCTIONS,
+                           ofproto.OFPTFPT_INSTRUCTIONS_MISS]
+
+    p_type_next_tables = [ofproto.OFPTFPT_NEXT_TABLES,
+                          ofproto.OFPTFPT_NEXT_TABLES_MISS]
+
+    p_type_actions = [ofproto.OFPTFPT_WRITE_ACTIONS,
+                      ofproto.OFPTFPT_WRITE_ACTIONS_MISS,
+                      ofproto.OFPTFPT_APPLY_ACTIONS,
+                      ofproto.OFPTFPT_APPLY_ACTIONS_MISS]
+
+    p_type_oxms = [ofproto.OFPTFPT_MATCH,
+                   ofproto.OFPTFPT_WILDCARDS,
+                   ofproto.OFPTFPT_WRITE_SETFIELD,
+                   ofproto.OFPTFPT_WRITE_SETFIELD_MISS,
+                   ofproto.OFPTFPT_APPLY_SETFIELD,
+                   ofproto.OFPTFPT_APPLY_SETFIELD_MISS]
+
+    p_type_experimenter = [ofproto.OFPTFPT_EXPERIMENTER,
+                           ofproto.OFPTFPT_EXPERIMENTER_MISS]
+
+    tables = []
+    for msg in msgs:
+        stats = msg.body
+        for stat in stats:
+            properties = []
+            for prop in stat.properties:
+                p = {'type': prop_type.get(prop.type, 'UNKNOWN')}
+                if prop.type in p_type_instructions:
+                    instruction_ids = []
+                    for id in prop.instruction_ids:
+                        i = {'len': id.len,
+                             'type': id.type}
+                        instruction_ids.append(i)
+                    p['instruction_ids'] = instruction_ids
+                elif prop.type in p_type_next_tables:
+                    table_ids = []
+                    for id in prop.table_ids:
+                        table_ids.append(id)
+                    p['table_ids'] = table_ids
+                elif prop.type in p_type_actions:
+                    action_ids = []
+                    for id in prop.action_ids:
+                        i = {'len': id.len,
+                             'type': id.type}
+                        action_ids.append(i)
+                    p['action_ids'] = action_ids
+                elif prop.type in p_type_oxms:
+                    oxm_ids = []
+                    for id in prop.oxm_ids:
+                        i = {'hasmask': id.hasmask,
+                             'length': id.length,
+                             'type': id.type}
+                        oxm_ids.append(i)
+                    p['oxm_ids'] = oxm_ids
+                elif prop.type in p_type_experimenter:
+                    pass
+                properties.append(p)
+            s = {'table_id': stat.table_id,
+                 'name': stat.name,
+                 'metadata_match': stat.metadata_match,
+                 'metadata_write': stat.metadata_write,
+                 'config': stat.config,
+                 'max_entries': stat.max_entries,
+                 'properties': properties,
+                 }
+            tables.append(s)
+    desc = {str(dp.id): tables}
+
+    return desc
+
+
 def get_port_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPPortStatsRequest(
         dp, 0, dp.ofproto.OFPP_ANY)

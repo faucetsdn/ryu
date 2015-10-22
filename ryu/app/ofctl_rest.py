@@ -68,6 +68,9 @@ supported_ofctl = {
 # get table stats of the switch
 # GET /stats/table/<dpid>
 #
+# get table features stats of the switch
+# GET /stats/tablefeatures/<dpid>
+#
 # get ports stats of the switch
 # GET /stats/port/<dpid>
 #
@@ -262,6 +265,30 @@ class StatsController(ControllerBase):
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
             ports = _ofctl.get_table_stats(dp, self.waiters)
+
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(ports)
+        return Response(content_type='application/json', body=body)
+
+    def get_table_features(self, req, dpid, **_kwargs):
+
+        if type(dpid) == str and not dpid.isdigit():
+            LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        dp = self.dpset.get(int(dpid))
+
+        if dp is None:
+            return Response(status=404)
+
+        _ofp_version = dp.ofproto.OFP_VERSION
+
+        _ofctl = supported_ofctl.get(_ofp_version, None)
+        if _ofctl is not None:
+            ports = _ofctl.get_table_features(dp, self.waiters)
 
         else:
             LOG.debug('Unsupported OF protocol')
@@ -773,6 +800,11 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_table_stats',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/tablefeatures/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_table_features',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/port/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_port_stats',
@@ -853,6 +885,7 @@ class RestStatsApi(app_manager.RyuApp):
                  ofp_event.EventOFPFlowStatsReply,
                  ofp_event.EventOFPAggregateStatsReply,
                  ofp_event.EventOFPTableStatsReply,
+                 ofp_event.EventOFPTableFeaturesStatsReply,
                  ofp_event.EventOFPPortStatsReply,
                  ofp_event.EventOFPQueueStatsReply,
                  ofp_event.EventOFPMeterStatsReply,
