@@ -77,6 +77,9 @@ supported_ofctl = {
 # get queues stats of the switch
 # GET /stats/queue/<dpid>
 #
+# get queues config stats of the switch
+# GET /stats/queueconfig/<dpid>/<port>
+#
 # get meter features stats of the switch
 # GET /stats/meterfeatures/<dpid>
 #
@@ -337,6 +340,35 @@ class StatsController(ControllerBase):
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
             queues = _ofctl.get_queue_stats(dp, self.waiters)
+
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
+
+        body = json.dumps(queues)
+        return Response(content_type='application/json', body=body)
+
+    def get_queue_config(self, req, dpid, port, **_kwargs):
+
+        if type(dpid) == str and not dpid.isdigit():
+            LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        if type(port) == str and not port.isdigit():
+            LOG.debug('invalid port %s', port)
+            return Response(status=400)
+
+        dp = self.dpset.get(int(dpid))
+        port = int(port)
+
+        if dp is None:
+            return Response(status=404)
+
+        _ofp_version = dp.ofproto.OFP_VERSION
+
+        _ofctl = supported_ofctl.get(_ofp_version, None)
+        if _ofctl is not None:
+            queues = _ofctl.get_queue_config(dp, port, self.waiters)
 
         else:
             LOG.debug('Unsupported OF protocol')
@@ -815,6 +847,11 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_queue_stats',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/queueconfig/{dpid}/{port}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_config',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/meterfeatures/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_meter_features',
@@ -920,7 +957,8 @@ class RestStatsApi(app_manager.RyuApp):
         del self.waiters[dp.id][msg.xid]
         lock.set()
 
-    @set_ev_cls([ofp_event.EventOFPSwitchFeatures], MAIN_DISPATCHER)
+    @set_ev_cls([ofp_event.EventOFPSwitchFeatures,
+                 ofp_event.EventOFPQueueGetConfigReply], MAIN_DISPATCHER)
     def features_reply_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath

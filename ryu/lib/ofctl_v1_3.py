@@ -478,6 +478,43 @@ def get_queue_stats(dp, waiters):
     return desc
 
 
+def get_queue_config(dp, port, waiters):
+    ofp = dp.ofproto
+    stats = dp.ofproto_parser.OFPQueueGetConfigRequest(dp, port)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    prop_type = {dp.ofproto.OFPQT_MIN_RATE: 'MIN_RATE',
+                 dp.ofproto.OFPQT_MAX_RATE: 'MAX_RATE',
+                 dp.ofproto.OFPQT_EXPERIMENTER: 'EXPERIMENTER',
+                 }
+
+    configs = []
+    for config in msgs:
+        queue_list = []
+        for queue in config.queues:
+            prop_list = []
+            for prop in queue.properties:
+                p = {'property': prop_type.get(prop.property, 'UNKNOWN')}
+                if prop.property == dp.ofproto.OFPQT_MIN_RATE or \
+                   prop.property == dp.ofproto.OFPQT_MAX_RATE:
+                    p['rate'] = prop.rate
+                elif prop.property == dp.ofproto.OFPQT_EXPERIMENTER:
+                    p['experimenter'] = prop.experimenter
+                    p['data'] = prop.data
+                prop_list.append(p)
+            q = {'port': queue.port,
+                 'properties': prop_list,
+                 'queue_id': queue.queue_id}
+            queue_list.append(q)
+        c = {'port': config.port,
+             'queues': queue_list}
+        configs.append(c)
+    configs = {str(dp.id): configs}
+
+    return configs
+
+
 def get_flow_stats(dp, waiters, flow={}):
     table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
     flags = int(flow.get('flags', 0))
