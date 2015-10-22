@@ -324,6 +324,88 @@ Get aggregate flow stats filtered by fields
         }
 
 
+Get table features
+------------------
+
+    Get table features of the switch which specified with Datapath ID in URI.
+
+    Usage:
+
+        ======= ===========================
+        Method  GET
+        URI     /stats/tablefeatures/<dpid>
+        ======= ===========================
+
+    Response message body:
+
+        ============== ==================================== =======================================================
+        Attribute      Description                          Example
+        ============== ==================================== =======================================================
+        dpid           Datapath ID                          "1"
+        table_id       Table ID                             0
+        name           Name of Table                        "table_0"
+        metadata_match Bits of metadata table can match     18446744073709552000
+        metadata_write Bits of metadata table can write     18446744073709552000
+        config         Bitmap of OFPTC_* values             0
+        max_entries    Max number of entries supported      4096
+        properties     struct ofp_table_feature_prop_header [{"type": "INSTRUCTIONS","instruction_ids": [...]},...]
+        ============== ==================================== =======================================================
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/tablefeatures/1
+
+    ::
+
+        {
+          "1": [
+            {
+              "metadata_write": 18446744073709552000,
+              "config": 0,
+              "table_id": 0,
+              "metadata_match": 18446744073709552000,
+              "max_entries": 4096,
+              "properties": [
+                {
+                  "type": "INSTRUCTIONS",
+                  "instruction_ids": [
+                   {
+                   "len": 4,
+                   "type": 1
+                   },
+                   ...
+                  ]
+                },
+                ...
+              ],
+              "name": "table_0"
+            },
+            {
+              "metadata_write": 18446744073709552000,
+              "config": 0,
+              "table_id": 1,
+              "metadata_match": 18446744073709552000,
+              "max_entries": 4096,
+              "properties": [
+                {
+                  "type": "INSTRUCTIONS",
+                  "instruction_ids": [
+                   {
+                   "len": 4,
+                   "type": 1
+                   },
+                   ...
+                  ]
+                },
+                ...
+              ],
+              "name": "table_1"
+            },
+            ...
+          ]
+        }
+
+
 Get ports stats
 ---------------
 
