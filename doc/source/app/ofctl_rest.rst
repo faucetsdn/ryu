@@ -324,6 +324,225 @@ Get aggregate flow stats filtered by fields
         }
 
 
+Get table stats
+---------------
+
+    Get table stats of the switch which specified with Datapath ID in URI.
+
+    Usage:
+
+        ======= ===================
+        Method  GET
+        URI     /stats/table/<dpid>
+        ======= ===================
+
+    Response message body(OpenFlow1.0):
+
+        =============== ============================================================ ============
+        Attribute       Description                                                  Example
+        =============== ============================================================ ============
+        dpid            Datapath ID                                                  "1"
+        table_id        Table ID                                                     0
+        name            Name of Table                                                "classifier"
+        max_entries     Max number of entries supported                              1e+06
+        wildcards       Bitmap of OFPFW_* wildcards that are supported by the table  ["IN_PORT","DL_VLAN"]
+        active_count    Number of active entries                                     0
+        lookup_count    Number of packets looked up in table                         8
+        matched_count   Number of packets that hit table                             0
+        =============== ============================================================ ============
+
+    Response message body(OpenFlow1.2):
+
+        =============== ============================================================ ====================
+        Attribute       Description                                                  Example
+        =============== ============================================================ ====================
+        dpid            Datapath ID                                                  "1"
+        table_id        Table ID                                                     0
+        name            Name of Table                                                "classifier"
+        match           Bitmap of (1 << OFPXMT_*) that indicate the                  ["OFB_IN_PORT","OFB_METADATA"]
+                        fields the table can match on
+        wildcards       Bitmap of (1 << OFPXMT_*) wildcards that are                 ["OFB_IN_PORT","OFB_METADATA"]
+                        supported by the table
+        write_actions   Bitmap of OFPAT_* that are supported                         ["OUTPUT","SET_MPLS_TTL"]
+                        by the table with OFPIT_WRITE_ACTIONS
+        apply_actions   Bitmap of OFPAT_* that are supported                         ["OUTPUT","SET_MPLS_TTL"]
+                        by the table with OFPIT_APPLY_ACTIONS
+        write_setfields Bitmap of (1 << OFPXMT_*) header fields that                 ["OFB_IN_PORT","OFB_METADATA"]
+                        can be set with OFPIT_WRITE_ACTIONS
+        apply_setfields Bitmap of (1 << OFPXMT_*) header fields that                 ["OFB_IN_PORT","OFB_METADATA"]
+                        can be set with OFPIT_APPLY_ACTIONS
+        metadata_match  Bits of metadata table can match                             18446744073709552000
+        metadata_write  Bits of metadata table can write                             18446744073709552000
+        instructions    Bitmap of OFPIT_* values supported                           ["GOTO_TABLE","WRITE_METADATA"]
+        config          Bitmap of OFPTC_* values                                     []
+        max_entries     Max number of entries supported                              1e+06
+        active_count    Number of active entries                                     0
+        lookup_count    Number of packets looked up in table                         0
+        matched_count   Number of packets that hit table                             8
+        =============== ============================================================ ====================
+
+    Response message body(OpenFlow1.3):
+
+        ============== ============================================================= =========
+        Attribute      Description                                                   Example
+        ============== ============================================================= =========
+        dpid           Datapath ID                                                   "1"
+        table_id       Table ID                                                      0
+        active_count   Number of active entries                                      0
+        lookup_count   Number of packets looked up in table                          8
+        matched_count  Number of packets that hit table                              0
+        ============== ============================================================= =========
+
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/table/1
+
+    Response (OpenFlow1.0):
+
+    ::
+
+        {
+          "1": [
+            {
+              "table_id": 0,
+              "lookup_count": 8,
+              "max_entries": 1e+06,
+              "active_count": 0,
+              "name": "classifier",
+              "matched_count": 0,
+              "wildcards": [
+               "IN_PORT",
+               "DL_VLAN"
+              ]
+            },
+            ...
+            {
+              "table_id": 253,
+              "lookup_count": 0,
+              "max_entries": 1e+06,
+              "active_count": 0,
+              "name": "table253",
+              "matched_count": 0,
+              "wildcards": [
+               "IN_PORT",
+               "DL_VLAN"
+              ]
+            }
+          ]
+        }
+
+    Response (OpenFlow1.2):
+
+    ::
+
+        {
+          "1": [
+            {
+              "apply_setfields": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "match": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "metadata_write": 18446744073709552000,
+              "config": [],
+              "instructions":[
+               "GOTO_TABLE",
+               "WRITE_METADATA"
+              ],
+              "table_id": 0,
+              "metadata_match": 18446744073709552000,
+              "lookup_count": 8,
+              "wildcards": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "write_setfields": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "write_actions": [
+               "OUTPUT",
+               "SET_MPLS_TTL"
+              ],
+              "name": "classifier",
+              "matched_count": 0,
+              "apply_actions": [
+               "OUTPUT",
+               "SET_MPLS_TTL"
+              ],
+              "active_count": 0,
+              "max_entries": 1e+06
+            },
+            ...
+            {
+              "apply_setfields": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "match": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "metadata_write": 18446744073709552000,
+              "config": [],
+              "instructions": [
+               "GOTO_TABLE",
+               "WRITE_METADATA"
+              ],
+              "table_id": 253,
+              "metadata_match": 18446744073709552000,
+              "lookup_count": 0,
+              "wildcards": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "write_setfields": [
+               "OFB_IN_PORT",
+               "OFB_METADATA"
+              ],
+              "write_actions": [
+               "OUTPUT",
+               "SET_MPLS_TTL"
+              ],
+              "name": "table253",
+              "matched_count": 0,
+              "apply_actions": [
+               "OUTPUT",
+               "SET_MPLS_TTL"
+              ],
+              "active_count": 0,
+              "max_entries": 1e+06
+            }
+          ]
+        }
+
+    Response (OpenFlow1.3):
+
+    ::
+
+        {
+          "1": [
+            {
+              "active_count": 0,
+              "table_id": 0,
+              "lookup_count": 8,
+              "matched_count": 0
+            },
+            ...
+            {
+              "active_count": 0,
+              "table_id": 253,
+              "lookup_count": 0,
+              "matched_count": 0
+            }
+          ]
+        }
+
+
 Get table features
 ------------------
 
