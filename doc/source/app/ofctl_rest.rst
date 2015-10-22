@@ -593,6 +593,79 @@ Get queues stats
         }
 
 
+Get queues config
+-----------------
+
+    Get queues config of the switch which specified with Datapath ID and Port in URI.
+
+    Usage:
+
+        ======= ================================
+        Method  GET
+        URI     /stats/queueconfig/<dpid>/<port>
+        ======= ================================
+
+    Response message body:
+
+        ================ ====================================================== ========================================
+        Attribute        Description                                            Example
+        ================ ====================================================== ========================================
+        dpid             Datapath ID                                            "1"
+        port             Port which was queried                                 1
+        queues           struct ofp_packet_queue
+        -- queue_id      ID for the specific queue                              2
+        -- port          Port this queue is attached to                         0
+        -- properties    struct ofp_queue_prop_header properties                [{"property": "MIN_RATE","rate": 80}]
+        ================ ====================================================== ========================================
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/queueconfig/1/1
+
+    ::
+
+        {
+          "1": [
+            {
+              "port": 1,
+              "queues": [
+                {
+                  "properties": [
+                    {
+                      "property": "MIN_RATE",
+                      "rate": 80
+                    }
+                  ],
+                  "port": 0,
+                  "queue_id": 1
+                },
+                {
+                  "properties": [
+                    {
+                      "property": "MAX_RATE",
+                      "rate": 120
+                    }
+                  ],
+                  "port": 2,
+                  "queue_id": 2
+                },
+                {
+                  "properties": [
+                    {
+                      "property": "EXPERIMENTER",
+                      "data": [],
+                      "experimenter": 999
+                    }
+                  ],
+                  "port": 3,
+                  "queue_id": 3
+                }
+              ]
+            }
+          ]
+        }
+
+
 Get groups stats
 ----------------
 
