@@ -547,6 +547,25 @@ def get_aggregate_flow_stats(dp, waiters, flow={}):
     return flows
 
 
+def get_table_stats(dp, waiters):
+    stats = dp.ofproto_parser.OFPTableStatsRequest(dp, 0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    tables = []
+    for msg in msgs:
+        stats = msg.body
+        for stat in stats:
+            s = {'table_id': stat.table_id,
+                 'active_count': stat.active_count,
+                 'lookup_count': stat.lookup_count,
+                 'matched_count': stat.matched_count}
+            tables.append(s)
+    desc = {str(dp.id): tables}
+
+    return desc
+
+
 def get_port_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPPortStatsRequest(
         dp, 0, dp.ofproto.OFPP_ANY)

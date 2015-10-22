@@ -382,6 +382,57 @@ def get_aggregate_flow_stats(dp, waiters, flow={}):
     return flows
 
 
+def get_table_stats(dp, waiters):
+    stats = dp.ofproto_parser.OFPTableStatsRequest(dp, 0)
+    ofp = dp.ofproto
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs)
+
+    match_convert = {ofp.OFPFW_IN_PORT: 'IN_PORT',
+                     ofp.OFPFW_DL_VLAN: 'DL_VLAN',
+                     ofp.OFPFW_DL_SRC: 'DL_SRC',
+                     ofp.OFPFW_DL_DST: 'DL_DST',
+                     ofp.OFPFW_DL_TYPE: 'DL_TYPE',
+                     ofp.OFPFW_NW_PROTO: 'NW_PROTO',
+                     ofp.OFPFW_TP_SRC: 'TP_SRC',
+                     ofp.OFPFW_TP_DST: 'TP_DST',
+                     ofp.OFPFW_NW_SRC_SHIFT: 'NW_SRC_SHIFT',
+                     ofp.OFPFW_NW_SRC_BITS: 'NW_SRC_BITS',
+                     ofp.OFPFW_NW_SRC_MASK: 'NW_SRC_MASK',
+                     ofp.OFPFW_NW_SRC: 'NW_SRC',
+                     ofp.OFPFW_NW_SRC_ALL: 'NW_SRC_ALL',
+                     ofp.OFPFW_NW_DST_SHIFT: 'NW_DST_SHIFT',
+                     ofp.OFPFW_NW_DST_BITS: 'NW_DST_BITS',
+                     ofp.OFPFW_NW_DST_MASK: 'NW_DST_MASK',
+                     ofp.OFPFW_NW_DST: 'NW_DST',
+                     ofp.OFPFW_NW_DST_ALL: 'NW_DST_ALL',
+                     ofp.OFPFW_DL_VLAN_PCP: 'DL_VLAN_PCP',
+                     ofp.OFPFW_NW_TOS: 'NW_TOS',
+                     ofp.OFPFW_ALL: 'ALL',
+                     ofp.OFPFW_ICMP_TYPE: 'ICMP_TYPE',
+                     ofp.OFPFW_ICMP_CODE: 'ICMP_CODE'}
+
+    tables = []
+    for msg in msgs:
+        stats = msg.body
+        for stat in stats:
+            wildcards = []
+            for k, v in match_convert.items():
+                if (1 << k) & stat.wildcards:
+                    wildcards.append(v)
+            s = {'table_id': stat.table_id,
+                 'name': stat.name,
+                 'wildcards': wildcards,
+                 'max_entries': stat.max_entries,
+                 'active_count': stat.active_count,
+                 'lookup_count': stat.lookup_count,
+                 'matched_count': stat.matched_count}
+            tables.append(s)
+    desc = {str(dp.id): tables}
+
+    return desc
+
+
 def get_port_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPPortStatsRequest(
         dp, 0, dp.ofproto.OFPP_NONE)
