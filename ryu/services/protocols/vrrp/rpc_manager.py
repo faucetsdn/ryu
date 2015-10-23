@@ -129,6 +129,8 @@ class RpcVRRPManager(app_manager.RyuApp):
                                               'preempt_delay',
                                               'statistics_interval'))
         try:
+            ip_addr = config_params.pop('ip_addresses')
+            config_params['ip_addresses'] = [ip_addr]
             config = vrrp_event.VRRPConfig(**config_params)
         except:
             raise RPCError('parameters are invalid, %s' % (str(param_dict)))
