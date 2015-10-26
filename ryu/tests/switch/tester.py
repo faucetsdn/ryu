@@ -48,9 +48,11 @@ from ryu.lib import dpid as dpid_lib
 from ryu.lib import hub
 from ryu.lib import stringify
 from ryu.lib.packet import packet
+from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_protocol
+from ryu.ofproto import ofproto_v1_0
+from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
-from ryu.ofproto import ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4
 from ryu.ofproto import ofproto_v1_5
 
@@ -289,6 +291,7 @@ class OfTester(app_manager.RyuApp):
 
         def __get_version(opt):
             vers = {
+                'openflow10': ofproto_v1_0.OFP_VERSION,
                 'openflow13': ofproto_v1_3.OFP_VERSION,
                 'openflow14': ofproto_v1_4.OFP_VERSION,
                 'openflow15': ofproto_v1_5.OFP_VERSION
@@ -297,9 +300,8 @@ class OfTester(app_manager.RyuApp):
             if ver is None:
                 self.logger.error(
                     '%s is not supported. '
-                    'Supported versions are openflow13, '
-                    'openflow14 and openflow15.',
-                    opt)
+                    'Supported versions are %s.',
+                    opt, list(vers.keys()))
                 self._test_end()
             return ver
 
@@ -364,6 +366,7 @@ class OfTester(app_manager.RyuApp):
 
     def _register_sw(self, dp):
         vers = {
+            ofproto_v1_0.OFP_VERSION: 'openflow10',
             ofproto_v1_3.OFP_VERSION: 'openflow13',
             ofproto_v1_4.OFP_VERSION: 'openflow14',
             ofproto_v1_5.OFP_VERSION: 'openflow15'
@@ -381,9 +384,6 @@ class OfTester(app_manager.RyuApp):
                     vers[OfTester.tester_ver]
             else:
                 self.tester_sw.dp = dp
-                self.tester_sw.add_flow(
-                    in_port=self.tester_recv_port_1,
-                    out_port=dp.ofproto.OFPP_CONTROLLER)
                 msg = 'Join tester SW.'
         else:
             msg = 'Connect unknown SW.'
@@ -456,8 +456,8 @@ class OfTester(app_manager.RyuApp):
             self._test(STATE_INIT_METER)
             self._test(STATE_INIT_GROUP)
             self._test(STATE_INIT_FLOW, self.target_sw)
-            self._test(STATE_INIT_THROUGHPUT_FLOW, self.tester_sw,
-                       THROUGHPUT_COOKIE)
+            self._test(STATE_INIT_THROUGHPUT_FLOW, self.tester_sw)
+
             # Install flows.
             for flow in test.prerequisite:
                 if isinstance(
@@ -599,8 +599,17 @@ class OfTester(app_manager.RyuApp):
         self.state = state
         return test[state](*args)
 
-    def _test_initialize_flow(self, datapath, cookie=0):
-        xid = datapath.del_flows(cookie)
+    def _test_initialize_flow(self, datapath):
+        # Note: Because DELETE and DELETE_STRICT commands in OpenFlow 1.0
+        # can not be filtered by the cookie value, this tool deletes all
+        # flow entries of the tester switch temporarily and inserts default
+        # flow entry immediately.
+        xid = datapath.del_flows()
+        self.send_msg_xids.append(xid)
+
+        xid = datapath.add_flow(
+            in_port=self.tester_recv_port_1,
+            out_port=datapath.dp.ofproto.OFPP_CONTROLLER)
         self.send_msg_xids.append(xid)
 
         xid = datapath.send_barrier_request()
@@ -624,21 +633,24 @@ class OfTester(app_manager.RyuApp):
         assert isinstance(msg, datapath.dp.ofproto_parser.OFPBarrierReply)
 
     def _test_exist_check(self, method, message):
+        ofp = method.__self__.dp.ofproto
         parser = method.__self__.dp.ofproto_parser
         method_dict = {
             OpenFlowSw.send_flow_stats.__name__: {
                 'reply': parser.OFPFlowStatsReply,
                 'compare': self._compare_flow
-            },
-            OpenFlowSw.send_meter_config_stats.__name__: {
-                'reply': parser.OFPMeterConfigStatsReply,
-                'compare': self._compare_meter
-            },
-            OpenFlowSw.send_group_desc_stats.__name__: {
+            }
+        }
+        if ofp.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
+            method_dict[OpenFlowSw.send_group_desc_stats.__name__] = {
                 'reply': parser.OFPGroupDescStatsReply,
                 'compare': self._compare_group
             }
-        }
+        if ofp.OFP_VERSION >= ofproto_v1_3.OFP_VERSION:
+            method_dict[OpenFlowSw.send_meter_config_stats.__name__] = {
+                'reply': parser.OFPMeterConfigStatsReply,
+                'compare': self._compare_meter
+            }
         xid = method()
         self.send_msg_xids.append(xid)
         self._wait()
@@ -655,13 +667,18 @@ class OfTester(app_manager.RyuApp):
                     ng_stats.append(stats)
 
         error_dict = {
-            OpenFlowSw.send_flow_stats.__name__:
-                {'flows': ', '.join(ng_stats)},
-            OpenFlowSw.send_meter_config_stats.__name__:
-                {'meters': ', '.join(ng_stats)},
-            OpenFlowSw.send_group_desc_stats.__name__:
-                {'groups': ', '.join(ng_stats)}
+            OpenFlowSw.send_flow_stats.__name__: {
+                'flows': ', '.join(ng_stats)
+            }
         }
+        if ofp.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
+            error_dict[OpenFlowSw.send_group_desc_stats.__name__] = {
+                'groups': ', '.join(ng_stats)
+            }
+        if ofp.OFP_VERSION >= ofproto_v1_3.OFP_VERSION:
+            error_dict[OpenFlowSw.send_meter_config_stats.__name__] = {
+                'meters': ', '.join(ng_stats)
+            }
         raise TestFailure(self.state, **error_dict[method.__name__])
 
     def _test_get_packet_count(self, is_target):
@@ -711,15 +728,17 @@ class OfTester(app_manager.RyuApp):
                      else pkt[KEY_PKT_IN])
 
         if hasattr(msg.datapath.ofproto, "OFPR_NO_MATCH"):
-            table_miss_value = msg.datapath.ofproto.OFPR_NO_MATCH
+            invalid_packet_in_reason = [msg.datapath.ofproto.OFPR_NO_MATCH]
         else:
-            table_miss_value = msg.datapath.ofproto.OFPR_TABLE_MISS
+            invalid_packet_in_reason = [msg.datapath.ofproto.OFPR_TABLE_MISS]
+        if hasattr(msg.datapath.ofproto, "OFPR_INVALID_TTL"):
+            invalid_packet_in_reason.append(
+                msg.datapath.ofproto.OFPR_INVALID_TTL)
 
         if msg.datapath.id != pkt_in_src_model.dp.id:
             pkt_type = 'packet-in'
             err_msg = 'SW[dpid=%s]' % dpid_lib.dpid_to_str(msg.datapath.id)
-        elif msg.reason == table_miss_value or \
-                msg.reason == msg.datapath.ofproto.OFPR_INVALID_TTL:
+        elif msg.reason in invalid_packet_in_reason:
             pkt_type = 'packet-in'
             err_msg = 'OFPPacketIn[reason=%d]' % msg.reason
         elif repr(msg.data) != repr(model_pkt):
@@ -878,45 +897,26 @@ class OfTester(app_manager.RyuApp):
 
         def __reasm_match(match):
             """ reassemble match_fields. """
-            mask_lengths = {'vlan_vid': 12 + 1,
-                            'ipv6_flabel': 20,
-                            'ipv6_exthdr': 9}
-            match_fields = list()
-            for key, united_value in match.items():
-                if isinstance(united_value, tuple):
-                    (value, mask) = united_value
-                    # look up oxm_fields.TypeDescr to get mask length.
-                    for ofb in stats2.datapath.ofproto.oxm_types:
-                        if ofb.name == key:
-                            # create all one bits mask
-                            mask_len = mask_lengths.get(
-                                key, ofb.type.size * 8)
-                            all_one_bits = 2 ** mask_len - 1
-                            # convert mask to integer
-                            mask_bytes = ofb.type.from_user(mask)
-                            oxm_mask = int(binascii.hexlify(mask_bytes), 16)
-                            # when mask is all one bits, remove mask
-                            if oxm_mask & all_one_bits == all_one_bits:
-                                united_value = value
-                            # when mask is all zero bits, remove field.
-                            elif oxm_mask & all_one_bits == 0:
-                                united_value = None
-                            break
-                if united_value is not None:
-                    match_fields.append((key, united_value))
+            match_fields = match.to_jsondict()
+            # For only OpenFlow1.0
+            match_fields['OFPMatch'].pop('wildcards', None)
             return match_fields
 
         attr_list = ['cookie', 'priority', 'hard_timeout', 'idle_timeout',
-                     'table_id', 'instructions', 'match']
+                     'match']
+        if self.target_sw.dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            attr_list += ['actions']
+        else:
+            attr_list += ['table_id', 'instructions']
         for attr in attr_list:
             value1 = getattr(stats1, attr)
             value2 = getattr(stats2, attr)
-            if attr == 'instructions':
+            if attr in ['actions', 'instructions']:
                 value1 = sorted(value1, key=lambda x: x.type)
                 value2 = sorted(value2, key=lambda x: x.type)
             elif attr == 'match':
-                value1 = sorted(__reasm_match(value1))
-                value2 = sorted(__reasm_match(value2))
+                value1 = __reasm_match(value1)
+                value2 = __reasm_match(value2)
             if str(value1) != str(value2):
                 flow_stats = []
                 for attr in attr_list:
@@ -1084,27 +1084,31 @@ class OfTester(app_manager.RyuApp):
     def stats_reply_handler(self, ev):
         # keys: stats reply event classes
         # values: states in which the events should be processed
+        ofp = ev.msg.datapath.ofproto
         event_states = {
             ofp_event.EventOFPFlowStatsReply:
                 [STATE_FLOW_EXIST_CHK,
                  STATE_THROUGHPUT_FLOW_EXIST_CHK,
                  STATE_GET_THROUGHPUT],
-            ofp_event.EventOFPMeterConfigStatsReply:
-                [STATE_METER_EXIST_CHK],
             ofp_event.EventOFPTableStatsReply:
                 [STATE_GET_MATCH_COUNT,
                  STATE_FLOW_UNMATCH_CHK],
             ofp_event.EventOFPPortStatsReply:
                 [STATE_TARGET_PKT_COUNT,
                  STATE_TESTER_PKT_COUNT],
-            ofp_event.EventOFPGroupDescStatsReply:
-                [STATE_GROUP_EXIST_CHK]
         }
+        if ofp.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
+            event_states[ofp_event.EventOFPGroupDescStatsReply] = [
+                STATE_GROUP_EXIST_CHK
+            ]
+        if ofp.OFP_VERSION >= ofproto_v1_3.OFP_VERSION:
+            event_states[ofp_event.EventOFPMeterConfigStatsReply] = [
+                STATE_METER_EXIST_CHK
+            ]
         if self.state in event_states[ev.__class__]:
             if self.waiter and ev.msg.xid in self.send_msg_xids:
                 self.rcv_msgs.append(ev.msg)
-                if not ev.msg.flags & \
-                        ev.msg.datapath.ofproto.OFPMPF_REPLY_MORE:
+                if not ev.msg.flags:
                     self.waiter.set()
                     hub.sleep(0)
 
@@ -1165,38 +1169,48 @@ class OpenFlowSw(object):
         """ Add flow. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
-
         match = parser.OFPMatch(in_port=in_port)
-        max_len = (0 if out_port != ofp.OFPP_CONTROLLER
-                   else ofp.OFPCML_MAX)
-        actions = [parser.OFPActionOutput(out_port, max_len)]
-        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS,
-                                             actions)]
-        mod = parser.OFPFlowMod(self.dp, cookie=0,
-                                command=ofp.OFPFC_ADD,
-                                match=match, instructions=inst)
+        actions = [parser.OFPActionOutput(out_port)]
+        if ofp.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            mod = parser.OFPFlowMod(
+                self.dp, match=match, cookie=0, command=ofp.OFPFC_ADD,
+                actions=actions)
+        else:
+            inst = [parser.OFPInstructionActions(
+                ofp.OFPIT_APPLY_ACTIONS, actions)]
+            mod = parser.OFPFlowMod(
+                self.dp, cookie=0, command=ofp.OFPFC_ADD, match=match,
+                instructions=inst)
         return self.send_msg(mod)
 
     def del_flows(self, cookie=0):
-        """ Delete all flow except default flow. """
+        """
+        Delete all flow except default flow by using the cookie value.
+
+        Note: In OpenFlow 1.0, DELETE and DELETE_STRICT commands can
+        not be filtered by the cookie value and this value is ignored.
+        """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
         cookie_mask = 0
         if cookie:
             cookie_mask = 0xffffffffffffffff
-        mod = parser.OFPFlowMod(self.dp,
-                                cookie=cookie,
-                                cookie_mask=cookie_mask,
-                                table_id=ofp.OFPTT_ALL,
-                                command=ofp.OFPFC_DELETE,
-                                out_port=ofp.OFPP_ANY,
-                                out_group=ofp.OFPG_ANY)
+        if ofp.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            match = parser.OFPMatch()
+            mod = parser.OFPFlowMod(self.dp, match, cookie, ofp.OFPFC_DELETE)
+        else:
+            mod = parser.OFPFlowMod(
+                self.dp, cookie=cookie, cookie_mask=cookie_mask,
+                table_id=ofp.OFPTT_ALL, command=ofp.OFPFC_DELETE,
+                out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY)
         return self.send_msg(mod)
 
     def del_meters(self):
         """ Delete all meter entries. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
+        if ofp.OFP_VERSION < ofproto_v1_3.OFP_VERSION:
+            return None
         mod = parser.OFPMeterMod(self.dp,
                                  command=ofp.OFPMC_DELETE,
                                  flags=0,
@@ -1204,8 +1218,11 @@ class OpenFlowSw(object):
         return self.send_msg(mod)
 
     def del_groups(self):
+        """ Delete all group entries. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
+        if ofp.OFP_VERSION < ofproto_v1_2.OFP_VERSION:
+            return None
         mod = parser.OFPGroupMod(self.dp,
                                  command=ofp.OFPGC_DELETE,
                                  type_=0,
@@ -1223,26 +1240,41 @@ class OpenFlowSw(object):
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
         flags = 0
-        req = parser.OFPPortStatsRequest(self.dp, flags, ofp.OFPP_ANY)
+        if ofp.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            port = ofp.OFPP_NONE
+        else:
+            port = ofp.OFPP_ANY
+        req = parser.OFPPortStatsRequest(self.dp, flags, port)
         return self.send_msg(req)
 
     def send_flow_stats(self):
         """ Get all flow. """
         ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
-        req = parser.OFPFlowStatsRequest(self.dp, 0, ofp.OFPTT_ALL,
-                                         ofp.OFPP_ANY, ofp.OFPG_ANY,
-                                         0, 0, parser.OFPMatch())
+        if ofp.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+            req = parser.OFPFlowStatsRequest(
+                self.dp, 0, parser.OFPMatch(), 0xff, ofp.OFPP_NONE)
+        else:
+            req = parser.OFPFlowStatsRequest(
+                self.dp, 0, ofp.OFPTT_ALL, ofp.OFPP_ANY, ofp.OFPG_ANY,
+                0, 0, parser.OFPMatch())
         return self.send_msg(req)
 
     def send_meter_config_stats(self):
         """ Get all meter. """
+        ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
+        if ofp.OFP_VERSION < ofproto_v1_3.OFP_VERSION:
+            return None
         stats = parser.OFPMeterConfigStatsRequest(self.dp)
         return self.send_msg(stats)
 
     def send_group_desc_stats(self):
+        """ Get all group. """
+        ofp = self.dp.ofproto
         parser = self.dp.ofproto_parser
+        if ofp.OFP_VERSION < ofproto_v1_2.OFP_VERSION:
+            return None
         stats = parser.OFPGroupDescStatsRequest(self.dp)
         return self.send_msg(stats)
 
@@ -1350,36 +1382,9 @@ class Test(stringify.StringifyMixin):
             data.serialize()
             return six.binary_type(data.data)
 
-        def __normalize_match(ofproto, match):
-            match_json = match.to_jsondict()
-            oxm_fields = match_json['OFPMatch']['oxm_fields']
-            fields = []
-            for field in oxm_fields:
-                field_obj = ofproto.oxm_from_jsondict(field)
-                field_obj = ofproto.oxm_normalize_user(*field_obj)
-                fields.append(field_obj)
-            return match.__class__(_ordered_fields=fields)
-
-        def __normalize_action(ofproto, action):
-            action_json = action.to_jsondict()
-            field = action_json['OFPActionSetField']['field']
-            field_obj = ofproto.oxm_from_jsondict(field)
-            field_obj = ofproto.oxm_normalize_user(*field_obj)
-            kwargs = {}
-            kwargs[field_obj[0]] = field_obj[1]
-            return action.__class__(**kwargs)
-
-        # get ofproto modules using user-specified versions
-        (target_ofproto, target_parser) = ofproto_protocol._versions[
-            OfTester.target_ver]
-        (tester_ofproto, tester_parser) = ofproto_protocol._versions[
-            OfTester.tester_ver]
-        target_dp = DummyDatapath()
-        target_dp.ofproto = target_ofproto
-        target_dp.ofproto_parser = target_parser
-        tester_dp = DummyDatapath()
-        tester_dp.ofproto = tester_ofproto
-        tester_dp.ofproto_parser = tester_parser
+        # create Datapath instance using user-specified versions
+        target_dp = DummyDatapath(OfTester.target_ver)
+        tester_dp = DummyDatapath(OfTester.tester_ver)
 
         # parse 'description'
         description = buf.get(KEY_DESC)
@@ -1388,51 +1393,9 @@ class Test(stringify.StringifyMixin):
         prerequisite = []
         if KEY_PREREQ not in buf:
             raise ValueError('a test requires a "%s" block' % KEY_PREREQ)
-        allowed_mod = [KEY_FLOW, KEY_METER, KEY_GROUP]
         for flow in buf[KEY_PREREQ]:
-            key, value = flow.popitem()
-            if key not in allowed_mod:
-                raise ValueError(
-                    '"%s" block allows only the followings: %s' % (
-                        KEY_PREREQ, allowed_mod))
-            cls = getattr(target_parser, key)
-            msg = cls.from_jsondict(value, datapath=target_dp)
-            msg.version = target_ofproto.OFP_VERSION
-            msg.msg_type = msg.cls_msg_type
-            msg.xid = 0
-            if isinstance(msg, target_parser.OFPFlowMod):
-                # normalize OFPMatch
-                msg.match = __normalize_match(target_ofproto, msg.match)
-                # normalize OFPActionSetField
-                insts = []
-                for inst in msg.instructions:
-                    if isinstance(inst, target_parser.OFPInstructionActions):
-                        acts = []
-                        for act in inst.actions:
-                            if isinstance(
-                                    act, target_parser.OFPActionSetField):
-                                act = __normalize_action(target_ofproto, act)
-                            acts.append(act)
-                        inst = target_parser.OFPInstructionActions(
-                            inst.type, actions=acts)
-                    insts.append(inst)
-                msg.instructions = insts
-            elif isinstance(msg, target_parser.OFPGroupMod):
-                # normalize OFPActionSetField
-                buckets = []
-                for bucket in msg.buckets:
-                    acts = []
-                    for act in bucket.actions:
-                        if isinstance(act, target_parser.OFPActionSetField):
-                            act = __normalize_action(target_ofproto, act)
-                        acts.append(act)
-                    bucket = target_parser.OFPBucket(
-                        weight=bucket.weight,
-                        watch_port=bucket.watch_port,
-                        watch_group=bucket.watch_group,
-                        actions=acts)
-                    buckets.append(bucket)
-                msg.buckets = buckets
+            msg = ofproto_parser.ofp_msg_from_jsondict(
+                target_dp, flow)
             msg.serialize()
             prerequisite.append(msg)
 
@@ -1476,14 +1439,17 @@ class Test(stringify.StringifyMixin):
                     throughputs = []
                     for throughput in test[KEY_EGRESS][KEY_THROUGHPUT]:
                         one = {}
-                        mod = {'match': {'OFPMatch': throughput[KEY_MATCH]}}
-                        cls = getattr(tester_parser, KEY_FLOW)
-                        msg = cls.from_jsondict(
-                            mod, datapath=tester_dp,
-                            cookie=THROUGHPUT_COOKIE,
-                            priority=THROUGHPUT_PRIORITY)
-                        msg.match = __normalize_match(
-                            tester_ofproto, msg.match)
+                        mod = {
+                            "OFPFlowMod": {
+                                'cookie': THROUGHPUT_COOKIE,
+                                'priority': THROUGHPUT_PRIORITY,
+                                'match': {
+                                    'OFPMatch': throughput[KEY_MATCH]
+                                }
+                            }
+                        }
+                        msg = ofproto_parser.ofp_msg_from_jsondict(
+                            tester_dp, mod)
                         one[KEY_FLOW] = msg
                         one[KEY_KBPS] = throughput.get(KEY_KBPS)
                         one[KEY_PKTPS] = throughput.get(KEY_PKTPS)
@@ -1505,10 +1471,9 @@ class Test(stringify.StringifyMixin):
         return (description, prerequisite, tests)
 
 
-class DummyDatapath(object):
-    def __init__(self):
-        self.ofproto = ofproto_v1_3
-        self.ofproto_parser = ofproto_v1_3_parser
+class DummyDatapath(ofproto_protocol.ProtocolDesc):
+    def __init__(self, version=None):
+        super(DummyDatapath, self).__init__(version)
 
     def set_xid(self, _):
         pass
