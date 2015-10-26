@@ -49,7 +49,7 @@ x() ->
                     % XXX ryu and flower have different defaults for the
                     % followin fields.
                     in_port = 0,
-                    dl_src = <<(-1):6/unit:8>>
+                    dl_src = <<0:6/unit:8>>
                 },
             actions = [#ofp_action_output{port = 6,max_len = 65535}]},
         skip,
