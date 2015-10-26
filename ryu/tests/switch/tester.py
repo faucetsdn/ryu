@@ -28,17 +28,6 @@ import traceback
 from random import randint
 
 from ryu import cfg
-
-# import all packet libraries.
-PKT_LIB_PATH = 'ryu.lib.packet'
-for modname, moddef in sys.modules.items():
-    if not modname.startswith(PKT_LIB_PATH) or not moddef:
-        continue
-    for (clsname, clsdef, ) in inspect.getmembers(moddef):
-        if not inspect.isclass(clsdef):
-            continue
-        exec('from %s import %s' % (modname, clsname))
-
 from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.controller import ofp_event
@@ -55,6 +44,16 @@ from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
 from ryu.ofproto import ofproto_v1_5
+
+# import all packet libraries.
+PKT_LIB_PATH = 'ryu.lib.packet'
+for modname, moddef in sys.modules.items():
+    if not modname.startswith(PKT_LIB_PATH) or not moddef:
+        continue
+    for (clsname, clsdef, ) in inspect.getmembers(moddef):
+        if not inspect.isclass(clsdef):
+            continue
+        exec('from %s import %s' % (modname, clsname))
 
 
 """ Required test network:
@@ -341,11 +340,10 @@ class OfTester(app_manager.RyuApp):
 
     def _convert_dpid(self, dpid_str):
         try:
-            dpid = int(dpid_str, 16)
+            return int(dpid_str, 16)
         except ValueError as err:
             self.logger.error('Invarid dpid parameter. %s', err)
             self._test_end()
-        return dpid
 
     def close(self):
         if self.test_thread is not None:
@@ -539,8 +537,8 @@ class OfTester(app_manager.RyuApp):
         self.logger.info('    %-100s %s', test.description, result[0])
         if 1 < len(result):
             self.logger.info('        %s', result[1])
-            if (result[1] == RYU_INTERNAL_ERROR
-                    or result == 'An unknown exception'):
+            if result[1] == RYU_INTERNAL_ERROR\
+                    or result == 'An unknown exception':
                 self.logger.error(traceback.format_exc())
 
         hub.sleep(0)
@@ -918,13 +916,11 @@ class OfTester(app_manager.RyuApp):
                 value1 = __reasm_match(value1)
                 value2 = __reasm_match(value2)
             if str(value1) != str(value2):
-                flow_stats = []
-                for attr in attr_list:
-                    flow_stats.append('%s=%s' % (attr, getattr(stats1, attr)))
-                return False, 'flow_stats(%s)' % ','.join(flow_stats)
+                return False, 'flow_stats(%s != %s)' % (value1, value2)
         return True, None
 
-    def _compare_meter(self, stats1, stats2):
+    @classmethod
+    def _compare_meter(cls, stats1, stats2):
         """compare the message used to install and the message got from
            the switch."""
         attr_list = ['flags', 'meter_id', 'bands']
@@ -932,25 +928,21 @@ class OfTester(app_manager.RyuApp):
             value1 = getattr(stats1, attr)
             value2 = getattr(stats2, attr)
             if str(value1) != str(value2):
-                meter_stats = []
-                for attr in attr_list:
-                    meter_stats.append('%s=%s' % (attr, getattr(stats1, attr)))
-                return False, 'meter_stats(%s)' % ','.join(meter_stats)
+                return False, 'meter_stats(%s != %s)' % (value1, value2)
         return True, None
 
-    def _compare_group(self, stats1, stats2):
+    @classmethod
+    def _compare_group(cls, stats1, stats2):
         attr_list = ['type', 'group_id', 'buckets']
         for attr in attr_list:
             value1 = getattr(stats1, attr)
             value2 = getattr(stats2, attr)
             if str(value1) != str(value2):
-                group_stats = []
-                for attr in attr_list:
-                    group_stats.append('%s=%s' % (attr, getattr(stats1, attr)))
-                return False, 'group_stats(%s)' % ','.join(group_stats)
+                return False, 'group_stats(%s != %s)' % (value1, value2)
             return True, None
 
-    def _diff_packets(self, model_pkt, rcv_pkt):
+    @classmethod
+    def _diff_packets(cls, model_pkt, rcv_pkt):
         msg = []
         for rcv_p in rcv_pkt.protocols:
             if not isinstance(rcv_p, six.binary_type):
@@ -1004,7 +996,7 @@ class OfTester(app_manager.RyuApp):
             if stat.cookie != THROUGHPUT_COOKIE:
                 continue
             result[str(stat.match)] = (stat.byte_count, stat.packet_count)
-        return (time.time(), result)
+        return time.time(), result
 
     def _test_throughput_check(self, throughputs, start, end):
         msgs = []
@@ -1376,7 +1368,8 @@ class Test(stringify.StringifyMixin):
          self.prerequisite,
          self.tests) = self._parse_test(test_json)
 
-    def _parse_test(self, buf):
+    @classmethod
+    def _parse_test(cls, buf):
         def __test_pkt_from_json(test):
             data = eval('/'.join(test))
             data.serialize()
@@ -1468,7 +1461,7 @@ class Test(stringify.StringifyMixin):
 
             tests.append(test_pkt)
 
-        return (description, prerequisite, tests)
+        return description, prerequisite, tests
 
 
 class DummyDatapath(ofproto_protocol.ProtocolDesc):
