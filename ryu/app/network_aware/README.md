@@ -12,7 +12,8 @@ Go into the directory, and run applications.
 
 ###Note
 
-This file is a initial version, so it may occur some bugs.
-New version is in the repository, please find it by yourself.
-
 You can look up for more information in pdf file.
+
+This is an old version code, so it may occur some bugs.
+
+New version code is in the repository, please find it by yourself.
