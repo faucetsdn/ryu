@@ -214,7 +214,7 @@ class OFPMatch(StringifyMixin):
             self.dl_src = mac.DONTCARE
         else:
             wc &= ~ofproto.OFPFW_DL_SRC
-            if isinstance(dl_src, str) and ':' in dl_src:
+            if isinstance(dl_src, (six.text_type, str)) and ':' in dl_src:
                 dl_src = addrconv.mac.text_to_bin(dl_src)
             if dl_src == 0:
                 self.dl_src = mac.DONTCARE
@@ -225,7 +225,7 @@ class OFPMatch(StringifyMixin):
             self.dl_dst = mac.DONTCARE
         else:
             wc &= ~ofproto.OFPFW_DL_DST
-            if isinstance(dl_dst, str) and ':' in dl_dst:
+            if isinstance(dl_dst, (six.text_type, str)) and ':' in dl_dst:
                 dl_dst = addrconv.mac.text_to_bin(dl_dst)
             if dl_dst == 0:
                 self.dl_dst = mac.DONTCARE
@@ -267,7 +267,7 @@ class OFPMatch(StringifyMixin):
         else:
             wc &= (32 - nw_src_mask) << ofproto.OFPFW_NW_SRC_SHIFT \
                 | ~ofproto.OFPFW_NW_SRC_MASK
-            if isinstance(nw_src, str) and '.' in nw_src:
+            if not isinstance(nw_src, int):
                 nw_src = ip.ipv4_to_int(nw_src)
             self.nw_src = nw_src
 
@@ -276,7 +276,7 @@ class OFPMatch(StringifyMixin):
         else:
             wc &= (32 - nw_dst_mask) << ofproto.OFPFW_NW_DST_SHIFT \
                 | ~ofproto.OFPFW_NW_DST_MASK
-            if isinstance(nw_dst, str) and '.' in nw_dst:
+            if not isinstance(nw_dst, int):
                 nw_dst = ip.ipv4_to_int(nw_dst)
             self.nw_dst = nw_dst
 
@@ -314,11 +314,9 @@ class OFPMatch(StringifyMixin):
         wc = getattr(ofproto, 'OFPFW_' + name.upper(), 0)
         if ~self.wildcards & wc:
             value = getattr(self, name)
-            if isinstance(value, six.binary_type) \
-                    and name in ['dl_src', 'dl_dst']:
+            if name in ['dl_src', 'dl_dst']:
                 value = addrconv.mac.bin_to_text(value)
-            elif isinstance(value, int) \
-                    and name in ['nw_src', 'nw_dst']:
+            elif name in ['nw_src', 'nw_dst']:
                 value = ip.ipv4_to_str(value)
             return value
         else:
@@ -340,6 +338,22 @@ class OFPMatch(StringifyMixin):
         match = struct.unpack_from(ofproto.OFP_MATCH_PACK_STR,
                                    buf, offset)
         return cls(*match)
+
+    def to_jsondict(self):
+        fields = {}
+        # copy values to avoid original values conversion
+        for k, v in self.__dict__.items():
+            if k in ['dl_src', 'dl_dst']:
+                fields[k] = addrconv.mac.bin_to_text(v)
+            elif k in ['nw_src', 'nw_dst']:
+                fields[k] = ip.ipv4_to_str(v)
+            else:
+                fields[k] = v
+        return {self.__class__.__name__: fields}
+
+    @classmethod
+    def from_jsondict(cls, dict_):
+        return cls(**dict_)
 
 
 class OFPActionHeader(StringifyMixin):
@@ -503,6 +517,8 @@ class OFPActionStripVlan(OFPAction):
 class OFPActionDlAddr(OFPAction):
     def __init__(self, dl_addr):
         super(OFPActionDlAddr, self).__init__()
+        if isinstance(dl_addr, (six.text_type, str)) and ':' in dl_addr:
+            dl_addr = addrconv.mac.text_to_bin(dl_addr)
         self.dl_addr = dl_addr
 
     @classmethod
@@ -517,6 +533,14 @@ class OFPActionDlAddr(OFPAction):
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.OFP_ACTION_DL_ADDR_PACK_STR,
                       buf, offset, self.type, self.len, self.dl_addr)
+
+    def to_jsondict(self):
+        body = {"dl_addr": addrconv.mac.bin_to_text(self.dl_addr)}
+        return {self.__class__.__name__: body}
+
+    @classmethod
+    def from_jsondict(cls, dict_):
+        return cls(**dict_)
 
 
 @OFPAction.register_action_type(ofproto.OFPAT_SET_DL_SRC,
@@ -558,6 +582,8 @@ class OFPActionSetDlDst(OFPActionDlAddr):
 class OFPActionNwAddr(OFPAction):
     def __init__(self, nw_addr):
         super(OFPActionNwAddr, self).__init__()
+        if not isinstance(nw_addr, int):
+            nw_addr = ip.ipv4_to_int(nw_addr)
         self.nw_addr = nw_addr
 
     @classmethod
@@ -572,6 +598,14 @@ class OFPActionNwAddr(OFPAction):
     def serialize(self, buf, offset):
         msg_pack_into(ofproto.OFP_ACTION_NW_ADDR_PACK_STR,
                       buf, offset, self.type, self.len, self.nw_addr)
+
+    def to_jsondict(self):
+        body = {"nw_addr": ip.ipv4_to_str(self.nw_addr)}
+        return {self.__class__.__name__: body}
+
+    @classmethod
+    def from_jsondict(cls, dict_):
+        return cls(**dict_)
 
 
 @OFPAction.register_action_type(ofproto.OFPAT_SET_NW_SRC,
