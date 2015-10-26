@@ -1,0 +1,242 @@
+[
+    "match: 07_NW_PROTO (IPv6)",
+    {
+        "description": "ethernet/ipv6(nxt=6)/tcp-->'nw_proto=6,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 34525,
+                            "nw_proto": 6
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "egress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/ipv6(nxt=6)/tcp-->'nw_proto=6,actions=output:CONTROLLER'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 65533
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 34525,
+                            "nw_proto": 6
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "PACKET_IN": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/ipv6(nxt=6)/tcp-->'nw_proto=17,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 34525,
+                            "nw_proto": 17
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=34525)",
+                    "ipv6(dst='b0::b0', flow_label=203, src='a0::a0', nxt=6, hop_limit=127, traffic_class=65)",
+                    "tcp(dst_port=6789, option=bytes(b'\\x01' * 4), src_port=12345)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "table-miss": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/ipv6(nxt=6)/tcp-->'nw_proto=6,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 34525,
+                            "nw_proto": 6
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "egress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/ipv6(nxt=6)/tcp-->'nw_proto=6,actions=output:CONTROLLER'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 65533
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 34525,
+                            "nw_proto": 6
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "PACKET_IN": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=34525)",
+                    "ipv6(dst='20::20', flow_label=100, src='10::10', nxt=6, hop_limit=64, traffic_class=32)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/ipv6(nxt=6)/tcp-->'nw_proto=17,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 34525,
+                            "nw_proto": 17
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
+                    "vlan(pcp=5, cfi=0, vid=203, ethertype=34525)",
+                    "ipv6(dst='b0::b0', flow_label=203, src='a0::a0', nxt=6, hop_limit=127, traffic_class=65)",
+                    "tcp(dst_port=6789, option=bytes(b'\\x01' * 4), src_port=12345)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "table-miss": [
+                    0
+                ]
+            }
+        ]
+    }
+]

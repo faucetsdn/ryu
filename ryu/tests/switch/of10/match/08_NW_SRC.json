@@ -1,0 +1,242 @@
+[
+    "match: 08_NW_SRC",
+    {
+        "description": "ethernet/ipv4(src='192.168.10.10')/tcp-->'nw_src=192.168.10.10,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 2048,
+                            "nw_src": "192.168.10.10"
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "egress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/ipv4(src='192.168.10.10')/tcp-->'nw_src=192.168.10.10,actions=output:CONTROLLER'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 65533
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 2048,
+                            "nw_src": "192.168.10.10"
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "PACKET_IN": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/ipv4(src='10.10.10.10')/tcp-->'nw_src=192.168.10.10,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 2048,
+                            "nw_src": "192.168.10.10"
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=2048)",
+                    "ipv4(tos=65, proto=6, src='10.10.10.10', dst='10.10.20.20', ttl=127)",
+                    "tcp(dst_port=6789, option=bytes(b'\\x01' * 4), src_port=12345)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "table-miss": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/ipv4(src='192.168.10.10')/tcp-->'nw_src=192.168.10.10,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 2048,
+                            "nw_src": "192.168.10.10"
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "egress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/ipv4(src='192.168.10.10')/tcp-->'nw_src=192.168.10.10,actions=output:CONTROLLER'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 65533
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 2048,
+                            "nw_src": "192.168.10.10"
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "PACKET_IN": [
+                    "ethernet(dst='22:22:22:22:22:22', src='12:11:11:11:11:11', ethertype=33024)",
+                    "vlan(pcp=3, cfi=0, vid=100, ethertype=2048)",
+                    "ipv4(tos=32, proto=6, src='192.168.10.10', dst='192.168.20.20', ttl=64)",
+                    "tcp(dst_port=2222, option=bytes(b'\\x00' * 4), src_port=11111)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "ethernet/vlan/ipv4(src='10.10.10.10')/tcp-->'nw_src=192.168.10.10,actions=output:2'",
+        "prerequisite": [
+            {
+                "OFPFlowMod": {
+                    "actions": [
+                        {
+                            "OFPActionOutput": {
+                                "port": 2
+                            }
+                        }
+                    ],
+                    "command": 0,
+                    "cookie": 0,
+                    "match": {
+                        "OFPMatch": {
+                            "dl_type": 2048,
+                            "nw_src": "192.168.10.10"
+                        }
+                    }
+                }
+            }
+        ],
+        "tests": [
+            {
+                "ingress": [
+                    "ethernet(dst='ba:bb:bb:bb:bb:bb', src='aa:aa:aa:aa:aa:aa', ethertype=33024)",
+                    "vlan(pcp=5, cfi=0, vid=203, ethertype=2048)",
+                    "ipv4(tos=65, proto=6, src='10.10.10.10', dst='10.10.20.20', ttl=127)",
+                    "tcp(dst_port=6789, option=bytes(b'\\x01' * 4), src_port=12345)",
+                    "b'\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f'"
+                ],
+                "table-miss": [
+                    0
+                ]
+            }
+        ]
+    }
+]
