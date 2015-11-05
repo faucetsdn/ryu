@@ -20,7 +20,6 @@ from eventlet.green import socket
 import ryu.base.app_manager
 from ryu.controller.handler import MAIN_DISPATCHER
 
-from ryu.openexchange import oxproto
 from ryu.openexchange import oxproto_common
 from ryu.openexchange import oxproto_parser
 from ryu.openexchange import oxproto_protocol
