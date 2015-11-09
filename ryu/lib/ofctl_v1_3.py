@@ -1008,14 +1008,16 @@ def mod_meter_entry(dp, flow, cmd):
                      'BURST': dp.ofproto.OFPMF_BURST,
                      'STATS': dp.ofproto.OFPMF_STATS}
 
-    flow_flags = flow.get('flags')
-    if not isinstance(flow_flags, list):
-        flow_flags = [flow_flags]
     flags = 0
-    for flag in flow_flags:
-        flags |= flags_convert.get(flag, 0)
-    if not flags:
-        LOG.error('Unknown flags: %s', flow.get('flags'))
+    if 'flags' in flow:
+        flow_flags = flow['flags']
+        if not isinstance(flow_flags, list):
+            flow_flags = [flow_flags]
+        for flag in flow_flags:
+            if flag not in flags_convert:
+                LOG.error('Unknown flag: %s', flag)
+                continue
+            flags |= flags_convert.get(flag)
 
     meter_id = int(flow.get('meter_id', 0))
 
