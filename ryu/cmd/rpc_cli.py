@@ -29,6 +29,8 @@
 #     NOTIFICATION from echo-server ['notify-method', ['param1', 'param2']]
 #     (Cmd)
 
+from __future__ import print_function
+
 import ryu.contrib
 ryu.contrib.update_module_path()
 

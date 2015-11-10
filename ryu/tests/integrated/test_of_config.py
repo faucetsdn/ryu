@@ -110,6 +110,8 @@ Here is my sys.config used for this test.
 
 """
 
+from __future__ import print_function
+
 import traceback
 
 import lxml.etree
