@@ -73,7 +73,7 @@ def register(**kwargs):
     Does not do any check or validation.
     """
     def decorator(func):
-        _CALL_REGISTRY[kwargs.get(API_SYM, func.func_name)] = func
+        _CALL_REGISTRY[kwargs.get(API_SYM, func.__name__)] = func
         return func
 
     return decorator
