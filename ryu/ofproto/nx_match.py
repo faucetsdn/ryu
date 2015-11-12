@@ -1202,6 +1202,10 @@ oxm_types = [
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
     oxm_fields.NiciraExtended1('conj_id', 37, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ct_state', 105, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ct_zone', 106, type_desc.Int2),
+    oxm_fields.NiciraExtended1('ct_mark', 107, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ct_label', 108, type_desc.Int16),
 
     # The following definition is merely for testing 64-bit experimenter OXMs.
     # Following Open vSwitch, we use dp_hash for this purpose.

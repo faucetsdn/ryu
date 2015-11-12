@@ -48,6 +48,7 @@ Int2 = IntDescr(2)
 Int3 = IntDescr(3)
 Int4 = IntDescr(4)
 Int8 = IntDescr(8)
+Int16 = IntDescr(16)
 
 
 def _split_str(s, n):
