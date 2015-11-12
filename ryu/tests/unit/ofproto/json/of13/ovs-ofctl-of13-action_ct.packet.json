@@ -1,0 +1,62 @@
+{
+   "OFPFlowMod": {
+      "buffer_id": 4294967295, 
+      "command": 0, 
+      "cookie": 0, 
+      "cookie_mask": 0, 
+      "flags": 0, 
+      "hard_timeout": 0, 
+      "idle_timeout": 0, 
+      "instructions": [
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "NXActionCT": {
+                        "actions": [], 
+                        "alg": 0, 
+                        "experimenter": 8992, 
+                        "flags": 0, 
+                        "len": 24, 
+                        "recirc_table": 4, 
+                        "subtype": 35, 
+                        "type": 65535, 
+                        "zone_ofs_nbits": 0, 
+                        "zone_src": 0
+                     }
+                  }
+               ], 
+               "len": 32, 
+               "type": 4
+            }
+         }
+      ], 
+      "match": {
+         "OFPMatch": {
+            "length": 22, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "eth_type", 
+                     "mask": null, 
+                     "value": 2048
+                  }
+               }, 
+               {
+                  "OXMTlv": {
+                     "field": "ct_state", 
+                     "mask": 128, 
+                     "value": 0
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "out_group": 4294967295, 
+      "out_port": 4294967295, 
+      "priority": 32768, 
+      "table_id": 3, 
+      "xid": 2
+   }
+}
