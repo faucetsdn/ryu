@@ -94,6 +94,20 @@ MESSAGES = [
               'importance=39032'] +
               STD_MATCH +
               ['actions=resubmit(1234,99)'])},
+    {'name': 'action_ct',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['table=3,',
+              'importance=39032'] +
+              ['dl_type=0x0800,ct_state=-trk'] +
+              ['actions=ct(table=4)'])},
+    {'name': 'action_ct_exec',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['table=3,',
+              'importance=39032'] +
+              ['dl_type=0x0800,ct_state=+trk+est'] +
+              ['actions=ct(commit,exec(set_field:0x654321->ct_mark))'])},
 ]
 
 buf = []
