@@ -51,8 +51,8 @@ class Network_Monitor(app_manager.RyuApp):
                 self._request_stats(dp)
             hub.sleep(SLEEP_PERIOD)
             if self.stats['flow'] or self.stats['port']:
-                # self.show_stat('flow', self.stats['flow'])
-                # self.show_stat('port', self.stats['port'])
+                self.show_stat('flow', self.stats['flow'])
+                self.show_stat('port', self.stats['port'])
                 hub.sleep(1)
 
     def _request_stats(self, datapath):
