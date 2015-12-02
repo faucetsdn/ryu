@@ -117,6 +117,7 @@ class DPSet(app_manager.RyuApp):
             self.logger.warning('DPSET: Multiple connections from %s',
                                 dpid_to_str(dp.id))
             self.logger.debug('DPSET: Forgetting datapath %s', self.dps[dp.id])
+            (self.dps[dp.id]).close()
             self.logger.debug('DPSET: New datapath %s', dp)
         self.dps[dp.id] = dp
         if dp.id not in self.port_state:
@@ -176,7 +177,7 @@ class DPSet(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [handler.MAIN_DISPATCHER, handler.DEAD_DISPATCHER])
-    def dispacher_change(self, ev):
+    def dispatcher_change(self, ev):
         datapath = ev.datapath
         assert datapath is not None
         if ev.state == handler.MAIN_DISPATCHER:
