@@ -190,8 +190,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                 if len(buf) < required_len:
                     break
 
-                msg = ofproto_parser.msg(self,
-                                         version, msg_type, msg_len, xid, buf)
+                msg = ofproto_parser.msg(
+                    self, version, msg_type, msg_len, xid, buf[:msg_len])
                 # LOG.debug('queue msg %s cls %s', msg, msg.__class__)
                 if msg:
                     ev = ofp_event.ofp_msg_to_ev(msg)
