@@ -1,0 +1,43 @@
+{
+    "1": [
+        {
+            "port": 4294967295,
+            "queues": [
+                {
+                    "len": 48,
+                    "port": 77,
+                    "properties": [
+                        {
+                            "len": 16,
+                            "property": "MIN_RATE",
+                            "rate": 10
+                        },
+                        {
+                            "len": 16,
+                            "property": "MAX_RATE",
+                            "rate": 900
+                        }
+                    ],
+                    "queue_id": 99
+                },
+                {
+                    "len": 48,
+                    "port": 77,
+                    "properties": [
+                        {
+                            "len": 16,
+                            "property": "MIN_RATE",
+                            "rate": 100
+                        },
+                        {
+                            "len": 16,
+                            "property": "MAX_RATE",
+                            "rate": 200
+                        }
+                    ],
+                    "queue_id": 88
+                }
+            ]
+        }
+    ]
+}

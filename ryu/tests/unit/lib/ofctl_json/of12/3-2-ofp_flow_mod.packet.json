@@ -1,0 +1,41 @@
+{
+    "cmd": 0,
+    "flow": {
+        "buffer_id": 65535,
+        "command": 0,
+        "cookie": 0,
+        "cookie_mask": 0,
+        "flags": 0,
+        "hard_timeout": 0,
+        "idle_timeout": 0,
+        "actions": [
+            {
+                "type": "WRITE_ACTIONS",
+                "actions": [
+                    {
+                        "type": "SET_FIELD",
+                        "field": "vlan_vid",
+                        "value": 258
+                    },
+                    {
+                        "type": "OUTPUT",
+                        "port": 6,
+                        "max_len": 65535
+                    }
+                ]
+            },
+            {
+                "type": "SET_FIELD",
+                "field": "eth_src",
+                "value": "01:02:03:04:05:06"
+            }
+        ],
+        "match": {
+            "eth_dst": "f2:0b:a4:7d:f8:ea"
+        },
+        "out_group": 4294967295,
+        "out_port": 4294967295,
+        "priority": 123,
+        "table_id": 1
+    }
+}

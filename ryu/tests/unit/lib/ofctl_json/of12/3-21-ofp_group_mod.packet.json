@@ -1,0 +1,22 @@
+{
+    "cmd": 0,
+    "group": {
+        "buckets": [
+            {
+                "actions": [
+                    {
+                        "max_len": 65535,
+                        "port": 2,
+                        "type": "OUTPUT"
+                    }
+                ],
+                "watch_group": 1,
+                "watch_port": 1,
+                "weight": 1
+            }
+        ],
+        "command": 0,
+        "group_id": 1,
+        "type": "ALL"
+    }
+}

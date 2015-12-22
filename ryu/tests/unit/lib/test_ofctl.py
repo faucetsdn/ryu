@@ -111,6 +111,85 @@ def _add_tests():
     }
 
     _test_cases = {
+        'of12': [
+            {
+                'method': ofctl_v1_2.get_desc_stats,
+                'request': '3-24-ofp_desc_stats_request.packet.json',
+                'reply': '3-0-ofp_desc_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_queue_stats,
+                'request': '3-37-ofp_queue_stats_request.packet.json',
+                'reply': '3-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_queue_config,
+                'request': '3-35-ofp_queue_get_config_request.packet.json',
+                'reply': '3-36-ofp_queue_get_config_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_flow_stats,
+                'request': '3-11-ofp_flow_stats_request.packet.json',
+                'reply': '3-12-ofp_flow_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_aggregate_flow_stats,
+                'request': '3-25-ofp_aggregate_stats_request.packet.json',
+                'reply': '3-26-ofp_aggregate_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_table_stats,
+                'request': '3-27-ofp_table_stats_request.packet.json',
+                'reply': '3-28-ofp_table_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_port_stats,
+                'request': '3-29-ofp_port_stats_request.packet.json',
+                'reply': '3-30-ofp_port_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_group_stats,
+                'request': '3-61-ofp_group_stats_request.packet.json',
+                'reply': '3-62-ofp_group_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_group_features,
+                'request': '3-31-ofp_group_features_stats_request.packet.json',
+                'reply': '3-32-ofp_group_features_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_group_desc,
+                'request': '3-33-ofp_group_desc_stats_request.packet.json',
+                'reply': '3-34-ofp_group_desc_stats_reply.packet.json'
+            },
+            # In OpenFlow 1.2, ofp_port_desc is not defined.
+            # We use ofp_features_request to get ports description instead.
+            {
+                'method': ofctl_v1_2.get_port_desc,
+                'request': '3-5-ofp_features_request.packet.json',
+                'reply': '3-6-ofp_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.mod_flow_entry,
+                'request': '3-2-ofp_flow_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_2.mod_group_entry,
+                'request': '3-21-ofp_group_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_2.mod_port_behavior,
+                'request': '3-22-ofp_port_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_2.send_experimenter,
+                'request': '3-16-ofp_experimenter.packet.json',
+                'reply': None
+            },
+        ],
         'of13': [
             {
                 'method': ofctl_v1_3.get_desc_stats,
