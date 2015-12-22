@@ -206,14 +206,6 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         else:
             datapath.ports = {}
 
-        ofproto = datapath.ofproto
-        ofproto_parser = datapath.ofproto_parser
-        set_config = ofproto_parser.OFPSetConfig(
-            datapath, ofproto.OFPC_FRAG_NORMAL,
-            128  # TODO:XXX
-        )
-        datapath.send_msg(set_config)
-
         if datapath.ofproto.OFP_VERSION < 0x04:
             self.logger.debug('move onto main mode')
             ev.msg.datapath.set_state(MAIN_DISPATCHER)
