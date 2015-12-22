@@ -1,0 +1,102 @@
+{
+    "1": [
+        {
+            "actions": [],
+            "byte_count": 0,
+            "cookie": 0,
+            "duration_nsec": 115277000,
+            "duration_sec": 358,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "length": 0,
+            "match": {},
+            "packet_count": 0,
+            "priority": 65535,
+            "table_id": 0
+        },
+        {
+            "actions": [
+                "OUTPUT:4294967290"
+            ],
+            "byte_count": 0,
+            "cookie": 0,
+            "duration_nsec": 115055000,
+            "duration_sec": 358,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "length": 0,
+            "match": {
+                "dl_type": 2054
+            },
+            "packet_count": 0,
+            "priority": 65534,
+            "table_id": 0
+        },
+        {
+            "actions": [
+                "GOTO_TABLE:1"
+            ],
+            "byte_count": 238,
+            "cookie": 0,
+            "duration_nsec": 511582000,
+            "duration_sec": 316220,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "length": 0,
+            "match": {
+                "dl_src": "f2:0b:a4:7d:f8:ea",
+                "in_port": 6
+            },
+            "packet_count": 3,
+            "priority": 123,
+            "table_id": 0
+        },
+        {
+            "actions": [
+                {
+                    "WRITE_ACTIONS": [
+                        "SET_FIELD: {vlan_vid:258}",
+                        "COPY_TTL_OUT",
+                        "COPY_TTL_IN",
+                        "COPY_TTL_IN",
+                        "POP_PBB",
+                        "PUSH_PBB:4660",
+                        "POP_MPLS:39030",
+                        "PUSH_MPLS:34887",
+                        "POP_VLAN",
+                        "PUSH_VLAN:33024",
+                        "DEC_MPLS_TTL",
+                        "SET_MPLS_TTL:10",
+                        "DEC_NW_TTL",
+                        "SET_NW_TTL:10",
+                        "SET_QUEUE:3",
+                        "GROUP:99",
+                        "OUTPUT:6"
+                    ]
+                },
+                "SET_FIELD: {eth_src:01:02:03:04:05:06}",
+                "SET_FIELD: {pbb_uca:1}",
+                {
+                    "WRITE_ACTIONS": [
+                        "OUTPUT:4294967293"
+                    ]
+                }
+            ],
+            "byte_count": 98,
+            "cookie": 0,
+            "duration_nsec": 980901000,
+            "duration_sec": 313499,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "length": 0,
+            "match": {},
+            "packet_count": 1,
+            "priority": 0,
+            "table_id": 0
+        }
+    ]
+}

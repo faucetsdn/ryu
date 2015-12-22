@@ -1,0 +1,38 @@
+{
+    "1": [
+        {
+            "collisions": 0,
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "port_no": 7,
+            "rx_bytes": 0,
+            "rx_crc_err": 0,
+            "rx_dropped": 0,
+            "rx_errors": 0,
+            "rx_frame_err": 0,
+            "rx_over_err": 0,
+            "rx_packets": 0,
+            "tx_bytes": 336,
+            "tx_dropped": 0,
+            "tx_errors": 0,
+            "tx_packets": 4
+        },
+        {
+            "collisions": 0,
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "port_no": 6,
+            "rx_bytes": 336,
+            "rx_crc_err": 0,
+            "rx_dropped": 0,
+            "rx_errors": 0,
+            "rx_frame_err": 0,
+            "rx_over_err": 0,
+            "rx_packets": 4,
+            "tx_bytes": 336,
+            "tx_dropped": 0,
+            "tx_errors": 0,
+            "tx_packets": 4
+        }
+    ]
+}

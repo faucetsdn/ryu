@@ -1,0 +1,19 @@
+{
+    "1": [
+        {
+            "bucket_stats": [
+                {
+                    "byte_count": 2345,
+                    "packet_count": 234
+                }
+            ],
+            "byte_count": 12345,
+            "duration_nsec": 609036000,
+            "duration_sec": 9,
+            "group_id": 1,
+            "length": 56,
+            "packet_count": 123,
+            "ref_count": 2
+        }
+    ]
+}

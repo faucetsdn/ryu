@@ -111,6 +111,108 @@ def _add_tests():
     }
 
     _test_cases = {
+        'of13': [
+            {
+                'method': ofctl_v1_3.get_desc_stats,
+                'request': '4-24-ofp_desc_request.packet.json',
+                'reply': '4-0-ofp_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_queue_stats,
+                'request': '4-37-ofp_queue_stats_request.packet.json',
+                'reply': '4-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_queue_config,
+                'request': '4-35-ofp_queue_get_config_request.packet.json',
+                'reply': '4-36-ofp_queue_get_config_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_flow_stats,
+                'request': '4-11-ofp_flow_stats_request.packet.json',
+                'reply': '4-12-ofp_flow_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_aggregate_flow_stats,
+                'request': '4-25-ofp_aggregate_stats_request.packet.json',
+                'reply': '4-26-ofp_aggregate_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_table_stats,
+                'request': '4-27-ofp_table_stats_request.packet.json',
+                'reply': '4-28-ofp_table_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_table_features,
+                'request': 'lib-ofctl-ofp_table_features_request.packet.json',
+                'reply': '4-56-ofp_table_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_port_stats,
+                'request': '4-29-ofp_port_stats_request.packet.json',
+                'reply': '4-30-ofp_port_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_meter_stats,
+                'request': '4-49-ofp_meter_stats_request.packet.json',
+                'reply': '4-50-ofp_meter_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_meter_features,
+                'request': '4-51-ofp_meter_features_request.packet.json',
+                'reply': '4-52-ofp_meter_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_meter_config,
+                'request': '4-47-ofp_meter_config_request.packet.json',
+                'reply': '4-48-ofp_meter_config_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_group_stats,
+                'request': '4-57-ofp_group_stats_request.packet.json',
+                'reply': '4-58-ofp_group_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_group_features,
+                'request': '4-31-ofp_group_features_request.packet.json',
+                'reply': '4-32-ofp_group_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_group_desc,
+                'request': '4-33-ofp_group_desc_request.packet.json',
+                'reply': '4-34-ofp_group_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_port_desc,
+                'request': '4-53-ofp_port_desc_request.packet.json',
+                'reply': '4-54-ofp_port_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.mod_flow_entry,
+                'request': '4-2-ofp_flow_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_3.mod_meter_entry,
+                'request': '4-45-ofp_meter_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_3.mod_group_entry,
+                'request': '4-21-ofp_group_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_3.mod_port_behavior,
+                'request': '4-22-ofp_port_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_3.send_experimenter,
+                'request': '4-16-ofp_experimenter.packet.json',
+                'reply': None
+            },
+        ]
     }
 
     def _jsonfile_to_msg(datapath, jsonfile):

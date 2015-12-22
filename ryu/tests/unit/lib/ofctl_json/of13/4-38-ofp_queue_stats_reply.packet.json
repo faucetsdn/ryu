@@ -1,0 +1,31 @@
+{
+    "1": [
+        {
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "port_no": 7,
+            "queue_id": 1,
+            "tx_bytes": 0,
+            "tx_errors": 0,
+            "tx_packets": 0
+        },
+        {
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "port_no": 6,
+            "queue_id": 1,
+            "tx_bytes": 0,
+            "tx_errors": 0,
+            "tx_packets": 0
+        },
+        {
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "port_no": 7,
+            "queue_id": 2,
+            "tx_bytes": 0,
+            "tx_errors": 0,
+            "tx_packets": 0
+        }
+    ]
+}

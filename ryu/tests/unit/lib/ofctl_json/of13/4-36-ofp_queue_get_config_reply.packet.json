@@ -1,0 +1,83 @@
+{
+    "1": [
+        {
+            "port": 4294967295,
+            "queues": [
+                {
+                    "len": 64,
+                    "port": 77,
+                    "properties": [
+                        {
+                            "len": 16,
+                            "property": "MIN_RATE",
+                            "rate": 10
+                        },
+                        {
+                            "len": 16,
+                            "property": "MAX_RATE",
+                            "rate": 900
+                        },
+                        {
+                            "data": [],
+                            "experimenter": 999,
+                            "len": 16,
+                            "property": "EXPERIMENTER"
+                        }
+                    ],
+                    "queue_id": 99
+                },
+                {
+                    "len": 65,
+                    "port": 77,
+                    "properties": [
+                        {
+                            "len": 16,
+                            "property": "MIN_RATE",
+                            "rate": 100
+                        },
+                        {
+                            "len": 16,
+                            "property": "MAX_RATE",
+                            "rate": 200
+                        },
+                        {
+                            "experimenter": 999,
+                            "data": [
+                                1
+                            ],
+                            "len": 17,
+                            "property": "EXPERIMENTER"
+                        }
+                    ],
+                    "queue_id": 88
+                },
+                {
+                    "len": 66,
+                    "port": 77,
+                    "properties": [
+                        {
+                            "len": 16,
+                            "property": "MIN_RATE",
+                            "rate": 200
+                        },
+                        {
+                            "len": 16,
+                            "property": "MAX_RATE",
+                            "rate": 400
+                        },
+                        {
+                            "experimenter": 999,
+                            "data": [
+                                1,
+                                2
+                            ],
+                            "len": 18,
+                            "property": "EXPERIMENTER"
+                        }
+                    ],
+                    "queue_id": 77
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+{
+   "OFPTableFeaturesStatsRequest": {
+      "body": [],
+      "flags": 0,
+      "type": 12
+   }
+}

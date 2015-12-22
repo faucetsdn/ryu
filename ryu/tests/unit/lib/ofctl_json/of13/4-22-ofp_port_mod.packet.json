@@ -1,0 +1,9 @@
+{
+    "port_config": {
+        "advertise": 4096,
+        "config": 0,
+        "hw_addr": "00:11:00:00:11:11",
+        "mask": 0,
+        "port_no": 1
+    }
+}

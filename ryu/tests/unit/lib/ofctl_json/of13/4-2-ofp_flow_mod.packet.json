@@ -1,0 +1,91 @@
+{
+    "cmd": 0,
+    "flow": {
+        "buffer_id": 65535,
+        "table_id": 1,
+        "priority": 123,
+        "match": {
+            "eth_dst": "f2:0b:a4:7d:f8:ea"
+        },
+        "actions": [
+            {
+                "type": "WRITE_ACTIONS",
+                "actions": [
+                    {
+                        "type": "SET_FIELD",
+                        "field": "vlan_vid",
+                        "value": 258
+                    },
+                    {
+                        "type": "COPY_TTL_OUT"
+                    },
+                    {
+                        "type": "COPY_TTL_IN"
+                    },
+                    {
+                        "type": "COPY_TTL_IN"
+                    },
+                    {
+                        "type": "POP_PBB"
+                    },
+                    {
+                        "type": "PUSH_PBB",
+                        "ethertype": 4660
+                    },
+                    {
+                        "type": "POP_MPLS",
+                        "ethertype": 39030
+                    },
+                    {
+                        "type": "PUSH_MPLS",
+                        "ethertype": 34887
+                    },
+                    {
+                        "type": "POP_VLAN"
+                    },
+                    {
+                        "type": "PUSH_VLAN",
+                        "ethertype": 33024
+                    },
+                    {
+                        "type": "DEC_MPLS_TTL"
+                    },
+                    {
+                        "type": "SET_MPLS_TTL",
+                        "mpls_ttl": 10
+                    },
+                    {
+                        "type": "DEC_NW_TTL"
+                    },
+                    {
+                        "type": "SET_NW_TTL",
+                        "nw_ttl": 10
+                    },
+                    {
+                        "type": "SET_QUEUE",
+                        "queue_id": 3
+                    },
+                    {
+                        "type": "GROUP",
+                        "group_id": 99
+                    },
+                    {
+                        "type": "OUTPUT",
+                        "max_len": 65535,
+                        "port": 6
+                    }
+                ]
+            },
+            {
+                "type": "SET_FIELD",
+                "field": "eth_src",
+                "value": "01:02:03:04:05:06"
+            },
+            {
+                "type": "SET_FIELD",
+                "field": "pbb_uca",
+                "value": 1
+            }
+        ]
+    }
+}
