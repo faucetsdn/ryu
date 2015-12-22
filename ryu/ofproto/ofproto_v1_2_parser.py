@@ -2151,6 +2151,7 @@ class OFPFlowStats(StringifyMixin):
         self.byte_count = byte_count
         self.match = match
         self.instructions = instructions
+        self.length = length
 
     @classmethod
     def parser(cls, buf, offset):
@@ -2697,13 +2698,14 @@ class OFPGroupStats(StringifyMixin):
     """
 
     def __init__(self, group_id, ref_count, packet_count,
-                 byte_count, bucket_counters):
+                 byte_count, bucket_counters, length=None):
         super(OFPGroupStats, self).__init__()
         self.group_id = group_id
         self.ref_count = ref_count
         self.packet_count = packet_count
         self.byte_count = byte_count
         self.bucket_counters = bucket_counters
+        self.length = length
 
     @classmethod
     def parser(cls, buf, offset):

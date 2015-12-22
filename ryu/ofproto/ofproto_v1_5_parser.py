@@ -3905,14 +3905,14 @@ class OFPFlowDesc(StringifyMixin):
 
 class OFPFlowStats(StringifyMixin):
     def __init__(self, table_id=None, reason=None, priority=None,
-                 match=None, stats=None, length=0):
+                 match=None, stats=None, length=None):
         super(OFPFlowStats, self).__init__()
-        self.length = length
         self.table_id = table_id
         self.reason = reason
         self.priority = priority
         self.match = match
         self.stats = stats
+        self.length = length
 
     @classmethod
     def parser(cls, buf, offset):

@@ -3867,7 +3867,6 @@ class OFPFlowStats(StringifyMixin):
                  byte_count=None, match=None, instructions=None,
                  length=None):
         super(OFPFlowStats, self).__init__()
-        self.length = 0
         self.table_id = table_id
         self.duration_sec = duration_sec
         self.duration_nsec = duration_nsec
@@ -3880,6 +3879,7 @@ class OFPFlowStats(StringifyMixin):
         self.byte_count = byte_count
         self.match = match
         self.instructions = instructions
+        self.length = length
 
     @classmethod
     def parser(cls, buf, offset):
