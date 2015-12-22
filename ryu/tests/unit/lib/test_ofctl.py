@@ -111,6 +111,13 @@ def _add_tests():
     }
 
     _test_cases = {
+        'of10': [
+            {
+                'method': ofctl_v1_0.mod_flow_entry,
+                'request': '1-2-ofp_flow_mod.packet.json',
+                'reply': None
+            },
+        ],
         'of12': [
             {
                 'method': ofctl_v1_2.get_desc_stats,

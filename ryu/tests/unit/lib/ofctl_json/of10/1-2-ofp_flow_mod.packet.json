@@ -1,0 +1,23 @@
+{
+    "cmd": 0,
+    "flow": {
+        "actions": [
+            {
+                "type": "OUTPUT",
+                "max_len": 65535,
+                "port": 6
+            }
+        ],
+        "buffer_id": 65535,
+        "command": 0,
+        "cookie": 0,
+        "flags": 0,
+        "hard_timeout": 0,
+        "idle_timeout": 0,
+        "match": {
+            "dl_dst": "f2:0b:a4:7d:f8:ea"
+        },
+        "out_port": 65532,
+        "priority": 123
+    }
+}
