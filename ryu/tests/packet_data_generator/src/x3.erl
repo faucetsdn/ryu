@@ -8734,6 +8734,16 @@ x() ->
             hard_timeout = 0,priority = 123,buffer_id = 65535,
             out_port = any,out_group = any,flags = [],
             match = #ofp_match{fields = AllFields},
-            instructions = []}
+            instructions = []},
+        #ofp_group_stats_request{flags = [],group_id = all},
+        #ofp_group_stats_reply{
+            flags = [],
+            stats =
+                [#ofp_group_stats{
+                     group_id = 1,ref_count = 2,packet_count = 123,
+                     byte_count = 12345,
+                     bucket_stats =
+                         [#ofp_bucket_counter{
+                              packet_count = 234,byte_count = 2345}]}]}
     ],
     lists:foldl(fun x:do/2, {3, 0}, List).
