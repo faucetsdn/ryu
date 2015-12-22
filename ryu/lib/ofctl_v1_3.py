@@ -686,7 +686,7 @@ def get_table_features(dp, waiters):
                     pass
                 properties.append(p)
             s = {'table_id': stat.table_id,
-                 'name': stat.name,
+                 'name': stat.name.decode('utf-8'),
                  'metadata_match': stat.metadata_match,
                  'metadata_write': stat.metadata_write,
                  'config': stat.config,
@@ -965,7 +965,7 @@ def get_port_desc(dp, waiters):
         for stat in stats:
             d = {'port_no': stat.port_no,
                  'hw_addr': stat.hw_addr,
-                 'name': stat.name,
+                 'name': stat.name.decode('utf-8'),
                  'config': stat.config,
                  'state': stat.state,
                  'curr': stat.curr,

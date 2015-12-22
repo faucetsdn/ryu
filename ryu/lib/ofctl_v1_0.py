@@ -421,7 +421,7 @@ def get_table_stats(dp, waiters):
                 if (1 << k) & stat.wildcards:
                     wildcards.append(v)
             s = {'table_id': stat.table_id,
-                 'name': stat.name,
+                 'name': stat.name.decode('utf-8'),
                  'wildcards': wildcards,
                  'max_entries': stat.max_entries,
                  'active_count': stat.active_count,
@@ -473,7 +473,7 @@ def get_port_desc(dp, waiters):
         for stat in stats.values():
             d = {'port_no': stat.port_no,
                  'hw_addr': stat.hw_addr,
-                 'name': stat.name,
+                 'name': stat.name.decode('utf-8'),
                  'config': stat.config,
                  'state': stat.state,
                  'curr': stat.curr,

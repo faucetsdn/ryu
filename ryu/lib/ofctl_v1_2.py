@@ -657,7 +657,7 @@ def get_table_stats(dp, waiters):
                 if (1 << k) & stat.config:
                     config.append(v)
             s = {'table_id': stat.table_id,
-                 'name': stat.name,
+                 'name': stat.name.decode('utf-8'),
                  'match': match,
                  'wildcards': wildcards,
                  'write_actions': write_actions,
@@ -835,7 +835,7 @@ def get_port_desc(dp, waiters):
         for stat in stats.values():
             d = {'port_no': stat.port_no,
                  'hw_addr': stat.hw_addr,
-                 'name': stat.name,
+                 'name': stat.name.decode('utf-8'),
                  'config': stat.config,
                  'state': stat.state,
                  'curr': stat.curr,
