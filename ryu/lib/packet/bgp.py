@@ -1558,6 +1558,7 @@ class BGPPathAttributeAsPath(_BGPPathAttributeAsPathCommon):
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_PATH)
 class BGPPathAttributeAs4Path(_BGPPathAttributeAsPathCommon):
     _AS_PACK_STR = '!I'
+    _ATTR_FLAGS = BGP_ATTR_FLAG_TRANSITIVE | BGP_ATTR_FLAG_OPTIONAL
 
     @classmethod
     def _is_valid_16bit_as_path(cls, buf):

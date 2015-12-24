@@ -847,7 +847,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             extcomm_attr = None
             community_attr = None
             localpref_attr = None
-            unkown_opttrans_attrs = None
+            unknown_opttrans_attrs = None
             nlri_list = [path.nlri]
 
             # By default we use BGPS's interface IP with this peer as next_hop.
@@ -995,7 +995,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
             # UNKOWN Attributes.
             # Get optional transitive path attributes
-            unkown_opttrans_attrs = bgp_utils.get_unknow_opttrans_attr(path)
+            unknown_opttrans_attrs = bgp_utils.get_unknown_opttrans_attr(path)
 
             # Ordering path attributes according to type as RFC says. We set
             # MPReachNLRI first as advised by experts as a new trend in BGP
@@ -1015,8 +1015,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 new_pathattr.append(community_attr)
             if extcomm_attr:
                 new_pathattr.append(extcomm_attr)
-            if unkown_opttrans_attrs:
-                new_pathattr.extend(unkown_opttrans_attrs.values())
+            if unknown_opttrans_attrs:
+                new_pathattr.extend(unknown_opttrans_attrs.values())
 
         if isinstance(path, Ipv4Path):
             update = BGPUpdate(path_attributes=new_pathattr,
