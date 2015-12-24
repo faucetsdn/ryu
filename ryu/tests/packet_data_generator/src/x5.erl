@@ -441,7 +441,10 @@ x() ->
                                    #ofp_action_set_queue{queue_id = 3},
                                    #ofp_action_group{group_id = 99},
                                    #ofp_action_output{port = 6,
-                                                      max_len = no_buffer}]},
+                                                      max_len = no_buffer},
+                                   #ofp_action_experimenter{experimenter = 98765432,
+                                                            data = <<"exp_data">>}
+                                                            ]},
                           #ofp_instruction_apply_actions{
                               actions =
                                   [#ofp_action_set_field{

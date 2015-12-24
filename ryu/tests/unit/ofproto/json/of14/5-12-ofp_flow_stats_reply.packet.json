@@ -251,9 +251,17 @@
                                  "port": 6, 
                                  "type": 0
                               }
+                           },
+                           {
+                              "OFPActionExperimenter": {
+                                 "len": 16,
+                                 "data": "ZXhwX2RhdGE=",
+                                 "experimenter": 98765432,
+                                 "type": 65535
+                              }
                            }
                         ], 
-                        "len": 160, 
+                        "len": 176,
                         "type": 3
                      }
                   }, 
@@ -304,7 +312,7 @@
                      }
                   }
                ], 
-               "length": 280, 
+               "length": 296,
                "match": {
                   "OFPMatch": {
                      "length": 4, 
