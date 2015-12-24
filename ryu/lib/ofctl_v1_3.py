@@ -515,7 +515,8 @@ def get_queue_config(dp, port, waiters):
     return configs
 
 
-def get_flow_stats(dp, waiters, flow={}):
+def get_flow_stats(dp, waiters, flow=None):
+    flow = flow if flow else {}
     table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
     flags = int(flow.get('flags', 0))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
@@ -556,7 +557,8 @@ def get_flow_stats(dp, waiters, flow={}):
     return flows
 
 
-def get_aggregate_flow_stats(dp, waiters, flow={}):
+def get_aggregate_flow_stats(dp, waiters, flow=None):
+    flow = flow if flow else {}
     table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
     flags = int(flow.get('flags', 0))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
@@ -1001,7 +1003,7 @@ def mod_flow_entry(dp, flow, cmd):
     dp.send_msg(flow_mod)
 
 
-def mod_meter_entry(dp, flow, cmd):
+def mod_meter_entry(dp, meter, cmd):
 
     flags_convert = {'KBPS': dp.ofproto.OFPMF_KBPS,
                      'PKTPS': dp.ofproto.OFPMF_PKTPS,
@@ -1009,20 +1011,20 @@ def mod_meter_entry(dp, flow, cmd):
                      'STATS': dp.ofproto.OFPMF_STATS}
 
     flags = 0
-    if 'flags' in flow:
-        flow_flags = flow['flags']
-        if not isinstance(flow_flags, list):
-            flow_flags = [flow_flags]
-        for flag in flow_flags:
+    if 'flags' in meter:
+        meter_flags = meter['flags']
+        if not isinstance(meter_flags, list):
+            meter_flags = [meter_flags]
+        for flag in meter_flags:
             if flag not in flags_convert:
-                LOG.error('Unknown flag: %s', flag)
+                LOG.error('Unknown meter flag: %s', flag)
                 continue
             flags |= flags_convert.get(flag)
 
-    meter_id = int(flow.get('meter_id', 0))
+    meter_id = int(meter.get('meter_id', 0))
 
     bands = []
-    for band in flow.get('bands', []):
+    for band in meter.get('bands', []):
         band_type = band.get('type')
         rate = int(band.get('rate', 0))
         burst_size = int(band.get('burst_size', 0))
@@ -1057,7 +1059,7 @@ def mod_group_entry(dp, group, cmd):
 
     type_ = type_convert.get(group.get('type', 'ALL'))
     if type_ is None:
-        LOG.error('Unknown type: %s', group.get('type'))
+        LOG.error('Unknown group type: %s', group.get('type'))
 
     group_id = int(group.get('group_id', 0))
 

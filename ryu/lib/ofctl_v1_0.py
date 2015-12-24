@@ -325,7 +325,8 @@ def get_queue_stats(dp, waiters):
     return desc
 
 
-def get_flow_stats(dp, waiters, flow={}):
+def get_flow_stats(dp, waiters, flow=None):
+    flow = flow if flow else {}
     match = to_match(dp, flow.get('match', {}))
     table_id = int(flow.get('table_id', 0xff))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_NONE))
@@ -358,7 +359,8 @@ def get_flow_stats(dp, waiters, flow={}):
     return flows
 
 
-def get_aggregate_flow_stats(dp, waiters, flow={}):
+def get_aggregate_flow_stats(dp, waiters, flow=None):
+    flow = flow if flow else {}
     match = to_match(dp, flow.get('match', {}))
     table_id = int(flow.get('table_id', 0xff))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_NONE))

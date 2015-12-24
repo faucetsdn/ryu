@@ -490,7 +490,8 @@ def get_queue_config(dp, port, waiters):
     return configs
 
 
-def get_flow_stats(dp, waiters, flow={}):
+def get_flow_stats(dp, waiters, flow=None):
+    flow = flow if flow else {}
     table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
     out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
@@ -527,7 +528,8 @@ def get_flow_stats(dp, waiters, flow={}):
     return flows
 
 
-def get_aggregate_flow_stats(dp, waiters, flow={}):
+def get_aggregate_flow_stats(dp, waiters, flow=None):
+    flow = flow if flow else {}
     table_id = int(flow.get('table_id', dp.ofproto.OFPTT_ALL))
     out_port = int(flow.get('out_port', dp.ofproto.OFPP_ANY))
     out_group = int(flow.get('out_group', dp.ofproto.OFPG_ANY))
@@ -880,7 +882,7 @@ def mod_group_entry(dp, group, cmd):
 
     type_ = type_convert.get(group.get('type', 'ALL'))
     if type_ is None:
-        LOG.error('Unknown type: %s', group.get('type'))
+        LOG.error('Unknown group type: %s', group.get('type'))
 
     group_id = int(group.get('group_id', 0))
 
