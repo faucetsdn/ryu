@@ -156,6 +156,7 @@ class RyuApp(object):
         self.event_handlers = {}        # ev_cls -> handlers:list
         self.observers = {}     # ev_cls -> observer-name -> states:set
         self.threads = []
+        self.main_thread = None
         self.events = hub.Queue(128)
         if hasattr(self.__class__, 'LOGGER_NAME'):
             self.logger = logging.getLogger(self.__class__.LOGGER_NAME)
@@ -176,9 +177,19 @@ class RyuApp(object):
         self.threads.append(hub.spawn(self._event_loop))
 
     def stop(self):
+        if self.main_thread:
+            hub.kill(self.main_thread)
         self.is_active = False
         self._send_event(self._event_stop, None)
         hub.joinall(self.threads)
+
+    def set_main_thread(self, thread):
+        """
+        Set self.main_thread so that stop() can terminate it.
+
+        Only AppManager.instantiate_apps should call this function.
+        """
+        self.main_thread = thread
 
     def register_handler(self, ev_cls, handler):
         assert callable(handler)
@@ -490,6 +501,7 @@ class AppManager(object):
         for app in self.applications.values():
             t = app.start()
             if t is not None:
+                app.set_main_thread(t)
                 threads.append(t)
         return threads
 

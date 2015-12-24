@@ -118,6 +118,7 @@ class OVSDB(app_manager.RyuApp):
         return t
 
     def stop(self):
+        # TODO main_thread should be stopped first, not from super().stop
         for client in self._clients.values():
             client.stop()
 
