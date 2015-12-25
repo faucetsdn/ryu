@@ -30,7 +30,7 @@ from ryu.lib.hub import StreamServer
 import traceback
 import random
 import ssl
-from socket import IPPROTO_TCP, TCP_NODELAY
+from socket import IPPROTO_TCP, TCP_NODELAY, timeout as SocketTimeout, error as SocketError
 import warnings
 
 import ryu.base.app_manager
@@ -172,12 +172,11 @@ class Datapath(ofproto_protocol.ProtocolDesc):
 
             try:
                 ret = self.socket.recv(required_len)
-            except:
-                # Hit socket timeout; decide what to do.
-                if self.close_requested:
-                    pass
-                else:
+            except SocketTimeout:
+                if not self.close_requested:
                     continue
+            except SocketError:
+                self.close_requested = True
 
             if (len(ret) == 0) or (self.close_requested):
                 self.socket.close()
