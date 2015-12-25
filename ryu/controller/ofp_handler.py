@@ -181,13 +181,13 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
             return
         datapath.set_version(max(usable_versions))
 
-        # now send feature
-        features_reqeust = datapath.ofproto_parser.OFPFeaturesRequest(datapath)
-        datapath.send_msg(features_reqeust)
-
-        # now move on to config state
+        # Move on to config state
         self.logger.debug('move onto config mode')
         datapath.set_state(CONFIG_DISPATCHER)
+
+        # Finally, send feature request
+        features_request = datapath.ofproto_parser.OFPFeaturesRequest(datapath)
+        datapath.send_msg(features_request)
 
     @set_ev_handler(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
