@@ -53,6 +53,11 @@ class EventDP(EventDPBase):
         self.ports = []  # port list when enter or leave
 
 
+class EventDPReconnected(EventDPBase):
+    def __init__(self, dp):
+        super(EventDPReconnected, self).__init__(dp)
+
+
 class EventPortBase(EventDPBase):
     def __init__(self, dp, port):
         super(EventPortBase, self).__init__(dp)
@@ -113,12 +118,14 @@ class DPSet(app_manager.RyuApp):
         # - forget the older connection as it likely will disappear soon
         # - do not send EventDP leave/enter events
         # - keep the PortState for the dpid
+        send_dp_reset = False
         if dp.id in self.dps:
             self.logger.warning('DPSET: Multiple connections from %s',
                                 dpid_to_str(dp.id))
             self.logger.debug('DPSET: Forgetting datapath %s', self.dps[dp.id])
             (self.dps[dp.id]).close()
             self.logger.debug('DPSET: New datapath %s', dp)
+            send_dp_reset = True
         self.dps[dp.id] = dp
         if dp.id not in self.port_state:
             self.port_state[dp.id] = PortState()
@@ -128,6 +135,9 @@ class DPSet(app_manager.RyuApp):
                 for port in dp.ports.values():
                     self._port_added(dp, port)
                     ev.ports.append(port)
+            self.send_event_to_observers(ev)
+        if send_dp_reset:
+            ev = EventDPReconnected(dp)
             self.send_event_to_observers(ev)
 
     def _unregister(self, dp):
