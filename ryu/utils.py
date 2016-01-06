@@ -125,8 +125,9 @@ def get_reqs_from_files(requirements_files):
     return []
 
 
-def parse_requirements(requirements_files=['requirements.txt',
-                                           'tools/pip-requires']):
+def parse_requirements(requirements_files=None):
+    requirements_files = requirements_files if requirements_files else [
+        'requirements.txt', 'tools/pip-requires']
     requirements = []
     for line in get_reqs_from_files(requirements_files):
         # For the requirements list, we need to inject only the portion

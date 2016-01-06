@@ -780,7 +780,8 @@ class _LabelledAddrPrefix(_AddrPrefix):
     #
     _WITHDRAW_LABEL = 0x800000
 
-    def __init__(self, length, addr, labels=[], **kwargs):
+    def __init__(self, length, addr, labels=None, **kwargs):
+        labels = labels if labels else []
         assert isinstance(labels, list)
         is_tuple = isinstance(addr, tuple)
         if is_tuple:
@@ -2246,8 +2247,9 @@ class BGPOpen(BGPMessage):
     }
 
     def __init__(self, my_as, bgp_identifier, type_=BGP_MSG_OPEN,
-                 opt_param_len=0, opt_param=[],
+                 opt_param_len=0, opt_param=None,
                  version=_VERSION, hold_time=0, len_=None, marker=None):
+        opt_param = opt_param if opt_param else []
         super(BGPOpen, self).__init__(marker=marker, len_=len_, type_=type_)
         self.version = version
         self.my_as = my_as
@@ -2332,11 +2334,14 @@ class BGPUpdate(BGPMessage):
 
     def __init__(self, type_=BGP_MSG_UPDATE,
                  withdrawn_routes_len=None,
-                 withdrawn_routes=[],
+                 withdrawn_routes=None,
                  total_path_attribute_len=None,
-                 path_attributes=[],
-                 nlri=[],
+                 path_attributes=None,
+                 nlri=None,
                  len_=None, marker=None):
+        withdrawn_routes = withdrawn_routes if withdrawn_routes else []
+        path_attributes = path_attributes if path_attributes else []
+        nlri = nlri if nlri else []
         super(BGPUpdate, self).__init__(marker=marker, len_=len_, type_=type_)
         self.withdrawn_routes_len = withdrawn_routes_len
         self.withdrawn_routes = withdrawn_routes

@@ -71,7 +71,8 @@ class OFPHello(MsgBase):
     elements   list of ``OFPHelloElemVersionBitmap`` instance
     ========== =========================================================
     """
-    def __init__(self, datapath, elements=[]):
+    def __init__(self, datapath, elements=None):
+        elements = elements if elements else []
         super(OFPHello, self).__init__(datapath)
         self.elements = elements
 
@@ -1466,7 +1467,8 @@ class OFPMeterMod(MsgBase):
     ================ ======================================================
     """
     def __init__(self, datapath, command=ofproto.OFPMC_ADD,
-                 flags=ofproto.OFPMF_KBPS, meter_id=1, bands=[]):
+                 flags=ofproto.OFPMF_KBPS, meter_id=1, bands=None):
+        bands = bands if bands else []
         super(OFPMeterMod, self).__init__(datapath)
         self.command = command
         self.flags = flags
@@ -1786,7 +1788,8 @@ class OFPInstructionId(StringifyMixin):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_INSTRUCTIONS)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_INSTRUCTIONS_MISS)
 class OFPTableFeaturePropInstructions(OFPTableFeatureProp):
-    def __init__(self, type_=None, length=None, instruction_ids=[]):
+    def __init__(self, type_=None, length=None, instruction_ids=None):
+        instruction_ids = instruction_ids if instruction_ids else []
         super(OFPTableFeaturePropInstructions, self).__init__(type_, length)
         self.instruction_ids = instruction_ids
 
@@ -1838,7 +1841,8 @@ class OFPActionId(StringifyMixin):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_ACTIONS)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_ACTIONS_MISS)
 class OFPTableFeaturePropActions(OFPTableFeatureProp):
-    def __init__(self, type_=None, length=None, action_ids=[]):
+    def __init__(self, type_=None, length=None, action_ids=None):
+        action_ids = action_ids if action_ids else []
         super(OFPTableFeaturePropActions, self).__init__(type_, length)
         self.action_ids = action_ids
 
@@ -1864,7 +1868,8 @@ class OFPTableFeaturePropActions(OFPTableFeatureProp):
 class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
     _TABLE_ID_PACK_STR = '!B'
 
-    def __init__(self, type_=None, length=None, table_ids=[]):
+    def __init__(self, type_=None, length=None, table_ids=None):
+        table_ids = table_ids if table_ids else []
         super(OFPTableFeaturePropNextTables, self).__init__(type_, length)
         self.table_ids = table_ids
 
@@ -1975,7 +1980,8 @@ class OFPExperimenterOxmId(OFPOxmId):
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_SETFIELD)
 @OFPTableFeatureProp.register_type(ofproto.OFPTFPT_APPLY_SETFIELD_MISS)
 class OFPTableFeaturePropOxm(OFPTableFeatureProp):
-    def __init__(self, type_=None, length=None, oxm_ids=[]):
+    def __init__(self, type_=None, length=None, oxm_ids=None):
+        oxm_ids = oxm_ids if oxm_ids else []
         super(OFPTableFeaturePropOxm, self).__init__(type_, length)
         self.oxm_ids = oxm_ids
 
@@ -2016,7 +2022,8 @@ class OFPTableFeaturesStatsRequest(OFPMultipartRequest):
                      The default is [].
     ================ ======================================================
     """
-    def __init__(self, datapath, flags=0, body=[], type_=None):
+    def __init__(self, datapath, flags=0, body=None, type_=None):
+        body = body if body else []
         super(OFPTableFeaturesStatsRequest, self).__init__(datapath, flags)
         self.body = body
 
@@ -3055,7 +3062,8 @@ class OFPFlowUpdateHeader(OFPFlowUpdate):
 class OFPFlowUpdateFull(OFPFlowUpdateHeader):
     def __init__(self, length=None, event=None, table_id=None, reason=None,
                  idle_timeout=None, hard_timeout=None, priority=None,
-                 cookie=None, match=None, instructions=[]):
+                 cookie=None, match=None, instructions=None):
+        instructions = instructions if instructions else []
         super(OFPFlowUpdateFull, self).__init__(length, event)
         self.table_id = table_id
         self.reason = reason
@@ -4266,7 +4274,8 @@ class OFPFlowMod(MsgBase):
                  buffer_id=ofproto.OFP_NO_BUFFER,
                  out_port=0, out_group=0, flags=0, importance=0,
                  match=None,
-                 instructions=[]):
+                 instructions=None):
+        instructions = instructions if instructions else []
         super(OFPFlowMod, self).__init__(datapath)
         self.cookie = cookie
         self.cookie_mask = cookie_mask
@@ -5036,7 +5045,8 @@ class OFPGroupMod(MsgBase):
             datapath.send_msg(req)
     """
     def __init__(self, datapath, command=ofproto.OFPGC_ADD,
-                 type_=ofproto.OFPGT_ALL, group_id=0, buckets=[]):
+                 type_=ofproto.OFPGT_ALL, group_id=0, buckets=None):
+        buckets = buckets if buckets else []
         super(OFPGroupMod, self).__init__(datapath)
         self.command = command
         self.type = type_

@@ -65,7 +65,8 @@ class OperatorApi(object):
     def clear(self, **kwargs):
         return self._run('clear', kw=kwargs)
 
-    def _run(self, cmd, kw={}):
+    def _run(self, cmd, kw=None):
+        kw = kw if kw else {}
         params = kw.get('params', [])
         fmt = kw.get('format', 'json')
         root = RootCmd(api=self.internal_api, resp_formatter_name=fmt)

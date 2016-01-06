@@ -261,7 +261,8 @@ class OVSBridge(object):
             return command.result[0]
         return None
 
-    def set_qos(self, port_name, type='linux-htb', max_rate=None, queues=[]):
+    def set_qos(self, port_name, type='linux-htb', max_rate=None, queues=None):
+        queues = queues if queues else []
         command_qos = ovs_vsctl.VSCtlCommand(
             'set-qos',
             [port_name, type, max_rate])

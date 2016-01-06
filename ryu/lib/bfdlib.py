@@ -78,7 +78,7 @@ class BFDSession(object):
                  detect_mult=3,
                  desired_min_tx_interval=1000000,
                  required_min_rx_interval=1000000,
-                 auth_type=0, auth_keys={}):
+                 auth_type=0, auth_keys=None):
         """
         Initialize a BFD session.
 
@@ -128,6 +128,7 @@ class BFDSession(object):
                               auth_keys={1: "secret key 1",
                                          2: "secret key 2"})
         """
+        auth_keys = auth_keys if auth_keys else {}
         assert not (auth_type and len(auth_keys) == 0)
 
         # RyuApp reference to BFDLib
@@ -787,7 +788,7 @@ class BFDLib(app_manager.RyuApp):
 
     def add_bfd_session(self, dpid, ofport, src_mac, src_ip,
                         dst_mac="FF:FF:FF:FF:FF:FF", dst_ip="255.255.255.255",
-                        auth_type=0, auth_keys={}):
+                        auth_type=0, auth_keys=None):
         """
         Establish a new BFD session and return My Discriminator of new session.
 
@@ -822,6 +823,7 @@ class BFDLib(app_manager.RyuApp):
                             auth_keys={1: "secret key 1",
                                        2: "secret key 2"})
         """
+        auth_keys = auth_keys if auth_keys else {}
         # Generate a unique discriminator
         while True:
             # Generate My Discriminator

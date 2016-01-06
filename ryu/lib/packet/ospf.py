@@ -280,7 +280,8 @@ class RouterLSA(LSA):
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_ROUTER_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
-                 checksum=None, length=None, flags=0, links=[]):
+                 checksum=None, length=None, flags=0, links=None):
+        links = links if links else []
         self.flags = flags
         self.links = links
         super(RouterLSA, self).__init__(ls_age, options, type_, id_,
@@ -320,7 +321,8 @@ class NetworkLSA(LSA):
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_NETWORK_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
-                 checksum=None, length=None, mask='0.0.0.0', routers=[]):
+                 checksum=None, length=None, mask='0.0.0.0', routers=None):
+        routers = routers if routers else []
         self.mask = mask
         self.routers = routers
         super(NetworkLSA, self).__init__(ls_age, options, type_, id_,
@@ -439,7 +441,8 @@ class ASExternalLSA(LSA):
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_AS_EXTERNAL_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
-                 checksum=None, length=None, extnws=[]):
+                 checksum=None, length=None, extnws=None):
+        extnws = extnws if extnws else []
         self.extnws = extnws
         super(ASExternalLSA, self).__init__(ls_age, options, type_, id_,
                                             adv_router, ls_seqnum, checksum,
@@ -539,7 +542,8 @@ class PrefixSIDSubTLV(ExtendedPrefixTLV):
 
 
 class OpaqueBody(StringifyMixin, _TypeDisp):
-    def __init__(self, tlvs=[]):
+    def __init__(self, tlvs=None):
+        tlvs = tlvs if tlvs else []
         self.tlvs = tlvs
 
     def serialize(self):
@@ -718,7 +722,8 @@ class OSPFHello(OSPFMessage):
                  au_type=1, authentication=0, checksum=None, version=_VERSION,
                  mask='0.0.0.0', hello_interval=10, options=0, priority=1,
                  dead_interval=40, designated_router='0.0.0.0',
-                 backup_router='0.0.0.0', neighbors=[]):
+                 backup_router='0.0.0.0', neighbors=None):
+        neighbors = neighbors if neighbors else []
         super(OSPFHello, self).__init__(OSPF_MSG_HELLO, length, router_id,
                                         area_id, au_type, authentication,
                                         checksum, version)
@@ -782,7 +787,8 @@ class OSPFDBDesc(OSPFMessage):
     def __init__(self, length=None, router_id='0.0.0.0', area_id='0.0.0.0',
                  au_type=1, authentication=0, checksum=None, version=_VERSION,
                  mtu=1500, options=0, i_flag=0, m_flag=0, ms_flag=0,
-                 sequence_number=0, lsa_headers=[]):
+                 sequence_number=0, lsa_headers=None):
+        lsa_headers = lsa_headers if lsa_headers else []
         super(OSPFDBDesc, self).__init__(OSPF_MSG_DB_DESC, length, router_id,
                                          area_id, au_type, authentication,
                                          checksum, version)
@@ -865,7 +871,8 @@ class OSPFLSReq(OSPFMessage):
 
     def __init__(self, length=None, router_id='0.0.0.0', area_id='0.0.0.0',
                  au_type=1, authentication=0, checksum=None, version=_VERSION,
-                 lsa_requests=[]):
+                 lsa_requests=None):
+        lsa_requests = lsa_requests if lsa_requests else []
         super(OSPFLSReq, self).__init__(OSPF_MSG_LS_REQ, length, router_id,
                                         area_id, au_type, authentication,
                                         checksum, version)
@@ -894,7 +901,8 @@ class OSPFLSUpd(OSPFMessage):
 
     def __init__(self, length=None, router_id='0.0.0.0', area_id='0.0.0.0',
                  au_type=1, authentication=0, checksum=None, version=_VERSION,
-                 lsas=[]):
+                 lsas=None):
+        lsas = lsas if lsas else []
         super(OSPFLSUpd, self).__init__(OSPF_MSG_LS_UPD, length, router_id,
                                         area_id, au_type, authentication,
                                         checksum, version)
@@ -930,7 +938,8 @@ class OSPFLSAck(OSPFMessage):
 
     def __init__(self, length=None, router_id='0.0.0.0', area_id='0.0.0.0',
                  au_type=1, authentication=0, checksum=None, version=_VERSION,
-                 lsa_headers=[]):
+                 lsa_headers=None):
+        lsa_headers = lsa_headers if lsa_headers else []
         super(OSPFLSAck, self).__init__(OSPF_MSG_LS_ACK, length, router_id,
                                         area_id, au_type, authentication,
                                         checksum, version)
