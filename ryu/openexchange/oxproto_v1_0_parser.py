@@ -481,7 +481,7 @@ class OXPSBP(MsgBase):
     def parser(cls, domain, version, msg_type, msg_len, xid, buf):
         msg = super(OXPSBP, cls).parser(
             domain, version, msg_type, msg_len, xid, buf)
-        # we don't parser the data of SBP due to no deal of model.
+        # we don't parser the data of SBP due to no deal of mode.
         # just leave it to handler.
         msg.data = buf[oxproto.OXP_HEADER_SIZE:]
 

@@ -111,14 +111,14 @@ OXP_DEFAULT_MISS_SENDD_LEN = 128
 OXPC_PERIOD = 10                 # Period of send domain network's info.
 
 # Enum oxp_config_flags
-OXPC_MODEL_ADVANCED = 1         # Send the intra-links' capability
+OXPC_MODE_ADVANCED = 1         # Send the intra-links' capability
 OXPC_CAP_BW = 1 << 1            # Bandwidth
 OXPC_CAP_DELAY = 1 << 2         # Delay
 OXPC_CAP_HOP = 1 << 3           # Hop
-OXPC_MODEL_SIMPLIFY = 1 << 4    # Compress the packet_in message
-OXPC_MODEL_TRUST = 1 << 5       # Trust the adjacent domain network.
+OXPC_MODE_SIMPLIFY = 1 << 4    # Compress the packet_in message
+OXPC_MODE_TRUST = 1 << 5       # Trust the adjacent domain network.
 
-OXPC_MODEL_DEFAULT = 24         # not use.
+OXPC_MODE_DEFAULT = 24         # not use.
 
 
 OXP_DOMAIN_CONFIG_PACK_STR = '!BBH'
