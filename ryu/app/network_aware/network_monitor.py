@@ -101,18 +101,18 @@ class Network_Monitor(app_manager.RyuApp):
             print('---------------- ''  -------- ----------------- '
                   '-------- -------- -------- -----------')
             for dpid in bodys.keys():
-                for stat in sorted([flow for flow in bodys[dpid]
-                                    if flow.priority == 1],
-                                   key=lambda flow: (flow.match['in_port'],
-                                                     flow.match['ipv4_dst'])):
+                for stat in sorted(
+                    [flow for flow in bodys[dpid] if flow.priority == 1],
+                    key=lambda flow: (flow.match.get('in_port'),
+                                      flow.match.get('ipv4_dst'))):
                     print('%016x %8x %17s %8x %8d %8d %8.1f' % (
                         dpid,
                         stat.match['in_port'], stat.match['ipv4_dst'],
                         stat.instructions[0].actions[0].port,
                         stat.packet_count, stat.byte_count,
                         abs(self.flow_speed[
-                            (stat.match['in_port'],
-                            stat.match['ipv4_dst'],
+                            (stat.match.get('in_port'),
+                            stat.match.get('ipv4_dst'),
                             stat.instructions[0].actions[0].port)][-1])))
             print '\n'
 
@@ -144,10 +144,10 @@ class Network_Monitor(app_manager.RyuApp):
         body = ev.msg.body
         self.stats['flow'][ev.msg.datapath.id] = body
         for stat in sorted([flow for flow in body if flow.priority == 1],
-                           key=lambda flow: (flow.match['in_port'],
-                                             flow.match['ipv4_dst'])):
+                           key=lambda flow: (flow.match.get('in_port'),
+                                             flow.match.get('ipv4_dst'))):
             key = (
-                stat.match['in_port'],  stat.match['ipv4_dst'],
+                stat.match['in_port'],  stat.match.get('ipv4_dst'),
                 stat.instructions[0].actions[0].port)
             value = (
                 stat.packet_count, stat.byte_count,
