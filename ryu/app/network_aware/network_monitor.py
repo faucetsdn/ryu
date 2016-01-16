@@ -110,7 +110,7 @@ class Network_Monitor(app_manager.RyuApp):
                         stat.match['in_port'], stat.match['ipv4_dst'],
                         stat.instructions[0].actions[0].port,
                         stat.packet_count, stat.byte_count,
-                        abs(self.flow_speed[
+                        abs(self.flow_speed[dpid][
                             (stat.match.get('in_port'),
                             stat.match.get('ipv4_dst'),
                             stat.instructions[0].actions[0].port)][-1])))
@@ -142,32 +142,32 @@ class Network_Monitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
         body = ev.msg.body
-        self.stats['flow'][ev.msg.datapath.id] = body
+        dpid = ev.msg.datapath.id
+        self.stats['flow'][dpid] = body
+        self.flow_stats.setdefault(dpid, {})
+        self.flow_speed.setdefault(dpid, {})
         for stat in sorted([flow for flow in body if flow.priority == 1],
                            key=lambda flow: (flow.match.get('in_port'),
                                              flow.match.get('ipv4_dst'))):
-            key = (
-                stat.match['in_port'],  stat.match.get('ipv4_dst'),
-                stat.instructions[0].actions[0].port)
-            value = (
-                stat.packet_count, stat.byte_count,
-                stat.duration_sec, stat.duration_nsec)
-            self._save_stats(self.flow_stats, key, value, 5)
+            key = (stat.match['in_port'],  stat.match.get('ipv4_dst'),
+                   stat.instructions[0].actions[0].port)
+            value = (stat.packet_count, stat.byte_count,
+                     stat.duration_sec, stat.duration_nsec)
+            self._save_stats(self.flow_stats[dpid], key, value, 5)
 
             # Get flow's speed.
             pre = 0
             period = SLEEP_PERIOD
-            tmp = self.flow_stats[key]
+            tmp = self.flow_stats[dpid][key]
             if len(tmp) > 1:
                 pre = tmp[-2][1]
-                period = self._get_period(
-                    tmp[-1][2], tmp[-1][3],
-                    tmp[-2][2], tmp[-2][3])
+                period = self._get_period(tmp[-1][2], tmp[-1][3],
+                                          tmp[-2][2], tmp[-2][3])
 
-            speed = self._get_speed(
-                self.flow_stats[key][-1][1], pre, period)
+            speed = self._get_speed(self.flow_stats[dpid][key][-1][1],
+                                    pre, period)
 
-            self._save_stats(self.flow_speed, key, speed, 5)
+            self._save_stats(self.flow_speed[dpid], key, speed, 5)
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
@@ -176,9 +176,8 @@ class Network_Monitor(app_manager.RyuApp):
         for stat in sorted(body, key=attrgetter('port_no')):
             if stat.port_no != ofproto_v1_3.OFPP_LOCAL:
                 key = (ev.msg.datapath.id, stat.port_no)
-                value = (
-                    stat.tx_bytes, stat.rx_bytes, stat.rx_errors,
-                    stat.duration_sec, stat.duration_nsec)
+                value = (stat.tx_bytes, stat.rx_bytes, stat.rx_errors,
+                         stat.duration_sec, stat.duration_nsec)
 
                 self._save_stats(self.port_stats, key, value, 5)
 
@@ -188,9 +187,8 @@ class Network_Monitor(app_manager.RyuApp):
                 tmp = self.port_stats[key]
                 if len(tmp) > 1:
                     pre = tmp[-2][0] + tmp[-2][1]
-                    period = self._get_period(
-                        tmp[-1][3], tmp[-1][4],
-                        tmp[-2][3], tmp[-2][4])
+                    period = self._get_period(tmp[-1][3], tmp[-1][4],
+                                              tmp[-2][3], tmp[-2][4])
 
                 speed = self._get_speed(
                     self.port_stats[key][-1][0] + self.port_stats[key][-1][1],
