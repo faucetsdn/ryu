@@ -1618,6 +1618,11 @@ class OFPActionExperimenter(OFPAction):
     ================ ======================================================
     experimenter     Experimenter ID
     ================ ======================================================
+
+    .. Note::
+
+        For the list of the supported Nicira experimenter actions,
+        please refer to :ref:`ryu.ofproto.nx_actions <nx_actions_structures>`.
     """
     def __init__(self, experimenter, type_=None, len_=None):
         super(OFPActionExperimenter, self).__init__()
@@ -3332,6 +3337,12 @@ class OFPMatch(StringifyMixin):
     ipv6_nd_tll      MAC address     Target link-layer for ND
     mpls_label       Integer 32bit   MPLS label
     mpls_tc          Integer 8bit    MPLS TC
+    pbb_uca          Integer 8bit    PBB UCA header field
+                                     (EXT-256 Old version of ONF Extension)
+    tcp_flags        Integer 16bit   TCP flags
+                                     (EXT-109 ONF Extension)
+    actset_output    Integer 32bit   Output port from action set metadata
+                                     (EXT-233 ONF Extension)
     ================ =============== ==================================
 
     Example::
@@ -3348,6 +3359,11 @@ class OFPMatch(StringifyMixin):
         ...     print match['ipv6_src']
         ...
         ('2001:db8:bd05:1d2:288a:1fc0:1:10ee', 'ffff:ffff:ffff:ffff::')
+
+    .. Note::
+
+        For the list of the supported Nicira experimenter matches,
+        please refer to :ref:`ryu.ofproto.nx_match <nx_match_structures>`.
 
     .. Note::
 
