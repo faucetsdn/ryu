@@ -69,6 +69,65 @@ fill_match(struct match *match)
  */
 
 /*
+ * Handshake
+ */
+
+struct ofpbuf *
+features_reply(enum ofputil_protocol proto)
+{
+    struct ofputil_switch_features sf;
+
+    memset(&sf, 0, sizeof(sf));
+    sf.datapath_id = 1;
+    sf.n_buffers = 255;
+    sf.n_tables = 255;
+    sf.auxiliary_id = 0;
+    sf.capabilities = OFPUTIL_C_FLOW_STATS | OFPUTIL_C_TABLE_STATS |
+                      OFPUTIL_C_PORT_STATS | OFPUTIL_C_GROUP_STATS |
+                      OFPUTIL_C_QUEUE_STATS;
+    // sf.ofpacts is for only OFP10
+
+    ovs_be32 xid = 0;
+
+    return ofputil_encode_switch_features(&sf, proto, xid);
+}
+
+/*
+ * Switch Configuration
+ */
+
+struct ofpbuf *
+set_config(enum ofputil_protocol proto)
+{
+    struct ofputil_switch_config sc;
+
+    memset(&sc, 0, sizeof(sc));
+    sc.frag = OFPUTIL_FRAG_NORMAL;
+    // sc.invalid_ttl_to_controller is for only OFP11 and OFP12
+    sc.miss_send_len = 128;  // The default of OpenFlow Spec
+
+    return ofputil_encode_set_config(
+        &sc, ofputil_protocol_to_ofp_version(proto));
+}
+
+struct ofpbuf *
+get_config_reply(enum ofputil_protocol proto)
+{
+    struct ofputil_switch_config sc;
+    struct ofp_header oh;
+
+    memset(&oh, 0, sizeof(oh));
+    oh.xid = 0;
+    oh.version = ofputil_protocol_to_ofp_version(proto);
+    memset(&sc, 0, sizeof(sc));
+    sc.frag = OFPUTIL_FRAG_NORMAL;
+    // sc.invalid_ttl_to_controller is for only OFP11 and OFP12
+    sc.miss_send_len = 128;  // The default of OpenFlow Spec
+
+    return ofputil_encode_get_config_reply(&oh, &sc);
+}
+
+/*
  * Modify State Messages
  */
 
@@ -633,6 +692,26 @@ struct message {
 
 const struct message messages[] = {
     /* Controller-to-Switch Messages */
+    /* Handshake */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.5.90,
+    // re-generate the packet data, later.
+    //  - OFP10+ Features Request Message
+    // M(features_request,
+    //   ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(features_reply,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    /* Switch Configuration */
+    // TODO:
+    // The following messages are not supported in Open vSwitch 2.5.90,
+    // re-generate the packet data, later.
+    //  - OFP10+ Get Switch Configuration Request Message
+    M(set_config,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    // M(get_config_request,
+    //   ((const struct protocol_version *[]){&p13, &p15, NULL})),
+    M(get_config_reply,
+      ((const struct protocol_version *[]){&p13, &p15, NULL})),
     /* Modify State Messages */
     // TODO:
     // The following messages are not supported in Open vSwitch 2.4.90,
