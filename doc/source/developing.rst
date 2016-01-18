@@ -10,4 +10,5 @@ Writing Your Ryu Application
    ryu_app_api.rst
    library.rst
    ofproto_ref.rst
+   nicira_ext_ref.rst
    api_ref.rst

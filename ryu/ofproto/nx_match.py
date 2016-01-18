@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import struct
+import sys
 
 from ryu import exception
 from ryu.lib import mac
@@ -1193,6 +1194,33 @@ class NXMatch(object):
 #
 # The followings are implementations for OpenFlow 1.2+
 #
+
+sys.modules[__name__].__doc__ = """
+The API of this class is the same as ``OFPMatch``.
+
+You can define the flow match by the keyword arguments.
+The following arguments are available.
+
+================ =============== ==================================
+Argument         Value           Description
+================ =============== ==================================
+eth_dst_nxm      MAC address     Ethernet destination address.
+eth_src_nxm      MAC address     Ethernet source address.
+tunnel_id_nxm    Integer 64bit   Tunnel identifier.
+tun_ipv4_src     IPv4 address    Tunnel IPv4 source address.
+tun_ipv4_dst     IPv4 address    Tunnel IPv4 destination address.
+pkt_mark         Integer 32bit   Packet metadata mark.
+conj_id          Integer 32bit   Conjunction ID used only with
+                                 the conjunction action
+ct_state         Integer 32bit   Conntrack state.
+ct_zone          Integer 16bit   Conntrack zone.
+ct_mark          Integer 32bit   Conntrack mark.
+ct_label         Integer 128bit  Conntrack label.
+_dp_hash         Integer 32bit   Flow hash computed in Datapath.
+reg<idx>         Integer 32bit   Packet register.
+                                 <idx> is register number 0-7.
+================ =============== ==================================
+"""
 
 oxm_types = [
     oxm_fields.NiciraExtended0('eth_dst_nxm', 1, type_desc.MacAddr),
