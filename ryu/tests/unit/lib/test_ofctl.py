@@ -73,11 +73,12 @@ class Test_ofctl(unittest.TestCase):
         # expected message <--> sent message
         request.serialize()
         try:
-            eq_(request.buf, dp.request_msg.buf)
+            eq_(request.to_jsondict(), dp.request_msg.to_jsondict())
         except AssertionError as e:
             # For debugging
             json.dump(dp.request_msg.to_jsondict(),
-                      open('/tmp/' + name, 'w'), indent=3, sort_keys=True)
+                      open('/tmp/' + name + '_request.json', 'w'),
+                      indent=3, sort_keys=True)
             raise e
 
         # expected output <--> return of ofctl
@@ -99,7 +100,8 @@ class Test_ofctl(unittest.TestCase):
                 _remove(output, ['len', 'length']))
         except AssertionError as e:
             # For debugging
-            json.dump(output, open('/tmp/' + name, 'w'), indent=4)
+            json.dump(output, open('/tmp/' + name + '_reply.json', 'w'),
+                      indent=4)
             raise e
 
 
@@ -314,7 +316,7 @@ def _add_tests():
         parser_json_dir = os.path.join(parser_json_root, ofp_ver)
         ofctl_json_dir = os.path.join(ofctl_json_root, ofp_ver)
         for test in tests:
-            name = 'test_ofctl_' + test['request']
+            name = 'test_ofctl_' + ofp_ver + '_' + test['method'].__name__
             print('adding %s ...' % name)
             args = {}
             args_json_path = os.path.join(ofctl_json_dir, test['request'])
