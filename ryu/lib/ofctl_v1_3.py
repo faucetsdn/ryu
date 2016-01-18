@@ -1084,7 +1084,7 @@ def mod_group_entry(dp, group, cmd):
 
 def mod_port_behavior(dp, port_config):
     port_no = int(port_config.get('port_no', 0))
-    hw_addr = port_config.get('hw_addr')
+    hw_addr = str(port_config.get('hw_addr'))
     config = int(port_config.get('config', 0))
     mask = int(port_config.get('mask', 0))
     advertise = int(port_config.get('advertise'))
