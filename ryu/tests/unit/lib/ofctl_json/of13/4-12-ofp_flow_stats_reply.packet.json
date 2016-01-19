@@ -17,7 +17,7 @@
         },
         {
             "actions": [
-                "OUTPUT:4294967290"
+                "OUTPUT:NORMAL"
             ],
             "byte_count": 0,
             "cookie": 0,
@@ -81,7 +81,7 @@
                 "SET_FIELD: {pbb_uca:1}",
                 {
                     "WRITE_ACTIONS": [
-                        "OUTPUT:4294967293"
+                        "OUTPUT:CONTROLLER"
                     ]
                 }
             ],

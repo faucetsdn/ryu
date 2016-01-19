@@ -22,7 +22,7 @@
             "hard_timeout": 0,
             "idle_timeout": 0,
             "actions": [
-                "OUTPUT:4294967290"
+                "OUTPUT:NORMAL"
             ],
             "length": 88,
             "match": {
@@ -61,7 +61,7 @@
             "actions": [
                 {
                     "WRITE_ACTIONS": [
-                        "OUTPUT:4294967293"
+                        "OUTPUT:CONTROLLER"
                     ]
                 }
             ],

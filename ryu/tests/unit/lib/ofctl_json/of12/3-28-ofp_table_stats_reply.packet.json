@@ -32081,7 +32081,7 @@
             "max_entries": 16777216,
             "lookup_count": 0,
             "metadata_match": 18446744073709551615,
-            "table_id": 254,
+            "table_id": "MAX",
             "instructions": [
                 "GOTO_TABLE",
                 "WRITE_METADATA",
