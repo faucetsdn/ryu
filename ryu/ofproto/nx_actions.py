@@ -182,6 +182,7 @@ def generate(ofp_name, ofpp_name):
     class NXActionUnknown(NXAction):
         def __init__(self, subtype, data=None,
                      type_=None, len_=None, experimenter=None):
+            self._subtype = subtype
             super(NXActionUnknown, self).__init__()
             self.data = data
 

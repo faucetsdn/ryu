@@ -443,6 +443,8 @@ x() ->
                                    #ofp_action_output{port = 6,
                                                       max_len = no_buffer},
                                    #ofp_action_experimenter{experimenter = 98765432,
+                                                            data = <<"exp_data">>},
+                                   #ofp_action_experimenter{experimenter = 8992,
                                                             data = <<"exp_data">>}
                                                             ]},
                           #ofp_instruction_apply_actions{

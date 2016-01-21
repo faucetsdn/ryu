@@ -259,9 +259,18 @@
                                  "experimenter": 98765432,
                                  "type": 65535
                               }
+                           },
+                           {
+                              "NXActionUnknown": {
+                                 "len": 16,
+                                 "data": "cF9kYXRh",
+                                 "experimenter": 8992,
+                                 "type": 65535,
+                                 "subtype": 25976
+                              }
                            }
                         ], 
-                        "len": 176,
+                        "len": 192,
                         "type": 3
                      }
                   }, 
@@ -312,7 +321,7 @@
                      }
                   }
                ], 
-               "length": 296,
+               "length": 312,
                "match": {
                   "OFPMatch": {
                      "length": 4, 
