@@ -2009,7 +2009,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         elif afi == addr_family.IP6:
             self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
         else:
-            raise ValueError('Invalid address familly(%d)' % afi)
+            raise ValueError('Invalid address family(%d)' % afi)
         self._reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
@@ -2054,7 +2054,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
                 next_hop_len = 16
             next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
         else:
-            raise ValueError('Invalid address familly(%d)' % afi)
+            raise ValueError('Invalid address family(%d)' % afi)
 
         return {
             'afi': afi,
