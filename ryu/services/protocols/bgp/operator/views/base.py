@@ -120,9 +120,11 @@ class OperatorDetailView(OperatorAbstractView):
         return f.get(self._obj)
 
     def encode(self):
-        return {field_name: field.get(self._obj)
-                for field_name, field in self._fields.items()
-                if isinstance(field, fields.DataField)}
+        encoded = {}
+        for field_name, field in self._fields.items():
+            if isinstance(field, fields.DataField):
+                encoded[field_name] = field.get(self._obj)
+        return encoded
 
     def rel(self, field_name):
         f = self._fields[field_name]
@@ -150,12 +152,14 @@ class OperatorListView(OperatorAbstractView):
         return RdyToFlattenList([f.get(obj) for obj in self.model])
 
     def encode(self):
-        return RdyToFlattenList(
-            [{field_name: field.get(obj)
-              for field_name, field in self._fields.items()
-              if isinstance(field, fields.DataField)}
-             for obj in self.model]
-        )
+        encoded_list = []
+        for obj in self.model:
+            encoded_item = {}
+            for field_name, field in self._fields.items():
+                if isinstance(field, fields.DataField):
+                    encoded_item[field_name] = field.get(obj)
+            encoded_list.append(encoded_item)
+        return RdyToFlattenList(encoded_list)
 
     @property
     def model(self):
@@ -179,17 +183,20 @@ class OperatorDictView(OperatorAbstractView):
 
     def get_field(self, field_name):
         f = self._fields[field_name]
-        return RdyToFlattenDict(
-            {key: f.get(obj) for key, obj in self.model.items()}
-        )
+        dict_to_flatten = {}
+        for key, obj in self.model.items():
+            dict_to_flatten[key] = f.get(obj)
+        return RdyToFlattenDict(dict_to_flatten)
 
     def encode(self):
-        return RdyToFlattenDict(
-            {key: {field_name: field.get(obj)
-                   for field_name, field in self._fields.items()
-                   if isinstance(field, fields.DataField)}
-             for key, obj in self.model.items()}
-        )
+        outer_dict_to_flatten = {}
+        for key, obj in self.model.items():
+            inner_dict_to_flatten = {}
+            for field_name, field in self._fields.items():
+                if isinstance(field, fields.DataField):
+                    inner_dict_to_flatten[field_name] = field.get(obj)
+            outer_dict_to_flatten[key] = inner_dict_to_flatten
+        return RdyToFlattenDict(outer_dict_to_flatten)
 
     @property
     def model(self):
@@ -280,8 +287,10 @@ def create_dict_view_class(detail_view_class, name):
     encode = None
     if 'encode' in dir(detail_view_class):
         def encode(self):
-            return RdyToFlattenDict({key: detail_view_class(obj).encode()
-                                     for key, obj in self.model.items()})
+            dict_to_flatten = {}
+            for key, obj in self.model.items():
+                dict_to_flatten[key] = detail_view_class(obj).encode()
+            return RdyToFlattenDict(dict_to_flatten)
 
     return _create_collection_view(
         detail_view_class, name, encode, OperatorDictView
