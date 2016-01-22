@@ -206,10 +206,14 @@ class HostState(dict):
         if not host:
             return
 
-        if ip_v4 != None and ip_v4 not in host.ipv4:
+        if ip_v4 != None:
+            if ip_v4 in host.ipv4:
+                host.ipv4.remove(ip_v4)
             host.ipv4.append(ip_v4)
 
-        if ip_v6 != None and ip_v6 not in host.ipv6:
+        if ip_v6 != None:
+            if ip_v6 in host.ipv6:
+                host.ipv6.remove(ip_v6)
             host.ipv6.append(ip_v6)
 
     def get_by_dpid(self, dpid):
