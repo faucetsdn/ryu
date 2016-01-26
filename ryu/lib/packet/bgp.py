@@ -1270,7 +1270,7 @@ class BGPOptParamCapabilityGracefulRestart(_OptParamCapability):
         (restart, ) = struct.unpack_from(cls._CAP_PACK_STR, six.binary_type(buf))
         buf = buf[2:]
         l = []
-        while len(buf) > 0:
+        while len(buf) >= 4:
             l.append(struct.unpack_from("!HBB", buf))
             buf = buf[4:]
         return {'flags': restart >> 12, 'time': restart & 0xfff, 'tuples': l}
