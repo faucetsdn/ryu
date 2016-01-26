@@ -3,8 +3,8 @@
 import sys
 
 from mininet.cli import CLI
-from mininet.link import Link
 from mininet.net import Mininet
+from mininet.link import Link
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
 from mininet.node import UserSwitch
