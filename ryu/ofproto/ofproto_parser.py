@@ -63,8 +63,8 @@ def msg(datapath, version, msg_type, msg_len, xid, buf):
         return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
     except:
         LOG.exception(
-            'Encounter an error during parsing OpenFlow packet from switch.'
-            'This implies switch sending a malformed OpenFlow packet.'
+            'Encountered an error while parsing OpenFlow packet from switch. '
+            'This implies the switch sent a malformed OpenFlow packet. '
             'version 0x%02x msg_type %d msg_len %d xid %d buf %s',
             version, msg_type, msg_len, xid, utils.hex_array(buf))
         return None
