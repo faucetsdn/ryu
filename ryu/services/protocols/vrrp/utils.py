@@ -41,7 +41,7 @@ def get_dp(app, dpid):
     """
     :type dpid: datapath id
     :param dpid:
-    :rtype: ryu.controller.controller.Datapatyh
+    :rtype: ryu.controller.controller.Datapath
     :returns: datapath corresponding to dpid
     """
     switches = topo_api.get_switch(app, dpid)
