@@ -92,7 +92,11 @@ class OVSDB(app_manager.RyuApp):
             self.send_event_to_observers(ev)
 
         else:
-            sock.shutdown(socket.SHUT_RDWR)
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+            except:
+                pass
+
             sock.close()
 
     def start(self):
