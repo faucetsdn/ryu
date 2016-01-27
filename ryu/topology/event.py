@@ -41,6 +41,11 @@ class EventSwitchLeave(EventSwitchBase):
         super(EventSwitchLeave, self).__init__(switch)
 
 
+class EventSwitchReconnected(EventSwitchBase):
+    def __init__(self, switch):
+        super(EventSwitchReconnected, self).__init__(switch)
+
+
 class EventPortBase(event.EventBase):
     def __init__(self, port):
         super(EventPortBase, self).__init__()

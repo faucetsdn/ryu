@@ -56,6 +56,8 @@ class EventDP(EventDPBase):
 class EventDPReconnected(EventDPBase):
     def __init__(self, dp):
         super(EventDPReconnected, self).__init__(dp)
+        # port list, which should not change across reconnects
+        self.ports = []
 
 
 class EventPortBase(EventDPBase):
@@ -138,6 +140,7 @@ class DPSet(app_manager.RyuApp):
             self.send_event_to_observers(ev)
         if send_dp_reconnected:
             ev = EventDPReconnected(dp)
+            ev.ports = self.port_state.get(dp.id, {}).values()
             self.send_event_to_observers(ev)
 
     def _unregister(self, dp):
@@ -163,7 +166,6 @@ class DPSet(app_manager.RyuApp):
         """
         This method returns the ryu.controller.controller.Datapath
         instance for the given Datapath ID.
-        Raises KeyError if no such a datapath connected to this controller.
         """
         return self.dps.get(dp_id)
 
