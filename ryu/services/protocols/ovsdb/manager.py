@@ -59,14 +59,15 @@ class OVSDB(app_manager.RyuApp):
             def check(address):
                 return True
 
-        while True:
+        while self.is_active:
             try:
                 # TODO(jkoelker) SSL Certificate Fingerprint check
                 sock, client_address = server.accept()
 
             except:
-                self.logger.exception('Error accepting connection')
-                continue
+                if self.is_active:
+                    self.logger.exception('Error accepting connection')
+                    continue
 
             if not check(client_address[0]):
                 sock.shutdown(socket.SHUT_RDWR)
@@ -127,10 +128,19 @@ class OVSDB(app_manager.RyuApp):
         return t
 
     def stop(self):
-        # TODO main_thread should be stopped first, not from super().stop
+        # NOTE(jkoelker) Attempt to gracefully stop the accept loop
+        self.is_active = False
+
+        # NOTE(jkoelker) Forceably kill the loop and clear the main_thread
+        if self.main_thread:
+            hub.kill(self.main_thread)
+            self.main_thread = None
+
+        # NOTE(jkoelker) Stop all the clients
         for client in self._clients.values():
             client.stop()
 
+        # NOTE(jkoelker) super will only take care of the event and joining now
         super(OVSDB, self).stop()
 
     @handler.set_ev_cls(event.EventModifyRequest)

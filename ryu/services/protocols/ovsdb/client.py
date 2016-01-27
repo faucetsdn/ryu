@@ -287,7 +287,7 @@ class RemoteOvsdb(app_manager.RyuApp):
             except Exception:
                 self.logger.exception('Error running IDL for system_id %s' %
                                       self.system_id)
-                break
+                raise
 
             hub.sleep(0)
 
@@ -295,7 +295,7 @@ class RemoteOvsdb(app_manager.RyuApp):
         try:
             func(*args, **kwargs)
 
-        finally:
+        except:
             self.stop()
 
     def _transactions(self):
@@ -348,5 +348,10 @@ class RemoteOvsdb(app_manager.RyuApp):
         self.threads.append(t)
 
     def stop(self):
-        super(RemoteOvsdb, self).stop()
+        # NOTE(jkoelker) Stop the idl and event_proxy threads first
+        #                letting them finish their current loop.
+        self.is_active = False
+        hub.joinall(self.threads)
+
         self._idl.close()
+        super(RemoteOvsdb, self).stop()
