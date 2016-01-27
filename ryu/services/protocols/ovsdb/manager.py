@@ -60,8 +60,13 @@ class OVSDB(app_manager.RyuApp):
                 return True
 
         while True:
-            # TODO(jkoelker) SSL Certificate Fingerprint check
-            sock, client_address = server.accept()
+            try:
+                # TODO(jkoelker) SSL Certificate Fingerprint check
+                sock, client_address = server.accept()
+
+            except:
+                self.logger.exception('Error accepting connection')
+                continue
 
             if not check(client_address[0]):
                 sock.shutdown(socket.SHUT_RDWR)
