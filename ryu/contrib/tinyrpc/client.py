@@ -41,7 +41,12 @@ class RPCClient(object):
         """
         req = self.protocol.create_request(method, args, kwargs, one_way)
 
-        return self._send_and_handle_reply(req).result
+        if one_way is False:
+            result = self._send_and_handle_reply(req).result
+        else:
+            self.transport.send_message(req.serialize())
+            result = None
+        return result
 
     def get_proxy(self, prefix='', one_way=False):
         """Convenience method for creating a proxy.
