@@ -98,7 +98,7 @@ class Port(object):
         return self.dpid == other.dpid and self.port_no == other.port_no
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+    	return not self.__eq__(other)
 
     def __hash__(self):
         return hash((self.dpid, self.port_no))
@@ -241,11 +241,11 @@ class PortState(dict):
 
     def modify(self, port_no, port):
         self[port_no] = port
-		
 
+		
 class SwitchData(object):
     # store the lldp information
-    # send one LLDP information per switch
+	# send one LLDP information per switch
     def __init__(self, lldp_data):
         super(SwitchData, self).__init__()
         self.lldp_data = lldp_data
@@ -885,7 +885,7 @@ class Switches(app_manager.RyuApp):
     def lldp_packet_in_handler(self, ev):
         if not self.link_discovery:
             return
-
+			
         msg = ev.msg
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -896,10 +896,10 @@ class Switches(app_manager.RyuApp):
             # This handler can receive all the packtes which can be
             # not-LLDP packet. Ignore it silently
             return
-
-		for port in self.port_state[src_dpid].values():
-            if port.hw_addr == src_mac:
-                src_port_no = port.port_no
+			
+        for port in self.port_state[src_dpid].values():
+		    if port.hw_addr == src_mac:
+			    src_port_no = port.port_no
         dst_dpid = msg.datapath.id
         if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             dst_port_no = msg.in_port
