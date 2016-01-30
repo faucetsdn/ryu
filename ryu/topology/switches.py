@@ -241,8 +241,8 @@ class PortState(dict):
 
     def modify(self, port_no, port):
         self[port_no] = port
-
 		
+
 class SwitchData(object):
     # store the lldp information
     # send one LLDP information per switch
@@ -298,7 +298,7 @@ class PortData(object):
         return 'PortData<live=%s, timestamp=%s, sent=%d>' \
             % (not self.is_down, self.timestamp, self.sent)
 
-			
+
 class SwitchDataState(dict):
     # dict: Switch class -> SwitchData class
     # slimed down version of OrderedDict as python 2.6 doesn't support it.
@@ -688,14 +688,13 @@ class Switches(app_manager.RyuApp):
         # LOG.debug('_port_added dpid=%s, port_no=%s, live=%s',
         # port.dpid, port.port_no, port.is_live())
 
-    #construct LLDP packet for switch
+    # construct LLDP packet for switch
     def _switch_added(self, dp):
         lldp_data = LLDPPacket.lldp_packet(
             dp.dp.id, 0, '00:00:00:00:00:00', self.DEFAULT_TTL)
         self.switches.add_switch(dp, lldp_data)
         # LOG.debug('_port_added dpid=%s, port_no=%s, live=%s',
         # port.dpid, port.port_no, port.is_live())
-
 
     def _link_down(self, port):
         try:
@@ -897,8 +896,8 @@ class Switches(app_manager.RyuApp):
             # This handler can receive all the packtes which can be
             # not-LLDP packet. Ignore it silently
             return
-  
-        for port in self.port_state[src_dpid].values():
+
+		for port in self.port_state[src_dpid].values():
             if port.hw_addr == src_mac:
                 src_port_no = port.port_no
         dst_dpid = msg.datapath.id
@@ -1029,7 +1028,7 @@ class Switches(app_manager.RyuApp):
                 if port_infor.name != "tap:":
                     actions.append(dp.ofproto_parser.OFPActionSetField(eth_src=port_infor.hw_addr))
                     actions.append(dp.ofproto_parser.OFPActionOutput(port_infor.port_no))
-                #actions = [dp.ofproto_parser.OFPActionOutput(self.port_state[dp].port_no)]
+                # actions = [dp.ofproto_parser.OFPActionOutput(self.port_state[dp].port_no)]
             out = dp.ofproto_parser.OFPPacketOut(
                 datapath=dp, in_port=dp.ofproto.OFPP_CONTROLLER,
                 buffer_id=dp.ofproto.OFP_NO_BUFFER, actions=actions,
@@ -1046,8 +1045,6 @@ class Switches(app_manager.RyuApp):
             timeout = None
             switches_now = []
             switches = []
-            #ports_now = []
-            #ports = []
             for (key, data) in self.switches.items():
                 if data.timestamp is None:
                     switches_now.append(key)
