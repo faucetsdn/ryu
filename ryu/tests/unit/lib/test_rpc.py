@@ -16,7 +16,11 @@
 
 import numbers
 import time
-import unittest
+import sys
+if sys.version_info < (2, 7):
+    import unittest2 as unittest
+else:
+    import unittest
 from nose.tools import raises
 import six
 
@@ -230,6 +234,7 @@ class Test_rpc(unittest.TestCase):
         obj = [1, b'hoge', {b'foo': 1, 3: b'bar'}]
         assert c.call(b'resp', [obj]) == list(obj)
 
+    @unittest.skip("doesn't work with eventlet 0.18 and later")
     def test_4_call_large_binary(self):
         import struct
 
