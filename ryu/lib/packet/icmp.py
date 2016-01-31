@@ -214,7 +214,12 @@ class dest_unreach(stringify.StringifyMixin):
 
     def __init__(self, data_len=0, mtu=0, data=None):
         super(dest_unreach, self).__init__()
-        self.data_len = data_len
+
+        if ((data_len >= 0) and (data_len <= 255)):
+            self.data_len = data_len
+        else:
+            raise ValueError('Specified data length (%d) is invalid.' % data_len)
+
         self.mtu = mtu
         self.data = data
 
@@ -273,7 +278,11 @@ class TimeExceeded(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, data_len=0, data=None):
-        self.data_len = data_len
+        if ((data_len >= 0) and (data_len <= 255)):
+            self.data_len = data_len
+        else:
+            raise ValueError('Specified data length (%d) is invalid.' % data_len)
+
         self.data = data
 
     @classmethod
