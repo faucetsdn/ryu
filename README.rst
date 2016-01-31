@@ -23,9 +23,6 @@ If you prefer to install Ryu from the source code::
    % git clone git://github.com/osrg/ryu.git
    % cd ryu; python ./setup.py install
 
-If you want to use Ryu with `OpenStack <http://openstack.org/>`_,
-please refer `networking-ofagent project <https://github.com/stackforge/networking-ofagent>`_.
-
 If you want to write your Ryu application, have a look at
 `Writing ryu application <http://ryu.readthedocs.org/en/latest/writing_ryu_app.html>`_ document.
 After writing your application, just type::
