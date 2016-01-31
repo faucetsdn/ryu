@@ -742,15 +742,12 @@ class Switches(app_manager.RyuApp):
 
             if not dp_multiple_conns:
                 self.send_event_to_observers(event.EventSwitchEnter(switch))
-<<<<<<< HEAD
                 self._switch_added(switch)
                 self.lldp_event.set()
-=======
             else:
                 self.send_event_to_observers(event.EventSwitchReconnected(switch))
 
->>>>>>> osrg/master
-            if not self.link_discovery:
+			if not self.link_discovery:
                 return
 
             if self.install_flow:
@@ -801,7 +798,7 @@ class Switches(app_manager.RyuApp):
 
         elif ev.state == DEAD_DISPATCHER:
             # dp.id is None when datapath dies before handshake
-            if dp.id is None:
+			if dp.id is None:
                 return
 
             switch = self._get_switch(dp.id)
