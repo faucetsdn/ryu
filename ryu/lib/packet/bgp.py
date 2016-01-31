@@ -1270,7 +1270,7 @@ class BGPOptParamCapabilityGracefulRestart(_OptParamCapability):
         (restart, ) = struct.unpack_from(cls._CAP_PACK_STR, six.binary_type(buf))
         buf = buf[2:]
         l = []
-        while len(buf) > 0:
+        while len(buf) >= 4:
             l.append(struct.unpack_from("!HBB", buf))
             buf = buf[4:]
         return {'flags': restart >> 12, 'time': restart & 0xfff, 'tuples': l}
@@ -2009,7 +2009,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         elif afi == addr_family.IP6:
             self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
         else:
-            raise ValueError('Invalid address familly(%d)' % afi)
+            raise ValueError('Invalid address family(%d)' % afi)
         self._reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
@@ -2054,7 +2054,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
                 next_hop_len = 16
             next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
         else:
-            raise ValueError('Invalid address familly(%d)' % afi)
+            raise ValueError('Invalid address family(%d)' % afi)
 
         return {
             'afi': afi,

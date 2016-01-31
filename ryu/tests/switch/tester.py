@@ -355,7 +355,7 @@ class OfTester(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [handler.MAIN_DISPATCHER, handler.DEAD_DISPATCHER])
-    def dispacher_change(self, ev):
+    def dispatcher_change(self, ev):
         assert ev.datapath is not None
         if ev.state == handler.MAIN_DISPATCHER:
             self._register_sw(ev.datapath)
