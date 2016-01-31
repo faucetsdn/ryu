@@ -210,14 +210,10 @@ class HostState(dict):
         if not host:
             return
 
-        if ip_v4 != None:
-            if ip_v4 in host.ipv4:
-                host.ipv4.remove(ip_v4)
+        if ip_v4 != None and ip_v4 not in host.ipv4:
             host.ipv4.append(ip_v4)
 
-        if ip_v6 != None:
-            if ip_v6 in host.ipv6:
-                host.ipv6.remove(ip_v6)
+        if ip_v6 != None and ip_v6 not in host.ipv6:
             host.ipv6.append(ip_v6)
 
     def get_by_dpid(self, dpid):
@@ -613,7 +609,6 @@ class Switches(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_2.OFP_VERSION,
                     ofproto_v1_3.OFP_VERSION, ofproto_v1_4.OFP_VERSION]
     _EVENTS = [event.EventSwitchEnter, event.EventSwitchLeave,
-               event.EventSwitchReconnected,
                event.EventPortAdd, event.EventPortDelete,
                event.EventPortModify,
                event.EventLinkAdd, event.EventLinkDelete,
@@ -668,9 +663,8 @@ class Switches(app_manager.RyuApp):
 
     def _unregister(self, dp):
         if dp.id in self.dps:
-            if (self.dps[dp.id] == dp):
-                del self.dps[dp.id]
-                del self.port_state[dp.id]
+            del self.dps[dp.id]
+            del self.port_state[dp.id]
 
     def _get_switch(self, dpid):
         if dpid in self.dps:
@@ -732,22 +726,19 @@ class Switches(app_manager.RyuApp):
         if ev.state == MAIN_DISPATCHER:
             dp_multiple_conns = False
             if dp.id in self.dps:
-                LOG.warning('Multiple connections from %s', dpid_to_str(dp.id))
+                LOG.warning('multiple connections from %s', dpid_to_str(dp.id))
                 dp_multiple_conns = True
-                (self.dps[dp.id]).close()
 
             self._register(dp)
             switch = self._get_switch(dp.id)
             LOG.debug('register %s', switch)
 
+            # Do not send event while dp has multiple connections.
             if not dp_multiple_conns:
                 self.send_event_to_observers(event.EventSwitchEnter(switch))
                 self._switch_added(switch)
                 self.lldp_event.set()
-            else:
-                self.send_event_to_observers(event.EventSwitchReconnected(switch))
-
-			if not self.link_discovery:
+            if not self.link_discovery:
                 return
 
             if self.install_flow:
@@ -798,25 +789,21 @@ class Switches(app_manager.RyuApp):
 
         elif ev.state == DEAD_DISPATCHER:
             # dp.id is None when datapath dies before handshake
-			if dp.id is None:
+            if dp.id is None:
+                return
+            switch = self._get_switch(dp.id)
+            self._unregister(dp)
+            LOG.debug('unregister %s', switch)
+            self.send_event_to_observers(event.EventSwitchLeave(switch))
+
+            if not self.link_discovery:
                 return
 
-            switch = self._get_switch(dp.id)
-            if switch:
-                if switch.dp is dp:
-                    self._unregister(dp)
-                    LOG.debug('unregister %s', switch)
-
-                    self.send_event_to_observers(event.EventSwitchLeave(switch))
-
-                    if not self.link_discovery:
-                        return
-
-                    for port in switch.ports:
-                        if not port.is_reserved():
-                            self.ports.del_port(port)
-                            self._link_down(port)
-                    self.lldp_event.set()
+            for port in switch.ports:
+                if not port.is_reserved():
+                    self.ports.del_port(port)
+                    self._link_down(port)
+            self.lldp_event.set()
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def port_status_handler(self, ev):
@@ -904,7 +891,7 @@ class Switches(app_manager.RyuApp):
             src_mac = eth.src
             src_dpid = LLDPPacket.lldp_parse(msg.data)
         except LLDPPacket.LLDPUnknownFormat as e:
-            # This handler can receive all the packets which can be
+            # This handler can receive all the packtes which can be
             # not-LLDP packet. Ignore it silently
             return
         for port in self.port_state[src_dpid].values():
