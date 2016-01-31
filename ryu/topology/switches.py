@@ -895,8 +895,8 @@ class Switches(app_manager.RyuApp):
             # not-LLDP packet. Ignore it silently
             return
         for port in self.port_state[src_dpid].values():
-		    if port.hw_addr == src_mac:
-            src_port_no = port.port_no
+            if port.hw_addr == src_mac:
+                src_port_no = port.port_no
         dst_dpid = msg.datapath.id
         if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             dst_port_no = msg.in_port
