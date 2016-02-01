@@ -108,6 +108,20 @@ MESSAGES = [
               'importance=39032'] +
               ['dl_type=0x0800,ct_state=+trk+est'] +
               ['actions=ct(commit,exec(set_field:0x654321->ct_mark))'])},
+    {'name': 'action_ct_nat',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['table=3,',
+              'importance=39032'] +
+              ['dl_type=0x0800'] +
+              ['actions=ct(commit,nat(src=10.1.12.0-10.1.13.255:1-1023)'])},
+    {'name': 'action_ct_nat_v6',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['table=3,',
+              'importance=39032'] +
+              ['dl_type=0x86dd'] +
+              ['actions=ct(commit,nat(dst=2001:1::1-2001:1::ffff)'])},
 ]
 
 buf = []
