@@ -1,0 +1,71 @@
+{
+   "OFPFlowMod": {
+      "buffer_id": 4294967295, 
+      "command": 0, 
+      "cookie": 0, 
+      "cookie_mask": 0, 
+      "flags": 0, 
+      "hard_timeout": 0, 
+      "idle_timeout": 0, 
+      "instructions": [
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "NXActionCT": {
+                        "actions": [
+                           {
+                              "NXActionNAT": {
+                                 "experimenter": 8992, 
+                                 "flags": 1, 
+                                 "len": 32, 
+                                 "range_ipv4_max": "10.1.13.255", 
+                                 "range_ipv4_min": "10.1.12.0", 
+                                 "range_ipv6_max": "", 
+                                 "range_ipv6_min": "", 
+                                 "range_proto_max": 1023, 
+                                 "range_proto_min": 1, 
+                                 "subtype": 36, 
+                                 "type": 65535
+                              }
+                           }
+                        ], 
+                        "alg": 0, 
+                        "experimenter": 8992, 
+                        "flags": 1, 
+                        "len": 56, 
+                        "recirc_table": 255, 
+                        "subtype": 35, 
+                        "type": 65535, 
+                        "zone_ofs_nbits": 0, 
+                        "zone_src": 0
+                     }
+                  }
+               ], 
+               "len": 64, 
+               "type": 4
+            }
+         }
+      ], 
+      "match": {
+         "OFPMatch": {
+            "length": 10, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "eth_type", 
+                     "mask": null, 
+                     "value": 2048
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "out_group": 4294967295, 
+      "out_port": 4294967295, 
+      "priority": 32768, 
+      "table_id": 3, 
+      "xid": 2
+   }
+}
