@@ -478,6 +478,116 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
                           bytes(data))
 
+    class NXActionNAT(NXAction):
+        _subtype = nicira_ext.NXAST_NAT
+
+        # pad, flags, range_present
+        _fmt_str = '!2xHH'
+        # Followed by optional parameters
+
+        _TYPE = {
+            'ascii': [
+                'range_ipv4_max',
+                'range_ipv4_min',
+                'range_ipv6_max',
+                'range_ipv6_min',
+            ]
+        }
+
+        def __init__(self,
+                     flags,
+                     range_ipv4_min='',
+                     range_ipv4_max='',
+                     range_ipv6_min='',
+                     range_ipv6_max='',
+                     range_proto_min=None,
+                     range_proto_max=None,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionNAT, self).__init__()
+            self.flags = flags
+            self.range_ipv4_min = range_ipv4_min
+            self.range_ipv4_max = range_ipv4_max
+            self.range_ipv6_min = range_ipv6_min
+            self.range_ipv6_max = range_ipv6_max
+            self.range_proto_min = range_proto_min
+            self.range_proto_max = range_proto_max
+
+        @classmethod
+        def parse(cls, buf):
+            (flags,
+             range_present) = struct.unpack_from(
+                 NXActionNAT._fmt_str, buf, 0)
+            rest = buf[struct.calcsize(NXActionNAT._fmt_str):]
+            # optional parameters
+            kwargs = dict()
+            if range_present & nicira_ext.NX_NAT_RANGE_IPV4_MIN:
+                kwargs['range_ipv4_min'] = type_desc.IPv4Addr.to_user(rest[:4])
+                rest = rest[4:]
+            if range_present & nicira_ext.NX_NAT_RANGE_IPV4_MAX:
+                kwargs['range_ipv4_max'] = type_desc.IPv4Addr.to_user(rest[:4])
+                rest = rest[4:]
+            if range_present & nicira_ext.NX_NAT_RANGE_IPV6_MIN:
+                kwargs['range_ipv6_min'] = (
+                    type_desc.IPv6Addr.to_user(rest[:16]))
+                rest = rest[16:]
+            if range_present & nicira_ext.NX_NAT_RANGE_IPV6_MAX:
+                kwargs['range_ipv6_max'] = (
+                    type_desc.IPv6Addr.to_user(rest[:16]))
+                rest = rest[16:]
+            if range_present & NX_NAT_RANGE_PROTO_MIN:
+                kwargs['range_proto_min'] = type_desc.Int2.to_user(rest[:2])
+                rest = rest[2:]
+            if range_present & NX_NAT_RANGE_PROTO_MAX:
+                kwargs['range_proto_max'] = type_desc.Int2.to_user(rest[:2])
+
+            return cls(flags, **kwargs)
+
+        def serialize(self, buf, offset):
+            # Pack optional parameters first, as range_present needs
+            # to be calculated.
+            optional_data = b''
+            range_present = 0
+            if self.range_ipv4_min != '':
+                range_present |= nicira_ext.NX_NAT_RANGE_IPV4_MIN
+                optional_data += type_desc.IPv4Addr.from_user(
+                    self.range_ipv4_min)
+            if self.range_ipv4_max != '':
+                range_present |= nicira_ext.NX_NAT_RANGE_IPV4_MAX
+                optional_data += type_desc.IPv4Addr.from_user(
+                    self.range_ipv4_max)
+            if self.range_ipv6_min != '':
+                range_present |= nicira_ext.NX_NAT_RANGE_IPV6_MIN
+                optional_data += type_desc.IPv6Addr.from_user(
+                    self.range_ipv6_min)
+            if self.range_ipv6_max != '':
+                range_present |= nicira_ext.NX_NAT_RANGE_IPV6_MAX
+                optional_data += type_desc.IPv6Addr.from_user(
+                    self.range_ipv6_max)
+            if self.range_proto_min is not None:
+                range_present |= nicira_ext.NX_NAT_RANGE_PROTO_MIN
+                optional_data += type_desc.Int2.from_user(
+                    self.range_proto_min)
+            if self.range_proto_max is not None:
+                range_present |= nicira_ext.NX_NAT_RANGE_PROTO_MAX
+                optional_data += type_desc.Int2.from_user(
+                    self.range_proto_max)
+
+            data = bytearray()
+            msg_pack_into(NXActionNAT._fmt_str, data, 0,
+                          self.flags,
+                          range_present)
+            msg_pack_into('!%ds' % len(optional_data), data, len(data),
+                          optional_data)
+
+            payload_offset = (
+                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
+                struct.calcsize(NXAction._fmt_str)
+            )
+            self.len = utils.round_up(payload_offset + len(data), 8)
+            super(NXActionNAT, self).serialize(buf, offset)
+            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
+                          bytes(data))
+
     def add_attr(k, v):
         v.__module__ = ofpp.__name__  # Necessary for stringify stuff
         setattr(ofpp, k, v)
@@ -491,6 +601,7 @@ def generate(ofp_name, ofpp_name):
         'NXActionConjunction',
         'NXActionResubmitTable',
         'NXActionCT',
+        'NXActionNAT',
         '_NXFlowSpec',  # exported for testing
         'NXFlowSpecMatch',
         'NXFlowSpecLoad',
