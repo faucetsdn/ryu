@@ -57,8 +57,8 @@
                {
                   "OXMTlv": {
                      "field": "ct_state", 
-                     "mask": 130, 
-                     "value": 130
+                     "mask": 34, 
+                     "value": 34
                   }
                }
             ], 
