@@ -79,6 +79,14 @@ MESSAGES = [
                'cookie=0x123456789abcdef0/0xffffffffffffffff'] +
               STD_MATCH +
               ['actions=conjunction(0xabcdef,1/2)'])},
+    {'name': 'match_load_nx_register',
+     'versions': [4],
+     'cmd': 'mod-flows',
+     'args': ['table=3',
+              'cookie=0x123456789abcdef0/0xffffffffffffffff',
+              'reg0=0x1234',
+              'reg5=0xabcd/0xffff',
+              'actions=load:0xdeadbee->NXM_NX_REG0[4..31]']},
     {'name': 'match_move_nx_register',
      'versions': [4],
      'cmd': 'mod-flows',
