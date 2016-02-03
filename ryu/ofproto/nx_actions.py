@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 import struct
 
 from ryu import utils
@@ -202,6 +204,52 @@ def generate(ofp_name, ofpp_name):
             self.len = utils.round_up(payload_offset + len(data), 8)
             super(NXActionUnknown, self).serialize(buf, offset)
             buf += data
+
+    class NXActionRegLoad(NXAction):
+        _subtype = nicira_ext.NXAST_REG_LOAD
+        _fmt_str = '!HIQ'  # ofs_nbits, dst, value
+        _TYPE = {
+            'ascii': [
+                'dst',
+            ]
+        }
+
+        def __init__(self, ofs, nbits, dst, value,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionRegLoad, self).__init__()
+            self.ofs = ofs
+            self.nbits = nbits
+            self.dst = dst
+            self.value = value
+
+        @classmethod
+        def parse(cls, buf):
+            (ofs_nbits, dst, value,) = struct.unpack_from(
+                NXActionRegLoad._fmt_str, buf, 0)
+            ofs = ofs_nbits >> 6
+            nbits = (ofs_nbits & ((1 << 6) - 1)) + 1
+            # Right-shift instead of using oxm_parse_header for simplicity...
+            dst_name = ofp.oxm_to_user_header(dst >> 9)
+            return cls(ofs, nbits, dst_name, value)
+
+        def serialize(self, buf, offset):
+            hdr_data = bytearray()
+            n = ofp.oxm_from_user_header(self.dst)
+            ofp.oxm_serialize_header(n, hdr_data, 0)
+            (dst_num,) = struct.unpack_from('!I', six.binary_type(hdr_data), 0)
+
+            ofs_nbits = (self.ofs << 6) + self.nbits - 1
+            data = bytearray()
+            msg_pack_into(NXActionRegLoad._fmt_str, data, 0,
+                          ofs_nbits, dst_num, self.value)
+            payload_offset = (
+                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
+                struct.calcsize(NXAction._fmt_str)
+            )
+            self.len = utils.round_up(payload_offset + len(data), 8)
+            super(NXActionRegLoad, self).serialize(buf, offset)
+            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
+                          bytes(data))
 
     class NXActionRegMove(NXAction):
         _subtype = nicira_ext.NXAST_REG_MOVE
@@ -596,6 +644,7 @@ def generate(ofp_name, ofpp_name):
     add_attr('NXActionUnknown', NXActionUnknown)
 
     classes = [
+        'NXActionRegLoad',
         'NXActionRegMove',
         'NXActionLearn',
         'NXActionConjunction',
