@@ -367,7 +367,9 @@ class Activity(object):
                 sock.bind(sa)
                 sock.listen(50)
                 listen_sockets[sa] = sock
-            except socket.error:
+            except socket.error as e:
+                LOG.error('Error creating socket: %s', e)
+
                 if sock:
                     sock.close()
 
