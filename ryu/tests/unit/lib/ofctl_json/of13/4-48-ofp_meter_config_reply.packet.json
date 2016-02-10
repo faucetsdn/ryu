@@ -9,9 +9,9 @@
                 }
             ],
             "flags": [
-                "STATS",
                 "PKTPS",
-                "BURST"
+                "BURST",
+                "STATS"
             ],
             "meter_id": 100
         }

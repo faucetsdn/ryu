@@ -6,10 +6,10 @@
                 "DSCP_REMARK"
             ],
             "capabilities": [
-                "STATS",
                 "KBPS",
                 "PKTPS",
-                "BURST"
+                "BURST",
+                "STATS"
             ],
             "max_bands": 255,
             "max_color": 0,

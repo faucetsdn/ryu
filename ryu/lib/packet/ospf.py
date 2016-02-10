@@ -682,7 +682,7 @@ class OSPFMessage(packet_base.PacketBase, _TypeDisp):
         rest = buf[length:]
         subcls = cls._lookup_type(type_)
         kwargs = subcls.parser(binmsg)
-        return subcls(length, router_id, area_id, au_type, authentication,
+        return subcls(length, router_id, area_id, au_type, int(authentication),
                       checksum, version, **kwargs), None, rest
 
     @classmethod

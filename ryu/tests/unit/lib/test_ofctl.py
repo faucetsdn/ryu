@@ -73,7 +73,8 @@ class Test_ofctl(unittest.TestCase):
         # expected message <--> sent message
         request.serialize()
         try:
-            eq_(request.to_jsondict(), dp.request_msg.to_jsondict())
+            eq_(json.dumps(request.to_jsondict(), sort_keys=True),
+                json.dumps(dp.request_msg.to_jsondict(), sort_keys=True))
         except AssertionError as e:
             # For debugging
             json.dump(dp.request_msg.to_jsondict(),
@@ -95,9 +96,11 @@ class Test_ofctl(unittest.TestCase):
                 return d2
             return d
 
+        expected = _remove(expected, ['len', 'length'])
+        output = _remove(output, ['len', 'length'])
         try:
-            eq_(_remove(expected, ['len', 'length']),
-                _remove(output, ['len', 'length']))
+            eq_(json.dumps(expected, sort_keys=True),
+                json.dumps(output, sort_keys=True))
         except AssertionError as e:
             # For debugging
             json.dump(output, open('/tmp/' + name + '_reply.json', 'w'),

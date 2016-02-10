@@ -787,7 +787,7 @@ def get_meter_features(dp, waiters):
                 if (1 << k) & feature.band_types:
                     band_types.append(v)
             capabilities = []
-            for k, v in capa_convert.items():
+            for k, v in sorted(capa_convert.items()):
                 if k & feature.capabilities:
                     capabilities.append(v)
             f = {'max_meter': feature.max_meter,
@@ -829,7 +829,7 @@ def get_meter_config(dp, waiters):
                     b['experimenter'] = band.experimenter
                 bands.append(b)
             c_flags = []
-            for k, v in flags.items():
+            for k, v in sorted(flags.items()):
                 if k & config.flags:
                     c_flags.append(v)
             c = {'flags': c_flags,

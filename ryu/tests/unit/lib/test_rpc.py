@@ -119,7 +119,13 @@ class Test_rpc(unittest.TestCase):
         assert isinstance(obj, int)
         result = c.call(b'resp', [obj])
         assert result == obj
-        assert isinstance(result, type(obj))
+        import sys
+        # note: on PyPy, result will be a long type value.
+        sv = getattr(sys, 'subversion', None)
+        if sv is not None and sv[0] == 'PyPy':
+            assert isinstance(result, long)
+        else:
+            assert isinstance(result, type(obj))
 
     def test_0_call_int3(self):
         c = rpc.Client(self._client_sock)
@@ -237,6 +243,11 @@ class Test_rpc(unittest.TestCase):
     @unittest.skip("doesn't work with eventlet 0.18 and later")
     def test_4_call_large_binary(self):
         import struct
+        import sys
+        # note: on PyPy, this test case may hang up.
+        sv = getattr(sys, 'subversion', None)
+        if sv is not None and sv[0] == 'PyPy':
+            return
 
         c = rpc.Client(self._client_sock)
         obj = struct.pack("10000000x")
