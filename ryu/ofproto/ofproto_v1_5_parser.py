@@ -3223,11 +3223,11 @@ class OFPMeterDescStats(StringifyMixin):
 
         (meter_config.length, meter_config.flags,
          meter_config.meter_id) = struct.unpack_from(
-            ofproto.OFP_METER_CONFIG_PACK_STR, buf, offset)
-        offset += ofproto.OFP_METER_CONFIG_SIZE
+            ofproto.OFP_METER_DESC_PACK_STR, buf, offset)
+        offset += ofproto.OFP_METER_DESC_SIZE
 
         meter_config.bands = []
-        length = ofproto.OFP_METER_CONFIG_SIZE
+        length = ofproto.OFP_METER_DESC_SIZE
         while length < meter_config.length:
             band = OFPMeterBandHeader.parser(buf, offset)
             meter_config.bands.append(band)
