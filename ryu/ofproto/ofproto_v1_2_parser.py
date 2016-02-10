@@ -1569,7 +1569,9 @@ class OFPActionSetField(OFPAction):
             o = self
         return {
             self.__class__.__name__: {
-                'field': ofproto.oxm_to_jsondict(self.key, self.value)
+                'field': ofproto.oxm_to_jsondict(self.key, self.value),
+                "len": self.len,
+                "type": self.type
             }
         }
 
