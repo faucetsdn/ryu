@@ -3309,7 +3309,7 @@ class OFPMeterDescStatsReply(OFPMultipartReply):
 
 class OFPMeterFeaturesStats(ofproto_parser.namedtuple('OFPMeterFeaturesStats',
                             ('max_meter', 'band_types', 'capabilities',
-                             'max_bands', 'max_color'))):
+                             'max_bands', 'max_color', 'features'))):
     @classmethod
     def parser(cls, buf, offset):
         meter_features = struct.unpack_from(
