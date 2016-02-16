@@ -82,7 +82,7 @@ def _get_field_info_by_number(oxx, num_to_field, n):
         name = f.name
     except KeyError:
         t = type_desc.UnknownType
-        if isinstance(n, int):
+        if isinstance(n, six.integer_types):
             name = 'field_%d' % (n,)
         else:
             raise KeyError('unknown %s field number: %s' % (oxx.upper(), n))

@@ -697,7 +697,7 @@ class TestPacket(unittest.TestCase):
         sctp_values = {'src_port': 1,
                        'dst_port': 1,
                        'vtag': 0,
-                       'csum': p_sctp.csum,
+                       'csum': repr(p_sctp.csum),
                        'chunks': data_str}
         _sctp_str = ','.join(['%s=%s' % (k, sctp_values[k])
                              for k, _ in inspect.getmembers(p_sctp)
@@ -1233,7 +1233,7 @@ class TestPacket(unittest.TestCase):
         sctp_values = {'src_port': 1,
                        'dst_port': 1,
                        'vtag': 0,
-                       'csum': p_sctp.csum,
+                       'csum': repr(p_sctp.csum),
                        'chunks': data_str}
         _sctp_str = ','.join(['%s=%s' % (k, sctp_values[k])
                              for k, _ in inspect.getmembers(p_sctp)
