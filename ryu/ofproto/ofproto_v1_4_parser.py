@@ -5419,8 +5419,8 @@ class OFPAsyncConfigPropReasons(OFPAsyncConfigProp):
         return buf
 
 
-@OFPAsyncConfigProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_SLAVE)
-@OFPAsyncConfigProp.register_type(ofproto.OFPTFPT_EXPERIMENTER_MASTER)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_EXPERIMENTER_SLAVE)
+@OFPAsyncConfigProp.register_type(ofproto.OFPACPT_EXPERIMENTER_MASTER)
 class OFPAsyncConfigPropExperimenter(OFPPropCommonExperimenter4ByteData):
     pass
 
