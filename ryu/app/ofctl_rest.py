@@ -27,9 +27,11 @@ from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_4
 from ryu.lib import ofctl_v1_0
 from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
+from ryu.lib import ofctl_v1_4
 from ryu.app.wsgi import ControllerBase, WSGIApplication
 
 
@@ -40,6 +42,7 @@ supported_ofctl = {
     ofproto_v1_0.OFP_VERSION: ofctl_v1_0,
     ofproto_v1_2.OFP_VERSION: ofctl_v1_2,
     ofproto_v1_3.OFP_VERSION: ofctl_v1_3,
+    ofproto_v1_4.OFP_VERSION: ofctl_v1_4,
 }
 
 # REST API
@@ -79,6 +82,9 @@ supported_ofctl = {
 #
 # get queues config stats of the switch
 # GET /stats/queueconfig/<dpid>/<port>
+#
+# get queues desc stats of the switch
+# GET /stats/queuedesc/<dpid>/<port>/<queue>
 #
 # get meter features stats of the switch
 # GET /stats/meterfeatures/<dpid>
@@ -369,7 +375,40 @@ class StatsController(ControllerBase):
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
             queues = _ofctl.get_queue_config(dp, port, self.waiters)
+        else:
+            LOG.debug('Unsupported OF protocol')
+            return Response(status=501)
 
+        body = json.dumps(queues)
+        return Response(content_type='application/json', body=body)
+
+    def get_queue_desc(self, req, dpid, port, queue, **_kwargs):
+
+        if type(dpid) == str and not dpid.isdigit():
+            LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        if type(port) == str and not port.isdigit():
+            LOG.debug('invalid port %s', port)
+            return Response(status=400)
+
+        if type(queue) == str and not queue.isdigit():
+            LOG.debug('invalid queue %s', queue)
+            return Response(status=400)
+
+        dp = self.dpset.get(int(dpid))
+        port = int(port)
+        queue = int(queue)
+
+        if dp is None:
+            return Response(status=404)
+
+        _ofp_version = dp.ofproto.OFP_VERSION
+
+        _ofctl = supported_ofctl.get(_ofp_version, None)
+        if _ofctl is not None:
+            queues = _ofctl.get_queue_desc_stats(
+                dp=dp, port_no=port, waiters=self.waiters)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
@@ -728,21 +767,23 @@ class StatsController(ControllerBase):
 
         port_info = self.dpset.port_state[int(dpid)].get(port_no)
 
+        dp = self.dpset.get(int(dpid))
+        _ofp_version = dp.ofproto.OFP_VERSION
+
         if port_info:
             port_config.setdefault('hw_addr', port_info.hw_addr)
-            port_config.setdefault('advertise', port_info.advertised)
+            if ofproto_v1_4.OFP_VERSION <= _ofp_version:
+                port_config.setdefault('properties', port_info.properties)
+            else:
+                port_config.setdefault('advertise', port_info.advertised)
         else:
             return Response(status=404)
-
-        dp = self.dpset.get(int(dpid))
 
         if dp is None:
             return Response(status=404)
 
         if cmd != 'modify':
             return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
 
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
@@ -788,7 +829,8 @@ class StatsController(ControllerBase):
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
                     ofproto_v1_2.OFP_VERSION,
-                    ofproto_v1_3.OFP_VERSION]
+                    ofproto_v1_3.OFP_VERSION,
+                    ofproto_v1_4.OFP_VERSION]
     _CONTEXTS = {
         'dpset': dpset.DPSet,
         'wsgi': WSGIApplication
@@ -850,6 +892,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/queueconfig/{dpid}/{port}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_queue_config',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/queuedesc/{dpid}/{port}/{queue}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_desc',
                        conditions=dict(method=['GET']))
 
         uri = path + '/meterfeatures/{dpid}'
@@ -925,6 +972,7 @@ class RestStatsApi(app_manager.RyuApp):
                  ofp_event.EventOFPTableFeaturesStatsReply,
                  ofp_event.EventOFPPortStatsReply,
                  ofp_event.EventOFPQueueStatsReply,
+                 ofp_event.EventOFPQueueDescStatsReply,
                  ofp_event.EventOFPMeterStatsReply,
                  ofp_event.EventOFPMeterFeaturesStatsReply,
                  ofp_event.EventOFPMeterConfigStatsReply,
@@ -949,7 +997,7 @@ class RestStatsApi(app_manager.RyuApp):
             flags = dp.ofproto.OFPSF_REPLY_MORE
         elif dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             flags = dp.ofproto.OFPSF_REPLY_MORE
-        elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION >= ofproto_v1_3.OFP_VERSION:
             flags = dp.ofproto.OFPMPF_REPLY_MORE
 
         if msg.flags & flags:
