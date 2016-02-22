@@ -4,11 +4,9 @@ import sys
 
 from mininet.cli import CLI
 from mininet.net import Mininet
-from mininet.link import Link
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
 from mininet.node import UserSwitch
-from mininet.term import makeTerm
 
 from oslo_config import cfg
 from ryu import version
@@ -37,14 +35,11 @@ if '__main__' == __name__:
     s1 = net.addSwitch('s1')
     s2 = net.addSwitch('s2')
 
-    Link(s1, s2)
-    Link(s1, s2)
-    Link(s1, s2)
+    net.addLink(s1, s2)
+    net.addLink(s1, s2)
+    net.addLink(s1, s2)
 
-    net.build()
-    c0.start()
-    s1.start([c0])
-    s2.start([c0])
+    net.start()
 
     if conf.switch == 'ovs':
         s1.cmd('ovs-vsctl set Bridge s1 protocols=%s' % conf.protocols)
