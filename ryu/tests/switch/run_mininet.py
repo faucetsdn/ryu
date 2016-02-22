@@ -17,15 +17,16 @@ if '__main__' == __name__:
 
     opts = [
         cfg.StrOpt('switch', default='ovs',
-                   help='test switch (ovs|ovs13|ovs14|cpqd)')
+                   help='test switch [ovs|cpqd]'),
+        cfg.StrOpt('protocols', default='OpenFlow13',
+                   help='"protocols" option for ovs-vsctl (e.g. OpenFlow13)')
     ]
     conf = cfg.ConfigOpts()
     conf.register_cli_opts(opts)
     conf(project='ryu', version='run_mininet.py %s' % version)
     conf(sys.argv[1:])
-    switch_type = {'ovs': OVSSwitch, 'ovs13': OVSSwitch,
-                   'ovs14': OVSSwitch, 'cpqd': UserSwitch}
-    switch = switch_type.get(conf.switch)
+    switch_type = {'ovs': OVSSwitch, 'cpqd': UserSwitch}
+    switch = switch_type.get(conf.switch, None)
     if switch is None:
         raise ValueError('Invalid switch type. [%s]', conf.switch)
 
@@ -45,12 +46,9 @@ if '__main__' == __name__:
     s1.start([c0])
     s2.start([c0])
 
-    if conf.switch in ['ovs', 'ovs13']:
-        s1.cmd('ovs-vsctl set Bridge s1 protocols=OpenFlow13')
-        s2.cmd('ovs-vsctl set Bridge s2 protocols=OpenFlow13')
-    elif conf.switch == 'ovs14':
-        s1.cmd('ovs-vsctl set Bridge s1 protocols=OpenFlow14')
-        s2.cmd('ovs-vsctl set Bridge s2 protocols=OpenFlow14')
+    if conf.switch == 'ovs':
+        s1.cmd('ovs-vsctl set Bridge s1 protocols=%s' % conf.protocols)
+        s2.cmd('ovs-vsctl set Bridge s2 protocols=%s' % conf.protocols)
 
     CLI(net)
 
