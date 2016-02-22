@@ -10,6 +10,8 @@ from mininet.node import UserSwitch
 
 from oslo_config import cfg
 from ryu import version
+from ryu.ofproto.ofproto_common import OFP_TCP_PORT
+
 
 if '__main__' == __name__:
 
@@ -30,7 +32,7 @@ if '__main__' == __name__:
 
     net = Mininet(switch=switch, controller=RemoteController)
 
-    c0 = net.addController('c0')
+    c0 = net.addController('c0', port=OFP_TCP_PORT)
 
     s1 = net.addSwitch('s1')
     s2 = net.addSwitch('s2')
