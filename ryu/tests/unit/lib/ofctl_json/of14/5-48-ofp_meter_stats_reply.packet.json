@@ -1,0 +1,19 @@
+{
+    "1": [
+        {
+            "band_stats": [
+                {
+                    "byte_band_count": 0,
+                    "packet_band_count": 0
+                }
+            ],
+            "byte_in_count": 0,
+            "duration_nsec": 480000,
+            "duration_sec": 0,
+            "flow_count": 0,
+            "len": 56,
+            "meter_id": 100,
+            "packet_in_count": 0
+        }
+    ]
+}

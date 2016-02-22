@@ -1,0 +1,104 @@
+{
+    "1": [
+        {
+            "actions": [
+                {
+                    "ALL": [
+                        "OUTPUT",
+                        "COPY_TTL_OUT",
+                        "COPY_TTL_IN",
+                        "SET_MPLS_TTL",
+                        "DEC_MPLS_TTL",
+                        "PUSH_VLAN",
+                        "POP_VLAN",
+                        "PUSH_MPLS",
+                        "POP_MPLS",
+                        "SET_QUEUE",
+                        "GROUP",
+                        "SET_NW_TTL",
+                        "DEC_NW_TTL",
+                        "SET_FIELD"
+                    ]
+                },
+                {
+                    "SELECT": [
+                        "OUTPUT",
+                        "COPY_TTL_OUT",
+                        "COPY_TTL_IN",
+                        "SET_MPLS_TTL",
+                        "DEC_MPLS_TTL",
+                        "PUSH_VLAN",
+                        "POP_VLAN",
+                        "PUSH_MPLS",
+                        "POP_MPLS",
+                        "SET_QUEUE",
+                        "GROUP",
+                        "SET_NW_TTL",
+                        "DEC_NW_TTL",
+                        "SET_FIELD"
+                    ]
+                },
+                {
+                    "INDIRECT": [
+                        "OUTPUT",
+                        "COPY_TTL_OUT",
+                        "COPY_TTL_IN",
+                        "SET_MPLS_TTL",
+                        "DEC_MPLS_TTL",
+                        "PUSH_VLAN",
+                        "POP_VLAN",
+                        "PUSH_MPLS",
+                        "POP_MPLS",
+                        "SET_QUEUE",
+                        "GROUP",
+                        "SET_NW_TTL",
+                        "DEC_NW_TTL",
+                        "SET_FIELD"
+                    ]
+                },
+                {
+                    "FF": [
+                        "OUTPUT",
+                        "COPY_TTL_OUT",
+                        "COPY_TTL_IN",
+                        "SET_MPLS_TTL",
+                        "DEC_MPLS_TTL",
+                        "PUSH_VLAN",
+                        "POP_VLAN",
+                        "PUSH_MPLS",
+                        "POP_MPLS",
+                        "SET_QUEUE",
+                        "GROUP",
+                        "SET_NW_TTL",
+                        "DEC_NW_TTL",
+                        "SET_FIELD"
+                    ]
+                }
+            ],
+            "capabilities": [
+                "SELECT_WEIGHT",
+                "CHAINING"
+            ],
+            "max_groups": [
+                {
+                    "ALL": 16777216
+                },
+                {
+                    "SELECT": 16777216
+                },
+                {
+                    "INDIRECT": 16777216
+                },
+                {
+                    "FF": 16777216
+                }
+            ],
+            "types": [
+                "ALL",
+                "SELECT",
+                "INDIRECT",
+                "FF"
+            ]
+        }
+    ]
+}

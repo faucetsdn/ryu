@@ -1,0 +1,64 @@
+{
+    "1": [
+        {
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "length": 104,
+            "port_no": 7,
+            "properties": [
+                {
+                    "data": [],
+                    "exp_type": 0,
+                    "experimenter": 101,
+                    "length": 12,
+                    "type": "EXPERIMENTER"
+                },
+                {
+                    "data": [
+                        1
+                    ],
+                    "exp_type": 1,
+                    "experimenter": 101,
+                    "length": 16,
+                    "type": "EXPERIMENTER"
+                },
+                {
+                    "data": [
+                        1,
+                        2
+                    ],
+                    "exp_type": 2,
+                    "experimenter": 101,
+                    "length": 20,
+                    "type": "EXPERIMENTER"
+                }
+            ],
+            "queue_id": 1,
+            "tx_bytes": 0,
+            "tx_errors": 0,
+            "tx_packets": 0
+        },
+        {
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "length": 48,
+            "port_no": 6,
+            "properties": [],
+            "queue_id": 1,
+            "tx_bytes": 0,
+            "tx_errors": 0,
+            "tx_packets": 0
+        },
+        {
+            "duration_nsec": 0,
+            "duration_sec": 0,
+            "length": 48,
+            "port_no": 7,
+            "properties": [],
+            "queue_id": 2,
+            "tx_bytes": 0,
+            "tx_errors": 0,
+            "tx_packets": 0
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "1": [
+        {
+            "active_count": 4,
+            "lookup_count": 4,
+            "matched_count": 4,
+            "table_id": 0
+        },
+        {
+            "active_count": 4,
+            "lookup_count": 4,
+            "matched_count": 4,
+            "table_id": 1
+        }
+    ]
+}

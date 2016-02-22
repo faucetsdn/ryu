@@ -1,0 +1,103 @@
+{
+    "cmd": 0,
+    "flow": {
+        "instructions": [
+            {
+                "actions": [
+                    {
+                        "field": "vlan_vid",
+                        "type": "SET_FIELD",
+                        "value": 258
+                    },
+                    {
+                        "type": "COPY_TTL_OUT"
+                    },
+                    {
+                        "type": "COPY_TTL_IN"
+                    },
+                    {
+                        "type": "COPY_TTL_IN"
+                    },
+                    {
+                        "type": "POP_PBB"
+                    },
+                    {
+                        "ethertype": 4660,
+                        "type": "PUSH_PBB"
+                    },
+                    {
+                        "ethertype": 39030,
+                        "type": "POP_MPLS"
+                    },
+                    {
+                        "ethertype": 34887,
+                        "type": "PUSH_MPLS"
+                    },
+                    {
+                        "type": "POP_VLAN"
+                    },
+                    {
+                        "ethertype": 33024,
+                        "type": "PUSH_VLAN"
+                    },
+                    {
+                        "type": "DEC_MPLS_TTL"
+                    },
+                    {
+                        "mpls_ttl": 10,
+                        "type": "SET_MPLS_TTL"
+                    },
+                    {
+                        "type": "DEC_NW_TTL"
+                    },
+                    {
+                        "nw_ttl": 10,
+                        "type": "SET_NW_TTL"
+                    },
+                    {
+                        "data": "AAECAwQFBgc=",
+                        "data_type": "base64",
+                        "experimenter": 101,
+                        "type": "EXPERIMENTER"
+                    },
+                    {
+                        "queue_id": 3,
+                        "type": "SET_QUEUE"
+                    },
+                    {
+                        "group_id": 99,
+                        "type": "GROUP"
+                    },
+                    {
+                        "max_len": 65535,
+                        "port": 6,
+                        "type": "OUTPUT"
+                    }
+                ],
+                "type": "WRITE_ACTIONS"
+            },
+            {
+                "actions": [
+                    {
+                        "field": "eth_src",
+                        "type": "SET_FIELD",
+                        "value": "01:02:03:04:05:06"
+                    },
+                    {
+                        "field": "pbb_uca",
+                        "type": "SET_FIELD",
+                        "value": 1
+                    }
+                ],
+                "type": "APPLY_ACTIONS"
+            }
+        ],
+        "buffer_id": 65535,
+        "importance": 0,
+        "match": {
+            "eth_dst": "f2:0b:a4:7d:f8:ea"
+        },
+        "priority": 123,
+        "table_id": 1
+    }
+}

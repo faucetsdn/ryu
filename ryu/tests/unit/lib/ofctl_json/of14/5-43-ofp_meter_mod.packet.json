@@ -1,0 +1,31 @@
+{
+    "cmd": 0,
+    "meter": {
+        "flags": [
+            "PKTPS",
+            "BURST",
+            "STATS"
+        ],
+        "meter_id": 100,
+        "bands": [
+            {
+                "burst_size": 10,
+                "rate": 1000,
+                "type": "DROP"
+            },
+            {
+                "burst_size": 10,
+                "prec_level": 1,
+                "rate": 1000,
+                "type": "DSCP_REMARK"
+            },
+            {
+                "burst_size": 10,
+                "experimenter": 999,
+                "len": 16,
+                "rate": 1000,
+                "type": "EXPERIMENTER"
+            }
+        ]
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "1": [
+        {
+            "buckets": [
+                {
+                    "actions": [
+                        {
+                            "max_len": 65535,
+                            "port": 2,
+                            "type": "OUTPUT"
+                        }
+                    ],
+                    "len": 32,
+                    "watch_group": 1,
+                    "watch_port": 1,
+                    "weight": 1
+                }
+            ],
+            "group_id": 1,
+            "length": 40,
+            "type": "ALL"
+        }
+    ]
+}

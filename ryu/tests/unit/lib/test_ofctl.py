@@ -24,6 +24,7 @@ import unittest
 from ryu.lib import ofctl_v1_0
 from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
+from ryu.lib import ofctl_v1_4
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto.ofproto_protocol import ProtocolDesc
 from ryu.tests import test_lib
@@ -112,7 +113,8 @@ def _add_tests():
     _ofp_vers = {
         'of10': 0x01,
         'of12': 0x03,
-        'of13': 0x04
+        'of13': 0x04,
+        'of14': 0x05,
     }
 
     _test_cases = {
@@ -303,7 +305,109 @@ def _add_tests():
                 'request': '4-16-ofp_experimenter.packet.json',
                 'reply': None
             },
-        ]
+        ],
+        'of14': [
+            {
+                'method': ofctl_v1_4.get_desc_stats,
+                'request': '5-24-ofp_desc_request.packet.json',
+                'reply': '5-0-ofp_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_queue_stats,
+                'request': '5-35-ofp_queue_stats_request.packet.json',
+                'reply': '5-36-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_queue_desc_stats,
+                'request': '5-63-ofp_queue_desc_request.packet.json',
+                'reply': '5-64-ofp_queue_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_flow_stats,
+                'request': '5-11-ofp_flow_stats_request.packet.json',
+                'reply': '5-12-ofp_flow_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_aggregate_flow_stats,
+                'request': '5-25-ofp_aggregate_stats_request.packet.json',
+                'reply': '5-26-ofp_aggregate_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_table_stats,
+                'request': '5-27-ofp_table_stats_request.packet.json',
+                'reply': '5-28-ofp_table_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_table_features,
+                'request': 'lib-ofctl-ofp_table_features_request.packet.json',
+                'reply': '5-54-ofp_table_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_port_stats,
+                'request': '5-29-ofp_port_stats_request.packet.json',
+                'reply': '5-30-ofp_port_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_meter_stats,
+                'request': '5-47-ofp_meter_stats_request.packet.json',
+                'reply': '5-48-ofp_meter_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_meter_features,
+                'request': '5-49-ofp_meter_features_request.packet.json',
+                'reply': '5-50-ofp_meter_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_meter_config,
+                'request': '5-45-ofp_meter_config_request.packet.json',
+                'reply': '5-46-ofp_meter_config_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_group_stats,
+                'request': '5-55-ofp_group_stats_request.packet.json',
+                'reply': '5-56-ofp_group_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_group_features,
+                'request': '5-31-ofp_group_features_request.packet.json',
+                'reply': '5-32-ofp_group_features_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_group_desc,
+                'request': '5-33-ofp_group_desc_request.packet.json',
+                'reply': '5-34-ofp_group_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.get_port_desc,
+                'request': '5-51-ofp_port_desc_request.packet.json',
+                'reply': '5-52-ofp_port_desc_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_4.mod_flow_entry,
+                'request': '5-2-ofp_flow_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_4.mod_meter_entry,
+                'request': '5-43-ofp_meter_mod.packet.json',  # flow --> meter
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_4.mod_group_entry,
+                'request': '5-21-ofp_group_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_4.mod_port_behavior,
+                'request': '5-22-ofp_port_mod.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_4.send_experimenter,
+                'request': '5-16-ofp_experimenter.packet.json',
+                'reply': None
+            },
+        ],
     }
 
     def _jsonfile_to_msg(datapath, jsonfile):

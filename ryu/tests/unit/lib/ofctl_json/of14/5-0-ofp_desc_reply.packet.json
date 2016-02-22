@@ -1,0 +1,9 @@
+{
+    "1": {
+        "dp_desc": "dp",
+        "hw_desc": "hw",
+        "mfr_desc": "mfr",
+        "serial_num": "serial",
+        "sw_desc": "sw"
+    }
+}

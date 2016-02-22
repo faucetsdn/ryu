@@ -1,0 +1,197 @@
+{
+    "1": [
+        {
+            "byte_count": 0,
+            "cookie": 0,
+            "duration_nsec": 115277000,
+            "duration_sec": 358,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "importance": 0,
+            "instructions": [],
+            "length": 0,
+            "match": {},
+            "packet_count": 0,
+            "priority": 65535,
+            "table_id": 0
+        },
+        {
+            "byte_count": 0,
+            "cookie": 0,
+            "duration_nsec": 115055000,
+            "duration_sec": 358,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "importance": 0,
+            "instructions": [
+                {
+                    "actions": [
+                        {
+                            "max_len": 0,
+                            "port": 4294967290,
+                            "type": "OUTPUT"
+                        }
+                    ],
+                    "type": "APPLY_ACTIONS"
+                }
+            ],
+            "length": 0,
+            "match": {
+                "eth_type": 2054
+            },
+            "packet_count": 0,
+            "priority": 65534,
+            "table_id": 0
+        },
+        {
+            "byte_count": 238,
+            "cookie": 0,
+            "duration_nsec": 511582000,
+            "duration_sec": 316220,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "importance": 0,
+            "instructions": [
+                {
+                    "table_id": 1,
+                    "type": "GOTO_TABLE"
+                }
+            ],
+            "length": 0,
+            "match": {
+                "eth_src": "f2:0b:a4:7d:f8:ea",
+                "in_port": 6
+            },
+            "packet_count": 3,
+            "priority": 123,
+            "table_id": 0
+        },
+        {
+            "byte_count": 98,
+            "cookie": 0,
+            "duration_nsec": 980901000,
+            "duration_sec": 313499,
+            "flags": 0,
+            "hard_timeout": 0,
+            "idle_timeout": 0,
+            "importance": 0,
+            "instructions": [
+                {
+                    "actions": [
+                        {
+                            "field": "vlan_vid",
+                            "mask": null,
+                            "type": "SET_FIELD",
+                            "value": 258
+                        },
+                        {
+                            "type": "COPY_TTL_OUT"
+                        },
+                        {
+                            "type": "COPY_TTL_IN"
+                        },
+                        {
+                            "type": "COPY_TTL_IN"
+                        },
+                        {
+                            "type": "POP_PBB"
+                        },
+                        {
+                            "ethertype": 4660,
+                            "type": "PUSH_PBB"
+                        },
+                        {
+                            "ethertype": 39030,
+                            "type": "POP_MPLS"
+                        },
+                        {
+                            "ethertype": 34887,
+                            "type": "PUSH_MPLS"
+                        },
+                        {
+                            "type": "POP_VLAN"
+                        },
+                        {
+                            "ethertype": 33024,
+                            "type": "PUSH_VLAN"
+                        },
+                        {
+                            "type": "DEC_MPLS_TTL"
+                        },
+                        {
+                            "mpls_ttl": 10,
+                            "type": "SET_MPLS_TTL"
+                        },
+                        {
+                            "type": "DEC_NW_TTL"
+                        },
+                        {
+                            "nw_ttl": 10,
+                            "type": "SET_NW_TTL"
+                        },
+                        {
+                            "queue_id": 3,
+                            "type": "SET_QUEUE"
+                        },
+                        {
+                            "group_id": 99,
+                            "type": "GROUP"
+                        },
+                        {
+                            "max_len": 65535,
+                            "port": 6,
+                            "type": "OUTPUT"
+                        },
+                        {
+                            "data": "ZXhwX2RhdGE=",
+                            "experimenter": 98765432,
+                            "type": "EXPERIMENTER"
+                        },
+                        {
+                            "data": "cF9kYXRh",
+                            "experimenter": 8992,
+                            "subtype": 25976,
+                            "type": "EXPERIMENTER"
+                        }
+                    ],
+                    "type": "WRITE_ACTIONS"
+                },
+                {
+                    "actions": [
+                        {
+                            "field": "eth_src",
+                            "mask": null,
+                            "type": "SET_FIELD",
+                            "value": "01:02:03:04:05:06"
+                        },
+                        {
+                            "field": "pbb_uca",
+                            "mask": null,
+                            "type": "SET_FIELD",
+                            "value": 1
+                        }
+                    ],
+                    "type": "APPLY_ACTIONS"
+                },
+                {
+                    "actions": [
+                        {
+                            "max_len": 65535,
+                            "port": 4294967293,
+                            "type": "OUTPUT"
+                        }
+                    ],
+                    "type": "WRITE_ACTIONS"
+                }
+            ],
+            "length": 0,
+            "match": {},
+            "packet_count": 1,
+            "priority": 0,
+            "table_id": 0
+        }
+    ]
+}
