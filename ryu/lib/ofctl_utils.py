@@ -27,6 +27,8 @@ class OFCtlUtil(object):
 
     def __init__(self, ofproto):
         self.ofproto = ofproto
+        self.deprecated_value = [
+            'OFPTFPT_EXPERIMENTER_SLAVE', 'OFPTFPT_EXPERIMENTER_MASTER']
 
     def _reserved_num_from_user(self, num, prefix):
         if isinstance(num, int):
@@ -39,9 +41,82 @@ class OFCtlUtil(object):
 
     def _reserved_num_to_user(self, num, prefix):
         for k, v in self.ofproto.__dict__.items():
-            if k.startswith(prefix) and v == num:
-                    return k.replace(prefix, '')
+            if k not in self.deprecated_value and \
+               k.startswith(prefix) and v == num:
+                return k.replace(prefix, '')
         return num
+
+    def ofp_port_features_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPPF_')
+
+    def ofp_port_features_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPPF_')
+
+    def ofp_port_mod_prop_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPPMPT_')
+
+    def ofp_port_mod_prop_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPPMPT_')
+
+    def ofp_port_desc_prop_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPPDPT_')
+
+    def ofp_port_desc_prop_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPPDPT_')
+
+    def ofp_action_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPAT_')
+
+    def ofp_action_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPAT_')
+
+    def ofp_instruction_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPIT_')
+
+    def ofp_instruction_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPIT_')
+
+    def ofp_group_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPGT_')
+
+    def ofp_group_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPGT_')
+
+    def ofp_meter_band_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPMBT_')
+
+    def ofp_meter_band_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPMBT_')
+
+    def ofp_table_feature_prop_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPTFPT_')
+
+    def ofp_table_feature_prop_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPTFPT_')
+
+    def ofp_port_stats_prop_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPPSPT_')
+
+    def ofp_port_stats_prop_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPPSPT_')
+
+    def ofp_queue_desc_prop_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPQDPT_')
+
+    def ofp_queue_desc_prop_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPQDPT_')
+
+    def ofp_queue_stats_prop_type_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPQSPT_')
+
+    def ofp_queue_stats_prop_type_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPQSPT_')
+
+    def ofp_meter_flags_from_user(self, act):
+        return self._reserved_num_from_user(act, 'OFPMF_')
+
+    def ofp_meter_flags_to_user(self, act):
+        return self._reserved_num_to_user(act, 'OFPMF_')
 
     def ofp_port_from_user(self, port):
         return self._reserved_num_from_user(port, 'OFPP_')
@@ -66,6 +141,12 @@ class OFCtlUtil(object):
 
     def ofp_group_to_user(self, group):
         return self._reserved_num_to_user(group, 'OFPG_')
+
+    def ofp_group_capabilities_from_user(self, group):
+        return self._reserved_num_from_user(group, 'OFPGFC_')
+
+    def ofp_group_capabilities_to_user(self, group):
+        return self._reserved_num_to_user(group, 'OFPGFC_')
 
     def ofp_buffer_from_user(self, buffer):
         if buffer in ['OFP_NO_BUFFER', 'NO_BUFFER']:
