@@ -243,22 +243,29 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
     def error_msg_handler(self, ev):
         msg = ev.msg
         ofp = msg.datapath.ofproto
-        (version, msg_type, msg_len, xid) = ofproto_parser.header(msg.data)
-        self.logger.debug('EventOFPErrorMsg received.')
         self.logger.debug(
-            'version=%s, msg_type=%s, msg_len=%s, xid=%s', hex(msg.version),
-            hex(msg.msg_type), hex(msg.msg_len), hex(msg.xid))
-        self.logger.debug(
-            ' `-- msg_type: %s', ofp.ofp_msg_type_to_str(msg.msg_type))
-        self.logger.debug(
-            "OFPErrorMsg(type=%s, code=%s, data=b'%s')", hex(msg.type),
-            hex(msg.code), utils.binary_str(msg.data))
-        self.logger.debug(
-            ' |-- type: %s', ofp.ofp_error_type_to_str(msg.type))
-        self.logger.debug(
-            ' |-- code: %s', ofp.ofp_error_code_to_str(msg.type, msg.code))
-        self.logger.debug(
-            ' `-- data: version=%s, msg_type=%s, msg_len=%s, xid=%s',
-            hex(version), hex(msg_type), hex(msg_len), hex(xid))
-        self.logger.debug(
-            '     `-- msg_type: %s', ofp.ofp_msg_type_to_str(msg_type))
+            "EventOFPErrorMsg received.\n"
+            "version=%s, msg_type=%s, msg_len=%s, xid=%s\n"
+            " `-- msg_type: %s\n"
+            "OFPErrorMsg(type=%s, code=%s, data=b'%s')\n"
+            " |-- type: %s\n"
+            " |-- code: %s",
+            hex(msg.version), hex(msg.msg_type), hex(msg.msg_len),
+            hex(msg.xid), ofp.ofp_msg_type_to_str(msg.msg_type),
+            hex(msg.type), hex(msg.code), utils.binary_str(msg.data),
+            ofp.ofp_error_type_to_str(msg.type),
+            ofp.ofp_error_code_to_str(msg.type, msg.code))
+        if len(msg.data) >= ofp.OFP_HEADER_SIZE:
+            (version, msg_type, msg_len, xid) = ofproto_parser.header(msg.data)
+            self.logger.debug(
+                " `-- data: version=%s, msg_type=%s, msg_len=%s, xid=%s\n"
+                "     `-- msg_type: %s",
+                hex(version), hex(msg_type), hex(msg_len), hex(xid),
+                ofp.ofp_msg_type_to_str(msg_type))
+        else:
+            self.logger.warning(
+                "The data field sent from the switch is too short: "
+                "len(msg.data) < OFP_HEADER_SIZE\n"
+                "The OpenFlow Spec says that the data field should contain "
+                "at least 64 bytes of the failed request.\n"
+                "Please check the settings or implementation of your switch.")
