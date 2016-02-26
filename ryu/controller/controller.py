@@ -62,7 +62,14 @@ CONF.register_cli_opts([
 CONF.register_opts([
     cfg.FloatOpt('socket-timeout',
                  default=5.0,
-                 help='Time, in seconds, to await completion of socket operations.')
+                 help='Time, in seconds, to await completion of socket operations.'),
+    cfg.FloatOpt('echo-request-interval',
+                 default=15.0,
+                 help='Time, in seconds, between sending echo requests to a datapath.'),
+    cfg.IntOpt('maximum-unreplied-echo-requests',
+               default=0,
+               min=0,
+               help='Maximum number of unreplied echo requests before datapath is disconnected.')
 ])
 
 
@@ -135,6 +142,10 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         # prevent it from eating memory up
         self.send_q = hub.Queue(16)
         self._send_q_sem = hub.BoundedSemaphore(self.send_q.maxsize)
+
+        self.echo_request_interval = CONF.echo_request_interval
+        self.max_unreplied_echo_requests = CONF.maximum_unreplied_echo_requests
+        self.unreplied_echo_requests = []
 
         self.xid = random.randint(0, self.ofproto.MAX_XID)
         self.id = None  # datapath_id is unknown yet
@@ -279,6 +290,23 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         # LOG.debug('send_msg %s', msg)
         self.send(msg.buf)
 
+    def _echo_request_loop(self):
+        if not self.max_unreplied_echo_requests:
+            return
+        while (self.send_q and
+               (len(self.unreplied_echo_requests) <= self.max_unreplied_echo_requests)):
+            echo_req = self.ofproto_parser.OFPEchoRequest(self)
+            self.unreplied_echo_requests.append(self.set_xid(echo_req))
+            self.send_msg(echo_req)
+            hub.sleep(self.echo_request_interval)
+        self.close()
+
+    def acknowledge_echo_reply(self, xid):
+        try:
+            self.unreplied_echo_requests.remove(xid)
+        except:
+            pass
+
     def serve(self):
         send_thr = hub.spawn(self._send_loop)
 
@@ -286,11 +314,14 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         hello = self.ofproto_parser.OFPHello(self)
         self.send_msg(hello)
 
+        echo_thr = hub.spawn(self._echo_request_loop)
+
         try:
             self._recv_loop()
         finally:
             hub.kill(send_thr)
-            hub.joinall([send_thr])
+            hub.kill(echo_thr)
+            hub.joinall([send_thr, echo_thr])
             self.is_active = False
 
     #

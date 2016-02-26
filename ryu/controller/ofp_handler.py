@@ -238,6 +238,13 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         echo_reply.data = msg.data
         datapath.send_msg(echo_reply)
 
+    @set_ev_handler(ofp_event.EventOFPEchoReply,
+                    [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def echo_reply_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        datapath.acknowledge_echo_reply(msg.xid)
+
     @set_ev_handler(ofp_event.EventOFPErrorMsg,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):
