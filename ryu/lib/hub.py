@@ -90,7 +90,7 @@ if HUB_TYPE == 'eventlet':
             except greenlet.GreenletExit:
                 pass
 
-    Queue = eventlet.queue.Queue
+    Queue = eventlet.queue.LightQueue
     QueueEmpty = eventlet.queue.Empty
     Semaphore = eventlet.semaphore.Semaphore
     BoundedSemaphore = eventlet.semaphore.BoundedSemaphore
