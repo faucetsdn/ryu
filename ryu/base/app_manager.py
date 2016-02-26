@@ -158,6 +158,7 @@ class RyuApp(object):
         self.threads = []
         self.main_thread = None
         self.events = hub.Queue(128)
+        self._events_sem = hub.BoundedSemaphore(self.events.maxsize)
         if hasattr(self.__class__, 'LOGGER_NAME'):
             self.logger = logging.getLogger(self.__class__.LOGGER_NAME)
         else:
@@ -280,6 +281,7 @@ class RyuApp(object):
     def _event_loop(self):
         while self.is_active or not self.events.empty():
             ev, state = self.events.get()
+            self._events_sem.release()
             if ev == self._event_stop:
                 continue
             handlers = self.get_handlers(ev, state)
@@ -287,6 +289,7 @@ class RyuApp(object):
                 handler(ev)
 
     def _send_event(self, ev, state):
+        self._events_sem.acquire()
         self.events.put((ev, state))
 
     def send_event(self, name, ev, state=None):
