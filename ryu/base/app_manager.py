@@ -349,7 +349,7 @@ class RyuApp(object):
 
 
 class AppManager(object):
-    # singletone
+    # singleton
     _instance = None
 
     @staticmethod
@@ -533,7 +533,7 @@ class AppManager(object):
         self._close(app)
         events = app.events
         if not events.empty():
-            app.logger.debug('%s events remians %d', app.name, events.qsize())
+            app.logger.debug('%s events remains %d', app.name, events.qsize())
 
     def close(self):
         def close_all(close_dict):

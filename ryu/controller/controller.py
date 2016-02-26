@@ -139,7 +139,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self.close_requested = False
 
         # The limit is arbitrary. We need to limit queue size to
-        # prevent it from eating memory up
+        # prevent it from eating memory up.
         self.send_q = hub.Queue(16)
         self._send_q_sem = hub.BoundedSemaphore(self.send_q.maxsize)
 
@@ -160,8 +160,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
             message = (
                 'Datapath#ports is kept for compatibility with the previous '
                 'openflow versions (< 1.3). '
-                'This not be updated by EventOFPPortStatus message. '
-                'If you want to be updated, you can use '
+                'This is not updated by the EventOFPPortStatus message. '
+                'If you want to be updated, you should use '
                 '\'ryu.controller.dpset\' or \'ryu.topology.switches\'.'
             )
             warnings.warn(message, stacklevel=2)
@@ -252,7 +252,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                       self.address, errno, ioe.strerror)
         finally:
             q = self.send_q
-            # first, clear self.send_q to prevent new references.
+            # First, clear self.send_q to prevent new references.
             self.send_q = None
             # Now, drain the send_q, releasing the associated semaphore for each entry.
             # This should release all threads waiting to acquire the semaphore.
