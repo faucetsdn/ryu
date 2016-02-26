@@ -57,8 +57,12 @@ CONF.register_cli_opts([
                help='openflow ssl listen port'),
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
     cfg.StrOpt('ctl-cert', default=None, help='controller certificate'),
-    cfg.StrOpt('ca-certs', default=None, help='CA certificates'),
-    cfg.FloatOpt('socket-timeout', default=5.0, help='Time, in seconds, to await completion of socket operations.')
+    cfg.StrOpt('ca-certs', default=None, help='CA certificates')
+])
+CONF.register_opts([
+    cfg.FloatOpt('socket-timeout',
+                 default=5.0,
+                 help='Time, in seconds, to await completion of socket operations.')
 ])
 
 
