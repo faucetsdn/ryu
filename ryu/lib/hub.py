@@ -50,7 +50,7 @@ if HUB_TYPE == 'eventlet':
             # by not propergating an exception to the joiner.
             try:
                 func(*args, **kwargs)
-            except greenlet.GreenletExit:
+            except TaskExit:
                 pass
             except:
                 # log uncaught exception.
@@ -67,7 +67,7 @@ if HUB_TYPE == 'eventlet':
             # by not propergating an exception to the joiner.
             try:
                 func(*args, **kwargs)
-            except greenlet.GreenletExit:
+            except TaskExit:
                 pass
             except:
                 # log uncaught exception.
@@ -87,13 +87,14 @@ if HUB_TYPE == 'eventlet':
             # greenthread
             try:
                 t.wait()
-            except greenlet.GreenletExit:
+            except TaskExit:
                 pass
 
     Queue = eventlet.queue.LightQueue
     QueueEmpty = eventlet.queue.Empty
     Semaphore = eventlet.semaphore.Semaphore
     BoundedSemaphore = eventlet.semaphore.BoundedSemaphore
+    TaskExit = greenlet.GreenletExit
 
     class StreamServer(object):
         def __init__(self, listen_info, handle=None, backlog=None,

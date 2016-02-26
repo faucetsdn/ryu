@@ -286,7 +286,17 @@ class RyuApp(object):
                 continue
             handlers = self.get_handlers(ev, state)
             for handler in handlers:
-                handler(ev)
+                try:
+                    handler(ev)
+                except hub.TaskExit:
+                    # Normal exit.
+                    # Propagate upwards, so we leave the event loop.
+                    raise
+                except:
+                    LOG.exception('%s: Exception occurred during handler processing. '
+                                  'Backtrace from offending handler '
+                                  '[%s] servicing event [%s] follows.',
+                                  self.name, handler.__name__, ev.__class__.__name__)
 
     def _send_event(self, ev, state):
         self._events_sem.acquire()
