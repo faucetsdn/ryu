@@ -26,6 +26,7 @@ from ryu.controller import handler
 
 opts = (cfg.StrOpt('address', default='0.0.0.0', help='OVSDB address'),
         cfg.IntOpt('port', default=6640, help='OVSDB port'),
+        cfg.IntOpt('probe-interval', help='OVSDB reconnect probe interval'),
         cfg.StrOpt('mngr-privkey', default=None, help='manager private key'),
         cfg.StrOpt('mngr-cert', default=None, help='manager certificate'),
         cfg.ListOpt('whitelist', default=[],
@@ -43,6 +44,7 @@ class OVSDB(app_manager.RyuApp):
         super(OVSDB, self).__init__(*args, **kwargs)
         self._address = self.CONF.ovsdb.address
         self._port = self.CONF.ovsdb.port
+        self._probe_interval = self.CONF.ovsdb.probe_interval
         self._clients = {}
 
     def _accept(self, server):
@@ -89,7 +91,8 @@ class OVSDB(app_manager.RyuApp):
         return self.send_event(client_name, ev)
 
     def _start_remote(self, sock, client_address):
-        app = client.RemoteOvsdb.factory(sock, client_address)
+        app = client.RemoteOvsdb.factory(sock, client_address,
+                                         probe_interval=self._probe_interval)
 
         if app:
             self._clients[app.name] = app
