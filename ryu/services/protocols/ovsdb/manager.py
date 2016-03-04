@@ -137,8 +137,8 @@ class OVSDB(app_manager.RyuApp):
             self.main_thread = None
 
         # NOTE(jkoelker) Stop all the clients
-        for client in self._clients.values():
-            client.stop()
+        for c in self._clients.values():
+            c.stop()
 
         # NOTE(jkoelker) super will only take care of the event and joining now
         super(OVSDB, self).stop()

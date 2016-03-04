@@ -261,9 +261,9 @@ class RemoteOvsdb(app_manager.RyuApp):
                 hub.sleep(0.1)
                 continue
 
-            for event in events:
-                ev = event[0]
-                args = event[1]
+            for e in events:
+                ev = e[0]
+                args = e[1]
                 self._submit_event(ev(self.system_id, *args))
 
             hub.sleep(0)
