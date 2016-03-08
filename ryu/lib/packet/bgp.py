@@ -23,18 +23,12 @@ RFC 4271 BGP-4
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
 
 import abc
-import six
-import struct
 import copy
-import netaddr
+import functools
 import numbers
-
-try:
-    # Python 3
-    from functools import reduce
-except ImportError:
-    # Python 2
-    pass
+import six
+import socket
+import struct
 
 from ryu.lib.stringify import StringifyMixin
 from ryu.lib.packet import afi as addr_family
@@ -43,6 +37,8 @@ from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
 from ryu.lib.pack_utils import msg_pack_into
+
+reduce = six.moves.reduce
 
 BGP_MSG_OPEN = 1
 BGP_MSG_UPDATE = 2
@@ -571,13 +567,17 @@ class OutOfResource(BgpExc):
     SUB_CODE = BGP_ERROR_SUB_OUT_OF_RESOURCES
 
 
+@functools.total_ordering
 class RouteFamily(StringifyMixin):
     def __init__(self, afi, safi):
         self.afi = afi
         self.safi = safi
 
-    def __cmp__(self, other):
-        return cmp((other.afi, other.safi), (self.afi, self.safi))
+    def __lt__(self, other):
+        return (self.afi, self.safi) < (other.afi, other.safi)
+
+    def __eq__(self, other):
+        return (self.afi, self.safi) == (other.afi, other.safi)
 
 # Route Family Singleton
 RF_IPv4_UC = RouteFamily(addr_family.IP, subaddr_family.UNICAST)
@@ -809,7 +809,8 @@ class _LabelledAddrPrefix(_AddrPrefix):
 
     @classmethod
     def _label_from_bin(cls, bin):
-        (b1, b2, b3) = struct.unpack_from(cls._LABEL_PACK_STR, six.binary_type(bin))
+        (b1, b2, b3) = struct.unpack_from(cls._LABEL_PACK_STR,
+                                          six.binary_type(bin))
         rest = bin[struct.calcsize(cls._LABEL_PACK_STR):]
         return (b1 << 16) | (b2 << 8) | b3, rest
 
@@ -1014,6 +1015,7 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
         return "%s:%s" % (self.route_dist, self.prefix)
 
 
+@functools.total_ordering
 class RouteTargetMembershipNLRI(StringifyMixin):
     """Route Target Membership NLRI.
 
@@ -1083,11 +1085,14 @@ class RouteTargetMembershipNLRI(StringifyMixin):
             return True
         return False
 
-    def __cmp__(self, other):
-        return cmp(
-            (self._origin_as, self._route_target),
-            (other.origin_as, other.route_target),
-        )
+    def __lt__(self, other):
+        return ((self.origin_as, self.route_target) <
+                (other.origin_as, other.route_target))
+
+    def __eq__(self, other):
+        return ((self.origin_as, self.route_target) ==
+                (other.origin_as, other.route_target))
+        return (self.afi, self.safi) == (other.afi, other.safi)
 
     @classmethod
     def parser(cls, buf):
@@ -1111,7 +1116,10 @@ class RouteTargetMembershipNLRI(StringifyMixin):
         # RT Nlri is 12 octets
         return struct.pack('B', (8 * 12)) + rt_nlri
 
-_addr_class_key = lambda x: (x.afi, x.safi)
+
+def _addr_class_key(route_family):
+    return (route_family.afi, route_family.safi)
+
 
 _ADDR_CLASSES = {
     _addr_class_key(RF_IPv4_UC): IPAddrPrefix,
@@ -1144,7 +1152,8 @@ class _OptParam(StringifyMixin, _TypeDisp, _Value):
 
     @classmethod
     def parser(cls, buf):
-        (type_, length) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf))
+        (type_, length) = struct.unpack_from(cls._PACK_STR,
+                                             six.binary_type(buf))
         rest = buf[struct.calcsize(cls._PACK_STR):]
         value = bytes(rest[:length])
         rest = rest[length:]
@@ -1267,7 +1276,8 @@ class BGPOptParamCapabilityGracefulRestart(_OptParamCapability):
 
     @classmethod
     def parse_cap_value(cls, buf):
-        (restart, ) = struct.unpack_from(cls._CAP_PACK_STR, six.binary_type(buf))
+        (restart, ) = struct.unpack_from(cls._CAP_PACK_STR,
+                                         six.binary_type(buf))
         buf = buf[2:]
         l = []
         while len(buf) >= 4:
@@ -1278,7 +1288,6 @@ class BGPOptParamCapabilityGracefulRestart(_OptParamCapability):
     def serialize_cap_value(self):
         buf = bytearray()
         msg_pack_into(self._CAP_PACK_STR, buf, 0, self.flags << 12 | self.time)
-        tuples = self.tuples
         i = 0
         offset = 2
         for i in self.tuples:
@@ -1298,7 +1307,8 @@ class BGPOptParamCapabilityFourOctetAsNumber(_OptParamCapability):
 
     @classmethod
     def parse_cap_value(cls, buf):
-        (as_number, ) = struct.unpack_from(cls._CAP_PACK_STR, six.binary_type(buf))
+        (as_number, ) = struct.unpack_from(cls._CAP_PACK_STR,
+                                           six.binary_type(buf))
         return {'as_number': as_number}
 
     def serialize_cap_value(self):
@@ -1363,7 +1373,8 @@ class _PathAttribute(StringifyMixin, _TypeDisp, _Value):
 
     @classmethod
     def parser(cls, buf):
-        (flags, type_) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf))
+        (flags, type_) = struct.unpack_from(cls._PACK_STR,
+                                            six.binary_type(buf))
         rest = buf[struct.calcsize(cls._PACK_STR):]
         if (flags & BGP_ATTR_FLAG_EXTENDED_LENGTH) != 0:
             len_pack_str = cls._PACK_STR_EXT_LEN
@@ -1578,7 +1589,8 @@ class BGPPathAttributeNextHop(_PathAttribute):
 
     @classmethod
     def parse_value(cls, buf):
-        (ip_addr,) = struct.unpack_from(cls._VALUE_PACK_STR, six.binary_type(buf))
+        (ip_addr,) = struct.unpack_from(cls._VALUE_PACK_STR,
+                                        six.binary_type(buf))
         return {
             'value': addrconv.ipv4.bin_to_text(ip_addr),
         }
@@ -2116,7 +2128,8 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
 
     @classmethod
     def parse_value(cls, buf):
-        (afi, safi,) = struct.unpack_from(cls._VALUE_PACK_STR, six.binary_type(buf))
+        (afi, safi,) = struct.unpack_from(cls._VALUE_PACK_STR,
+                                          six.binary_type(buf))
         binnlri = buf[struct.calcsize(cls._VALUE_PACK_STR):]
         addr_cls = _get_addr_class(afi, safi)
         nlri = []
@@ -2260,9 +2273,12 @@ class BGPOpen(BGPMessage):
 
     @classmethod
     def parser(cls, buf):
-        (version, my_as, hold_time,
-         bgp_identifier, opt_param_len) = struct.unpack_from(cls._PACK_STR,
-                                                             six.binary_type(buf))
+        (version,
+         my_as,
+         hold_time,
+         bgp_identifier,
+         opt_param_len) = struct.unpack_from(cls._PACK_STR,
+                                             six.binary_type(buf))
         rest = buf[struct.calcsize(cls._PACK_STR):]
         binopts = rest[:opt_param_len]
         opt_param = []
