@@ -22,7 +22,6 @@ import logging
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
-from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 
 from ryu.services.protocols.bgp.utils import validation
 from ryu.services.protocols.bgp.base import get_validator

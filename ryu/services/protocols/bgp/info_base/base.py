@@ -23,6 +23,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 from copy import copy
 import logging
+import functools
 import netaddr
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
@@ -249,8 +250,9 @@ class NonVrfPathProcessingMixin(object):
         LOG.debug('New best path selected for destination %s', self)
 
         # If old best path was withdrawn
-        if (old_best_path and old_best_path not in self._known_path_list
-                and self._sent_routes):
+        if (old_best_path and
+                old_best_path not in self._known_path_list and
+                self._sent_routes):
             # Have to clear sent_route list for this destination as
             # best path is removed.
             self._sent_routes = {}
@@ -810,7 +812,7 @@ class Path(object):
         return not interested_rts.isdisjoint(curr_rts)
 
     def is_local(self):
-        return self._source == None
+        return self._source is None
 
     def has_nexthop(self):
         return not (not self._nexthop or self._nexthop == '0.0.0.0' or
@@ -880,6 +882,7 @@ class Filter(object):
         raise NotImplementedError()
 
 
+@functools.total_ordering
 class PrefixFilter(Filter):
     """
     used to specify a prefix for filter.
@@ -934,8 +937,11 @@ class PrefixFilter(Filter):
         self._ge = ge
         self._le = le
 
-    def __cmp__(self, other):
-        return cmp(self.prefix, other.prefix)
+    def __lt__(self, other):
+        return self._network < other._network
+
+    def __eq__(self, other):
+        return self._network == other._network
 
     def __repr__(self):
         policy = 'PERMIT' \
@@ -1009,6 +1015,7 @@ class PrefixFilter(Filter):
                               le=self._le)
 
 
+@functools.total_ordering
 class ASPathFilter(Filter):
     """
     used to specify a prefix for AS_PATH attribute.
@@ -1055,8 +1062,11 @@ class ASPathFilter(Filter):
         super(ASPathFilter, self).__init__(policy)
         self._as_number = as_number
 
-    def __cmp__(self, other):
-        return cmp(self.as_number, other.as_number)
+    def __lt__(self, other):
+        return self.as_number < other.as_number
+
+    def __eq__(self, other):
+        return self.as_number == other.as_number
 
     def __repr__(self):
         policy = 'TOP'
@@ -1223,5 +1233,8 @@ class AttributeMap(object):
             if self.attr_type == self.ATTR_LOCAL_PREF else None
 
         filter_string = ','.join(repr(f) for f in self.filters)
-        return 'AttributeMap(filters=[%s],attribute_type=%s,attribute_value=%s)'\
-               % (filter_string, attr_type, self.attr_value)
+        return ('AttributeMap(filters=[%s],'
+                'attribute_type=%s,'
+                'attribute_value=%s)' % (filter_string,
+                                         attr_type,
+                                         self.attr_value))

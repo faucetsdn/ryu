@@ -24,14 +24,11 @@ from socket import IPPROTO_TCP, TCP_NODELAY
 from eventlet import semaphore
 
 from ryu.lib.packet import bgp
-from ryu.lib.packet.bgp import RouteFamily
-from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGPMessage
 from ryu.lib.packet.bgp import BGPOpen
 from ryu.lib.packet.bgp import BGPUpdate
 from ryu.lib.packet.bgp import BGPKeepAlive
 from ryu.lib.packet.bgp import BGPNotification
-from ryu.lib.packet.bgp import BGPRouteRefresh
 from ryu.lib.packet.bgp import BGP_MSG_OPEN
 from ryu.lib.packet.bgp import BGP_MSG_UPDATE
 from ryu.lib.packet.bgp import BGP_MSG_KEEPALIVE
@@ -39,7 +36,6 @@ from ryu.lib.packet.bgp import BGP_MSG_NOTIFICATION
 from ryu.lib.packet.bgp import BGP_MSG_ROUTE_REFRESH
 from ryu.lib.packet.bgp import BGP_CAP_ENHANCED_ROUTE_REFRESH
 from ryu.lib.packet.bgp import BGP_CAP_MULTIPROTOCOL
-from ryu.lib.packet.bgp import BGP_CAP_ROUTE_REFRESH
 from ryu.lib.packet.bgp import BGP_ERROR_HOLD_TIMER_EXPIRED
 from ryu.lib.packet.bgp import BGP_ERROR_SUB_HOLD_TIMER_EXPIRED
 from ryu.lib.packet.bgp import get_rf
@@ -143,7 +139,7 @@ class BgpProtocol(Protocol, Activity):
                              '`BgpProtocol`')
 
         # Compare protocol connection end point's addresses
-        if (self._remotename[0] == other_protoco._remotename[0] and
+        if (self._remotename[0] == other_protocol._remotename[0] and
                 self._localname[0] == other_protocol._localname[0]):
             return True
 
@@ -324,25 +320,23 @@ class BgpProtocol(Protocol, Activity):
                 raise bgp.NotSync()
 
             # Check if we have valid bgp message length.
-            check = lambda: length < BGP_MIN_MSG_LEN\
-                or length > BGP_MAX_MSG_LEN
+            check = (length < BGP_MIN_MSG_LEN or length > BGP_MAX_MSG_LEN)
 
             # RFC says: The minimum length of the OPEN message is 29
             # octets (including the message header).
-            check2 = lambda: ptype == BGP_MSG_OPEN\
-                and length < BGPOpen._MIN_LEN
+            check2 = (ptype == BGP_MSG_OPEN and length < BGPOpen._MIN_LEN)
 
             # RFC says: A KEEPALIVE message consists of only the
             # message header and has a length of 19 octets.
-            check3 = lambda: ptype == BGP_MSG_KEEPALIVE\
-                and length != BGPKeepAlive._MIN_LEN
+            check3 = (ptype == BGP_MSG_KEEPALIVE and
+                      length != BGPKeepAlive._MIN_LEN)
 
             # RFC says: The minimum length of the UPDATE message is 23
             # octets.
-            check4 = lambda: ptype == BGP_MSG_UPDATE\
-                and length < BGPUpdate._MIN_LEN
+            check4 = (ptype == BGP_MSG_UPDATE and
+                      length < BGPUpdate._MIN_LEN)
 
-            if check() or check2() or check3() or check4():
+            if any((check, check2, check3, check4)):
                 raise bgp.BadLen(ptype, length)
 
             # If we have partial message we wait for rest of the message.
@@ -380,7 +374,7 @@ class BgpProtocol(Protocol, Activity):
         self._sendlock.acquire()
         try:
             self._socket.sendall(msg.serialize())
-        except socket.error as err:
+        except socket.error:
             self.connection_lost('failed to write to socket')
         finally:
             self._sendlock.release()

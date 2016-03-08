@@ -104,8 +104,8 @@ class VrfTable(Table):
         local_route_count = 0
         for dest in self.values():
             for path in dest.known_path_list:
-                if (hasattr(path.source, 'version_num')
-                        or path.source == VPN_TABLE):
+                if (hasattr(path.source, 'version_num') or
+                        path.source == VPN_TABLE):
                     remote_route_count += 1
                 else:
                     local_route_count += 1

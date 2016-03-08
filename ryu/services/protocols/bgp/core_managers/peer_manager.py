@@ -7,10 +7,6 @@ from ryu.services.protocols.bgp.peer import Peer
 from ryu.lib.packet.bgp import BGPPathAttributeCommunities
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
-from ryu.lib.packet.bgp import RF_IPv4_UC
-from ryu.lib.packet.bgp import RF_IPv6_UC
-from ryu.lib.packet.bgp import RF_IPv4_VPN
-from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
 from ryu.services.protocols.bgp.utils.bgp \

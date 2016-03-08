@@ -18,7 +18,6 @@
 import imp
 import logging
 import traceback
-from os import path
 from oslo_config import cfg
 
 from ryu.lib import hub

@@ -60,7 +60,6 @@ from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.base import validate
 from ryu.services.protocols.bgp.rtconf.base import validate_med
 from ryu.services.protocols.bgp.rtconf.base import validate_soo_list
-from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
 from ryu.services.protocols.bgp.info_base.base import Filter
 from ryu.services.protocols.bgp.info_base.base import PrefixFilter

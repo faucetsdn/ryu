@@ -129,10 +129,11 @@ def validate_refresh_max_eor_time(rmet):
 @validate(name=LABEL_RANGE)
 def validate_label_range(label_range):
     min_label, max_label = label_range
-    if (not min_label or not max_label
-            or not isinstance(min_label, numbers.Integral)
-            or not isinstance(max_label, numbers.Integral) or min_label < 17
-            or min_label >= max_label):
+    if (not min_label or
+            not max_label or
+            not isinstance(min_label, numbers.Integral) or
+            not isinstance(max_label, numbers.Integral) or min_label < 17 or
+            min_label >= max_label):
         raise ConfigValueError(desc=('Invalid label_range configuration value:'
                                      ' (%s).' % label_range))
 

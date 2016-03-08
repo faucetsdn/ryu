@@ -34,8 +34,6 @@ from ryu.services.protocols.bgp.rtconf.common \
     import DEFAULT_REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common \
     import DEFAULT_REFRESH_STALEPATH_TIME
-from ryu.services.protocols.bgp.rtconf.common \
-    import DEFAULT_BGP_CONN_RETRY_TIME
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
@@ -57,8 +55,6 @@ from ryu.services.protocols.bgp.rtconf.neighbors \
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
-from ryu.services.protocols.bgp.rtconf.neighbors import IN_FILTER
-from ryu.services.protocols.bgp.rtconf.neighbors import OUT_FILTER
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_ROUTE_SERVER_CLIENT
 from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
 from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE

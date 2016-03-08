@@ -18,6 +18,7 @@
 """
 from abc import ABCMeta
 from abc import abstractmethod
+import functools
 import numbers
 import logging
 import six
@@ -479,6 +480,7 @@ class ConfWithStatsListener(BaseConfListener):
         raise NotImplementedError()
 
 
+@functools.total_ordering
 class ConfEvent(object):
     """Encapsulates configuration settings change/update event."""
 
@@ -517,9 +519,13 @@ class ConfEvent(object):
         return ('ConfEvent(src=%s, name=%s, value=%s)' %
                 (self.src, self.name, self.value))
 
-    def __cmp__(self, other):
-        return cmp((other.src, other.name, other.value),
-                   (self.src, self.name, self.value))
+    def __lt__(self, other):
+        return ((self.src, self.name, self.value) <
+                (other.src, other.name, other.value))
+
+    def __eq__(self, other):
+        return ((self.src, self.name, self.value) ==
+                (other.src, other.name, other.value))
 
 
 # =============================================================================
@@ -598,10 +604,10 @@ def validate_cap_mbgp_ipv4(cmv4):
 
 
 @validate(name=CAP_MBGP_IPV6)
-def validate_cap_mbgp_ipv4(cmv6):
+def validate_cap_mbgp_ipv6(cmv6):
     if cmv6 not in (True, False):
         raise ConfigTypeError(desc='Invalid Enhanced Refresh capability '
-                              'settings: %s boolean value expected' % cmv4)
+                              'settings: %s boolean value expected' % cmv6)
 
     return cmv6
 

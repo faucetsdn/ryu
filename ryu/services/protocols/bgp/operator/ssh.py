@@ -22,14 +22,6 @@ import sys
 from copy import copy
 import os.path
 
-CONF = {
-    "ssh_port": 4990,
-    "ssh_host": "localhost",
-    "ssh_hostkey": None,
-    "ssh_username": "ryu",
-    "ssh_password": "ryu",
-}
-
 from ryu.lib import hub
 from ryu import version
 from ryu.services.protocols.bgp.operator.command import Command
@@ -38,6 +30,14 @@ from ryu.services.protocols.bgp.operator.commands.root import RootCmd
 from ryu.services.protocols.bgp.operator.internal_api import InternalApi
 from ryu.services.protocols.bgp.operator.command import STATUS_OK
 from ryu.services.protocols.bgp.base import Activity
+
+CONF = {
+    "ssh_port": 4990,
+    "ssh_host": "localhost",
+    "ssh_hostkey": None,
+    "ssh_username": "ryu",
+    "ssh_password": "ryu",
+}
 
 LOG = logging.getLogger('bgpspeaker.cli')
 
@@ -83,7 +83,7 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def _find_ssh_server_key(self):
         if CONF["ssh_hostkey"]:
-            return paramiko.RSAKey.from_private_key_file(ssh_hostkey)
+            return paramiko.RSAKey.from_private_key_file(CONF['ssh_hostkey'])
         elif os.path.exists("/etc/ssh_host_rsa_key"):
             # OSX
             return paramiko.RSAKey.from_private_key_file(

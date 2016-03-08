@@ -17,15 +17,12 @@ from ryu.services.protocols.bgp.base import Activity
 from ryu.lib import hub
 from ryu.lib.packet import bmp
 from ryu.lib.packet import bgp
-from ryu.services.protocols.bgp import constants as const
 import socket
 import logging
 from calendar import timegm
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.lib.packet.bgp import BGPUpdate
-from ryu.lib.packet.bgp import BGPPathAttributeNextHop
-from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
 
 LOG = logging.getLogger('bgpspeaker.bmp')
@@ -82,9 +79,7 @@ class BMPClient(Activity):
         if not self._socket:
             return
         assert isinstance(msg, bmp.BMPMessage)
-        serialized_msg = msg.serialize()
-
-        ret = self._socket.send(msg.serialize())
+        self._socket.send(msg.serialize())
 
     def on_adj_rib_in_changed(self, data):
         peer = data['peer']

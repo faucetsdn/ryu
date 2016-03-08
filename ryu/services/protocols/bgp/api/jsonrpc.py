@@ -14,10 +14,9 @@
 # limitations under the License.
 
 
-import json
 from ryu.base import app_manager
 from ryu.lib import hub
-from ryu.app.wsgi import route, websocket, ControllerBase, WSGIApplication
+from ryu.app.wsgi import websocket, ControllerBase, WSGIApplication
 from ryu.app.wsgi import rpc_public, WebSocketRPCServer
 from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.api.base import PREFIX
