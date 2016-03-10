@@ -2814,7 +2814,6 @@ class OFPGroupDescStats(StringifyMixin):
         self.length = length
         self.type = type_
         self.group_id = group_id
-        self.bucket_array_len = bucket_array_len
         self.buckets = buckets
         self.properties = properties
 
