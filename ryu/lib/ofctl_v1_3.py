@@ -81,6 +81,16 @@ def to_action(dp, dic):
         result = parser.OFPActionPushPbb(ethertype)
     elif action_type == 'POP_PBB':
         result = parser.OFPActionPopPbb()
+    elif action_type == 'EXPERIMENTER':
+        experimenter = int(dic.get('experimenter'))
+        data_type = dic.get('data_type', 'ascii')
+        if data_type not in ['ascii', 'base64']:
+            LOG.error('Unknown data type: %s', data_type)
+            return None
+        data = dic.get('data', '')
+        if data_type == 'base64':
+            data = base64.b64decode(data)
+        result = parser.OFPActionExperimenterUnknown(experimenter, data)
     else:
         result = None
 
@@ -176,6 +186,10 @@ def action_to_str(act):
         buf = 'PUSH_PBB:' + str(act.ethertype)
     elif action_type == ofproto_v1_3.OFPAT_POP_PBB:
         buf = 'POP_PBB'
+    elif action_type == ofproto_v1_3.OFPAT_EXPERIMENTER:
+        data_str = base64.b64encode(act.data)
+        buf = 'EXPERIMENTER: {experimenter:%s, data:%s}' % \
+            (act.experimenter, data_str.decode('utf-8'))
     else:
         buf = 'UNKNOWN'
     return buf

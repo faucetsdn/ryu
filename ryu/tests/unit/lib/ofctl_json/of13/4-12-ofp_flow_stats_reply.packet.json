@@ -74,7 +74,9 @@
                         "SET_NW_TTL:10",
                         "SET_QUEUE:3",
                         "GROUP:99",
-                        "OUTPUT:6"
+                        "OUTPUT:6",
+                        "EXPERIMENTER: {experimenter:98765432, data:ZXhwX2RhdGE=}",
+                        "EXPERIMENTER: {experimenter:8992, data:cF9kYXRh}"
                     ]
                 },
                 "SET_FIELD: {eth_src:01:02:03:04:05:06}",

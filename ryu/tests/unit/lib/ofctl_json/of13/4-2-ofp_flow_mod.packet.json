@@ -62,6 +62,12 @@
                         "nw_ttl": 10
                     },
                     {
+                        "type": "EXPERIMENTER",
+                        "experimenter": 101,
+                        "data": "AAECAwQFBgc=",
+                        "data_type": "base64"
+                    },
+                    {
                         "type": "SET_QUEUE",
                         "queue_id": 3
                     },
