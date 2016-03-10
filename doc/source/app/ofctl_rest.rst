@@ -2165,6 +2165,8 @@ Description of Actions on request messages
                         (The set of keywords available for "field" is the same as match field)
         PUSH_PBB        Push a new PBB service tag with "ethertype"                                  {"type": "PUSH_PBB", "ethertype": 35047}
         POP_PBB         Pop the outer PBB service tag                                                {"type": "POP_PBB"}
+        EXPERIMENTER    Extensible action for the experimenter                                       {"type": "EXPERIMENTER", "experimenter": 101, "data": "AAECAwQFBgc=", "data_type": "base64"}
+                        (Set "base64" or "ascii" to "data_type" field)
         GOTO_TABLE      (Instruction) Setup the next table identified by "table_id"                  {"type": "GOTO_TABLE", "table_id": 8}
         WRITE_METADATA  (Instruction) Setup the metadata field using "metadata" and "metadata_mask"  {"type": "WRITE_METADATA", "metadata": 0x3, "metadata_mask": 0x3}
         METER           (Instruction) Apply meter identified by "meter_id"                           {"type": "METER", "meter_id": 3}
