@@ -42,7 +42,7 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import nx_match
 
 from ryu.controller import ofp_event
-from ryu.controller.handler import HANDSHAKE_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER
+from ryu.controller.handler import HANDSHAKE_DISPATCHER, DEAD_DISPATCHER
 
 from ryu.lib.dpid import dpid_to_str
 
@@ -121,8 +121,6 @@ def _deactivate(method):
 
             if not self.is_active:
                 self.socket.close()
-            if self.state is not DEAD_DISPATCHER:
-                self.set_state(DEAD_DISPATCHER)
     return deactivate
 
 
@@ -134,9 +132,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         self.socket.settimeout(CONF.socket_timeout)
         self.address = address
-
         self.is_active = True
-        self.close_requested = False
 
         # The limit is arbitrary. We need to limit queue size to
         # prevent it from eating memory up.
@@ -175,7 +171,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
 
     @_deactivate
     def close(self):
-        self.close_requested = True
+        if self.state != DEAD_DISPATCHER:
+            self.set_state(DEAD_DISPATCHER)
 
     def set_state(self, state):
         self.state = state
@@ -190,7 +187,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         required_len = ofproto_common.OFP_HEADER_SIZE
 
         count = 0
-        while not self.close_requested:
+        while self.state != DEAD_DISPATCHER:
             ret = ""
 
             try:
@@ -238,7 +235,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
 
     def _send_loop(self):
         try:
-            while True:
+            while self.state != DEAD_DISPATCHER:
                 buf = self.send_q.get()
                 self._send_q_sem.release()
                 self.socket.sendall(buf)
