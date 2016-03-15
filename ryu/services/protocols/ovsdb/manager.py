@@ -27,6 +27,12 @@ from ryu.controller import handler
 opts = (cfg.StrOpt('address', default='0.0.0.0', help='OVSDB address'),
         cfg.IntOpt('port', default=6640, help='OVSDB port'),
         cfg.IntOpt('probe-interval', help='OVSDB reconnect probe interval'),
+        cfg.IntOpt('min-backoff',
+                   help=('OVSDB reconnect minimum milliseconds between '
+                         'connection attemps')),
+        cfg.IntOpt('max-backoff',
+                   help=('OVSDB reconnect maximum milliseconds between '
+                         'connection attemps')),
         cfg.StrOpt('mngr-privkey', default=None, help='manager private key'),
         cfg.StrOpt('mngr-cert', default=None, help='manager certificate'),
         cfg.ListOpt('whitelist', default=[],
@@ -45,6 +51,8 @@ class OVSDB(app_manager.RyuApp):
         self._address = self.CONF.ovsdb.address
         self._port = self.CONF.ovsdb.port
         self._probe_interval = self.CONF.ovsdb.probe_interval
+        self._min_backoff = self.CONF.ovsdb._min_backoff
+        self._max_backoff = self.CONF.ovsdb._max_backoff
         self._clients = {}
 
     def _accept(self, server):
@@ -92,7 +100,9 @@ class OVSDB(app_manager.RyuApp):
 
     def _start_remote(self, sock, client_address):
         app = client.RemoteOvsdb.factory(sock, client_address,
-                                         probe_interval=self._probe_interval)
+                                         probe_interval=self._probe_interval,
+                                         min_backoff=self._min_backoff,
+                                         max_backoff=self._max_min_backoff)
 
         if app:
             self._clients[app.name] = app

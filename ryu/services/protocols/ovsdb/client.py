@@ -192,7 +192,8 @@ class RemoteOvsdb(app_manager.RyuApp):
                event.EventPortUpdated]
 
     @classmethod
-    def factory(cls, sock, address, probe_interval=None, *args, **kwargs):
+    def factory(cls, sock, address, probe_interval=None, min_backoff=None,
+                max_backoff=None, *args, **kwargs):
         ovs_stream = stream.Stream(sock, None, None)
         connection = jsonrpc.Connection(ovs_stream)
         schemas = discover_schemas(connection)
@@ -208,6 +209,15 @@ class RemoteOvsdb(app_manager.RyuApp):
 
         if probe_interval is not None:
             fsm.set_probe_interval(probe_interval)
+
+        if min_backoff is None:
+            min_backoff = fsm.get_min_backoff()
+
+        if max_backoff is None:
+            max_backoff = fsm.get_max_backoff()
+
+        if min_backoff and max_backoff:
+            fsm.set_backoff(min_backoff, max_backoff)
 
         fsm.connected(now())
 
