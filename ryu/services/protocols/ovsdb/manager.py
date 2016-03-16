@@ -51,8 +51,8 @@ class OVSDB(app_manager.RyuApp):
         self._address = self.CONF.ovsdb.address
         self._port = self.CONF.ovsdb.port
         self._probe_interval = self.CONF.ovsdb.probe_interval
-        self._min_backoff = self.CONF.ovsdb._min_backoff
-        self._max_backoff = self.CONF.ovsdb._max_backoff
+        self._min_backoff = self.CONF.ovsdb.min_backoff
+        self._max_backoff = self.CONF.ovsdb.max_backoff
         self._clients = {}
 
     def _accept(self, server):
@@ -102,7 +102,7 @@ class OVSDB(app_manager.RyuApp):
         app = client.RemoteOvsdb.factory(sock, client_address,
                                          probe_interval=self._probe_interval,
                                          min_backoff=self._min_backoff,
-                                         max_backoff=self._max_min_backoff)
+                                         max_backoff=self._max_backoff)
 
         if app:
             self._clients[app.name] = app
