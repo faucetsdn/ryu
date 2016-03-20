@@ -1,6 +1,8 @@
 import sys
 
+
 _orig_sys_path = None
+
 
 def update_module_path():
     # Adjust module loading path for third party libraries
@@ -15,6 +17,7 @@ def update_module_path():
         if path in sys.path:
             sys.path.remove(path)
         sys.path.insert(0, path)  # prioritize our own copy than system's
+
 
 def restore_module_path():
     global _orig_sys_path
