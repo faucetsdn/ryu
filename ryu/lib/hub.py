@@ -45,14 +45,18 @@ if HUB_TYPE == 'eventlet':
     connect = eventlet.connect
 
     def spawn(*args, **kwargs):
+        raise_error = kwargs.pop('raise_error', False)
+
         def _launch(func, *args, **kwargs):
             # Mimic gevent's default raise_error=False behaviour
             # by not propagating an exception to the joiner.
             try:
-                func(*args, **kwargs)
+                return func(*args, **kwargs)
             except TaskExit:
                 pass
             except:
+                if raise_error:
+                    raise
                 # Log uncaught exception.
                 # Note: this is an intentional divergence from gevent
                 # behaviour; gevent silently ignores such exceptions.
@@ -62,14 +66,18 @@ if HUB_TYPE == 'eventlet':
         return eventlet.spawn(_launch, *args, **kwargs)
 
     def spawn_after(seconds, *args, **kwargs):
+        raise_error = kwargs.pop('raise_error', False)
+
         def _launch(func, *args, **kwargs):
             # Mimic gevent's default raise_error=False behaviour
             # by not propagating an exception to the joiner.
             try:
-                func(*args, **kwargs)
+                return func(*args, **kwargs)
             except TaskExit:
                 pass
             except:
+                if raise_error:
+                    raise
                 # Log uncaught exception.
                 # Note: this is an intentional divergence from gevent
                 # behaviour; gevent silently ignores such exceptions.
