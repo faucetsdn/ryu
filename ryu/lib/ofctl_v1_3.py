@@ -756,9 +756,14 @@ def get_port_stats(dp, waiters, port=None):
     return ports
 
 
-def get_meter_stats(dp, waiters):
+def get_meter_stats(dp, waiters, meter_id=None):
+    if meter_id is None:
+        meter_id = dp.ofproto.OFPM_ALL
+    else:
+        meter_id = int(str(meter_id), 0)
+
     stats = dp.ofproto_parser.OFPMeterStatsRequest(
-        dp, 0, dp.ofproto.OFPM_ALL)
+        dp, 0, meter_id)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 
