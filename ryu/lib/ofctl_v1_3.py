@@ -470,10 +470,21 @@ def get_desc_stats(dp, waiters):
     return desc
 
 
-def get_queue_stats(dp, waiters):
+def get_queue_stats(dp, waiters, port=None, queue_id=None):
     ofp = dp.ofproto
-    stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, 0, ofp.OFPP_ANY,
-                                                   ofp.OFPQ_ALL)
+
+    if port is None:
+        port = ofp.OFPP_ANY
+    else:
+        port = int(str(port), 0)
+
+    if queue_id is None:
+        queue_id = ofp.OFPQ_ALL
+    else:
+        queue_id = int(str(queue_id), 0)
+
+    stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, 0, port,
+                                                   queue_id)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 

@@ -79,7 +79,11 @@ supported_ofctl = {
 # Note: Specification of port number is optional
 #
 # get queues stats of the switch
-# GET /stats/queue/<dpid>
+# GET /stats/queue/<dpid>[/<port>[/<queue_id>]]
+# Note: Specification of port number and queue id are optional
+#       If you want to omitting the port number and setting the queue id,
+#       please specify the keyword "ALL" to the port number
+#       e.g. GET /stats/queue/1/ALL/1
 #
 # get queues config stats of the switch
 # GET /stats/queueconfig/<dpid>/<port>
@@ -338,10 +342,24 @@ class StatsController(ControllerBase):
         body = json.dumps(ports)
         return Response(content_type='application/json', body=body)
 
-    def get_queue_stats(self, req, dpid, **_kwargs):
+    def get_queue_stats(self, req, dpid, port=None, queue_id=None, **_kwargs):
 
         if type(dpid) == str and not dpid.isdigit():
             LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        if port == "ALL":
+            port = None
+
+        if type(port) == str and not port.isdigit():
+            LOG.debug('invalid port %s', port)
+            return Response(status=400)
+
+        if queue_id == "ALL":
+            queue_id = None
+
+        if type(queue_id) == str and not queue_id.isdigit():
+            LOG.debug('invalid queue_id %s', queue_id)
             return Response(status=400)
 
         dp = self.dpset.get(int(dpid))
@@ -353,7 +371,7 @@ class StatsController(ControllerBase):
 
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
-            queues = _ofctl.get_queue_stats(dp, self.waiters)
+            queues = _ofctl.get_queue_stats(dp, self.waiters, port, queue_id)
 
         else:
             LOG.debug('Unsupported OF protocol')
@@ -910,6 +928,16 @@ class RestStatsApi(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
 
         uri = path + '/queue/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_stats',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/queue/{dpid}/{port}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_stats',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/queue/{dpid}/{port}/{queue_id}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_queue_stats',
                        conditions=dict(method=['GET']))
