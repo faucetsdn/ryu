@@ -632,10 +632,15 @@ Get ports stats
 
     Usage:
 
-        ======= ===================
+        ======= ===========================
         Method  GET
-        URI     /stats/port/<dpid>
-        ======= ===================
+        URI     /stats/port/<dpid>[/<port>]
+        ======= ===========================
+
+        .. NOTE::
+
+           Specification of port number is optional.
+
 
     Response message body:
 
@@ -762,10 +767,20 @@ Get queues stats
 
     Usage:
 
-        ======= ====================
+        ======= =========================================
         Method  GET
-        URI     /stats/queue/<dpid>
-        ======= ====================
+        URI     /stats/queue/<dpid>[/<port>[/<queue_id>]]
+        ======= =========================================
+
+        .. NOTE::
+
+           Specification of port number and queue id are optional.
+
+           If you want to omitting the port number and setting the queue id,
+           please specify the keyword "ALL" to the port number.
+
+           e.g. GET http://localhost:8080/stats/queue/1/ALL/1
+
 
     Response message body:
 
@@ -892,10 +907,15 @@ Get groups stats
 
     Usage:
 
-        ======= ====================
+        ======= ================================
         Method  GET
-        URI     /stats/group/<dpid>
-        ======= ====================
+        URI     /stats/group/<dpid>[/<group_id>]
+        ======= ================================
+
+        .. NOTE::
+
+           Specification of group id is optional.
+
 
     Response message body:
 
@@ -1094,10 +1114,15 @@ Get meters stats
 
     Usage:
 
-        ======= =======================
+        ======= ================================
         Method  GET
-        URI     /stats/meter/<dpid>
-        ======= =======================
+        URI     /stats/meter/<dpid>[/<meter_id>]
+        ======= ================================
+
+        .. NOTE::
+
+           Specification of meter id is optional.
+
 
     Response message body:
 
@@ -1153,10 +1178,15 @@ Get meter config stats
 
     Usage:
 
-        ======= ============================
+        ======= ======================================
         Method  GET
-        URI     /stats/meterconfig/<dpid>
-        ======= ============================
+        URI     /stats/meterconfig/<dpid>[/<meter_id>]
+        ======= ======================================
+
+        .. NOTE::
+
+           Specification of meter id is optional.
+
 
     Response message body:
 
