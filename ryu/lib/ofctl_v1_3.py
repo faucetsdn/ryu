@@ -824,7 +824,7 @@ def get_meter_features(dp, waiters):
     return features
 
 
-def get_meter_config(dp, waiters):
+def get_meter_config(dp, waiters, meter_id=None):
     flags = {dp.ofproto.OFPMF_KBPS: 'KBPS',
              dp.ofproto.OFPMF_PKTPS: 'PKTPS',
              dp.ofproto.OFPMF_BURST: 'BURST',
@@ -834,8 +834,13 @@ def get_meter_config(dp, waiters):
                  dp.ofproto.OFPMBT_DSCP_REMARK: 'DSCP_REMARK',
                  dp.ofproto.OFPMBT_EXPERIMENTER: 'EXPERIMENTER'}
 
+    if meter_id is None:
+        meter_id = dp.ofproto.OFPM_ALL
+    else:
+        meter_id = int(str(meter_id), 0)
+
     stats = dp.ofproto_parser.OFPMeterConfigStatsRequest(
-        dp, 0, dp.ofproto.OFPM_ALL)
+        dp, 0, meter_id)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 

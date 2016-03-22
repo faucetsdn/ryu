@@ -91,7 +91,8 @@ supported_ofctl = {
 # GET /stats/meterfeatures/<dpid>
 #
 # get meter config stats of the switch
-# GET /stats/meterconfig/<dpid>
+# GET /stats/meterconfig/<dpid>[/<meter_id>]
+# Note: Specification of meter id is optional
 #
 # get meters stats of the switch
 # GET /stats/meter/<dpid>[/<meter_id>]
@@ -448,10 +449,14 @@ class StatsController(ControllerBase):
         body = json.dumps(meters)
         return Response(content_type='application/json', body=body)
 
-    def get_meter_config(self, req, dpid, **_kwargs):
+    def get_meter_config(self, req, dpid, meter_id=None, **_kwargs):
 
         if type(dpid) == str and not dpid.isdigit():
             LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        if type(meter_id) == str and not meter_id.isdigit():
+            LOG.debug('invalid meter_id %s', memter_id)
             return Response(status=400)
 
         dp = self.dpset.get(int(dpid))
@@ -463,7 +468,7 @@ class StatsController(ControllerBase):
         _ofctl = supported_ofctl.get(_ofp_version, None)
 
         if _ofctl is not None and hasattr(_ofctl, 'get_meter_config'):
-            meters = _ofctl.get_meter_config(dp, self.waiters)
+            meters = _ofctl.get_meter_config(dp, self.waiters, meter_id)
 
         else:
             LOG.debug('Unsupported OF protocol or \
@@ -925,6 +930,11 @@ class RestStatsApi(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
 
         uri = path + '/meterconfig/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_meter_config',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/meterconfig/{dpid}/{meter_id}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_meter_config',
                        conditions=dict(method=['GET']))
