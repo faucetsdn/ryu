@@ -686,9 +686,14 @@ def get_table_stats(dp, waiters):
     return desc
 
 
-def get_port_stats(dp, waiters):
+def get_port_stats(dp, waiters, port=None):
+    if port is None:
+        port = dp.ofproto.OFPP_ANY
+    else:
+        port = int(str(port), 0)
+
     stats = dp.ofproto_parser.OFPPortStatsRequest(
-        dp, dp.ofproto.OFPP_ANY, 0)
+        dp, port, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 

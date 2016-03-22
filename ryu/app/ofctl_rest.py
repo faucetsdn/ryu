@@ -75,7 +75,8 @@ supported_ofctl = {
 # GET /stats/tablefeatures/<dpid>
 #
 # get ports stats of the switch
-# GET /stats/port/<dpid>
+# GET /stats/port/<dpid>[/<port>]
+# Note: Specification of port number is optional
 #
 # get queues stats of the switch
 # GET /stats/queue/<dpid>
@@ -306,10 +307,14 @@ class StatsController(ControllerBase):
         body = json.dumps(ports)
         return Response(content_type='application/json', body=body)
 
-    def get_port_stats(self, req, dpid, **_kwargs):
+    def get_port_stats(self, req, dpid, port=None, **_kwargs):
 
         if type(dpid) == str and not dpid.isdigit():
             LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        if type(port) == str and not port.isdigit():
+            LOG.debug('invalid port %s', port)
             return Response(status=400)
 
         dp = self.dpset.get(int(dpid))
@@ -321,7 +326,7 @@ class StatsController(ControllerBase):
 
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
-            ports = _ofctl.get_port_stats(dp, self.waiters)
+            ports = _ofctl.get_port_stats(dp, self.waiters, port)
 
         else:
             LOG.debug('Unsupported OF protocol')
@@ -880,6 +885,11 @@ class RestStatsApi(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
 
         uri = path + '/port/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_port_stats',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/port/{dpid}/{port}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_port_stats',
                        conditions=dict(method=['GET']))
