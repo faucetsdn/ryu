@@ -718,9 +718,14 @@ def get_port_stats(dp, waiters, port=None):
     return ports
 
 
-def get_group_stats(dp, waiters):
+def get_group_stats(dp, waiters, group_id=None):
+    if group_id is None:
+        group_id = dp.ofproto.OFPG_ALL
+    else:
+        group_id = int(str(group_id), 0)
+
     stats = dp.ofproto_parser.OFPGroupStatsRequest(
-        dp, dp.ofproto.OFPG_ALL, 0)
+        dp, group_id, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 

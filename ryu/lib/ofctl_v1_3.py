@@ -859,9 +859,14 @@ def get_meter_config(dp, waiters):
     return configs
 
 
-def get_group_stats(dp, waiters):
+def get_group_stats(dp, waiters, group_id=None):
+    if group_id is None:
+        group_id = dp.ofproto.OFPG_ALL
+    else:
+        group_id = int(str(group_id), 0)
+
     stats = dp.ofproto_parser.OFPGroupStatsRequest(
-        dp, 0, dp.ofproto.OFPG_ALL)
+        dp, 0, group_id)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
 

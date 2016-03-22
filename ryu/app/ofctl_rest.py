@@ -103,7 +103,8 @@ supported_ofctl = {
 # GET /stats/groupdesc/<dpid>
 #
 # get groups stats of the switch
-# GET /stats/group/<dpid>
+# GET /stats/group/<dpid>[/<group_id>]
+# Note: Specification of group id is optional
 #
 # get ports description of the switch
 # GET /stats/portdesc/<dpid>
@@ -546,10 +547,14 @@ class StatsController(ControllerBase):
         body = json.dumps(groups)
         return Response(content_type='application/json', body=body)
 
-    def get_group_stats(self, req, dpid, **_kwargs):
+    def get_group_stats(self, req, dpid, group_id=None, **_kwargs):
 
         if type(dpid) == str and not dpid.isdigit():
             LOG.debug('invalid dpid %s', dpid)
+            return Response(status=400)
+
+        if type(group_id) == str and not group_id.isdigit():
+            LOG.debug('invalid group_id %s', group_id)
             return Response(status=400)
 
         dp = self.dpset.get(int(dpid))
@@ -561,7 +566,7 @@ class StatsController(ControllerBase):
         _ofctl = supported_ofctl.get(_ofp_version, None)
 
         if _ofctl is not None and hasattr(_ofctl, 'get_group_stats'):
-            groups = _ofctl.get_group_stats(dp, self.waiters)
+            groups = _ofctl.get_group_stats(dp, self.waiters, group_id)
 
         else:
             LOG.debug('Unsupported OF protocol or \
@@ -935,6 +940,11 @@ class RestStatsApi(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
 
         uri = path + '/group/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_group_stats',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/group/{dpid}/{group_id}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_group_stats',
                        conditions=dict(method=['GET']))
