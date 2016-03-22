@@ -137,6 +137,21 @@ def _add_tests():
                 'reply': '3-38-ofp_queue_stats_reply.packet.json'
             },
             {
+                'method': ofctl_v1_2.get_queue_stats,
+                'request': 'lib-ofctl-ofp_queue_stats_request.packet1.json',
+                'reply': '3-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_queue_stats,
+                'request': 'lib-ofctl-ofp_queue_stats_request.packet2.json',
+                'reply': '3-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_queue_stats,
+                'request': 'lib-ofctl-ofp_queue_stats_request.packet3.json',
+                'reply': '3-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_2.get_queue_config,
                 'request': '3-35-ofp_queue_get_config_request.packet.json',
                 'reply': '3-36-ofp_queue_get_config_reply.packet.json'
@@ -162,8 +177,18 @@ def _add_tests():
                 'reply': '3-30-ofp_port_stats_reply.packet.json'
             },
             {
+                'method': ofctl_v1_2.get_port_stats,
+                'request': 'lib-ofctl-ofp_port_stats_request.packet.json',
+                'reply': '3-30-ofp_port_stats_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_2.get_group_stats,
                 'request': '3-61-ofp_group_stats_request.packet.json',
+                'reply': '3-62-ofp_group_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_2.get_group_stats,
+                'request': 'lib-ofctl-ofp_group_stats_request.packet.json',
                 'reply': '3-62-ofp_group_stats_reply.packet.json'
             },
             {
@@ -216,6 +241,21 @@ def _add_tests():
                 'reply': '4-38-ofp_queue_stats_reply.packet.json'
             },
             {
+                'method': ofctl_v1_3.get_queue_stats,
+                'request': 'lib-ofctl-ofp_queue_stats_request.packet1.json',
+                'reply': '4-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_queue_stats,
+                'request': 'lib-ofctl-ofp_queue_stats_request.packet2.json',
+                'reply': '4-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_queue_stats,
+                'request': 'lib-ofctl-ofp_queue_stats_request.packet3.json',
+                'reply': '4-38-ofp_queue_stats_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_3.get_queue_config,
                 'request': '4-35-ofp_queue_get_config_request.packet.json',
                 'reply': '4-36-ofp_queue_get_config_reply.packet.json'
@@ -246,8 +286,18 @@ def _add_tests():
                 'reply': '4-30-ofp_port_stats_reply.packet.json'
             },
             {
+                'method': ofctl_v1_3.get_port_stats,
+                'request': 'lib-ofctl-ofp_port_stats_request.packet.json',
+                'reply': '4-30-ofp_port_stats_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_3.get_meter_stats,
                 'request': '4-49-ofp_meter_stats_request.packet.json',
+                'reply': '4-50-ofp_meter_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_meter_stats,
+                'request': 'lib-ofctl-ofp_meter_stats_request.packet.json',
                 'reply': '4-50-ofp_meter_stats_reply.packet.json'
             },
             {
@@ -261,8 +311,18 @@ def _add_tests():
                 'reply': '4-48-ofp_meter_config_reply.packet.json'
             },
             {
+                'method': ofctl_v1_3.get_meter_config,
+                'request': 'lib-ofctl-ofp_meter_config_request.packet.json',
+                'reply': '4-48-ofp_meter_config_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_3.get_group_stats,
                 'request': '4-57-ofp_group_stats_request.packet.json',
+                'reply': '4-58-ofp_group_stats_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_group_stats,
+                'request': 'lib-ofctl-ofp_group_stats_request.packet.json',
                 'reply': '4-58-ofp_group_stats_reply.packet.json'
             },
             {
@@ -423,7 +483,7 @@ def _add_tests():
         parser_json_dir = os.path.join(parser_json_root, ofp_ver)
         ofctl_json_dir = os.path.join(ofctl_json_root, ofp_ver)
         for test in tests:
-            name = 'test_ofctl_' + ofp_ver + '_' + test['method'].__name__
+            name = 'test_ofctl_' + ofp_ver + '_' + test['request']
             print('adding %s ...' % name)
             args = {}
             args_json_path = os.path.join(ofctl_json_dir, test['request'])
