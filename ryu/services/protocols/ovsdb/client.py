@@ -82,9 +82,9 @@ def transact_block(request, connection):
             break
 
         connection.run()
-        connection.wait(poller)
-        connection.recv_wait(poller)
-        poller.block()
+        connection.wait(ovs_poller)
+        connection.recv_wait(ovs_poller)
+        ovs_poller.block()
 
         hub.sleep(0)
 
