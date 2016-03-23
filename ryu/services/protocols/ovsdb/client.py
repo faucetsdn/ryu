@@ -146,6 +146,7 @@ class Idl(idl.Idl):
         self._events = []
 
         self.tables = schema.tables
+        self.readonly = schema.readonly
         self._db = schema
         self._session = session
         self._monitor_request_id = None
