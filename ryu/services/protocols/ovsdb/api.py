@@ -125,6 +125,37 @@ def get_datapath_ids_for_systemd_id(manager, system_id):
     return reply.result
 
 
+def get_system_id_for_datapath_id(manager, datapath_id):
+    def _get_dp_ids(tables):
+        bridges = tables.get('Bridge')
+
+        if not bridges:
+            return None
+
+        for bridge in bridges.rows.values():
+            datapath_ids = [dpidlib.str_to_dpid(dp_id)
+                            for dp_id in bridge.datapath_id]
+
+            if datapath_id in datapath_ids:
+                openvswitch = tables['Open_vSwitch'].rows
+
+                if openvswitch:
+                    row = openvswitch.get(list(openvswitch.keys())[0])
+                    return row.external_ids.get('system-id')
+
+        return None
+
+    request = ovsdb_event.EventReadRequest(None, _get_dp_ids)
+    reply = manager.send_request(request)
+
+    # NOTE(jkoelker) Bulk reads return a tuple of (system_id, result)
+    for result in reply.result:
+        if result[1]:
+            return result[0]
+
+    return None
+
+
 def get_bridges_by_system_id(manager, system_id):
     return get_table(manager, system_id, 'Bridge').rows.values()
 
