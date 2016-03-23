@@ -88,6 +88,26 @@ class OVSDB(app_manager.RyuApp):
             t = hub.spawn(self._start_remote, sock, client_address)
             self.threads.append(t)
 
+    def _bulk_read_handler(self, ev):
+        results = []
+
+        def done(gt, *args, **kwargs):
+            if gt in self.threads:
+                self.threads.remove(gt)
+
+            results.append(gt.wait())
+
+        threads = []
+        for c in self._clients.values():
+            gt = hub.spawn(c.read_request_handler, ev, bulk=True)
+            threads.append(gt)
+            self.threads.append(gt)
+            gt.link(done)
+
+        hub.joinall(threads)
+        rep = event.EventReadReply(None, results)
+        self.reply_to_request(ev, rep)
+
     def _proxy_event(self, ev):
         system_id = ev.system_id
         client_name = client.RemoteOvsdb.instance_name(system_id)
@@ -174,6 +194,16 @@ class OVSDB(app_manager.RyuApp):
     @handler.set_ev_cls(event.EventReadRequest)
     def read_request_handler(self, ev):
         system_id = ev.system_id
+
+        if system_id is None:
+            def done(gt, *args, **kwargs):
+                if gt in self.threads:
+                    self.threads.remove(gt)
+
+            thread = hub.spawn(self._bulk_read_handler, ev)
+            self.threads.append(thread)
+            return thread.link(done)
+
         client_name = client.RemoteOvsdb.instance_name(system_id)
         remote = self._clients.get(client_name)
 

@@ -373,8 +373,15 @@ class RemoteOvsdb(app_manager.RyuApp):
     def modify_request_handler(self, ev):
         self._txn_q.append(ev)
 
-    def read_request_handler(self, ev):
+    def read_request_handler(self, ev, bulk=False):
         result = ev.func(self._idl.tables)
+
+        # NOTE(jkoelker) If this was a bulk request, the parent OVSDB app is
+        #                responsible for the reply
+
+        if bulk:
+            return (self.system_id, result)
+
         rep = event.EventReadReply(self.system_id, result)
         self.reply_to_request(ev, rep)
 
