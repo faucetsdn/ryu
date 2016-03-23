@@ -15,23 +15,7 @@
 
 import collections
 import errno
-import logging
 import uuid
-
-# NOTE(jkoelker) Patch Vlog so that is uses standard logging
-from ovs import vlog
-
-
-class Vlog(vlog.Vlog):
-    def __init__(self, name):
-        self.log = logging.getLogger('ovs.%s' % name)
-
-    def __log(self, level, message, **kwargs):
-        level = vlog.LEVELS.get(level, logging.DEBUG)
-        self.log.log(level, message, **kwargs)
-
-vlog.Vlog = Vlog
-
 
 from ovs import jsonrpc
 from ovs import poller
