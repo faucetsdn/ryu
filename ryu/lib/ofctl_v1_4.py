@@ -522,7 +522,8 @@ def get_table_features(dp, waiters):
                            ofproto.OFPTFPT_INSTRUCTIONS_MISS]
 
     p_type_next_tables = [ofproto.OFPTFPT_NEXT_TABLES,
-                          ofproto.OFPTFPT_NEXT_TABLES_MISS]
+                          ofproto.OFPTFPT_NEXT_TABLES_MISS,
+                          ofproto.OFPTFPT_TABLE_SYNC_FROM]
 
     p_type_actions = [ofproto.OFPTFPT_WRITE_ACTIONS,
                       ofproto.OFPTFPT_WRITE_ACTIONS_MISS,
