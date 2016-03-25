@@ -895,7 +895,7 @@ def mod_meter_entry(dp, meter, cmd):
 
 
 def mod_group_entry(dp, group, cmd):
-    group_type = str(group.get('type'))
+    group_type = str(group.get('type', 'ALL'))
     t = UTIL.ofp_group_type_from_user(group_type)
     group_type = t if t != group_type else None
     if group_type is None:
