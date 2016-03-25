@@ -302,6 +302,7 @@ def get_desc_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPDescStatsRequest(dp, 0)
     msgs = []
     send_stats_request(dp, stats, waiters, msgs)
+    s = {}
 
     for msg in msgs:
         stats = msg.body
@@ -400,7 +401,7 @@ def get_aggregate_flow_stats(dp, waiters, flow=None):
             s = {'packet_count': st.packet_count,
                  'byte_count': st.byte_count,
                  'flow_count': st.flow_count}
-        flows.append(s)
+            flows.append(s)
     flows = {str(dp.id): flows}
 
     return flows
