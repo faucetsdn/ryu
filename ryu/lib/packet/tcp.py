@@ -35,6 +35,16 @@ TCP_OPTION_KIND_TIMESTAMPS = 8            # Timestamps
 TCP_OPTION_KIND_USER_TIMEOUT = 28         # User Timeout Option
 TCP_OPTION_KIND_AUTHENTICATION = 29       # TCP Authentication Option (TCP-AO)
 
+TCP_FIN = 0x001
+TCP_SYN = 0x002
+TCP_RST = 0x004
+TCP_PSH = 0x008
+TCP_ACK = 0x010
+TCP_URG = 0x020
+TCP_ECE = 0x040
+TCP_CWR = 0x080
+TCP_NS = 0x100
+
 
 class tcp(packet_base.PacketBase):
     """TCP (RFC 793) header encoder/decoder class.
@@ -82,6 +92,21 @@ class tcp(packet_base.PacketBase):
 
     def __len__(self):
         return self.offset * 4
+
+    def has_flags(self, *flags):
+        """Check if flags are set on this packet.
+
+        returns boolean if all passed flags is set
+
+        eg.
+
+        # Check if this is a syn+ack
+        if pkt.has_flags(tcp.TCP_SYN, tcp.TCP_ACK):
+            ...
+        """
+
+        mask = sum(flags)
+        return (self.bits & mask) == mask
 
     @classmethod
     def parser(cls, buf):
