@@ -1150,17 +1150,5 @@ def mod_port_behavior(dp, port_config):
     ofctl_utils.send_msg(dp, port_mod, LOG)
 
 
-def send_experimenter(dp, exp):
-    experimenter = exp.get('experimenter', 0)
-    exp_type = exp.get('exp_type', 0)
-    data_type = exp.get('data_type', 'ascii')
-    if data_type != 'ascii' and data_type != 'base64':
-        LOG.error('Unknown data type: %s', data_type)
-    data = exp.get('data', '')
-    if data_type == 'base64':
-        data = base64.b64decode(data)
-
-    expmsg = dp.ofproto_parser.OFPExperimenter(
-        dp, experimenter, exp_type, data)
-
-    ofctl_utils.send_msg(dp, expmsg, LOG)
+# NOTE(jkoelker) Alias common funcitons
+send_experimenter = ofctl_utils.send_experimenter

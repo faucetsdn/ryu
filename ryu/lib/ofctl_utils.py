@@ -45,6 +45,14 @@ POP_PBB = 'POP_PBB'
 EXPERIMENTER = 'EXPERIMENTER'
 
 
+def get_logger(logger=None):
+    # NOTE(jkoelker) use the logger the calling code wants us to
+    if logger is not None:
+        return logger
+
+    return LOG
+
+
 def match_vid_to_str(value, mask, ofpvid_present):
     if mask is not None:
         return '0x%04x/0x%04x' % (value, mask)
@@ -171,18 +179,28 @@ def to_match_masked_int(value):
     return str_to_int(value)
 
 
+def send_experimenter(dp, exp, logger=None):
+    experimenter = exp.get('experimenter', 0)
+    exp_type = exp.get('exp_type', 0)
+    data_type = exp.get('data_type', 'ascii')
+
+    if data_type not in ('ascii', 'base64'):
+        LOG.error('Unknown data type: %s', data_type)
+
+    data = exp.get('data', '')
+    if data_type == 'base64':
+        data = base64.b64decode(data)
+
+    expmsg = dp.ofproto_parser.OFPExperimenter(dp, experimenter, exp_type,
+                                               data)
+    send_msg(dp, expmsg, logger)
+
+
 def send_msg(dp, msg, logger=None):
     if msg.xid is None:
         dp.set_xid(msg)
 
-    # NOTE(jkoelker) use the logger the calling code wants us to
-    if logger is not None:
-        log = logger
-
-    else:
-        log = LOG
-
-    log.debug('Sending message with xid(%x): %s', msg.xid, msg)
+    get_logger(logger).debug('Sending message with xid(%x): %s', msg.xid, msg)
     dp.send_msg(msg)
 
 
