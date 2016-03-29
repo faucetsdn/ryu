@@ -15,8 +15,11 @@
 
 import logging
 
+from ryu.lib import hub
+
 
 LOG = logging.getLogger(__name__)
+DEFAULT_TIMEOUT = 1.0
 
 
 def str_to_int(str_num):
@@ -36,6 +39,26 @@ def send_msg(dp, msg, logger=None):
 
     log.debug('Sending message with xid(%x): %s', msg.xid, msg)
     dp.send_msg(msg)
+
+
+def send_stats_request(dp, stats, waiters, msgs, logger=None):
+    dp.set_xid(stats)
+    waiters_per_dp = waiters.setdefault(dp.id, {})
+    lock = hub.Event()
+    previous_msg_len = len(msgs)
+    waiters_per_dp[stats.xid] = (lock, msgs)
+    send_msg(dp, stats, logger)
+
+    lock.wait(timeout=DEFAULT_TIMEOUT)
+    current_msg_len = len(msgs)
+
+    while current_msg_len > previous_msg_len:
+        previous_msg_len = current_msg_len
+        lock.wait(timeout=DEFAULT_TIMEOUT)
+        current_msg_len = len(msgs)
+
+    if not lock.is_set():
+        del waiters_per_dp[stats.xid]
 
 
 class OFCtlUtil(object):

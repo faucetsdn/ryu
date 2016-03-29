@@ -18,7 +18,6 @@ import socket
 import logging
 
 from ryu.ofproto import ofproto_v1_0
-from ryu.lib import hub
 from ryu.lib import ofctl_utils
 from ryu.lib.mac import haddr_to_bin, haddr_to_str
 
@@ -278,30 +277,10 @@ def nw_dst_to_str(wildcards, addr):
     return ip
 
 
-def send_stats_request(dp, stats, waiters, msgs):
-    dp.set_xid(stats)
-    waiters_per_dp = waiters.setdefault(dp.id, {})
-    lock = hub.Event()
-    previous_msg_len = len(msgs)
-    waiters_per_dp[stats.xid] = (lock, msgs)
-    ofctl_utils.send_msg(dp, stats, LOG)
-
-    lock.wait(timeout=DEFAULT_TIMEOUT)
-    current_msg_len = len(msgs)
-
-    while current_msg_len > previous_msg_len:
-        previous_msg_len = current_msg_len
-        lock.wait(timeout=DEFAULT_TIMEOUT)
-        current_msg_len = len(msgs)
-
-    if not lock.is_set():
-        del waiters_per_dp[stats.xid]
-
-
 def get_desc_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPDescStatsRequest(dp, 0)
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
     s = {}
 
     for msg in msgs:
@@ -329,7 +308,7 @@ def get_queue_stats(dp, waiters, port=None, queue_id=None):
     stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, 0, port,
                                                    queue_id)
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
     s = []
     for msg in msgs:
@@ -356,7 +335,7 @@ def get_flow_stats(dp, waiters, flow=None):
         dp, 0, match, table_id, out_port)
 
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
     flows = []
     for msg in msgs:
@@ -392,7 +371,7 @@ def get_aggregate_flow_stats(dp, waiters, flow=None):
         dp, 0, match, table_id, out_port)
 
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
     flows = []
     for msg in msgs:
@@ -411,7 +390,7 @@ def get_table_stats(dp, waiters):
     stats = dp.ofproto_parser.OFPTableStatsRequest(dp, 0)
     ofp = dp.ofproto
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
     match_convert = {ofp.OFPFW_IN_PORT: 'IN_PORT',
                      ofp.OFPFW_DL_VLAN: 'DL_VLAN',
@@ -467,7 +446,7 @@ def get_port_stats(dp, waiters, port=None):
     stats = dp.ofproto_parser.OFPPortStatsRequest(
         dp, 0, port)
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
     ports = []
     for msg in msgs:
@@ -494,7 +473,7 @@ def get_port_desc(dp, waiters):
 
     stats = dp.ofproto_parser.OFPFeaturesRequest(dp)
     msgs = []
-    send_stats_request(dp, stats, waiters, msgs)
+    ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
     descs = []
 
