@@ -5,5 +5,4 @@ oslo.config>=1.6.0
 routes  # wsgi
 six>=1.4.0
 webob>=1.2  # wsgi
-ovs >=2.6.0.dev0 ; python_version >= '3.0'
-ovs ; python_version < '3.0'
+ovs >=2.6.0.dev0
