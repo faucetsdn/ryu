@@ -258,8 +258,8 @@ def match_to_str(m):
 
 def nw_src_to_str(wildcards, addr):
     ip = socket.inet_ntoa(struct.pack('!I', addr))
-    mask = 32 - ((wildcards & ofproto_v1_0.OFPFW_NW_SRC_MASK)
-                 >> ofproto_v1_0.OFPFW_NW_SRC_SHIFT)
+    mask = 32 - ((wildcards & ofproto_v1_0.OFPFW_NW_SRC_MASK) >>
+                 ofproto_v1_0.OFPFW_NW_SRC_SHIFT)
     if mask == 32:
         mask = 0
     if mask:
@@ -269,8 +269,8 @@ def nw_src_to_str(wildcards, addr):
 
 def nw_dst_to_str(wildcards, addr):
     ip = socket.inet_ntoa(struct.pack('!I', addr))
-    mask = 32 - ((wildcards & ofproto_v1_0.OFPFW_NW_DST_MASK)
-                 >> ofproto_v1_0.OFPFW_NW_DST_SHIFT)
+    mask = 32 - ((wildcards & ofproto_v1_0.OFPFW_NW_DST_MASK) >>
+                 ofproto_v1_0.OFPFW_NW_DST_SHIFT)
     if mask == 32:
         mask = 0
     if mask:
