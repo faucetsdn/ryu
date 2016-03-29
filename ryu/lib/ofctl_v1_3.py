@@ -19,8 +19,10 @@ import netaddr
 
 from ryu.ofproto import ether
 from ryu.ofproto import inet
+from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser
+from ryu.lib import ofctl_nicira_ext
 from ryu.lib import ofctl_utils
 
 
@@ -187,6 +189,13 @@ def action_to_str(act):
     elif action_type == ofproto_v1_3.OFPAT_POP_PBB:
         buf = 'POP_PBB'
     elif action_type == ofproto_v1_3.OFPAT_EXPERIMENTER:
+        if act.experimenter == ofproto_common.NX_EXPERIMENTER_ID:
+            try:
+                return ofctl_nicira_ext.action_to_str(act, action_to_str)
+            except:
+                LOG.debug('Error parsing NX_ACTION(%s)',
+                          act.__class__.__name__, exc_info=True)
+
         data_str = base64.b64encode(act.data)
         buf = 'EXPERIMENTER: {experimenter:%s, data:%s}' % \
             (act.experimenter, data_str.decode('utf-8'))
