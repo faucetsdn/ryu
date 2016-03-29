@@ -215,7 +215,8 @@ class OFPMatch(StringifyMixin):
             self.dl_src = mac.DONTCARE
         else:
             wc &= ~ofproto.OFPFW_DL_SRC
-            if isinstance(dl_src, (six.text_type, str)) and netaddr.valid_mac(dl_src):
+            if (isinstance(dl_src, (six.text_type, str)) and
+                    netaddr.valid_mac(dl_src)):
                 dl_src = addrconv.mac.text_to_bin(dl_src)
             if dl_src == 0:
                 self.dl_src = mac.DONTCARE
@@ -226,7 +227,8 @@ class OFPMatch(StringifyMixin):
             self.dl_dst = mac.DONTCARE
         else:
             wc &= ~ofproto.OFPFW_DL_DST
-            if isinstance(dl_dst, (six.text_type, str)) and netaddr.valid_mac(dl_dst):
+            if (isinstance(dl_dst, (six.text_type, str)) and
+                    netaddr.valid_mac(dl_dst)):
                 dl_dst = addrconv.mac.text_to_bin(dl_dst)
             if dl_dst == 0:
                 self.dl_dst = mac.DONTCARE
@@ -518,7 +520,8 @@ class OFPActionStripVlan(OFPAction):
 class OFPActionDlAddr(OFPAction):
     def __init__(self, dl_addr):
         super(OFPActionDlAddr, self).__init__()
-        if isinstance(dl_addr, (six.text_type, str)) and netaddr.valid_mac(dl_addr):
+        if (isinstance(dl_addr, (six.text_type, str)) and
+                netaddr.valid_mac(dl_addr)):
             dl_addr = addrconv.mac.text_to_bin(dl_addr)
         self.dl_addr = dl_addr
 
@@ -1958,8 +1961,8 @@ class NXTFlowRemoved(NiciraHeader):
          idle_timeout, match_len,
          packet_count, byte_count) = struct.unpack_from(
             ofproto.NX_FLOW_REMOVED_PACK_STR, buf, offset)
-        offset += (ofproto.NX_FLOW_REMOVED_SIZE
-                   - ofproto.NICIRA_HEADER_SIZE)
+        offset += (ofproto.NX_FLOW_REMOVED_SIZE -
+                   ofproto.NICIRA_HEADER_SIZE)
         match = nx_match.NXMatch.parser(buf, offset, match_len)
         return cls(datapath, cookie, priority, reason, duration_sec,
                    duration_nsec, idle_timeout, match_len, packet_count,
@@ -2000,8 +2003,8 @@ class NXTPacketIn(NiciraHeader):
          cookie, match_len) = struct.unpack_from(
             ofproto.NX_PACKET_IN_PACK_STR, buf, offset)
 
-        offset += (ofproto.NX_PACKET_IN_SIZE
-                   - ofproto.NICIRA_HEADER_SIZE)
+        offset += (ofproto.NX_PACKET_IN_SIZE -
+                   ofproto.NICIRA_HEADER_SIZE)
 
         match = nx_match.NXMatch.parser(buf, offset, match_len)
         offset += (match_len + 7) // 8 * 8
