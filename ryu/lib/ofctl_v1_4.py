@@ -19,7 +19,6 @@ import netaddr
 import six
 
 from ryu.ofproto import ether
-from ryu.ofproto import inet
 from ryu.ofproto import ofproto_v1_4
 from ryu.ofproto import ofproto_v1_4_parser
 from ryu.lib import hub
@@ -165,7 +164,9 @@ def action_to_str(act):
 
 
 def _remove(d, names):
-    f = lambda x: _remove(x, names)
+    def f(x):
+        return _remove(x, names)
+
     if isinstance(d, list):
         return list(map(f, d))
     if isinstance(d, dict):
