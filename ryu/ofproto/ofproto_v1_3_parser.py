@@ -1686,7 +1686,6 @@ class OFPMatchField(StringifyMixin):
 
     @classmethod
     def field_parser(cls, header, buf, offset):
-        hasmask = (header >> 8) & 1
         mask = None
         if ofproto.oxm_tlv_header_extract_hasmask(header):
             pack_str = '!' + cls.pack_str[1:] * 2
@@ -2155,7 +2154,6 @@ class MTPbbIsid(OFPMatchField):
 
     @classmethod
     def field_parser(cls, header, buf, offset):
-        hasmask = (header >> 8) & 1
         mask = None
         if ofproto.oxm_tlv_header_extract_hasmask(header):
             pack_str = '!' + cls.pack_str[1:] * 2
@@ -3273,16 +3271,6 @@ class OFPActionSetField(OFPAction):
         return not hasattr(self, 'value')
 
     def to_jsondict(self):
-        # XXX old api compat
-        if self._composed_with_old_api():
-            # copy object first because serialize_old is destructive
-            o2 = OFPActionSetField(self.field)
-            # serialize and parse to fill new fields
-            buf = bytearray()
-            o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(six.binary_type(buf), 0)
-        else:
-            o = self
         return {
             self.__class__.__name__: {
                 'field': ofproto.oxm_to_jsondict(self.key, self.value),
@@ -3404,7 +3392,7 @@ class OFPActionExperimenter(OFPAction):
         data = buf[(offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
                     ): offset + len_]
         if experimenter == ofproto_common.NX_EXPERIMENTER_ID:
-            obj = NXAction.parse(data)
+            obj = NXAction.parse(data)  # noqa
         else:
             obj = OFPActionExperimenterUnknown(experimenter, data)
         obj.len = len_
@@ -5139,7 +5127,8 @@ class OFPInstructionId(StringifyMixin):
 
     @classmethod
     def parse(cls, buf):
-        (type_, len_,) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf), 0)
+        (type_, len_,) = struct.unpack_from(cls._PACK_STR,
+                                            six.binary_type(buf), 0)
         rest = buf[len_:]
         return cls(type_=type_, len_=len_), rest
 
@@ -5192,7 +5181,8 @@ class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
         rest = cls.get_rest(buf)
         ids = []
         while rest:
-            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR, six.binary_type(rest), 0)
+            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR,
+                                      six.binary_type(rest), 0)
             rest = rest[struct.calcsize(cls._TABLE_ID_PACK_STR):]
             ids.append(i)
         return cls(table_ids=ids)
@@ -5225,7 +5215,8 @@ class OFPActionId(StringifyMixin):
 
     @classmethod
     def parse(cls, buf):
-        (type_, len_,) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf), 0)
+        (type_, len_,) = struct.unpack_from(cls._PACK_STR,
+                                            six.binary_type(buf), 0)
         rest = buf[len_:]
         return cls(type_=type_, len_=len_), rest
 
