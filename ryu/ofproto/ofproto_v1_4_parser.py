@@ -24,7 +24,7 @@ import struct
 from ryu.lib import addrconv
 from ryu.lib.pack_utils import msg_pack_into
 from ryu import utils
-from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase, msg_str_attr
+from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase
 from ryu.ofproto import ether
 from ryu.ofproto import nx_actions
 from ryu.ofproto import ofproto_parser
@@ -1783,7 +1783,8 @@ class OFPInstructionId(StringifyMixin):
 
     @classmethod
     def parse(cls, buf):
-        (type_, len_,) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf), 0)
+        (type_, len_,) = struct.unpack_from(cls._PACK_STR,
+                                            six.binary_type(buf), 0)
         rest = buf[len_:]
         return cls(type_=type_, len_=len_), rest
 
@@ -1834,7 +1835,8 @@ class OFPActionId(StringifyMixin):
 
     @classmethod
     def parse(cls, buf):
-        (type_, len_,) = struct.unpack_from(cls._PACK_STR, six.binary_type(buf), 0)
+        (type_, len_,) = struct.unpack_from(cls._PACK_STR,
+                                            six.binary_type(buf), 0)
         rest = buf[len_:]
         return cls(type_=type_, len_=len_), rest
 
@@ -1889,7 +1891,8 @@ class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
         rest = cls.get_rest(buf)
         ids = []
         while rest:
-            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR, six.binary_type(rest), 0)
+            (i,) = struct.unpack_from(cls._TABLE_ID_PACK_STR,
+                                      six.binary_type(rest), 0)
             rest = rest[struct.calcsize(cls._TABLE_ID_PACK_STR):]
             ids.append(i)
         return cls(table_ids=ids)
@@ -5004,7 +5007,7 @@ class OFPActionExperimenter(OFPAction):
         data = buf[(offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
                     ): offset + len_]
         if experimenter == ofproto_common.NX_EXPERIMENTER_ID:
-            obj = NXAction.parse(data)
+            obj = NXAction.parse(data)  # noqa
         else:
             obj = OFPActionExperimenterUnknown(experimenter, data)
         obj.len = len_
