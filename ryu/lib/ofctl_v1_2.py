@@ -104,8 +104,9 @@ def to_actions(dp, acts):
                     else:
                         LOG.error('Unknown action type: %s', action_type)
                 if write_actions:
-                    inst.append(parser.OFPInstructionActions(ofp.OFPIT_WRITE_ACTIONS,
-                                                             write_actions))
+                    inst.append(
+                        parser.OFPInstructionActions(ofp.OFPIT_WRITE_ACTIONS,
+                                                     write_actions))
             elif action_type == 'CLEAR_ACTIONS':
                 inst.append(parser.OFPInstructionActions(
                             ofp.OFPIT_CLEAR_ACTIONS, []))
@@ -464,7 +465,6 @@ def get_queue_stats(dp, waiters, port=None, queue_id=None):
 
 
 def get_queue_config(dp, port, waiters):
-    ofp = dp.ofproto
     port = UTIL.ofp_port_from_user(port)
     stats = dp.ofproto_parser.OFPQueueGetConfigRequest(dp, port)
     msgs = []
