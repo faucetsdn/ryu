@@ -1557,16 +1557,6 @@ class OFPActionSetField(OFPAction):
         return not hasattr(self, 'value')
 
     def to_jsondict(self):
-        # XXX old api compat
-        if self._composed_with_old_api():
-            # copy object first because serialize_old is destructive
-            o2 = OFPActionSetField(self.field)
-            # serialize and parse to fill new fields
-            buf = bytearray()
-            o2.serialize(buf, 0)
-            o = OFPActionSetField.parser(six.binary_type(buf), 0)
-        else:
-            o = self
         return {
             self.__class__.__name__: {
                 'field': ofproto.oxm_to_jsondict(self.key, self.value),
