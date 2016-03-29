@@ -85,7 +85,9 @@ class Test_ofctl(unittest.TestCase):
 
         # expected output <--> return of ofctl
         def _remove(d, names):
-            f = lambda x: _remove(x, names)
+            def f(x):
+                return _remove(x, names)
+
             if isinstance(d, list):
                 return list(map(f, d))
             if isinstance(d, dict):
