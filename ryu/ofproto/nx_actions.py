@@ -28,8 +28,6 @@ from ryu.ofproto.ofproto_parser import StringifyMixin
 
 def generate(ofp_name, ofpp_name):
     import sys
-    import string
-    import functools
 
     ofp = sys.modules[ofp_name]
     ofpp = sys.modules[ofpp_name]
@@ -582,10 +580,10 @@ def generate(ofp_name, ofpp_name):
                 kwargs['range_ipv6_max'] = (
                     type_desc.IPv6Addr.to_user(rest[:16]))
                 rest = rest[16:]
-            if range_present & NX_NAT_RANGE_PROTO_MIN:
+            if range_present & nicira_ext.NX_NAT_RANGE_PROTO_MIN:
                 kwargs['range_proto_min'] = type_desc.Int2.to_user(rest[:2])
                 rest = rest[2:]
-            if range_present & NX_NAT_RANGE_PROTO_MAX:
+            if range_present & nicira_ext.NX_NAT_RANGE_PROTO_MAX:
                 kwargs['range_proto_max'] = type_desc.Int2.to_user(rest[:2])
 
             return cls(flags, **kwargs)
