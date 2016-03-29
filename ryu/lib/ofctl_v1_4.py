@@ -354,7 +354,7 @@ def send_stats_request(dp, stats, waiters, msgs):
     lock = hub.Event()
     previous_msg_len = len(msgs)
     waiters_per_dp[stats.xid] = (lock, msgs)
-    dp.send_msg(stats)
+    ofctl_utils.send_msg(dp, stats, LOG)
 
     lock.wait(timeout=DEFAULT_TIMEOUT)
     current_msg_len = len(msgs)
@@ -848,7 +848,7 @@ def mod_flow_entry(dp, flow, cmd):
         hard_timeout, priority, buffer_id, out_port, out_group,
         importance, flags, match, inst)
 
-    dp.send_msg(flow_mod)
+    ofctl_utils.send_msg(dp, flow_mod, LOG)
 
 
 def mod_meter_entry(dp, meter, cmd):
@@ -890,7 +890,7 @@ def mod_meter_entry(dp, meter, cmd):
     meter_mod = dp.ofproto_parser.OFPMeterMod(
         dp, cmd, flags, meter_id, bands)
 
-    dp.send_msg(meter_mod)
+    ofctl_utils.send_msg(dp, meter_mod, LOG)
 
 
 def mod_group_entry(dp, group, cmd):
@@ -919,7 +919,7 @@ def mod_group_entry(dp, group, cmd):
     group_mod = dp.ofproto_parser.OFPGroupMod(
         dp, cmd, group_type, group_id, buckets)
 
-    dp.send_msg(group_mod)
+    ofctl_utils.send_msg(dp, group_mod, LOG)
 
 
 def mod_port_behavior(dp, port_config):
@@ -959,7 +959,7 @@ def mod_port_behavior(dp, port_config):
     port_mod = dp.ofproto_parser.OFPPortMod(
         dp, port_no, hw_addr, config, mask, prop)
 
-    dp.send_msg(port_mod)
+    ofctl_utils.send_msg(dp, port_mod, LOG)
 
 
 def send_experimenter(dp, exp):
@@ -975,4 +975,4 @@ def send_experimenter(dp, exp):
     expmsg = dp.ofproto_parser.OFPExperimenter(
         dp, experimenter, exp_type, data)
 
-    dp.send_msg(expmsg)
+    ofctl_utils.send_msg(dp, expmsg, LOG)

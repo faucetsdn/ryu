@@ -284,7 +284,7 @@ def send_stats_request(dp, stats, waiters, msgs):
     lock = hub.Event()
     previous_msg_len = len(msgs)
     waiters_per_dp[stats.xid] = (lock, msgs)
-    dp.send_msg(stats)
+    ofctl_utils.send_msg(dp, stats, LOG)
 
     lock.wait(timeout=DEFAULT_TIMEOUT)
     current_msg_len = len(msgs)
@@ -537,7 +537,7 @@ def mod_flow_entry(dp, flow, cmd):
         flags=flags,
         actions=actions)
 
-    dp.send_msg(flow_mod)
+    ofctl_utils.send_msg(dp, flow_mod, LOG)
 
 
 def delete_flow_entry(dp):
@@ -548,7 +548,7 @@ def delete_flow_entry(dp):
         datapath=dp, match=match, cookie=0,
         command=dp.ofproto.OFPFC_DELETE)
 
-    dp.send_msg(flow_mod)
+    ofctl_utils.send_msg(dp, flow_mod, LOG)
 
 
 def mod_port_behavior(dp, port_config):
@@ -561,4 +561,4 @@ def mod_port_behavior(dp, port_config):
     port_mod = dp.ofproto_parser.OFPPortMod(
         dp, port_no, hw_addr, config, mask, advertise)
 
-    dp.send_msg(port_mod)
+    ofctl_utils.send_msg(dp, port_mod, LOG)
