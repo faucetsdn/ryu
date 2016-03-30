@@ -6,7 +6,7 @@ ryu.app.ofctl_rest provides REST APIs for retrieving the switch stats
 and Updating the switch stats.
 This application helps you debug your application and get various statistics.
 
-This application supports OpenFlow version 1.0, 1.2 and 1.3.
+This application supports OpenFlow version 1.0, 1.2, 1.3 and 1.4.
 
 .. contents::
    :depth: 3
@@ -108,7 +108,7 @@ Get all flows stats
         URI     /stats/flow/<dpid>
         ======= ===================
 
-    Response message body:
+    Response message body(OpenFlow1.3 or earlier):
 
         ============== ============================================================ ===============
         Attribute      Description                                                  Example
@@ -129,9 +129,33 @@ Get all flows stats
         actions        Instruction set                                              ["OUTPUT:2"]
         ============== ============================================================ ===============
 
+    Response message body(OpenFlow1.4 or later):
+
+        ============== ============================================================ ========================================
+        Attribute      Description                                                  Example
+        ============== ============================================================ ========================================
+        dpid           Datapath ID                                                  "1"
+        length         Length of this entry                                         88
+        table_id       Table ID                                                     0
+        duration_sec   Time flow has been alive in seconds                          2
+        duration_nsec  Time flow has been alive in nanoseconds beyond duration_sec  6.76e+08
+        priority       Priority of the entry                                        11111
+        idle_timeout   Number of seconds idle before expiration                     0
+        hard_timeout   Number of seconds before expiration                          0
+        flags          Bitmap of OFPFF_* flags                                      1
+        cookie         Opaque controller-issued identifier                          1
+        packet_count   Number of packets in flow                                    0
+        byte_count     Number of bytes in flow                                      0
+        importance     Eviction precedence                                          0
+        match          Fields to match                                              {"eth_type": 2054}
+        instructions   struct ofp_instruction_header                                [{"type":GOTO_TABLE", "table_id":1}]
+        ============== ============================================================ ========================================
+
     Example of use::
 
         $ curl -X GET http://localhost:8080/stats/flow/1
+
+    Response (OpenFlow1.3 or earlier):
 
     ::
 
@@ -158,6 +182,44 @@ Get all flows stats
             }
           ]
         }
+
+    Response (OpenFlow1.4 or later):
+
+    ::
+
+        {
+           "1": [
+             {
+               "length": 88,
+               "table_id": 0,
+               "duration_sec": 2,
+               "duration_nsec": 6.76e+08,
+               "priority": 11111,
+               "idle_timeout": 0,
+               "hard_timeout": 0,
+               "flags": 1,
+               "cookie": 1,
+               "packet_count": 0,
+               "byte_count": 0,
+               "match": {
+                 "eth_type": 2054
+               },
+               "importance": 0,
+               "instructions": [
+                 {
+                   "type": "APPLY_ACTIONS",
+                   "actions": [
+                     {
+                       "port": 2,
+                       "max_len": 0,
+                       "type": "OUTPUT"
+                     }
+                   ]
+                 }
+               ]
+             }
+           ]
+       }
 
 
 .. _get-flows-stats-filtered:
@@ -203,17 +265,21 @@ Get flows stats filtered by fields
              }
          }' http://localhost:8080/stats/flow/1
 
+    Response (OpenFlow1.3 or earlier):
+
     ::
 
         {
           "1": [
             {
+              "length": 88,
               "table_id": 0,
               "duration_sec": 2,
               "duration_nsec": 6.76e+08,
               "priority": 11111,
               "idle_timeout": 0,
               "hard_timeout": 0,
+              "flags": 1,
               "cookie": 1,
               "packet_count": 0,
               "byte_count": 0,
@@ -226,6 +292,45 @@ Get flows stats filtered by fields
             }
           ]
         }
+
+    Response (OpenFlow1.4 or later):
+
+    ::
+
+        {
+           "1": [
+             {
+               "length": 88,
+               "table_id": 0,
+               "duration_sec": 2,
+               "duration_nsec": 6.76e+08,
+               "priority": 11111,
+               "idle_timeout": 0,
+               "hard_timeout": 0,
+               "flags": 1,
+               "cookie": 1,
+               "packet_count": 0,
+               "byte_count": 0,
+               "match": {
+                 "eth_type": 2054
+               },
+               "importance": 0,
+               "instructions": [
+                 {
+                   "type": "APPLY_ACTIONS",
+                   "actions": [
+                     {
+                       "port": 2,
+                       "max_len": 0,
+                       "type": "OUTPUT"
+                     }
+                   ]
+                 }
+               ]
+             }
+           ]
+       }
+
 
 
 .. _get-aggregate-flow-stats:
@@ -642,7 +747,7 @@ Get ports stats
            Specification of port number is optional.
 
 
-    Response message body:
+    Response message body(OpenFlow1.3 or earlier):
 
         ============== ============================================================ =========
         Attribute      Description                                                  Example
@@ -665,9 +770,32 @@ Get ports stats
         duration_nsec  Time port has been alive in nanoseconds beyond duration_sec  9.76e+08
         ============== ============================================================ =========
 
+
+    Response message body(OpenFlow1.4 or later):
+
+        ============== ============================================================ =================================================================================
+        Attribute      Description                                                  Example
+        ============== ============================================================ =================================================================================
+        dpid           Datapath ID                                                  "1"
+        port_no        Port number                                                  1
+        rx_packets     Number of received packets                                   9
+        tx_packets     Number of transmitted packets                                6
+        rx_bytes       Number of received bytes                                     738
+        tx_bytes       Number of transmitted bytes                                  252
+        rx_dropped     Number of packets dropped by RX                              0
+        tx_dropped     Number of packets dropped by TX                              0
+        rx_errors      Number of receive errors                                     0
+        tx_errors      Number of transmit errors                                    0
+        duration_sec   Time port has been alive in seconds                          12
+        duration_nsec  Time port has been alive in nanoseconds beyond duration_sec  9.76e+08
+        properties     struct ofp_port_desc_prop_header                             [{"rx_frame_err": 0, "rx_over_err": 0, "rx_crc_err": 0, "collisions": 0,...},...]
+        ============== ============================================================ =================================================================================
+
     Example of use::
 
         $ curl -X GET http://localhost:8080/stats/port/1
+
+    Response (OpenFlow1.3 or earlier):
 
     ::
 
@@ -697,6 +825,62 @@ Get ports stats
           ]
         }
 
+    Response (OpenFlow1.4 or later):
+
+    ::
+
+        {
+           "1": [
+             {
+               "port_no": 1,
+               "rx_packets": 9,
+               "tx_packets": 6,
+               "rx_bytes": 738,
+               "tx_bytes": 252,
+               "rx_dropped": 0,
+               "tx_dropped": 0,
+               "rx_errors": 0,
+               "tx_errors": 0,
+               "duration_nsec": 12,
+               "duration_sec": 9.76e+08,
+               "properties": [
+                 {
+                   "rx_frame_err": 0,
+                   "rx_over_err": 0,
+                   "rx_crc_err": 0,
+                   "collisions": 0,
+                   "type": "ETHERNET"
+                 },
+                 {
+                   "bias_current": 300,
+                   "flags": 3,
+                   "rx_freq_lmda": 1500,
+                   "rx_grid_span": 500,
+                   "rx_offset": 700,
+                   "rx_pwr": 2000,
+                   "temperature": 273,
+                   "tx_freq_lmda": 1500,
+                   "tx_grid_span": 500,
+                   "tx_offset": 700,
+                   "tx_pwr": 2000,
+                   "type": "OPTICAL"
+                 },
+                 {
+                   "data": [],
+                   "exp_type": 0,
+                   "experimenter": 101,
+                   "type": "EXPERIMENTER"
+                 },
+                 {
+                   :
+
+                   :
+                 }
+               ]
+             }
+           ]
+         }
+
 
 .. _get-ports-description:
 
@@ -712,7 +896,7 @@ Get ports description
         URI     /stats/portdesc/<dpid>
         ======= =======================
 
-    Response message body:
+    Response message body(OpenFlow1.3 or earlier):
 
         ============== ====================================== ====================
         Attribute      Description                            Example
@@ -731,9 +915,26 @@ Get ports description
         max_speed      Max port bitrate in kbps               0
         ============== ====================================== ====================
 
+    Response message body(OpenFlow1.4 or later):
+
+        ============== ====================================== ======================================
+        Attribute      Description                            Example
+        ============== ====================================== ======================================
+        dpid           Datapath ID                            "1"
+        port_no        Port number                            1
+        hw_addr        Ethernet hardware address              "0a:b6:d0:0c:e1:d7"
+        name           Name of port                           "s1-eth1"
+        config         Bitmap of OFPPC_* flags                0
+        state          Bitmap of OFPPS_* flags                0
+        length         Length of this entry                   168
+        properties     struct ofp_port_desc_prop_header       [{"length": 32, "curr": 10248,...}...]
+        ============== ====================================== ======================================
+
     Example of use::
 
         $ curl -X GET http://localhost:8080/stats/portdesc/1
+
+    Response (OpenFlow1.3 or earlier):
 
     ::
 
@@ -759,6 +960,60 @@ Get ports description
           ]
         }
 
+    Response (OpenFlow1.4 or later):
+
+    ::
+
+        {
+           "1": [
+             {
+               "port_no": 1,
+               "hw_addr": "0a:b6:d0:0c:e1:d7",
+               "name": "s1-eth1",
+               "config": 0,
+               "state": 0,
+               "length": 168,
+               "properties": [
+                 {
+                   "length": 32,
+                   "curr": 10248,
+                   "advertised": 10240,
+                   "supported": 10248,
+                   "peer": 10248,
+                   "curr_speed": 5000,
+                   "max_speed": 5000,
+                   "type": "ETHERNET"
+                 },
+                 {
+                   "length": 40,
+                   "rx_grid_freq_lmda": 1500,
+                   "tx_grid_freq_lmda": 1500,
+                   "rx_max_freq_lmda": 2000,
+                   "tx_max_freq_lmda": 2000,
+                   "rx_min_freq_lmda": 1000,
+                   "tx_min_freq_lmda": 1000,
+                   "tx_pwr_max": 2000,
+                   "tx_pwr_min": 1000,
+                   "supported": 1,
+                   "type": "OPTICAL"
+                 },
+                 {
+                   "data": [],
+                   "exp_type": 0,
+                   "experimenter": 101,
+                   "length": 12,
+                   "type": "EXPERIMENTER"
+                 },
+                 {
+                   :
+
+                   :
+                 }
+               ]
+             }
+           ]
+        }
+
 
 Get queues stats
 ----------------
@@ -782,7 +1037,7 @@ Get queues stats
            e.g. GET http://localhost:8080/stats/queue/1/ALL/1
 
 
-    Response message body:
+    Response message body(OpenFlow1.3 or earlier):
 
         ============== ============================================================= ===========
         Attribute      Description                                                   Example
@@ -797,9 +1052,28 @@ Get queues stats
         duration_nsec  Time queue has been alive in nanoseconds beyond duration_sec  3912967296
         ============== ============================================================= ===========
 
+    Response message body(OpenFlow1.4 or later):
+
+        ============== ============================================================= ======================================
+        Attribute      Description                                                   Example
+        ============== ============================================================= ======================================
+        dpid           Datapath ID                                                   "1"
+        port_no        Port number                                                   1
+        queue_id       Queue ID                                                      0
+        tx_bytes       Number of transmitted bytes                                   0
+        tx_packets     Number of transmitted packets                                 0
+        tx_errors      Number of packets dropped due to overrun                      0
+        duration_sec   Time queue has been alive in seconds                          4294963425
+        duration_nsec  Time queue has been alive in nanoseconds beyond duration_sec  3912967296
+        length         Length of this entry                                          104
+        properties     struct ofp_queue_stats_prop_header                            [{"type": 65535,"length": 12,...},...]
+        ============== ============================================================= ======================================
+
     Example of use::
 
         $ curl -X GET http://localhost:8080/stats/queue/1
+
+    Response (OpenFlow1.3 or earlier):
 
     ::
 
@@ -826,6 +1100,55 @@ Get queues stats
           ]
         }
 
+    Response (OpenFlow1.4 or later):
+
+    ::
+
+        {
+          "1": [
+            {
+              "port_no": 1,
+              "queue_id": 0,
+              "tx_bytes": 0,
+              "tx_packets": 0,
+              "tx_errors": 0,
+              "duration_sec": 4294963425,
+              "duration_nsec": 3912967296,
+              "length": 104,
+              "properties": [
+                 {
+                    "OFPQueueStatsPropExperimenter": {
+                       "type": 65535,
+                       "length": 16,
+                       "data": [
+                          1
+                       ],
+                       "exp_type": 1,
+                       "experimenter": 101
+                    }
+                 },
+                 {
+                    :
+
+                    :
+                 }
+              ]
+            },
+            {
+              "port_no": 2,
+              "queue_id": 1,
+              "tx_bytes": 0,
+              "tx_packets": 0,
+              "tx_errors": 0,
+              "duration_sec": 4294963425,
+              "duration_nsec": 3912967296,
+              "length": 48,
+              "properties": []
+            }
+          ]
+        }
+
+.. _get-queues-config:
 
 Get queues config
 -----------------
@@ -838,6 +1161,11 @@ Get queues config
         Method  GET
         URI     /stats/queueconfig/<dpid>/<port>
         ======= ================================
+
+        .. CAUTION::
+
+           This message is deprecated in Openflow1.4.
+           If OpenFlow 1.4 or later is in use, please refer to :ref:`get-queues-description` instead.
 
     Response message body:
 
@@ -898,6 +1226,79 @@ Get queues config
             }
           ]
         }
+
+.. _get-queues-description:
+
+Get queues description
+----------------------
+
+    Get queues description of the switch which specified with Datapath ID, Port and Queue_id in URI.
+
+    Usage:
+
+        ======= =========================================
+        Method  GET
+        URI     /stats/queuedesc/<dpid>/<port>/<queue_id>
+        ======= =========================================
+
+        .. CAUTION::
+
+           This message is available in OpenFlow1.4 or later.
+           If Openflow1.3 or earlier is in use, please refer to :ref:`get-queues-config` instead.
+
+
+    Response message body:
+
+        ================ ====================================================== ========================================
+        Attribute        Description                                            Example
+        ================ ====================================================== ========================================
+        dpid             Datapath ID                                            "1"
+        len              Length in bytes of this queue desc                     88
+        port_no          Port which was queried                                 1
+        queue_id         Queue ID                                               1
+        properties       struct ofp_queue_desc_prop_header                      [{"length": 8, ...},...]
+        ================ ====================================================== ========================================
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/queuedesc/1/1/1
+
+    ::
+
+
+        {
+         "1": [
+             {
+               "len": 88,
+               "port_no": 1,
+               "queue_id": 1,
+               "properties": [
+                 {
+                   "length": 8,
+                   "rate": 300,
+                   "type": "MIN_RATE"
+                 },
+                 {
+                   "length": 8,
+                   "rate": 900,
+                   "type": "MAX_RATE"
+                 },
+                 {
+                   "length": 16,
+                   "exp_type": 0,
+                   "experimenter": 101,
+                   "data": [1],
+                   "type": "EXPERIMENTER"
+                 },
+                 {
+                   :
+
+                   :
+                 }
+               ]
+             }
+           ]
+         }
 
 
 Get groups stats
@@ -976,7 +1377,7 @@ Get group description stats
         URI     /stats/groupdesc/<dpid>
         ======= ========================
 
-    Response message body:
+    Response message body(Openflow1.3 or earlier):
 
         =============== ======================================================= =============
         Attribute       Description                                             Example
@@ -994,9 +1395,32 @@ Get group description stats
         -- actions      0 or more actions associated with the bucket            ["OUTPUT:1"]
         =============== ======================================================= =============
 
+    Response message body(Openflow1.4 or later):
+
+        =============== ======================================================= ====================================
+        Attribute       Description                                             Example
+        =============== ======================================================= ====================================
+        dpid            Datapath ID                                             "1"
+        type            One of OFPGT_*                                          "ALL"
+        group_id        Group ID                                                1
+        length          Length of this entry                                    40
+        buckets         struct ofp_bucket
+        -- weight       Relative weight of bucket                               0
+                        (Only defined for select groups)
+        -- watch_port   Port whose state affects whether this bucket is live    4294967295
+                        (Only required for fast failover groups)
+        -- watch_group  Group whose state affects whether this bucket is live   4294967295
+                        (Only required for fast failover groups)
+        -- len          Length the bucket in bytes, including this header and   32
+                        any adding to make it 64-bit aligned.
+        -- actions      0 or more actions associated with the bucket            [{"OUTPUT:1", "max_len": 65535,...}]
+        =============== ======================================================= ====================================
+
     Example of use::
 
         $ curl -X GET http://localhost:8080/stats/groupdesc/1
+
+    Response (Openflow1.3 or earlier):
 
     ::
 
@@ -1017,6 +1441,35 @@ Get group description stats
               ]
             }
           ]
+        }
+
+    Response (Openflow1.4 or later):
+
+    ::
+
+        {
+           "1": [
+             {
+               "type": "ALL",
+               "group_id": 1,
+               "length": 40,
+               "buckets": [
+                 {
+                   "weight": 1,
+                   "watch_port": 1,
+                   "watch_group": 1,
+                   "len": 32,
+                   "actions": [
+                     {
+                         "type": "OUTPUT",
+                         "max_len": 65535,
+                         "port": 2
+                     }
+                   ]
+                 }
+               ]
+             }
+           ]
         }
 
 
@@ -1292,7 +1745,7 @@ Add a flow entry
         URI     /stats/flowentry/add
         ======= =====================
 
-    Request message body:
+    Request message body(Openflow1.3 or earlier):
 
         ============= ===================================================== ============================== ===============
         Attribute     Description                                           Example                        Default
@@ -1310,12 +1763,31 @@ Add a flow entry
         actions       Instruction set (list of dict)                        [{"type":"OUTPUT", "port":2}]  [] #DROP
         ============= ===================================================== ============================== ===============
 
+    Request message body(Openflow1.4 or later):
+
+        ============= ===================================================== =============================== ===============
+        Attribute     Description                                           Example                          Default
+        ============= ===================================================== =============================== ===============
+        dpid          Datapath ID (int)                                     1                                (Mandatory)
+        cookie        Opaque controller-issued identifier (int)             1                                0
+        cookie_mask   Mask used to restrict the cookie bits (int)           1                                0
+        table_id      Table ID to put the flow in (int)                     0                                0
+        idle_timeout  Idle time before discarding (seconds) (int)           30                               0
+        hard_timeout  Max time before discarding (seconds) (int)            30                               0
+        priority      Priority level of flow entry (int)                    11111                            0
+        buffer_id     Buffered packet to apply to, or OFP_NO_BUFFER (int)   1                                OFP_NO_BUFFER
+        flags         Bitmap of OFPFF_* flags (int)                         1                                0
+        match         Fields to match (dict)                                {"in_port":1}                    {} #wildcarded
+        instructions  Instruction set (list of dict)                        [{"type":"METER", "meter_id":2}] [] #DROP
+        ============= ===================================================== ================================ ===============
+
     .. NOTE::
 
         For description of match and actions, please see :ref:`description-of-match-and-actions`.
 
+    Example of use(Openflow1.3 or earlier):
 
-    Example of use::
+    ::
 
         $ curl -X POST -d '{
             "dpid": 1,
@@ -1379,6 +1851,85 @@ Add a flow entry
                 "in_port":1
             },
             "actions":[
+                {
+                    "type":"METER",
+                    "meter_id": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    Example of use(Openflow1.4 or later):
+
+    ::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "cookie": 1,
+            "cookie_mask": 1,
+            "table_id": 0,
+            "idle_timeout": 30,
+            "hard_timeout": 30,
+            "priority": 11111,
+            "flags": 1,
+            "match":{
+                "in_port":1
+            },
+            "instructions": [
+                {
+                    "type": "APPLY_ACTIONS",
+                    "actions": [
+                        {
+                            "max_len": 65535,
+                            "port": 2,
+                            "type": "OUTPUT"
+                        }
+                    ]
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    ::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "priority": 22222,
+            "match":{
+                "in_port":1
+            },
+            "instructions": [
+                {
+                    "type":"GOTO_TABLE",
+                    "table_id": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    ::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "priority": 33333,
+            "match":{
+                "in_port":1
+            },
+            "instructions": [
+                {
+                    "type":"WRITE_METADATA",
+                    "metadata": 1,
+                    "metadata_mask": 1
+                }
+            ]
+         }' http://localhost:8080/stats/flowentry/add
+
+    ::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "priority": 44444,
+            "match":{
+                "in_port":1
+            },
+            "instructions": [
                 {
                     "type":"METER",
                     "meter_id": 1
