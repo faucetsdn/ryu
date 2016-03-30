@@ -2762,18 +2762,24 @@ Example of set-field action
 
     To set VLAN ID to non-VLAN-tagged frame::
 
-        "actions":[
-            {
-                "type": "PUSH_VLAN",     # Push a new VLAN tag if a input frame is non-VLAN-tagged
-                "ethertype": 33024       # Ethertype 0x8100(=33024): IEEE 802.1Q VLAN-tagged frame
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "match":{
+                "dl_type": "0x8000"
             },
-            {
-                "type": "SET_FIELD",
-                "field": "vlan_vid",     # Set VLAN ID
-                "value": 4102            # Describe sum of vlan_id(e.g. 6) | OFPVID_PRESENT(0x1000=4096)
-            },
-            {
-                "type": "OUTPUT",
-                "port": 2
-            }
-        ]
+	        "actions":[
+	            {
+	                "type": "PUSH_VLAN",     # Push a new VLAN tag if a input frame is non-VLAN-tagged
+	                "ethertype": 33024       # Ethertype 0x8100(=33024): IEEE 802.1Q VLAN-tagged frame
+	            },
+	            {
+	                "type": "SET_FIELD",
+	                "field": "vlan_vid",     # Set VLAN ID
+	                "value": 4102            # Describe sum of vlan_id(e.g. 6) | OFPVID_PRESENT(0x1000=4096)
+	            },
+	            {
+	                "type": "OUTPUT",
+	                "port": 2
+	            }
+	        ]
+         }' http://localhost:8080/stats/flowentry/add
