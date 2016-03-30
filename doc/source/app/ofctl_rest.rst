@@ -39,7 +39,7 @@ Get all switches
 
         $ curl -X GET http://localhost:8080/stats/switches
 
-    ::
+    .. code-block:: javascript
 
         [
           1,
@@ -81,7 +81,7 @@ Get the desc stats
 
         $ curl -X GET http://localhost:8080/stats/desc/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": {
@@ -157,7 +157,7 @@ Get all flows stats
 
     Response (OpenFlow1.3 or earlier):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -185,7 +185,7 @@ Get all flows stats
 
     Response (OpenFlow1.4 or later):
 
-    ::
+    .. code-block:: javascript
 
         {
            "1": [
@@ -267,7 +267,7 @@ Get flows stats filtered by fields
 
     Response (OpenFlow1.3 or earlier):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -295,7 +295,7 @@ Get flows stats filtered by fields
 
     Response (OpenFlow1.4 or later):
 
-    ::
+    .. code-block:: javascript
 
         {
            "1": [
@@ -362,7 +362,7 @@ Get aggregate flow stats
 
         $ curl -X GET http://localhost:8080/stats/aggregateflow/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -416,7 +416,7 @@ Get aggregate flow stats filtered by fields
              }
          }' http://localhost:8080/stats/aggregateflow/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -505,7 +505,7 @@ Get table stats
 
     Response (OpenFlow1.0):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -539,7 +539,7 @@ Get table stats
 
     Response (OpenFlow1.2):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -627,7 +627,7 @@ Get table stats
 
     Response (OpenFlow1.3):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -679,7 +679,7 @@ Get table features
 
         $ curl -X GET http://localhost:8080/stats/tablefeatures/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -797,7 +797,7 @@ Get ports stats
 
     Response (OpenFlow1.3 or earlier):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -827,7 +827,7 @@ Get ports stats
 
     Response (OpenFlow1.4 or later):
 
-    ::
+    .. code-block:: javascript
 
         {
            "1": [
@@ -936,7 +936,7 @@ Get ports description
 
     Response (OpenFlow1.3 or earlier):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -962,7 +962,7 @@ Get ports description
 
     Response (OpenFlow1.4 or later):
 
-    ::
+    .. code-block:: javascript
 
         {
            "1": [
@@ -1075,7 +1075,7 @@ Get queues stats
 
     Response (OpenFlow1.3 or earlier):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1102,7 +1102,7 @@ Get queues stats
 
     Response (OpenFlow1.4 or later):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1184,7 +1184,7 @@ Get queues config
 
         $ curl -X GET http://localhost:8080/stats/queueconfig/1/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1263,7 +1263,7 @@ Get queues description
 
         $ curl -X GET http://localhost:8080/stats/queuedesc/1/1/1
 
-    ::
+    .. code-block:: javascript
 
 
         {
@@ -1340,7 +1340,7 @@ Get groups stats
 
         $ curl -X GET http://localhost:8080/stats/group/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1422,7 +1422,7 @@ Get group description stats
 
     Response (Openflow1.3 or earlier):
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1445,7 +1445,7 @@ Get group description stats
 
     Response (Openflow1.4 or later):
 
-    ::
+    .. code-block:: javascript
 
         {
            "1": [
@@ -1501,7 +1501,7 @@ Get group features stats
 
         $ curl -X GET http://localhost:8080/stats/groupfeatures/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1599,7 +1599,7 @@ Get meters stats
 
         $ curl -X GET http://localhost:8080/stats/meter/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1659,7 +1659,7 @@ Get meter config stats
 
         $ curl -X GET http://localhost:8080/stats/meterconfig/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
@@ -1709,7 +1709,7 @@ Get meter features stats
 
         $ curl -X GET http://localhost:8080/stats/meterfeatures/1
 
-    ::
+    .. code-block:: javascript
 
         {
           "1": [
