@@ -41,8 +41,6 @@ def setup_hook(config):
     metadata = config['metadata']
     if sys.platform == 'win32':
         requires = metadata.get('requires_dist', '').split('\n')
-        requires.append('pywin32')
-        requires.append('wmi')
         metadata['requires_dist'] = "\n".join(requires)
     config['metadata'] = metadata
 
