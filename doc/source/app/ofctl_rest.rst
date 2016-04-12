@@ -1157,10 +1157,14 @@ Get queues config
 
     Usage:
 
-        ======= ================================
+        ======= ==================================
         Method  GET
-        URI     /stats/queueconfig/<dpid>/<port>
-        ======= ================================
+        URI     /stats/queueconfig/<dpid>/[<port>]
+        ======= ==================================
+
+        .. NOTE::
+
+           Specification of port number is optional.
 
         .. CAUTION::
 
@@ -1236,10 +1240,20 @@ Get queues description
 
     Usage:
 
-        ======= =========================================
+        ======= =============================================
         Method  GET
-        URI     /stats/queuedesc/<dpid>/<port>/<queue_id>
-        ======= =========================================
+        URI     /stats/queuedesc/<dpid>[/<port>/[<queue_id>]]
+        ======= =============================================
+
+        .. NOTE::
+
+           Specification of port number and queue id are optional.
+
+           If you want to omitting the port number and setting the queue id,
+           please specify the keyword "ALL" to the port number.
+
+           e.g. GET http://localhost:8080/stats/queuedesc/1/ALL/1
+
 
         .. CAUTION::
 
