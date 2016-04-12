@@ -2591,6 +2591,8 @@ Description of Match on request messages
                         (Openflow1.3+)
         ipv6_exthdr     IPv6 Extension Header pseudo-field (int or string) {"ipv6_exthdr": 3, "eth_type": 34525} or {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
                         (Openflow1.3+)
+        pbb_uca         PBB UCA hander field(int)                          {"pbb_uca": 1, "eth_type": 35047}
+                        (Openflow1.4+) 
         =============== ================================================== =======================================================================================================
 
     .. NOTE::
