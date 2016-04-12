@@ -6,7 +6,7 @@ ryu.app.ofctl_rest provides REST APIs for retrieving the switch stats
 and Updating the switch stats.
 This application helps you debug your application and get various statistics.
 
-This application supports OpenFlow version 1.0, 1.2, 1.3 and 1.4.
+This application supports OpenFlow version 1.0, 1.2, 1.3, 1.4 and 1.5.
 
 .. contents::
    :depth: 3
@@ -889,12 +889,24 @@ Get ports description
 
     Get ports description of the switch which specified with Datapath ID in URI.
 
-    Usage:
+    Usage(OpenFlow1.4 or earlier):
 
         ======= =======================
         Method  GET
         URI     /stats/portdesc/<dpid>
         ======= =======================
+
+    Usage(OpenFlow1.5 or later):
+
+        ======= ==================================
+        Method  GET
+        URI     /stats/portdesc/<dpid>/[<port>]
+        ======= ==================================
+
+        .. NOTE::
+
+           Specification of port number is optional.
+
 
     Response message body(OpenFlow1.3 or earlier):
 
@@ -1166,6 +1178,7 @@ Get queues config
 
            Specification of port number is optional.
 
+
         .. CAUTION::
 
            This message is deprecated in Openflow1.4.
@@ -1384,12 +1397,24 @@ Get group description stats
 
     Get group description stats of the switch which specified with Datapath ID in URI.
 
-    Usage:
+    Usage(Openflow1.4 or earlier):
 
         ======= ========================
         Method  GET
         URI     /stats/groupdesc/<dpid>
         ======= ========================
+
+    Usage(Openflow1.5 or later):
+
+        ======= ====================================
+        Method  GET
+        URI     /stats/groupdesc/<dpid>/[<group_id>]
+        ======= ====================================
+
+        .. NOTE::
+
+           Specification of group id is optional.
+
 
     Response message body(Openflow1.3 or earlier):
 
@@ -1640,14 +1665,30 @@ Get meters stats
 
 Get meter config stats
 ------------------------
+Get meter description stats
+---------------------------
 
     Get meter config stats of the switch which specified with Datapath ID in URI.
 
-    Usage:
+        .. CAUTION::
+
+           This message has been renamed in openflow 1.5.
+           If Openflow 1.4 or earlier is in use, please used as Get meter description stats.
+           If Openflow 1.5 or later is in use, please used as Get meter description stats.
+
+
+    Usage(Openflow1.4 or earlier):
 
         ======= ======================================
         Method  GET
         URI     /stats/meterconfig/<dpid>[/<meter_id>]
+        ======= ======================================
+
+    Usage(Openflow1.5 or later):
+
+        ======= ======================================
+        Method  GET
+        URI     /stats/meterdesc/<dpid>[/<meter_id>]
         ======= ======================================
 
         .. NOTE::
@@ -2599,14 +2640,20 @@ Description of Match on request messages
         mpls_tc         MPLS Traffic Class (int)                           {"mpls_tc": 2, "eth_type": 34888}
         mpls_bos        MPLS BoS bit (int)                                 {"mpls_bos": 1, "eth_type": 34888}
                         (Openflow1.3+)
-        pbb_isid        PBB I-SID (int or string)                          {"pbb_isid": 5, "eth_type": 35047} or {"pbb_isid": "0x05/0xff", "eth_type": 35047}
+        pbb_isid        PBB I-SID (int or string)                          {"pbb_isid": 5, "eth_type": 35047} or{"pbb_isid": "0x05/0xff", "eth_type": 35047}
                         (Openflow1.3+)
         tunnel_id       Logical Port Metadata (int or string)              {"tunnel_id": 7} or {"tunnel_id": "0x07/0xff"}
                         (Openflow1.3+)
         ipv6_exthdr     IPv6 Extension Header pseudo-field (int or string) {"ipv6_exthdr": 3, "eth_type": 34525} or {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
-                        (Openflow1.3+)
+                        (Openflow1.3+) 
         pbb_uca         PBB UCA hander field(int)                          {"pbb_uca": 1, "eth_type": 35047}
-                        (Openflow1.4+) 
+                        (Openflow1.4+)
+        tcp_flags       TCP flags(int)                                     {"tcp_flags": 2, "ip_proto": 6, "eth_type": 2048}
+                        (Openflow1.5+)
+        actset_output   Output port from action set metadata(int)          {"actset_output": 3}
+                        (Openflow1.5+)
+        packet_type     Packet type value(int)                             {"packet_type": [1, 2048]}
+                        (Openflow1.5+)
         =============== ================================================== =======================================================================================================
 
     .. NOTE::
@@ -2738,9 +2785,9 @@ Description of Actions on request messages
 
     List of Actions (OpenFlow1.2 or later):
 
-        =============== ============================================================================ ==================================================================
+        =============== ============================================================================ ========================================================================================================================
         Actions         Description                                                                  Example
-        =============== ============================================================================ ==================================================================
+        =============== ============================================================================ ========================================================================================================================
         OUTPUT          Output packet from "port"                                                    {"type": "OUTPUT", "port": 3}
         COPY_TTL_OUT    Copy TTL outwards                                                            {"type": "COPY_TTL_OUT"}
         COPY_TTL_IN     Copy TTL inwards                                                             {"type": "COPY_TTL_IN"}
@@ -2760,14 +2807,21 @@ Description of Actions on request messages
                         (Openflow1.3+)
         POP_PBB         Pop the outer PBB service tag                                                {"type": "POP_PBB"}
                         (Openflow1.3+)
+        COPY_FIELD      Copy value between header and register                                       {"type": "COPY_FIELD", "n_bits": 32, "src_offset": 1, "dst_offset": 2, "src_oxm_id": "eth_src", "dst_oxm_id": "eth_dst"}
+                        (Openflow1.5+)
+        METER           Apply meter identified by "meter_id"                                         {"type": "METER", "meter_id": 3}
+                        (Openflow1.5+)
         EXPERIMENTER    Extensible action for the experimenter                                       {"type": "EXPERIMENTER", "experimenter": 101, "data": "AAECAwQFBgc=", "data_type": "base64"}
                         (Set "base64" or "ascii" to "data_type" field)
         GOTO_TABLE      (Instruction) Setup the next table identified by "table_id"                  {"type": "GOTO_TABLE", "table_id": 8}
         WRITE_METADATA  (Instruction) Setup the metadata field using "metadata" and "metadata_mask"  {"type": "WRITE_METADATA", "metadata": 0x3, "metadata_mask": 0x3}
         METER           (Instruction) Apply meter identified by "meter_id"                           {"type": "METER", "meter_id": 3}
+                        (deprecated in Openflow1.5)
         WRITE_ACTIONS   (Instruction) Write the action(s) onto the datapath action set               {"type": "WRITE_ACTIONS", actions":[{"type":"POP_VLAN",},{ "type":"OUTPUT", "port": 2}]}
         CLEAR_ACTIONS   (Instruction) Clears all actions from the datapath action set                {"type": "CLEAR_ACTIONS"}
-        =============== ============================================================================ ==================================================================
+        =============== ============================================================================ ========================================================================================================================
+
+
 
 .. _example-of-set-field-action:
 
