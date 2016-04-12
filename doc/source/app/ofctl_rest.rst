@@ -2586,14 +2586,15 @@ Description of Match on request messages
         mpls_label      MPLS label (int)                                   {"mpls_label": 3, "eth_type": 34888}
         mpls_tc         MPLS Traffic Class (int)                           {"mpls_tc": 2, "eth_type": 34888}
         mpls_bos        MPLS BoS bit (int)                                 {"mpls_bos": 1, "eth_type": 34888}
+                        (Openflow1.3+)
         pbb_isid        PBB I-SID (int or string)                          {"pbb_isid": 5, "eth_type": 35047}
-
+                        (Openflow1.3+)
                                                                            | {"pbb_isid": "0x05/0xff", "eth_type": 35047}
         tunnel_id       Logical Port Metadata (int or string)              {"tunnel_id": 7}
-
+                        (Openflow1.3+)
                                                                            | {"tunnel_id": "0x07/0xff"}
         ipv6_exthdr     IPv6 Extension Header pseudo-field (int or string) {"ipv6_exthdr": 3, "eth_type": 34525}
-
+                        (Openflow1.3+)
                                                                            | {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
         =============== ================================================== =======================================================================================================
 
@@ -2745,7 +2746,9 @@ Description of Actions on request messages
         SET_FIELD       Set a "field" using "value"                                                  See :ref:`example-of-set-field-action`
                         (The set of keywords available for "field" is the same as match field)
         PUSH_PBB        Push a new PBB service tag with "ethertype"                                  {"type": "PUSH_PBB", "ethertype": 35047}
+                        (Openflow1.3+)
         POP_PBB         Pop the outer PBB service tag                                                {"type": "POP_PBB"}
+                        (Openflow1.3+)
         EXPERIMENTER    Extensible action for the experimenter                                       {"type": "EXPERIMENTER", "experimenter": 101, "data": "AAECAwQFBgc=", "data_type": "base64"}
                         (Set "base64" or "ascii" to "data_type" field)
         GOTO_TABLE      (Instruction) Setup the next table identified by "table_id"                  {"type": "GOTO_TABLE", "table_id": 8}
