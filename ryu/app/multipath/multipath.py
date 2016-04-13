@@ -23,10 +23,12 @@ from ryu.controller.handler import CONFIG_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import MAIN_DISPATCHER, HANDSHAKE_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ether
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import arp
 from ryu.lib.packet import ipv4
+from ryu.lib.packet import ipv6
 from ryu import utils
 
 
@@ -185,6 +187,13 @@ class MULTIPATH_13(app_manager.RyuApp):
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         arp_pkt = pkt.get_protocol(arp.arp)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
+
+        ip_pkt_6 = pkt.get_protocol(ipv6.ipv6)
+        if isinstance(ip_pkt_6, ipv6.ipv6):
+            actions = []
+            match = parser.OFPMatch(eth_type=ether.ETH_TYPE_IPV6)
+            self.add_flow(datapath, 0, 1, match, actions)
+            return
 
         if isinstance(arp_pkt, arp.arp):
             self.logger.debug("ARP processing")
