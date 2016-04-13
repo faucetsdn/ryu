@@ -2,6 +2,7 @@
 import logging
 import struct
 import copy
+import networkx as nx
 from operator import attrgetter
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -31,28 +32,22 @@ class Network_Aware(app_manager.RyuApp):
         self.name = "Network_Aware"
         self.topology_api_app = self
 
-        # links   :(src_dpid,dst_dpid)->(src_port,dst_port)
+        # links_to_port:(src_dpid,dst_dpid)->(src_port,dst_port)
         self.link_to_port = {}
-
-        # {(sw,port) :[host1_ip,host2_ip,host3_ip,host4_ip]}
+        # access_table:{(sw,port) :[host1_ip]}
         self.access_table = {}
-
-        # ports
-        self.switch_port_table = {}  # dpid->port_num
-
-        # dpid->port_num (access ports)
+        # switch_port_table:dpip->port_num
+        self.switch_port_table = {}
+        # access_port:dpid->port_num
         self.access_ports = {}
-
-        # dpid->port_num(interior ports)
+        # interior_ports: dpid->port_num
         self.interior_ports = {}
 
-        self.outer_ports = {}
-
-        self.graph = {}
-
-        self.pre_link_to_port = {}
-        self.pre_graph = {}
+        self.graph = nx.DiGraph()
+        self.pre_graph = nx.DiGraph()
         self.pre_access_table = {}
+        self.pre_link_to_port = {}
+        self.shortest_paths = None
 
         self.discover_thread = hub.spawn(self._discover)
 
@@ -94,6 +89,13 @@ class Network_Aware(app_manager.RyuApp):
                                 match=match, instructions=inst)
         dp.send_msg(mod)
 
+    def get_host_location(self, host_ip):
+        for key in self.access_table.keys():
+            if self.access_table[key][0] == host_ip:
+                return key
+        self.logger.info("%s location is not found." % host_ip)
+        return None
+
     def get_switches(self):
         return self.switches
 
@@ -104,13 +106,11 @@ class Network_Aware(app_manager.RyuApp):
     def get_graph(self, link_list):
         for src in self.switches:
             for dst in self.switches:
-                self.graph.setdefault(src, {dst: float('inf')})
+                self.graph.add_edge(src, dst, weight=float('inf'))
                 if src == dst:
-                    self.graph[src][src] = 0
+                    self.graph.add_edge(src, dst, weight=0)
                 elif (src, dst) in link_list:
-                    self.graph[src][dst] = 1
-                else:
-                    self.graph[src][dst] = float('inf')
+                    self.graph.add_edge(src, dst, weight=1)
         return self.graph
 
     def create_port_map(self, switch_list):
@@ -140,14 +140,9 @@ class Network_Aware(app_manager.RyuApp):
 
     # get ports without link into access_ports
     def create_access_ports(self):
-        # we assume that the access ports include outer port.
-        # Todo: find the outer ports by filter.
         for sw in self.switch_port_table:
             self.access_ports[sw] = self.switch_port_table[
                 sw] - self.interior_ports[sw]
-
-    def create_outer_port(self):
-        pass
 
     events = [event.EventSwitchEnter,
               event.EventSwitchLeave, event.EventPortAdd,
@@ -164,13 +159,26 @@ class Network_Aware(app_manager.RyuApp):
         self.create_access_ports()
         self.get_graph(self.link_to_port.keys())
 
-    def register_access_info(self, dpid, in_port, ip):
+    @set_ev_cls(events)
+    def get_shortest_paths(self, ev):
+        self.shortest_paths = self.floyd_dict(self.graph)
+        return self.shortest_paths
+
+    def floyd_dict(self, graph, src=None, topo=None):
+        return nx.all_pairs_dijkstra_path(graph)
+
+    def register_access_info(self, dpid, in_port, ip, mac):
         if in_port in self.access_ports[dpid]:
             if (dpid, in_port) in self.access_table:
-                if ip != self.access_table[(dpid, in_port)]:
-                    self.access_table[(dpid, in_port)] = ip
+                if self.access_table[(dpid, in_port)] == (ip, mac):
+                    return
+                else:
+                    self.access_table[(dpid, in_port)] = (ip, mac)
+                    return
             else:
-                self.access_table[(dpid, in_port)] = ip
+                self.access_table.setdefault((dpid, in_port), None)
+                self.access_table[(dpid, in_port)] = (ip, mac)
+                return
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -188,26 +196,27 @@ class Network_Aware(app_manager.RyuApp):
         if arp_pkt:
             arp_src_ip = arp_pkt.src_ip
             arp_dst_ip = arp_pkt.dst_ip
+            mac = arp_pkt.src_mac
 
             # record the access info
-            self.register_access_info(datapath.id, in_port, arp_src_ip)
+            self.register_access_info(datapath.id, in_port, arp_src_ip, mac)
 
     # show topo
     def show_topology(self):
-        switch_num = len(self.graph)
+        switch_num = len(self.graph.nodes())
         if self.pre_graph != self.graph or IS_UPDATE:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
                 print '%10d' % i,
             print ""
-            for i in self.graph.keys():
+            for i in self.graph.nodes():
                 print '%10d' % i,
                 for j in self.graph[i].values():
-                    print '%10.0f' % j,
+                    print '%10.0f' % j['weight'],
                 print ""
             self.pre_graph = copy.deepcopy(self.graph)
-        # show link
+
         if self.pre_link_to_port != self.link_to_port or IS_UPDATE:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
@@ -224,8 +233,7 @@ class Network_Aware(app_manager.RyuApp):
                 print ""
             self.pre_link_to_port = copy.deepcopy(self.link_to_port)
 
-        # each dp access host
-        # {(sw,port) :[host1_ip,host2_ip,host3_ip,host4_ip]}
+        # show host info:{(sw,port) :[host1_ip],...}
         if self.pre_access_table != self.access_table or IS_UPDATE:
             print "----------------Access Host-------------------"
             print '%10s' % ("switch"), '%12s' % "Host"
