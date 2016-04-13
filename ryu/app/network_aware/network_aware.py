@@ -55,7 +55,7 @@ class Network_Aware(app_manager.RyuApp):
     def _discover(self):
         i = 0
         while True:
-            self.show_topology()
+            # self.show_topology()
             if i == 5:
                 self.get_topology(None)
                 i = 0

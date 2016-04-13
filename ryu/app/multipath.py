@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 # Author:muzixing
-# Time:2014/10/19
+# Time:2016/04/13
 #
 
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import MAIN_DISPATCHER, HANDSHAKE_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
@@ -27,25 +27,7 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import arp
 from ryu.lib.packet import ipv4
-from ryu.lib.packet import icmp
 from ryu import utils
-import socket
-
-from ryu.lib import addrconv
-import struct
-import socket
-
-ETHERNET = ethernet.ethernet.__name__
-ETHERNET_MULTICAST = "ff:ff:ff:ff:ff:ff"
-ARP = arp.arp.__name__
-ICMP = icmp.icmp.__name__
-IPV4 = ipv4.ipv4.__name__
-DST_IPADDR = "10.0.0.2"
-SRC_IPADDR = "10.0.0.1"
-
-
-def ip2long(ip):
-    return struct.unpack("!I", socket.inet_aton(ip))[0]
 
 
 class MULTIPATH_13(app_manager.RyuApp):
@@ -54,8 +36,30 @@ class MULTIPATH_13(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(MULTIPATH_13, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        self.arp_table = {}
-        self.sw = {}
+        self.datapaths = {}
+        self.FLAGS = True
+
+    @set_ev_cls(
+        ofp_event.EventOFPErrorMsg,
+        [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def error_msg_handler(self, ev):
+        msg = ev.msg
+        self.logger.debug('OFPErrorMsg received: type=0x%02x code=0x%02x '
+                          'message=%s', msg.type, msg.code,
+                          utils.hex_array(msg.data))
+
+    @set_ev_cls(ofp_event.EventOFPStateChange,
+                [MAIN_DISPATCHER, DEAD_DISPATCHER])
+    def _state_change_handler(self, ev):
+        datapath = ev.datapath
+        if ev.state == MAIN_DISPATCHER:
+            if not datapath.id in self.datapaths:
+                self.logger.debug('register datapath: %016x', datapath.id)
+                self.datapaths[datapath.id] = datapath
+        elif ev.state == DEAD_DISPATCHER:
+            if datapath.id in self.datapaths:
+                self.logger.debug('unregister datapath: %016x', datapath.id)
+                del self.datapaths[datapath.id]
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -65,17 +69,10 @@ class MULTIPATH_13(app_manager.RyuApp):
         parser = datapath.ofproto_parser
 
         # install table-miss flow entry
-        #
-        # We specify NO BUFFER to max_len of the output action due to
-        # OVS bug. At this moment, if we specify a lesser number, e.g.,
-        # 128, OVS will send Packet-In with invalid buffer_id and
-        # truncated packet data. In that case, we cannot output packets
-        # correctly.
-
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
-        self.add_flow(datapath, 1, 0, match, actions)
+        self.add_flow(datapath, 0, 0, match, actions)
         self.logger.info("switch:%s connected", dpid)
 
     def add_flow(self, datapath, hard_timeout, priority, match, actions):
@@ -88,178 +85,68 @@ class MULTIPATH_13(app_manager.RyuApp):
         mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                 hard_timeout=hard_timeout,
                                 match=match, instructions=inst)
-        #print mod.__dict__
         datapath.send_msg(mod)
 
-    @set_ev_cls(
-        ofp_event.EventOFPErrorMsg,
-        [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
-    def error_msg_handler(self, ev):
-        msg = ev.msg
-        self.logger.debug(
-            'OFPErrorMsg received: type=0x%02x code=0x%02x '
-            'message=%s', msg.type, msg.code, utils.hex_array(msg.data))
+    def _build_packet_out(self, datapath, buffer_id, src_port, dst_port, data):
+        actions = []
+        if dst_port:
+            actions.append(datapath.ofproto_parser.OFPActionOutput(dst_port))
 
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        msg = ev.msg
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
-
-        pkt = packet.Packet(msg.data)
-
-        eth = pkt.get_protocols(ethernet.ethernet)[0]
-        dst = eth.dst
-        src = eth.src
-        dpid = datapath.id
-
-        header_list = dict(
-            (p.protocol_name, p)for p in pkt.protocols if type(p) != str)
-        if ARP in header_list:
-            self.arp_table[header_list[ARP].src_ip] = src  # ARP learning
-            #print "ARP"
-
-        self.mac_to_port.setdefault(dpid, {})
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
-
-        # learn a mac address to avoid FLOOD next time.
-        self.mac_to_port[dpid][src] = in_port
-
-        if dst in self.mac_to_port[dpid]:
-            out_port = self.mac_to_port[dpid][dst]
-        else:
-            if self.arp_handler(header_list, datapath, in_port, msg.buffer_id):
-                # 1:reply or drop;  0: flood
-                print "ARP_PROXY_13"
+        msg_data = None
+        if buffer_id == datapath.ofproto.OFP_NO_BUFFER:
+            if data is None:
                 return None
-            else:
-                out_port = ofproto.OFPP_FLOOD
-                print 'OFPP_FLOOD'
+            msg_data = data
 
-        actions = [parser.OFPActionOutput(out_port)]
+        out = datapath.ofproto_parser.OFPPacketOut(
+            datapath=datapath, buffer_id=buffer_id,
+            data=msg_data, in_port=src_port, actions=actions)
+        return out
 
-        # install a flow to avoid packet_in next time
-        if out_port != ofproto.OFPP_FLOOD:
-            # check the ethertype
-            if IPV4 in header_list and dpid == 1:
-                src_ip = header_list[IPV4].src
-                dst_ip = header_list[IPV4].dst
-                if in_port == 1:
-                    # src_ip == SRC_IPADDR and dst_ip == DST_IPADDR:
-                    self.send_group_mod(datapath)
-                    print "send_group_mod"
+    def send_packet_out(self, datapath, buffer_id, src_port, dst_port, data):
+        out = self._build_packet_out(datapath, buffer_id,
+                                     src_port, dst_port, data)
+        if out:
+            datapath.send_msg(out)
 
-                    actions = [parser.OFPActionGroup(group_id=50)]
-                    match = parser.OFPMatch(
-                        in_port=in_port,
-                        eth_type=eth.ethertype,
-                        ipv4_src=src_ip)
-
-                    self.add_flow(datapath, 0, 3, match, actions)
-                    actions = []
-                    # We know outputs at dpid=1
-                    actions.append(parser.OFPActionOutput(2))
-                    actions.append(parser.OFPActionOutput(3))
-
-                    self.send_packet_out(msg, actions)
-                    #print "send_packet_out"
-                    return None
-
-            #Normal flows
-            match = parser.OFPMatch(
-                in_port=in_port,
-                eth_dst=dst,
-                eth_type=eth.ethertype)
-            if IPV4 in header_list and not ICMP in header_list:
-                self.add_flow(datapath, 0, 1, match, actions)
-            else:
-                self.add_flow(datapath, 10, 1, match, actions)
-
-        self.send_packet_out(msg, actions)
-
-    def send_packet_out(self, msg, actions):
+    def flood(self, msg):
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
+        out = self._build_packet_out(datapath, ofproto.OFP_NO_BUFFER,
+                                     ofproto.OFPP_CONTROLLER,
+                                     ofproto.OFPP_FLOOD, msg.data)
+        datapath.send_msg(out)
+        self.logger.debug("Flooding msg")
+
+    def arp_forwarding(self, msg, src_ip, dst_ip, eth_pkt):
+        datapath = msg.datapath
+        parser = datapath.ofproto_parser
         in_port = msg.match['in_port']
 
-        data = None
-        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-            data = msg.data
-        out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
-                                  in_port=in_port, actions=actions, data=data)
-        datapath.send_msg(out)
+        out_port = self.mac_to_port[datapath.id].get(eth_pkt.dst)
+        if out_port is not None:
+            match = parser.OFPMatch(in_port=in_port, eth_dst=eth_pkt.dst,
+                                    eth_type=eth_pkt.ethertype)
+            actions = [parser.OFPActionOutput(out_port)]
+            self.add_flow(datapath, 0, 1, match, actions)
+            self.send_packet_out(datapath, msg.buffer_id, in_port,
+                                 out_port, msg.data)
+            self.logger.debug("Reply ARP to knew host")
+        else:
+            self.flood(msg)
 
-    def arp_handler(self, header_list, datapath, in_port, msg_buffer_id):
-        header_list = header_list
-        datapath = datapath
-        in_port = in_port
+    def mac_learning(self, dpid, src_mac, in_port):
+        self.mac_to_port.setdefault(dpid, {})
+        if src_mac in self.mac_to_port[dpid]:
+            if in_port != self.mac_to_port[dpid][src_mac]:
+                return False
+        else:
+            self.mac_to_port[dpid][src_mac] = in_port
+            return True
 
-        if ETHERNET in header_list:
-            eth_dst = header_list[ETHERNET].dst
-            eth_src = header_list[ETHERNET].src
-
-        if eth_dst == ETHERNET_MULTICAST and ARP in header_list:
-            arp_dst_ip = header_list[ARP].dst_ip
-            if (datapath.id, eth_src, arp_dst_ip) in self.sw:  # Break the loop
-                if self.sw[(datapath.id, eth_src, arp_dst_ip)] != in_port:
-                    out = datapath.ofproto_parser.OFPPacketOut(
-                        datapath=datapath,
-                        buffer_id=datapath.ofproto.OFP_NO_BUFFER,
-                        in_port=in_port,
-                        actions=[], data=None)
-                    datapath.send_msg(out)
-                    print "\ndrop\n"
-                    return True
-            else:
-                self.sw[(datapath.id, eth_src, arp_dst_ip)] = in_port
-
-        if ARP in header_list:
-            hwtype = header_list[ARP].hwtype
-            proto = header_list[ARP].proto
-            hlen = header_list[ARP].hlen
-            plen = header_list[ARP].plen
-            opcode = header_list[ARP].opcode
-
-            arp_src_ip = header_list[ARP].src_ip
-            arp_dst_ip = header_list[ARP].dst_ip
-
-            actions = []
-
-            if opcode == arp.ARP_REQUEST:
-                if arp_dst_ip in self.arp_table:  # arp reply
-                    actions.append(datapath.ofproto_parser.OFPActionOutput(
-                        in_port)
-                    )
-
-                    ARP_Reply = packet.Packet()
-                    ARP_Reply.add_protocol(ethernet.ethernet(
-                        ethertype=header_list[ETHERNET].ethertype,
-                        dst=eth_src,
-                        src=self.arp_table[arp_dst_ip]))
-                    ARP_Reply.add_protocol(arp.arp(
-                        opcode=arp.ARP_REPLY,
-                        src_mac=self.arp_table[arp_dst_ip],
-                        src_ip=arp_dst_ip,
-                        dst_mac=eth_src,
-                        dst_ip=arp_src_ip))
-
-                    ARP_Reply.serialize()
-
-                    out = datapath.ofproto_parser.OFPPacketOut(
-                        datapath=datapath,
-                        buffer_id=datapath.ofproto.OFP_NO_BUFFER,
-                        in_port=datapath.ofproto.OFPP_CONTROLLER,
-                        actions=actions, data=ARP_Reply.data)
-                    datapath.send_msg(out)
-                    return True
-        #print "flase"
-        return False
-
-    def send_group_mod(self, datapath):
-        ofp = datapath.ofproto
+    def send_group_mod(self, datapath,):
+        ofproto = datapath.ofproto
         ofp_parser = datapath.ofproto_parser
 
         port_1 = 3
@@ -281,8 +168,63 @@ class MULTIPATH_13(app_manager.RyuApp):
             ofp_parser.OFPBucket(weight_2, watch_port, watch_group, actions_2)]
 
         group_id = 50
-        req = ofp_parser.OFPGroupMod(
-            datapath, ofp.OFPFC_ADD,
-            ofp.OFPGT_SELECT, group_id, buckets)
+        req = ofp_parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD,
+                                     ofproto.OFPGT_SELECT, group_id, buckets)
 
         datapath.send_msg(req)
+
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        dpid = datapath.id
+        parser = datapath.ofproto_parser
+        in_port = msg.match['in_port']
+
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocols(ethernet.ethernet)[0]
+        arp_pkt = pkt.get_protocol(arp.arp)
+        ip_pkt = pkt.get_protocol(ipv4.ipv4)
+
+        if isinstance(arp_pkt, arp.arp):
+            self.logger.debug("ARP processing")
+            if self.mac_learning(dpid, eth.src, in_port) is False:
+                self.logger.debug("ARP packet enter in different ports")
+                return
+
+            self.arp_forwarding(msg, arp_pkt.src_ip, arp_pkt.dst_ip, eth)
+
+        if isinstance(ip_pkt, ipv4.ipv4):
+            self.logger.debug("IPV4 processing")
+            out_port = None
+            if eth.dst in self.mac_to_port[dpid]:
+                out_port = self.mac_to_port[dpid][eth.dst]
+                actions = [parser.OFPActionOutput(out_port)]
+
+                if dpid == 1 and in_port == 1:
+                    if self.FLAGS is True:
+                        self.send_group_mod(datapath)
+                        self.logger.info("send_group_mod")
+                        self.FLAGS = False
+
+                    actions = [parser.OFPActionGroup(group_id=50)]
+                    match = parser.OFPMatch(in_port=in_port,
+                                            eth_type=eth.ethertype,
+                                            ipv4_src=ip_pkt.src)
+                    self.add_flow(datapath, 0, 3, match, actions)
+                    # asign output at 2
+                    self.send_packet_out(datapath, msg.buffer_id,
+                                         in_port, 2, msg.data)
+                else:
+                    #Normal flows
+                    match = parser.OFPMatch(in_port=in_port, eth_dst=eth.dst,
+                                            eth_type=eth.ethertype)
+                    self.add_flow(datapath, 0, 1, match, actions)
+                    self.send_packet_out(datapath, msg.buffer_id, in_port,
+                                         out_port, msg.data)
+            else:
+                if self.mac_learning(dpid, eth.src, in_port) is False:
+                    self.logger.debug("IPV4 packet enter in different ports")
+                    return
+                else:
+                    self.flood(msg)
