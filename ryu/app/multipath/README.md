@@ -8,7 +8,7 @@ This module is a simple demo for multipath forwarding based on OpenFlow group ta
 
 * Reinstall Ryu by commond below.
 
-	ryu/$ sudo python setup.py install
+		ryu/$ sudo python setup.py install
 
 * Start multipath application.
 	
@@ -18,15 +18,15 @@ For example:
 
 * Start up Mininet
 
-	sudo mn --controller=remote --custom=yourpath/loop.py --topo=mytopo --mac 
+		sudo mn --controller=remote --custom=yourpath/loop.py --topo=mytopo --mac 
 
 * Set queue at ports
 
-	sudo ./set_queue.sh
+		sudo ./set_queue.sh
 
 * View the info of queue
  
-	sudo ./dump_queue.sh
+		sudo ./dump_queue.sh
 
 * Pingall test and Iperf Test.
 
@@ -34,7 +34,7 @@ In mininet, use pingall of iperf commond to test
 
 * View the info of flow table.
 
-	sudo ./dump_s1_s4.sh
+		sudo ./dump_s1_s4.sh
 
 Good Luck!
 
