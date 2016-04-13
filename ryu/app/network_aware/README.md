@@ -8,7 +8,7 @@ Download files, and put them in the same directory.
 
 Go into the directory, and run applications.
 
-	ryu-manager shortest_route.py --observe-links
+	ryu-manager shortest_forwarding.py --observe-links
 
 ###Note
 
