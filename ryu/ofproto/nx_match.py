@@ -22,6 +22,7 @@ from ryu import exception
 from ryu.lib import mac
 from ryu.lib import type_desc
 from ryu.lib.pack_utils import msg_pack_into
+from ryu.ofproto import ether
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import inet
@@ -94,6 +95,7 @@ class Flow(ofproto_parser.StringifyMixin):
         self.regs = [0] * FLOW_N_REGS
         self.ipv6_label = 0
         self.pkt_mark = 0
+        self.tcp_flags = 0
 
 
 class FlowWildcards(ofproto_parser.StringifyMixin):
@@ -116,6 +118,7 @@ class FlowWildcards(ofproto_parser.StringifyMixin):
         self.regs_mask = [0] * FLOW_N_REGS
         self.wildcards = ofproto_v1_0.OFPFW_ALL
         self.pkt_mark_mask = 0
+        self.tcp_flags_mask = 0
 
 
 class ClsRule(ofproto_parser.StringifyMixin):
@@ -312,6 +315,10 @@ class ClsRule(ofproto_parser.StringifyMixin):
         self.flow.pkt_mark = pkt_mark
         self.wc.pkt_mark_mask = mask
 
+    def set_tcp_flags(self, tcp_flags, mask):
+        self.flow.tcp_flags = tcp_flags
+        self.wc.tcp_flags_mask = mask
+
     def flow_format(self):
         # Tunnel ID is only supported by NXM
         if self.wc.tun_id_mask != 0:
@@ -330,6 +337,9 @@ class ClsRule(ofproto_parser.StringifyMixin):
             return ofproto_v1_0.NXFF_NXM
 
         if self.wc.regs_bits > 0:
+            return ofproto_v1_0.NXFF_NXM
+
+        if self.flow.tcp_flags > 0:
             return ofproto_v1_0.NXFF_NXM
 
         return ofproto_v1_0.NXFF_OPENFLOW10
@@ -948,6 +958,19 @@ class MFPktMark(MFField):
                          rule.wc.pkt_mark_mask)
 
 
+@_register_make
+@_set_nxm_headers([ofproto_v1_0.NXM_NX_TCP_FLAGS,
+                   ofproto_v1_0.NXM_NX_TCP_FLAGS_W])
+class MFTcpFlags(MFField):
+    @classmethod
+    def make(cls, header):
+        return cls(header, MF_PACK_STRING_BE16)
+
+    def put(self, buf, offset, rule):
+        return self.putm(buf, offset, rule.flow.tcp_flags,
+                         rule.wc.tcp_flags_mask)
+
+
 def serialize_nxm_match(rule, buf, offset):
     old_offset = offset
 
@@ -1024,6 +1047,22 @@ def serialize_nxm_match(rule, buf, offset):
                 header = ofproto_v1_0.NXM_OF_UDP_DST
             else:
                 header = ofproto_v1_0.NXM_OF_UDP_DST_W
+        else:
+            header = 0
+        if header != 0:
+            offset += nxm_put(buf, offset, header, rule)
+
+    if rule.flow.tcp_flags != 0:
+        # TCP Flags can only be used if the ethernet type is IPv4 or IPv6
+        if rule.flow.dl_type in (ether.ETH_TYPE_IP, ether.ETH_TYPE_IPV6):
+            # TCP Flags can only be used if the ip protocol is TCP
+            if rule.flow.nw_proto == inet.IPPROTO_TCP:
+                if rule.wc.tcp_flags_mask == UINT16_MAX:
+                    header = ofproto_v1_0.NXM_NX_TCP_FLAGS
+                else:
+                    header = ofproto_v1_0.NXM_NX_TCP_FLAGS_W
+            else:
+                header = 0
         else:
             header = 0
         if header != 0:
@@ -1206,10 +1245,19 @@ Argument         Value           Description
 ================ =============== ==================================
 eth_dst_nxm      MAC address     Ethernet destination address.
 eth_src_nxm      MAC address     Ethernet source address.
+eth_type_nxm     Integer 16bit   Ethernet type.  Needed to support Nicira
+                                 extensions that require the eth_type to
+                                 be set. (i.e. tcp_flags_nxm)
+ip_proto_nxm     Integer 8bit    IP protocol. Needed to support Nicira
+                                 extensions that require the ip_proto to
+                                 be set. (i.e. tcp_flags_nxm)
 tunnel_id_nxm    Integer 64bit   Tunnel identifier.
 tun_ipv4_src     IPv4 address    Tunnel IPv4 source address.
 tun_ipv4_dst     IPv4 address    Tunnel IPv4 destination address.
 pkt_mark         Integer 32bit   Packet metadata mark.
+tcp_flags_nxm    Integer 16bit   TCP Flags.  Requires setting fields:
+                                 eth_type_nxm = |IP or IPv6| and
+                                 ip_proto_nxm = TCP
 conj_id          Integer 32bit   Conjunction ID used only with
                                  the conjunction action
 ct_state         Integer 32bit   Conntrack state.
@@ -1220,15 +1268,38 @@ _dp_hash         Integer 32bit   Flow hash computed in Datapath.
 reg<idx>         Integer 32bit   Packet register.
                                  <idx> is register number 0-7.
 ================ =============== ==================================
+
+Example:: Setting the TCP flags via the nicira extensions.
+          This is required when using OVS version < 2.4.
+
+          When using the nxm fields, you need to use any nxm prereq
+          fields as well or you will receive a OFPBMC_BAD_PREREQ error
+
+    # WILL NOT work
+    flag = tcp.TCP_ACK
+    match = parser.OFPMatch(
+        tcp_flags_nxm=(flag, flag),
+        ip_proto=inet.IPPROTO_TCP,
+        eth_type=eth_type)
+
+    # works
+    flag = tcp.TCP_ACK
+    match = parser.OFPMatch(
+        tcp_flags_nxm=(flag, flag),
+        ip_proto_nxm=inet.IPPROTO_TCP,
+        eth_type_nxm=eth_type)
 """
 
 oxm_types = [
     oxm_fields.NiciraExtended0('eth_dst_nxm', 1, type_desc.MacAddr),
     oxm_fields.NiciraExtended0('eth_src_nxm', 2, type_desc.MacAddr),
+    oxm_fields.NiciraExtended0('eth_type_nxm', 3, type_desc.Int2),
+    oxm_fields.NiciraExtended0('ip_proto_nxm', 6, type_desc.Int1),
     oxm_fields.NiciraExtended1('tunnel_id_nxm', 16, type_desc.Int8),
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
+    oxm_fields.NiciraExtended1('tcp_flags_nxm', 34, type_desc.Int2),
     oxm_fields.NiciraExtended1('conj_id', 37, type_desc.Int4),
     oxm_fields.NiciraExtended1('ct_state', 105, type_desc.Int4),
     oxm_fields.NiciraExtended1('ct_zone', 106, type_desc.Int2),
