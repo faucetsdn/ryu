@@ -2596,23 +2596,14 @@ Description of Match on request messages
         in_port         Switch input port (int)                            {"in_port": 7}
         in_phy_port     Switch physical input port (int)                   {"in_phy_port": 5, "in_port": 3}
         metadata        Metadata passed between tables (int or string)     {"metadata": 12345} or {"metadata": "0x1212/0xffff"}
-        dl_dst          Ethernet destination address (string)              {"dl_dst": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"}
-        dl_src          Ethernet source address (string)                   {"dl_src": "aa:bb:cc:11:22:33"}
         eth_dst         Ethernet destination address (string)              {"eth_dst": "aa:bb:cc:11:22:33/00:00:00:00:ff:ff"}
         eth_src         Ethernet source address (string)                   {"eth_src": "aa:bb:cc:11:22:33"}
-        dl_type         Ethernet frame type (int)                          {"dl_type": 123}
         eth_type        Ethernet frame type (int)                          {"eth_type": 2048}
-        dl_vlan         VLAN id (int or string)                            See :ref:`example-of-vlan-id-match-field`
         vlan_vid        VLAN id (int or string)                            See :ref:`example-of-vlan-id-match-field`
         vlan_pcp        VLAN priority (int)                                {"vlan_pcp": 3, "vlan_vid": 3}
         ip_dscp         IP DSCP (6 bits in ToS field) (int)                {"ip_dscp": 3, "eth_type": 2048}
         ip_ecn          IP ECN (2 bits in ToS field) (int)                 {"ip_ecn": 0, "eth_type": 34525}
-        nw_proto        IP protocol (int)                                  {"nw_proto": 5, "eth_type": 2048}
         ip_proto        IP protocol (int)                                  {"ip_proto": 5, "eth_type": 34525}
-        tp_src          Transport layer source port (int)                  {"tp_src": 1, "ip_proto": 6, "eth_type": 2048}
-        tp_dst          Transport layer destination port (int)             {"tp_dst": 2, "ip_proto": 6, "eth_type": 2048}
-        nw_src          IPv4 source address (string)                       {"nw_src": "192.168.0.1", "eth_type": 2048}
-        nw_dst          IPv4 destination address (string)                  {"nw_dst": "192.168.0.1/24", "eth_type": 2048}
         ipv4_src        IPv4 source address (string)                       {"ipv4_src": "192.168.0.1", "eth_type": 2048}
         ipv4_dst        IPv4 destination address (string)                  {"ipv4_dst": "192.168.10.10/255.255.255.0", "eth_type": 2048}
         tcp_src         TCP source port (int)                              {"tcp_src": 3, "ip_proto": 6, "eth_type": 2048}
