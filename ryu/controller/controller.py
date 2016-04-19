@@ -194,6 +194,10 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                 ret = self.socket.recv(required_len)
             except SocketTimeout:
                 continue
+            except ssl.SSLError:
+                # eventlet throws SSLError (which is a subclass of IOError)
+                # on SSL socket read timeout; re-try the loop in this case.
+                continue
             except (EOFError, IOError):
                 break
 
