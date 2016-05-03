@@ -15,6 +15,7 @@
 
 import collections
 import errno
+import six
 import uuid
 
 from ovs import jsonrpc
@@ -132,6 +133,68 @@ def discover_system_id(idl):
     return system_id
 
 
+def _filter_schemas(schemas, schema_tables, exclude_table_columns):
+    """Wrapper method for _filter_schema to filter multiple schemas."""
+    return [_filter_schema(s, schema_tables, exclude_table_columns)
+            for s in schemas]
+
+
+def _filter_schema(schema, schema_tables, exclude_table_columns):
+    """Filters a schema to only include the specified tables in the
+       schema_tables parameter.  This will also filter out any colums for
+       included tables that reference tables that are not included
+       in the schema_tables parameter
+
+    :param schema: Schema dict to be filtered
+    :param schema_tables: List of table names to filter on.
+                          EX: ['Bridge', 'Controller', 'Interface']
+                          NOTE: This list is case sensitive.
+    :return: Schema dict:
+                filtered if the schema_table parameter contains table names,
+                else the original schema dict
+    """
+
+    tables = {}
+    for tbl_name, tbl_data in schema['tables'].iteritems():
+        if not schema_tables or tbl_name in schema_tables:
+            columns = {}
+
+            exclude_columns = exclude_table_columns.get(tbl_name, [])
+            for col_name, col_data in tbl_data['columns'].iteritems():
+                if col_name in exclude_columns:
+                    continue
+
+                # NOTE(Alan Quillin) Needs to check and remove
+                # and columns that have references to tables that
+                # are not to be configured
+                type_ = col_data.get('type')
+                if type_:
+                    if type_ and isinstance(type_, dict):
+                        key = type_.get('key')
+                        if key and isinstance(key, dict):
+                            ref_tbl = key.get('refTable')
+                            if ref_tbl and isinstance(ref_tbl,
+                                                      six.string_types):
+                                if ref_tbl not in schema_tables:
+                                    continue
+                        value = type_.get('value')
+                        if value and isinstance(value, dict):
+                            ref_tbl = value.get('refTable')
+                            if ref_tbl and isinstance(ref_tbl,
+                                                      six.string_types):
+                                if ref_tbl not in schema_tables:
+                                    continue
+
+                columns[col_name] = col_data
+
+            tbl_data['columns'] = columns
+            tables[tbl_name] = tbl_data
+
+    schema['tables'] = tables
+
+    return schema
+
+
 # NOTE(jkoelker) Wrap ovs's Idl to accept an existing session, and
 #                trigger callbacks on changes
 class Idl(idl.Idl):
@@ -218,13 +281,18 @@ class RemoteOvsdb(app_manager.RyuApp):
 
     @classmethod
     def factory(cls, sock, address, probe_interval=None, min_backoff=None,
-                max_backoff=None, *args, **kwargs):
+                max_backoff=None, schema_tables=None,
+                schema_exclude_columns={}, *args, **kwargs):
         ovs_stream = stream.Stream(sock, None, None)
         connection = jsonrpc.Connection(ovs_stream)
         schemas = discover_schemas(connection)
 
         if not schemas:
             return
+
+        if schema_tables or schema_exclude_columns:
+            schemas = _filter_schemas(schemas, schema_tables,
+                                      schema_exclude_columns)
 
         fsm = reconnect.Reconnect(now())
         fsm.set_name('%s:%s' % address)

@@ -36,7 +36,14 @@ opts = (cfg.StrOpt('address', default='0.0.0.0', help='OVSDB address'),
         cfg.StrOpt('mngr-privkey', default=None, help='manager private key'),
         cfg.StrOpt('mngr-cert', default=None, help='manager certificate'),
         cfg.ListOpt('whitelist', default=[],
-                    help='Whitelist of address to allow to connect'))
+                    help='Whitelist of address to allow to connect'),
+        cfg.ListOpt('schema-tables', default=[],
+                    help='Tables in the OVSDB schema to configure'),
+        cfg.ListOpt('schema-exclude-columns', default=[],
+                    help='Table columns in the OVSDB schema to filter out.  '
+                         'Values should be in the format: <table>.<column>.'
+                         'Ex: Bridge.netflow,Interface.statistics')
+        )
 
 cfg.CONF.register_opts(opts, 'ovsdb')
 
@@ -119,10 +126,22 @@ class OVSDB(app_manager.RyuApp):
         return self.send_event(client_name, ev)
 
     def _start_remote(self, sock, client_address):
+        schema_tables = cfg.CONF.ovsdb.schema_tables
+        schema_ex_col = {}
+        if cfg.CONF.ovsdb.schema_exclude_columns:
+            for c in cfg.CONF.ovsdb.schema_exclude_columns:
+                tbl, col = c.split('.')
+                if tbl in schema_ex_col:
+                    schema_ex_col[tbl].append(col)
+                else:
+                    schema_ex_col[tbl] = [col]
+
         app = client.RemoteOvsdb.factory(sock, client_address,
                                          probe_interval=self._probe_interval,
                                          min_backoff=self._min_backoff,
-                                         max_backoff=self._max_backoff)
+                                         max_backoff=self._max_backoff,
+                                         schema_tables=schema_tables,
+                                         schema_exclude_columns=schema_ex_col)
 
         if app:
             self._clients[app.name] = app
