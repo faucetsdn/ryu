@@ -383,8 +383,12 @@ def get_queue_stats(dp, waiters, port=None, queue_id=None, to_user=True):
     return wrap_dpid_dict(dp, s, to_user)
 
 
-def get_queue_config(dp, port, waiters, to_user=True):
-    port = UTIL.ofp_port_from_user(port)
+def get_queue_config(dp, waiters, port=None, to_user=True):
+    ofp = dp.ofproto
+    if port is None:
+        port = ofp.OFPP_ANY
+    else:
+        port = UTIL.ofp_port_from_user(int(str(port), 0))
     stats = dp.ofproto_parser.OFPQueueGetConfigRequest(dp, port)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)

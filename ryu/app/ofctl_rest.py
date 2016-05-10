@@ -400,7 +400,7 @@ class StatsController(ControllerBase):
 
         _ofctl = supported_ofctl.get(_ofp_version, None)
         if _ofctl is not None:
-            queues = _ofctl.get_queue_config(dp, port, self.waiters)
+            queues = _ofctl.get_queue_config(dp, self.waiters, port)
         else:
             LOG.debug('Unsupported OF protocol')
             return Response(status=501)
