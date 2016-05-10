@@ -1,5 +1,4 @@
-# Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
-# Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
+# Copyright (C) 2016 Nippon Telegraph and Telephone Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name = "this is hoge"
+name = "this is ggg"

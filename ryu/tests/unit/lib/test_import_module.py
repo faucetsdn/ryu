@@ -18,18 +18,12 @@ import unittest
 from nose.tools import eq_
 
 from ryu.utils import import_module
-import ryu.tests.unit.lib.test_mod.fuga.mod
 
 
 class Test_import_module(unittest.TestCase):
-    """ Test case for ryu.utils.import_module
     """
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+    Test case for ryu.utils.import_module
+    """
 
     @staticmethod
     def _my_import(name):
@@ -40,32 +34,34 @@ class Test_import_module(unittest.TestCase):
         return mod
 
     def test_import_module_with_same_basename(self):
-        fuga = import_module('ryu.tests.unit.lib.test_mod.fuga.mod')
-        eq_("this is fuga", fuga.name)
-        hoge = import_module('ryu.tests.unit.lib.test_mod.hoge.mod')
-        eq_("this is hoge", hoge.name)
+        aaa = import_module('ryu.tests.unit.lib.test_mod.aaa.mod')
+        eq_("this is aaa", aaa.name)
+        bbb = import_module('ryu.tests.unit.lib.test_mod.bbb.mod')
+        eq_("this is bbb", bbb.name)
 
     def test_import_module_by_filename(self):
-        fuga = import_module('./lib/test_mod/fuga/mod.py')
-        eq_("this is fuga", fuga.name)
-        hoge = import_module('./lib/test_mod/hoge/mod.py')
-        eq_("this is hoge", hoge.name)
+        ccc = import_module('./lib/test_mod/ccc/mod.py')
+        eq_("this is ccc", ccc.name)
+        ddd = import_module('./lib/test_mod/ddd/mod.py')
+        # Note: When importing a module by filename, if module file name
+        # is duplicated, import_module returns a module instance which is
+        # imported before.
+        eq_("this is ccc", ddd.name)
 
     def test_import_same_module1(self):
-        fuga1 = import_module('./lib/test_mod/fuga/mod.py')
-        eq_("this is fuga", fuga1.name)
-        eq_(ryu.tests.unit.lib.test_mod.fuga.mod, fuga1)
+        from ryu.tests.unit.lib.test_mod import eee as eee1
+        eq_("this is eee", eee1.name)
+        eee2 = import_module('./lib/test_mod/eee.py')
+        eq_("this is eee", eee2.name)
 
     def test_import_same_module2(self):
-        fuga1 = import_module('./lib/test_mod/fuga/mod.py')
-        eq_("this is fuga", fuga1.name)
-        fuga2 = import_module('ryu.tests.unit.lib.test_mod.fuga.mod')
-        eq_("this is fuga", fuga2.name)
-        eq_(fuga1, fuga2)
+        fff1 = import_module('./lib/test_mod/fff.py')
+        eq_("this is fff", fff1.name)
+        fff2 = import_module('ryu.tests.unit.lib.test_mod.fff')
+        eq_("this is fff", fff2.name)
 
     def test_import_same_module3(self):
-        fuga1 = import_module('./lib/test_mod/fuga/mod.py')
-        eq_("this is fuga", fuga1.name)
-        fuga3 = self._my_import('ryu.tests.unit.lib.test_mod.fuga.mod')
-        eq_("this is fuga", fuga3.name)
-        eq_(fuga1, fuga3)
+        ggg1 = import_module('./lib/test_mod/ggg.py')
+        eq_("this is ggg", ggg1.name)
+        ggg2 = self._my_import('ryu.tests.unit.lib.test_mod.ggg')
+        eq_("this is ggg", ggg2.name)
