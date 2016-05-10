@@ -159,6 +159,11 @@ def _add_tests():
                 'reply': '3-36-ofp_queue_get_config_reply.packet.json'
             },
             {
+                'method': ofctl_v1_2.get_queue_config,
+                'request': 'lib-ofctl-ofp_queue_get_config_request.packet.json',
+                'reply': '3-36-ofp_queue_get_config_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_2.get_flow_stats,
                 'request': '3-11-ofp_flow_stats_request.packet.json',
                 'reply': '3-12-ofp_flow_stats_reply.packet.json'
@@ -260,6 +265,11 @@ def _add_tests():
             {
                 'method': ofctl_v1_3.get_queue_config,
                 'request': '4-35-ofp_queue_get_config_request.packet.json',
+                'reply': '4-36-ofp_queue_get_config_reply.packet.json'
+            },
+            {
+                'method': ofctl_v1_3.get_queue_config,
+                'request': 'lib-ofctl-ofp_queue_get_config_request.packet.json',
                 'reply': '4-36-ofp_queue_get_config_reply.packet.json'
             },
             {
