@@ -29,10 +29,12 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
+from ryu.ofproto import ofproto_v1_5
 from ryu.lib import ofctl_v1_0
 from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
 from ryu.lib import ofctl_v1_4
+from ryu.lib import ofctl_v1_5
 from ryu.app.wsgi import ControllerBase, WSGIApplication
 
 
@@ -44,6 +46,7 @@ supported_ofctl = {
     ofproto_v1_2.OFP_VERSION: ofctl_v1_2,
     ofproto_v1_3.OFP_VERSION: ofctl_v1_3,
     ofproto_v1_4.OFP_VERSION: ofctl_v1_4,
+    ofproto_v1_5.OFP_VERSION: ofctl_v1_5,
 }
 
 # REST API
@@ -56,6 +59,12 @@ supported_ofctl = {
 #
 # get the desc stats of the switch
 # GET /stats/desc/<dpid>
+#
+# get flows desc stats of the switch
+# GET /stats/flowdesc/<dpid>
+#
+# get flows desc stats of the switch filtered by the fields
+# POST /stats/flowdesc/<dpid>
 #
 # get flows stats of the switch
 # GET /stats/flow/<dpid>
@@ -104,6 +113,10 @@ supported_ofctl = {
 # GET /stats/meterconfig/<dpid>[/<meter_id>]
 # Note: Specification of meter id is optional
 #
+# get meter desc stats of the switch
+# GET /stats/meterdesc/<dpid>[/<meter_id>]
+# Note: Specification of meter id is optional
+#
 # get meters stats of the switch
 # GET /stats/meter/<dpid>[/<meter_id>]
 # Note: Specification of meter id is optional
@@ -112,14 +125,16 @@ supported_ofctl = {
 # GET /stats/groupfeatures/<dpid>
 #
 # get groups desc stats of the switch
-# GET /stats/groupdesc/<dpid>
+# GET /stats/groupdesc/<dpid>[/<group_id>]
+# Note: Specification of group id is optional (OpenFlow 1.5 or later)
 #
 # get groups stats of the switch
 # GET /stats/group/<dpid>[/<group_id>]
 # Note: Specification of group id is optional
 #
 # get ports description of the switch
-# GET /stats/portdesc/<dpid>
+# GET /stats/portdesc/<dpid>[/<port_no>]
+# Note: Specification of port number is optional (OpenFlow 1.5 or later)
 
 # Update the switch stats
 #
@@ -291,6 +306,11 @@ class StatsController(ControllerBase):
         return ofctl.get_desc_stats(dp, self.waiters)
 
     @stats_method
+    def get_flow_desc(self, req, dp, ofctl, **kwargs):
+        flow = req.json if req.body else {}
+        return ofctl.get_flow_desc(dp, self.waiters, flow)
+
+    @stats_method
     def get_flow_stats(self, req, dp, ofctl, **kwargs):
         flow = req.json if req.body else {}
         return ofctl.get_flow_stats(dp, self.waiters, flow)
@@ -356,6 +376,13 @@ class StatsController(ControllerBase):
         return ofctl.get_meter_config(dp, self.waiters, meter_id)
 
     @stats_method
+    def get_meter_desc(self, req, dp, ofctl, meter_id=None, **kwargs):
+        if meter_id == "ALL":
+            meter_id = None
+
+        return ofctl.get_meter_desc(dp, self.waiters, meter_id)
+
+    @stats_method
     def get_meter_stats(self, req, dp, ofctl, meter_id=None, **kwargs):
         if meter_id == "ALL":
             meter_id = None
@@ -367,8 +394,11 @@ class StatsController(ControllerBase):
         return ofctl.get_group_features(dp, self.waiters)
 
     @stats_method
-    def get_group_desc(self, req, dp, ofctl, **kwargs):
-        return ofctl.get_group_desc(dp, self.waiters)
+    def get_group_desc(self, req, dp, ofctl, group_id=None, **kwargs):
+        if dp.ofproto.OFP_VERSION < ofproto_v1_5.OFP_VERSION:
+            return ofctl.get_group_desc(dp, self.waiters)
+        else:
+            return ofctl.get_group_desc(dp, self.waiters, group_id)
 
     @stats_method
     def get_group_stats(self, req, dp, ofctl, group_id=None, **kwargs):
@@ -378,8 +408,11 @@ class StatsController(ControllerBase):
         return ofctl.get_group_stats(dp, self.waiters, group_id)
 
     @stats_method
-    def get_port_desc(self, req, dp, ofctl, **kwargs):
-        return ofctl.get_port_desc(dp, self.waiters)
+    def get_port_desc(self, req, dp, ofctl, port_no=None, **kwargs):
+        if dp.ofproto.OFP_VERSION < ofproto_v1_5.OFP_VERSION:
+            return ofctl.get_port_desc(dp, self.waiters)
+        else:
+            return ofctl.get_port_desc(dp, self.waiters, port_no)
 
     @command_method
     def mod_flow_entry(self, req, dp, ofctl, flow, cmd, **kwargs):
@@ -460,7 +493,8 @@ class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
                     ofproto_v1_2.OFP_VERSION,
                     ofproto_v1_3.OFP_VERSION,
-                    ofproto_v1_4.OFP_VERSION]
+                    ofproto_v1_4.OFP_VERSION,
+                    ofproto_v1_5.OFP_VERSION]
     _CONTEXTS = {
         'dpset': dpset.DPSet,
         'wsgi': WSGIApplication
@@ -487,6 +521,11 @@ class RestStatsApi(app_manager.RyuApp):
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_desc_stats',
                        conditions=dict(method=['GET']))
+
+        uri = path + '/flowdesc/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_flow_stats',
+                       conditions=dict(method=['GET', 'POST']))
 
         uri = path + '/flow/{dpid}'
         mapper.connect('stats', uri,
@@ -574,6 +613,16 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_meter_config',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/meterdesc/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_meter_desc',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/meterdesc/{dpid}/{meter_id}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_meter_desc',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/meter/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_meter_stats',
@@ -594,6 +643,11 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_group_desc',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/groupdesc/{dpid}/{group_id}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_group_desc',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/group/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_group_stats',
@@ -605,6 +659,11 @@ class RestStatsApi(app_manager.RyuApp):
                        conditions=dict(method=['GET']))
 
         uri = path + '/portdesc/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_port_desc',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/portdesc/{dpid}/{port_no}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_port_desc',
                        conditions=dict(method=['GET']))
