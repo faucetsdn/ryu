@@ -240,13 +240,18 @@ class OFCtlUtil(object):
             'OFPQCFC_EPERM']
 
     def _reserved_num_from_user(self, num, prefix):
-        if isinstance(num, int):
-            return num
-        else:
-            if num.startswith(prefix):
-                return getattr(self.ofproto, num)
-            else:
-                return getattr(self.ofproto, prefix + num.upper())
+        try:
+            return str_to_int(num)
+        except ValueError:
+            try:
+                if num.startswith(prefix):
+                    return getattr(self.ofproto, num.upper())
+                else:
+                    return getattr(self.ofproto, prefix + num.upper())
+            except AttributeError:
+                LOG.warning(
+                    "Cannot convert argument to reserved number: %s", num)
+        return num
 
     def _reserved_num_to_user(self, num, prefix):
         for k, v in self.ofproto.__dict__.items():
