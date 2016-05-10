@@ -274,7 +274,7 @@ def get_queue_stats(dp, waiters, port_no=None, queue_id=None):
     return desc
 
 
-def get_queue_desc_stats(dp, waiters, port_no=None, queue_id=None):
+def get_queue_desc(dp, waiters, port_no=None, queue_id=None):
     if port_no is None:
         port_no = dp.ofproto.OFPP_ANY
     else:

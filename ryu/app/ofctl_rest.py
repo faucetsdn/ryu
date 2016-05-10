@@ -342,7 +342,7 @@ class StatsController(ControllerBase):
         if queue == "ALL":
             queue = None
 
-        return ofctl.get_queue_desc_stats(dp, self.waiters, port, queue)
+        return ofctl.get_queue_desc(dp, self.waiters, port, queue)
 
     @stats_method
     def get_meter_features(self, req, dp, ofctl, **kwargs):

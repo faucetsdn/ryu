@@ -390,7 +390,7 @@ def _add_tests():
                 'reply': '5-36-ofp_queue_stats_reply.packet.json'
             },
             {
-                'method': ofctl_v1_4.get_queue_desc_stats,
+                'method': ofctl_v1_4.get_queue_desc,
                 'request': '5-63-ofp_queue_desc_request.packet.json',
                 'reply': '5-64-ofp_queue_desc_reply.packet.json'
             },
