@@ -87,7 +87,7 @@ class Port(object):
         return {'dpid': dpid_to_str(self.dpid),
                 'port_no': port_no_to_str(self.port_no),
                 'hw_addr': self.hw_addr,
-                'name': self.name.rstrip('\0')}
+                'name': self.name.decode('utf-8')}
 
     # for Switch.del_port()
     def __eq__(self, other):
@@ -476,7 +476,7 @@ class LLDPPacket(object):
         if tlv_chassis_id.subtype != lldp.ChassisID.SUB_LOCALLY_ASSIGNED:
             raise LLDPPacket.LLDPUnknownFormat(
                 msg='unknown chassis id subtype %d' % tlv_chassis_id.subtype)
-        chassis_id = tlv_chassis_id.chassis_id
+        chassis_id = tlv_chassis_id.chassis_id.decode('utf-8')
         if not chassis_id.startswith(LLDPPacket.CHASSIS_ID_PREFIX):
             raise LLDPPacket.LLDPUnknownFormat(
                 msg='unknown chassis id format %s' % chassis_id)
