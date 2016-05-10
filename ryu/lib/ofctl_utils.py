@@ -184,15 +184,17 @@ def send_experimenter(dp, exp, logger=None):
     exp_type = exp.get('exp_type', 0)
     data_type = exp.get('data_type', 'ascii')
 
-    if data_type not in ('ascii', 'base64'):
-        LOG.error('Unknown data type: %s', data_type)
-
     data = exp.get('data', '')
     if data_type == 'base64':
         data = base64.b64decode(data)
+    elif data_type == 'ascii':
+        data = data.encode('ascii')
+    else:
+        get_logger(logger).error('Unknown data type: %s', data_type)
+        return
 
-    expmsg = dp.ofproto_parser.OFPExperimenter(dp, experimenter, exp_type,
-                                               data)
+    expmsg = dp.ofproto_parser.OFPExperimenter(
+        dp, experimenter, exp_type, data)
     send_msg(dp, expmsg, logger)
 
 
