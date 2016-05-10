@@ -242,10 +242,18 @@ def get_desc_stats(dp, waiters):
     return desc
 
 
-def get_queue_stats(dp, waiters):
-    ofp = dp.ofproto
-    stats = dp.ofproto_parser.OFPQueueStatsRequest(dp, 0, ofp.OFPP_ANY,
-                                                   ofp.OFPQ_ALL)
+def get_queue_stats(dp, waiters, port_no=None, queue_id=None):
+    if port_no is None:
+        port_no = dp.ofproto.OFPP_ANY
+    else:
+        port_no = UTIL.ofp_port_from_user(port_no)
+    if queue_id is None:
+        queue_id = dp.ofproto.OFPQ_ALL
+    else:
+        queue_id = UTIL.ofp_queue_from_user(queue_id)
+
+    stats = dp.ofproto_parser.OFPQueueStatsRequest(
+        dp, 0, port_no, queue_id)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
@@ -267,9 +275,14 @@ def get_queue_stats(dp, waiters):
 
 
 def get_queue_desc_stats(dp, waiters, port_no=None, queue_id=None):
-    ofp = dp.ofproto
-    port_no = port_no if port_no else ofp.OFPP_ANY
-    queue_id = queue_id if queue_id else ofp.OFPQ_ALL
+    if port_no is None:
+        port_no = dp.ofproto.OFPP_ANY
+    else:
+        port_no = UTIL.ofp_port_from_user(port_no)
+    if queue_id is None:
+        queue_id = dp.ofproto.OFPQ_ALL
+    else:
+        queue_id = UTIL.ofp_queue_from_user(queue_id)
 
     stats = dp.ofproto_parser.OFPQueueDescStatsRequest(
         dp, 0, port_no, queue_id)
@@ -444,9 +457,13 @@ def get_table_features(dp, waiters):
     return desc
 
 
-def get_port_stats(dp, waiters):
-    stats = dp.ofproto_parser.OFPPortStatsRequest(
-        dp, 0, dp.ofproto.OFPP_ANY)
+def get_port_stats(dp, waiters, port_no=None):
+    if port_no is None:
+        port_no = dp.ofproto.OFPP_ANY
+    else:
+        port_no = UTIL.ofp_port_from_user(port_no)
+
+    stats = dp.ofproto_parser.OFPPortStatsRequest(dp, 0, port_no)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
@@ -466,9 +483,14 @@ def get_port_stats(dp, waiters):
     return ports
 
 
-def get_meter_stats(dp, waiters):
+def get_meter_stats(dp, waiters, meter_id=None):
+    if meter_id is None:
+        meter_id = dp.ofproto.OFPM_ALL
+    else:
+        meter_id = UTIL.ofp_meter_from_user(meter_id)
+
     stats = dp.ofproto_parser.OFPMeterStatsRequest(
-        dp, 0, dp.ofproto.OFPM_ALL)
+        dp, 0, meter_id)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
@@ -521,14 +543,19 @@ def get_meter_features(dp, waiters):
     return features
 
 
-def get_meter_config(dp, waiters):
+def get_meter_config(dp, waiters, meter_id=None):
     flags = {dp.ofproto.OFPMF_KBPS: 'KBPS',
              dp.ofproto.OFPMF_PKTPS: 'PKTPS',
              dp.ofproto.OFPMF_BURST: 'BURST',
              dp.ofproto.OFPMF_STATS: 'STATS'}
 
+    if meter_id is None:
+        meter_id = dp.ofproto.OFPM_ALL
+    else:
+        meter_id = UTIL.ofp_meter_from_user(meter_id)
+
     stats = dp.ofproto_parser.OFPMeterConfigStatsRequest(
-        dp, 0, dp.ofproto.OFPM_ALL)
+        dp, 0, meter_id)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
@@ -553,9 +580,14 @@ def get_meter_config(dp, waiters):
     return configs
 
 
-def get_group_stats(dp, waiters):
+def get_group_stats(dp, waiters, group_id=None):
+    if group_id is None:
+        group_id = dp.ofproto.OFPG_ALL
+    else:
+        group_id = UTIL.ofp_group_from_user(group_id)
+
     stats = dp.ofproto_parser.OFPGroupStatsRequest(
-        dp, 0, dp.ofproto.OFPG_ALL)
+        dp, 0, group_id)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
@@ -662,8 +694,13 @@ def get_group_desc(dp, waiters):
     return descs
 
 
-def get_port_desc(dp, waiters):
-    stats = dp.ofproto_parser.OFPPortDescStatsRequest(dp, 0)
+def get_port_desc(dp, waiters, port_no=None):
+    if port_no is None:
+        port_no = dp.ofproto.OFPP_ANY
+    else:
+        port_no = UTIL.ofp_port_from_user(port_no)
+
+    stats = dp.ofproto_parser.OFPPortDescStatsRequest(dp, 0, port_no)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
