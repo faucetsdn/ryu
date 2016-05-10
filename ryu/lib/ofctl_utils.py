@@ -40,8 +40,10 @@ GROUP = 'GROUP'
 SET_NW_TTL = 'SET_NW_TTL'
 DEC_NW_TTL = 'DEC_NW_TTL'
 SET_FIELD = 'SET_FIELD'
-PUSH_PBB = 'PUSH_PBB'
-POP_PBB = 'POP_PBB'
+PUSH_PBB = 'PUSH_PBB'      # OpenFlow 1.3 or later
+POP_PBB = 'POP_PBB'        # OpenFlow 1.3 or later
+COPY_FIELD = 'COPY_FIELD'  # OpenFlow 1.5 or later
+METER = 'METER'            # OpenFlow 1.5 or later
 EXPERIMENTER = 'EXPERIMENTER'
 
 
@@ -108,6 +110,24 @@ def to_action(dic, ofp, parser, action_type, util):
         field = dic.get('field')
         value = dic.get('value')
         return parser.OFPActionSetField(**{field: value})
+
+    elif action_type == 'COPY_FIELD':
+        n_bits = int(dic.get('n_bits'))
+        src_offset = int(dic.get('src_offset'))
+        dst_offset = int(dic.get('dst_offset'))
+        oxm_ids = [parser.OFPOxmId(str(dic.get('src_oxm_id'))),
+                   parser.OFPOxmId(str(dic.get('dst_oxm_id')))]
+        return parser.OFPActionCopyField(
+            n_bits, src_offset, dst_offset, oxm_ids)
+
+    elif action_type == 'METER':
+        if hasattr(parser, 'OFPActionMeter'):
+            # OpenFlow 1.5 or later
+            meter_id = int(dic.get('meter_id'))
+            return parser.OFPActionMeter(meter_id)
+        else:
+            # OpenFlow 1.4 or earlier
+            return None
 
     elif action_type == EXPERIMENTER:
         experimenter = int(dic.get('experimenter'))
@@ -177,6 +197,13 @@ def to_match_masked_int(value):
         return (str_to_int(value[0]), str_to_int(value[1]))
 
     return str_to_int(value)
+
+
+def to_match_packet_type(value):
+    if isinstance(value, (list, tuple)):
+        return str_to_int(value[0]) << 16 | str_to_int(value[1])
+    else:
+        return str_to_int(value)
 
 
 def send_experimenter(dp, exp, logger=None):
@@ -361,6 +388,12 @@ class OFCtlUtil(object):
 
     def ofp_group_capabilities_to_user(self, group):
         return self._reserved_num_to_user(group, 'OFPGFC_')
+
+    def ofp_group_bucket_prop_type_from_user(self, group):
+        return self._reserved_num_from_user(group, 'OFPGBPT_')
+
+    def ofp_group_bucket_prop_type_to_user(self, group):
+        return self._reserved_num_to_user(group, 'OFPGBPT_')
 
     def ofp_buffer_from_user(self, buffer):
         if buffer in ['OFP_NO_BUFFER', 'NO_BUFFER']:
