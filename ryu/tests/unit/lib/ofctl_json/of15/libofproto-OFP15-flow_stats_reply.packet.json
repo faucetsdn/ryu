@@ -1,0 +1,16 @@
+{
+    "1": [
+        {
+            "length": 40,
+            "match": {
+                "in_port": 1
+            },
+            "priority": 1,
+            "reason": 0,
+            "stats": {
+                "flow_count": 1
+            },
+            "table_id": 1
+        }
+    ]
+}

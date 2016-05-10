@@ -1,0 +1,42 @@
+{
+    "cmd": 3,
+    "group": {
+        "buckets": [
+            {
+                "actions": [
+                    {
+                        "len": 8,
+                        "type": "POP_VLAN"
+                    },
+                    {
+                        "field": "ipv4_dst",
+                        "type": "SET_FIELD",
+                        "value": "192.168.2.9"
+                    }
+                ],
+                "bucket_id": 305419896,
+                "properties": [
+                    {
+                        "length": 8,
+                        "type": "WEIGHT",
+                        "weight": 52428
+                    },
+                    {
+                        "length": 8,
+                        "type": "WATCH_PORT",
+                        "watch": 56797
+                    },
+                    {
+                        "length": 8,
+                        "type": "WATCH_GROUP",
+                        "watch": 4008636142
+                    }
+                ]
+            }
+        ],
+        "command_bucket_id": 3149642683,
+        "group_id": 2863311530,
+        "properties": [],
+        "type": "SELECT"
+    }
+}

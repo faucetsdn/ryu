@@ -1,0 +1,24 @@
+{
+    "cmd": 0,
+    "meter": {
+        "bands": [
+            {
+                "burst_size": 10,
+                "rate": 1000,
+                "type": "DROP"
+            },
+            {
+                "burst_size": 10,
+                "prec_level": 1,
+                "rate": 1000,
+                "type": "DSCP_REMARK"
+            }
+        ],
+        "flags": [
+            "PKTPS",
+            "BURST",
+            "STATS"
+        ],
+        "meter_id": 100
+    }
+}

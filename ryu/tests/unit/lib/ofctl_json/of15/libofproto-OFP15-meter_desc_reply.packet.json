@@ -1,0 +1,19 @@
+{
+    "1": [
+        {
+            "bands": [
+                {
+                    "burst_size": 10,
+                    "rate": 1000,
+                    "type": "DROP"
+                }
+            ],
+            "flags": [
+                "PKTPS",
+                "BURST",
+                "STATS"
+            ],
+            "meter_id": 100
+        }
+    ]
+}

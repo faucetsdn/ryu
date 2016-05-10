@@ -1,0 +1,50 @@
+{
+    "port_config": {
+        "config": 0,
+        "hw_addr": "00:11:00:00:11:11",
+        "mask": 0,
+        "port_no": 1,
+        "properties": [
+            {
+                "advertise": 4096,
+                "length": 8,
+                "type": "ETHERNET"
+            },
+            {
+                "configure": 3,
+                "fl_offset": 2000,
+                "freq_lmda": 1500,
+                "grid_span": 3000,
+                "length": 24,
+                "tx_pwr": 300,
+                "type": "OPTICAL"
+            },
+            {
+                "data": [],
+                "exp_type": 0,
+                "experimenter": 101,
+                "length": 12,
+                "type": "EXPERIMENTER"
+            },
+            {
+                "data": [
+                    1
+                ],
+                "exp_type": 1,
+                "experimenter": 101,
+                "length": 16,
+                "type": "EXPERIMENTER"
+            },
+            {
+                "data": [
+                    1,
+                    2
+                ],
+                "exp_type": 2,
+                "experimenter": 101,
+                "length": 20,
+                "type": "EXPERIMENTER"
+            }
+        ]
+    }
+}

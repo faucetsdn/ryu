@@ -1,0 +1,27 @@
+{
+    "1": [
+        {
+            "buckets": [
+                {
+                    "actions": [
+                        {
+                            "max_len": 65509,
+                            "port": 1,
+                            "type": "OUTPUT"
+                        }
+                    ],
+                    "bucket_id": 65535,
+                    "properties": [
+                        {
+                            "type": "WEIGHT",
+                            "weight": 65535
+                        }
+                    ]
+                }
+            ],
+            "group_id": 1,
+            "properties": [],
+            "type": "SELECT"
+        }
+    ]
+}

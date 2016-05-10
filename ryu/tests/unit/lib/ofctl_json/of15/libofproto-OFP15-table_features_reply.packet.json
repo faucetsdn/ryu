@@ -1,0 +1,25 @@
+{
+    "1": [
+        {
+            "capabilities": 4,
+            "command": 1,
+            "features": 1,
+            "length": 80,
+            "max_entries": 255,
+            "metadata_match": 18446744073709551615,
+            "metadata_write": 18446744073709551615,
+            "name": "table1",
+            "properties": [
+                {
+                    "oxm_values": [
+                        {
+                            "eth_src": "aa:bb:cc:dd:ee:ff"
+                        }
+                    ],
+                    "type": "PACKET_TYPES"
+                }
+            ],
+            "table_id": 1
+        }
+    ]
+}

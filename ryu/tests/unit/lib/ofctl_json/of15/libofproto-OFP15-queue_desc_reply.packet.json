@@ -1,0 +1,61 @@
+{
+    "1": [
+        {
+            "len": 32,
+            "port_no": 7,
+            "properties": [
+                {
+                    "data": [],
+                    "exp_type": 0,
+                    "experimenter": 101,
+                    "length": 12,
+                    "type": "EXPERIMENTER"
+                }
+            ],
+            "queue_id": 0
+        },
+        {
+            "len": 88,
+            "port_no": 8,
+            "properties": [
+                {
+                    "length": 8,
+                    "rate": 300,
+                    "type": "MIN_RATE"
+                },
+                {
+                    "length": 8,
+                    "rate": 900,
+                    "type": "MAX_RATE"
+                },
+                {
+                    "data": [],
+                    "exp_type": 0,
+                    "experimenter": 101,
+                    "length": 12,
+                    "type": "EXPERIMENTER"
+                },
+                {
+                    "data": [
+                        1
+                    ],
+                    "exp_type": 1,
+                    "experimenter": 101,
+                    "length": 16,
+                    "type": "EXPERIMENTER"
+                },
+                {
+                    "data": [
+                        1,
+                        2
+                    ],
+                    "exp_type": 2,
+                    "experimenter": 101,
+                    "length": 20,
+                    "type": "EXPERIMENTER"
+                }
+            ],
+            "queue_id": 1
+        }
+    ]
+}

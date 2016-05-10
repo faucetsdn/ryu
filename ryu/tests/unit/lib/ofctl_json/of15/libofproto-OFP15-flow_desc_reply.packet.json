@@ -1,0 +1,26 @@
+{
+    "1": [
+        {
+            "cookie": 1234605616436508552,
+            "flags": 1,
+            "hard_timeout": 255,
+            "idle_timeout": 255,
+            "importance": 43690,
+            "instructions": [
+                {
+                    "table_id": 2,
+                    "type": "GOTO_TABLE"
+                }
+            ],
+            "length": 64,
+            "match": {
+                "in_port": 1
+            },
+            "priority": 5,
+            "stats": {
+                "flow_count": 1
+            },
+            "table_id": 1
+        }
+    ]
+}

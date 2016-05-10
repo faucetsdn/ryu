@@ -1,0 +1,19 @@
+{
+    "1": [
+        {
+            "band_types": [
+                "DROP",
+                "DSCP_REMARK"
+            ],
+            "capabilities": [
+                "KBPS",
+                "PKTPS",
+                "BURST",
+                "STATS"
+            ],
+            "max_bands": 255,
+            "max_color": 0,
+            "max_meter": 16777216
+        }
+    ]
+}
