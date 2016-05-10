@@ -1,0 +1,13 @@
+{
+    "flow": {
+        "cookie": 1234605616436508552,
+        "cookie_mask": 18446744073709551615,
+        "flags": 0,
+        "match": {
+            "in_port": 1
+        },
+        "out_group": 4294967295,
+        "out_port": 4294967295,
+        "table_id": 1
+    }
+}

@@ -1,0 +1,234 @@
+{
+   "OFPFlowMod": {
+      "buffer_id": 65535, 
+      "command": 0, 
+      "cookie": 0, 
+      "cookie_mask": 0, 
+      "flags": 0, 
+      "hard_timeout": 0, 
+      "idle_timeout": 0, 
+      "importance": 0, 
+      "instructions": [
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "OFPActionSetField": {
+                        "field": {
+                           "OXMTlv": {
+                              "field": "vlan_vid", 
+                              "mask": null, 
+                              "value": 258
+                           }
+                        },
+                        "len": 16,
+                        "type": 25
+                     }
+                  }, 
+                  {
+                     "OFPActionCopyTtlOut": {
+                        "len": 8, 
+                        "type": 11
+                     }
+                  }, 
+                  {
+                     "OFPActionCopyTtlIn": {
+                        "len": 8, 
+                        "type": 12
+                     }
+                  }, 
+                  {
+                     "OFPActionCopyTtlIn": {
+                        "len": 8, 
+                        "type": 12
+                     }
+                  }, 
+                  {
+                     "OFPActionPopPbb": {
+                        "len": 8, 
+                        "type": 27
+                     }
+                  }, 
+                  {
+                     "OFPActionPushPbb": {
+                        "ethertype": 4660, 
+                        "len": 8, 
+                        "type": 26
+                     }
+                  }, 
+                  {
+                     "OFPActionPopMpls": {
+                        "ethertype": 39030, 
+                        "len": 8, 
+                        "type": 20
+                     }
+                  }, 
+                  {
+                     "OFPActionPushMpls": {
+                        "ethertype": 34887, 
+                        "len": 8, 
+                        "type": 19
+                     }
+                  }, 
+                  {
+                     "OFPActionPopVlan": {
+                        "len": 8, 
+                        "type": 18
+                     }
+                  }, 
+                  {
+                     "OFPActionPushVlan": {
+                        "ethertype": 33024, 
+                        "len": 8, 
+                        "type": 17
+                     }
+                  }, 
+                  {
+                     "OFPActionDecMplsTtl": {
+                        "len": 8, 
+                        "type": 16
+                     }
+                  }, 
+                  {
+                     "OFPActionSetMplsTtl": {
+                        "len": 8, 
+                        "mpls_ttl": 10, 
+                        "type": 15
+                     }
+                  }, 
+                  {
+                     "OFPActionDecNwTtl": {
+                        "len": 8, 
+                        "type": 24
+                     }
+                  }, 
+                  {
+                     "OFPActionSetNwTtl": {
+                        "len": 8, 
+                        "nw_ttl": 10, 
+                        "type": 23
+                     }
+                  }, 
+                  {
+                     "OFPActionExperimenterUnknown": {
+                        "data": "AAECAwQFBgc=", 
+                        "experimenter": 101, 
+                        "len": 16, 
+                        "type": 65535
+                     }
+                  }, 
+                  {
+                     "OFPActionSetQueue": {
+                        "len": 8, 
+                        "queue_id": 3, 
+                        "type": 21
+                     }
+                  }, 
+                  {
+                     "OFPActionMeter": {
+                        "len": 8,
+                        "meter_id": 2,
+                        "type": 29
+                     }
+                  },
+                  {
+                     "OFPActionGroup": {
+                        "group_id": 99, 
+                        "len": 8, 
+                        "type": 22
+                     }
+                  }, 
+                  {
+                     "OFPActionOutput": {
+                        "len": 16, 
+                        "max_len": 65535, 
+                        "port": 6, 
+                        "type": 0
+                     }
+                  }
+               ], 
+               "len": 176, 
+               "type": 3
+            }
+         }, 
+         {
+            "OFPInstructionActions": {
+               "actions": [
+                  {
+                     "OFPActionSetField": {
+                        "field": {
+                           "OXMTlv": {
+                              "field": "eth_src", 
+                              "mask": null, 
+                              "value": "01:02:03:04:05:06"
+                           }
+                        },
+                        "len": 16,
+                        "type": 25
+                     }
+                  }, 
+                  {
+                     "OFPActionSetField": {
+                        "field": {
+                           "OXMTlv": {
+                              "field": "pbb_uca", 
+                              "mask": null, 
+                              "value": 1
+                           }
+                        },
+                        "len": 16,
+                        "type": 25
+                     }
+                  },
+                  {
+                     "OFPActionCopyField": {
+                         "type": 28,
+                         "len": 20, 
+                         "n_bits": 32, 
+                         "src_offset": 1, 
+                         "dst_offset": 2, 
+                         "oxm_ids": [
+                             {
+                                 "OFPOxmId": {
+                                     "hasmask": false, 
+                                     "length": 0, 
+                                     "type": "eth_src"
+                                 }
+                             }, 
+                             {
+                                 "OFPOxmId": {
+                                     "hasmask": false, 
+                                     "length": 0, 
+                                     "type": "eth_dst"
+                                 }
+                             }
+                         ]
+                     }
+                  }
+               ], 
+               "len": 60, 
+               "type": 4
+            }
+         }
+      ], 
+      "match": {
+         "OFPMatch": {
+            "length": 14, 
+            "oxm_fields": [
+               {
+                  "OXMTlv": {
+                     "field": "eth_dst", 
+                     "mask": null, 
+                     "value": "f2:0b:a4:7d:f8:ea"
+                  }
+               }
+            ], 
+            "type": 1
+         }
+      }, 
+      "out_group": 4294967295, 
+      "out_port": 4294967295, 
+      "priority": 123, 
+      "table_id": 1
+   }
+}

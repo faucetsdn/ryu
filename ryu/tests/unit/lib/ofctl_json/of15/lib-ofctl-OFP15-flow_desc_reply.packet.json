@@ -1,0 +1,48 @@
+{
+    "1": [
+        {
+            "cookie": 1234605616436508552,
+            "flags": 1,
+            "hard_timeout": 255,
+            "idle_timeout": 255,
+            "importance": 43690,
+            "instructions": [
+                {
+                    "table_id": 2,
+                    "type": "GOTO_TABLE"
+                },
+                {
+                    "actions": [
+                        {
+                            "meter_id": 2,
+                            "type": "METER"
+                        }
+                    ],
+                    "type": "WRITE_ACTIONS"
+                },
+                {
+                    "actions": [
+                        {
+                            "type": "COPY_FIELD",
+                            "n_bits": 32,
+                            "src_offset": 1,
+                            "dst_offset": 2,
+                            "src_oxm_id": "eth_src",
+                            "dst_oxm_id": "eth_dst"
+                        }
+                    ],
+                    "type": "APPLY_ACTIONS"
+                }
+            ],
+            "length": 64,
+            "match": {
+                "in_port": 1
+            },
+            "priority": 5,
+            "stats": {
+                "flow_count": 1
+            },
+            "table_id": 1
+        }
+    ]
+}

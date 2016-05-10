@@ -510,6 +510,11 @@ def _add_tests():
                 'reply': 'libofproto-OFP15-flow_desc_reply.packet.json'
             },
             {
+                'method': ofctl_v1_5.get_flow_desc_stats,
+                'request': 'lib-ofctl-OFP15-flow_desc_request.packet.json',
+                'reply': 'lib-ofctl-OFP15-flow_desc_reply.packet.json'
+            },
+            {
                 'method': ofctl_v1_5.get_aggregate_flow_stats,
                 'request': 'libofproto-OFP15-aggregate_stats_request.packet.json',
                 'reply': 'libofproto-OFP15-aggregate_stats_reply.packet.json'
@@ -567,6 +572,11 @@ def _add_tests():
             {
                 'method': ofctl_v1_5.mod_flow_entry,
                 'request': 'libofproto-OFP15-flow_mod_no_nx.packet.json',
+                'reply': None
+            },
+            {
+                'method': ofctl_v1_5.mod_flow_entry,
+                'request': 'lib-ofctl-OFP15-flow_mod.packet.json',
                 'reply': None
             },
             {
