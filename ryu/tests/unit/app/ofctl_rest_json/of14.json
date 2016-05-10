@@ -1,0 +1,195 @@
+[
+    {
+        "method": "GET",
+        "path": "/stats/switches"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/desc/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/flow/1"
+    },
+    {
+        "method": "POST",
+        "path": "/stats/flow/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/aggregateflow/1"
+    },
+    {
+        "method": "POST",
+        "path": "/stats/aggregateflow/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/port/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/port/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/portdesc/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/queue/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/queue/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/queue/1/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/queuedesc/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/queuedesc/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/queuedesc/1/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/group/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/group/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/groupdesc/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/groupfeatures/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/meter/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/meter/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/meterconfig/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/meterconfig/1/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/meterfeatures/1"
+    },
+    {
+        "method": "GET",
+        "path": "/stats/table/1"
+    },
+    {
+        "method": "POST",
+        "path": "/stats/flowentry/add",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/flowentry/modify",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/flowentry/modify_strict",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/flowentry/delete",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/flowentry/delete_strict",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "DELETE",
+        "path": "/stats/flowentry/clear/1"
+    },
+    {
+        "method": "POST",
+        "path": "/stats/groupentry/add",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/groupentry/modify",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/groupentry/delete",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/portdesc/modify",
+        "body": {
+            "dpid": 1,
+            "port_no": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/meterentry/add",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/meterentry/modify",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/meterentry/delete",
+        "body": {
+            "dpid": 1
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/stats/experimenter/1"
+    }
+]
