@@ -24,6 +24,7 @@ from ryu.controller import ofp_event
 from ryu.controller import dpset
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+from ryu.exception import RyuException
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
@@ -161,6 +162,114 @@ supported_ofctl = {
 # POST /stats/experimenter/<dpid>
 
 
+class CommandNotFoundError(RyuException):
+    message = 'No such command : %(cmd)s'
+
+
+class PortNotFoundError(RyuException):
+    message = 'No such port info: %(port_no)s'
+
+
+def stats_method(method):
+    def wrapper(self, req, dpid, *args, **kwargs):
+        # Get datapath instance from DPSet
+        try:
+            dp = self.dpset.get(int(str(dpid), 0))
+        except ValueError:
+            LOG.exception('Invalid dpid: %s', dpid)
+            return Response(status=400)
+        if dp is None:
+            LOG.error('No such Datapath: %s', dpid)
+            return Response(status=404)
+
+        # Get lib/ofctl_* module
+        try:
+            ofctl = supported_ofctl.get(dp.ofproto.OFP_VERSION)
+        except KeyError:
+            LOG.exception('Unsupported OF version: %s',
+                          dp.ofproto.OFP_VERSION)
+            return Response(status=501)
+
+        # Invoke StatsController method
+        try:
+            ret = method(self, req, dp, ofctl, *args, **kwargs)
+            return Response(content_type='application/json',
+                            body=json.dumps(ret))
+        except ValueError:
+            LOG.exception('Invalid syntax: %s', req.body)
+            return Response(status=400)
+        except AttributeError:
+            LOG.exception('Unsupported OF request in this version: %s',
+                          dp.ofproto.OFP_VERSION)
+            return Response(status=501)
+
+    return wrapper
+
+
+def command_method(method):
+    def wrapper(self, req, *args, **kwargs):
+        # Parse request json body
+        try:
+            if req.body:
+                # We use ast.literal_eval() to parse request json body
+                # instead of json.loads().
+                # Because we need to parse binary format body
+                # in send_experimenter().
+                body = ast.literal_eval(req.body.decode('utf-8'))
+            else:
+                body = {}
+        except SyntaxError:
+            LOG.exception('Invalid syntax: %s', req.body)
+            return Response(status=400)
+
+        # Get datapath_id from request parameters
+        dpid = body.get('dpid', None)
+        if not dpid:
+            try:
+                dpid = kwargs.pop('dpid')
+            except KeyError:
+                LOG.exception('Cannot get dpid from request parameters')
+                return Response(status=400)
+
+        # Get datapath instance from DPSet
+        try:
+            dp = self.dpset.get(int(str(dpid), 0))
+        except ValueError:
+            LOG.exception('Invalid dpid: %s', dpid)
+            return Response(status=400)
+        if dp is None:
+            LOG.error('No such Datapath: %s', dpid)
+            return Response(status=404)
+
+        # Get lib/ofctl_* module
+        try:
+            ofctl = supported_ofctl.get(dp.ofproto.OFP_VERSION)
+        except KeyError:
+            LOG.exception('Unsupported OF version: version=%s',
+                          dp.ofproto.OFP_VERSION)
+            return Response(status=501)
+
+        # Invoke StatsController method
+        try:
+            method(self, req, dp, ofctl, body, *args, **kwargs)
+            return Response(status=200)
+        except ValueError:
+            LOG.exception('Invalid syntax: %s', req.body)
+            return Response(status=400)
+        except AttributeError:
+            LOG.exception('Unsupported OF request in this version: %s',
+                          dp.ofproto.OFP_VERSION)
+            return Response(status=501)
+        except CommandNotFoundError as e:
+            LOG.exception(e.message)
+            return Response(status=404)
+        except PortNotFoundError as e:
+            LOG.exception(e.message)
+            return Response(status=404)
+
+    return wrapper
+
+
 class StatsController(ControllerBase):
     def __init__(self, req, link, data, **config):
         super(StatsController, self).__init__(req, link, data, **config)
@@ -172,696 +281,174 @@ class StatsController(ControllerBase):
         body = json.dumps(dps)
         return Response(content_type='application/json', body=body)
 
-    def get_desc_stats(self, req, dpid, **_kwargs):
+    @stats_method
+    def get_desc_stats(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_desc_stats(dp, self.waiters)
 
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
+    @stats_method
+    def get_flow_stats(self, req, dp, ofctl, **kwargs):
+        flow = req.json if req.body else {}
+        return ofctl.get_flow_stats(dp, self.waiters, flow)
 
-        dp = self.dpset.get(int(dpid))
+    @stats_method
+    def get_aggregate_flow_stats(self, req, dp, ofctl, **kwargs):
+        flow = req.json if req.body else {}
+        return ofctl.get_aggregate_flow_stats(dp, self.waiters, flow)
 
-        if dp is None:
-            return Response(status=404)
-        _ofp_version = dp.ofproto.OFP_VERSION
+    @stats_method
+    def get_table_stats(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_table_stats(dp, self.waiters)
 
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            desc = _ofctl.get_desc_stats(dp, self.waiters)
+    @stats_method
+    def get_table_features(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_table_features(dp, self.waiters)
 
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(desc)
-        return Response(content_type='application/json', body=body)
-
-    def get_flow_stats(self, req, dpid, **_kwargs):
-
-        if req.body == '':
-            flow = {}
-
-        else:
-
-            try:
-                flow = ast.literal_eval(req.body)
-
-            except SyntaxError:
-                LOG.debug('invalid syntax %s', req.body)
-                return Response(status=400)
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            flows = _ofctl.get_flow_stats(dp, self.waiters, flow)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(flows)
-        return Response(content_type='application/json', body=body)
-
-    def get_aggregate_flow_stats(self, req, dpid, **_kwargs):
-
-        if req.body == '':
-            flow = {}
-
-        else:
-            try:
-                flow = ast.literal_eval(req.body)
-
-            except SyntaxError:
-                LOG.debug('invalid syntax %s', req.body)
-                return Response(status=400)
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            flows = _ofctl.get_aggregate_flow_stats(dp, self.waiters, flow)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(flows)
-        return Response(content_type='application/json', body=body)
-
-    def get_table_stats(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            ports = _ofctl.get_table_stats(dp, self.waiters)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(ports)
-        return Response(content_type='application/json', body=body)
-
-    def get_table_features(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            ports = _ofctl.get_table_features(dp, self.waiters)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(ports)
-        return Response(content_type='application/json', body=body)
-
-    def get_port_stats(self, req, dpid, port=None, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        if type(port) == str and not port.isdigit():
-            LOG.debug('invalid port %s', port)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            ports = _ofctl.get_port_stats(dp, self.waiters, port)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(ports)
-        return Response(content_type='application/json', body=body)
-
-    def get_queue_stats(self, req, dpid, port=None, queue_id=None, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
+    @stats_method
+    def get_port_stats(self, req, dp, ofctl, port=None, **kwargs):
         if port == "ALL":
             port = None
 
-        if type(port) == str and not port.isdigit():
-            LOG.debug('invalid port %s', port)
-            return Response(status=400)
+        return ofctl.get_port_stats(dp, self.waiters, port)
+
+    @stats_method
+    def get_queue_stats(self, req, dp, ofctl,
+                        port=None, queue_id=None, **kwargs):
+        if port == "ALL":
+            port = None
 
         if queue_id == "ALL":
             queue_id = None
 
-        if type(queue_id) == str and not queue_id.isdigit():
-            LOG.debug('invalid queue_id %s', queue_id)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            queues = _ofctl.get_queue_stats(dp, self.waiters, port, queue_id)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(queues)
-        return Response(content_type='application/json', body=body)
-
-    def get_queue_config(self, req, dpid, port, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        if type(port) == str and not port.isdigit():
-            LOG.debug('invalid port %s', port)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-        port = int(port)
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            queues = _ofctl.get_queue_config(dp, self.waiters, port)
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(queues)
-        return Response(content_type='application/json', body=body)
-
-    def get_queue_desc(self, req, dpid, port, queue, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        if type(port) == str and not port.isdigit():
-            LOG.debug('invalid port %s', port)
-            return Response(status=400)
-
-        if type(queue) == str and not queue.isdigit():
-            LOG.debug('invalid queue %s', queue)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-        port = int(port)
-        queue = int(queue)
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            queues = _ofctl.get_queue_desc_stats(
-                dp=dp, port_no=port, waiters=self.waiters)
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(queues)
-        return Response(content_type='application/json', body=body)
-
-    def get_meter_features(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'get_meter_features'):
-            meters = _ofctl.get_meter_features(dp, self.waiters)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        body = json.dumps(meters)
-        return Response(content_type='application/json', body=body)
-
-    def get_meter_config(self, req, dpid, meter_id=None, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        if type(meter_id) == str and not meter_id.isdigit():
-            LOG.debug('invalid meter_id %s', memter_id)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'get_meter_config'):
-            meters = _ofctl.get_meter_config(dp, self.waiters, meter_id)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        body = json.dumps(meters)
-        return Response(content_type='application/json', body=body)
-
-    def get_meter_stats(self, req, dpid, meter_id=None, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        if type(meter_id) == str and not meter_id.isdigit():
-            LOG.debug('invalid meter_id %s', memter_id)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'get_meter_stats'):
-            meters = _ofctl.get_meter_stats(dp, self.waiters, meter_id)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        body = json.dumps(meters)
-        return Response(content_type='application/json', body=body)
-
-    def get_group_features(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'get_group_features'):
-            groups = _ofctl.get_group_features(dp, self.waiters)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        body = json.dumps(groups)
-        return Response(content_type='application/json', body=body)
-
-    def get_group_desc(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'get_group_desc'):
-            groups = _ofctl.get_group_desc(dp, self.waiters)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        body = json.dumps(groups)
-        return Response(content_type='application/json', body=body)
-
-    def get_group_stats(self, req, dpid, group_id=None, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        if type(group_id) == str and not group_id.isdigit():
-            LOG.debug('invalid group_id %s', group_id)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'get_group_stats'):
-            groups = _ofctl.get_group_stats(dp, self.waiters, group_id)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        body = json.dumps(groups)
-        return Response(content_type='application/json', body=body)
-
-    def get_port_desc(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            groups = _ofctl.get_port_desc(dp, self.waiters)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        body = json.dumps(groups)
-        return Response(content_type='application/json', body=body)
-
-    def mod_flow_entry(self, req, cmd, **_kwargs):
-
-        try:
-            flow = ast.literal_eval(req.body)
-
-        except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
-            return Response(status=400)
-
-        dpid = flow.get('dpid')
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        if cmd == 'add':
-            cmd = dp.ofproto.OFPFC_ADD
-        elif cmd == 'modify':
-            cmd = dp.ofproto.OFPFC_MODIFY
-        elif cmd == 'modify_strict':
-            cmd = dp.ofproto.OFPFC_MODIFY_STRICT
-        elif cmd == 'delete':
-            cmd = dp.ofproto.OFPFC_DELETE
-        elif cmd == 'delete_strict':
-            cmd = dp.ofproto.OFPFC_DELETE_STRICT
-        else:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            _ofctl.mod_flow_entry(dp, flow, cmd)
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        return Response(status=200)
-
-    def delete_flow_entry(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-
-        if ofproto_v1_0.OFP_VERSION == _ofp_version:
+        return ofctl.get_queue_stats(dp, self.waiters, port, queue_id)
+
+    @stats_method
+    def get_queue_config(self, req, dp, ofctl, port=None, **kwargs):
+        if port == "ALL":
+            port = None
+
+        return ofctl.get_queue_config(dp, self.waiters, port)
+
+    @stats_method
+    def get_queue_desc(self, req, dp, ofctl,
+                       port=None, queue=None, **_kwargs):
+        if port == "ALL":
+            port = None
+
+        if queue == "ALL":
+            queue = None
+
+        return ofctl.get_queue_desc_stats(dp, self.waiters, port, queue)
+
+    @stats_method
+    def get_meter_features(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_meter_features(dp, self.waiters)
+
+    @stats_method
+    def get_meter_config(self, req, dp, ofctl, meter_id=None, **kwargs):
+        if meter_id == "ALL":
+            meter_id = None
+
+        return ofctl.get_meter_config(dp, self.waiters, meter_id)
+
+    @stats_method
+    def get_meter_stats(self, req, dp, ofctl, meter_id=None, **kwargs):
+        if meter_id == "ALL":
+            meter_id = None
+
+        return ofctl.get_meter_stats(dp, self.waiters, meter_id)
+
+    @stats_method
+    def get_group_features(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_group_features(dp, self.waiters)
+
+    @stats_method
+    def get_group_desc(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_group_desc(dp, self.waiters)
+
+    @stats_method
+    def get_group_stats(self, req, dp, ofctl, group_id=None, **kwargs):
+        if group_id == "ALL":
+            group_id = None
+
+        return ofctl.get_group_stats(dp, self.waiters, group_id)
+
+    @stats_method
+    def get_port_desc(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_port_desc(dp, self.waiters)
+
+    @command_method
+    def mod_flow_entry(self, req, dp, ofctl, flow, cmd, **kwargs):
+        cmd_convert = {
+            'add': dp.ofproto.OFPFC_ADD,
+            'modify': dp.ofproto.OFPFC_MODIFY,
+            'modify_strict': dp.ofproto.OFPFC_MODIFY_STRICT,
+            'delete': dp.ofproto.OFPFC_DELETE,
+            'delete_strict': dp.ofproto.OFPFC_DELETE_STRICT,
+        }
+        mod_cmd = cmd_convert.get(cmd, None)
+        if mod_cmd is None:
+            raise CommandNotFoundError(cmd=cmd)
+
+        ofctl.mod_flow_entry(dp, flow, mod_cmd)
+
+    @command_method
+    def delete_flow_entry(self, req, dp, ofctl, flow, **kwargs):
+        if ofproto_v1_0.OFP_VERSION == dp.ofproto.OFP_VERSION:
             flow = {}
         else:
             flow = {'table_id': dp.ofproto.OFPTT_ALL}
 
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            _ofctl.mod_flow_entry(dp, flow, dp.ofproto.OFPFC_DELETE)
+        ofctl.mod_flow_entry(dp, flow, dp.ofproto.OFPFC_DELETE)
 
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
+    @command_method
+    def mod_meter_entry(self, req, dp, ofctl, meter, cmd, **kwargs):
+        cmd_convert = {
+            'add': dp.ofproto.OFPMC_ADD,
+            'modify': dp.ofproto.OFPMC_MODIFY,
+            'delete': dp.ofproto.OFPMC_DELETE,
+        }
+        mod_cmd = cmd_convert.get(cmd, None)
+        if mod_cmd is None:
+            raise CommandNotFoundError(cmd=cmd)
 
-        return Response(status=200)
+        ofctl.mod_meter_entry(dp, meter, mod_cmd)
 
-    def mod_meter_entry(self, req, cmd, **_kwargs):
+    @command_method
+    def mod_group_entry(self, req, dp, ofctl, group, cmd, **kwargs):
+        cmd_convert = {
+            'add': dp.ofproto.OFPGC_ADD,
+            'modify': dp.ofproto.OFPGC_MODIFY,
+            'delete': dp.ofproto.OFPGC_DELETE,
+        }
+        mod_cmd = cmd_convert.get(cmd, None)
+        if mod_cmd is None:
+            raise CommandNotFoundError(cmd=cmd)
 
-        try:
-            flow = ast.literal_eval(req.body)
+        ofctl.mod_group_entry(dp, group, mod_cmd)
 
-        except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
-            return Response(status=400)
+    @command_method
+    def mod_port_behavior(self, req, dp, ofctl, port_config, cmd, **kwargs):
+        port_no = port_config.get('port_no', None)
+        port_no = int(str(port_no), 0)
 
-        dpid = flow.get('dpid')
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        if cmd == 'add':
-            cmd = dp.ofproto.OFPMC_ADD
-        elif cmd == 'modify':
-            cmd = dp.ofproto.OFPMC_MODIFY
-        elif cmd == 'delete':
-            cmd = dp.ofproto.OFPMC_DELETE
-        else:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'mod_meter_entry'):
-            _ofctl.mod_meter_entry(dp, flow, cmd)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        return Response(status=200)
-
-    def mod_group_entry(self, req, cmd, **_kwargs):
-
-        try:
-            group = ast.literal_eval(req.body)
-
-        except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
-            return Response(status=400)
-
-        dpid = group.get('dpid')
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        if cmd == 'add':
-            cmd = dp.ofproto.OFPGC_ADD
-        elif cmd == 'modify':
-            cmd = dp.ofproto.OFPGC_MODIFY
-        elif cmd == 'delete':
-            cmd = dp.ofproto.OFPGC_DELETE
-        else:
-            return Response(status=404)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'mod_group_entry'):
-            _ofctl.mod_group_entry(dp, group, cmd)
-
-        else:
-            LOG.debug('Unsupported OF protocol or \
-                request not supported in this OF protocol version')
-            return Response(status=501)
-
-        return Response(status=200)
-
-    def mod_port_behavior(self, req, cmd, **_kwargs):
-
-        try:
-            port_config = ast.literal_eval(req.body)
-
-        except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
-            return Response(status=400)
-
-        dpid = port_config.get('dpid')
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        port_no = port_config.get('port_no', 0)
-        if type(port_no) == str and not port_no.isdigit():
-            LOG.debug('invalid port_no %s', port_no)
-            return Response(status=400)
-
-        port_info = self.dpset.port_state[int(dpid)].get(port_no)
-
-        dp = self.dpset.get(int(dpid))
-        _ofp_version = dp.ofproto.OFP_VERSION
-
+        port_info = self.dpset.port_state[int(dp.id)].get(port_no)
         if port_info:
             port_config.setdefault('hw_addr', port_info.hw_addr)
-            if ofproto_v1_4.OFP_VERSION <= _ofp_version:
-                port_config.setdefault('properties', port_info.properties)
-            else:
+            if dp.ofproto.OFP_VERSION < ofproto_v1_4.OFP_VERSION:
                 port_config.setdefault('advertise', port_info.advertised)
+            else:
+                port_config.setdefault('properties', port_info.properties)
         else:
-            return Response(status=404)
-
-        if dp is None:
-            return Response(status=404)
+            raise PortNotFoundError(port_no=port_no)
 
         if cmd != 'modify':
-            return Response(status=404)
+            raise CommandNotFoundError(cmd=cmd)
 
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-        if _ofctl is not None:
-            _ofctl.mod_port_behavior(dp, port_config)
+        ofctl.mod_port_behavior(dp, port_config)
 
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        return Response(status=200)
-
-    def send_experimenter(self, req, dpid, **_kwargs):
-
-        if type(dpid) == str and not dpid.isdigit():
-            LOG.debug('invalid dpid %s', dpid)
-            return Response(status=400)
-
-        dp = self.dpset.get(int(dpid))
-
-        if dp is None:
-            return Response(status=404)
-
-        try:
-            exp = ast.literal_eval(req.body)
-
-        except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
-            return Response(status=400)
-
-        _ofp_version = dp.ofproto.OFP_VERSION
-        _ofctl = supported_ofctl.get(_ofp_version, None)
-
-        if _ofctl is not None and hasattr(_ofctl, 'send_experimenter'):
-            _ofctl.send_experimenter(dp, exp)
-
-        else:
-            LOG.debug('Unsupported OF protocol')
-            return Response(status=501)
-
-        return Response(status=200)
+    @command_method
+    def send_experimenter(self, req, dp, ofctl, exp, **kwargs):
+        ofctl.send_experimenter(dp, exp)
 
 
 class RestStatsApi(app_manager.RyuApp):
