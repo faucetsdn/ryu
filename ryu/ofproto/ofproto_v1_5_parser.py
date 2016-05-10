@@ -5888,12 +5888,14 @@ class OFPActionCopyField(OFPAction):
         return cls(n_bits, src_offset, dst_offset, oxm_ids, type_, len_)
 
     def serialize(self, buf, offset):
+        oxm_ids_buf = bytearray()
+        for i in self.oxm_ids:
+            oxm_ids_buf += i.serialize()
+        self.len += len(oxm_ids_buf)
         msg_pack_into(ofproto.OFP_ACTION_COPY_FIELD_PACK_STR, buf,
                       offset, self.type, self.len,
                       self.n_bits, self.src_offset, self.dst_offset)
-
-        for i in self.oxm_ids:
-            buf += i.serialize()
+        buf += oxm_ids_buf
 
 
 @OFPAction.register_action_type(ofproto.OFPAT_METER,
