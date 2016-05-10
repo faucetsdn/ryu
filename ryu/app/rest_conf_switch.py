@@ -111,7 +111,11 @@ class ConfSwitchController(ControllerBase):
 
     def set_key(self, req, dpid, key, **_kwargs):
         def _set_val(dpid, key):
-            val = json.loads(req.body)
+            try:
+                val = req.json if req.body else {}
+            except ValueError:
+                return Response(status=http_client.BAD_REQUEST,
+                                body='invalid syntax %s' % req.body)
             self.conf_switch.set_key(dpid, key, val)
             return None
 

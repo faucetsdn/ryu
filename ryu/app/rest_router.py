@@ -376,42 +376,45 @@ class RouterController(ControllerBase):
     @rest_command
     def get_data(self, req, switch_id, **_kwargs):
         return self._access_router(switch_id, VLANID_NONE,
-                                   'get_data', req.body)
+                                   'get_data', req)
 
     # GET /router/{switch_id}/{vlan_id}
     @rest_command
     def get_vlan_data(self, req, switch_id, vlan_id, **_kwargs):
         return self._access_router(switch_id, vlan_id,
-                                   'get_data', req.body)
+                                   'get_data', req)
 
     # POST /router/{switch_id}
     @rest_command
     def set_data(self, req, switch_id, **_kwargs):
         return self._access_router(switch_id, VLANID_NONE,
-                                   'set_data', req.body)
+                                   'set_data', req)
 
     # POST /router/{switch_id}/{vlan_id}
     @rest_command
     def set_vlan_data(self, req, switch_id, vlan_id, **_kwargs):
         return self._access_router(switch_id, vlan_id,
-                                   'set_data', req.body)
+                                   'set_data', req)
 
     # DELETE /router/{switch_id}
     @rest_command
     def delete_data(self, req, switch_id, **_kwargs):
         return self._access_router(switch_id, VLANID_NONE,
-                                   'delete_data', req.body)
+                                   'delete_data', req)
 
     # DELETE /router/{switch_id}/{vlan_id}
     @rest_command
     def delete_vlan_data(self, req, switch_id, vlan_id, **_kwargs):
         return self._access_router(switch_id, vlan_id,
-                                   'delete_data', req.body)
+                                   'delete_data', req)
 
-    def _access_router(self, switch_id, vlan_id, func, rest_param):
+    def _access_router(self, switch_id, vlan_id, func, req):
         rest_message = []
         routers = self._get_router(switch_id)
-        param = json.loads(rest_param) if rest_param else {}
+        try:
+            param = req.json if req.body else {}
+        except ValueError:
+            raise SyntaxError('invalid syntax %s', req.body)
         for router in routers.values():
             function = getattr(router, func)
             data = function(vlan_id, param, self.waiters)

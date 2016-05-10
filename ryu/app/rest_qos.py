@@ -506,8 +506,8 @@ class QoSController(ControllerBase):
 
     def _access_switch(self, req, switchid, vlan_id, func, waiters):
         try:
-            rest = json.loads(req.body) if req.body else {}
-        except SyntaxError:
+            rest = req.json if req.body else {}
+        except ValueError:
             QoSController._LOGGER.debug('invalid syntax %s', req.body)
             return Response(status=400)
 
