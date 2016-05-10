@@ -30,7 +30,7 @@
 #    under the License.
 
 
-import inspect
+import importlib
 import logging
 import os
 import sys
@@ -77,21 +77,27 @@ def _find_loaded_module(modpath):
 
 def import_module(modname):
     try:
-        __import__(modname)
-    except:
+        # Import module with python module path
+        # e.g.) modname = 'module.path.module_name'
+        return importlib.import_module(modname)
+    except (ImportError, TypeError):
+        # In this block, we retry to import module when modname is filename
+        # e.g.) modname = 'module/path/module_name.py'
         abspath = os.path.abspath(modname)
+        # Check if specified modname is already imported
         mod = _find_loaded_module(abspath)
         if mod:
             return mod
-        opath = sys.path
+        # Backup original sys.path before appending path to file
+        original_path = list(sys.path)
         sys.path.append(os.path.dirname(abspath))
-        name = os.path.basename(modname)
-        if name.endswith('.py'):
-            name = name[:-3]
-        __import__(name)
-        sys.path = opath
-        return sys.modules[name]
-    return sys.modules[modname]
+        # Remove python suffix
+        name = chop_py_suffix(os.path.basename(modname))
+        # Retry to import
+        mod = importlib.import_module(name)
+        # Restore sys.path
+        sys.path = original_path
+        return mod
 
 
 def round_up(x, y):
