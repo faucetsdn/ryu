@@ -101,22 +101,6 @@ def action_to_str(act):
     return s
 
 
-def _remove(d, names):
-    def f(x):
-        return _remove(x, names)
-
-    if isinstance(d, list):
-        return list(map(f, d))
-    if isinstance(d, dict):
-        d2 = {}
-        for k, v in d.items():
-            if k in names:
-                continue
-            d2[k] = f(v)
-        return d2
-    return d
-
-
 def instructions_to_str(instructions):
 
     s = []
@@ -148,7 +132,7 @@ def to_match(dp, attrs):
                'eth_dst': ofctl_utils.to_match_eth,
                'eth_src': ofctl_utils.to_match_eth,
                'eth_type': int,
-               'vlan_vid': ofctl_utils.to_match_vid,
+               'vlan_vid': to_match_vid,
                'vlan_pcp': int,
                'ip_dscp': int,
                'ip_ecn': int,
@@ -181,7 +165,17 @@ def to_match(dp, attrs):
                'mpls_bos': int,
                'pbb_isid': ofctl_utils.to_match_masked_int,
                'tunnel_id': ofctl_utils.to_match_masked_int,
-               'ipv6_exthdr': ofctl_utils.to_match_masked_int}
+               'ipv6_exthdr': ofctl_utils.to_match_masked_int,
+               'pbb_uca': int,
+               }
+
+    keys = {'dl_dst': 'eth_dst',
+            'dl_src': 'eth_src',
+            'dl_type': 'eth_type',
+            'dl_vlan': 'vlan_vid',
+            'nw_src': 'ipv4_src',
+            'nw_dst': 'ipv4_dst',
+            'nw_proto': 'ip_proto'}
 
     if attrs.get('eth_type') == ether.ETH_TYPE_ARP:
         if 'ipv4_src' in attrs and 'arp_spa' not in attrs:
@@ -193,6 +187,9 @@ def to_match(dp, attrs):
 
     kwargs = {}
     for key, value in attrs.items():
+        if key in keys:
+            # For old field name
+            key = keys[key]
         if key in convert:
             value = convert[key](value)
             kwargs[key] = value
@@ -229,7 +226,14 @@ def match_to_str(ofmatch):
     return match
 
 
-def get_desc_stats(dp, waiters):
+def wrap_dpid_dict(dp, value, to_user=True):
+    if to_user:
+        return {str(dp.id): value}
+
+    return {dp.id: value}
+
+
+def get_desc_stats(dp, waiters, to_user=True):
     stats = dp.ofproto_parser.OFPDescStatsRequest(dp, 0)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
@@ -238,11 +242,11 @@ def get_desc_stats(dp, waiters):
     for msg in msgs:
         stats = msg.body
         s = stats.to_jsondict()[stats.__class__.__name__]
-    desc = {str(dp.id): s}
-    return desc
+
+    return wrap_dpid_dict(dp, s, to_user)
 
 
-def get_queue_stats(dp, waiters, port_no=None, queue_id=None):
+def get_queue_stats(dp, waiters, port_no=None, queue_id=None, to_user=True):
     if port_no is None:
         port_no = dp.ofproto.OFPP_ANY
     else:
@@ -265,16 +269,17 @@ def get_queue_stats(dp, waiters, port_no=None, queue_id=None):
             properties = []
             for prop in stat.properties:
                 p = prop.to_jsondict()[prop.__class__.__name__]
-                t = UTIL.ofp_queue_stats_prop_type_to_user(prop.type)
-                p['type'] = t if t != p['type'] else 'UNKNOWN'
+                if to_user:
+                    t = UTIL.ofp_queue_stats_prop_type_to_user(prop.type)
+                    p['type'] = t if t != p['type'] else 'UNKNOWN'
                 properties.append(p)
             s['properties'] = properties
             desc.append(s)
-    desc = {str(dp.id): desc}
-    return desc
+
+    return wrap_dpid_dict(dp, desc, to_user)
 
 
-def get_queue_desc(dp, waiters, port_no=None, queue_id=None):
+def get_queue_desc(dp, waiters, port_no=None, queue_id=None, to_user=True):
     if port_no is None:
         port_no = dp.ofproto.OFPP_ANY
     else:
@@ -296,17 +301,17 @@ def get_queue_desc(dp, waiters, port_no=None, queue_id=None):
             prop_list = []
             for prop in queue.properties:
                 p = prop.to_jsondict()[prop.__class__.__name__]
-                t = UTIL.ofp_queue_desc_prop_type_to_user(prop.type)
-                p['type'] = t if t != prop.type else 'UNKNOWN'
+                if to_user:
+                    t = UTIL.ofp_queue_desc_prop_type_to_user(prop.type)
+                    p['type'] = t if t != prop.type else 'UNKNOWN'
                 prop_list.append(p)
             q['properties'] = prop_list
             configs.append(q)
-    configs = {str(dp.id): configs}
 
-    return configs
+    return wrap_dpid_dict(dp, configs, to_user)
 
 
-def get_flow_stats(dp, waiters, flow=None):
+def get_flow_stats(dp, waiters, flow=None, to_user=True):
     flow = flow if flow else {}
     table_id = UTIL.ofp_table_from_user(
         flow.get('table_id', dp.ofproto.OFPTT_ALL))
@@ -333,12 +338,11 @@ def get_flow_stats(dp, waiters, flow=None):
             s['instructions'] = instructions_to_str(stats.instructions)
             s['match'] = match_to_str(stats.match)
             flows.append(s)
-    flows = {str(dp.id): flows}
 
-    return flows
+    return wrap_dpid_dict(dp, flows, to_user)
 
 
-def get_aggregate_flow_stats(dp, waiters, flow=None):
+def get_aggregate_flow_stats(dp, waiters, flow=None, to_user=True):
     flow = flow if flow else {}
     table_id = UTIL.ofp_table_from_user(
         flow.get('table_id', dp.ofproto.OFPTT_ALL))
@@ -363,12 +367,11 @@ def get_aggregate_flow_stats(dp, waiters, flow=None):
         stats = msg.body
         s = stats.to_jsondict()[stats.__class__.__name__]
         flows.append(s)
-    flows = {str(dp.id): flows}
 
-    return flows
+    return wrap_dpid_dict(dp, flows, to_user)
 
 
-def get_table_stats(dp, waiters):
+def get_table_stats(dp, waiters, to_user=True):
     stats = dp.ofproto_parser.OFPTableStatsRequest(dp, 0)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
@@ -378,13 +381,16 @@ def get_table_stats(dp, waiters):
         stats = msg.body
         for stat in stats:
             s = stat.to_jsondict()[stat.__class__.__name__]
+
+            if to_user:
+                s['table_id'] = UTIL.ofp_table_to_user(stat.table_id)
+
             tables.append(s)
-    desc = {str(dp.id): tables}
 
-    return desc
+    return wrap_dpid_dict(dp, tables, to_user)
 
 
-def get_table_features(dp, waiters):
+def get_table_features(dp, waiters, to_user=True):
     stats = dp.ofproto_parser.OFPTableFeaturesStatsRequest(dp, 0, [])
     msgs = []
     ofproto = dp.ofproto
@@ -451,13 +457,16 @@ def get_table_features(dp, waiters):
                 properties.append(p)
             s['name'] = stat.name.decode('utf-8')
             s['properties'] = properties
+
+            if to_user:
+                s['table_id'] = UTIL.ofp_table_to_user(stat.table_id)
+
             tables.append(s)
-    desc = {str(dp.id): tables}
 
-    return desc
+    return wrap_dpid_dict(dp, tables, to_user)
 
 
-def get_port_stats(dp, waiters, port_no=None):
+def get_port_stats(dp, waiters, port_no=None, to_user=True):
     if port_no is None:
         port_no = dp.ofproto.OFPP_ANY
     else:
@@ -478,12 +487,16 @@ def get_port_stats(dp, waiters, port_no=None):
                 p['type'] = t if t != prop.type else 'UNKNOWN'
                 properties.append(p)
             s['properties'] = properties
+
+            if to_user:
+                s['port_no'] = UTIL.ofp_port_to_user(stats.port_no)
+
             ports.append(s)
-    ports = {str(dp.id): ports}
-    return ports
+
+    return wrap_dpid_dict(dp, ports, to_user)
 
 
-def get_meter_stats(dp, waiters, meter_id=None):
+def get_meter_stats(dp, waiters, meter_id=None, to_user=True):
     if meter_id is None:
         meter_id = dp.ofproto.OFPM_ALL
     else:
@@ -503,12 +516,16 @@ def get_meter_stats(dp, waiters, meter_id=None):
                 b = band.to_jsondict()[band.__class__.__name__]
                 bands.append(b)
             s['band_stats'] = bands
+
+            if to_user:
+                s['meter_id'] = UTIL.ofp_meter_to_user(stats.meter_id)
+
             meters.append(s)
-    meters = {str(dp.id): meters}
-    return meters
+
+    return wrap_dpid_dict(dp, meters, to_user)
 
 
-def get_meter_features(dp, waiters):
+def get_meter_features(dp, waiters, to_user=True):
     ofp = dp.ofproto
     type_convert = {ofp.OFPMBT_DROP: 'DROP',
                     ofp.OFPMBT_DSCP_REMARK: 'DSCP_REMARK'}
@@ -528,22 +545,34 @@ def get_meter_features(dp, waiters):
             band_types = []
             for k, v in type_convert.items():
                 if (1 << k) & feature.band_types:
-                    band_types.append(v)
+
+                    if to_user:
+                        band_types.append(v)
+
+                    else:
+                        band_types.append(k)
+
             capabilities = []
             for k, v in sorted(capa_convert.items()):
                 if k & feature.capabilities:
-                    capabilities.append(v)
+
+                    if to_user:
+                        capabilities.append(v)
+
+                    else:
+                        capabilities.append(k)
+
             f = {'max_meter': feature.max_meter,
                  'band_types': band_types,
                  'capabilities': capabilities,
                  'max_bands': feature.max_bands,
                  'max_color': feature.max_color}
             features.append(f)
-    features = {str(dp.id): features}
-    return features
+
+    return wrap_dpid_dict(dp, features, to_user)
 
 
-def get_meter_config(dp, waiters, meter_id=None):
+def get_meter_config(dp, waiters, meter_id=None, to_user=True):
     flags = {dp.ofproto.OFPMF_KBPS: 'KBPS',
              dp.ofproto.OFPMF_PKTPS: 'PKTPS',
              dp.ofproto.OFPMF_BURST: 'BURST',
@@ -566,21 +595,33 @@ def get_meter_config(dp, waiters, meter_id=None):
             bands = []
             for band in config.bands:
                 b = band.to_jsondict()[band.__class__.__name__]
-                t = UTIL.ofp_meter_band_type_to_user(band.type)
-                b['type'] = t if t != band.type else 'UNKNOWN'
+
+                if to_user:
+                    t = UTIL.ofp_meter_band_type_to_user(band.type)
+                    b['type'] = t if t != band.type else 'UNKNOWN'
+
                 bands.append(b)
             c_flags = []
             for k, v in sorted(flags.items()):
                 if k & config.flags:
-                    c_flags.append(v)
+                    if to_user:
+                        c_flags.append(v)
+
+                    else:
+                        c_flags.append(k)
+
             c['flags'] = c_flags
             c['bands'] = bands
+
+            if to_user:
+                c['meter_id'] = UTIL.ofp_meter_to_user(config.meter_id)
+
             configs.append(c)
-    configs = {str(dp.id): configs}
-    return configs
+
+    return wrap_dpid_dict(dp, configs, to_user)
 
 
-def get_group_stats(dp, waiters, group_id=None):
+def get_group_stats(dp, waiters, group_id=None, to_user=True):
     if group_id is None:
         group_id = dp.ofproto.OFPG_ALL
     else:
@@ -600,12 +641,16 @@ def get_group_stats(dp, waiters, group_id=None):
                 c = bucket_stat.to_jsondict()[bucket_stat.__class__.__name__]
                 bucket_stats.append(c)
             g['bucket_stats'] = bucket_stats
+
+            if to_user:
+                g['group_id'] = UTIL.ofp_group_to_user(stats.group_id)
+
             groups.append(g)
-    groups = {str(dp.id): groups}
-    return groups
+
+    return wrap_dpid_dict(dp, groups, to_user)
 
 
-def get_group_features(dp, waiters):
+def get_group_features(dp, waiters, to_user=True):
 
     ofp = dp.ofproto
     type_convert = {ofp.OFPGT_ALL: 'ALL',
@@ -645,31 +690,56 @@ def get_group_features(dp, waiters):
         types = []
         for k, v in type_convert.items():
             if (1 << k) & feature.types:
-                types.append(v)
+                if to_user:
+                    types.append(v)
+
+                else:
+                    types.append(k)
+
         capabilities = []
         for k, v in cap_convert.items():
             if k & feature.capabilities:
-                capabilities.append(v)
-        max_groups = []
-        for k, v in type_convert.items():
-            max_groups.append({v: feature.max_groups[k]})
+                if to_user:
+                    capabilities.append(v)
+
+                else:
+                    capabilities.append(k)
+
+        if to_user:
+            max_groups = []
+            for k, v in type_convert.items():
+                max_groups.append({v: feature.max_groups[k]})
+
+        else:
+            max_groups = feature.max_groups
+
         actions = []
         for k1, v1 in type_convert.items():
             acts = []
             for k2, v2 in act_convert.items():
                 if (1 << k2) & feature.actions[k1]:
-                    acts.append(v2)
-            actions.append({v1: acts})
+                    if to_user:
+                        acts.append(v2)
+
+                    else:
+                        acts.append(k2)
+
+            if to_user:
+                actions.append({v1: acts})
+
+            else:
+                actions.append({k1: acts})
+
         f = {'types': types,
              'capabilities': capabilities,
              'max_groups': max_groups,
              'actions': actions}
         features.append(f)
-    features = {str(dp.id): features}
-    return features
+
+    return wrap_dpid_dict(dp, features, to_user)
 
 
-def get_group_desc(dp, waiters):
+def get_group_desc(dp, waiters, to_user=True):
     stats = dp.ofproto_parser.OFPGroupDescStatsRequest(dp, 0)
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
@@ -683,18 +753,26 @@ def get_group_desc(dp, waiters):
                 b = bucket.to_jsondict()[bucket.__class__.__name__]
                 actions = []
                 for action in bucket.actions:
-                    actions.append(action_to_str(action))
+                    if to_user:
+                        actions.append(action_to_str(action))
+
+                    else:
+                        actions.append(action)
                 b['actions'] = actions
                 buckets.append(b)
-            t = UTIL.ofp_group_type_to_user(stats.type)
-            d['type'] = t if t != stats.type else 'UNKNOWN'
+
             d['buckets'] = buckets
+            if to_user:
+                d['group_id'] = UTIL.ofp_group_to_user(stats.group_id)
+                t = UTIL.ofp_group_type_to_user(stats.type)
+                d['type'] = t if t != stats.type else 'UNKNOWN'
+
             descs.append(d)
-    descs = {str(dp.id): descs}
-    return descs
+
+    return wrap_dpid_dict(dp, descs, to_user)
 
 
-def get_port_desc(dp, waiters, port_no=None):
+def get_port_desc(dp, waiters, port_no=None, to_user=True):
     if port_no is None:
         port_no = dp.ofproto.OFPP_ANY
     else:
@@ -713,14 +791,21 @@ def get_port_desc(dp, waiters, port_no=None):
             properties = []
             for prop in stat.properties:
                 p = prop.to_jsondict()[prop.__class__.__name__]
-                t = UTIL.ofp_port_desc_prop_type_to_user(prop.type)
-                p['type'] = t if t != prop.type else 'UNKNOWN'
+
+                if to_user:
+                    t = UTIL.ofp_port_desc_prop_type_to_user(prop.type)
+                    p['type'] = t if t != prop.type else 'UNKNOWN'
+
                 properties.append(p)
             d['name'] = stat.name.decode('utf-8')
             d['properties'] = properties
+
+            if to_user:
+                d['port_no'] = UTIL.ofp_port_to_user(stat.port_no)
+
             descs.append(d)
-    descs = {str(dp.id): descs}
-    return descs
+
+    return wrap_dpid_dict(dp, descs, to_user)
 
 
 def mod_flow_entry(dp, flow, cmd):
@@ -771,19 +856,20 @@ def mod_meter_entry(dp, meter, cmd):
         rate = int(band.get('rate', 0))
         burst_size = int(band.get('burst_size', 0))
         if band_type == 'DROP':
-            b = dp.ofproto_parser.OFPMeterBandDrop(rate, burst_size)
+            bands.append(
+                dp.ofproto_parser.OFPMeterBandDrop(rate, burst_size))
         elif band_type == 'DSCP_REMARK':
             prec_level = int(band.get('prec_level', 0))
-            b = dp.ofproto_parser.OFPMeterBandDscpRemark(
-                rate, burst_size, prec_level)
+            bands.append(
+                dp.ofproto_parser.OFPMeterBandDscpRemark(
+                    rate, burst_size, prec_level))
         elif band_type == 'EXPERIMENTER':
             experimenter = int(band.get('experimenter', 0))
-            b = dp.ofproto_parser.OFPMeterBandExperimenter(
-                rate, burst_size, experimenter)
+            bands.append(
+                dp.ofproto_parser.OFPMeterBandExperimenter(
+                    rate, burst_size, experimenter))
         else:
             LOG.error('Unknown band type: %s', band_type)
-            continue
-        bands.append(b)
 
     meter_mod = dp.ofproto_parser.OFPMeterMod(
         dp, cmd, flags, meter_id, bands)
@@ -810,9 +896,8 @@ def mod_group_entry(dp, group, cmd):
             action = to_action(dp, dic)
             if action is not None:
                 actions.append(action)
-        b = dp.ofproto_parser.OFPBucket(
-            weight, watch_port, watch_group, actions)
-        buckets.append(b)
+        buckets.append(dp.ofproto_parser.OFPBucket(
+            weight, watch_port, watch_group, actions))
 
     group_mod = dp.ofproto_parser.OFPGroupMod(
         dp, cmd, group_type, group_id, buckets)
@@ -835,24 +920,20 @@ def mod_port_behavior(dp, port_config):
         length = None
         if type_ == ofp.OFPPDPT_ETHERNET:
             advertise = UTIL.ofp_port_features_from_user(p['advertise'])
-            m = parser.OFPPortModPropEthernet(type_, length,
-                                              advertise)
+            prop.append(
+                parser.OFPPortModPropEthernet(type_, length, advertise))
         elif type_ == ofp.OFPPDPT_OPTICAL:
-            m = parser.OFPPortModPropOptical(type_, length,
-                                             p['configure'],
-                                             p['freq_lmda'],
-                                             p['fl_offset'],
-                                             p['grid_span'],
-                                             p['tx_pwr'])
+            prop.append(
+                parser.OFPPortModPropOptical(
+                    type_, length, p['configure'], p['freq_lmda'],
+                    p['fl_offset'], p['grid_span'], p['tx_pwr']))
         elif type_ == ofp.OFPPDPT_EXPERIMENTER:
-            m = parser.OFPPortModPropExperimenter(type_, length,
-                                                  p['experimenter'],
-                                                  p['exp_type'],
-                                                  p['data'])
+            prop.append(
+                parser.OFPPortModPropExperimenter(
+                    type_, length, p['experimenter'], p['exp_type'],
+                    p['data']))
         else:
             LOG.error('Unknown port desc prop type: %s', type_)
-            continue
-        prop.append(m)
 
     port_mod = dp.ofproto_parser.OFPPortMod(
         dp, port_no, hw_addr, config, mask, prop)
