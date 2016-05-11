@@ -238,7 +238,7 @@ class OFCtlUtil(object):
             'OFPQCFC_EPERM']
 
     def _reserved_num_from_user(self, num, prefix):
-        if isinstance(num, int):
+        if isinstance(num, int) or isinstance(num, long):
             return num
         else:
             if num.startswith(prefix):
