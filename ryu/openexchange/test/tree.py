@@ -54,7 +54,7 @@ def createTopo():
 
     logging.debug("Start Mininet")
     CONTROLLER_IP = "127.0.0.1"
-    CONTROLLER_PORT = 6677
+    CONTROLLER_PORT = 6633
     net = Mininet(topo=topo, link=TCLink, controller=None)
     net.addController(
         'controller', controller=RemoteController,
