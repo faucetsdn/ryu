@@ -87,10 +87,15 @@ supported_ofctl = {
 #       e.g. GET /stats/queue/1/ALL/1
 #
 # get queues config stats of the switch
-# GET /stats/queueconfig/<dpid>/<port>
+# GET /stats/queueconfig/<dpid>[/<port>]
+# Note: Specification of port number is optional
 #
 # get queues desc stats of the switch
-# GET /stats/queuedesc/<dpid>/<port>/<queue>
+# GET /stats/queuedesc/<dpid>[/<port>[/<queue_id>]]
+# Note: Specification of port number and queue id are optional
+#       If you want to omitting the port number and setting the queue id,
+#       please specify the keyword "ALL" to the port number
+#       e.g. GET /stats/queuedesc/1/ALL/1
 #
 # get meter features stats of the switch
 # GET /stats/meterfeatures/<dpid>
@@ -529,9 +534,24 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_queue_stats',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/queueconfig/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_config',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/queueconfig/{dpid}/{port}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_queue_config',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/queuedesc/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_desc',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/queuedesc/{dpid}/{port}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_queue_desc',
                        conditions=dict(method=['GET']))
 
         uri = path + '/queuedesc/{dpid}/{port}/{queue}'
