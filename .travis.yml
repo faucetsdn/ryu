@@ -10,9 +10,12 @@ env:
   - TOX_ENV=pep8
 
 install:
-  - "pip install tox"
+  - pip install tox coveralls
 
 script:
   - NOSE_VERBOSE=0 tox -e $TOX_ENV
+
+after_success:
+  - coveralls
 
 sudo: false
