@@ -158,9 +158,9 @@ class Network_Aware(app_manager.RyuApp):
         self.create_interior_links(links)
         self.create_access_ports()
         self.get_graph(self.link_to_port.keys())
+        self.get_shortest_paths()
 
-    @set_ev_cls(events)
-    def get_shortest_paths(self, ev):
+    def get_shortest_paths(self):
         self.shortest_paths = self.floyd_dict(self.graph)
         return self.shortest_paths
 
