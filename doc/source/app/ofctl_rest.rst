@@ -1664,7 +1664,7 @@ Get meters stats
 .. _get-meter-config-stats:
 
 Get meter config stats
-------------------------
+----------------------
 Get meter description stats
 ---------------------------
 
@@ -1820,9 +1820,9 @@ Add a flow entry
 
     Request message body(Openflow1.4 or later):
 
-        ============= ===================================================== =============================== ===============
+        ============= ===================================================== ================================ ===============
         Attribute     Description                                           Example                          Default
-        ============= ===================================================== =============================== ===============
+        ============= ===================================================== ================================ ===============
         dpid          Datapath ID (int)                                     1                                (Mandatory)
         cookie        Opaque controller-issued identifier (int)             1                                0
         cookie_mask   Mask used to restrict the cookie bits (int)           1                                0
@@ -2555,7 +2555,7 @@ Send a experimenter message
 .. _description-of-match-and-actions:
 
 Reference: Description of Match and Actions
-============================================
+===========================================
 
 Description of Match on request messages
 ----------------------------------------
@@ -2636,7 +2636,7 @@ Description of Match on request messages
         tunnel_id       Logical Port Metadata (int or string)              {"tunnel_id": 7} or {"tunnel_id": "0x07/0xff"}
                         (Openflow1.3+)
         ipv6_exthdr     IPv6 Extension Header pseudo-field (int or string) {"ipv6_exthdr": 3, "eth_type": 34525} or {"ipv6_exthdr": "0x40/0x1F0", "eth_type": 34525}
-                        (Openflow1.3+) 
+                        (Openflow1.3+)
         pbb_uca         PBB UCA hander field(int)                          {"pbb_uca": 1, "eth_type": 35047}
                         (Openflow1.4+)
         tcp_flags       TCP flags(int)                                     {"tcp_flags": 2, "ip_proto": 6, "eth_type": 2048}
@@ -2826,19 +2826,20 @@ Example of set-field action
             "match":{
                 "dl_type": "0x8000"
             },
-	        "actions":[
-	            {
-	                "type": "PUSH_VLAN",     # Push a new VLAN tag if a input frame is non-VLAN-tagged
-	                "ethertype": 33024       # Ethertype 0x8100(=33024): IEEE 802.1Q VLAN-tagged frame
-	            },
-	            {
-	                "type": "SET_FIELD",
-	                "field": "vlan_vid",     # Set VLAN ID
-	                "value": 4102            # Describe sum of vlan_id(e.g. 6) | OFPVID_PRESENT(0x1000=4096)
-	            },
-	            {
-	                "type": "OUTPUT",
-	                "port": 2
-	            }
-	        ]
+            "actions":[
+                {
+                    "type": "PUSH_VLAN",     # Push a new VLAN tag if a input frame is non-VLAN-tagged
+                    "ethertype": 33024       # Ethertype 0x8100(=33024): IEEE 802.1Q VLAN-tagged frame
+                },
+                {
+                    "type": "SET_FIELD",
+                    "field": "vlan_vid",     # Set VLAN ID
+                    "value": 4102            # Describe sum of vlan_id(e.g. 6) | OFPVID_PRESENT(0x1000=4096)
+                },
+                {
+                    "type": "OUTPUT",
+                    "port": 2
+                }
+            ]
          }' http://localhost:8080/stats/flowentry/add
+

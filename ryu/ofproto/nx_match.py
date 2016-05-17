@@ -1240,9 +1240,9 @@ The API of this class is the same as ``OFPMatch``.
 You can define the flow match by the keyword arguments.
 The following arguments are available.
 
-================ =============== ==================================
+================ =============== ==============================================
 Argument         Value           Description
-================ =============== ==================================
+================ =============== ==============================================
 eth_dst_nxm      MAC address     Ethernet destination address.
 eth_src_nxm      MAC address     Ethernet source address.
 eth_type_nxm     Integer 16bit   Ethernet type.  Needed to support Nicira
@@ -1256,8 +1256,8 @@ tun_ipv4_src     IPv4 address    Tunnel IPv4 source address.
 tun_ipv4_dst     IPv4 address    Tunnel IPv4 destination address.
 pkt_mark         Integer 32bit   Packet metadata mark.
 tcp_flags_nxm    Integer 16bit   TCP Flags.  Requires setting fields:
-                                 eth_type_nxm = |IP or IPv6| and
-                                 ip_proto_nxm = TCP
+                                 eth_type_nxm = [0x0800 (IP)|0x86dd (IPv6)] and
+                                 ip_proto_nxm = 6 (TCP)
 conj_id          Integer 32bit   Conjunction ID used only with
                                  the conjunction action
 ct_state         Integer 32bit   Conntrack state.
@@ -1267,27 +1267,30 @@ ct_label         Integer 128bit  Conntrack label.
 _dp_hash         Integer 32bit   Flow hash computed in Datapath.
 reg<idx>         Integer 32bit   Packet register.
                                  <idx> is register number 0-7.
-================ =============== ==================================
+================ =============== ==============================================
 
-Example:: Setting the TCP flags via the nicira extensions.
-          This is required when using OVS version < 2.4.
+.. Note::
 
-          When using the nxm fields, you need to use any nxm prereq
-          fields as well or you will receive a OFPBMC_BAD_PREREQ error
+    Setting the TCP flags via the nicira extensions.
+    This is required when using OVS version < 2.4.
+    When using the nxm fields, you need to use any nxm prereq
+    fields as well or you will receive a OFPBMC_BAD_PREREQ error
 
-    # WILL NOT work
-    flag = tcp.TCP_ACK
-    match = parser.OFPMatch(
-        tcp_flags_nxm=(flag, flag),
-        ip_proto=inet.IPPROTO_TCP,
-        eth_type=eth_type)
+    Example::
 
-    # works
-    flag = tcp.TCP_ACK
-    match = parser.OFPMatch(
-        tcp_flags_nxm=(flag, flag),
-        ip_proto_nxm=inet.IPPROTO_TCP,
-        eth_type_nxm=eth_type)
+        # WILL NOT work
+        flag = tcp.TCP_ACK
+        match = parser.OFPMatch(
+            tcp_flags_nxm=(flag, flag),
+            ip_proto=inet.IPPROTO_TCP,
+            eth_type=eth_type)
+
+        # Works
+        flag = tcp.TCP_ACK
+        match = parser.OFPMatch(
+            tcp_flags_nxm=(flag, flag),
+            ip_proto_nxm=inet.IPPROTO_TCP,
+            eth_type_nxm=eth_type)
 """
 
 oxm_types = [

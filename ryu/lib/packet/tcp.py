@@ -98,11 +98,11 @@ class tcp(packet_base.PacketBase):
 
         returns boolean if all passed flags is set
 
-        eg.
+        Example::
 
-        # Check if this is a syn+ack
-        if pkt.has_flags(tcp.TCP_SYN, tcp.TCP_ACK):
-            ...
+            >>> pkt = tcp.tcp(bits=(tcp.TCP_SYN | tcp.TCP_ACK))
+            >>> pkt.has_flags(tcp.TCP_SYN, tcp.TCP_ACK)
+            True
         """
 
         mask = sum(flags)
