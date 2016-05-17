@@ -125,6 +125,56 @@ def _deactivate(method):
 
 
 class Datapath(ofproto_protocol.ProtocolDesc):
+    """
+    A class to describe an OpenFlow switch connected to this controller.
+
+    An instance has the following attributes.
+
+    .. tabularcolumns:: |l|L|
+
+    ==================================== ======================================
+    Attribute                            Description
+    ==================================== ======================================
+    id                                   64-bit OpenFlow Datapath ID.
+                                         Only available for
+                                         ryu.controller.handler.MAIN_DISPATCHER
+                                         phase.
+    ofproto                              A module which exports OpenFlow
+                                         definitions, mainly constants appeared
+                                         in the specification, for the
+                                         negotiated OpenFlow version.  For
+                                         example, ryu.ofproto.ofproto_v1_0 for
+                                         OpenFlow 1.0.
+    ofproto_parser                       A module which exports OpenFlow wire
+                                         message encoder and decoder for the
+                                         negotiated OpenFlow version.
+                                         For example,
+                                         ryu.ofproto.ofproto_v1_0_parser
+                                         for OpenFlow 1.0.
+    ofproto_parser.OFPxxxx(datapath,...) A callable to prepare an OpenFlow
+                                         message for the given switch.  It can
+                                         be sent with Datapath.send_msg later.
+                                         xxxx is a name of the message.  For
+                                         example OFPFlowMod for flow-mod
+                                         message.  Arguemnts depend on the
+                                         message.
+    set_xid(self, msg)                   Generate an OpenFlow XID and put it
+                                         in msg.xid.
+    send_msg(self, msg)                  Queue an OpenFlow message to send to
+                                         the corresponding switch.  If msg.xid
+                                         is None, set_xid is automatically
+                                         called on the message before queueing.
+    send_packet_out                      deprecated
+    send_flow_mod                        deprecated
+    send_flow_del                        deprecated
+    send_delete_all_flows                deprecated
+    send_barrier                         Queue an OpenFlow barrier message to
+                                         send to the switch.
+    send_nxt_set_flow_format             deprecated
+    is_reserved_port                     deprecated
+    ==================================== ======================================
+    """
+
     def __init__(self, socket, address):
         super(Datapath, self).__init__()
 

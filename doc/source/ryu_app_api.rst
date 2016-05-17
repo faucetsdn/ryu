@@ -82,20 +82,10 @@ For example, EventOFPPacketIn for packet-in message.
 The OpenFlow controller part of Ryu automatically decodes OpenFlow messages
 received from switches and send these events to Ryu applications which
 expressed an interest using ryu.controller.handler.set_ev_cls.
-OpenFlow event classes have at least the following attributes.
+OpenFlow event classes are subclass of the following class.
 
-.. tabularcolumns:: |l|L|
+.. autoclass:: ryu.controller.ofp_event.EventOFPMsgBase
 
-============ =============================================================
-Attribute    Description
-============ =============================================================
-msg          An object which describes the corresponding OpenFlow message.
-msg.datapath A ryu.controller.controller.Datapath instance which describes
-             an OpenFlow switch from which we received this OpenFlow message.
-============ =============================================================
-
-The msg object has some more additional members whose values are extracted
-from the original OpenFlow message.
 See :ref:`ofproto_ref` for more info about OpenFlow messages.
 
 ryu.base.app_manager.RyuApp
@@ -103,97 +93,30 @@ ryu.base.app_manager.RyuApp
 
 See :ref:`api_ref`.
 
-ryu.controller.handler.set_ev_cls(ev_cls, dispatchers=None)
-===========================================================
+ryu.controller.handler.set_ev_cls
+=================================
 
-A decorator for Ryu application to declare an event handler.
-Decorated method will become an event handler.
-ev_cls is an event class whose instances this RyuApp wants to receive.
-dispatchers argument specifies one of the following negotiation phases
-(or a list of them) for which events should be generated for this handler.
-Note that, in case an event changes the phase, the phase before the change
-is used to check the interest.
-
-.. tabularcolumns:: |l|L|
-
-=========================================== ==================================
-Negotiation phase                           Description
-=========================================== ==================================
-ryu.controller.handler.HANDSHAKE_DISPATCHER Sending and waiting for hello
-                                            message
-ryu.controller.handler.CONFIG_DISPATCHER    Version negotiated and sent
-                                            features-request message
-ryu.controller.handler.MAIN_DISPATCHER      Switch-features message received
-                                            and sent set-config message
-ryu.controller.handler.DEAD_DISPATCHER      Disconnect from the peer.  Or
-                                            disconnecting due to some
-                                            unrecoverable errors.
-=========================================== ==================================
+.. autofunction:: ryu.controller.handler.set_ev_cls
 
 ryu.controller.controller.Datapath
 ==================================
 
-A class to describe an OpenFlow switch connected to this controller.
-An instance has the following attributes.
-
-.. tabularcolumns:: |l|L|
-
-====================================== =======================================
-Attribute                              Description
-====================================== =======================================
-id                                     64-bit OpenFlow Datapath ID.
-                                       Only available for
-                                       ryu.controller.handler.MAIN_DISPATCHER
-                                       phase.
-ofproto                                A module which exports OpenFlow
-                                       definitions, mainly constants appeared
-                                       in the specification, for the
-                                       negotiated OpenFlow version.  For
-                                       example, ryu.ofproto.ofproto_v1_0 for
-                                       OpenFlow 1.0.
-ofproto_parser                         A module which exports OpenFlow wire
-                                       message encoder and decoder for the
-                                       negotiated OpenFlow version.  For
-                                       example, ryu.ofproto.ofproto_v1_0_parser
-                                       for OpenFlow 1.0.
-ofproto_parser.OFPxxxx(datapath, ....) A callable to prepare an OpenFlow
-                                       message for the given switch.  It can
-                                       be sent with Datapath.send_msg later.
-                                       xxxx is a name of the message.  For
-                                       example OFPFlowMod for flow-mod
-                                       message.  Arguemnts depend on the
-                                       message.
-set_xid(self, msg)                     Generate an OpenFlow XID and put it
-                                       in msg.xid.
-send_msg(self, msg)                    Queue an OpenFlow message to send to
-                                       the corresponding switch.  If msg.xid
-                                       is None, set_xid is automatically
-                                       called on the message before queueing.
-send_packet_out                        deprecated
-send_flow_mod                          deprecated
-send_flow_del                          deprecated
-send_delete_all_flows                  deprecated
-send_barrier                           Queue an OpenFlow barrier message to
-                                       send to the switch.
-send_nxt_set_flow_format               deprecated
-is_reserved_port                       deprecated
-====================================== =======================================
+.. autoclass:: ryu.controller.controller.Datapath
 
 ryu.controller.event.EventBase
 ==============================
 
-The base of all event classes.
-A Ryu application can define its own event type by creating a subclass.
+.. autoclass:: ryu.controller.event.EventBase
 
 ryu.controller.event.EventRequestBase
 =====================================
 
-The base class for synchronous request for RyuApp.send_request.
+.. autoclass:: ryu.controller.event.EventRequestBase
 
 ryu.controller.event.EventReplyBase
 ===================================
 
-The base class for synchronous request reply for RyuApp.send_reply.
+.. autoclass:: ryu.controller.event.EventReplyBase
 
 ryu.controller.ofp_event.EventOFPStateChange
 ============================================
@@ -208,158 +131,49 @@ ryu.controller.ofp_event.EventOFPPortStateChange
 ryu.controller.dpset.EventDP
 ============================
 
-An event class to notify connect/disconnect of a switch.
-For OpenFlow switches, one can get the same notification by observing
-ryu.controller.ofp_event.EventOFPStateChange.
-An instance has at least the following attributes.
-
-========= ====================================================================
-Attribute Description
-========= ====================================================================
-dp        A ryu.controller.controller.Datapath instance of the switch
-enter     True when the switch connected to our controller.  False for
-          disconnect.
-========= ====================================================================
+.. autoclass:: ryu.controller.dpset.EventDP
 
 ryu.controller.dpset.EventPortAdd
 =================================
 
-An event class for switch port status notification.
-This event is generated when a new port is added to a switch.
-For OpenFlow switches, one can get the same notification by observing
-ryu.controller.ofp_event.EventOFPPortStatus.
-An instance has at least the following attributes.
-
-========= ====================================================================
-Attribute Description
-========= ====================================================================
-dp        A ryu.controller.controller.Datapath instance of the switch
-port      port number
-========= ====================================================================
+.. autoclass:: ryu.controller.dpset.EventPortAdd
 
 ryu.controller.dpset.EventPortDelete
 ====================================
 
-An event class for switch port status notification.
-This event is generated when a port is removed from a switch.
-For OpenFlow switches, one can get the same notification by observing
-ryu.controller.ofp_event.EventOFPPortStatus.
-An instance has at least the following attributes.
-
-========= ====================================================================
-Attribute Description
-========= ====================================================================
-dp        A ryu.controller.controller.Datapath instance of the switch
-port      port number
-========= ====================================================================
+.. autoclass:: ryu.controller.dpset.EventPortDelete
 
 ryu.controller.dpset.EventPortModify
 ====================================
 
-An event class for switch port status notification.
-This event is generated when some attribute of a port is changed.
-For OpenFlow switches, one can get the same notification by observing
-ryu.controller.ofp_event.EventOFPPortStatus.
-An instance has at least the following attributes.
-
-========= ====================================================================
-Attribute Description
-========= ====================================================================
-dp        A ryu.controller.controller.Datapath instance of the switch
-port      port number
-========= ====================================================================
+.. autoclass:: ryu.controller.dpset.EventPortModify
 
 ryu.controller.network.EventNetworkPort
 =======================================
 
-An event class for notification of port arrival and deperture.
-This event is generated when a port is introduced to or removed from a network
-by the REST API.
-An instance has at least the following attributes.
-
-========== ===================================================================
-Attribute  Description
-========== ===================================================================
-network_id Network ID
-dpid       OpenFlow Datapath ID of the switch to which the port belongs.
-port_no    OpenFlow port number of the port
-add_del    True for adding a port.  False for removing a port.
-========== ===================================================================
+.. autoclass:: ryu.controller.network.EventNetworkPort
 
 ryu.controller.network.EventNetworkDel
 ======================================
 
-An event class for network deletion.
-This event is generated when a network is deleted by the REST API.
-An instance has at least the following attributes.
-
-========== ===================================================================
-Attribute  Description
-========== ===================================================================
-network_id Network ID
-========== ===================================================================
+.. autoclass:: ryu.controller.network.EventNetworkDel
 
 ryu.controller.network.EventMacAddress
 ======================================
 
-An event class for end-point MAC address registration.
-This event is generated when a end-point MAC address is updated
-by the REST API.
-An instance has at least the following attributes.
-
-=========== ==================================================================
-Attribute   Description
-=========== ==================================================================
-network_id  Network ID
-dpid        OpenFlow Datapath ID of the switch to which the port belongs.
-port_no     OpenFlow port number of the port
-mac_address The old MAC address of the port if add_del is False.  Otherwise
-            the new MAC address.
-add_del     False if this event is a result of a port removal.  Otherwise
-            True.
-=========== ==================================================================
+.. autoclass:: ryu.controller.network.EventMacAddress
 
 ryu.controller.tunnels.EventTunnelKeyAdd
 ========================================
 
-An event class for tunnel key registration.
-This event is generated when a tunnel key is registered or updated
-by the REST API.
-An instance has at least the following attributes.
-
-=========== ==================================================================
-Attribute   Description
-=========== ==================================================================
-network_id  Network ID
-tunnel_key  Tunnel Key
-=========== ==================================================================
+.. autoclass:: ryu.controller.tunnels.EventTunnelKeyAdd
 
 ryu.controller.tunnels.EventTunnelKeyDel
 ========================================
 
-An event class for tunnel key registration.
-This event is generated when a tunnel key is removed by the REST API.
-An instance has at least the following attributes.
-
-=========== ==================================================================
-Attribute   Description
-=========== ==================================================================
-network_id  Network ID
-tunnel_key  Tunnel Key
-=========== ==================================================================
+.. autoclass:: ryu.controller.tunnels.EventTunnelKeyDel
 
 ryu.controller.tunnels.EventTunnelPort
 ======================================
 
-An event class for tunnel port registration.
-This event is generated when a tunnel port is added or removed by the REST API.
-An instance has at least the following attributes.
-
-=========== ==================================================================
-Attribute   Description
-=========== ==================================================================
-dpid        OpenFlow Datapath ID
-port_no     OpenFlow port number
-remote_dpid OpenFlow port number of the tunnel peer
-add_del     True for adding a tunnel.  False for removal.
-=========== ==================================================================
+.. autoclass:: ryu.controller.tunnels.EventTunnelPort

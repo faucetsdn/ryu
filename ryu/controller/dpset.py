@@ -44,6 +44,23 @@ class EventDPBase(event.EventBase):
 
 
 class EventDP(EventDPBase):
+    """
+    An event class to notify connect/disconnect of a switch.
+
+    For OpenFlow switches, one can get the same notification by observing
+    ryu.controller.ofp_event.EventOFPStateChange.
+    An instance has at least the following attributes.
+
+    ========= =================================================================
+    Attribute Description
+    ========= =================================================================
+    dp        A ryu.controller.controller.Datapath instance of the switch
+    enter     True when the switch connected to our controller.  False for
+              disconnect.
+    ports     A list of port instances.
+    ========= =================================================================
+    """
+
     def __init__(self, dp, enter_leave):
         # enter_leave
         # True: dp entered
@@ -67,16 +84,64 @@ class EventPortBase(EventDPBase):
 
 
 class EventPortAdd(EventPortBase):
+    """
+    An event class for switch port status "ADD" notification.
+
+    This event is generated when a new port is added to a switch.
+    For OpenFlow switches, one can get the same notification by observing
+    ryu.controller.ofp_event.EventOFPPortStatus.
+    An instance has at least the following attributes.
+
+    ========= =================================================================
+    Attribute Description
+    ========= =================================================================
+    dp        A ryu.controller.controller.Datapath instance of the switch
+    port      port number
+    ========= =================================================================
+    """
+
     def __init__(self, dp, port):
         super(EventPortAdd, self).__init__(dp, port)
 
 
 class EventPortDelete(EventPortBase):
+    """
+    An event class for switch port status "DELETE" notification.
+
+    This event is generated when a port is removed from a switch.
+    For OpenFlow switches, one can get the same notification by observing
+    ryu.controller.ofp_event.EventOFPPortStatus.
+    An instance has at least the following attributes.
+
+    ========= =================================================================
+    Attribute Description
+    ========= =================================================================
+    dp        A ryu.controller.controller.Datapath instance of the switch
+    port      port number
+    ========= =================================================================
+    """
+
     def __init__(self, dp, port):
         super(EventPortDelete, self).__init__(dp, port)
 
 
 class EventPortModify(EventPortBase):
+    """
+    An event class for switch port status "MODIFY" notification.
+
+    This event is generated when some attribute of a port is changed.
+    For OpenFlow switches, one can get the same notification by observing
+    ryu.controller.ofp_event.EventOFPPortStatus.
+    An instance has at least the following attributes.
+
+    ========= ====================================================================
+    Attribute Description
+    ========= ====================================================================
+    dp        A ryu.controller.controller.Datapath instance of the switch
+    port      port number
+    ========= ====================================================================
+    """
+
     def __init__(self, dp, new_port):
         super(EventPortModify, self).__init__(dp, new_port)
 

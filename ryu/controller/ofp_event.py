@@ -27,6 +27,25 @@ from . import event
 
 
 class EventOFPMsgBase(event.EventBase):
+    """
+    The base class of OpenFlow event class.
+
+    OpenFlow event classes have at least the following attributes.
+
+    .. tabularcolumns:: |l|L|
+
+    ============ ==============================================================
+    Attribute    Description
+    ============ ==============================================================
+    msg          An object which describes the corresponding OpenFlow message.
+    msg.datapath A ryu.controller.controller.Datapath instance
+                 which describes an OpenFlow switch from which we received
+                 this OpenFlow message.
+    ============ ==============================================================
+
+    The msg object has some more additional members whose values are extracted
+    from the original OpenFlow message.
+    """
     def __init__(self, msg):
         super(EventOFPMsgBase, self).__init__()
         self.msg = msg
@@ -83,6 +102,7 @@ for ofp_mods in ofproto.get_ofp_modules().values():
 class EventOFPStateChange(event.EventBase):
     """
     An event class for negotiation phase change notification.
+
     An instance of this class is sent to observer after changing
     the negotiation phase.
     An instance has at least the following attributes.
@@ -101,6 +121,7 @@ class EventOFPStateChange(event.EventBase):
 class EventOFPPortStateChange(event.EventBase):
     """
     An event class to notify the port state changes of Dtatapath instance.
+
     This event performs like EventOFPPortStatus, but Ryu will
     send this event after updating ``ports`` dict of Datapath instances.
     An instance has at least the following attributes.
