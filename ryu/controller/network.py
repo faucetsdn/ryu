@@ -18,10 +18,12 @@ import collections
 
 from ryu.base import app_manager
 import ryu.exception as ryu_exc
-from ryu.app.rest_nw_id import NW_ID_UNKNOWN
 from ryu.controller import event
 from ryu.exception import NetworkNotFound, NetworkAlreadyExist
 from ryu.exception import PortAlreadyExist, PortNotFound, PortUnknown
+
+
+NW_ID_UNKNOWN = '__NW_ID_UNKNOWN__'
 
 
 class MacAddressAlreadyExist(ryu_exc.RyuException):
