@@ -245,6 +245,24 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         datapath = msg.datapath
         datapath.acknowledge_echo_reply(msg.xid)
 
+    @set_ev_handler(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
+    def port_status_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+
+        if msg.reason in [ofproto.OFPPR_ADD, ofproto.OFPPR_MODIFY]:
+            datapath.ports[msg.desc.port_no] = msg.desc
+        elif msg.reason == ofproto.OFPPR_DELETE:
+            datapath.ports.pop(msg.desc.port_no, None)
+        else:
+            return
+
+        self.send_event_to_observers(
+            ofp_event.EventOFPPortStateChange(
+                datapath, msg.reason, msg.desc.port_no),
+            datapath.state)
+
     @set_ev_handler(ofp_event.EventOFPErrorMsg,
                     [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def error_msg_handler(self, ev):

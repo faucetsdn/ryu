@@ -150,25 +150,6 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
 
-    def _get_ports(self):
-        if (self.ofproto_parser is not None and
-                self.ofproto_parser.ofproto.OFP_VERSION >= 0x04):
-            message = (
-                'Datapath#ports is kept for compatibility with the previous '
-                'openflow versions (< 1.3). '
-                'This is not updated by the EventOFPPortStatus message. '
-                'If you want to be updated, you should use '
-                '\'ryu.controller.dpset\' or \'ryu.topology.switches\'.'
-            )
-            warnings.warn(message, stacklevel=2)
-        return self._ports
-
-    def _set_ports(self, ports):
-        self._ports = ports
-
-    # To show warning when Datapath#ports is read
-    ports = property(_get_ports, _set_ports)
-
     @_deactivate
     def close(self):
         if self.state != DEAD_DISPATCHER:

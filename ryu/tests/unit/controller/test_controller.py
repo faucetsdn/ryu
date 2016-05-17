@@ -72,7 +72,7 @@ class Test_Datapath(unittest.TestCase):
                     self.assertTrue(issubclass(msg.category, UserWarning))
 
     def test_ports_accessibility_v13(self):
-        self._test_ports_accessibility(ofproto_v1_3_parser, 2)
+        self._test_ports_accessibility(ofproto_v1_3_parser, 0)
 
     def test_ports_accessibility_v12(self):
         self._test_ports_accessibility(ofproto_v1_2_parser, 0)

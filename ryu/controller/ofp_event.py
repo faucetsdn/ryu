@@ -86,4 +86,12 @@ class EventOFPStateChange(event.EventBase):
         self.datapath = dp
 
 
+class EventOFPPortStateChange(event.EventBase):
+    def __init__(self, dp, reason, port_no):
+        super(EventOFPPortStateChange, self).__init__()
+        self.datapath = dp
+        self.reason = reason
+        self.port_no = port_no
+
+
 handler.register_service('ryu.controller.ofp_handler')
