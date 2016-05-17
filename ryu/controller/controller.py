@@ -51,10 +51,10 @@ LOG = logging.getLogger('ryu.controller.controller')
 CONF = cfg.CONF
 CONF.register_cli_opts([
     cfg.StrOpt('ofp-listen-host', default='', help='openflow listen host'),
-    cfg.IntOpt('ofp-tcp-listen-port', default=ofproto_common.OFP_TCP_PORT,
+    cfg.IntOpt('ofp-tcp-listen-port', default=None,
                help='openflow tcp listen port '
                     '(default: %d)' % ofproto_common.OFP_TCP_PORT),
-    cfg.IntOpt('ofp-ssl-listen-port', default=ofproto_common.OFP_SSL_PORT,
+    cfg.IntOpt('ofp-ssl-listen-port', default=None,
                help='openflow ssl listen port '
                     '(default: %d)' % ofproto_common.OFP_SSL_PORT),
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
@@ -78,17 +78,29 @@ CONF.register_opts([
 class OpenFlowController(object):
     def __init__(self):
         super(OpenFlowController, self).__init__()
+        if not CONF.ofp_tcp_listen_port and not CONF.ofp_ssl_listen_port:
+            self.ofp_tcp_listen_port = ofproto_common.OFP_TCP_PORT
+            self.ofp_ssl_listen_port = ofproto_common.OFP_SSL_PORT
+            # For the backward compatibility, we spawn a server loop
+            # listening on the old OpenFlow listen port 6633.
+            hub.spawn(self.server_loop,
+                      ofproto_common.OFP_TCP_PORT_OLD,
+                      ofproto_common.OFP_SSL_PORT_OLD)
+        else:
+            self.ofp_tcp_listen_port = CONF.ofp_tcp_listen_port
+            self.ofp_ssl_listen_port = CONF.ofp_ssl_listen_port
 
     # entry point
     def __call__(self):
         # LOG.debug('call')
-        self.server_loop()
+        self.server_loop(self.ofp_tcp_listen_port,
+                         self.ofp_ssl_listen_port)
 
-    def server_loop(self):
+    def server_loop(self, ofp_tcp_listen_port, ofp_ssl_listen_port):
         if CONF.ctl_privkey is not None and CONF.ctl_cert is not None:
             if CONF.ca_certs is not None:
                 server = StreamServer((CONF.ofp_listen_host,
-                                       CONF.ofp_ssl_listen_port),
+                                       ofp_ssl_listen_port),
                                       datapath_connection_factory,
                                       keyfile=CONF.ctl_privkey,
                                       certfile=CONF.ctl_cert,
@@ -97,14 +109,14 @@ class OpenFlowController(object):
                                       ssl_version=ssl.PROTOCOL_TLSv1)
             else:
                 server = StreamServer((CONF.ofp_listen_host,
-                                       CONF.ofp_ssl_listen_port),
+                                       ofp_ssl_listen_port),
                                       datapath_connection_factory,
                                       keyfile=CONF.ctl_privkey,
                                       certfile=CONF.ctl_cert,
                                       ssl_version=ssl.PROTOCOL_TLSv1)
         else:
             server = StreamServer((CONF.ofp_listen_host,
-                                   CONF.ofp_tcp_listen_port),
+                                   ofp_tcp_listen_port),
                                   datapath_connection_factory)
 
         # LOG.debug('loop')

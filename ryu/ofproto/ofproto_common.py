@@ -26,6 +26,8 @@ assert calcsize(OFP_HEADER_PACK_STR) == OFP_HEADER_SIZE
 # Some applications may still use 6633 as the de facto standard though.
 OFP_TCP_PORT = 6653
 OFP_SSL_PORT = 6653
+OFP_TCP_PORT_OLD = 6633
+OFP_SSL_PORT_OLD = 6633
 
 # Vendor/Experimenter IDs
 # https://rs.opennetworking.org/wiki/display/PUBLIC/ONF+Registry
