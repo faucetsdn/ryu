@@ -52,9 +52,11 @@ CONF = cfg.CONF
 CONF.register_cli_opts([
     cfg.StrOpt('ofp-listen-host', default='', help='openflow listen host'),
     cfg.IntOpt('ofp-tcp-listen-port', default=ofproto_common.OFP_TCP_PORT,
-               help='openflow tcp listen port'),
+               help='openflow tcp listen port '
+                    '(default: %d)' % ofproto_common.OFP_TCP_PORT),
     cfg.IntOpt('ofp-ssl-listen-port', default=ofproto_common.OFP_SSL_PORT,
-               help='openflow ssl listen port'),
+               help='openflow ssl listen port '
+                    '(default: %d)' % ofproto_common.OFP_SSL_PORT),
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
     cfg.StrOpt('ctl-cert', default=None, help='controller certificate'),
     cfg.StrOpt('ca-certs', default=None, help='CA certificates')

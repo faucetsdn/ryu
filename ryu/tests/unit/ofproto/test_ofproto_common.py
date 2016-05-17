@@ -33,5 +33,5 @@ class TestOfprotCommon(unittest.TestCase):
         eq_(OFP_HEADER_SIZE, 8)
 
     def test_define_constants(self):
-        eq_(OFP_TCP_PORT, 6633)
-        eq_(OFP_SSL_PORT, 6633)
+        eq_(OFP_TCP_PORT, 6653)
+        eq_(OFP_SSL_PORT, 6653)
