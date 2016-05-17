@@ -579,6 +579,9 @@ class RouteFamily(StringifyMixin):
     def __eq__(self, other):
         return (self.afi, self.safi) == (other.afi, other.safi)
 
+    def __hash__(self):
+        return hash((self.afi, self.safi))
+
 # Route Family Singleton
 RF_IPv4_UC = RouteFamily(addr_family.IP, subaddr_family.UNICAST)
 RF_IPv6_UC = RouteFamily(addr_family.IP6, subaddr_family.UNICAST)
