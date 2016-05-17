@@ -198,16 +198,12 @@ The base class for synchronous request reply for RyuApp.send_reply.
 ryu.controller.ofp_event.EventOFPStateChange
 ============================================
 
-An event class for negotiation phase change notification.
-An instance of this class is sent to observer after changing
-the negotiation phase.
-An instance has at least the following attributes.
+.. autoclass:: ryu.controller.ofp_event.EventOFPStateChange
 
-========= ====================================================================
-Attribute Description
-========= ====================================================================
-datapath  ryu.controller.controller.Datapath instance of the switch
-========= ====================================================================
+ryu.controller.ofp_event.EventOFPPortStateChange
+================================================
+
+.. autoclass:: ryu.controller.ofp_event.EventOFPPortStateChange
 
 ryu.controller.dpset.EventDP
 ============================
