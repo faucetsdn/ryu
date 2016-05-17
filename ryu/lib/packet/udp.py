@@ -18,6 +18,7 @@ import struct
 from . import packet_base
 from . import packet_utils
 from . import dhcp
+from . import vxlan
 
 
 class udp(packet_base.PacketBase):
@@ -49,10 +50,14 @@ class udp(packet_base.PacketBase):
         self.total_length = total_length
         self.csum = csum
 
-    @classmethod
-    def get_packet_type(cls, src_port, dst_port):
-        if (src_port == 68 and dst_port == 67) or (src_port == 67 and dst_port == 68):
+    @staticmethod
+    def get_packet_type(src_port, dst_port):
+        if ((src_port == 68 and dst_port == 67) or
+                (src_port == 67 and dst_port == 68)):
             return dhcp.dhcp
+        if (dst_port == vxlan.UDP_DST_PORT or
+                dst_port == vxlan.UDP_DST_PORT_OLD):
+            return vxlan.vxlan
         return None
 
     @classmethod
