@@ -1095,7 +1095,9 @@ class RouteTargetMembershipNLRI(StringifyMixin):
     def __eq__(self, other):
         return ((self.origin_as, self.route_target) ==
                 (other.origin_as, other.route_target))
-        return (self.afi, self.safi) == (other.afi, other.safi)
+
+    def __hash__(self):
+        return hash((self.origin_as, self.route_target))
 
     @classmethod
     def parser(cls, buf):
