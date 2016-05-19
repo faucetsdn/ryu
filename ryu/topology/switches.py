@@ -394,20 +394,6 @@ class LLDPPacket(object):
         tlv_end = lldp.End()
 
         tlvs = (tlv_chassis_id, tlv_port_id, tlv_ttl, tlv_end)
-        # Add LLDPDU for OXP.
-        if CONF.oxp_role is not None:
-            tlv_domain_id = lldp.DomainID(
-                subtype=lldp.DomainID.SUB_LOCALLY_ASSIGNED,
-                domain_id=LLDPPacket.DOMAIN_ID_FMT %
-                dpid_to_str(CONF.oxp_domain_id))
-
-            tlv_vport_id = lldp.VPortID(
-                subtype=lldp.VPortID.SUB_PORT_COMPONENT,
-                vport_id=struct.pack(
-                    LLDPPacket.VPORT_ID_STR, vport_no))
-
-            tlvs = (tlv_chassis_id, tlv_port_id, tlv_ttl,
-                    tlv_domain_id, tlv_vport_id, tlv_end)
 
         lldp_pkt = lldp.lldp(tlvs)
         pkt.add_protocol(lldp_pkt)
@@ -448,61 +434,6 @@ class LLDPPacket(object):
         (src_port_no, ) = struct.unpack(LLDPPacket.PORT_ID_STR, port_id)
 
         return src_dpid, src_port_no
-
-    @staticmethod
-    def oxp_lldp_parse(data):
-        pkt = packet.Packet(data)
-        i = iter(pkt)
-        eth_pkt = i.next()
-        assert type(eth_pkt) == ethernet.ethernet
-
-        lldp_pkt = i.next()
-        if type(lldp_pkt) != lldp.lldp:
-            raise LLDPPacket.LLDPUnknownFormat()
-
-        tlv_chassis_id = lldp_pkt.tlvs[0]
-        if tlv_chassis_id.subtype != lldp.ChassisID.SUB_LOCALLY_ASSIGNED:
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown chassis id subtype %d' % tlv_chassis_id.subtype)
-        chassis_id = tlv_chassis_id.chassis_id
-        if not chassis_id.startswith(LLDPPacket.CHASSIS_ID_PREFIX):
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown chassis id format %s' % chassis_id)
-        src_dpid = str_to_dpid(chassis_id[LLDPPacket.CHASSIS_ID_PREFIX_LEN:])
-
-        tlv_port_id = lldp_pkt.tlvs[1]
-        if tlv_port_id.subtype != lldp.PortID.SUB_PORT_COMPONENT:
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown port id subtype %d' % tlv_port_id.subtype)
-        port_id = tlv_port_id.port_id
-        if len(port_id) != LLDPPacket.PORT_ID_SIZE:
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown port id %d' % port_id)
-        (src_port_no, ) = struct.unpack(LLDPPacket.PORT_ID_STR, port_id)
-
-        # oxp related.
-        tlv_domain_id = lldp_pkt.tlvs[3]
-        if tlv_domain_id.subtype != lldp.DomainID.SUB_LOCALLY_ASSIGNED:
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown domain id subtype %d' % tlv_domain_id.subtype)
-        domain_id = tlv_domain_id.domain_id
-        if not domain_id.startswith(LLDPPacket.DOMAIN_ID_PREFIX):
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown domain id format %s' % domain_id)
-        src_domain_id = str_to_dpid(domain_id[
-            LLDPPacket.DOMAIN_ID_PREFIX_LEN:])
-
-        tlv_vport_id = lldp_pkt.tlvs[4]
-        if tlv_vport_id.subtype != lldp.VPortID.SUB_PORT_COMPONENT:
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown vport id subtype %d' % tlv_vport_id.subtype)
-        vport_id = tlv_vport_id.vport_id
-        if len(vport_id) != LLDPPacket.VPORT_ID_SIZE:
-            raise LLDPPacket.LLDPUnknownFormat(
-                msg='unknown vport id %d' % vport_id)
-        (src_vport_no, ) = struct.unpack(LLDPPacket.VPORT_ID_STR, vport_id)
-
-        return src_dpid, src_port_no, src_domain_id, src_vport_no
 
 
 class Switches(app_manager.RyuApp):
