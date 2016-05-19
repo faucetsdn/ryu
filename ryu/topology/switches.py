@@ -31,8 +31,8 @@ from ryu.lib.dpid import dpid_to_str, str_to_dpid
 from ryu.lib.port_no import port_no_to_str
 from ryu.lib.packet import packet, ethernet
 from ryu.lib.packet import lldp, ether_types
-from ryu.lib.packet import arp, ipv4, ipv6
 from ryu.ofproto.ether import ETH_TYPE_LLDP
+from ryu.ofproto.ether import ETH_TYPE_CFM
 from ryu.ofproto import nx_match
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
@@ -836,11 +836,10 @@ class Switches(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def host_discovery_packet_in_handler(self, ev):
         msg = ev.msg
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocols(ethernet.ethernet)[0]
+        eth, pkt_type, pkt_data = ethernet.ethernet.parser(msg.data)
 
-        # ignore lldp packet
-        if eth.ethertype == ETH_TYPE_LLDP:
+        # ignore lldp and cfm packets
+        if eth.ethertype in (ETH_TYPE_LLDP, ETH_TYPE_CFM):
             return
 
         datapath = msg.datapath
@@ -871,18 +870,18 @@ class Switches(app_manager.RyuApp):
 
         # arp packet, update ip address
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
-            arp_pkt = pkt.get_protocols(arp.arp)[0]
+            arp_pkt, _, _ = pkt_type.parser(pkt_data)
             self.hosts.update_ip(host, ip_v4=arp_pkt.src_ip)
 
         # ipv4 packet, update ipv4 address
         elif eth.ethertype == ether_types.ETH_TYPE_IP:
-            ipv4_pkt = pkt.get_protocols(ipv4.ipv4)[0]
+            ipv4_pkt, _, _ = pkt_type.parser(pkt_data)
             self.hosts.update_ip(host, ip_v4=ipv4_pkt.src)
 
         # ipv6 packet, update ipv6 address
         elif eth.ethertype == ether_types.ETH_TYPE_IPV6:
             # TODO: need to handle NDP
-            ipv6_pkt = pkt.get_protocols(ipv6.ipv6)[0]
+            ipv6_pkt, _, _ = pkt_type.parser(pkt_data)
             self.hosts.update_ip(host, ip_v6=ipv6_pkt.src)
 
     def send_lldp_packet(self, port):
