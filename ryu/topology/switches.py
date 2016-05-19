@@ -17,7 +17,6 @@ import logging
 import six
 import struct
 import time
-import json
 from ryu import cfg
 
 from ryu.topology import event
@@ -206,12 +205,12 @@ class HostState(dict):
         if not host:
             return
 
-        if ip_v4 != None:
+        if ip_v4 is not None:
             if ip_v4 in host.ipv4:
                 host.ipv4.remove(ip_v4)
             host.ipv4.append(ip_v4)
 
-        if ip_v6 != None:
+        if ip_v6 is not None:
             if ip_v6 in host.ipv6:
                 host.ipv6.remove(ip_v6)
             host.ipv6.append(ip_v6)
@@ -281,9 +280,8 @@ class PortDataState(dict):
 
     def __init__(self):
         super(PortDataState, self).__init__()
-        self._root = root = []          # sentinel node
-        root[:] = [root, root, None]    # [_PREV, _NEXT, _KEY]
-                                        # doubly linked list
+        self._root = root = []  # sentinel node
+        root[:] = [root, root, None]  # [_PREV, _NEXT, _KEY] doubly linked list
         self._map = {}
 
     def _remove_key(self, key):
@@ -619,7 +617,8 @@ class Switches(app_manager.RyuApp):
             if not dp_multiple_conns:
                 self.send_event_to_observers(event.EventSwitchEnter(switch))
             else:
-                self.send_event_to_observers(event.EventSwitchReconnected(switch))
+                evt = event.EventSwitchReconnected(switch)
+                self.send_event_to_observers(evt)
 
             if not self.link_discovery:
                 return
@@ -679,8 +678,8 @@ class Switches(app_manager.RyuApp):
                 if switch.dp is dp:
                     self._unregister(dp)
                     LOG.debug('unregister %s', switch)
-
-                    self.send_event_to_observers(event.EventSwitchLeave(switch))
+                    evt = event.EventSwitchLeave(switch)
+                    self.send_event_to_observers(evt)
 
                     if not self.link_discovery:
                         return
@@ -773,7 +772,7 @@ class Switches(app_manager.RyuApp):
         msg = ev.msg
         try:
             src_dpid, src_port_no = LLDPPacket.lldp_parse(msg.data)
-        except LLDPPacket.LLDPUnknownFormat as e:
+        except LLDPPacket.LLDPUnknownFormat:
             # This handler can receive all the packets which can be
             # not-LLDP packet. Ignore it silently
             return
@@ -796,7 +795,7 @@ class Switches(app_manager.RyuApp):
             # There are races between EventOFPPacketIn and
             # EventDPPortAdd. So packet-in event can happend before
             # port add event. In that case key error can happend.
-            # LOG.debug('lldp_received: KeyError %s', e)
+            # LOG.debug('lldp_received error', exc_info=True)
             pass
 
         dst = self._get_port(dst_dpid, dst_port_no)
@@ -889,9 +888,9 @@ class Switches(app_manager.RyuApp):
     def send_lldp_packet(self, port):
         try:
             port_data = self.ports.lldp_sent(port)
-        except KeyError as e:
+        except KeyError:
             # ports can be modified during our sleep in self.lldp_loop()
-            # LOG.debug('send_lldp: KeyError %s', e)
+            # LOG.debug('send_lld error', exc_info=True)
             return
         if port_data.is_down:
             return
