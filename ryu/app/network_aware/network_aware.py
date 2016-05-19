@@ -35,17 +35,16 @@ from ryu.lib import hub
 from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
 
-SLEEP_PERIOD = 10
-IS_UPDATE = True
-
 
 class Network_Aware(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    _NAME = 'network_aware'
+    _NAME = "network_aware"
+    SLEEP_PERIOD = 10
+    IS_UPDATE = True
 
     def __init__(self, *args, **kwargs):
         super(Network_Aware, self).__init__(*args, **kwargs)
-        self.name = "Network_Aware"
+        self.name = "network_aware"
         self.topology_api_app = self
 
         # links_to_port:(src_dpid,dst_dpid)->(src_port,dst_port)
@@ -71,11 +70,11 @@ class Network_Aware(app_manager.RyuApp):
     def _discover(self):
         i = 0
         while True:
-            # self.show_topology()
+            self.show_topology()
             if i == 5:
                 self.get_topology(None)
                 i = 0
-            hub.sleep(SLEEP_PERIOD)
+            hub.sleep(self.SLEEP_PERIOD)
             i = i + 1
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -160,6 +159,14 @@ class Network_Aware(app_manager.RyuApp):
             self.access_ports[sw] = self.switch_port_table[
                 sw] - self.interior_ports[sw]
 
+    def floyd_dict(self, graph, cutoff=None, weight='weight'):
+        return nx.all_pairs_dijkstra_path(graph, cutoff=cutoff, weight=weight)
+
+    def get_shortest_paths(self, cutoff=None, weight='weight'):
+        self.shortest_paths = self.floyd_dict(self.graph, cutoff=cutoff,
+                                              weight=weight)
+        return self.shortest_paths
+
     events = [event.EventSwitchEnter,
               event.EventSwitchLeave, event.EventPortAdd,
               event.EventPortDelete, event.EventPortModify,
@@ -174,14 +181,7 @@ class Network_Aware(app_manager.RyuApp):
         self.create_interior_links(links)
         self.create_access_ports()
         self.get_graph(self.link_to_port.keys())
-        self.get_shortest_paths()
-
-    def get_shortest_paths(self):
-        self.shortest_paths = self.floyd_dict(self.graph)
-        return self.shortest_paths
-
-    def floyd_dict(self, graph, src=None, topo=None):
-        return nx.all_pairs_dijkstra_path(graph)
+        self.get_shortest_paths(weight='weight')
 
     def register_access_info(self, dpid, in_port, ip, mac):
         if in_port in self.access_ports[dpid]:
@@ -220,7 +220,7 @@ class Network_Aware(app_manager.RyuApp):
     # show topo
     def show_topology(self):
         switch_num = len(self.graph.nodes())
-        if self.pre_graph != self.graph or IS_UPDATE:
+        if self.pre_graph != self.graph or self.IS_UPDATE:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -233,7 +233,7 @@ class Network_Aware(app_manager.RyuApp):
                 print ""
             self.pre_graph = copy.deepcopy(self.graph)
 
-        if self.pre_link_to_port != self.link_to_port or IS_UPDATE:
+        if self.pre_link_to_port != self.link_to_port or self.IS_UPDATE:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -250,7 +250,7 @@ class Network_Aware(app_manager.RyuApp):
             self.pre_link_to_port = copy.deepcopy(self.link_to_port)
 
         # show host info:{(sw,port) :[host1_ip],...}
-        if self.pre_access_table != self.access_table or IS_UPDATE:
+        if self.pre_access_table != self.access_table or self.IS_UPDATE:
             print "----------------Access Host-------------------"
             print '%10s' % ("switch"), '%12s' % "Host"
             if not self.access_table.keys():
