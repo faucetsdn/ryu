@@ -25,16 +25,14 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.lib import hub
 from ryu.lib.packet import packet
 
-SLEEP_PERIOD = 10
 
-
-class Network_Monitor(app_manager.RyuApp):
+class NetworkMonitor(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    _NAME = 'Network_Monitor'
+    SLEEP_PERIOD = 10
 
     def __init__(self, *args, **kwargs):
-        super(Network_Monitor, self).__init__(*args, **kwargs)
-
+        super(NetworkMonitor, self).__init__(*args, **kwargs)
+        self.name = 'monitor'
         self.datapaths = {}
         self.port_stats = {}
         self.port_speed = {}
@@ -64,7 +62,7 @@ class Network_Monitor(app_manager.RyuApp):
             for dp in self.datapaths.values():
                 self.port_link.setdefault(dp.id, {})
                 self._request_stats(dp)
-            hub.sleep(SLEEP_PERIOD)
+            hub.sleep(self.SLEEP_PERIOD)
             if self.stats['flow'] or self.stats['port']:
                 self.show_stat('flow', self.stats['flow'])
                 self.show_stat('port', self.stats['port'])
@@ -172,7 +170,7 @@ class Network_Monitor(app_manager.RyuApp):
 
             # Get flow's speed.
             pre = 0
-            period = SLEEP_PERIOD
+            period = self.SLEEP_PERIOD
             tmp = self.flow_stats[dpid][key]
             if len(tmp) > 1:
                 pre = tmp[-2][1]
@@ -198,7 +196,7 @@ class Network_Monitor(app_manager.RyuApp):
 
                 # Get port speed.
                 pre = 0
-                period = SLEEP_PERIOD
+                period = self.SLEEP_PERIOD
                 tmp = self.port_stats[key]
                 if len(tmp) > 1:
                     pre = tmp[-2][0] + tmp[-2][1]

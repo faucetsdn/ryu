@@ -33,21 +33,21 @@ from ryu.lib.packet import arp
 from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
 
-import network_aware
+import network_awareness
 import network_monitor
 
 
 class Shortest_Forwarding(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
-        "Network_Aware": network_aware.Network_Aware,
-        "Network_Monitor": network_monitor.Network_Monitor,
-    }
+        "network_awareness": network_awareness.NetworkAwareness,
+        "network_monitor": network_monitor.NetworkMonitor}
 
     def __init__(self, *args, **kwargs):
         super(Shortest_Forwarding, self).__init__(*args, **kwargs)
-        self.network_aware = kwargs["Network_Aware"]
-        self.network_monitor = kwargs["Network_Monitor"]
+        self.name = 'shortest_forwarding'
+        self.awareness = kwargs["network_awareness"]
+        self.monitor = kwargs["network_monitor"]
         self.mac_to_port = {}
         self.datapaths = {}
 
@@ -134,9 +134,9 @@ class Shortest_Forwarding(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        for dpid in self.network_aware.access_ports:
-            for port in self.network_aware.access_ports[dpid]:
-                if (dpid, port) not in self.network_aware.access_table.keys():
+        for dpid in self.awareness.access_ports:
+            for port in self.awareness.access_ports[dpid]:
+                if (dpid, port) not in self.awareness.access_table.keys():
                     datapath = self.datapaths[dpid]
                     out = self._build_packet_out(
                         datapath, ofproto.OFP_NO_BUFFER,
@@ -149,7 +149,7 @@ class Shortest_Forwarding(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        result = self.network_aware.get_host_location(dst_ip)
+        result = self.awareness.get_host_location(dst_ip)
         if result:  # host record in access table.
             datapath_dst, out_port = result[0], result[1]
             datapath = self.datapaths[datapath_dst]
@@ -162,20 +162,20 @@ class Shortest_Forwarding(app_manager.RyuApp):
             self.flood(msg)
 
     def get_path(self, src, dst):
-        return self.network_aware.shortest_paths.get(src).get(dst)
+        return self.awareness.shortest_paths.get(src).get(dst)
 
     def get_sw(self, dpid, in_port, src, dst):
         src_sw = dpid
         dst_sw = None
 
-        src_location = self.network_aware.get_host_location(src)
-        if in_port in self.network_aware.access_ports[dpid]:
+        src_location = self.awareness.get_host_location(src)
+        if in_port in self.awareness.access_ports[dpid]:
             if (dpid,  in_port) == src_location:
                 src_sw = src_location[0]
             else:
                 return None
 
-        dst_location = self.network_aware.get_host_location(dst)
+        dst_location = self.awareness.get_host_location(dst)
         if dst_location:
             dst_sw = dst_location[0]
 
@@ -256,8 +256,8 @@ class Shortest_Forwarding(app_manager.RyuApp):
                 self.logger.info("[PATH]%s<-->%s: %s" % (ip_src, ip_dst, path))
                 flow_info = (eth_type, ip_src, ip_dst, in_port)
                 self.install_flow(self.datapaths,
-                                  self.network_aware.link_to_port,
-                                  self.network_aware.access_table, path,
+                                  self.awareness.link_to_port,
+                                  self.awareness.access_table, path,
                                   flow_info, msg.buffer_id, msg.data)
         return
 
