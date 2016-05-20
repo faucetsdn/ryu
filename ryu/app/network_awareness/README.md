@@ -16,7 +16,7 @@ In this version, we take networkx's data structure to store topology. Meanwhile,
 
 ###Download File
 
-Download files, and add them to ryu directory, for instance, app/network_aware
+Download files, and add them to ryu directory, for instance, app/network_awareness
 
 ### Reinstall Ryu
 
