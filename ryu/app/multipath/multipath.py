@@ -205,8 +205,13 @@ class MULTIPATH_13(app_manager.RyuApp):
 
         if isinstance(ip_pkt, ipv4.ipv4):
             self.logger.debug("IPV4 processing")
+            mac_to_port_table = self.mac_to_port.get(dpid)
+            if mac_to_port_table is None:
+                self.logger.info("Dpid is not in mac_to_port")
+                return
+
             out_port = None
-            if eth.dst in self.mac_to_port[dpid]:
+            if eth.dst in mac_to_port_table:
                 if dpid == 1 and in_port == 1:
                     if self.FLAGS is True:
                         self.send_group_mod(datapath)
@@ -223,7 +228,7 @@ class MULTIPATH_13(app_manager.RyuApp):
                                          in_port, 2, msg.data)
                 else:
                     #Normal flows
-                    out_port = self.mac_to_port[dpid][eth.dst]
+                    out_port = mac_to_port_table[eth.dst]
                     actions = [parser.OFPActionOutput(out_port)]
                     match = parser.OFPMatch(in_port=in_port, eth_dst=eth.dst,
                                             eth_type=eth.ethertype)
