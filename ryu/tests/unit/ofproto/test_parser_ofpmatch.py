@@ -200,6 +200,8 @@ def _add_tests():
         ('tun_ipv4_dst', IPv4),
         ('pkt_mark', Int4),
         ('conj_id', Int4),
+        ('tun_ipv6_src', IPv6),
+        ('tun_ipv6_dst', IPv6),
         ('_dp_hash', Int4),
         ('reg0', Int4),
         ('reg1', Int4),

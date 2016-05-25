@@ -1264,6 +1264,8 @@ ct_state         Integer 32bit   Conntrack state.
 ct_zone          Integer 16bit   Conntrack zone.
 ct_mark          Integer 32bit   Conntrack mark.
 ct_label         Integer 128bit  Conntrack label.
+tun_ipv6_src     IPv6 address    Tunnel IPv6 source address.
+tun_ipv6_dst     IPv6 address    Tunnel IPv6 destination address.
 _dp_hash         Integer 32bit   Flow hash computed in Datapath.
 reg<idx>         Integer 32bit   Packet register.
                                  <idx> is register number 0-7.
@@ -1308,6 +1310,8 @@ oxm_types = [
     oxm_fields.NiciraExtended1('ct_zone', 106, type_desc.Int2),
     oxm_fields.NiciraExtended1('ct_mark', 107, type_desc.Int4),
     oxm_fields.NiciraExtended1('ct_label', 108, type_desc.Int16),
+    oxm_fields.NiciraExtended1('tun_ipv6_src', 109, type_desc.IPv6Addr),
+    oxm_fields.NiciraExtended1('tun_ipv6_dst', 110, type_desc.IPv6Addr),
 
     # The following definition is merely for testing 64-bit experimenter OXMs.
     # Following Open vSwitch, we use dp_hash for this purpose.
