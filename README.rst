@@ -38,11 +38,13 @@ Some functionalities of ryu requires extra packages:
 - OF-Config requires lxml
 - NETCONF requires paramiko
 - BGP speaker (ssh console) requires paramiko
+- OVSDB support requires ovs  (Note: python 3.4 requires ovs>=2.6.0.dev0)
 
 If you want to use the functionalities, please install requirements::
 
     % pip install lxml
     % pip install paramiko
+    % pip install ovs
 
 
 Support
