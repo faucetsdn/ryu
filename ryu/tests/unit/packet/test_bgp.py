@@ -16,6 +16,8 @@
 
 from __future__ import print_function
 
+import os
+import sys
 import unittest
 from nose.tools import eq_
 from nose.tools import ok_
@@ -23,6 +25,10 @@ from nose.tools import ok_
 from ryu.lib.packet import bgp
 from ryu.lib.packet import afi
 from ryu.lib.packet import safi
+
+
+BGP4_PACKET_DATA_DIR = os.path.join(
+    os.path.dirname(sys.modules[__name__].__file__), '../../packet_data/bgp4/')
 
 
 class Test_bgp(unittest.TestCase):
@@ -112,7 +118,7 @@ class Test_bgp(unittest.TestCase):
         ]
         path_attributes = [
             bgp.BGPPathAttributeOrigin(value=1),
-            bgp.BGPPathAttributeAsPath(value=[[1000], set([1001, 1002]),
+            bgp.BGPPathAttributeAsPath(value=[[1000], {1001, 1002},
                                               [1003, 1004]]),
             bgp.BGPPathAttributeNextHop(value='192.0.2.199'),
             bgp.BGPPathAttributeMultiExitDisc(value=2000000000),
@@ -124,7 +130,7 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeOriginatorId(value='10.1.1.1'),
             bgp.BGPPathAttributeClusterList(value=['1.1.1.1', '2.2.2.2']),
             bgp.BGPPathAttributeExtendedCommunities(communities=ecommunities),
-            bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
+            bgp.BGPPathAttributeAs4Path(value=[[1000000], {1000001, 1002},
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
                                               addr='192.0.2.99'),
@@ -199,11 +205,10 @@ class Test_bgp(unittest.TestCase):
             # 'bgp4-update',
             'bgp4-keepalive',
         ]
-        dir = '../packet_data/bgp4/'
 
         for f in files:
             print('testing %s' % f)
-            binmsg = open(dir + f, 'rb').read()
+            binmsg = open(BGP4_PACKET_DATA_DIR + f, 'rb').read()
             msg, rest = bgp.BGPMessage.parser(binmsg)
             binmsg2 = msg.serialize()
             eq_(binmsg, binmsg2)
@@ -260,7 +265,7 @@ class Test_bgp(unittest.TestCase):
         ]
         path_attributes = [
             bgp.BGPPathAttributeOrigin(value=1),
-            bgp.BGPPathAttributeAsPath(value=[[1000], set([1001, 1002]),
+            bgp.BGPPathAttributeAsPath(value=[[1000], {1001, 1002},
                                               [1003, 1004]]),
             bgp.BGPPathAttributeNextHop(value='192.0.2.199'),
             bgp.BGPPathAttributeMultiExitDisc(value=2000000000),
@@ -270,7 +275,7 @@ class Test_bgp(unittest.TestCase):
                                            addr='192.0.2.99'),
             bgp.BGPPathAttributeCommunities(communities=communities),
             bgp.BGPPathAttributeExtendedCommunities(communities=ecommunities),
-            bgp.BGPPathAttributeAs4Path(value=[[1000000], set([1000001, 1002]),
+            bgp.BGPPathAttributeAs4Path(value=[[1000000], {1000001, 1002},
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
                                               addr='192.0.2.99'),
