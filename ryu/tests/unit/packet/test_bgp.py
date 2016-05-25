@@ -22,6 +22,7 @@ import unittest
 from nose.tools import eq_
 from nose.tools import ok_
 
+from ryu.lib.packet import packet
 from ryu.lib.packet import bgp
 from ryu.lib.packet import afi
 from ryu.lib.packet import safi
@@ -208,11 +209,10 @@ class Test_bgp(unittest.TestCase):
 
         for f in files:
             print('testing %s' % f)
-            binmsg = open(BGP4_PACKET_DATA_DIR + f, 'rb').read()
-            msg, rest = bgp.BGPMessage.parser(binmsg)
-            binmsg2 = msg.serialize()
-            eq_(binmsg, binmsg2)
-            eq_(rest, b'')
+            msg_buf = open(BGP4_PACKET_DATA_DIR + f + '.pcap', 'rb').read()
+            pkt = packet.Packet(msg_buf)
+            pkt.serialize()
+            eq_(msg_buf, pkt.data)
 
     def test_json1(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
