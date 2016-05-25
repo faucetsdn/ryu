@@ -7,3 +7,4 @@ formencode
 lxml; platform_python_implementation != 'PyPy'  # OF-Config
 lxml==3.4.0; platform_python_implementation == 'PyPy'
 paramiko  # NETCONF, BGP speaker
+tinyrpc   # RPC
