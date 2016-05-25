@@ -2,7 +2,7 @@ coverage
 mock
 nose
 pep8
-pylint==0.25.0
+pylint
 formencode
 lxml; platform_python_implementation != 'PyPy'  # OF-Config
 lxml==3.4.0; platform_python_implementation == 'PyPy'
