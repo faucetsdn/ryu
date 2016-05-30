@@ -3073,6 +3073,7 @@ class OFPPacketOut(MsgBase):
                       self.buffer_id, self.in_port, self._actions_len)
 
 
+@_register_parser
 @_set_msg_type(ofproto.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
     """
@@ -3129,15 +3130,14 @@ class OFPFlowMod(MsgBase):
                 priority, buffer_id, out_port, flags, actions)
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, match, cookie, command,
+    def __init__(self, datapath, match=None, cookie=0,
+                 command=ofproto.OFPFC_ADD,
                  idle_timeout=0, hard_timeout=0,
                  priority=ofproto.OFP_DEFAULT_PRIORITY,
                  buffer_id=0xffffffff, out_port=ofproto.OFPP_NONE,
                  flags=0, actions=None):
-        if actions is None:
-            actions = []
         super(OFPFlowMod, self).__init__(datapath)
-        self.match = match
+        self.match = OFPMatch() if match is None else match
         self.cookie = cookie
         self.command = command
         self.idle_timeout = idle_timeout
@@ -3146,7 +3146,7 @@ class OFPFlowMod(MsgBase):
         self.buffer_id = buffer_id
         self.out_port = out_port
         self.flags = flags
-        self.actions = actions
+        self.actions = [] if actions is None else actions
 
     def _serialize_body(self):
         offset = ofproto.OFP_HEADER_SIZE
@@ -3164,6 +3164,30 @@ class OFPFlowMod(MsgBase):
             for a in self.actions:
                 a.serialize(self.buf, offset)
                 offset += a.len
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPFlowMod, cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+        offset = ofproto.OFP_HEADER_SIZE
+
+        msg.match = OFPMatch.parse(msg.buf, offset)
+        offset += ofproto.OFP_MATCH_SIZE
+
+        (msg.cookie, msg.command, msg.idle_timeout, msg.hard_timeout,
+         msg.priority, msg.buffer_id, msg.out_port,
+         msg.flags) = struct.unpack_from(
+            ofproto.OFP_FLOW_MOD_PACK_STR0, msg.buf, offset)
+        offset = ofproto.OFP_FLOW_MOD_SIZE
+
+        actions = []
+        while offset < msg_len:
+            a = OFPAction.parser(buf, offset)
+            actions.append(a)
+            offset += a.len
+        msg.actions = actions
+
+        return msg
 
 
 @_set_msg_type(ofproto.OFPT_PORT_MOD)

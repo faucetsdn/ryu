@@ -5066,6 +5066,7 @@ class OFPPacketOut(MsgBase):
                       self.buffer_id, self.actions_len)
 
 
+@_register_parser
 @_set_msg_type(ofproto.OFPT_FLOW_MOD)
 class OFPFlowMod(MsgBase):
     """
@@ -5181,6 +5182,31 @@ class OFPFlowMod(MsgBase):
         for inst in self.instructions:
             inst.serialize(self.buf, offset)
             offset += inst.len
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPFlowMod, cls).parser(
+            datapath, version, msg_type, msg_len, xid, buf)
+
+        (msg.cookie, msg.cookie_mask, msg.table_id,
+         msg.command, msg.idle_timeout, msg.hard_timeout,
+         msg.priority, msg.buffer_id, msg.out_port,
+         msg.out_group, msg.flags, msg.importance) = struct.unpack_from(
+            ofproto.OFP_FLOW_MOD_PACK_STR0, msg.buf,
+            ofproto.OFP_HEADER_SIZE)
+        offset = ofproto.OFP_FLOW_MOD_SIZE - ofproto.OFP_HEADER_SIZE
+
+        msg.match = OFPMatch.parser(buf, offset)
+        offset += utils.round_up(msg.match.length, 8)
+
+        instructions = []
+        while offset < msg_len:
+            i = OFPInstruction.parser(buf, offset)
+            instructions.append(i)
+            offset += i.len
+        msg.instructions = instructions
+
+        return msg
 
 
 class OFPInstruction(StringifyMixin):
