@@ -54,7 +54,6 @@
       "out_group": 4294967295, 
       "out_port": 4294967295, 
       "priority": 32768, 
-      "table_id": 3, 
-      "xid": 2
+      "table_id": 3
    }
 }

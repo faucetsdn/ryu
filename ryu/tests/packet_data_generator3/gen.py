@@ -162,7 +162,8 @@ class MyHandler(socketserver.BaseRequestHandler):
                 hello.serialize()
                 self.request.send(hello.buf)
             elif msg_type == desc.ofproto.OFPT_FLOW_MOD:
-                buf.append(data[:msg_len])
+                # HACK: Clear xid into zero
+                buf.append(data[:4] + b'\x00\x00\x00\x00' + data[8:msg_len])
             elif msg_type == desc.ofproto.OFPT_BARRIER_REQUEST:
                 brep = desc.ofproto_parser.OFPBarrierReply(desc)
                 brep.xid = xid
