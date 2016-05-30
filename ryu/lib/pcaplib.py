@@ -33,52 +33,8 @@ Reference source: http://wiki.wireshark.org/Development/LibpcapFileFormat
                 +---------------------+
                 |     Packet Data     |
                 +---------------------+
-                |          ...
-                +---------------- ...
-
-
-Sample usage of dump packets:
-
-    from ryu.lib import pcaplib
-
-    class SimpleSwitch13(app_manager.RyuApp):
-        OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-
-        def __init__(self, *args, **kwargs):
-            super(SimpleSwitch13, self).__init__(*args, **kwargs)
-            self.mac_to_port = {}
-
-            # Creating an instance with a PCAP filename
-            self.pcap_pen = Writer(open('mypcap.pcap', 'wb'))
-
-        @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-        def _packet_in_handler(self, ev):
-            msg = ev.msg
-
-            # Dump the data packet into PCAP file
-            self.pcap_pen.write_pkt(msg.data)
-
-            pkt = packet.Packet(msg.data)
-
-Sample usage of reading PCAP files:
-
-    from ryu.lib import pcaplib
-    from ryu.lib.packet import packet
-
-    frame_count = 0
-    # Using the Reader iterator that yields packets in PCAP file
-    for ts, buf in pcaplib.Reader(open('test.pcap', 'rb')):
-        frame_count += 1
-        pkt = packet.Packet(buf)
-
-        eth = pkt.get_protocols(ethernet.ethernet)[0]
-
-        dst = eth.dst
-        src = eth.src
-        # print frames count, timestamp, ethernet src, ethernet dst
-        # and raw packet.
-        print frame_count, ts, dst, src, pkt
-
+                |          ...        |
+                +---------------------+
 """
 
 import struct
@@ -235,6 +191,30 @@ class PcapPktHdr(object):
 
 
 class Reader(object):
+    """
+    PCAP file reader
+
+    ================ ===================================
+    Argument         Description
+    ================ ===================================
+    file_obj         File object which reading PCAP file
+                     in binary mode
+    ================ ===================================
+
+    Example of usage::
+
+        from ryu.lib import pcaplib
+        from ryu.lib.packet import packet
+
+        frame_count = 0
+        # iterate pcaplib.Reader that yields (timestamp, packet_data)
+        # in the PCAP file
+        for ts, buf in pcaplib.Reader(open('test.pcap', 'rb')):
+            frame_count += 1
+            pkt = packet.Packet(buf)
+            print("%d, %f, %s" % (frame_count, ts, pkt))
+    """
+
     def __init__(self, file_obj):
         self._fp = file_obj
         buf = self._fp.read(PcapFileHdr.FILE_HDR_SIZE)
@@ -264,6 +244,47 @@ class Reader(object):
 
 
 class Writer(object):
+    """
+    PCAP file writer
+
+    ========== ==================================================
+    Argument   Description
+    ========== ==================================================
+    file_obj   File object which writing PCAP file in binary mode
+    snaplen    Max length of captured packets (in octets)
+    network    Data link type. (e.g. 1 for Ethernet,
+               see `tcpdump.org`_ for details)
+    ========== ==================================================
+
+    .. _tcpdump.org: http://www.tcpdump.org/linktypes.html
+
+    Example of usage::
+
+        ...
+        from ryu.lib import pcaplib
+
+
+        class SimpleSwitch13(app_manager.RyuApp):
+            OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
+
+            def __init__(self, *args, **kwargs):
+                super(SimpleSwitch13, self).__init__(*args, **kwargs)
+                self.mac_to_port = {}
+
+                # Create pcaplib.Writer instance with a file object
+                # for the PCAP file
+                self.pcap_writer = pcaplib.Writer(open('mypcap.pcap', 'wb'))
+
+            ...
+
+            @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+            def _packet_in_handler(self, ev):
+                # Dump the packet data into PCAP file
+                self.pcap_writer.write_pkt(ev.msg.data)
+
+                ...
+    """
+
     def __init__(self, file_obj, snaplen=65535, network=1):
         self._f = file_obj
         self.snaplen = snaplen
