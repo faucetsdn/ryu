@@ -1,3 +1,18 @@
+# Copyright (C) 2015 Nippon Telegraph and Telephone Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Parsing libpcap and reading/writing PCAP file.
 Reference source: http://wiki.wireshark.org/Development/LibpcapFileFormat
@@ -66,7 +81,6 @@ Sample usage of reading PCAP files:
 
 """
 
-import six
 import struct
 import sys
 import time
@@ -103,43 +117,56 @@ class PcapFileHdr(object):
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
                                 File Format
     """
-    _FILE_HDR_FMT = None
+    _FILE_HDR_FMT = '4sHHIIII'
+    _FILE_HDR_FMT_BIG_ENDIAN = '>' + _FILE_HDR_FMT
+    _FILE_HDR_FMT_LITTLE_ENDIAN = '<' + _FILE_HDR_FMT
+    FILE_HDR_SIZE = struct.calcsize(_FILE_HDR_FMT)
 
-    def __init__(self, magic=b'\xd4\xc3\xb2\xa1', version_major=2,
+    # Magic Number field is used to detect the file format itself and
+    # the byte ordering.
+    MAGIC_NUMBER_IDENTICAL = b'\xa1\xb2\xc3\xd4'  # Big Endian
+    MAGIC_NUMBER_SWAPPED = b'\xd4\xc3\xb2\xa1'    # Little Endian
+
+    def __init__(self, magic=MAGIC_NUMBER_SWAPPED, version_major=2,
                  version_minor=4, thiszone=0, sigfigs=0, snaplen=0,
-                 linktype=0):
+                 network=0):
         self.magic = magic
         self.version_major = version_major
         self.version_minor = version_minor
         self.thiszone = thiszone
         self.sigfigs = sigfigs
         self.snaplen = snaplen
-        self.linktype = linktype
+        self.network = network
 
     @classmethod
     def parser(cls, buf):
-        if buf[:4] == b'\xa1\xb2\xc3\xd4':
+        magic_buf = buf[:4]
+        if magic_buf == cls.MAGIC_NUMBER_IDENTICAL:
             # Big Endian
-            cls._FILE_HDR_FMT = '>IHHIIII'
-            byteorder = '>'
-        elif buf[:4] == b'\xd4\xc3\xb2\xa1':
+            fmt = cls._FILE_HDR_FMT_BIG_ENDIAN
+            byteorder = 'big'
+        elif magic_buf == cls.MAGIC_NUMBER_SWAPPED:
             # Little Endian
-            cls._FILE_HDR_FMT = '<IHHIIII'
-            byteorder = '<'
+            fmt = cls._FILE_HDR_FMT_LITTLE_ENDIAN
+            byteorder = 'little'
         else:
-            raise Exception('Invalid pcap file.')
+            raise struct.error('Invalid byte ordered pcap file.')
 
-        (magic, version_major, version_minor, thiszone, sigfigs,
-         snaplen, linktype) = struct.unpack_from(cls._FILE_HDR_FMT, buf)
+        return cls(*struct.unpack_from(fmt, buf)), byteorder
 
-        hdr = cls(magic, version_major, version_minor, thiszone, sigfigs,
-                  snaplen, linktype)
-        return hdr, byteorder
+    def serialize(self):
+        if sys.byteorder == 'big':
+            # Big Endian
+            fmt = self._FILE_HDR_FMT_BIG_ENDIAN
+            self.magic = self.MAGIC_NUMBER_IDENTICAL
+        else:
+            # Little Endian
+            fmt = self._FILE_HDR_FMT_LITTLE_ENDIAN
+            self.magic = self.MAGIC_NUMBER_SWAPPED
 
-    def serialize(self, fmt):
         return struct.pack(fmt, self.magic, self.version_major,
                            self.version_minor, self.thiszone,
-                           self.sigfigs, self.snaplen, self.linktype)
+                           self.sigfigs, self.snaplen, self.network)
 
 
 class PcapPktHdr(object):
@@ -167,7 +194,10 @@ class PcapPktHdr(object):
                         Record (Packet) Header Format
     """
 
-    _PKT_HDR_FMT = None
+    _PKT_HDR_FMT = 'IIII'
+    _PKT_HDR_FMT_BIG_ENDIAN = '>' + _PKT_HDR_FMT
+    _PKT_HDR_FMT_LITTLE_ENDIAN = '<' + _PKT_HDR_FMT
+    PKT_HDR_SIZE = struct.calcsize(_PKT_HDR_FMT)
 
     def __init__(self, ts_sec=0, ts_usec=0, incl_len=0, orig_len=0):
         self.ts_sec = ts_sec
@@ -176,114 +206,96 @@ class PcapPktHdr(object):
         self.orig_len = orig_len
 
     @classmethod
-    def parser(cls, byteorder, buf):
+    def parser(cls, buf, byteorder='little'):
         if not buf:
             raise IndexError('No data')
-        cls._PKT_HDR_FMT = byteorder + 'IIII'
-        PKT_HDR_LEN = struct.calcsize(cls._PKT_HDR_FMT)
 
-        (ts_sec, ts_usec, incl_len,
-         orig_len) = struct.unpack_from(cls._PKT_HDR_FMT, buf)
+        if byteorder == 'big':
+            # Big Endian
+            fmt = cls._PKT_HDR_FMT_BIG_ENDIAN
+        else:
+            # Little Endian
+            fmt = cls._PKT_HDR_FMT_LITTLE_ENDIAN
 
+        (ts_sec, ts_usec, incl_len, orig_len) = struct.unpack_from(fmt, buf)
         hdr = cls(ts_sec, ts_usec, incl_len, orig_len)
-        # print repr(buf[0:16])
-        return hdr, buf[PKT_HDR_LEN:PKT_HDR_LEN + incl_len]
 
-    def serialize(self, fmt):
+        return hdr, buf[cls.PKT_HDR_SIZE:cls.PKT_HDR_SIZE + incl_len]
+
+    def serialize(self):
+        if sys.byteorder == 'big':
+            # Big Endian
+            fmt = self._PKT_HDR_FMT_BIG_ENDIAN
+        else:
+            # Little Endian
+            fmt = self._PKT_HDR_FMT_LITTLE_ENDIAN
+
         return struct.pack(fmt, self.ts_sec, self.ts_usec,
                            self.incl_len, self.orig_len)
 
 
 class Reader(object):
-    _FILE_HDR_FMT = '>IHHIIII'
-    _PKT_HDR_FMT = '>IIII'
-
-    _PKT_HDR_LEN = struct.calcsize(_PKT_HDR_FMT)
-    _FILE_HDR_FMT_LEN = struct.calcsize(_FILE_HDR_FMT)
-
     def __init__(self, file_obj):
         self._fp = file_obj
-        # self.__filename = filename
-        self._file_byteorder = None
-        self._hdr_data = None
-        self.incl_len_pos = 0
+        buf = self._fp.read(PcapFileHdr.FILE_HDR_SIZE)
+        # Read only pcap file header
+        self.pcap_header, self._file_byteorder = PcapFileHdr.parser(buf)
+        # Read pcap data with out header
+        self._pcap_body = self._fp.read()
+        self._fp.close()
+        self._next_pos = 0
 
     def __iter__(self):
-        buf = self._fp.read(Reader._FILE_HDR_FMT_LEN)
-        # Only Read PCAP file from 0 to 24th byte
-        (filehdr, self._file_byteorder) = PcapFileHdr.parser(buf)
-
-        # self._fp.seek(Reader._FILE_HDR_FMT_LEN)
-
-        # Read PCAP file from 24th byte to EOF
-        self._hdr_data = self._fp.read()
-        self._fp.close()
-
         return self
 
     def next(self):
         try:
-            pkt_hdr, pkt_data = PcapPktHdr.parser(self._file_byteorder,
-                                                  self._hdr_data
-                                                  [self.incl_len_pos:])
+            pkt_hdr, pkt_data = PcapPktHdr.parser(
+                self._pcap_body[self._next_pos:], self._file_byteorder)
+            self._next_pos += pkt_hdr.incl_len + PcapPktHdr.PKT_HDR_SIZE
 
-            next_pos = pkt_hdr.incl_len + Reader._PKT_HDR_LEN
-            self.incl_len_pos += next_pos
         except IndexError:
-            raise StopIteration
+            raise StopIteration()
 
-        return float(pkt_hdr.ts_sec + (pkt_hdr.ts_usec / 1e6)), pkt_data
+        return pkt_hdr.ts_sec + (pkt_hdr.ts_usec / 1e6), pkt_data
+
+    # for Python 3 compatible
+    __next__ = next
 
 
 class Writer(object):
-    def __init__(self, file_obj, snaplen=65535, linktype=1):
+    def __init__(self, file_obj, snaplen=65535, network=1):
         self._f = file_obj
-        self._write_pcap_file_hdr(snaplen, linktype)
+        self.snaplen = snaplen
+        self.network = network
+        self._write_pcap_file_hdr()
 
-    def _write_pcap_file_hdr(self, snaplen, linktype):
-        if sys.byteorder == 'little':
-            pcap_file_hdr = PcapFileHdr(magic=0xa1b2c3d4,
-                                        snaplen=snaplen,
-                                        linktype=linktype)
-            p = pcap_file_hdr.serialize(fmt='<IHHIIII')
-        else:
-            pcap_file_hdr, byteorder = PcapFileHdr(magic=0xd4c3b2a1,
-                                                   naplen=snaplen,
-                                                   linktype=linktype)
-            p = pcap_file_hdr.serialize(fmt='>IHHIIII')
-        self._f.write(str(p))
+    def _write_pcap_file_hdr(self):
+        pcap_file_hdr = PcapFileHdr(snaplen=self.snaplen,
+                                    network=self.network)
+        self._f.write(pcap_file_hdr.serialize())
 
-    def _write_pkt_hdr(self, ts, buf_str_len):
+    def _write_pkt_hdr(self, ts, buf_len):
         sec = int(ts)
-        if sec == 0:
-            usec = 0
-        else:
-            usec = int(ts * 1e6) % int(ts)
+        usec = int(round(ts % 1, 6) * 1e6) if sec != 0 else 0
 
-        if sys.byteorder == 'little':
-            # usec = int(ts * 1e6) % int(ts)
-            # old_usec = int((float(ts) - int(ts)) * 1e6)
-            pc_pkt_hdr = PcapPktHdr(ts_sec=sec,
-                                    ts_usec=usec,
-                                    incl_len=buf_str_len,
-                                    orig_len=buf_str_len)
-            p = pc_pkt_hdr.serialize(fmt='<IIII')
-        else:
-            pc_pkt_hdr = PcapPktHdr(ts_sec=sec,
-                                    ts_usec=usec,
-                                    incl_len=buf_str_len,
-                                    orig_len=buf_str_len)
-            p = pc_pkt_hdr.serialize(fmt='>IIII')
-        self._f.write(str(p))
+        pc_pkt_hdr = PcapPktHdr(ts_sec=sec, ts_usec=usec,
+                                incl_len=buf_len, orig_len=buf_len)
+
+        self._f.write(pc_pkt_hdr.serialize())
 
     def write_pkt(self, buf, ts=None):
-        if ts is None:
-            ts = time.time()
+        ts = time.time() if ts is None else ts
 
-        buf_str = six.binary_type(buf)
-        buf_str_len = len(buf_str)
-        self._write_pkt_hdr(ts, buf_str_len)
-        self._f.write(buf_str)
+        # Check the max length of captured packets
+        buf_len = len(buf)
+        if buf_len > self.snaplen:
+            buf_len = self.snaplen
+            buf = buf[:self.snaplen]
+
+        self._write_pkt_hdr(ts, buf_len)
+
+        self._f.write(buf)
 
     def __del__(self):
         self._f.close()
