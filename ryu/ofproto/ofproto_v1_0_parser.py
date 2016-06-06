@@ -28,10 +28,11 @@ from ryu.lib import addrconv
 from ryu.lib import ip
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
+from ryu.ofproto import nx_match
 from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_v1_0 as ofproto
-from ryu.ofproto import nx_match
+from ryu.ofproto import nx_actions
 from ryu import utils
 
 import logging
@@ -784,16 +785,63 @@ class OFPActionVendor(OFPAction):
             return cls
         return _register_action_vendor
 
-    def __init__(self):
+    def __init__(self, vendor=None):
         super(OFPActionVendor, self).__init__()
-        self.vendor = self.cls_vendor
+        self.type = ofproto.OFPAT_VENDOR
+        self.len = None
+
+        if vendor is None:
+            self.vendor = self.cls_vendor
+        else:
+            self.vendor = vendor
 
     @classmethod
     def parser(cls, buf, offset):
         type_, len_, vendor = struct.unpack_from(
             ofproto.OFP_ACTION_VENDOR_HEADER_PACK_STR, buf, offset)
-        cls_ = cls._ACTION_VENDORS.get(vendor)
-        return cls_.parser(buf, offset)
+
+        data = buf[(offset + ofproto.OFP_ACTION_VENDOR_HEADER_SIZE
+                    ): offset + len_]
+
+        if vendor == ofproto_common.NX_EXPERIMENTER_ID:
+            obj = NXAction.parse(data)  # noqa
+        else:
+            cls_ = cls._ACTION_VENDORS.get(vendor, None)
+
+            if cls_ is None:
+                obj = OFPActionVendorUnknown(vendor, data)
+            else:
+                obj = cls_.parser(buf, offset)
+
+        obj.len = len_
+        return obj
+
+    def serialize(self, buf, offset):
+        msg_pack_into(ofproto.OFP_ACTION_VENDOR_HEADER_PACK_STR,
+                      buf, offset, self.type, self.len, self.vendor)
+
+# OpenFlow1.2 or later compatible
+OFPActionExperimenter = OFPActionVendor
+
+
+class OFPActionVendorUnknown(OFPActionVendor):
+    def __init__(self, vendor, data=None, type_=None, len_=None):
+        super(OFPActionVendorUnknown,
+              self).__init__(vendor=vendor)
+        self.data = data
+
+    def serialize(self, buf, offset):
+        # fixup
+        data = self.data
+        if data is None:
+            data = bytearray()
+        self.len = (utils.round_up(len(data), 8) +
+                    ofproto.OFP_ACTION_VENDOR_HEADER_SIZE)
+        super(OFPActionVendorUnknown, self).serialize(buf, offset)
+        msg_pack_into('!%ds' % len(self.data),
+                      buf,
+                      offset + ofproto.OFP_ACTION_VENDOR_HEADER_SIZE,
+                      self.data)
 
 
 @OFPActionVendor.register_action_vendor(ofproto_common.NX_EXPERIMENTER_ID)
@@ -823,476 +871,6 @@ class NXActionHeader(OFPActionVendor):
             ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset)
         cls_ = cls._NX_ACTION_SUBTYPES.get(subtype)
         return cls_.parser(buf, offset)
-
-
-class NXActionResubmitBase(NXActionHeader):
-    def __init__(self, in_port, table):
-        super(NXActionResubmitBase, self).__init__()
-        assert self.subtype in (ofproto.NXAST_RESUBMIT,
-                                ofproto.NXAST_RESUBMIT_TABLE)
-        self.in_port = in_port
-        self.table = table
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_RESUBMIT_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype,
-                      self.in_port, self.table)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_RESUBMIT, ofproto.NX_ACTION_RESUBMIT_SIZE)
-class NXActionResubmit(NXActionResubmitBase):
-    def __init__(self, in_port=ofproto.OFPP_IN_PORT):
-        super(NXActionResubmit, self).__init__(in_port, 0)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
-            ofproto.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
-        return cls(in_port)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_RESUBMIT_TABLE, ofproto.NX_ACTION_RESUBMIT_SIZE)
-class NXActionResubmitTable(NXActionResubmitBase):
-    def __init__(self, in_port=ofproto.OFPP_IN_PORT, table=0xff):
-        super(NXActionResubmitTable, self).__init__(in_port, table)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, in_port, table = struct.unpack_from(
-            ofproto.NX_ACTION_RESUBMIT_PACK_STR, buf, offset)
-        return cls(in_port, table)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_SET_TUNNEL, ofproto.NX_ACTION_SET_TUNNEL_SIZE)
-class NXActionSetTunnel(NXActionHeader):
-    def __init__(self, tun_id):
-        super(NXActionSetTunnel, self).__init__()
-        self.tun_id = tun_id
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_SET_TUNNEL_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor, self.subtype,
-                      self.tun_id)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, tun_id = struct.unpack_from(
-            ofproto.NX_ACTION_SET_TUNNEL_PACK_STR, buf, offset)
-        return cls(tun_id)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_SET_QUEUE, ofproto.NX_ACTION_SET_QUEUE_SIZE)
-class NXActionSetQueue(NXActionHeader):
-    def __init__(self, queue_id):
-        super(NXActionSetQueue, self).__init__()
-        self.queue_id = queue_id
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_SET_QUEUE_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor,
-                      self.subtype, self.queue_id)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, queue_id) = struct.unpack_from(
-            ofproto.NX_ACTION_SET_QUEUE_PACK_STR, buf, offset)
-        return cls(queue_id)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_POP_QUEUE, ofproto.NX_ACTION_POP_QUEUE_SIZE)
-class NXActionPopQueue(NXActionHeader):
-    def __init__(self):
-        super(NXActionPopQueue, self).__init__()
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_POP_QUEUE_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor,
-                      self.subtype)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype) = struct.unpack_from(
-            ofproto.NX_ACTION_POP_QUEUE_PACK_STR, buf, offset)
-        return cls()
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_REG_MOVE, ofproto.NX_ACTION_REG_MOVE_SIZE)
-class NXActionRegMove(NXActionHeader):
-    def __init__(self, n_bits, src_ofs, dst_ofs, src, dst):
-        super(NXActionRegMove, self).__init__()
-        self.n_bits = n_bits
-        self.src_ofs = src_ofs
-        self.dst_ofs = dst_ofs
-        self.src = src
-        self.dst = dst
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_REG_MOVE_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor,
-                      self.subtype, self.n_bits, self.src_ofs, self.dst_ofs,
-                      self.src, self.dst)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, n_bits, src_ofs, dst_ofs,
-            src, dst) = struct.unpack_from(
-            ofproto.NX_ACTION_REG_MOVE_PACK_STR, buf, offset)
-        return cls(n_bits, src_ofs, dst_ofs, src, dst)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_REG_LOAD, ofproto.NX_ACTION_REG_LOAD_SIZE)
-class NXActionRegLoad(NXActionHeader):
-    def __init__(self, ofs_nbits, dst, value):
-        super(NXActionRegLoad, self).__init__()
-        self.ofs_nbits = ofs_nbits
-        self.dst = dst
-        self.value = value
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_REG_LOAD_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor,
-                      self.subtype, self.ofs_nbits, self.dst, self.value)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, ofs_nbits, dst,
-            value) = struct.unpack_from(
-            ofproto.NX_ACTION_REG_LOAD_PACK_STR, buf, offset)
-        return cls(ofs_nbits, dst, value)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_SET_TUNNEL64, ofproto.NX_ACTION_SET_TUNNEL64_SIZE)
-class NXActionSetTunnel64(NXActionHeader):
-    def __init__(self, tun_id):
-        super(NXActionSetTunnel64, self).__init__()
-        self.tun_id = tun_id
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_SET_TUNNEL64_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor, self.subtype,
-                      self.tun_id)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        type_, len_, vendor, subtype, tun_id = struct.unpack_from(
-            ofproto.NX_ACTION_SET_TUNNEL64_PACK_STR, buf, offset)
-        return cls(tun_id)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_MULTIPATH, ofproto.NX_ACTION_MULTIPATH_SIZE)
-class NXActionMultipath(NXActionHeader):
-    def __init__(self, fields, basis, algorithm, max_link, arg,
-                 ofs_nbits, dst):
-        super(NXActionMultipath, self).__init__()
-        self.fields = fields
-        self.basis = basis
-        self.algorithm = algorithm
-        self.max_link = max_link
-        self.arg = arg
-        self.ofs_nbits = ofs_nbits
-        self.dst = dst
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_MULTIPATH_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor, self.subtype,
-                      self.fields, self.basis, self.algorithm, self.max_link,
-                      self.arg, self.ofs_nbits, self.dst)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, fields, basis, algorithm,
-            max_link, arg, ofs_nbits, dst) = struct.unpack_from(
-            ofproto.NX_ACTION_MULTIPATH_PACK_STR, buf, offset)
-        return cls(fields, basis, algorithm, max_link, arg, ofs_nbits,
-                   dst)
-
-
-@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_NOTE, 0)
-class NXActionNote(NXActionHeader):
-    def __init__(self, note):
-        super(NXActionNote, self).__init__()
-        # should check here if the note is valid (only hex values)
-        pad = (len(note) + 10) % 8
-        if pad:
-            note += [0x0 for i in range(8 - pad)]
-        self.note = note
-        self.len = len(note) + 10
-
-    def serialize(self, buf, offset):
-        note = self.note
-        extra = None
-        extra_len = len(self.note) - 6
-        if extra_len > 0:
-            extra = note[6:]
-        note = note[0:6]
-        msg_pack_into(ofproto.NX_ACTION_NOTE_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor, self.subtype,
-                      *note)
-        if extra_len > 0:
-            msg_pack_into('B' * extra_len, buf,
-                          offset + ofproto.NX_ACTION_NOTE_SIZE,
-                          *extra)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        note = struct.unpack_from(
-            ofproto.NX_ACTION_NOTE_PACK_STR, buf, offset)
-        (type_, len_, vendor, subtype) = note[0:4]
-        note = [i for i in note[4:]]
-        if len_ > ofproto.NX_ACTION_NOTE_SIZE:
-            note_start = offset + ofproto.NX_ACTION_NOTE_SIZE
-            note_end = note_start + len_ - ofproto.NX_ACTION_NOTE_SIZE
-            note += [int(binascii.b2a_hex(i), 16) for i
-                     in buf[note_start:note_end]]
-        return cls(note)
-
-
-class NXActionBundleBase(NXActionHeader):
-    def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                 ofs_nbits, dst, slaves):
-        super(NXActionBundleBase, self).__init__()
-        _len = ofproto.NX_ACTION_BUNDLE_SIZE + len(slaves) * 2
-        _len += (_len % 8)
-        self.len = _len
-
-        self.algorithm = algorithm
-        self.fields = fields
-        self.basis = basis
-        self.slave_type = slave_type
-        self.n_slaves = n_slaves
-        self.ofs_nbits = ofs_nbits
-        self.dst = dst
-        self.slaves = slaves
-
-    def serialize(self, buf, offset):
-        slave_offset = offset + ofproto.NX_ACTION_BUNDLE_SIZE
-
-        for s in self.slaves:
-            msg_pack_into('!H', buf, slave_offset, s)
-            slave_offset += 2
-
-        pad_len = (len(self.slaves) * 2 +
-                   ofproto.NX_ACTION_BUNDLE_SIZE) % 8
-
-        if pad_len != 0:
-            msg_pack_into('%dx' % pad_len, buf, slave_offset)
-
-        msg_pack_into(ofproto.NX_ACTION_BUNDLE_PACK_STR, buf,
-                      offset, self.type, self.len, self.vendor, self.subtype,
-                      self.algorithm, self.fields, self.basis,
-                      self.slave_type, self.n_slaves,
-                      self.ofs_nbits, self.dst)
-
-    @classmethod
-    def parser(cls, action_cls, buf, offset):
-        (type_, len_, vendor, subtype, algorithm, fields, basis,
-            slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
-            ofproto.NX_ACTION_BUNDLE_PACK_STR, buf, offset)
-        slave_offset = offset + ofproto.NX_ACTION_BUNDLE_SIZE
-
-        slaves = []
-        for i in range(0, n_slaves):
-            s = struct.unpack_from('!H', buf, slave_offset)
-            slaves.append(s[0])
-            slave_offset += 2
-
-        return action_cls(algorithm, fields, basis, slave_type,
-                          n_slaves, ofs_nbits, dst, slaves)
-
-
-@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_BUNDLE, 0)
-class NXActionBundle(NXActionBundleBase):
-    def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                 ofs_nbits, dst, slaves):
-        super(NXActionBundle, self).__init__(
-            algorithm, fields, basis, slave_type, n_slaves,
-            ofs_nbits, dst, slaves)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        return NXActionBundleBase.parser(NXActionBundle, buf, offset)
-
-
-@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_BUNDLE_LOAD, 0)
-class NXActionBundleLoad(NXActionBundleBase):
-    def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                 ofs_nbits, dst, slaves):
-        super(NXActionBundleLoad, self).__init__(
-            algorithm, fields, basis, slave_type, n_slaves,
-            ofs_nbits, dst, slaves)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        return NXActionBundleBase.parser(NXActionBundleLoad, buf, offset)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_AUTOPATH, ofproto.NX_ACTION_AUTOPATH_SIZE)
-class NXActionAutopath(NXActionHeader):
-    def __init__(self, ofs_nbits, dst, id_):
-        super(NXActionAutopath, self).__init__()
-        self.ofs_nbits = ofs_nbits
-        self.dst = dst
-        self.id = id_
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_AUTOPATH_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype,
-                      self.ofs_nbits, self.dst, self.id)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, ofs_nbits, dst,
-            id_) = struct.unpack_from(
-            ofproto.NX_ACTION_AUTOPATH_PACK_STR, buf, offset)
-        return cls(ofs_nbits, dst, id_)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_OUTPUT_REG, ofproto.NX_ACTION_OUTPUT_REG_SIZE)
-class NXActionOutputReg(NXActionHeader):
-    def __init__(self, ofs_nbits, src, max_len):
-        super(NXActionOutputReg, self).__init__()
-        self.ofs_nbits = ofs_nbits
-        self.src = src
-        self.max_len = max_len
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype,
-                      self.ofs_nbits, self.src, self.max_len)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, ofs_nbits, src,
-            max_len) = struct.unpack_from(
-            ofproto.NX_ACTION_OUTPUT_REG_PACK_STR, buf, offset)
-        return cls(ofs_nbits, src, max_len)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_EXIT, ofproto.NX_ACTION_HEADER_SIZE)
-class NXActionExit(NXActionHeader):
-    def __init__(self):
-        super(NXActionExit, self).__init__()
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype) = struct.unpack_from(
-            ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset)
-        return cls()
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_DEC_TTL, ofproto.NX_ACTION_HEADER_SIZE)
-class NXActionDecTtl(NXActionHeader):
-    def __init__(self):
-        super(NXActionDecTtl, self).__init__()
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype) = struct.unpack_from(
-            ofproto.NX_ACTION_HEADER_PACK_STR, buf, offset)
-        return cls()
-
-
-@NXActionHeader.register_nx_action_subtype(ofproto.NXAST_LEARN, 0)
-class NXActionLearn(NXActionHeader):
-    def __init__(self, idle_timeout, hard_timeout, priority, cookie, flags,
-                 table_id, fin_idle_timeout, fin_hard_timeout, spec):
-        super(NXActionLearn, self).__init__()
-        len_ = len(spec) + ofproto.NX_ACTION_LEARN_SIZE
-        pad_len = 8 - (len_ % 8)
-        self.len = len_ + pad_len
-
-        self.idle_timeout = idle_timeout
-        self.hard_timeout = hard_timeout
-        self.priority = priority
-        self.cookie = cookie
-        self.flags = flags
-        self.table_id = table_id
-        self.fin_idle_timeout = fin_idle_timeout
-        self.fin_hard_timeout = fin_hard_timeout
-        self.spec = spec + bytearray(b'\x00' * pad_len)
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_LEARN_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype,
-                      self.idle_timeout, self.hard_timeout, self.priority,
-                      self.cookie, self.flags, self.table_id,
-                      self.fin_idle_timeout, self.fin_hard_timeout)
-        buf += self.spec
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, idle_timeout, hard_timeout, priority,
-            cookie, flags, table_id, fin_idle_timeout,
-            fin_hard_timeout) = struct.unpack_from(
-            ofproto.NX_ACTION_LEARN_PACK_STR, buf, offset)
-        spec = buf[offset + ofproto.NX_ACTION_LEARN_SIZE:]
-        return cls(idle_timeout, hard_timeout, priority,
-                   cookie, flags, table_id, fin_idle_timeout,
-                   fin_hard_timeout, spec)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_CONTROLLER, ofproto.NX_ACTION_CONTROLLER_SIZE)
-class NXActionController(NXActionHeader):
-    def __init__(self, max_len, controller_id, reason):
-        super(NXActionController, self).__init__()
-        self.max_len = max_len
-        self.controller_id = controller_id
-        self.reason = reason
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_CONTROLLER_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype,
-                      self.max_len, self.controller_id, self.reason, 0)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, max_len, controller_id, reason,
-            _zero) = struct.unpack_from(
-            ofproto.NX_ACTION_CONTROLLER_PACK_STR, buf, offset)
-        return cls(max_len, controller_id, reason)
-
-
-@NXActionHeader.register_nx_action_subtype(
-    ofproto.NXAST_FIN_TIMEOUT, ofproto.NX_ACTION_FIN_TIMEOUT_SIZE)
-class NXActionFinTimeout(NXActionHeader):
-    def __init__(self, fin_idle_timeout, fin_hard_timeout):
-        super(NXActionFinTimeout, self).__init__()
-        self.fin_idle_timeout = fin_idle_timeout
-        self.fin_hard_timeout = fin_hard_timeout
-
-    def serialize(self, buf, offset):
-        msg_pack_into(ofproto.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset,
-                      self.type, self.len, self.vendor, self.subtype,
-                      self.fin_idle_timeout, self.fin_hard_timeout)
-
-    @classmethod
-    def parser(cls, buf, offset):
-        (type_, len_, vendor, subtype, fin_idle_timeout,
-            fin_hard_timeout) = struct.unpack_from(
-            ofproto.NX_ACTION_FIN_TIMEOUT_PACK_STR, buf, offset)
-        return cls(fin_idle_timeout, fin_hard_timeout)
 
 
 class OFPDescStats(ofproto_parser.namedtuple('OFPDescStats', (
@@ -3646,3 +3224,9 @@ class NXAggregateStatsRequest(NXStatsRequest):
             ofproto.NX_AGGREGATE_STATS_REQUEST_PACK_STR,
             self.buf, ofproto.NX_STATS_MSG_SIZE, self.out_port,
             self.match_len, self.table_id)
+
+
+nx_actions.generate(
+    'ryu.ofproto.ofproto_v1_0',
+    'ryu.ofproto.ofproto_v1_0_parser'
+)

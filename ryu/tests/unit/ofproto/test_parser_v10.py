@@ -1275,60 +1275,6 @@ class TestNXActionSetTunnel(unittest.TestCase):
         eq_(self.tun_id['val'], res[4])
 
 
-class TestNXActionSetQueue(unittest.TestCase):
-    """ Test case for ofproto_v1_0_parser.NXActionSetQueue
-    """
-
-    # NX_ACTION_SET_QUEUE_PACK_STR
-    # '!HHIH2xI'...type, len, vendor, subtype, zfill, queue_id
-    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': b'\x00\x00\x23\x20',
-              'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': b'\x00\x04', 'val': ofproto.NXAST_SET_QUEUE}
-    zfill = b'\x00' * 2
-    queue_id = {'buf': b'\xde\xbe\xc5\x18', 'val': 3737044248}
-
-    buf = type_['buf'] \
-        + len_['buf'] \
-        + vendor['buf'] \
-        + subtype['buf'] \
-        + zfill \
-        + queue_id['buf']
-
-    c = NXActionSetQueue(queue_id['val'])
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
-        eq_(self.subtype['val'], self.c.subtype)
-        eq_(self.queue_id['val'], self.c.queue_id)
-
-    def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-        eq_(self.queue_id['val'], res.queue_id)
-
-    def test_serialize(self):
-        buf = bytearray()
-        self.c.serialize(buf, 0)
-
-        fmt = ofproto.NX_ACTION_SET_QUEUE_PACK_STR
-        res = struct.unpack(fmt, six.binary_type(buf))
-
-        eq_(self.type_['val'], res[0])
-        eq_(self.len_['val'], res[1])
-        eq_(self.vendor['val'], res[2])
-        eq_(self.subtype['val'], res[3])
-        eq_(self.queue_id['val'], res[4])
-
-
 class TestNXActionPopQueue(unittest.TestCase):
     """ Test case for ofproto_v1_0_parser.NXActionPopQueue
     """
@@ -1906,78 +1852,6 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.n_slaves['val'], res[8])
         eq_(self.ofs_nbits['val'], res[9])
         eq_(self.dst['val'], res[10])
-
-
-class TestNXActionAutopath(unittest.TestCase):
-    """ Test case for ofproto_v1_0_parser.NXActionAutopath
-    """
-
-    # NX_ACTION_AUTOPATH_PACK_STR
-    # '!HHIHHII4x'...type, len, vendor, subtype, ofs_nbits,
-    #                dst, id_, zfill
-    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
-    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': b'\x00\x00\x23\x20',
-              'val': ofproto_common.NX_EXPERIMENTER_ID}
-    subtype = {'buf': b'\x00\x0b', 'val': ofproto.NXAST_AUTOPATH}
-    ofs_nbits = {'buf': b'\xfe\x78', 'val': 65144}
-    dst = {'buf': b'\xf8\x55\x74\x95', 'val': 4166349973}
-    id_ = {'buf': b'\x02\x2d\x37\xed', 'val': 36517869}
-    zfill = b'\x00' * 4
-
-    buf = type_['buf'] \
-        + len_['buf'] \
-        + vendor['buf'] \
-        + subtype['buf'] \
-        + ofs_nbits['buf'] \
-        + dst['buf'] \
-        + id_['buf'] \
-        + zfill
-
-    c = NXActionAutopath(ofs_nbits['val'],
-                         dst['val'],
-                         id_['val'])
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
-        eq_(self.subtype['val'], self.c.subtype)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
-        eq_(self.dst['val'], self.c.dst)
-        eq_(self.id_['val'], self.c.id)
-
-    def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
-        eq_(self.type_['val'], res.type)
-        eq_(self.len_['val'], res.len)
-        eq_(self.vendor['val'], res.vendor)
-        eq_(self.subtype['val'], res.subtype)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
-        eq_(self.dst['val'], res.dst)
-        eq_(self.id_['val'], res.id)
-
-    def test_serialize(self):
-        buf = bytearray()
-        self.c.serialize(buf, 0)
-
-        fmt = ofproto.NX_ACTION_AUTOPATH_PACK_STR
-        res = struct.unpack(fmt, six.binary_type(buf))
-
-        eq_(self.type_['val'], res[0])
-        eq_(self.len_['val'], res[1])
-        eq_(self.vendor['val'], res[2])
-        eq_(self.subtype['val'], res[3])
-        eq_(self.ofs_nbits['val'], res[4])
-        eq_(self.dst['val'], res[5])
-        eq_(self.id_['val'], res[6])
 
 
 class TestNXActionOutputReg(unittest.TestCase):

@@ -154,7 +154,7 @@ def generate(ofp_name, ofpp_name):
         _experimenter = ofproto_common.NX_EXPERIMENTER_ID
 
         def __init__(self):
-            super(NXAction, self).__init__(experimenter=self._experimenter)
+            super(NXAction, self).__init__(self._experimenter)
             self.subtype = self._subtype
 
         @classmethod
