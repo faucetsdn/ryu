@@ -130,6 +130,21 @@ MESSAGES = [
               'importance=39032'] +
               ['dl_type=0x86dd'] +
               ['actions=ct(commit,nat(dst=2001:1::1-2001:1::ffff)'])},
+    {'name': 'action_note',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=note:04.05.06.07.00.00'])},
+    {'name': 'action_controller',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=controller(reason=packet_out,max_len=1024,id=1)'])},
+    {'name': 'action_fintimeout',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100,tcp'] +
+              ['actions=fin_timeout(idle_timeout=30,hard_timeout=60)'])},
 ]
 
 buf = []
