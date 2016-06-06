@@ -20,6 +20,7 @@ import logging
 import six
 from nose.tools import *
 from ryu.ofproto.ofproto_v1_0_parser import *
+from ryu.ofproto.nx_actions import *
 from ryu.ofproto import ofproto_v1_0_parser
 from ryu.lib import addrconv
 
