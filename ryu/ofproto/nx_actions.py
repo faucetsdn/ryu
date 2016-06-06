@@ -168,11 +168,18 @@ def generate(ofp_name, ofpp_name):
             return subtype_cls.parse(rest)
 
         def serialize(self, buf, offset):
+            data = self.serialize_body()
+            payload_offset = (
+                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
+                struct.calcsize(NXAction._fmt_str)
+            )
+            self.len = utils.round_up(payload_offset + len(data), 8)
             super(NXAction, self).serialize(buf, offset)
             msg_pack_into(NXAction._fmt_str,
                           buf,
                           offset + ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE,
                           self.subtype)
+            buf += data
 
         @classmethod
         def register(cls, subtype_cls):
@@ -187,21 +194,12 @@ def generate(ofp_name, ofpp_name):
             self.data = data
 
         @classmethod
-        def parse(cls, subtype, buf):
+        def parse(cls, buf):
             return cls(data=buf)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             # fixup
-            data = self.data
-            if data is None:
-                data = bytearray()
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionUnknown, self).serialize(buf, offset)
-            buf += data
+            return bytearray() if self.data is None else self.data
 
     class NXActionRegLoad(NXAction):
         _subtype = nicira_ext.NXAST_REG_LOAD
@@ -223,14 +221,14 @@ def generate(ofp_name, ofpp_name):
         @classmethod
         def parse(cls, buf):
             (ofs_nbits, dst, value,) = struct.unpack_from(
-                NXActionRegLoad._fmt_str, buf, 0)
+                cls._fmt_str, buf, 0)
             ofs = ofs_nbits >> 6
             nbits = (ofs_nbits & ((1 << 6) - 1)) + 1
             # Right-shift instead of using oxm_parse_header for simplicity...
             dst_name = ofp.oxm_to_user_header(dst >> 9)
             return cls(ofs, nbits, dst_name, value)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             hdr_data = bytearray()
             n = ofp.oxm_from_user_header(self.dst)
             ofp.oxm_serialize_header(n, hdr_data, 0)
@@ -238,16 +236,9 @@ def generate(ofp_name, ofpp_name):
 
             ofs_nbits = (self.ofs << 6) + self.nbits - 1
             data = bytearray()
-            msg_pack_into(NXActionRegLoad._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           ofs_nbits, dst_num, self.value)
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionRegLoad, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     class NXActionRegMove(NXAction):
         _subtype = nicira_ext.NXAST_REG_MOVE
@@ -272,7 +263,7 @@ def generate(ofp_name, ofpp_name):
         @classmethod
         def parse(cls, buf):
             (n_bits, src_ofs, dst_ofs,) = struct.unpack_from(
-                NXActionRegMove._fmt_str, buf, 0)
+                cls._fmt_str, buf, 0)
             rest = buf[struct.calcsize(NXActionRegMove._fmt_str):]
             # src field
             (n, len) = ofp.oxm_parse_header(rest, 0)
@@ -286,10 +277,10 @@ def generate(ofp_name, ofpp_name):
             return cls(src_field, dst_field=dst_field, n_bits=n_bits,
                        src_ofs=src_ofs, dst_ofs=dst_ofs)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             # fixup
             data = bytearray()
-            msg_pack_into(NXActionRegMove._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           self.n_bits, self.src_ofs, self.dst_ofs)
             # src field
             n = ofp.oxm_from_user_header(self.src_field)
@@ -297,14 +288,7 @@ def generate(ofp_name, ofpp_name):
             # dst field
             n = ofp.oxm_from_user_header(self.dst_field)
             ofp.oxm_serialize_header(n, data, len(data))
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionRegMove, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     class NXActionLearn(NXAction):
         _subtype = nicira_ext.NXAST_LEARN
@@ -346,8 +330,8 @@ def generate(ofp_name, ofpp_name):
              table_id,
              fin_idle_timeout,
              fin_hard_timeout,) = struct.unpack_from(
-                NXActionLearn._fmt_str, buf, 0)
-            rest = buf[struct.calcsize(NXActionLearn._fmt_str):]
+                cls._fmt_str, buf, 0)
+            rest = buf[struct.calcsize(cls._fmt_str):]
             # specs
             specs = []
             while len(rest) > 0:
@@ -365,10 +349,10 @@ def generate(ofp_name, ofpp_name):
                        fin_hard_timeout=fin_hard_timeout,
                        specs=specs)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             # fixup
             data = bytearray()
-            msg_pack_into(NXActionLearn._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           self.idle_timeout,
                           self.hard_timeout,
                           self.priority,
@@ -379,14 +363,7 @@ def generate(ofp_name, ofpp_name):
                           self.fin_hard_timeout)
             for spec in self.specs:
                 data += spec.serialize()
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionLearn, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     class NXActionConjunction(NXAction):
         _subtype = nicira_ext.NXAST_CONJUNCTION
@@ -409,23 +386,16 @@ def generate(ofp_name, ofpp_name):
             (clause,
              n_clauses,
              id_,) = struct.unpack_from(
-                NXActionConjunction._fmt_str, buf, 0)
+                cls._fmt_str, buf, 0)
             return cls(clause, n_clauses, id_)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             data = bytearray()
-            msg_pack_into(NXActionConjunction._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           self.clause,
                           self.n_clauses,
                           self.id)
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionConjunction, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     class NXActionResubmitTable(NXAction):
         _subtype = nicira_ext.NXAST_RESUBMIT_TABLE
@@ -445,22 +415,15 @@ def generate(ofp_name, ofpp_name):
         def parse(cls, buf):
             (in_port,
              table_id) = struct.unpack_from(
-                NXActionResubmitTable._fmt_str, buf, 0)
+                cls._fmt_str, buf, 0)
             return cls(in_port, table_id)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             data = bytearray()
-            msg_pack_into(NXActionResubmitTable._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           self.in_port,
                           self.table_id)
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionResubmitTable, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     class NXActionCT(NXAction):
         _subtype = nicira_ext.NXAST_CT
@@ -493,8 +456,8 @@ def generate(ofp_name, ofpp_name):
              zone_ofs_nbits,
              recirc_table,
              alg,) = struct.unpack_from(
-                 NXActionCT._fmt_str, buf, 0)
-            rest = buf[struct.calcsize(NXActionCT._fmt_str):]
+                cls._fmt_str, buf, 0)
+            rest = buf[struct.calcsize(cls._fmt_str):]
             # actions
             actions = []
             while len(rest) > 0:
@@ -505,9 +468,9 @@ def generate(ofp_name, ofpp_name):
             return cls(flags, zone_src, zone_ofs_nbits, recirc_table,
                        alg, actions)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             data = bytearray()
-            msg_pack_into(NXActionCT._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           self.flags,
                           self.zone_src,
                           self.zone_ofs_nbits,
@@ -515,14 +478,7 @@ def generate(ofp_name, ofpp_name):
                           self.alg)
             for a in self.actions:
                 a.serialize(data, len(data))
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionCT, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     class NXActionNAT(NXAction):
         _subtype = nicira_ext.NXAST_NAT
@@ -562,8 +518,8 @@ def generate(ofp_name, ofpp_name):
         def parse(cls, buf):
             (flags,
              range_present) = struct.unpack_from(
-                 NXActionNAT._fmt_str, buf, 0)
-            rest = buf[struct.calcsize(NXActionNAT._fmt_str):]
+                cls._fmt_str, buf, 0)
+            rest = buf[struct.calcsize(cls._fmt_str):]
             # optional parameters
             kwargs = dict()
             if range_present & nicira_ext.NX_NAT_RANGE_IPV4_MIN:
@@ -588,7 +544,7 @@ def generate(ofp_name, ofpp_name):
 
             return cls(flags, **kwargs)
 
-        def serialize(self, buf, offset):
+        def serialize_body(self):
             # Pack optional parameters first, as range_present needs
             # to be calculated.
             optional_data = b''
@@ -619,20 +575,13 @@ def generate(ofp_name, ofpp_name):
                     self.range_proto_max)
 
             data = bytearray()
-            msg_pack_into(NXActionNAT._fmt_str, data, 0,
+            msg_pack_into(self._fmt_str, data, 0,
                           self.flags,
                           range_present)
             msg_pack_into('!%ds' % len(optional_data), data, len(data),
                           optional_data)
 
-            payload_offset = (
-                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
-                struct.calcsize(NXAction._fmt_str)
-            )
-            self.len = utils.round_up(payload_offset + len(data), 8)
-            super(NXActionNAT, self).serialize(buf, offset)
-            msg_pack_into('!%ds' % len(data), buf, offset + payload_offset,
-                          bytes(data))
+            return data
 
     def add_attr(k, v):
         v.__module__ = ofpp.__name__  # Necessary for stringify stuff
