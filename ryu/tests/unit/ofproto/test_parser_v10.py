@@ -1421,6 +1421,8 @@ class TestNXActionRegLoad(unittest.TestCase):
     dst = {'buf': b'\x9f\x9f\x88\x26', 'val': 2678032422}
     value = {'buf': b'\x33\x51\xcd\x43\x25\x28\x18\x99',
              'val': 3697962457317775513}
+    start = 246
+    end = 270
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1430,7 +1432,8 @@ class TestNXActionRegLoad(unittest.TestCase):
         + dst['buf'] \
         + value['buf']
 
-    c = NXActionRegLoad(ofs_nbits['val'],
+    c = NXActionRegLoad(start,
+                        end,
                         dst['val'],
                         value['val'])
 
@@ -1445,13 +1448,15 @@ class TestNXActionRegLoad(unittest.TestCase):
         eq_(self.len_['val'], self.c.len)
         eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.dst['val'], self.c.dst)
         eq_(self.value['val'], self.c.value)
 
     def test_parser(self):
         res = self.c.parser(self.buf, 0)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.dst['val'], res.dst)
         eq_(self.value['val'], res.value)
 
@@ -1547,6 +1552,8 @@ class TestNXActionMultipath(unittest.TestCase):
     zfill1 = b'\x00' * 2
     ofs_nbits = {'buf': b'\xa9\x9a', 'val': 43418}
     dst = {'buf': b'\xb9\x2f\x16\x64', 'val': 3106870884}
+    start = 678
+    end = 704
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1567,7 +1574,8 @@ class TestNXActionMultipath(unittest.TestCase):
                           algorithm['val'],
                           max_link['val'],
                           arg['val'],
-                          ofs_nbits['val'],
+                          start,
+                          end,
                           dst['val'])
 
     def setUp(self):
@@ -1582,7 +1590,8 @@ class TestNXActionMultipath(unittest.TestCase):
         eq_(self.algorithm['val'], self.c.algorithm)
         eq_(self.max_link['val'], self.c.max_link)
         eq_(self.arg['val'], self.c.arg)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.dst['val'], self.c.dst)
 
     def test_parser(self):
@@ -1593,7 +1602,8 @@ class TestNXActionMultipath(unittest.TestCase):
         eq_(self.algorithm['val'], res.algorithm)
         eq_(self.max_link['val'], res.max_link)
         eq_(self.arg['val'], res.arg)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.start, res.start)
+        eq_(self.end, res.end)
         eq_(self.dst['val'], res.dst)
 
     def test_serialize(self):
@@ -1634,12 +1644,14 @@ class TestNXActionBundle(unittest.TestCase):
     basis = {'buf': b'\xfd\x6f', 'val': 64879}
     slave_type = {'buf': b'\x7c\x51\x0f\xe0', 'val': 2085687264}
     n_slaves = {'buf': b'\x00\x02', 'val': 2}
-    ofs_nbits = {'buf': b'\xec\xf7', 'val': 60663}
-    dst = {'buf': b'\x50\x7c\x75\xfe', 'val': 1350333950}
+    ofs_nbits = {'buf': b'\x00\x00', 'val': 0}
+    dst = {'buf': b'\x00\x00\x00\x00', 'val': 0}
     zfill = b'\x00' * 4
 
     slaves_buf = (b'\x00\x01', b'\x00\x02')
     slaves_val = (1, 2)
+    start = 0
+    end = 0
 
     _len = len_['val'] + len(slaves_val) * 2
     _len += (_len % 8)
@@ -1664,7 +1676,8 @@ class TestNXActionBundle(unittest.TestCase):
                        basis['val'],
                        slave_type['val'],
                        n_slaves['val'],
-                       ofs_nbits['val'],
+                       start,
+                       end,
                        dst['val'],
                        slaves_val)
 
@@ -1684,7 +1697,8 @@ class TestNXActionBundle(unittest.TestCase):
         eq_(self.basis['val'], self.c.basis)
         eq_(self.slave_type['val'], self.c.slave_type)
         eq_(self.n_slaves['val'], self.c.n_slaves)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.dst['val'], self.c.dst)
 
         # slaves
@@ -1704,7 +1718,8 @@ class TestNXActionBundle(unittest.TestCase):
         eq_(self.basis['val'], res.basis)
         eq_(self.slave_type['val'], res.slave_type)
         eq_(self.n_slaves['val'], res.n_slaves)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.start, res.start)
+        eq_(self.end, res.end)
         eq_(self.dst['val'], res.dst)
 
         # slaves
@@ -1756,6 +1771,8 @@ class TestNXActionBundleLoad(unittest.TestCase):
     ofs_nbits = {'buf': b'\xd2\x9d', 'val': 53917}
     dst = {'buf': b'\x37\xfe\xb3\x60', 'val': 939438944}
     zfill = b'\x00' * 4
+    start = 842
+    end = 871
 
     slaves_buf = (b'\x00\x01', b'\x00\x02')
     slaves_val = (1, 2)
@@ -1783,7 +1800,8 @@ class TestNXActionBundleLoad(unittest.TestCase):
                            basis['val'],
                            slave_type['val'],
                            n_slaves['val'],
-                           ofs_nbits['val'],
+                           start,
+                           end,
                            dst['val'],
                            slaves_val)
 
@@ -1803,7 +1821,8 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.basis['val'], self.c.basis)
         eq_(self.slave_type['val'], self.c.slave_type)
         eq_(self.n_slaves['val'], self.c.n_slaves)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.dst['val'], self.c.dst)
 
         # slaves
@@ -1823,7 +1842,8 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.basis['val'], res.basis)
         eq_(self.slave_type['val'], res.slave_type)
         eq_(self.n_slaves['val'], res.n_slaves)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.start, res.start)
+        eq_(self.end, res.end)
         eq_(self.dst['val'], res.dst)
 
         # slaves
@@ -1870,6 +1890,8 @@ class TestNXActionOutputReg(unittest.TestCase):
     src = {'buf': b'\x5e\x3a\x04\x26', 'val': 1580860454}
     max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
     zfill = b'\x00' * 6
+    start = 1017
+    end = 1073
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1880,7 +1902,8 @@ class TestNXActionOutputReg(unittest.TestCase):
         + max_len['buf'] \
         + zfill
 
-    c = NXActionOutputReg(ofs_nbits['val'],
+    c = NXActionOutputReg(start,
+                          end,
                           src['val'],
                           max_len['val'])
 
@@ -1895,7 +1918,8 @@ class TestNXActionOutputReg(unittest.TestCase):
         eq_(self.len_['val'], self.c.len)
         eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.src['val'], self.c.src)
         eq_(self.max_len['val'], self.c.max_len)
 
@@ -1906,7 +1930,8 @@ class TestNXActionOutputReg(unittest.TestCase):
         eq_(self.len_['val'], res.len)
         eq_(self.vendor['val'], res.vendor)
         eq_(self.subtype['val'], res.subtype)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.start, self.c.start)
+        eq_(self.end, self.c.end)
         eq_(self.src['val'], res.src)
         eq_(self.max_len['val'], res.max_len)
 

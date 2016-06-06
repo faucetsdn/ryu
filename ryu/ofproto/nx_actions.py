@@ -228,11 +228,11 @@ def generate(ofp_name, ofpp_name):
             ]
         }
 
-        def __init__(self, ofs, nbits, dst, value,
+        def __init__(self, start, end, dst, value,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionRegLoad, self).__init__()
-            self.ofs = ofs
-            self.nbits = nbits
+            self.start = start
+            self.end = end
             self.dst = dst
             self.value = value
 
@@ -240,11 +240,11 @@ def generate(ofp_name, ofpp_name):
         def parser(cls, buf):
             (ofs_nbits, dst, value,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            ofs = ofs_nbits >> 6
-            nbits = (ofs_nbits & ((1 << 6) - 1)) + 1
+            start = ofs_nbits >> 6
+            end = (ofs_nbits & 0x3f) + start
             # Right-shift instead of using oxm_parse_header for simplicity...
             dst_name = ofp.oxm_to_user_header(dst >> 9)
-            return cls(ofs, nbits, dst_name, value)
+            return cls(start, end, dst_name, value)
 
         def serialize_body(self):
             hdr_data = bytearray()
@@ -252,7 +252,7 @@ def generate(ofp_name, ofpp_name):
             ofp.oxm_serialize_header(n, hdr_data, 0)
             (dst_num,) = struct.unpack_from('!I', six.binary_type(hdr_data), 0)
 
-            ofs_nbits = (self.ofs << 6) + self.nbits - 1
+            ofs_nbits = (self.start << 6) + (self.end - self.start)
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0,
                           ofs_nbits, dst_num, self.value)
@@ -432,12 +432,14 @@ def generate(ofp_name, ofpp_name):
         _fmt_str = '!HIH6x'
 
         def __init__(self,
-                     ofs_nbits,
+                     start,
+                     end,
                      src,
                      max_len,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionOutputReg, self).__init__()
-            self.ofs_nbits = ofs_nbits
+            self.start = start
+            self.end = end
             self.src = src
             self.max_len = max_len
 
@@ -447,12 +449,16 @@ def generate(ofp_name, ofpp_name):
              src,
              max_len) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            return cls(ofs_nbits,
+            start = ofs_nbits >> 6
+            end = (ofs_nbits & 0x3f) + start
+            return cls(start,
+                       end,
                        src,
                        max_len)
 
         def serialize_body(self):
             data = bytearray()
+            ofs_nbits = (self.start << 6) + (self.end - self.start)
             msg_pack_into(self._fmt_str, data, 0,
                           ofs_nbits,
                           self.src,
@@ -660,7 +666,8 @@ def generate(ofp_name, ofpp_name):
                      algorithm,
                      max_link,
                      arg,
-                     ofs_nbits,
+                     start,
+                     end,
                      dst,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionMultipath, self).__init__()
@@ -669,7 +676,8 @@ def generate(ofp_name, ofpp_name):
             self.algorithm = algorithm
             self.max_link = max_link
             self.arg = arg
-            self.ofs_nbits = ofs_nbits
+            self.start = start
+            self.end = end
             self.dst = dst
 
         @classmethod
@@ -682,15 +690,19 @@ def generate(ofp_name, ofpp_name):
              ofs_nbits,
              dst) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
+            start = ofs_nbits >> 6
+            end = (ofs_nbits & 0x3f) + start
             return cls(fields,
                        basis,
                        algorithm,
                        max_link,
                        arg,
-                       ofs_nbits,
+                       start,
+                       end,
                        dst)
 
         def serialize_body(self):
+            ofs_nbits = (self.start << 6) + (self.end - self.start)
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0,
                           self.fields,
@@ -698,7 +710,7 @@ def generate(ofp_name, ofpp_name):
                           self.algorithm,
                           self.max_link,
                           self.arg,
-                          self.ofs_nbits,
+                          ofs_nbits,
                           self.dst)
             return data
 
@@ -708,7 +720,7 @@ def generate(ofp_name, ofpp_name):
         _fmt_str = '!HHHIHHI4x'
 
         def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                     ofs_nbits, dst, slaves):
+                     start, end, dst, slaves):
             super(_NXActionBundleBase, self).__init__()
             self.len = utils.round_up(
                 nicira_ext.NX_ACTION_BUNDLE_0_SIZE + len(slaves) * 2, 8)
@@ -718,7 +730,8 @@ def generate(ofp_name, ofpp_name):
             self.basis = basis
             self.slave_type = slave_type
             self.n_slaves = n_slaves
-            self.ofs_nbits = ofs_nbits
+            self.start = start
+            self.end = end
             self.dst = dst
 
             assert isinstance(slaves, (list, tuple))
@@ -732,6 +745,8 @@ def generate(ofp_name, ofpp_name):
             (algorithm, fields, basis,
                 slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
+            start = ofs_nbits >> 6
+            end = (ofs_nbits & 0x3f) + start
             slave_offset = (nicira_ext.NX_ACTION_BUNDLE_0_SIZE -
                             nicira_ext.NX_ACTION_HEADER_0_SIZE)
 
@@ -742,9 +757,10 @@ def generate(ofp_name, ofpp_name):
                 slave_offset += 2
 
             return cls(algorithm, fields, basis, slave_type,
-                       n_slaves, ofs_nbits, dst, slaves)
+                       n_slaves, start, end, dst, slaves)
 
         def serialize_body(self):
+            ofs_nbits = (self.start << 6) + (self.end - self.start)
             data = bytearray()
             slave_offset = (nicira_ext.NX_ACTION_BUNDLE_0_SIZE -
                             nicira_ext.NX_ACTION_HEADER_0_SIZE)
@@ -761,7 +777,7 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into(self._fmt_str, data, 0,
                           self.algorithm, self.fields, self.basis,
                           self.slave_type, self.n_slaves,
-                          self.ofs_nbits, self.dst)
+                          ofs_nbits, self.dst)
 
             return data
 
@@ -769,25 +785,25 @@ def generate(ofp_name, ofpp_name):
         _subtype = nicira_ext.NXAST_BUNDLE
 
         def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                     ofs_nbits, dst, slaves):
+                     start, end, dst, slaves):
             # NXAST_BUNDLE actions should have 'ofs_nbits' and 'dst' zeroed.
             super(NXActionBundle, self).__init__(
                 algorithm, fields, basis, slave_type, n_slaves,
-                ofs_nbits=0, dst=0, slaves=slaves)
+                start=0, end=0, dst=0, slaves=slaves)
 
     class NXActionBundleLoad(_NXActionBundleBase):
         _subtype = nicira_ext.NXAST_BUNDLE_LOAD
 
         def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                     ofs_nbits, dst, slaves):
+                     start, end, dst, slaves):
             super(NXActionBundleLoad, self).__init__(
                 algorithm, fields, basis, slave_type, n_slaves,
-                ofs_nbits, dst, slaves)
+                start, end, dst, slaves)
 
     class NXActionCT(NXAction):
         _subtype = nicira_ext.NXAST_CT
 
-        # flags, zone_src, zone_ofs_nbits (zone_imm), recirc_table,
+        # flags, zone_src, zone_ofs_nbits, recirc_table,
         # pad, alg
         _fmt_str = '!HIHB3xH'
         # Followed by actions
@@ -795,7 +811,8 @@ def generate(ofp_name, ofpp_name):
         def __init__(self,
                      flags,
                      zone_src,
-                     zone_ofs_nbits,  # is zone_imm if zone_src == 0
+                     zone_start,
+                     zone_end,
                      recirc_table,
                      alg,
                      actions,
@@ -803,7 +820,8 @@ def generate(ofp_name, ofpp_name):
             super(NXActionCT, self).__init__()
             self.flags = flags
             self.zone_src = zone_src
-            self.zone_ofs_nbits = zone_ofs_nbits
+            self.zone_start = zone_start
+            self.zone_end = zone_end
             self.recirc_table = recirc_table
             self.alg = alg
             self.actions = actions
@@ -816,6 +834,8 @@ def generate(ofp_name, ofpp_name):
              recirc_table,
              alg,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
+            zone_start = zone_ofs_nbits >> 6
+            zone_end = (zone_ofs_nbits & 0x3f) + zone_start
             rest = buf[struct.calcsize(cls._fmt_str):]
             # actions
             actions = []
@@ -824,15 +844,17 @@ def generate(ofp_name, ofpp_name):
                 actions.append(action)
                 rest = rest[action.len:]
 
-            return cls(flags, zone_src, zone_ofs_nbits, recirc_table,
+            return cls(flags, zone_src, zone_start, zone_end, recirc_table,
                        alg, actions)
 
         def serialize_body(self):
+            zone_ofs_nbits = ((self.zone_start << 6) +
+                              (self.zone_end - self.zone_start))
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0,
                           self.flags,
                           self.zone_src,
-                          self.zone_ofs_nbits,
+                          zone_ofs_nbits,
                           self.recirc_table,
                           self.alg)
             for a in self.actions:

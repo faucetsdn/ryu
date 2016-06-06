@@ -16,8 +16,8 @@
                         "dst": "reg0", 
                         "experimenter": 8992, 
                         "len": 24, 
-                        "nbits": 28, 
-                        "ofs": 4, 
+                        "end": 31, 
+                        "start": 4, 
                         "subtype": 7, 
                         "type": 65535, 
                         "value": 233495534
