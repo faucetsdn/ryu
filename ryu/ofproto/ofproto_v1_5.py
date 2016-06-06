@@ -19,7 +19,7 @@ OpenFlow 1.5 definitions.
 """
 
 from ryu.lib import type_desc
-from ryu.ofproto import nx_match
+from ryu.ofproto import nicira_ext
 from ryu.ofproto import ofproto_utils
 from ryu.ofproto import oxm_fields
 from ryu.ofproto import oxs_fields
@@ -431,7 +431,7 @@ oxm_types = [
     oxm_fields.OpenFlowBasic('tcp_flags', 42, type_desc.Int2),
     oxm_fields.OpenFlowBasic('actset_output', 43, type_desc.Int4),
     oxm_fields.OpenFlowBasic('packet_type', 44, type_desc.Int4),
-] + nx_match.oxm_types
+] + nicira_ext.oxm_types
 
 oxm_fields.generate(__name__)
 

@@ -27,5 +27,5 @@ but also available in OF1.2+.
 Nicira Extended Match Structures
 ================================
 
-.. automodule:: ryu.ofproto.nx_match
+.. automodule:: ryu.ofproto.nicira_ext
 

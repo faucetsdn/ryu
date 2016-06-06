@@ -17,9 +17,11 @@
 # Nicira extensions
 # Many of these definitions are common among OpenFlow versions.
 
+import sys
 from struct import calcsize
-
+from ryu.lib import type_desc
 from ryu.ofproto.ofproto_common import OFP_HEADER_SIZE
+from ryu.ofproto import oxm_fields
 
 # Action subtypes
 NXAST_RESUBMIT = 1
@@ -252,3 +254,206 @@ NX_NAT_RANGE_IPV6_MIN = 1 << 2
 NX_NAT_RANGE_IPV6_MAX = 1 << 3
 NX_NAT_RANGE_PROTO_MIN = 1 << 4
 NX_NAT_RANGE_PROTO_MAX = 1 << 5
+
+
+def nxm_header__(vendor, field, hasmask, length):
+    return (vendor << 16) | (field << 9) | (hasmask << 8) | length
+
+
+def nxm_header(vendor, field, length):
+    return nxm_header__(vendor, field, 0, length)
+
+
+def nxm_header_w(vendor, field, length):
+    return nxm_header__(vendor, field, 1, (length) * 2)
+
+
+NXM_OF_IN_PORT = nxm_header(0x0000, 0, 2)
+
+NXM_OF_ETH_DST = nxm_header(0x0000, 1, 6)
+NXM_OF_ETH_DST_W = nxm_header_w(0x0000, 1, 6)
+NXM_OF_ETH_SRC = nxm_header(0x0000, 2, 6)
+NXM_OF_ETH_SRC_W = nxm_header_w(0x0000, 2, 6)
+NXM_OF_ETH_TYPE = nxm_header(0x0000, 3, 2)
+
+NXM_OF_VLAN_TCI = nxm_header(0x0000, 4, 2)
+NXM_OF_VLAN_TCI_W = nxm_header_w(0x0000, 4, 2)
+
+NXM_OF_IP_TOS = nxm_header(0x0000, 5, 1)
+
+NXM_OF_IP_PROTO = nxm_header(0x0000, 6, 1)
+
+NXM_OF_IP_SRC = nxm_header(0x0000, 7, 4)
+NXM_OF_IP_SRC_W = nxm_header_w(0x0000, 7, 4)
+NXM_OF_IP_DST = nxm_header(0x0000, 8, 4)
+NXM_OF_IP_DST_W = nxm_header_w(0x0000, 8, 4)
+
+NXM_OF_TCP_SRC = nxm_header(0x0000, 9, 2)
+NXM_OF_TCP_SRC_W = nxm_header_w(0x0000, 9, 2)
+NXM_OF_TCP_DST = nxm_header(0x0000, 10, 2)
+NXM_OF_TCP_DST_W = nxm_header_w(0x0000, 10, 2)
+
+NXM_OF_UDP_SRC = nxm_header(0x0000, 11, 2)
+NXM_OF_UDP_SRC_W = nxm_header_w(0x0000, 11, 2)
+NXM_OF_UDP_DST = nxm_header(0x0000, 12, 2)
+NXM_OF_UDP_DST_W = nxm_header_w(0x0000, 12, 2)
+
+NXM_OF_ICMP_TYPE = nxm_header(0x0000, 13, 1)
+NXM_OF_ICMP_CODE = nxm_header(0x0000, 14, 1)
+
+NXM_OF_ARP_OP = nxm_header(0x0000, 15, 2)
+
+NXM_OF_ARP_SPA = nxm_header(0x0000, 16, 4)
+NXM_OF_ARP_SPA_W = nxm_header_w(0x0000, 16, 4)
+NXM_OF_ARP_TPA = nxm_header(0x0000, 17, 4)
+NXM_OF_ARP_TPA_W = nxm_header_w(0x0000, 17, 4)
+
+NXM_NX_TUN_ID = nxm_header(0x0001, 16, 8)
+NXM_NX_TUN_ID_W = nxm_header_w(0x0001, 16, 8)
+NXM_NX_TUN_IPV4_SRC = nxm_header(0x0001, 31, 4)
+NXM_NX_TUN_IPV4_SRC_W = nxm_header_w(0x0001, 31, 4)
+NXM_NX_TUN_IPV4_DST = nxm_header(0x0001, 32, 4)
+NXM_NX_TUN_IPV4_DST_W = nxm_header_w(0x0001, 32, 4)
+
+NXM_NX_ARP_SHA = nxm_header(0x0001, 17, 6)
+NXM_NX_ARP_THA = nxm_header(0x0001, 18, 6)
+
+NXM_NX_IPV6_SRC = nxm_header(0x0001, 19, 16)
+NXM_NX_IPV6_SRC_W = nxm_header_w(0x0001, 19, 16)
+NXM_NX_IPV6_DST = nxm_header(0x0001, 20, 16)
+NXM_NX_IPV6_DST_W = nxm_header_w(0x0001, 20, 16)
+
+NXM_NX_ICMPV6_TYPE = nxm_header(0x0001, 21, 1)
+NXM_NX_ICMPV6_CODE = nxm_header(0x0001, 22, 1)
+
+NXM_NX_ND_TARGET = nxm_header(0x0001, 23, 16)
+NXM_NX_ND_TARGET_W = nxm_header_w(0x0001, 23, 16)
+
+NXM_NX_ND_SLL = nxm_header(0x0001, 24, 6)
+
+NXM_NX_ND_TLL = nxm_header(0x0001, 25, 6)
+
+NXM_NX_IP_FRAG = nxm_header(0x0001, 26, 1)
+NXM_NX_IP_FRAG_W = nxm_header_w(0x0001, 26, 1)
+
+NXM_NX_IPV6_LABEL = nxm_header(0x0001, 27, 4)
+
+NXM_NX_IP_ECN = nxm_header(0x0001, 28, 1)
+
+NXM_NX_IP_TTL = nxm_header(0x0001, 29, 1)
+
+NXM_NX_PKT_MARK = nxm_header(0x0001, 33, 4)
+NXM_NX_PKT_MARK_W = nxm_header_w(0x0001, 33, 4)
+
+NXM_NX_TCP_FLAGS = nxm_header(0x0001, 34, 2)
+NXM_NX_TCP_FLAGS_W = nxm_header_w(0x0001, 34, 2)
+
+
+def nxm_nx_reg(idx):
+    return nxm_header(0x0001, idx, 4)
+
+
+def nxm_nx_reg_w(idx):
+    return nxm_header_w(0x0001, idx, 4)
+
+NXM_HEADER_PACK_STRING = '!I'
+
+#
+# The followings are implementations for OpenFlow 1.2+
+#
+
+sys.modules[__name__].__doc__ = """
+The API of this class is the same as ``OFPMatch``.
+
+You can define the flow match by the keyword arguments.
+The following arguments are available.
+
+================ =============== ==============================================
+Argument         Value           Description
+================ =============== ==============================================
+eth_dst_nxm      MAC address     Ethernet destination address.
+eth_src_nxm      MAC address     Ethernet source address.
+eth_type_nxm     Integer 16bit   Ethernet type.  Needed to support Nicira
+                                 extensions that require the eth_type to
+                                 be set. (i.e. tcp_flags_nxm)
+ip_proto_nxm     Integer 8bit    IP protocol. Needed to support Nicira
+                                 extensions that require the ip_proto to
+                                 be set. (i.e. tcp_flags_nxm)
+tunnel_id_nxm    Integer 64bit   Tunnel identifier.
+tun_ipv4_src     IPv4 address    Tunnel IPv4 source address.
+tun_ipv4_dst     IPv4 address    Tunnel IPv4 destination address.
+pkt_mark         Integer 32bit   Packet metadata mark.
+tcp_flags_nxm    Integer 16bit   TCP Flags.  Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IP)|0x86dd (IPv6)] and
+                                 ip_proto_nxm = 6 (TCP)
+conj_id          Integer 32bit   Conjunction ID used only with
+                                 the conjunction action
+ct_state         Integer 32bit   Conntrack state.
+ct_zone          Integer 16bit   Conntrack zone.
+ct_mark          Integer 32bit   Conntrack mark.
+ct_label         Integer 128bit  Conntrack label.
+tun_ipv6_src     IPv6 address    Tunnel IPv6 source address.
+tun_ipv6_dst     IPv6 address    Tunnel IPv6 destination address.
+_dp_hash         Integer 32bit   Flow hash computed in Datapath.
+reg<idx>         Integer 32bit   Packet register.
+                                 <idx> is register number 0-7.
+================ =============== ==============================================
+
+.. Note::
+
+    Setting the TCP flags via the nicira extensions.
+    This is required when using OVS version < 2.4.
+    When using the nxm fields, you need to use any nxm prereq
+    fields as well or you will receive a OFPBMC_BAD_PREREQ error
+
+    Example::
+
+        # WILL NOT work
+        flag = tcp.TCP_ACK
+        match = parser.OFPMatch(
+            tcp_flags_nxm=(flag, flag),
+            ip_proto=inet.IPPROTO_TCP,
+            eth_type=eth_type)
+
+        # Works
+        flag = tcp.TCP_ACK
+        match = parser.OFPMatch(
+            tcp_flags_nxm=(flag, flag),
+            ip_proto_nxm=inet.IPPROTO_TCP,
+            eth_type_nxm=eth_type)
+"""
+
+oxm_types = [
+    oxm_fields.NiciraExtended0('eth_dst_nxm', 1, type_desc.MacAddr),
+    oxm_fields.NiciraExtended0('eth_src_nxm', 2, type_desc.MacAddr),
+    oxm_fields.NiciraExtended0('eth_type_nxm', 3, type_desc.Int2),
+    oxm_fields.NiciraExtended0('ip_proto_nxm', 6, type_desc.Int1),
+    oxm_fields.NiciraExtended1('tunnel_id_nxm', 16, type_desc.Int8),
+    oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
+    oxm_fields.NiciraExtended1('tcp_flags_nxm', 34, type_desc.Int2),
+    oxm_fields.NiciraExtended1('conj_id', 37, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ct_state', 105, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ct_zone', 106, type_desc.Int2),
+    oxm_fields.NiciraExtended1('ct_mark', 107, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ct_label', 108, type_desc.Int16),
+    oxm_fields.NiciraExtended1('tun_ipv6_src', 109, type_desc.IPv6Addr),
+    oxm_fields.NiciraExtended1('tun_ipv6_dst', 110, type_desc.IPv6Addr),
+
+    # The following definition is merely for testing 64-bit experimenter OXMs.
+    # Following Open vSwitch, we use dp_hash for this purpose.
+    # Prefix the name with '_' to indicate this is not intended to be used
+    # in wild.
+    oxm_fields.NiciraExperimenter('_dp_hash', 0, type_desc.Int4),
+
+    # Support for matching/setting NX registers 0-7
+    oxm_fields.NiciraExtended1('reg0', 0, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg1', 1, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg2', 2, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg3', 3, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg4', 4, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg5', 5, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg6', 6, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg7', 7, type_desc.Int4),
+]
