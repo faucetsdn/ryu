@@ -101,7 +101,7 @@ class BgpProtocol(Protocol, Activity):
         Activity.__init__(self, name=activity_name)
         # Intialize instance variables.
         self._peer = None
-        self._recv_buff = ''
+        self._recv_buff = b''
         self._socket = socket
         self._socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         self._sendlock = semaphore.Semaphore()

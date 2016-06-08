@@ -233,8 +233,6 @@ class Datapath(ofproto_protocol.ProtocolDesc):
 
         count = 0
         while self.state != DEAD_DISPATCHER:
-            ret = ""
-
             try:
                 ret = self.socket.recv(required_len)
             except SocketTimeout:
