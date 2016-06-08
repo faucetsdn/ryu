@@ -18,6 +18,8 @@
 
  This API can be used by various services like RPC, CLI, IoC, etc.
 """
+from __future__ import absolute_import
+
 import inspect
 import logging
 import traceback
@@ -208,7 +210,7 @@ def call(symbol, **kwargs):
     LOG.info("API method %s called with args: %s", symbol, str(kwargs))
 
     # TODO(PH, JK) improve the way api function modules are loaded
-    import all  # noqa
+    from . import all  # noqa
     if not is_call_registered(symbol):
         message = 'Did not find any method registered by symbol %s' % symbol
         raise MethodNotFound(message)

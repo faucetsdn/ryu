@@ -17,12 +17,7 @@ class RouteFormatterMixin(object):
 
     @classmethod
     def _format_family(cls, dest_list):
-        if six.PY3:
-            import io
-            msg = io.StringIO()
-        else:
-            import StringIO
-            msg = StringIO.StringIO()
+        msg = six.StringIO()
 
         def _append_path_info(buff, path, is_best, show_prefix):
             aspath = path.get('aspath')

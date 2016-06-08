@@ -226,6 +226,10 @@ class NonVrfPathProcessingMixin(object):
     because they are processed at VRF level, so different logic applies.
     """
 
+    def __init__(self):
+        self._core_service = None  # not assigned yet
+        self._known_path_list = []
+
     def _best_path_lost(self):
         self._best_path = None
 

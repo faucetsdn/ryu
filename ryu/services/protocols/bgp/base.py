@@ -15,12 +15,16 @@
 """
   Defines some base class related to managing green threads.
 """
+from __future__ import absolute_import
+
 import abc
+from collections import OrderedDict
 import logging
 import socket
 import time
 import traceback
 import weakref
+
 import netaddr
 
 from ryu.lib import hub
@@ -37,12 +41,6 @@ from ryu.services.protocols.bgp.utils.evtlet import LoopingCall
 
 # Logger instance for this module.
 LOG = logging.getLogger('bgpspeaker.base')
-
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
 # Pointer to active/available OrderedDict.
 OrderedDict = OrderedDict
@@ -456,7 +454,7 @@ class Sink(object):
         self.index = Sink.next_index()
 
         # Event used to signal enqueing.
-        from utils.evtlet import EventletIOFactory
+        from .utils.evtlet import EventletIOFactory
         self.outgoing_msg_event = EventletIOFactory.create_custom_event()
 
         self.messages_queued = 0

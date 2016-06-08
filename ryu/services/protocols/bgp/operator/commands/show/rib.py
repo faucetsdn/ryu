@@ -1,4 +1,6 @@
-from route_formatter_mixin import RouteFormatterMixin
+from __future__ import absolute_import
+
+from .route_formatter_mixin import RouteFormatterMixin
 
 from ryu.services.protocols.bgp.operator.command import Command
 from ryu.services.protocols.bgp.operator.command import CommandsResponse

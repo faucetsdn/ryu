@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six.moves import intern
+import six
+if six.PY3:
+    from sys import intern
 
 
 class CircularListType(object):

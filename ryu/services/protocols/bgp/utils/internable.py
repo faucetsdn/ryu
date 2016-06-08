@@ -14,9 +14,6 @@
 # limitations under the License.
 
 import weakref
-from six.moves import intern
-
-dict_name = intern('_internable_dict')
 
 
 #
@@ -40,6 +37,12 @@ class Internable(object):
     Internable to work.
     """
 
+    _internable_stats = None
+    _internable_dict = None
+
+    def __init__(self):
+        self._interned = False
+
     class Stats(object):
 
         def __init__(self):
@@ -55,17 +58,17 @@ class Internable(object):
             return str(self.d)
 
     @classmethod
-    def _internable_init(kls):
+    def _internable_init(cls):
         # Objects to be interned are held as keys in a dictionary that
         # only holds weak references to keys. As a result, when the
         # last reference to an interned object goes away, the object
         # will be removed from the dictionary.
-        kls._internable_dict = weakref.WeakKeyDictionary()
-        kls._internable_stats = Internable.Stats()
+        cls._internable_dict = weakref.WeakKeyDictionary()
+        cls._internable_stats = Internable.Stats()
 
     @classmethod
-    def intern_stats(kls):
-        return kls._internable_stats
+    def intern_stats(cls):
+        return cls._internable_stats
 
     def intern(self):
         """Returns either itself or a canonical copy of itself."""
@@ -78,26 +81,26 @@ class Internable(object):
         # Got to find or create an interned object identical to this
         # one. Auto-initialize the class if need be.
         #
-        kls = self.__class__
+        cls = self.__class__
 
-        if not hasattr(kls, dict_name):
-            kls._internable_init()
+        if not cls._internable_dict:
+            cls._internable_init()
 
-        obj = kls._internable_dict.get(self)
+        obj = cls._internable_dict.get(self)
         if (obj):
             # Found an interned copy.
-            kls._internable_stats.incr('found')
+            cls._internable_stats.incr('found')
             return obj
 
         # Create an interned copy. Take care to only keep a weak
         # reference to the object itself.
         def object_collected(obj):
-            kls._internable_stats.incr('collected')
+            cls._internable_stats.incr('collected')
             # print("Object %s garbage collected" % obj)
             pass
 
         ref = weakref.ref(self, object_collected)
-        kls._internable_dict[self] = ref
+        cls._internable_dict[self] = ref
         self._interned = True
-        kls._internable_stats.incr('inserted')
+        cls._internable_stats.incr('inserted')
         return self

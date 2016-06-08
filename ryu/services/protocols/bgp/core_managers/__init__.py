@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
 
-from configuration_manager import ConfigurationManager
-from import_map_manager import ImportMapManager
-from peer_manager import PeerManager
-from table_manager import TableCoreManager
+from .configuration_manager import ConfigurationManager
+from .import_map_manager import ImportMapManager
+from .peer_manager import PeerManager
+from .table_manager import TableCoreManager
 __all__ = ['ImportMapManager', 'TableCoreManager', 'PeerManager',
            'ConfigurationManager']
