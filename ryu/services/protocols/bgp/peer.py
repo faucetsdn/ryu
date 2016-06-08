@@ -390,6 +390,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         return self._neigh_conf.multi_exit_disc
 
     @property
+    def local_as(self):
+        return self._neigh_conf.local_as
+
+    @property
     def in_filters(self):
         return self._in_filters
 
@@ -918,9 +922,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 if (len(path_seg_list) > 0 and
                         isinstance(path_seg_list[0], list) and
                         len(path_seg_list[0]) < 255):
-                    path_seg_list[0].insert(0, self._core_service.asn)
+                    path_seg_list[0].insert(0, self.local_as)
                 else:
-                    path_seg_list.insert(0, [self._core_service.asn])
+                    path_seg_list.insert(0, [self.local_as])
                 aspath_attr = BGPPathAttributeAsPath(path_seg_list)
 
             # MULTI_EXIT_DISC Attribute.
@@ -1186,7 +1190,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         Current setting include capabilities, timers and ids.
         """
-        asnum = self._common_conf.local_as
+        asnum = self.local_as
         bgpid = self._common_conf.router_id
         holdtime = self._neigh_conf.hold_time
 
@@ -1369,7 +1373,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
         # Check if AS_PATH has loops.
-        if aspath.has_local_as(self._common_conf.local_as):
+        if aspath.has_local_as(self.local_as):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
                       ' UPDATE. %s', update_msg)
             return
@@ -1497,7 +1501,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
         # Check if AS_PATH has loops.
-        if aspath.has_local_as(self._common_conf.local_as):
+        if aspath.has_local_as(self.local_as):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
                       ' UPDATE. %s', update_msg)
             return

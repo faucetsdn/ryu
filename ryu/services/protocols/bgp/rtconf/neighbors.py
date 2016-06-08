@@ -74,6 +74,7 @@ ENABLED = 'enabled'
 CHANGES = 'changes'
 LOCAL_ADDRESS = 'local_address'
 LOCAL_PORT = 'local_port'
+LOCAL_AS = 'local_as'
 PEER_NEXT_HOP = 'peer_next_hop'
 PASSWORD = 'password'
 IN_FILTER = 'in_filter'
@@ -299,7 +300,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    CAP_RTC, RTC_AS, HOLD_TIME,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
-                                   LOCAL_ADDRESS, LOCAL_PORT,
+                                   LOCAL_ADDRESS, LOCAL_PORT, LOCAL_AS,
                                    PEER_NEXT_HOP, PASSWORD,
                                    IN_FILTER, OUT_FILTER,
                                    IS_ROUTE_SERVER_CLIENT, CHECK_FIRST_AS,
@@ -366,6 +367,13 @@ class NeighborConf(ConfWithId, ConfWithStats):
         self._settings[LOCAL_PORT] = compute_optional_conf(
             LOCAL_PORT, None, **kwargs)
 
+        # We use the global defined local (router) AS as the default
+        # local AS.
+        from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
+        g_local_as = CORE_MANAGER.common_conf.local_as
+        self._settings[LOCAL_AS] = compute_optional_conf(
+            LOCAL_AS, g_local_as, **kwargs)
+
         self._settings[PEER_NEXT_HOP] = compute_optional_conf(
             PEER_NEXT_HOP, None, **kwargs)
 
@@ -373,14 +381,11 @@ class NeighborConf(ConfWithId, ConfWithStats):
             PASSWORD, None, **kwargs)
 
         # RTC configurations.
-        self._settings[CAP_RTC] = \
-            compute_optional_conf(CAP_RTC, DEFAULT_CAP_RTC, **kwargs)
+        self._settings[CAP_RTC] = compute_optional_conf(
+            CAP_RTC, DEFAULT_CAP_RTC, **kwargs)
         # Default RTC_AS is local (router) AS.
-        from ryu.services.protocols.bgp.core_manager import \
-            CORE_MANAGER
-        default_rt_as = CORE_MANAGER.common_conf.local_as
-        self._settings[RTC_AS] = \
-            compute_optional_conf(RTC_AS, default_rt_as, **kwargs)
+        self._settings[RTC_AS] = compute_optional_conf(
+            RTC_AS, g_local_as, **kwargs)
 
         # Since ConfWithId' default values use str(self) and repr(self), we
         # call super method after we have initialized other settings.
@@ -435,6 +440,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
     # =========================================================================
     # Optional attributes with valid defaults.
     # =========================================================================
+
+    @property
+    def local_as(self):
+        return self._settings[LOCAL_AS]
 
     @property
     def hold_time(self):
