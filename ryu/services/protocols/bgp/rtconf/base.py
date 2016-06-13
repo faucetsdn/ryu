@@ -143,13 +143,13 @@ class ConfigValueError(RuntimeConfigError):
 # Configuration base classes.
 # =============================================================================
 
+@six.add_metaclass(ABCMeta)
 class BaseConf(object):
     """Base class for a set of configuration values.
 
     Configurations can be required or optional. Also acts as a container of
     configuration change listeners.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, **kwargs):
         self._req_settings = self.get_req_settings()
@@ -426,9 +426,9 @@ class ConfWithStats(BaseConf):
                                   **kwargs)
 
 
+@six.add_metaclass(ABCMeta)
 class BaseConfListener(object):
     """Base class of all configuration listeners."""
-    __metaclass__ = ABCMeta
 
     def __init__(self, base_conf):
         pass

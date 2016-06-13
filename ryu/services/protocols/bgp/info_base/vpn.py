@@ -19,6 +19,7 @@
 
 import abc
 import logging
+import six
 
 from ryu.services.protocols.bgp.info_base.base import Destination
 from ryu.services.protocols.bgp.info_base.base import NonVrfPathProcessingMixin
@@ -55,8 +56,8 @@ class VpnTable(Table):
         )
 
 
+@six.add_metaclass(abc.ABCMeta)
 class VpnPath(Path):
-    __metaclass__ = abc.ABCMeta
     ROUTE_FAMILY = None
     VRF_PATH_CLASS = None
     NLRI_CLASS = None
@@ -82,10 +83,9 @@ class VpnPath(Path):
         return vrf_path
 
 
+@six.add_metaclass(abc.ABCMeta)
 class VpnDest(Destination, NonVrfPathProcessingMixin):
     """Base class for VPN destinations."""
-
-    __metaclass__ = abc.ABCMeta
 
     def _best_path_lost(self):
         old_best_path = self._best_path
