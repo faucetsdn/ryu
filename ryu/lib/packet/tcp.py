@@ -190,7 +190,9 @@ class TCPOption(stringify.StringifyMixin):
         self.kind = self.cls_kind if kind is None else kind
         self.length = self.cls_length if length is None else length
         if self.kind > 1 and self.length < 2:
-            raise TCPOption.TCPMalformedOption(msg='Malformed TCP option (announced length is %i)' % self.length)
+            raise TCPOption.TCPMalformedOption(
+                msg='Malformed TCP option (announced length is %i)'
+                % self.length)
 
     @classmethod
     def register(cls, kind, length):
