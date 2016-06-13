@@ -82,9 +82,6 @@ class Table(object):
         raise NotImplementedError()
 
     def values(self):
-        return self._destinations.values()
-
-    def itervalues(self):
         return iter(self._destinations.values())
 
     def insert(self, path):
