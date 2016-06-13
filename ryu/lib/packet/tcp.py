@@ -20,6 +20,7 @@ import logging
 from . import packet_base
 from . import packet_utils
 from ryu.lib import stringify
+from ryu.exception import RyuException
 
 
 LOG = logging.getLogger(__name__)
@@ -127,6 +128,9 @@ class tcp(packet_base.PacketBase):
                     'Encounter an error during parsing TCP option field.'
                     'Skip parsing TCP option.')
                 option = buf[tcp._MIN_LEN:length]
+            except TCPOption.TCPMalformedOption as e:
+                LOG.warning(str(e))
+                option = buf[tcp._MIN_LEN:length]
         else:
             option = None
         msg = cls(src_port, dst_port, seq, ack, offset, bits,
@@ -179,9 +183,14 @@ class TCPOption(stringify.StringifyMixin):
     cls_kind = None
     cls_length = None
 
+    class TCPMalformedOption(RyuException):
+        message = '%(msg)s'
+
     def __init__(self, kind=None, length=None):
         self.kind = self.cls_kind if kind is None else kind
         self.length = self.cls_length if length is None else length
+        if self.kind > 1 and self.length < 2:
+            raise TCPOption.TCPMalformedOption(msg='Malformed TCP option (announced length is %i)' % self.length)
 
     @classmethod
     def register(cls, kind, length):
