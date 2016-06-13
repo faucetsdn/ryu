@@ -234,7 +234,7 @@ class BaseConfigurator(object):
                  isinstance(value, tuple):
             value = ConvertingTuple(value)
             value.configurator = self
-        elif isinstance(value, basestring):  # str for py3k
+        elif isinstance(value, six.string_types):
             m = self.CONVERT_PATTERN.match(value)
             if m:
                 d = m.groupdict()
