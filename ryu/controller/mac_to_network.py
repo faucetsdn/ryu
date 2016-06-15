@@ -49,8 +49,8 @@ class MacToNetwork(object):
             # VM-> tap-> ovs-> ext-port-> wire-> ext-port-> ovs-> tap-> VM
             return
 
-        LOG.warn('duplicated nw_id: mac %s nw old %s new %s',
-                 haddr_to_str(mac), _nw_id, nw_id)
+        LOG.warning('duplicated nw_id: mac %s nw old %s new %s',
+                    haddr_to_str(mac), _nw_id, nw_id)
 
         raise MacAddressDuplicated(mac=mac)
 

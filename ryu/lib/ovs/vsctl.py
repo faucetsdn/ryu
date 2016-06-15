@@ -325,7 +325,8 @@ class VSCtlContext(object):
         for ovsrec_bridge in ovsrec_bridges.rows.values():
             name = ovsrec_bridge.name
             if name in bridges:
-                LOG.warn('%s: database contains duplicate bridge name', name)
+                LOG.warning('%s: database contains duplicate bridge name',
+                            name)
             bridges.add(name)
             vsctl_bridge = self.add_bridge_to_cache(ovsrec_bridge, name,
                                                     None, 0)
@@ -356,10 +357,10 @@ class VSCtlContext(object):
                 vsctl_port = self.ports.get(port_name)
                 if vsctl_port:
                     if ovsrec_port == vsctl_port.port_cfg:
-                        LOG.warn('%s: vsctl_port is in multiple bridges '
-                                 '(%s and %s)',
-                                 port_name, vsctl_bridge.name,
-                                 vsctl_port.br.name)
+                        LOG.warning('%s: vsctl_port is in multiple bridges '
+                                    '(%s and %s)',
+                                    port_name, vsctl_bridge.name,
+                                    vsctl_port.br.name)
                     else:
                         LOG.error('%s: database contains duplicate '
                                   'vsctl_port name',
@@ -378,7 +379,7 @@ class VSCtlContext(object):
                     iface = self.ifaces.get(ovsrec_iface.name)
                     if iface:
                         if ovsrec_iface == iface.iface_cfg:
-                            LOG.warn(
+                            LOG.warning(
                                 '%s: interface is in multiple ports '
                                 '(%s and %s)',
                                 ovsrec_iface.name,
