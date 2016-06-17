@@ -305,7 +305,7 @@ class StatsController(ControllerBase):
     def get_desc_stats(self, req, dp, ofctl, **kwargs):
         desc = ofctl.get_desc_stats(dp, self.waiters)
         for key in desc:
-            desc[key].update((k, v.decode("utf-8")) for k,v in desc[key].items())
+            desc[key].update((k, v.decode("utf-8")) for k, v in desc[key].items())
         return desc
 
     @stats_method
