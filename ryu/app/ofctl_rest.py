@@ -303,7 +303,10 @@ class StatsController(ControllerBase):
 
     @stats_method
     def get_desc_stats(self, req, dp, ofctl, **kwargs):
-        return ofctl.get_desc_stats(dp, self.waiters)
+        desc = ofctl.get_desc_stats(dp, self.waiters)
+        for key in desc:
+            desc[key].update((k, v.decode("utf-8")) for k,v in desc[key].items())
+        return desc
 
     @stats_method
     def get_flow_desc(self, req, dp, ofctl, **kwargs):
