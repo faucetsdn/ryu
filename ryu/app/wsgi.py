@@ -141,7 +141,7 @@ class WebSocketServerTransport(ServerTransport):
         return (context, message)
 
     def send_reply(self, context, reply):
-        self.ws.send(unicode(reply))
+        self.ws.send(str(reply))
 
 
 class WebSocketRPCServer(RPCServer):
@@ -171,7 +171,7 @@ class WebSocketClientTransport(ClientTransport):
         self.queue = queue
 
     def send_message(self, message, expect_reply=True):
-        self.ws.send(unicode(message))
+        self.ws.send(str(message))
 
         if expect_reply:
             return self.queue.get()
