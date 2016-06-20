@@ -351,7 +351,7 @@ class Stp(app_manager.RyuApp):
 
     @staticmethod
     def _cmp_value(value1, value2):
-        result = cmp(value1, value2)
+        result =  (value1 > value2) - (value1 < value2)
         if result < 0:
             return SUPERIOR
         elif result == 0:
