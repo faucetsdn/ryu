@@ -351,7 +351,9 @@ class Stp(app_manager.RyuApp):
 
     @staticmethod
     def _cmp_value(value1, value2):
-        result =  (value1 > value2) - (value1 < value2)
+        if(type(value2) is str):
+            value2 = 0
+        result =  ((value1 > value2) - (value1 < value2))
         if result < 0:
             return SUPERIOR
         elif result == 0:
@@ -1034,10 +1036,10 @@ class Port(object):
             bridge_mac_address=self.bridge_id.mac_addr,
             port_priority=self.port_id.priority,
             port_number=self.ofport.port_no,
-            message_age=self.port_times.message_age + 1,
-            max_age=self.port_times.max_age,
-            hello_time=self.port_times.hello_time,
-            forward_delay=self.port_times.forward_delay)
+            message_age=int(self.port_times.message_age) + 1,
+            max_age=int(self.port_times.max_age),
+            hello_time=int(self.port_times.hello_time),
+            forward_delay=int(self.port_times.forward_delay))
 
         pkt = packet.Packet()
         pkt.add_protocol(e)
