@@ -6138,12 +6138,13 @@ class OFPSetAsync(MsgBase):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            packet_in_mask = ofp.OFPR_ACTION | ofp.OFPR_INVALID_TTL
-            port_status_mask = (ofp.OFPPR_ADD | ofp.OFPPR_DELETE |
-                                ofp.OFPPR_MODIFY)
-            flow_removed_mask = (ofp.OFPRR_IDLE_TIMEOUT |
-                                 ofp.OFPRR_HARD_TIMEOUT |
-                                 ofp.OFPRR_DELETE)
+            packet_in_mask = 1 << ofp.OFPR_ACTION | 1 << ofp.OFPR_INVALID_TTL
+            port_status_mask = (1 << ofp.OFPPR_ADD
+                                | 1 << ofp.OFPPR_DELETE
+                                | 1 << ofp.OFPPR_MODIFY)
+            flow_removed_mask = (1 << ofp.OFPRR_IDLE_TIMEOUT
+                                 | 1 << ofp.OFPRR_HARD_TIMEOUT
+                                 | 1 << ofp.OFPRR_DELETE)
             req = ofp_parser.OFPSetAsync(datapath,
                                          [packet_in_mask, 0],
                                          [port_status_mask, 0],
