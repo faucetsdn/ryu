@@ -20,6 +20,7 @@ import struct
 import copy
 import networkx as nx
 from operator import attrgetter
+from ryu import cfg
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
@@ -34,12 +35,14 @@ from ryu.lib import hub
 
 from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
+import setting
+
+
+CONF = cfg.CONF
 
 
 class NetworkAwareness(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    SLEEP_PERIOD = 10
-    IS_UPDATE = True
 
     def __init__(self, *args, **kwargs):
         super(NetworkAwareness, self).__init__(*args, **kwargs)
@@ -66,7 +69,7 @@ class NetworkAwareness(app_manager.RyuApp):
             if i == 5:
                 self.get_topology(None)
                 i = 0
-            hub.sleep(self.SLEEP_PERIOD)
+            hub.sleep(setting.DISCOVERY_PERIOD)
             i = i + 1
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -113,7 +116,7 @@ class NetworkAwareness(app_manager.RyuApp):
     def get_graph(self, link_list):
         for src in self.switches:
             for dst in self.switches:
-                self.graph.add_edge(src, dst, weight=float('inf'))
+                # self.graph.add_edge(src, dst, weight=float('inf'))
                 if src == dst:
                     self.graph.add_edge(src, dst, weight=0)
                 elif (src, dst) in link_list:
@@ -148,16 +151,38 @@ class NetworkAwareness(app_manager.RyuApp):
     # get ports without link into access_ports
     def create_access_ports(self):
         for sw in self.switch_port_table:
-            self.access_ports[sw] = self.switch_port_table[
-                sw] - self.interior_ports[sw]
+            all_port_table = self.switch_port_table[sw]
+            interior_port = self.interior_ports[sw]
+            self.access_ports[sw] = all_port_table - interior_port
 
-    def floyd_dict(self, graph, cutoff=None, weight='weight'):
-        return nx.all_pairs_dijkstra_path(graph, cutoff=cutoff, weight=weight)
+    def k_shortest_paths(self, graph, src, dst, weight='weight', k=1):
+        generator = nx.shortest_simple_paths(graph, source=src,
+                                             target=dst, weight=weight)
+        shortest_paths = []
+        try:
+            for path in generator:
+                if k <= 0:
+                    break
+                shortest_paths.append(path)
+                k -= 1
+            return shortest_paths
+        except:
+            self.logger.debug("No path between %s and %s" % (src, dst))
 
-    def get_shortest_paths(self, cutoff=None, weight='weight'):
-        self.shortest_paths = self.floyd_dict(self.graph, cutoff=cutoff,
-                                              weight=weight)
-        return self.shortest_paths
+    def all_k_shortest_paths(self, graph, weight='weight', k=1):
+        _graph = copy.deepcopy(graph)
+        paths = {}
+
+        # find ksp in graph.
+        for src in _graph.nodes():
+            paths.setdefault(src, {src: [[src] for i in xrange(k)]})
+            for dst in _graph.nodes():
+                if src == dst:
+                    continue
+                paths[src].setdefault(dst, [])
+                paths[src][dst] = self.k_shortest_paths(_graph, src, dst,
+                                                        weight=weight, k=k)
+        return paths
 
     events = [event.EventSwitchEnter,
               event.EventSwitchLeave, event.EventPortAdd,
@@ -173,7 +198,8 @@ class NetworkAwareness(app_manager.RyuApp):
         self.create_interior_links(links)
         self.create_access_ports()
         self.get_graph(self.link_to_port.keys())
-        self.get_shortest_paths(weight='weight')
+        self.shortest_paths = self.all_k_shortest_paths(
+            self.graph, weight='weight', k=CONF.k_paths)
 
     def register_access_info(self, dpid, in_port, ip, mac):
         if in_port in self.access_ports[dpid]:
@@ -211,7 +237,7 @@ class NetworkAwareness(app_manager.RyuApp):
 
     def show_topology(self):
         switch_num = len(self.graph.nodes())
-        if self.pre_graph != self.graph or self.IS_UPDATE:
+        if self.pre_graph != self.graph or setting.TOSHOW:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -224,7 +250,7 @@ class NetworkAwareness(app_manager.RyuApp):
                 print ""
             self.pre_graph = copy.deepcopy(self.graph)
 
-        if self.pre_link_to_port != self.link_to_port or self.IS_UPDATE:
+        if self.pre_link_to_port != self.link_to_port or setting.TOSHOW:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -240,7 +266,7 @@ class NetworkAwareness(app_manager.RyuApp):
                 print ""
             self.pre_link_to_port = copy.deepcopy(self.link_to_port)
 
-        if self.pre_access_table != self.access_table or self.IS_UPDATE:
+        if self.pre_access_table != self.access_table or setting.TOSHOW:
             print "----------------Access Host-------------------"
             print '%10s' % ("switch"), '%12s' % "Host"
             if not self.access_table.keys():

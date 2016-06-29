@@ -15,8 +15,11 @@
 # limitations under the License.
 
 from __future__ import division
+import copy
 from operator import attrgetter
+from ryu import cfg
 from ryu.base import app_manager
+from ryu.base.app_manager import lookup_service_brick
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
@@ -24,11 +27,14 @@ from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib import hub
 from ryu.lib.packet import packet
+import setting
+
+
+CONF = cfg.CONF
 
 
 class NetworkMonitor(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    SLEEP_PERIOD = 10
 
     def __init__(self, *args, **kwargs):
         super(NetworkMonitor, self).__init__(*args, **kwargs)
@@ -40,7 +46,11 @@ class NetworkMonitor(app_manager.RyuApp):
         self.flow_speed = {}
         self.stats = {}
         self.port_link = {}
+        self.free_bandwidth = {}
+        self.awareness = lookup_service_brick('awareness')
+        self.graph = None
         self.monitor_thread = hub.spawn(self._monitor)
+        self.save_freebandwidth_thread = hub.spawn(self._save_bw_graph)
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -56,31 +66,107 @@ class NetworkMonitor(app_manager.RyuApp):
                 del self.datapaths[datapath.id]
 
     def _monitor(self):
-        while True:
+        while CONF.weight == 'bw':
             self.stats['flow'] = {}
             self.stats['port'] = {}
             for dp in self.datapaths.values():
                 self.port_link.setdefault(dp.id, {})
                 self._request_stats(dp)
-            hub.sleep(self.SLEEP_PERIOD)
+            hub.sleep(setting.MONITOR_PERIOD)
             if self.stats['flow'] or self.stats['port']:
-                self.show_stat('flow', self.stats['flow'])
-                self.show_stat('port', self.stats['port'])
+                self.show_stat('flow')
+                self.show_stat('port')
                 hub.sleep(1)
+
+    def _save_bw_graph(self):
+        while CONF.weight == 'bw':
+            self.graph = self.create_bw_graph(self.free_bandwidth)
+            self.logger.debug("save_freebandwidth")
+            hub.sleep(setting.MONITOR_PERIOD)
 
     def _request_stats(self, datapath):
         self.logger.debug('send stats request: %016x', datapath.id)
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        req = parser.OFPFlowStatsRequest(datapath)
+        req = parser.OFPPortDescStatsRequest(datapath, 0)
         datapath.send_msg(req)
 
         req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
         datapath.send_msg(req)
 
-        req = parser.OFPPortDescStatsRequest(datapath, 0)
+        req = parser.OFPFlowStatsRequest(datapath)
         datapath.send_msg(req)
+
+    def get_min_bw_of_links(self, graph, path, min_bw):
+        _len = len(path)
+        if _len > 1:
+            minimal_band_width = min_bw
+            for i in xrange(_len-1):
+                pre, curr = path[i], path[i+1]
+                if 'bandwidth' in graph[pre][curr]:
+                    bw = graph[pre][curr]['bandwidth']
+                    minimal_band_width = min(bw, minimal_band_width)
+                else:
+                    continue
+            return minimal_band_width
+        return min_bw
+
+    def get_best_path_by_bw(self, graph, paths):
+        capabilities = {}
+        best_paths = copy.deepcopy(paths)
+
+        for src in paths:
+            for dst in paths[src]:
+                if src == dst:
+                    best_paths[src][src] = [src]
+                    capabilities.setdefault(src, {src: setting.MAX_CAPACITY})
+                    capabilities[src][src] = setting.MAX_CAPACITY
+                    continue
+                max_bw_of_paths = 0
+                best_path = paths[src][dst][0]
+                for path in paths[src][dst]:
+                    min_bw = setting.MAX_CAPACITY
+                    min_bw = self.get_min_bw_of_links(graph, path, min_bw)
+                    if min_bw > max_bw_of_paths:
+                        max_bw_of_paths = min_bw
+                        best_path = path
+
+                best_paths[src][dst] = best_path
+                capabilities.setdefault(src, {dst: max_bw_of_paths})
+                capabilities[src][dst] = max_bw_of_paths
+        return capabilities, best_paths
+
+    def create_bw_graph(self, bw_dict):
+        try:
+            graph = self.awareness.graph
+            link_to_port = self.awareness.link_to_port
+            for link in link_to_port:
+                (src_dpid, dst_dpid) = link
+                (src_port, dst_port) = link_to_port[link]
+                if src_dpid in bw_dict and dst_dpid in bw_dict:
+                    bw_src = bw_dict[src_dpid][src_port]
+                    bw_dst = bw_dict[dst_dpid][dst_port]
+                    bandwidth = min(bw_src, bw_dst)
+                    graph[src_dpid][dst_dpid]['bandwidth'] = bandwidth
+                else:
+                    graph[src_dpid][dst_dpid]['bandwidth'] = 0
+            return graph
+        except:
+            self.logger.info("Create bw graph exception")
+            if self.awareness is None:
+                self.awareness = lookup_service_brick('awareness')
+            return self.awareness.graph
+
+    def _save_freebandwidth(self, dpid, port_no, speed):
+        port_state = self.port_link.get(dpid).get(port_no)
+        if port_state:
+            capacity = port_state[2]
+            curr_bw = self._get_free_bw(capacity, speed)
+            self.free_bandwidth[dpid].setdefault(port_no, None)
+            self.free_bandwidth[dpid][port_no] = curr_bw
+        else:
+            self.logger.info("Fail in getting port state")
 
     def _save_stats(self, dist, key, value, length):
         if key not in dist:
@@ -96,61 +182,15 @@ class NetworkMonitor(app_manager.RyuApp):
         else:
             return 0
 
+    def _get_free_bw(self, capacity, speed):
+        # BW:Mbit/s
+        return max(capacity / 10**3 - speed * 8, 0)
+
     def _get_time(self, sec, nsec):
         return sec + nsec / (10 ** 9)
 
     def _get_period(self, n_sec, n_nsec, p_sec, p_nsec):
         return self._get_time(n_sec, n_nsec) - self._get_time(p_sec, p_nsec)
-
-    def show_stat(self, type, bodys):
-        '''
-            type: 'port' 'flow'
-            bodys: port or flow `s information :{dpid:body}
-        '''
-        if(type == 'flow'):
-
-            print('datapath         ''   in-port        ip-dst      '
-                  'out-port packets  bytes  flow-speed(B/s)')
-            print('---------------- ''  -------- ----------------- '
-                  '-------- -------- -------- -----------')
-            for dpid in bodys.keys():
-                for stat in sorted(
-                    [flow for flow in bodys[dpid] if flow.priority == 1],
-                    key=lambda flow: (flow.match.get('in_port'),
-                                      flow.match.get('ipv4_dst'))):
-                    print('%016x %8x %17s %8x %8d %8d %8.1f' % (
-                        dpid,
-                        stat.match['in_port'], stat.match['ipv4_dst'],
-                        stat.instructions[0].actions[0].port,
-                        stat.packet_count, stat.byte_count,
-                        abs(self.flow_speed[dpid][
-                            (stat.match.get('in_port'),
-                            stat.match.get('ipv4_dst'),
-                            stat.instructions[0].actions[0].port)][-1])))
-            print '\n'
-
-        if(type == 'port'):
-            print('datapath             port   ''rx-pkts  rx-bytes rx-error '
-                  'tx-pkts  tx-bytes tx-error  port-speed(B/s)'
-                  ' current-capacity(Kbps)  '
-                  'port-stat   link-stat')
-            print('----------------   -------- ''-------- -------- -------- '
-                  '-------- -------- -------- '
-                  '----------------  ----------------   '
-                  '   -----------    -----------')
-            format = '%016x %8x %8d %8d %8d %8d %8d %8d %8.1f %16d %16s %16s'
-            for dpid in bodys.keys():
-                for stat in sorted(bodys[dpid], key=attrgetter('port_no')):
-                    if stat.port_no != ofproto_v1_3.OFPP_LOCAL:
-                        print(format % (
-                            dpid, stat.port_no,
-                            stat.rx_packets, stat.rx_bytes, stat.rx_errors,
-                            stat.tx_packets, stat.tx_bytes, stat.tx_errors,
-                            abs(self.port_speed[(dpid, stat.port_no)][-1]),
-                            self.port_link[dpid][stat.port_no][2],
-                            self.port_link[dpid][stat.port_no][0],
-                            self.port_link[dpid][stat.port_no][1]))
-            print '\n'
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
@@ -170,7 +210,7 @@ class NetworkMonitor(app_manager.RyuApp):
 
             # Get flow's speed.
             pre = 0
-            period = self.SLEEP_PERIOD
+            period = setting.MONITOR_PERIOD
             tmp = self.flow_stats[dpid][key]
             if len(tmp) > 1:
                 pre = tmp[-2][1]
@@ -185,10 +225,14 @@ class NetworkMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
-        self.stats['port'][ev.msg.datapath.id] = body
+        dpid = ev.msg.datapath.id
+        self.stats['port'][dpid] = body
+        self.free_bandwidth.setdefault(dpid, {})
+
         for stat in sorted(body, key=attrgetter('port_no')):
-            if stat.port_no != ofproto_v1_3.OFPP_LOCAL:
-                key = (ev.msg.datapath.id, stat.port_no)
+            port_no = stat.port_no
+            if port_no != ofproto_v1_3.OFPP_LOCAL:
+                key = (dpid, port_no)
                 value = (stat.tx_bytes, stat.rx_bytes, stat.rx_errors,
                          stat.duration_sec, stat.duration_nsec)
 
@@ -196,7 +240,7 @@ class NetworkMonitor(app_manager.RyuApp):
 
                 # Get port speed.
                 pre = 0
-                period = self.SLEEP_PERIOD
+                period = setting.MONITOR_PERIOD
                 tmp = self.port_stats[key]
                 if len(tmp) > 1:
                     pre = tmp[-2][0] + tmp[-2][1]
@@ -208,6 +252,7 @@ class NetworkMonitor(app_manager.RyuApp):
                     pre, period)
 
                 self._save_stats(self.port_speed, key, speed, 5)
+                self._save_freebandwidth(dpid, port_no, speed)
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
@@ -266,3 +311,55 @@ class NetworkMonitor(app_manager.RyuApp):
             print "switch%d: port %s %s" % (dpid, reason_dict[reason], port_no)
         else:
             print "switch%d: Illeagal port state %s %s" % (port_no, reason)
+
+    def show_stat(self, type):
+        '''
+            type: 'port' 'flow'
+        '''
+        if setting.TOSHOW is False:
+            return
+
+        bodys = self.stats[type]
+        if(type == 'flow'):
+            print('datapath         ''   in-port        ip-dst      '
+                  'out-port packets  bytes  flow-speed(B/s)')
+            print('---------------- ''  -------- ----------------- '
+                  '-------- -------- -------- -----------')
+            for dpid in bodys.keys():
+                for stat in sorted(
+                    [flow for flow in bodys[dpid] if flow.priority == 1],
+                    key=lambda flow: (flow.match.get('in_port'),
+                                      flow.match.get('ipv4_dst'))):
+                    print('%016x %8x %17s %8x %8d %8d %8.1f' % (
+                        dpid,
+                        stat.match['in_port'], stat.match['ipv4_dst'],
+                        stat.instructions[0].actions[0].port,
+                        stat.packet_count, stat.byte_count,
+                        abs(self.flow_speed[dpid][
+                            (stat.match.get('in_port'),
+                            stat.match.get('ipv4_dst'),
+                            stat.instructions[0].actions[0].port)][-1])))
+            print '\n'
+
+        if(type == 'port'):
+            print('datapath             port   ''rx-pkts  rx-bytes rx-error '
+                  'tx-pkts  tx-bytes tx-error  port-speed(B/s)'
+                  ' current-capacity(Kbps)  '
+                  'port-stat   link-stat')
+            print('----------------   -------- ''-------- -------- -------- '
+                  '-------- -------- -------- '
+                  '----------------  ----------------   '
+                  '   -----------    -----------')
+            format = '%016x %8x %8d %8d %8d %8d %8d %8d %8.1f %16d %16s %16s'
+            for dpid in bodys.keys():
+                for stat in sorted(bodys[dpid], key=attrgetter('port_no')):
+                    if stat.port_no != ofproto_v1_3.OFPP_LOCAL:
+                        print(format % (
+                            dpid, stat.port_no,
+                            stat.rx_packets, stat.rx_bytes, stat.rx_errors,
+                            stat.tx_packets, stat.tx_bytes, stat.tx_errors,
+                            abs(self.port_speed[(dpid, stat.port_no)][-1]),
+                            self.port_link[dpid][stat.port_no][2],
+                            self.port_link[dpid][stat.port_no][0],
+                            self.port_link[dpid][stat.port_no][1]))
+            print '\n'
