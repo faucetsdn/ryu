@@ -23,6 +23,16 @@ In this version, we take networkx's data structure to store topology. Meanwhile,
 
 Download files, and add them to ryu directory, for instance, app/network_awareness
 
+### Make some changes
+
+To register parsing parameter, you NEED to add code into flags.py, which is in the topo directory of ryu project.
+
+    CONF.register_cli_opts([
+        # k_shortest_forwarding
+        cfg.IntOpt('k-paths', default=1, help='number for k shortest paths'),
+        cfg.StrOpt('weight', default='hop',
+                   help='weight type of computing shortest path.')])
+
 ### Reinstall Ryu
 
 You have to reinstall Ryu, so that you can run the new code. In the top derectory of ryu project.
