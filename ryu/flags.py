@@ -82,10 +82,3 @@ CONF.register_cli_opts([
                help='tester sw OFP version [openflow13|openflow14] '
                '(default: openflow13)')
 ], group='test-switch')
-
-
-CONF.register_cli_opts([
-    # k_shortest_forwarding
-    cfg.IntOpt('k-paths', default=1, help='number for k shortest paths'),
-    cfg.StrOpt('weight', default='hop',
-               help='weight type of computing shortest path.')])
