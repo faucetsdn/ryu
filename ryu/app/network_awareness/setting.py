@@ -1,0 +1,9 @@
+# Common Setting for Networ awareness module.
+
+
+DISCOVERY_PERIOD = 10
+MONITOR_PERIOD = 10
+DELAY_DETECTING_PERIOD = 10
+
+TOSHOW = True
+MAX_CAPACITY = 281474976710655L
