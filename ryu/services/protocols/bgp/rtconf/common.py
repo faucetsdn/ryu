@@ -20,7 +20,7 @@ import logging
 import numbers
 
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
-from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
+from ryu.services.protocols.bgp.utils.validation import is_valid_asn
 
 from ryu.services.protocols.bgp import rtconf
 from ryu.services.protocols.bgp.rtconf.base import BaseConf
@@ -85,7 +85,7 @@ def validate_local_as(asn):
     if asn is None:
         raise MissingRequiredConf(conf_name=LOCAL_AS)
 
-    if not is_valid_old_asn(asn):
+    if not is_valid_asn(asn):
         raise ConfigValueError(desc='Invalid local_as configuration value: %s'
                                % asn)
     return asn

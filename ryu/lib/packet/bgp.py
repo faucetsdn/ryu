@@ -1045,24 +1045,18 @@ class RouteTargetMembershipNLRI(StringifyMixin):
         if not (origin_as is self.DEFAULT_AS and
                 route_target is self.DEFAULT_RT):
             # We validate them
-            if (not self._is_valid_old_asn(origin_as) or
+            if (not self._is_valid_asn(origin_as) or
                     not self._is_valid_ext_comm_attr(route_target)):
                 raise ValueError('Invalid params.')
         self.origin_as = origin_as
         self.route_target = route_target
 
-    def _is_valid_old_asn(self, asn):
-        """Returns true if given asn is a 16 bit number.
-
-        Old AS numbers are 16 but unsigned number.
-        """
-        valid = True
-        # AS number should be a 16 bit number
-        if (not isinstance(asn, numbers.Integral) or (asn < 0) or
-                (asn > ((2 ** 16) - 1))):
-            valid = False
-
-        return valid
+    def _is_valid_asn(self, asn):
+        """Returns True if the given AS number is Two or Four Octet."""
+        if isinstance(asn, six.integer_types) and 0 <= asn <= 0xffffffff:
+            return True
+        else:
+            return False
 
     def _is_valid_ext_comm_attr(self, attr):
         """Validates *attr* as string representation of RT or SOO.
@@ -2311,6 +2305,17 @@ class BGPOpen(BGPMessage):
         self.opt_param_len = opt_param_len
         self.opt_param = opt_param
 
+    @property
+    def opt_param_cap_map(self):
+        cap_map = {}
+        for param in self.opt_param:
+            if param.type == BGP_OPT_CAPABILITY:
+                cap_map[param.cap_code] = param
+        return cap_map
+
+    def get_opt_param_cap(self, cap_code):
+        return self.opt_param_cap_map.get(cap_code)
+
     @classmethod
     def parser(cls, buf):
         (version,
@@ -2403,17 +2408,17 @@ class BGPUpdate(BGPMessage):
         self.withdrawn_routes = withdrawn_routes
         self.total_path_attribute_len = total_path_attribute_len
         self.path_attributes = path_attributes
-        self._pathattr_map = {}
-        for attr in path_attributes:
-            self._pathattr_map[attr.type] = attr
         self.nlri = nlri
 
     @property
     def pathattr_map(self):
-        return self._pathattr_map
+        passattr_map = {}
+        for attr in self.path_attributes:
+            passattr_map[attr.type] = attr
+        return passattr_map
 
     def get_path_attr(self, attr_name):
-        return self._pathattr_map.get(attr_name)
+        return self.pathattr_map.get(attr_name)
 
     @classmethod
     def parser(cls, buf):

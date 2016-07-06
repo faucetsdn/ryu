@@ -45,13 +45,14 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_ENHANCED_REFRESH
+from ryu.services.protocols.bgp.rtconf.base import CAP_FOUR_OCTET_AS_NUMBER
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
 from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
-from ryu.services.protocols.bgp.rtconf.neighbors \
-    import DEFAULT_CAP_ENHANCED_REFRESH
+from ryu.services.protocols.bgp.rtconf.neighbors import (
+    DEFAULT_CAP_ENHANCED_REFRESH, DEFAULT_CAP_FOUR_OCTET_AS_NUMBER)
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
@@ -237,6 +238,7 @@ class BGPSpeaker(object):
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
                      enable_enhanced_refresh=DEFAULT_CAP_ENHANCED_REFRESH,
+                     enable_four_octet_as_number=DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
                      next_hop=None, password=None, multi_exit_disc=None,
                      site_of_origins=None, is_route_server_client=False,
                      is_next_hop_self=False, local_address=None,
@@ -262,8 +264,11 @@ class BGPSpeaker(object):
         ``enable_vpnv6`` enables VPNv6 address family for this
         neighbor. The default is False.
 
-        ``enable_enhanced_refresh`` enable Enhanced Route Refresh for this
+        ``enable_enhanced_refresh`` enables Enhanced Route Refresh for this
         neighbor. The default is False.
+
+        ``enable_four_octet_as_number`` enables Four-Octet AS Number
+        capability for this neighbor. The default is True.
 
         ``next_hop`` specifies the next hop IP address. If not
         specified, host's ip address to access to a peer is used.
@@ -298,15 +303,17 @@ class BGPSpeaker(object):
         CONNECT_MODE_BOTH use both methods.
         The default is CONNECT_MODE_BOTH.
         """
-        bgp_neighbor = {}
-        bgp_neighbor[neighbors.IP_ADDRESS] = address
-        bgp_neighbor[neighbors.REMOTE_AS] = remote_as
-        bgp_neighbor[PEER_NEXT_HOP] = next_hop
-        bgp_neighbor[PASSWORD] = password
-        bgp_neighbor[IS_ROUTE_SERVER_CLIENT] = is_route_server_client
-        bgp_neighbor[IS_NEXT_HOP_SELF] = is_next_hop_self
-        bgp_neighbor[CONNECT_MODE] = connect_mode
-        bgp_neighbor[CAP_ENHANCED_REFRESH] = enable_enhanced_refresh
+        bgp_neighbor = {
+            neighbors.IP_ADDRESS: address,
+            neighbors.REMOTE_AS: remote_as,
+            PEER_NEXT_HOP: next_hop,
+            PASSWORD: password,
+            IS_ROUTE_SERVER_CLIENT: is_route_server_client,
+            IS_NEXT_HOP_SELF: is_next_hop_self,
+            CONNECT_MODE: connect_mode,
+            CAP_ENHANCED_REFRESH: enable_enhanced_refresh,
+            CAP_FOUR_OCTET_AS_NUMBER: enable_four_octet_as_number,
+        }
         # v6 advertizement is available with only v6 peering
         if netaddr.valid_ipv4(address):
             bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
