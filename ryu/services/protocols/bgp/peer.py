@@ -48,6 +48,7 @@ from ryu.lib.packet import bgp
 
 from ryu.lib.packet.bgp import RouteFamily
 from ryu.lib.packet.bgp import RF_IPv4_UC
+from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_RTC_UC
@@ -1873,7 +1874,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # Check if this session is available for given paths afi/safi
         path_rf = path.route_family
-        if not self.is_mpbgp_cap_valid(path_rf):
+        if not (self.is_mpbgp_cap_valid(path_rf) or
+                path_rf in [RF_IPv4_UC, RF_IPv6_UC]):
             LOG.debug('Skipping sending path as %s route family is not'
                       ' available for this session', path_rf)
             return
