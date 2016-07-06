@@ -121,7 +121,16 @@ class TestLLDPMandatoryTLV(unittest.TestCase):
         eq_(len(pkt.protocols), 2)
 
         pkt.serialize()
-        eq_(pkt.data, self.data)
+
+        # Note: If ethernet frame is less than 60 bytes length,
+        # ethernet.ethernet() appends padding to the payload.
+        # So, we splits the serialized data to compare.
+        data_len = len(self.data)
+        pkt_data_lldp = pkt.data[:data_len]
+        pkt_data_pad = pkt.data[data_len:]
+        eq_(b'\x00' * (60 - data_len), pkt_data_pad)
+
+        eq_(self.data, pkt_data_lldp)
 
     def test_to_string(self):
         chassis_id = lldp.ChassisID(subtype=lldp.ChassisID.SUB_MAC_ADDRESS,

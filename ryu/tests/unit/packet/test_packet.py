@@ -93,6 +93,11 @@ class TestPacket(unittest.TestCase):
             + self.dst_ip_bin
 
         buf = e_buf + a_buf
+
+        # Append padding if ethernet frame is less than 60 bytes length
+        pad_len = 60 - len(buf)
+        if pad_len > 0:
+            buf += b'\x00' * pad_len
         eq_(buf, p.data)
 
         # parse
@@ -188,6 +193,11 @@ class TestPacket(unittest.TestCase):
             + self.dst_ip_bin
 
         buf = e_buf + v_buf + a_buf
+
+        # Append padding if ethernet frame is less than 60 bytes length
+        pad_len = 60 - len(buf)
+        if pad_len > 0:
+            buf += b'\x00' * pad_len
         eq_(buf, p.data)
 
         # parse
@@ -1407,9 +1417,9 @@ class TestPacket(unittest.TestCase):
                  b'\x00'
                  b'\x00'
                  b'\x00'
-                 b'\x80\x64\xaa\xaa\xaa\xaa\xaa\xaa'
-                 b'\x00\x00\x00\x04'
-                 b'\x80\x64\xbb\xbb\xbb\xbb\xbb\xbb'
+                 b'\x80\x00\xbb\xbb\xbb\xbb\xbb\xbb'
+                 b'\x00\x00\x00\x00'
+                 b'\x80\x00\xaa\xaa\xaa\xaa\xaa\xaa'
                  b'\x80\x04'
                  b'\x01\x00'
                  b'\x14\x00'
@@ -1417,6 +1427,12 @@ class TestPacket(unittest.TestCase):
                  b'\x0f\x00')
 
         buf = e_buf + l_buf + b_buf
+
+        # Append padding if ethernet frame is less than 60 bytes length
+        pad_len = 60 - len(buf)
+        if pad_len > 0:
+            buf += b'\x00' * pad_len
+        eq_(buf, p.data)
 
         # parse
         pkt = packet.Packet(array.array('B', p.data))
