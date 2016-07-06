@@ -18,12 +18,20 @@
 import unittest
 import logging
 import struct
-import array
 import inspect
-from nose.tools import *
+from nose.tools import ok_, eq_
 import six
 from ryu.ofproto import ether, inet
-from ryu.lib.packet import *
+from ryu.lib.packet import arp
+from ryu.lib.packet import bpdu
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import icmp, icmpv6
+from ryu.lib.packet import ipv4, ipv6
+from ryu.lib.packet import llc
+from ryu.lib.packet import packet, packet_utils
+from ryu.lib.packet import sctp
+from ryu.lib.packet import tcp, udp
+from ryu.lib.packet import vlan
 from ryu.lib import addrconv
 
 
@@ -101,7 +109,7 @@ class TestPacket(unittest.TestCase):
         eq_(buf, p.data)
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_arp = protocols['arp']
@@ -201,7 +209,7 @@ class TestPacket(unittest.TestCase):
         eq_(buf, p.data)
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_vlan = protocols['vlan']
@@ -319,7 +327,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + u_buf + self.payload
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv4 = protocols['ipv4']
@@ -363,7 +371,7 @@ class TestPacket(unittest.TestCase):
 
         # payload
         ok_('payload' in protocols)
-        eq_(self.payload, protocols['payload'].tostring())
+        eq_(self.payload, protocols['payload'])
 
         # to string
         eth_values = {'dst': self.dst_mac,
@@ -464,7 +472,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + t_buf + self.payload
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv4 = protocols['ipv4']
@@ -513,7 +521,7 @@ class TestPacket(unittest.TestCase):
 
         # payload
         ok_('payload' in protocols)
-        eq_(self.payload, protocols['payload'].tostring())
+        eq_(self.payload, protocols['payload'])
 
         # to string
         eth_values = {'dst': self.dst_mac,
@@ -617,7 +625,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + s_buf
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv4 = protocols['ipv4']
@@ -766,7 +774,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + ic_buf
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv4 = protocols['ipv4']
@@ -896,7 +904,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + u_buf + self.payload
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv6 = protocols['ipv6']
@@ -934,7 +942,7 @@ class TestPacket(unittest.TestCase):
 
         # payload
         ok_('payload' in protocols)
-        eq_(self.payload, protocols['payload'].tostring())
+        eq_(self.payload, protocols['payload'])
 
         # to string
         eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
@@ -1023,7 +1031,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + t_buf + self.payload
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv6 = protocols['ipv6']
@@ -1066,7 +1074,7 @@ class TestPacket(unittest.TestCase):
 
         # payload
         ok_('payload' in protocols)
-        eq_(self.payload, protocols['payload'].tostring())
+        eq_(self.payload, protocols['payload'])
 
         # to string
         eth_values = {'dst': 'ff:ff:ff:ff:ff:ff',
@@ -1163,7 +1171,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + s_buf
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv6 = protocols['ipv6']
@@ -1297,7 +1305,7 @@ class TestPacket(unittest.TestCase):
         buf = e_buf + ip_buf + ic_buf
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_ipv6 = protocols['ipv6']
@@ -1435,7 +1443,7 @@ class TestPacket(unittest.TestCase):
         eq_(buf, p.data)
 
         # parse
-        pkt = packet.Packet(array.array('B', p.data))
+        pkt = packet.Packet(p.data)
         protocols = self.get_protocols(pkt)
         p_eth = protocols['ethernet']
         p_llc = protocols['llc']
