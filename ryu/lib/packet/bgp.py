@@ -1677,8 +1677,27 @@ class _BGPPathAttributeAggregatorCommon(_PathAttribute):
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AGGREGATOR)
 class BGPPathAttributeAggregator(_BGPPathAttributeAggregatorCommon):
-    # XXX currently this implementation assumes 16 bit AS numbers.
-    _VALUE_PACK_STR = '!H4s'
+    # Note: AS numbers can be Two-Octet or Four-Octet.
+    # This class would detect it by the value length field.
+    # For example,
+    # - if the value field length is 6 (='!H4s'), AS number should
+    #   be Two-Octet.
+    # - else if the length is 8 (='!I4s'), AS number should be Four-Octet.
+    _TWO_OCTET_VALUE_PACK_STR = '!H4s'
+    _FOUR_OCTET_VALUE_PACK_STR = '!I4s'
+    _VALUE_PACK_STR = _TWO_OCTET_VALUE_PACK_STR  # Two-Octet by default
+    _FOUR_OCTET_VALUE_SIZE = struct.calcsize(_FOUR_OCTET_VALUE_PACK_STR)
+
+    @classmethod
+    def parse_value(cls, buf):
+        if len(buf) == cls._FOUR_OCTET_VALUE_SIZE:
+            cls._VALUE_PACK_STR = cls._FOUR_OCTET_VALUE_PACK_STR
+        return super(BGPPathAttributeAggregator, cls).parse_value(buf)
+
+    def serialize_value(self):
+        if self.as_number > 0xffff:
+            self._VALUE_PACK_STR = self._FOUR_OCTET_VALUE_PACK_STR
+        return super(BGPPathAttributeAggregator, self).serialize_value()
 
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_AS4_AGGREGATOR)
