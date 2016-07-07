@@ -116,7 +116,6 @@ class NetworkAwareness(app_manager.RyuApp):
     def get_graph(self, link_list):
         for src in self.switches:
             for dst in self.switches:
-                # self.graph.add_edge(src, dst, weight=float('inf'))
                 if src == dst:
                     self.graph.add_edge(src, dst, weight=0)
                 elif (src, dst) in link_list:
@@ -237,7 +236,7 @@ class NetworkAwareness(app_manager.RyuApp):
 
     def show_topology(self):
         switch_num = len(self.graph.nodes())
-        if self.pre_graph != self.graph or setting.TOSHOW:
+        if self.pre_graph != self.graph and setting.TOSHOW:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -250,7 +249,7 @@ class NetworkAwareness(app_manager.RyuApp):
                 print ""
             self.pre_graph = copy.deepcopy(self.graph)
 
-        if self.pre_link_to_port != self.link_to_port or setting.TOSHOW:
+        if self.pre_link_to_port != self.link_to_port and setting.TOSHOW:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
             for i in xrange(1, switch_num + 1):
@@ -266,7 +265,7 @@ class NetworkAwareness(app_manager.RyuApp):
                 print ""
             self.pre_link_to_port = copy.deepcopy(self.link_to_port)
 
-        if self.pre_access_table != self.access_table or setting.TOSHOW:
+        if self.pre_access_table != self.access_table and setting.TOSHOW:
             print "----------------Access Host-------------------"
             print '%10s' % ("switch"), '%12s' % "Host"
             if not self.access_table.keys():

@@ -45,10 +45,12 @@ class NetworkMonitor(app_manager.RyuApp):
         self.flow_stats = {}
         self.flow_speed = {}
         self.stats = {}
-        self.port_link = {}
+        self.port_features = {}
         self.free_bandwidth = {}
         self.awareness = lookup_service_brick('awareness')
         self.graph = None
+        self.capabilities = None
+        self.best_paths = None
         self.monitor_thread = hub.spawn(self._monitor)
         self.save_freebandwidth_thread = hub.spawn(self._save_bw_graph)
 
@@ -70,8 +72,11 @@ class NetworkMonitor(app_manager.RyuApp):
             self.stats['flow'] = {}
             self.stats['port'] = {}
             for dp in self.datapaths.values():
-                self.port_link.setdefault(dp.id, {})
+                self.port_features.setdefault(dp.id, {})
                 self._request_stats(dp)
+                # refresh data.
+                self.capabilities = None
+                self.best_paths = None
             hub.sleep(setting.MONITOR_PERIOD)
             if self.stats['flow'] or self.stats['port']:
                 self.show_stat('flow')
@@ -135,6 +140,8 @@ class NetworkMonitor(app_manager.RyuApp):
                 best_paths[src][dst] = best_path
                 capabilities.setdefault(src, {dst: max_bw_of_paths})
                 capabilities[src][dst] = max_bw_of_paths
+        self.capabilities = capabilities
+        self.best_paths = best_paths
         return capabilities, best_paths
 
     def create_bw_graph(self, bw_dict):
@@ -159,7 +166,7 @@ class NetworkMonitor(app_manager.RyuApp):
             return self.awareness.graph
 
     def _save_freebandwidth(self, dpid, port_no, speed):
-        port_state = self.port_link.get(dpid).get(port_no)
+        port_state = self.port_features.get(dpid).get(port_no)
         if port_state:
             capacity = port_state[2]
             curr_bw = self._get_free_bw(capacity, speed)
@@ -168,13 +175,13 @@ class NetworkMonitor(app_manager.RyuApp):
         else:
             self.logger.info("Fail in getting port state")
 
-    def _save_stats(self, dist, key, value, length):
-        if key not in dist:
-            dist[key] = []
-        dist[key].append(value)
+    def _save_stats(self, _dict, key, value, length):
+        if key not in _dict:
+            _dict[key] = []
+        _dict[key].append(value)
 
-        if len(dist[key]) > length:
-            dist[key].pop(0)
+        if len(_dict[key]) > length:
+            _dict[key].pop(0)
 
     def _get_speed(self, now, pre, period):
         if period:
@@ -260,12 +267,12 @@ class NetworkMonitor(app_manager.RyuApp):
         dpid = msg.datapath.id
         ofproto = msg.datapath.ofproto
 
-        config_dist = {ofproto.OFPPC_PORT_DOWN: "Down",
+        config_dict = {ofproto.OFPPC_PORT_DOWN: "Down",
                        ofproto.OFPPC_NO_RECV: "No Recv",
                        ofproto.OFPPC_NO_FWD: "No Farward",
                        ofproto.OFPPC_NO_PACKET_IN: "No Packet-in"}
 
-        state_dist = {ofproto.OFPPS_LINK_DOWN: "Down",
+        state_dict = {ofproto.OFPPS_LINK_DOWN: "Down",
                       ofproto.OFPPS_BLOCKED: "Blocked",
                       ofproto.OFPPS_LIVE: "Live"}
 
@@ -281,18 +288,18 @@ class NetworkMonitor(app_manager.RyuApp):
                           p.supported, p.peer, p.curr_speed,
                           p.max_speed))
 
-            if p.config in config_dist:
-                config = config_dist[p.config]
+            if p.config in config_dict:
+                config = config_dict[p.config]
             else:
                 config = "up"
 
-            if p.state in state_dist:
-                state = state_dist[p.state]
+            if p.state in state_dict:
+                state = state_dict[p.state]
             else:
                 state = "up"
 
             port_feature = (config, state, p.curr_speed)
-            self.port_link[dpid][p.port_no] = port_feature
+            self.port_features[dpid][p.port_no] = port_feature
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
@@ -359,7 +366,7 @@ class NetworkMonitor(app_manager.RyuApp):
                             stat.rx_packets, stat.rx_bytes, stat.rx_errors,
                             stat.tx_packets, stat.tx_bytes, stat.tx_errors,
                             abs(self.port_speed[(dpid, stat.port_no)][-1]),
-                            self.port_link[dpid][stat.port_no][2],
-                            self.port_link[dpid][stat.port_no][0],
-                            self.port_link[dpid][stat.port_no][1]))
+                            self.port_features[dpid][stat.port_no][2],
+                            self.port_features[dpid][stat.port_no][0],
+                            self.port_features[dpid][stat.port_no][1]))
             print '\n'

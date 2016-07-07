@@ -57,7 +57,6 @@ class ShortestForwarding(app_manager.RyuApp):
         self.awareness = kwargs["network_awareness"]
         self.monitor = kwargs["network_monitor"]
         self.delay_detector = kwargs["network_delay_detector"]
-        self.mac_to_port = {}
         self.datapaths = {}
         self.weight = self.WEIGHT_MODEL[CONF.weight]
 
@@ -137,7 +136,7 @@ class ShortestForwarding(app_manager.RyuApp):
                         return dst_port
         return None
 
-    def get_link_to_port(self, link_to_port, src_dpid, dst_dpid):
+    def get_port_pair_from_link(self, link_to_port, src_dpid, dst_dpid):
         if (src_dpid, dst_dpid) in link_to_port:
             return link_to_port[(src_dpid, dst_dpid)]
         else:
@@ -196,10 +195,15 @@ class ShortestForwarding(app_manager.RyuApp):
                 shortest_paths[src].setdefault(dst, paths)
                 return paths[0]
         elif weight == self.WEIGHT_MODEL['bw']:
-            result = self.monitor.get_best_path_by_bw(graph, shortest_paths)
-            paths = result[1]
-            best_path = paths.get(src).get(dst)
-            return best_path
+            try:
+                path = self.monitor.best_paths.get(src).get(dst)
+                return path
+            except:
+                result = self.monitor.get_best_path_by_bw(graph,
+                                                          shortest_paths)
+                paths = result[1]
+                best_path = paths.get(src).get(dst)
+                return best_path
 
     def get_sw(self, dpid, in_port, src, dst):
         src_sw = dpid
@@ -233,9 +237,10 @@ class ShortestForwarding(app_manager.RyuApp):
         # inter_link
         if len(path) > 2:
             for i in xrange(1, len(path)-1):
-                port = self.get_link_to_port(link_to_port, path[i-1], path[i])
-                port_next = self.get_link_to_port(link_to_port,
-                                                  path[i], path[i+1])
+                port = self.get_port_pair_from_link(link_to_port,
+                                                    path[i-1], path[i])
+                port_next = self.get_port_pair_from_link(link_to_port,
+                                                         path[i], path[i+1])
                 if port and port_next:
                     src_port, dst_port = port[1], port_next[0]
                     datapath = datapaths[path[i]]
@@ -244,7 +249,8 @@ class ShortestForwarding(app_manager.RyuApp):
                     self.logger.debug("inter_link flow install")
         if len(path) > 1:
             # the last flow entry: tor -> host
-            port_pair = self.get_link_to_port(link_to_port, path[-2], path[-1])
+            port_pair = self.get_port_pair_from_link(link_to_port,
+                                                     path[-2], path[-1])
             if port_pair is None:
                 self.logger.info("Port is not found")
                 return
@@ -260,7 +266,8 @@ class ShortestForwarding(app_manager.RyuApp):
             self.send_flow_mod(last_dp, back_info, dst_port, src_port)
 
             # the first flow entry
-            port_pair = self.get_link_to_port(link_to_port, path[0], path[1])
+            port_pair = self.get_port_pair_from_link(link_to_port,
+                                                     path[0], path[1])
             if port_pair is None:
                 self.logger.info("Port not found in first hop.")
                 return
