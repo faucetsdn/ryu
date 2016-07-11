@@ -1596,7 +1596,7 @@ class TestNXActionMultipath(unittest.TestCase):
     arg = {'buf': b'\x18\x79\x41\xc8', 'val': 410599880}
     zfill1 = b'\x00' * 2
     ofs_nbits = {'buf': b'\xa9\x9a', 'val': 43418}
-    dst = {'buf': b'\xb9\x2f\x16\x64', 'val': 3106870884}
+    dst = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", 'val2': 65540}
     start = 678
     end = 704
 
@@ -1671,7 +1671,7 @@ class TestNXActionMultipath(unittest.TestCase):
         eq_(self.max_link['val'], res[7])
         eq_(self.arg['val'], res[8])
         eq_(self.ofs_nbits['val'], res[9])
-        eq_(self.dst['val'], res[10])
+        eq_(self.dst['val2'], res[10])
 
 
 class TestNXActionBundle(unittest.TestCase):
@@ -1812,7 +1812,7 @@ class TestNXActionBundleLoad(unittest.TestCase):
     slave_type = {'buf': b'\x18\x42\x0b\x55', 'val': 406981461}
     n_slaves = {'buf': b'\x00\x02', 'val': 2}
     ofs_nbits = {'buf': b'\xd2\x9d', 'val': 53917}
-    dst = {'buf': b'\x37\xfe\xb3\x60', 'val': 939438944}
+    dst = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", 'val2': 65540}
     zfill = b'\x00' * 4
     start = 842
     end = 871
@@ -1909,7 +1909,7 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.slave_type['val'], res[7])
         eq_(self.n_slaves['val'], res[8])
         eq_(self.ofs_nbits['val'], res[9])
-        eq_(self.dst['val'], res[10])
+        eq_(self.dst['val2'], res[10])
 
 
 class TestNXActionOutputReg(unittest.TestCase):
