@@ -145,6 +145,41 @@ MESSAGES = [
      'cmd': 'add-flow',
      'args': (['priority=100,tcp'] +
               ['actions=fin_timeout(idle_timeout=30,hard_timeout=60)'])},
+    {'name': 'action_dec_nw_ttl',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=dec_ttl'])},
+    {'name': 'action_push_mpls',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,ip'] +
+              ['actions=push_mpls:0x8847'])},
+    {'name': 'action_pop_mpls',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=pop_mpls:0x0800'])},
+    {'name': 'action_set_mpls_ttl',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=set_mpls_ttl(127)'])},
+    {'name': 'action_dec_mpls_ttl',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=dec_mpls_ttl'])},
+    {'name': 'action_set_mpls_label',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=set_mpls_label(10)'])},
+    {'name': 'action_set_mpls_tc',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=set_mpls_tc(10)'])},
 ]
 
 buf = []
