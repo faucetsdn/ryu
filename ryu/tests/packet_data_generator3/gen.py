@@ -180,6 +180,37 @@ MESSAGES = [
      'cmd': 'add-flow',
      'args': (['priority=100,mpls'] +
               ['actions=set_mpls_tc(10)'])},
+    {'name': 'action_dec_ttl_cnt_ids',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100,tcp'] +
+              ['actions=dec_ttl(1,2,3,4,5)'])},
+    {'name': 'action_stack_push',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=push:NXM_NX_REG2[1..5]'])},
+    {'name': 'action_stack_pop',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=pop:NXM_NX_REG2[1..5]'])},
+    {'name': 'action_sample',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=sample(probability=3,collector_set_id=1,' +
+               'obs_domain_id=2,obs_point_id=3)'])},
+    {'name': 'action_controller2',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=controller(reason=packet_out,max_len=1024,' +
+               'id=10,userdata=01.02.03.04.05,pause)'])},
+
+    # ToDo: The following actions are not eligible
+    # {'name': 'action_regload2'},
+    # {'name': 'action_outputreg2'},
 ]
 
 buf = []

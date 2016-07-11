@@ -1,0 +1,43 @@
+{
+    "OFPFlowMod": {
+        "buffer_id": 4294967295, 
+        "command": 0, 
+        "cookie": 0, 
+        "cookie_mask": 0, 
+        "flags": 0, 
+        "hard_timeout": 0, 
+        "idle_timeout": 0, 
+        "instructions": [
+            {
+                "OFPInstructionActions": {
+                    "actions": [
+                        {
+                            "NXActionStackPush": {
+                                "end": 5, 
+                                "experimenter": 8992, 
+                                "field": "reg2", 
+                                "len": 24, 
+                                "start": 1, 
+                                "subtype": 27, 
+                                "type": 65535
+                            }
+                        }
+                    ], 
+                    "len": 32, 
+                    "type": 4
+                }
+            }
+        ], 
+        "match": {
+            "OFPMatch": {
+                "length": 4, 
+                "oxm_fields": [], 
+                "type": 1
+            }
+        }, 
+        "out_group": 4294967295,
+        "out_port": 4294967295,
+        "priority": 100,
+        "table_id": 0
+    }
+}
