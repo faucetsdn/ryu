@@ -201,12 +201,24 @@ MESSAGES = [
      'args': (['priority=100'] +
               ['actions=sample(probability=3,collector_set_id=1,' +
                'obs_domain_id=2,obs_point_id=3)'])},
+    {'name': 'action_sample2',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=sample(probability=3,collector_set_id=1,' +
+               'obs_domain_id=2,obs_point_id=3,sampling_port=8080)'])},
     {'name': 'action_controller2',
      'versions': [4],
      'cmd': 'add-flow',
      'args': (['priority=100'] +
               ['actions=controller(reason=packet_out,max_len=1024,' +
                'id=10,userdata=01.02.03.04.05,pause)'])},
+    {'name': 'action_output_trunc',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=output(port=8080,max_len=1024)'])},
+
 
     # ToDo: The following actions are not eligible
     # {'name': 'action_regload2'},
