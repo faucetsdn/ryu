@@ -45,6 +45,7 @@ The followings shows the supported NXAction classes in OpenFlow1.0 or later
 .. autoclass:: NXActionStackPush
 .. autoclass:: NXActionStackPop
 .. autoclass:: NXActionSample
+.. autoclass:: NXActionSample2
 .. autoclass:: NXActionFinTimeout
 .. autoclass:: NXActionConjunction
 .. autoclass:: NXActionMultipath
@@ -52,6 +53,7 @@ The followings shows the supported NXAction classes in OpenFlow1.0 or later
 .. autoclass:: NXActionBundleLoad
 .. autoclass:: NXActionCT
 .. autoclass:: NXActionNAT
+.. autoclass:: NXActionOutputTrunc
 .. autoclass:: NXFlowSpecMatch
 .. autoclass:: NXFlowSpecLoad
 .. autoclass:: NXFlowSpecOutput
