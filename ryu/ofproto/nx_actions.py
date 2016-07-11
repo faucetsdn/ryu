@@ -201,6 +201,28 @@ def generate(ofp_name, ofpp_name):
             # fixup
             return bytearray() if self.data is None else self.data
 
+    # For OpenFlow1.0 only
+    class NXActionSetQueue(NXAction):
+        _subtype = nicira_ext.NXAST_SET_QUEUE
+
+        # queue_id
+        _fmt_str = '!2xI'
+
+        def __init__(self, queue_id,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionSetQueue, self).__init__()
+            self.queue_id = queue_id
+
+        @classmethod
+        def parser(cls, buf):
+            (queue_id,) = struct.unpack_from(cls._fmt_str, buf, 0)
+            return cls(queue_id)
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0, self.queue_id)
+            return data
+
     class NXActionPopQueue(NXAction):
         _subtype = nicira_ext.NXAST_POP_QUEUE
 
@@ -558,6 +580,25 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into(self._fmt_str, data, 0)
             return data
 
+    # For OpenFlow1.0 only
+    class NXActionDecTtl(NXAction):
+        _subtype = nicira_ext.NXAST_DEC_TTL
+
+        _fmt_str = '!6x'
+
+        def __init__(self,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionDecTtl, self).__init__()
+
+        @classmethod
+        def parser(cls, buf):
+            return cls()
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0)
+            return data
+
     class NXActionController(NXAction):
         _subtype = nicira_ext.NXAST_CONTROLLER
 
@@ -590,6 +631,132 @@ def generate(ofp_name, ofpp_name):
                           self.max_len,
                           self.controller_id,
                           self.reason)
+            return data
+
+    # For OpenFlow1.0 only
+    class NXActionMplsBase(NXAction):
+        # ethertype
+        _fmt_str = '!H4x'
+
+        def __init__(self,
+                     ethertype,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionMplsBase, self).__init__()
+            self.ethertype = ethertype
+
+        @classmethod
+        def parser(cls, buf):
+            (ethertype,) = struct.unpack_from(
+                cls._fmt_str, buf)
+            return cls(ethertype)
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0,
+                          self.ethertype)
+            return data
+
+    # For OpenFlow1.0 only
+    class NXActionPushMpls(NXActionMplsBase):
+        _subtype = nicira_ext.NXAST_PUSH_MPLS
+
+    # For OpenFlow1.0 only
+    class NXActionPopMpls(NXActionMplsBase):
+        _subtype = nicira_ext.NXAST_POP_MPLS
+
+    # For OpenFlow1.0 only
+    class NXActionSetMplsTtl(NXAction):
+        _subtype = nicira_ext.NXAST_SET_MPLS_TTL
+
+        # ethertype
+        _fmt_str = '!B5x'
+
+        def __init__(self,
+                     ttl,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionSetMplsTtl, self).__init__()
+            self.ttl = ttl
+
+        @classmethod
+        def parser(cls, buf):
+            (ttl,) = struct.unpack_from(
+                cls._fmt_str, buf)
+            return cls(ttl)
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0,
+                          self.ttl)
+            return data
+
+    # For OpenFlow1.0 only
+    class NXActionDecMplsTtl(NXAction):
+        _subtype = nicira_ext.NXAST_DEC_MPLS_TTL
+
+        # ethertype
+        _fmt_str = '!6x'
+
+        def __init__(self,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionDecMplsTtl, self).__init__()
+
+        @classmethod
+        def parser(cls, buf):
+            return cls()
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0)
+            return data
+
+    # For OpenFlow1.0 only
+    class NXActionSetMplsLabel(NXAction):
+        _subtype = nicira_ext.NXAST_SET_MPLS_LABEL
+
+        # ethertype
+        _fmt_str = '!2xI'
+
+        def __init__(self,
+                     label,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionSetMplsLabel, self).__init__()
+            self.label = label
+
+        @classmethod
+        def parser(cls, buf):
+            (label,) = struct.unpack_from(
+                cls._fmt_str, buf)
+            return cls(label)
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0,
+                          self.label)
+            return data
+
+    # For OpenFlow1.0 only
+    class NXActionSetMplsTc(NXAction):
+        _subtype = nicira_ext.NXAST_SET_MPLS_TC
+
+        # ethertype
+        _fmt_str = '!B5x'
+
+        def __init__(self,
+                     tc,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionSetMplsTc, self).__init__()
+            self.tc = tc
+
+        @classmethod
+        def parser(cls, buf):
+            (tc,) = struct.unpack_from(
+                cls._fmt_str, buf)
+            return cls(tc)
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0,
+                          self.tc)
             return data
 
     class NXActionFinTimeout(NXAction):
@@ -972,6 +1139,7 @@ def generate(ofp_name, ofpp_name):
     add_attr('NXActionUnknown', NXActionUnknown)
 
     classes = [
+        'NXActionSetQueue',
         'NXActionPopQueue',
         'NXActionRegLoad',
         'NXActionNote',
@@ -983,7 +1151,14 @@ def generate(ofp_name, ofpp_name):
         'NXActionOutputReg',
         'NXActionLearn',
         'NXActionExit',
+        'NXActionDecTtl',
         'NXActionController',
+        'NXActionPushMpls',
+        'NXActionPopMpls',
+        'NXActionSetMplsTtl',
+        'NXActionDecMplsTtl',
+        'NXActionSetMplsLabel',
+        'NXActionSetMplsTc',
         'NXActionFinTimeout',
         'NXActionConjunction',
         'NXActionMultipath',
