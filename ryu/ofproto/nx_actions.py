@@ -280,6 +280,46 @@ def generate(ofp_name, ofpp_name):
                           ofs_nbits, dst_num, self.value)
             return data
 
+    class NXActionRegLoad2(NXAction):
+        _subtype = nicira_ext.NXAST_REG_LOAD2
+        _TYPE = {
+            'ascii': [
+                'dst',
+                'value',
+            ]
+        }
+
+        def __init__(self, dst, value, mask=None,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionRegLoad2, self).__init__()
+            self.dst = dst
+            self.value = value
+            self.mask = mask
+
+        @classmethod
+        def parser(cls, buf):
+            (n, uv, mask, _len) = ofp.oxm_parse(buf, 0)
+            dst, value = ofp.oxm_to_user(n, uv, mask)
+
+            if isinstance(value, (tuple, list)):
+                return cls(dst, value[0], value[1])
+            else:
+                return cls(dst, value, None)
+
+        def serialize_body(self):
+            data = bytearray()
+            if self.mask is None:
+                value = self.value
+            else:
+                value = (self.value, self.mask)
+                self._TYPE['ascii'].append('mask')
+
+            n, value, mask = ofp.oxm_from_user(self.dst, value)
+            len_ = ofp.oxm_serialize(n, value, mask, data, 0)
+            msg_pack_into("!%dx" % (14 - len_), data, len_)
+
+            return data
+
     class NXActionNote(NXAction):
         _subtype = nicira_ext.NXAST_NOTE
 
@@ -357,20 +397,28 @@ def generate(ofp_name, ofpp_name):
             ]
         }
 
-        def __init__(self, src_field, dst_field, n_bits, src_ofs=0, dst_ofs=0,
+        def __init__(self, src_field, src_start, src_end,
+                     dst_field, dst_start, dst_end,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionRegMove, self).__init__()
-            self.n_bits = n_bits
-            self.src_ofs = src_ofs
-            self.dst_ofs = dst_ofs
             self.src_field = src_field
+            self.src_start = src_start
+            self.src_end = src_end
             self.dst_field = dst_field
+            self.dst_start = dst_start
+            self.dst_end = dst_end
 
         @classmethod
         def parser(cls, buf):
             (n_bits, src_ofs, dst_ofs,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
             rest = buf[struct.calcsize(NXActionRegMove._fmt_str):]
+
+            src_start = src_ofs
+            src_end = src_ofs + n_bits - 1
+            dst_start = dst_ofs
+            dst_end = dst_ofs + n_bits - 1
+
             # src field
             (n, len) = ofp.oxm_parse_header(rest, 0)
             src_field = ofp.oxm_to_user_header(n)
@@ -380,14 +428,17 @@ def generate(ofp_name, ofpp_name):
             dst_field = ofp.oxm_to_user_header(n)
             rest = rest[len:]
             # ignore padding
-            return cls(src_field, dst_field=dst_field, n_bits=n_bits,
-                       src_ofs=src_ofs, dst_ofs=dst_ofs)
+            return cls(src_field, src_start, src_end,
+                       dst_field, dst_start, dst_end)
 
         def serialize_body(self):
             # fixup
             data = bytearray()
+            n_bits = self.src_end - self.src_start + 1
+            assert n_bits == self.dst_end - self.dst_start + 1
+
             msg_pack_into(self._fmt_str, data, 0,
-                          self.n_bits, self.src_ofs, self.dst_ofs)
+                          n_bits, self.src_start, self.dst_start)
             # src field
             n = ofp.oxm_from_user_header(self.src_field)
             ofp.oxm_serialize_header(n, data, len(data))
@@ -493,6 +544,58 @@ def generate(ofp_name, ofpp_name):
                           ofs_nbits,
                           six.binary_type(src),
                           self.max_len)
+            return data
+
+    class NXActionOutputReg2(NXAction):
+        _subtype = nicira_ext.NXAST_OUTPUT_REG2
+
+        # start, end, src, max_len
+        _fmt_str = '!HH4s'
+        _TYPE = {
+            'ascii': [
+                'src',
+            ]
+        }
+
+        def __init__(self,
+                     start,
+                     end,
+                     src,
+                     max_len,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionOutputReg2, self).__init__()
+            self.start = start
+            self.end = end
+            self.src = src
+            self.max_len = max_len
+
+        @classmethod
+        def parser(cls, buf):
+            (ofs_nbits,
+             max_len,
+             oxm_data) = struct.unpack_from(
+                cls._fmt_str, buf, 0)
+            start = ofs_nbits >> 6
+            end = (ofs_nbits & 0x3f) + start
+            (n, len_) = ofp.oxm_parse_header(oxm_data, 0)
+            src = ofp.oxm_to_user_header(n)
+            return cls(start,
+                       end,
+                       src,
+                       max_len)
+
+        def serialize_body(self):
+            data = bytearray()
+            oxm_data = bytearray()
+            ofs_nbits = (self.start << 6) + (self.end - self.start)
+            oxm = ofp.oxm_from_user_header(self.src)
+            ofp.oxm_serialize_header(oxm, oxm_data, 0),
+            msg_pack_into(self._fmt_str, data, 0,
+                          ofs_nbits,
+                          self.max_len,
+                          six.binary_type(oxm_data))
+            offset = len(data)
+            msg_pack_into("!%dx" % (14 - offset), data, offset)
             return data
 
     class NXActionLearn(NXAction):
@@ -641,7 +744,270 @@ def generate(ofp_name, ofpp_name):
                           self.reason)
             return data
 
-    # For OpenFlow1.0 only
+    class NXActionController2(NXAction):
+        _subtype = nicira_ext.NXAST_CONTROLLER2
+        _fmt_str = '!6x'
+        _PACK_STR = '!HH'
+
+        def __init__(self,
+                     type_=None, len_=None, vendor=None, subtype=None,
+                     **kwargs):
+            super(NXActionController2, self).__init__()
+
+            for arg in kwargs:
+                if arg in NXActionController2Prop._NAMES:
+                    setattr(self, arg, kwargs[arg])
+
+        @classmethod
+        def parser(cls, buf):
+            cls_data = {}
+            offset = 6
+            buf_len = len(buf)
+            while buf_len > offset:
+                (type_, length) = struct.unpack_from(cls._PACK_STR, buf, offset)
+                offset += 4
+                try:
+                    subcls = NXActionController2Prop._TYPES[type_]
+                except KeyError:
+                    subcls = NXActionController2PropUnknown
+                data, size = subcls.parser_prop(buf[offset:], length - 4)
+                offset += size
+                cls_data[subcls._arg_name] = data
+            return cls(**cls_data)
+
+        def serialize_body(self):
+            body = bytearray()
+            msg_pack_into(self._fmt_str, body, 0)
+            prop_list = []
+            for arg in self.__dict__:
+                if arg in NXActionController2Prop._NAMES:
+                    prop_list.append((NXActionController2Prop._NAMES[arg],
+                                      self.__dict__[arg]))
+            prop_list.sort(key=lambda x: x[0].type)
+
+            for subcls, value in prop_list:
+                body += subcls.serialize_prop(value)
+
+            return body
+
+    class NXActionController2Prop(object):
+        _TYPES = {}
+        _NAMES = {}
+
+        @classmethod
+        def register_type(cls, type_):
+            def _register_type(subcls):
+                subcls.type = type_
+                NXActionController2Prop._TYPES[type_] = subcls
+                NXActionController2Prop._NAMES[subcls._arg_name] = subcls
+                return subcls
+
+            return _register_type
+
+    class NXActionController2PropUnknown(NXActionController2Prop):
+
+        @classmethod
+        def parser_prop(cls, buf, length):
+            size = 4
+            return buf, size
+
+        @classmethod
+        def serialize_prop(cls, argment):
+            data = bytearray()
+            return data
+
+    @NXActionController2Prop.register_type(nicira_ext.NXAC2PT_MAX_LEN)
+    class NXActionController2PropMaxLen(NXActionController2Prop):
+        # max_len
+        _fmt_str = "!H2x"
+        _arg_name = "max_len"
+
+        @classmethod
+        def parser_prop(cls, buf, length):
+            size = 4
+            (max_len,) = struct.unpack_from(
+                cls._fmt_str, buf, 0)
+            return max_len, size
+
+        @classmethod
+        def serialize_prop(cls, max_len):
+            data = bytearray()
+            msg_pack_into("!HHH2x", data, 0,
+                          nicira_ext.NXAC2PT_MAX_LEN,
+                          8,
+                          max_len)
+            return data
+
+    @NXActionController2Prop.register_type(nicira_ext.NXAC2PT_CONTROLLER_ID)
+    class NXActionController2PropControllerId(NXActionController2Prop):
+        # controller_id
+        _fmt_str = "!H2x"
+        _arg_name = "controller_id"
+
+        @classmethod
+        def parser_prop(cls, buf, length):
+            size = 4
+            (controller_id,) = struct.unpack_from(
+                cls._fmt_str, buf, 0)
+            return controller_id, size
+
+        @classmethod
+        def serialize_prop(cls, controller_id):
+            data = bytearray()
+            msg_pack_into("!HHH2x", data, 0,
+                          nicira_ext.NXAC2PT_CONTROLLER_ID,
+                          8,
+                          controller_id)
+            return data
+
+    @NXActionController2Prop.register_type(nicira_ext.NXAC2PT_REASON)
+    class NXActionController2PropReason(NXActionController2Prop):
+        # reason
+        _fmt_str = "!B3x"
+        _arg_name = "reason"
+
+        @classmethod
+        def parser_prop(cls, buf, length):
+            size = 4
+            (reason,) = struct.unpack_from(
+                cls._fmt_str, buf, 0)
+            return reason, size
+
+        @classmethod
+        def serialize_prop(cls, reason):
+            data = bytearray()
+            msg_pack_into("!HHB3x", data, 0,
+                          nicira_ext.NXAC2PT_REASON,
+                          5,
+                          reason)
+            return data
+
+    @NXActionController2Prop.register_type(nicira_ext.NXAC2PT_USERDATA)
+    class NXActionController2PropUserData(NXActionController2Prop):
+        # userdata
+        _fmt_str = "!B"
+        _arg_name = "userdata"
+
+        @classmethod
+        def parser_prop(cls, buf, length):
+            userdata = []
+            offset = 0
+
+            while offset < length:
+                u = struct.unpack_from(cls._fmt_str, buf, offset)
+                userdata.append(u[0])
+                offset += 1
+
+            user_size = utils.round_up(length, 4)
+
+            if user_size > 4 and (user_size % 8) == 0:
+                size = utils.round_up(length, 4) + 4
+            else:
+                size = utils.round_up(length, 4)
+
+            return userdata, size
+
+        @classmethod
+        def serialize_prop(cls, userdata):
+            data = bytearray()
+            user_buf = bytearray()
+            user_offset = 0
+            for user in userdata:
+                msg_pack_into('!B', user_buf, user_offset,
+                              user)
+                user_offset += 1
+
+            msg_pack_into("!HH", data, 0,
+                          nicira_ext.NXAC2PT_USERDATA,
+                          4 + user_offset)
+            data += user_buf
+
+            if user_offset > 4:
+                user_len = utils.round_up(user_offset, 4)
+                brank_size = 0
+                if (user_len % 8) == 0:
+                    brank_size = 4
+                msg_pack_into("!%dx" % (user_len - user_offset + brank_size),
+                              data, 4 + user_offset)
+            else:
+                user_len = utils.round_up(user_offset, 4)
+
+                msg_pack_into("!%dx" % (user_len - user_offset),
+                              data, 4 + user_offset)
+            return data
+
+    @NXActionController2Prop.register_type(nicira_ext.NXAC2PT_PAUSE)
+    class NXActionController2PropPause(NXActionController2Prop):
+        _arg_name = "pause"
+
+        @classmethod
+        def parser_prop(cls, buf, length):
+            pause = True
+            size = 4
+            return pause, size
+
+        @classmethod
+        def serialize_prop(cls, pause):
+            data = bytearray()
+            msg_pack_into("!HH4x", data, 0,
+                          nicira_ext.NXAC2PT_PAUSE,
+                          4)
+            return data
+
+    class NXActionDecTtlCntIds(NXAction):
+        _subtype = nicira_ext.NXAST_DEC_TTL_CNT_IDS
+
+        # controllers
+        _fmt_str = '!H4x'
+        _fmt_len = 6
+
+        def __init__(self,
+                     cnt_ids,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionDecTtlCntIds, self).__init__()
+
+            self.cnt_ids = cnt_ids
+
+        @classmethod
+        def parser(cls, buf):
+            (controllers,) = struct.unpack_from(
+                cls._fmt_str, buf)
+
+            offset = cls._fmt_len
+            cnt_ids = []
+
+            for i in range(0, controllers):
+                id_ = struct.unpack_from('!H', buf, offset)
+                cnt_ids.append(id_[0])
+                offset += 2
+
+            return cls(cnt_ids)
+
+        def serialize_body(self):
+            assert isinstance(self.cnt_ids, (tuple, list))
+            for i in self.cnt_ids:
+                assert isinstance(i, six.integer_types)
+
+            controllers = len(self.cnt_ids)
+
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0,
+                          controllers)
+            offset = self._fmt_len
+
+            for id_ in self.cnt_ids:
+                msg_pack_into('!H', data, offset, id_)
+                offset += 2
+
+            id_len = (utils.round_up(controllers, 4) -
+                      controllers)
+
+            if id_len != 0:
+                msg_pack_into('%dx' % id_len * 2, data, offset)
+
+            return data
+
+    # Use in only OpenFlow1.0
     class NXActionMplsBase(NXAction):
         # ethertype
         _fmt_str = '!H4x'
@@ -765,6 +1131,91 @@ def generate(ofp_name, ofpp_name):
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0,
                           self.tc)
+            return data
+
+    class NXActionStackBase(NXAction):
+        # start, field, end
+        _fmt_str = '!H4sH'
+        _TYPE = {
+            'ascii': [
+                'field',
+            ]
+        }
+
+        def __init__(self,
+                     field,
+                     start,
+                     end,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionStackBase, self).__init__()
+            self.field = field
+            self.start = start
+            self.end = end
+
+        @classmethod
+        def parser(cls, buf):
+            (start, oxm_data, end) = struct.unpack_from(
+                cls._fmt_str, buf, 0)
+            (n, len_) = ofp.oxm_parse_header(oxm_data, 0)
+            field = ofp.oxm_to_user_header(n)
+            return cls(field, start, end)
+
+        def serialize_body(self):
+            data = bytearray()
+            oxm_data = bytearray()
+            oxm = ofp.oxm_from_user_header(self.field)
+            ofp.oxm_serialize_header(oxm, oxm_data, 0)
+            msg_pack_into(self._fmt_str, data, 0,
+                          self.start,
+                          six.binary_type(oxm_data),
+                          self.end)
+            offset = len(data)
+            msg_pack_into("!%dx" % (12 - offset), data, offset)
+            return data
+
+    class NXActionStackPush(NXActionStackBase):
+        _subtype = nicira_ext.NXAST_STACK_PUSH
+
+    class NXActionStackPop(NXActionStackBase):
+        _subtype = nicira_ext.NXAST_STACK_POP
+
+    class NXActionSample(NXAction):
+        _subtype = nicira_ext.NXAST_SAMPLE
+
+        # probability, collector_set_id, obs_domain_id, obs_point_id
+        _fmt_str = '!HIII'
+
+        def __init__(self,
+                     probability,
+                     collector_set_id=0,
+                     obs_domain_id=0,
+                     obs_point_id=0,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionSample, self).__init__()
+            self.probability = probability
+            self.collector_set_id = collector_set_id
+            self.obs_domain_id = obs_domain_id
+            self.obs_point_id = obs_point_id
+
+        @classmethod
+        def parser(cls, buf):
+            (probability,
+             collector_set_id,
+             obs_domain_id,
+             obs_point_id) = struct.unpack_from(
+                cls._fmt_str, buf, 0)
+            return cls(probability,
+                       collector_set_id,
+                       obs_domain_id,
+                       obs_point_id)
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0,
+                          self.probability,
+                          self.collector_set_id,
+                          self.obs_domain_id,
+                          self.obs_point_id)
             return data
 
     class NXActionFinTimeout(NXAction):
@@ -1182,6 +1633,7 @@ def generate(ofp_name, ofpp_name):
         'NXActionSetQueue',
         'NXActionPopQueue',
         'NXActionRegLoad',
+        'NXActionRegLoad2',
         'NXActionNote',
         'NXActionSetTunnel',
         'NXActionSetTunnel64',
@@ -1189,16 +1641,22 @@ def generate(ofp_name, ofpp_name):
         'NXActionResubmit',
         'NXActionResubmitTable',
         'NXActionOutputReg',
+        'NXActionOutputReg2',
         'NXActionLearn',
         'NXActionExit',
         'NXActionDecTtl',
         'NXActionController',
+        'NXActionController2',
+        'NXActionDecTtlCntIds',
         'NXActionPushMpls',
         'NXActionPopMpls',
         'NXActionSetMplsTtl',
         'NXActionDecMplsTtl',
         'NXActionSetMplsLabel',
         'NXActionSetMplsTc',
+        'NXActionStackPush',
+        'NXActionStackPop',
+        'NXActionSample',
         'NXActionFinTimeout',
         'NXActionConjunction',
         'NXActionMultipath',
