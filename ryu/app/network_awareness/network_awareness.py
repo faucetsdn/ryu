@@ -239,7 +239,7 @@ class NetworkAwareness(app_manager.RyuApp):
         if self.pre_graph != self.graph and setting.TOSHOW:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
-            for i in xrange(1, switch_num + 1):
+            for i in self.graph.nodes():
                 print '%10d' % i,
             print ""
             for i in self.graph.nodes():
@@ -252,12 +252,12 @@ class NetworkAwareness(app_manager.RyuApp):
         if self.pre_link_to_port != self.link_to_port and setting.TOSHOW:
             print "---------------------Link Port---------------------"
             print '%10s' % ("switch"),
-            for i in xrange(1, switch_num + 1):
+            for i in self.graph.nodes():
                 print '%10d' % i,
             print ""
-            for i in xrange(1, switch_num + 1):
+            for i in self.graph.nodes():
                 print '%10d' % i,
-                for j in xrange(1, switch_num + 1):
+                for j in self.graph.nodes():
                     if (i, j) in self.link_to_port.keys():
                         print '%10s' % str(self.link_to_port[(i, j)]),
                     else:
