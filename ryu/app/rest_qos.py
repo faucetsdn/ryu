@@ -1127,20 +1127,20 @@ class Match(object):
 class Action(object):
 
     @staticmethod
-    def to_rest(openflow):
-        if REST_ACTION in openflow:
+    def to_rest(flow):
+        if REST_ACTION in flow:
             actions = []
-            for action in openflow[REST_ACTION]:
-                field_value = re.search('SET_FIELD: {ip_dscp:(\d+)', action)
+            for act in flow[REST_ACTION]:
+                field_value = re.search('SET_FIELD: \{ip_dscp:(\d+)', act)
                 if field_value:
                     actions.append({REST_ACTION_MARK: field_value.group(1)})
-                meter_value = re.search('METER:(\d+)', action)
+                meter_value = re.search('METER:(\d+)', act)
                 if meter_value:
                     actions.append({REST_ACTION_METER: meter_value.group(1)})
-                queue_value = re.search('SET_QUEUE:(\d+)', action)
+                queue_value = re.search('SET_QUEUE:(\d+)', act)
                 if queue_value:
                     actions.append({REST_ACTION_QUEUE: queue_value.group(1)})
-                action = {REST_ACTION: actions}
+            action = {REST_ACTION: actions}
         else:
             action = {REST_ACTION: 'Unknown action type.'}
 
