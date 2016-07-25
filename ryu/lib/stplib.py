@@ -297,6 +297,11 @@ class Stp(app_manager.RyuApp):
                 bridge.port_delete(port.port_no)
             else:
                 assert reason is dp.ofproto.OFPPR_MODIFY
+                if bridge.dp.ports[port.port_no].state == port.state:
+                    # Do nothing
+                    self.logger.debug('[port=%d] Link status not changed.',
+                                      port.port_no, extra=dpid_str)
+                    return
                 if link_down_flg:
                     self.logger.info('[port=%d] Link down.',
                                      port.port_no, extra=dpid_str)
