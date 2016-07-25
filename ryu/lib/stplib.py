@@ -169,6 +169,13 @@ class EventPacketIn(event.EventBase):
         self.msg = msg
 
 
+# For Python3 compatibility
+# Note: The following is the official workaround for cmp() in Python2.
+# https://docs.python.org/3.0/whatsnew/3.0.html#ordering-comparisons
+def cmp(a, b):
+    return (a > b) - (a < b)
+
+
 class Stp(app_manager.RyuApp):
     """ STP(spanning tree) library. """
 
@@ -351,7 +358,7 @@ class Stp(app_manager.RyuApp):
 
     @staticmethod
     def _cmp_value(value1, value2):
-        result = cmp(value1, value2)
+        result = cmp(str(value1), str(value2))
         if result < 0:
             return SUPERIOR
         elif result == 0:
