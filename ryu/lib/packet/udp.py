@@ -53,7 +53,9 @@ class udp(packet_base.PacketBase):
     @staticmethod
     def get_packet_type(src_port, dst_port):
         if ((src_port == 68 and dst_port == 67) or
-                (src_port == 67 and dst_port == 68)):
+            (src_port == 67 and dst_port == 68) or
+            (src_port == 67 and
+             dst_port == 67)):
             return dhcp.dhcp
         if (dst_port == vxlan.UDP_DST_PORT or
                 dst_port == vxlan.UDP_DST_PORT_OLD):
