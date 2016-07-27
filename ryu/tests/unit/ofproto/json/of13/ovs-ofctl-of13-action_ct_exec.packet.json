@@ -36,7 +36,7 @@
                         "subtype": 35, 
                         "type": 65535, 
                         "zone_ofs_nbits": 0,
-                        "zone_src": 0
+                        "zone_src": ""
                      }
                   }
                ], 

@@ -2665,20 +2665,25 @@ def generate(ofp_name, ofpp_name):
         zone_ofs_nbits   Start and End for the OXM/NXM field.
                          Setting method refer to the ``nicira_ext.ofs_nbits``.
                          If you need set the Immediate value for zone,
-                         zone_src must be set to zero.
+                         zone_src must be set to None or empty character string.
         recirc_table     Recirculate to a specific table
         alg              Well-known port number for the protocol
         actions          Zero or more actions may immediately follow this
                          action
         ================ ======================================================
 
+        .. NOTE::
+
+            If you set number to zone_src,
+            Traceback occurs when you run the to_jsondict.
+
         Example::
 
             match = parser.OFPMatch(eth_type=0x0800, ct_state=(0,32))
             actions += [parser.NXActionCT(
                             flags = 1,
-                            zone_src = 0,
-                            zone_ofs_nbits = 0,
+                            zone_src = "reg0",
+                            zone_ofs_nbits = nicira_ext.ofs_nbits(4, 31),
                             recirc_table = 4,
                             alg = 0,
                             actions = [])]
@@ -2687,7 +2692,13 @@ def generate(ofp_name, ofpp_name):
 
         # flags, zone_src, zone_ofs_nbits, recirc_table,
         # pad, alg
-        _fmt_str = '!HIHB3xH'
+        _fmt_str = '!H4sHB3xH'
+        _TYPE = {
+            'ascii': [
+                'zone_src',
+            ]
+        }
+
         # Followed by actions
 
         def __init__(self,
@@ -2709,12 +2720,20 @@ def generate(ofp_name, ofpp_name):
         @classmethod
         def parser(cls, buf):
             (flags,
-             zone_src,
+             oxm_data,
              zone_ofs_nbits,
              recirc_table,
              alg,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
             rest = buf[struct.calcsize(cls._fmt_str):]
+
+            # OXM/NXM field
+            if oxm_data == b'\x00' * 4:
+                zone_src = ""
+            else:
+                (n, len_) = ofp.oxm_parse_header(oxm_data, 0)
+                zone_src = ofp.oxm_to_user_header(n)
+
             # actions
             actions = []
             while len(rest) > 0:
@@ -2727,9 +2746,19 @@ def generate(ofp_name, ofpp_name):
 
         def serialize_body(self):
             data = bytearray()
+            # If zone_src is zero, zone_ofs_nbits is zone_imm
+            if not self.zone_src:
+                zone_src = b'\x00' * 4
+            elif isinstance(self.zone_src, six.integer_types):
+                zone_src = struct.pack("!I", self.zone_src)
+            else:
+                zone_src = bytearray()
+                oxm = ofp.oxm_from_user_header(self.zone_src)
+                ofp.oxm_serialize_header(oxm, zone_src, 0)
+
             msg_pack_into(self._fmt_str, data, 0,
                           self.flags,
-                          self.zone_src,
+                          six.binary_type(zone_src),
                           self.zone_ofs_nbits,
                           self.recirc_table,
                           self.alg)

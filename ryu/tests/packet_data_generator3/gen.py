@@ -108,7 +108,7 @@ MESSAGES = [
      'args': (['table=3,',
               'importance=39032'] +
               ['dl_type=0x0800,ct_state=-trk'] +
-              ['actions=ct(table=4)'])},
+              ['actions=ct(table=4,zone=NXM_NX_REG0[4..31])'])},
     {'name': 'action_ct_exec',
      'versions': [4],
      'cmd': 'add-flow',
