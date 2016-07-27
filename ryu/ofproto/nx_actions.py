@@ -356,18 +356,18 @@ def generate(ofp_name, ofpp_name):
         ================ ======================================================
         Attribute        Description
         ================ ======================================================
-        start            Start bit for destination field
-        end              End bit for destination field
+        ofs_nbits        Start and End for the OXM/NXM field.
+                         Setting method refer to the ``nicira_ext.ofs_nbits``
         dst              OXM/NXM header for destination field
         value            OXM/NXM value to be loaded
         ================ ======================================================
 
         Example::
 
-            actions += [parser.NXActionRegLoad(start=4,
-                                               end=31,
-                                               dst="eth_dst",
-                                               value=0x112233)]
+            actions += [parser.NXActionRegLoad(
+                            ofs_nbits=nicira_ext.ofs_nbits(4, 31),
+                            dst="eth_dst",
+                            value=0x112233)]
         """
         _subtype = nicira_ext.NXAST_REG_LOAD
         _fmt_str = '!HIQ'  # ofs_nbits, dst, value
@@ -377,11 +377,11 @@ def generate(ofp_name, ofpp_name):
             ]
         }
 
-        def __init__(self, start, end, dst, value,
-                     type_=None, len_=None, experimenter=None, subtype=None):
+        def __init__(self, ofs_nbits, dst, value,
+                     type_=None, len_=None, experimenter=None,
+                     subtype=None):
             super(NXActionRegLoad, self).__init__()
-            self.start = start
-            self.end = end
+            self.ofs_nbits = ofs_nbits
             self.dst = dst
             self.value = value
 
@@ -389,11 +389,9 @@ def generate(ofp_name, ofpp_name):
         def parser(cls, buf):
             (ofs_nbits, dst, value,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            start = ofs_nbits >> 6
-            end = (ofs_nbits & 0x3f) + start
             # Right-shift instead of using oxm_parse_header for simplicity...
             dst_name = ofp.oxm_to_user_header(dst >> 9)
-            return cls(start, end, dst_name, value)
+            return cls(ofs_nbits, dst_name, value)
 
         def serialize_body(self):
             hdr_data = bytearray()
@@ -401,10 +399,9 @@ def generate(ofp_name, ofpp_name):
             ofp.oxm_serialize_header(n, hdr_data, 0)
             (dst_num,) = struct.unpack_from('!I', six.binary_type(hdr_data), 0)
 
-            ofs_nbits = (self.start << 6) + (self.end - self.start)
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0,
-                          ofs_nbits, dst_num, self.value)
+                          self.ofs_nbits, dst_num, self.value)
             return data
 
     class NXActionRegLoad2(NXAction):
@@ -671,11 +668,10 @@ def generate(ofp_name, ofpp_name):
         Attribute        Description
         ================ ======================================================
         src_field        OXM/NXM header for source field
-        src_start        Start bit for source field
-        src_end          End bit for source field
         dst_field        OXM/NXM header for destination field
-        dst_start        Start bit for destination field
-        dst_end          End bit for destination field
+        n_bits           Number of bits
+        src_ofs          Starting bit offset in source
+        dst_ofs          Starting bit offset in destination
         ================ ======================================================
 
         .. CAUTION::
@@ -685,11 +681,10 @@ def generate(ofp_name, ofpp_name):
         Example::
 
             actions += [parser.NXActionRegMove(src_field="reg0",
-                                               src_start=0,
-                                               src_end=5,
                                                dst_field="reg1",
-                                               dst_start=10,
-                                               dst_end=15)]
+                                               n_bits=5,
+                                               src_ofs=0
+                                               dst_ofs=10)]
         """
         _subtype = nicira_ext.NXAST_REG_MOVE
         _fmt_str = '!HHH'  # n_bits, src_ofs, dst_ofs
@@ -701,27 +696,20 @@ def generate(ofp_name, ofpp_name):
             ]
         }
 
-        def __init__(self, src_field, src_start, src_end,
-                     dst_field, dst_start, dst_end,
+        def __init__(self, src_field, dst_field, n_bits, src_ofs=0, dst_ofs=0,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionRegMove, self).__init__()
+            self.n_bits = n_bits
+            self.src_ofs = src_ofs
+            self.dst_ofs = dst_ofs
             self.src_field = src_field
-            self.src_start = src_start
-            self.src_end = src_end
             self.dst_field = dst_field
-            self.dst_start = dst_start
-            self.dst_end = dst_end
 
         @classmethod
         def parser(cls, buf):
             (n_bits, src_ofs, dst_ofs,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
             rest = buf[struct.calcsize(NXActionRegMove._fmt_str):]
-
-            src_start = src_ofs
-            src_end = src_ofs + n_bits - 1
-            dst_start = dst_ofs
-            dst_end = dst_ofs + n_bits - 1
 
             # src field
             (n, len) = ofp.oxm_parse_header(rest, 0)
@@ -732,17 +720,14 @@ def generate(ofp_name, ofpp_name):
             dst_field = ofp.oxm_to_user_header(n)
             rest = rest[len:]
             # ignore padding
-            return cls(src_field, src_start, src_end,
-                       dst_field, dst_start, dst_end)
+            return cls(src_field, dst_field=dst_field, n_bits=n_bits,
+                       src_ofs=src_ofs, dst_ofs=dst_ofs)
 
         def serialize_body(self):
             # fixup
             data = bytearray()
-            n_bits = self.src_end - self.src_start + 1
-            assert n_bits == self.dst_end - self.dst_start + 1
-
             msg_pack_into(self._fmt_str, data, 0,
-                          n_bits, self.src_start, self.dst_start)
+                          self.n_bits, self.src_ofs, self.dst_ofs)
             # src field
             n = ofp.oxm_from_user_header(self.src_field)
             ofp.oxm_serialize_header(n, data, len(data))
@@ -874,18 +859,18 @@ def generate(ofp_name, ofpp_name):
         ================ ======================================================
         Attribute        Description
         ================ ======================================================
-        start            Start bit for source field
-        end              End bit for source field
+        ofs_nbits        Start and End for the OXM/NXM field.
+                         Setting method refer to the ``nicira_ext.ofs_nbits``
         src              OXM/NXM header for source field
         max_len          Max length to send to controller
         ================ ======================================================
 
         Example::
 
-            actions += [parser.NXActionOutputReg(start=8080,
-                                                 end=10,
-                                                 src="reg0",
-                                                 max_len=1024)]
+            actions += [parser.NXActionOutputReg(
+                            ofs_nbits=nicira_ext.ofs_nbits(4, 31),
+                            src="reg0",
+                            max_len=1024)]
         """
         _subtype = nicira_ext.NXAST_OUTPUT_REG
 
@@ -898,14 +883,12 @@ def generate(ofp_name, ofpp_name):
         }
 
         def __init__(self,
-                     start,
-                     end,
+                     ofs_nbits,
                      src,
                      max_len,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionOutputReg, self).__init__()
-            self.start = start
-            self.end = end
+            self.ofs_nbits = ofs_nbits
             self.src = src
             self.max_len = max_len
 
@@ -913,23 +896,19 @@ def generate(ofp_name, ofpp_name):
         def parser(cls, buf):
             (ofs_nbits, oxm_data, max_len) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            start = ofs_nbits >> 6
-            end = (ofs_nbits & 0x3f) + start
             (n, len_) = ofp.oxm_parse_header(oxm_data, 0)
             src = ofp.oxm_to_user_header(n)
-            return cls(start,
-                       end,
+            return cls(ofs_nbits,
                        src,
                        max_len)
 
         def serialize_body(self):
             data = bytearray()
             src = bytearray()
-            ofs_nbits = (self.start << 6) + (self.end - self.start)
             oxm = ofp.oxm_from_user_header(self.src)
             ofp.oxm_serialize_header(oxm, src, 0),
             msg_pack_into(self._fmt_str, data, 0,
-                          ofs_nbits,
+                          self.ofs_nbits,
                           six.binary_type(src),
                           self.max_len)
             return data
@@ -958,22 +937,22 @@ def generate(ofp_name, ofpp_name):
         ================ ======================================================
         Attribute        Description
         ================ ======================================================
-        start            Start bit for source field
-        end              End bit for source field
+        ofs_nbits        Start and End for the OXM/NXM field.
+                         Setting method refer to the ``nicira_ext.ofs_nbits``
         src              OXM/NXM header for source field
         max_len          Max length to send to controller
         ================ ======================================================
 
         Example::
 
-            actions += [parser.NXActionOutputReg(start=8080,
-                                                 end=10,
-                                                 src="reg0",
-                                                 max_len=1024)]
+            actions += [parser.NXActionOutputReg2(
+                            ofs_nbits=nicira_ext.ofs_nbits(4, 31),
+                            src="reg0",
+                            max_len=1024)]
         """
         _subtype = nicira_ext.NXAST_OUTPUT_REG2
 
-        # start, end, src, max_len
+        # ofs_nbits, src, max_len
         _fmt_str = '!HH4s'
         _TYPE = {
             'ascii': [
@@ -982,14 +961,12 @@ def generate(ofp_name, ofpp_name):
         }
 
         def __init__(self,
-                     start,
-                     end,
+                     ofs_nbits,
                      src,
                      max_len,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionOutputReg2, self).__init__()
-            self.start = start
-            self.end = end
+            self.ofs_nbits = ofs_nbits
             self.src = src
             self.max_len = max_len
 
@@ -999,23 +976,19 @@ def generate(ofp_name, ofpp_name):
              max_len,
              oxm_data) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            start = ofs_nbits >> 6
-            end = (ofs_nbits & 0x3f) + start
             (n, len_) = ofp.oxm_parse_header(oxm_data, 0)
             src = ofp.oxm_to_user_header(n)
-            return cls(start,
-                       end,
+            return cls(ofs_nbits,
                        src,
                        max_len)
 
         def serialize_body(self):
             data = bytearray()
             oxm_data = bytearray()
-            ofs_nbits = (self.start << 6) + (self.end - self.start)
             oxm = ofp.oxm_from_user_header(self.src)
             ofp.oxm_serialize_header(oxm, oxm_data, 0),
             msg_pack_into(self._fmt_str, data, 0,
-                          ofs_nbits,
+                          self.ofs_nbits,
                           self.max_len,
                           six.binary_type(oxm_data))
             offset = len(data)
@@ -2394,8 +2367,8 @@ def generate(ofp_name, ofpp_name):
         algorithm        One of NX_MP_ALG_*.
         max_link         Number of output links
         arg              Algorithm-specific argument
-        start            Start bit for source field
-        end              End bit for source field
+        ofs_nbits        Start and End for the OXM/NXM field.
+                         Setting method refer to the ``nicira_ext.ofs_nbits``
         dst              OXM/NXM header for source field
         ================ ======================================================
 
@@ -2407,8 +2380,7 @@ def generate(ofp_name, ofpp_name):
                             algorithm=nicira_ext.NX_MP_ALG_HRW,
                             max_link=5,
                             arg=0,
-                            start=4,
-                            end=31,
+                            ofs_nbits=nicira_ext.ofs_nbits(4, 31),
                             dst="reg2")]
         """
         _subtype = nicira_ext.NXAST_MULTIPATH
@@ -2428,8 +2400,7 @@ def generate(ofp_name, ofpp_name):
                      algorithm,
                      max_link,
                      arg,
-                     start,
-                     end,
+                     ofs_nbits,
                      dst,
                      type_=None, len_=None, experimenter=None, subtype=None):
             super(NXActionMultipath, self).__init__()
@@ -2438,8 +2409,7 @@ def generate(ofp_name, ofpp_name):
             self.algorithm = algorithm
             self.max_link = max_link
             self.arg = arg
-            self.start = start
-            self.end = end
+            self.ofs_nbits = ofs_nbits
             self.dst = dst
 
         @classmethod
@@ -2452,8 +2422,6 @@ def generate(ofp_name, ofpp_name):
              ofs_nbits,
              oxm_data) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            start = ofs_nbits >> 6
-            end = (ofs_nbits & 0x3f) + start
             (n, len_) = ofp.oxm_parse_header(oxm_data, 0)
             dst = ofp.oxm_to_user_header(n)
             return cls(fields,
@@ -2461,14 +2429,12 @@ def generate(ofp_name, ofpp_name):
                        algorithm,
                        max_link,
                        arg,
-                       start,
-                       end,
+                       ofs_nbits,
                        dst)
 
         def serialize_body(self):
             data = bytearray()
             dst = bytearray()
-            ofs_nbits = (self.start << 6) + (self.end - self.start)
             oxm = ofp.oxm_from_user_header(self.dst)
             ofp.oxm_serialize_header(oxm, dst, 0),
             msg_pack_into(self._fmt_str, data, 0,
@@ -2477,7 +2443,7 @@ def generate(ofp_name, ofpp_name):
                           self.algorithm,
                           self.max_link,
                           self.arg,
-                          ofs_nbits,
+                          self.ofs_nbits,
                           six.binary_type(dst))
 
             return data
@@ -2488,7 +2454,7 @@ def generate(ofp_name, ofpp_name):
         _fmt_str = '!HHHIHH'
 
         def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                     start, end, dst, slaves):
+                     ofs_nbits, dst, slaves):
             super(_NXActionBundleBase, self).__init__()
             self.len = utils.round_up(
                 nicira_ext.NX_ACTION_BUNDLE_0_SIZE + len(slaves) * 2, 8)
@@ -2498,8 +2464,7 @@ def generate(ofp_name, ofpp_name):
             self.basis = basis
             self.slave_type = slave_type
             self.n_slaves = n_slaves
-            self.start = start
-            self.end = end
+            self.ofs_nbits = ofs_nbits
             self.dst = dst
 
             assert isinstance(slaves, (list, tuple))
@@ -2514,8 +2479,6 @@ def generate(ofp_name, ofpp_name):
             (algorithm, fields, basis,
              slave_type, n_slaves, ofs_nbits, dst) = struct.unpack_from(
                 cls._fmt_str + 'I', buf, 0)
-            start = ofs_nbits >> 6
-            end = (ofs_nbits & 0x3f) + start
 
             offset = (nicira_ext.NX_ACTION_BUNDLE_0_SIZE -
                       nicira_ext.NX_ACTION_HEADER_0_SIZE - 8)
@@ -2534,10 +2497,9 @@ def generate(ofp_name, ofpp_name):
                 slave_offset += 2
 
             return cls(algorithm, fields, basis, slave_type,
-                       n_slaves, start, end, dst, slaves)
+                       n_slaves, ofs_nbits, dst, slaves)
 
         def serialize_body(self):
-            ofs_nbits = (self.start << 6) + (self.end - self.start)
             data = bytearray()
             slave_offset = (nicira_ext.NX_ACTION_BUNDLE_0_SIZE -
                             nicira_ext.NX_ACTION_HEADER_0_SIZE)
@@ -2554,7 +2516,7 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into(self._fmt_str, data, 0,
                           self.algorithm, self.fields, self.basis,
                           self.slave_type, self.n_slaves,
-                          ofs_nbits)
+                          self.ofs_nbits)
             offset = (nicira_ext.NX_ACTION_BUNDLE_0_SIZE -
                       nicira_ext.NX_ACTION_HEADER_0_SIZE - 8)
 
@@ -2591,8 +2553,7 @@ def generate(ofp_name, ofpp_name):
         basis            Universal hash parameter
         slave_type       Type of slaves(must be NXM_OF_IN_PORT)
         n_slaves         Number of slaves
-        start            Start bit for source field(must be zero)
-        end              End bit for source field(must be zero)
+        ofs_nbits        Start and End for the OXM/NXM field. (must be zero)
         dst              OXM/NXM header for source field(must be zero)
         slaves           List of slaves
         ================ ======================================================
@@ -2606,19 +2567,18 @@ def generate(ofp_name, ofpp_name):
                             basis=0,
                             slave_type=nicira_ext.NXM_OF_IN_PORT,
                             n_slaves=2,
-                            start=0,
-                            end=0,
+                            ofs_nbits=0,
                             dst=0,
                             slaves=[2, 3])]
         """
         _subtype = nicira_ext.NXAST_BUNDLE
 
         def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                     start, end, dst, slaves):
-            # NXAST_BUNDLE actions should have 'start' 'end' and 'dst' zeroed.
+                     ofs_nbits, dst, slaves):
+            # NXAST_BUNDLE actions should have 'sofs_nbits' and 'dst' zeroed.
             super(NXActionBundle, self).__init__(
                 algorithm, fields, basis, slave_type, n_slaves,
-                start=0, end=0, dst=0, slaves=slaves)
+                ofs_nbits=0, dst=0, slaves=slaves)
 
     class NXActionBundleLoad(_NXActionBundleBase):
         """
@@ -2632,12 +2592,13 @@ def generate(ofp_name, ofpp_name):
 
         ..
           bundle_load(fields, basis, algorithm, slave_type,
-                      slaves:[ s1, s2,...])
+                      dst[start..end], slaves:[ s1, s2,...])
         ..
 
         +-----------------------------------------------------------+
         | **bundle_load(**\ *fields*\, \ *basis*\, \ *algorithm*\,  |
-        | *slave_type*\, \ *slaves*\:[ \ *s1*\, \ *s2*\,...]\ **)** |
+        | *slave_type*\, \ *dst*\[\ *start*\... \*emd*\],           |
+        | \ *slaves*\:[ \ *s1*\, \ *s2*\,...]\ **)** |              |
         +-----------------------------------------------------------+
 
         ================ ======================================================
@@ -2648,8 +2609,8 @@ def generate(ofp_name, ofpp_name):
         basis            Universal hash parameter
         slave_type       Type of slaves(must be NXM_OF_IN_PORT)
         n_slaves         Number of slaves
-        start            Start bit for source field
-        end              End bit for source field
+        ofs_nbits        Start and End for the OXM/NXM field.
+                         Setting method refer to the ``nicira_ext.ofs_nbits``
         dst              OXM/NXM header for source field
         slaves           List of slaves
         ================ ======================================================
@@ -2663,8 +2624,7 @@ def generate(ofp_name, ofpp_name):
                             basis=0,
                             slave_type=nicira_ext.NXM_OF_IN_PORT,
                             n_slaves=2,
-                            start=4,
-                            end=31,
+                            ofs_nbits=nicira_ext.ofs_nbits(4, 31),
                             dst="reg0",
                             slaves=[2, 3])]
         """
@@ -2676,10 +2636,10 @@ def generate(ofp_name, ofpp_name):
         }
 
         def __init__(self, algorithm, fields, basis, slave_type, n_slaves,
-                     start, end, dst, slaves):
+                     ofs_nbits, dst, slaves):
             super(NXActionBundleLoad, self).__init__(
                 algorithm, fields, basis, slave_type, n_slaves,
-                start, end, dst, slaves)
+                ofs_nbits, dst, slaves)
 
     class NXActionCT(NXAction):
         """
@@ -2702,8 +2662,10 @@ def generate(ofp_name, ofpp_name):
         ================ ======================================================
         flags            Zero or more(Unspecified flag bits must be zero.)
         zone_src         OXM/NXM header for source field
-        zone_start       Start bit for source field
-        zone_end         End bit for source field
+        zone_ofs_nbits   Start and End for the OXM/NXM field.
+                         Setting method refer to the ``nicira_ext.ofs_nbits``.
+                         If you need set the Immediate value for zone,
+                         zone_src must be set to zero.
         recirc_table     Recirculate to a specific table
         alg              Well-known port number for the protocol
         actions          Zero or more actions may immediately follow this
@@ -2713,13 +2675,13 @@ def generate(ofp_name, ofpp_name):
         Example::
 
             match = parser.OFPMatch(eth_type=0x0800, ct_state=(0,32))
-            actions += [parser.NXActionCT(flags = 1,
-                                          zone_src = 0,
-                                          zone_start = 0,
-                                          zone_end = 0,
-                                          recirc_table = 4,
-                                          alg = 0,
-                                          actions = [])]
+            actions += [parser.NXActionCT(
+                            flags = 1,
+                            zone_src = 0,
+                            zone_ofs_nbits = 0,
+                            recirc_table = 4,
+                            alg = 0,
+                            actions = [])]
         """
         _subtype = nicira_ext.NXAST_CT
 
@@ -2731,8 +2693,7 @@ def generate(ofp_name, ofpp_name):
         def __init__(self,
                      flags,
                      zone_src,
-                     zone_start,
-                     zone_end,
+                     zone_ofs_nbits,
                      recirc_table,
                      alg,
                      actions,
@@ -2740,8 +2701,7 @@ def generate(ofp_name, ofpp_name):
             super(NXActionCT, self).__init__()
             self.flags = flags
             self.zone_src = zone_src
-            self.zone_start = zone_start
-            self.zone_end = zone_end
+            self.zone_ofs_nbits = zone_ofs_nbits
             self.recirc_table = recirc_table
             self.alg = alg
             self.actions = actions
@@ -2754,8 +2714,6 @@ def generate(ofp_name, ofpp_name):
              recirc_table,
              alg,) = struct.unpack_from(
                 cls._fmt_str, buf, 0)
-            zone_start = zone_ofs_nbits >> 6
-            zone_end = (zone_ofs_nbits & 0x3f) + zone_start
             rest = buf[struct.calcsize(cls._fmt_str):]
             # actions
             actions = []
@@ -2764,17 +2722,15 @@ def generate(ofp_name, ofpp_name):
                 actions.append(action)
                 rest = rest[action.len:]
 
-            return cls(flags, zone_src, zone_start, zone_end, recirc_table,
+            return cls(flags, zone_src, zone_ofs_nbits, recirc_table,
                        alg, actions)
 
         def serialize_body(self):
-            zone_ofs_nbits = ((self.zone_start << 6) +
-                              (self.zone_end - self.zone_start))
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0,
                           self.flags,
                           self.zone_src,
-                          zone_ofs_nbits,
+                          self.zone_ofs_nbits,
                           self.recirc_table,
                           self.alg)
             for a in self.actions:
@@ -2824,9 +2780,8 @@ def generate(ofp_name, ofpp_name):
             actions += [
                 parser.NXActionCT(
                     flags = 1,
-                    zone_src = 0,
-                    zone_start = 0,
-                    zone_end = 0,
+                    zone_src = "reg0",
+                    zone_ofs_nbits = nicira_ext.ofs_nbits(4, 31),
                     recirc_table = 255,
                     alg = 0,
                     actions = [

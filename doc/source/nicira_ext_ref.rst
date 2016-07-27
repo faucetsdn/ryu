@@ -57,6 +57,7 @@ The followings shows the supported NXAction classes in OpenFlow1.0 or later
 .. autoclass:: NXFlowSpecMatch
 .. autoclass:: NXFlowSpecLoad
 .. autoclass:: NXFlowSpecOutput
+.. autofunction:: ryu.ofproto.nicira_ext.ofs_nbits
 
 .. _nx_match_structures:
 

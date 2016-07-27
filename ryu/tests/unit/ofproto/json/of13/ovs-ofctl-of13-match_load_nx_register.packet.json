@@ -16,8 +16,7 @@
                         "dst": "reg0",
                         "experimenter": 8992,
                         "len": 24,
-                        "end": 31,
-                        "start": 4,
+                        "ofs_nbits": 283,
                         "subtype": 7,
                         "type": 65535,
                         "value": 233495534
@@ -26,7 +25,7 @@
                ],
                "len": 32,
                "type": 4
-            }
+             }
          }
       ],
       "match": {

@@ -13,14 +13,13 @@
                     "actions": [
                         {
                             "NXActionRegMove": {
-                                "dst_end": 5,
                                 "dst_field": "reg1",
-                                "dst_start": 0,
+                                "dst_ofs": 0,
                                 "experimenter": 8992,
                                 "len": 24,
-                                "src_end": 15,
+                                "n_bits": 6,
                                 "src_field": "reg0",
-                                "src_start": 10,
+                                "src_ofs": 10,
                                 "subtype": 6,
                                 "type": 65535
                             }
