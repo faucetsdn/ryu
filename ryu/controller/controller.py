@@ -319,6 +319,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         if not msg_enqueued:
             LOG.debug('Datapath in process of terminating; send() to %s discarded.',
                       self.address)
+        return msg_enqueued
 
     def set_xid(self, msg):
         self.xid += 1
@@ -332,7 +333,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
             self.set_xid(msg)
         msg.serialize()
         # LOG.debug('send_msg %s', msg)
-        self.send(msg.buf)
+        return self.send(msg.buf)
 
     def _echo_request_loop(self):
         if not self.max_unreplied_echo_requests:
@@ -418,7 +419,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
 
     def send_barrier(self):
         barrier_request = self.ofproto_parser.OFPBarrierRequest(self)
-        self.send_msg(barrier_request)
+        return self.send_msg(barrier_request)
 
     def send_nxt_set_flow_format(self, flow_format):
         assert (flow_format == ofproto_v1_0.NXFF_OPENFLOW10 or
