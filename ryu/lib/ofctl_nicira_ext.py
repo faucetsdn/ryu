@@ -72,7 +72,7 @@ def action_to_str(act, ofctl_action_to_str):
 
                 else:
                     src = spec.src
-                    start_end = ''
+                    src_start_end = '[]'
 
                 if isinstance(spec.dst, (tuple, list)):
                     dst = spec.dst[0]
@@ -82,7 +82,7 @@ def action_to_str(act, ofctl_action_to_str):
 
                 else:
                     dst = spec.dst
-                    start_end = '[]'
+                    dst_start_end = '[]'
 
                 add_spec('NX_LOAD {%s%s: %s%s}' % (dst, dst_start_end,
                                                    src, src_start_end))
