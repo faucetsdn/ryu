@@ -21,10 +21,10 @@ from __future__ import print_function
 import base64
 import collections
 import inspect
+
 import six
 
-
-# Some arguments to __init__ is mungled in order to avoid name conflicts
+# Some arguments to __init__ is mangled in order to avoid name conflicts
 # with builtin names.
 # The standard mangling is to append '_' in order to avoid name clashes
 # with reserved keywords.
@@ -40,15 +40,8 @@ import six
 # grep __init__ *.py | grep '[^_]_\>' showed that
 # 'len', 'property', 'set', 'type'
 # A bit more generic way is adopted
-try:
-    # Python 2
-    import __builtin__
-except ImportError:
-    # Python 3
-    import builtins as __builtin__
 
-_RESERVED_KEYWORD = dir(__builtin__)
-
+_RESERVED_KEYWORD = dir(six.moves.builtins)
 
 _mapdict = lambda f, d: dict([(k, f(v)) for k, v in d.items()])
 _mapdict_key = lambda f, d: dict([(f(k), v) for k, v in d.items()])
