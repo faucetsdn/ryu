@@ -54,9 +54,9 @@ if HUB_TYPE == 'eventlet':
                 return func(*args, **kwargs)
             except TaskExit:
                 pass
-            except:
+            except BaseException as e:
                 if raise_error:
-                    raise
+                    raise e
                 # Log uncaught exception.
                 # Note: this is an intentional divergence from gevent
                 # behaviour; gevent silently ignores such exceptions.
@@ -75,9 +75,9 @@ if HUB_TYPE == 'eventlet':
                 return func(*args, **kwargs)
             except TaskExit:
                 pass
-            except:
+            except BaseException as e:
                 if raise_error:
-                    raise
+                    raise e
                 # Log uncaught exception.
                 # Note: this is an intentional divergence from gevent
                 # behaviour; gevent silently ignores such exceptions.

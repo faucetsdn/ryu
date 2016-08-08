@@ -40,6 +40,8 @@ class SnortLib(app_manager.RyuApp):
         self.name = 'snortlib'
         self.config = {'unixsock': True}
         self._set_logger()
+        self.sock = None
+        self.nwsock = None
 
     def set_config(self, config):
         assert isinstance(config, dict)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (C) 2013 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2013 YAMAMOTO Takashi <yamamoto at valinux co jp>
 #
@@ -19,7 +17,6 @@
 from __future__ import print_function
 
 import base64
-import collections
 import inspect
 
 import six
@@ -104,7 +101,7 @@ class NXFlowSpecFieldType(TypeDescr):
         if not isinstance(v, list):
             return v
         field, ofs = v
-        return (field, ofs)
+        return field, ofs
 
 
 _types = {
@@ -126,7 +123,7 @@ class StringifyMixin(object):
     Currently the following types are implemented.
 
     ========= =============
-    Type      Descrption
+    Type      Description
     ========= =============
     ascii     US-ASCII
     utf-8     UTF-8
@@ -162,7 +159,7 @@ class StringifyMixin(object):
     def _is_class(cls, dict_):
         # we distinguish a dict like OFPSwitchFeatures.ports
         # from OFPxxx classes using heuristics.
-        # exmples of OFP classes:
+        # Examples of OFP classes:
         #   {"OFPMatch": { ... }}
         #   {"MTIPv6SRC": { ... }}
         assert isinstance(dict_, dict)
@@ -208,7 +205,7 @@ class StringifyMixin(object):
                 if six.PY3:
                     json_value = json_value.decode('ascii')
             elif isinstance(v, list):
-                json_value = list(map(_encode, v))
+                json_value = [_encode(ve) for ve in v]
             elif isinstance(v, dict):
                 json_value = _mapdict(_encode, v)
                 # while a python dict key can be any hashable object,
@@ -218,7 +215,7 @@ class StringifyMixin(object):
             else:
                 try:
                     json_value = v.to_jsondict()
-                except:
+                except Exception:
                     json_value = v
             return json_value
         return _encode
@@ -253,7 +250,7 @@ class StringifyMixin(object):
         =============  =====================================================
         """
         dict_ = {}
-        encode = lambda k, x: self._encode_value(k, x, encode_string)
+        encode = lambda key, val: self._encode_value(key, val, encode_string)
         for k, v in obj_attrs(self):
             dict_[k] = encode(k, v)
         return {self.__class__.__name__: dict_}
@@ -282,6 +279,8 @@ class StringifyMixin(object):
     @classmethod
     def _decode_value(cls, k, json_value, decode_string=base64.b64decode,
                       **additional_args):
+        # Note: To avoid passing redundant arguments (e.g. 'datapath' for
+        # non OFP classes), we omit '**additional_args' here.
         return cls._get_decoder(k, decode_string)(json_value)
 
     @classmethod
@@ -290,13 +289,13 @@ class StringifyMixin(object):
             if isinstance(json_value, (bytes, six.text_type)):
                 v = decode_string(json_value)
             elif isinstance(json_value, list):
-                v = list(map(_decode, json_value))
+                v = [_decode(jv) for jv in json_value]
             elif isinstance(json_value, dict):
                 if cls._is_class(json_value):
                     v = cls.obj_from_jsondict(json_value, **additional_args)
                 else:
                     v = _mapdict(_decode, json_value)
-                    # XXXhack
+                    # XXX: Hack
                     # try to restore integer keys used by
                     # OFPSwitchFeatures.ports.
                     try:
@@ -386,11 +385,11 @@ def obj_attrs(msg_):
     """
 
     if isinstance(msg_, StringifyMixin):
-        iter = msg_.stringify_attrs()
+        itr = msg_.stringify_attrs()
     else:
         # probably called by msg_str_attr
-        iter = obj_python_attrs(msg_)
-    for k, v in iter:
+        itr = obj_python_attrs(msg_)
+    for k, v in itr:
         if k.endswith('_') and k[:-1] in _RESERVED_KEYWORD:
             # XXX currently only StringifyMixin has restoring logic
             assert isinstance(msg_, StringifyMixin)

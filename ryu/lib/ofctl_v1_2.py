@@ -95,8 +95,8 @@ def to_actions(dp, acts):
             if action_type == 'WRITE_ACTIONS':
                 write_actions = []
                 write_acts = a.get('actions')
-                for a in write_acts:
-                    action = to_action(dp, a)
+                for act in write_acts:
+                    action = to_action(dp, act)
                     if action is not None:
                         write_actions.append(action)
                     else:
@@ -106,8 +106,8 @@ def to_actions(dp, acts):
                         parser.OFPInstructionActions(ofp.OFPIT_WRITE_ACTIONS,
                                                      write_actions))
             elif action_type == 'CLEAR_ACTIONS':
-                inst.append(parser.OFPInstructionActions(
-                            ofp.OFPIT_CLEAR_ACTIONS, []))
+                inst.append(
+                    parser.OFPInstructionActions(ofp.OFPIT_CLEAR_ACTIONS, []))
             elif action_type == 'GOTO_TABLE':
                 table_id = UTIL.ofp_table_from_user(a.get('table_id'))
                 inst.append(parser.OFPInstructionGotoTable(table_id))
@@ -358,8 +358,7 @@ def match_to_str(ofmatch):
             'tcp_src': 'tp_src',
             'tcp_dst': 'tp_dst',
             'udp_src': 'tp_src',
-            'udp_dst': 'tp_dst'
-            }
+            'udp_dst': 'tp_dst'}
 
     match = {}
 
@@ -407,8 +406,8 @@ def get_desc_stats(dp, waiters):
              'sw_desc': stats.sw_desc,
              'serial_num': stats.serial_num,
              'dp_desc': stats.dp_desc}
-    desc = {str(dp.id): s}
-    return desc
+
+    return {str(dp.id): s}
 
 
 def get_queue_stats(dp, waiters, port=None, queue_id=None):
@@ -438,8 +437,8 @@ def get_queue_stats(dp, waiters, port=None, queue_id=None):
                       'tx_bytes': stat.tx_bytes,
                       'tx_errors': stat.tx_errors,
                       'tx_packets': stat.tx_packets})
-    desc = {str(dp.id): s}
-    return desc
+
+    return {str(dp.id): s}
 
 
 def get_queue_config(dp, waiters, port=None):
@@ -452,10 +451,11 @@ def get_queue_config(dp, waiters, port=None):
     msgs = []
     ofctl_utils.send_stats_request(dp, stats, waiters, msgs, LOG)
 
-    prop_type = {dp.ofproto.OFPQT_MIN_RATE: 'MIN_RATE',
-                 dp.ofproto.OFPQT_MAX_RATE: 'MAX_RATE',
-                 dp.ofproto.OFPQT_EXPERIMENTER: 'EXPERIMENTER',
-                 }
+    prop_type = {
+        dp.ofproto.OFPQT_MIN_RATE: 'MIN_RATE',
+        dp.ofproto.OFPQT_MAX_RATE: 'MAX_RATE',
+        dp.ofproto.OFPQT_EXPERIMENTER: 'EXPERIMENTER',
+    }
 
     configs = []
     for config in msgs:
@@ -478,9 +478,8 @@ def get_queue_config(dp, waiters, port=None):
         c = {'port': UTIL.ofp_port_to_user(config.port),
              'queues': queue_list}
         configs.append(c)
-    configs = {str(dp.id): configs}
 
-    return configs
+    return {str(dp.id): configs}
 
 
 def get_flow_stats(dp, waiters, flow=None):
@@ -519,9 +518,8 @@ def get_flow_stats(dp, waiters, flow=None):
                  'table_id': UTIL.ofp_table_to_user(stats.table_id),
                  'length': stats.length}
             flows.append(s)
-    flows = {str(dp.id): flows}
 
-    return flows
+    return {str(dp.id): flows}
 
 
 def get_aggregate_flow_stats(dp, waiters, flow=None):
@@ -549,9 +547,8 @@ def get_aggregate_flow_stats(dp, waiters, flow=None):
              'byte_count': stats.byte_count,
              'flow_count': stats.flow_count}
         flows.append(s)
-    flows = {str(dp.id): flows}
 
-    return flows
+    return {str(dp.id): flows}
 
 
 def get_table_stats(dp, waiters):
@@ -674,9 +671,8 @@ def get_table_stats(dp, waiters):
                  'lookup_count': stat.lookup_count,
                  'matched_count': stat.matched_count}
             tables.append(s)
-    desc = {str(dp.id): tables}
 
-    return desc
+    return {str(dp.id): tables}
 
 
 def get_port_stats(dp, waiters, port=None):
@@ -707,8 +703,8 @@ def get_port_stats(dp, waiters, port=None):
                  'rx_crc_err': stats.rx_crc_err,
                  'collisions': stats.collisions}
             ports.append(s)
-    ports = {str(dp.id): ports}
-    return ports
+
+    return {str(dp.id): ports}
 
 
 def get_group_stats(dp, waiters, group_id=None):
@@ -737,8 +733,8 @@ def get_group_stats(dp, waiters, group_id=None):
                  'byte_count': stats.byte_count,
                  'bucket_stats': bucket_counters}
             groups.append(g)
-    groups = {str(dp.id): groups}
-    return groups
+
+    return {str(dp.id): groups}
 
 
 def get_group_features(dp, waiters):
@@ -797,8 +793,8 @@ def get_group_features(dp, waiters):
              'max_groups': max_groups,
              'actions': actions}
         features.append(f)
-    features = {str(dp.id): features}
-    return features
+
+    return {str(dp.id): features}
 
 
 def get_group_desc(dp, waiters):
@@ -829,8 +825,8 @@ def get_group_desc(dp, waiters):
                  'group_id': UTIL.ofp_group_to_user(stats.group_id),
                  'buckets': buckets}
             descs.append(d)
-    descs = {str(dp.id): descs}
-    return descs
+
+    return {str(dp.id): descs}
 
 
 def get_port_desc(dp, waiters):
@@ -856,8 +852,8 @@ def get_port_desc(dp, waiters):
                  'curr_speed': stat.curr_speed,
                  'max_speed': stat.max_speed}
             descs.append(d)
-    descs = {str(dp.id): descs}
-    return descs
+
+    return {str(dp.id): descs}
 
 
 def mod_flow_entry(dp, flow, cmd):

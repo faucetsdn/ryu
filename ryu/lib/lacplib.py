@@ -84,12 +84,11 @@ class LacpLib(app_manager.RyuApp):
         if you want to use multi LAG, call 'add' method more than once.
         """
         assert isinstance(ports, list)
-        assert 2 <= len(ports)
+        assert len(ports) >= 2
         ifs = {}
         for port in ports:
             ifs[port] = {'enabled': False, 'timeout': 0}
-        bond = {}
-        bond[dpid] = ifs
+        bond = {dpid: ifs}
         self._bonds.append(bond)
 
     # -------------------------------------------------------------------

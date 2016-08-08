@@ -191,7 +191,7 @@ class Stp(app_manager.RyuApp):
         self.bridge_list = {}
 
     def close(self):
-        for dpid in self.bridge_list.keys():
+        for dpid in self.bridge_list:
             self._unregister_bridge(dpid)
 
     def _set_logger(self):
@@ -480,12 +480,12 @@ class Bridge(object):
 
         pkt = packet.Packet(msg.data)
         if bpdu.ConfigurationBPDUs in pkt:
-            """ Receive Configuration BPDU.
-                 - If receive superior BPDU:
-                    re-caluculation of spanning tree.
-                 - If receive Topology Change BPDU:
-                    throw EventTopologyChange.
-                    forward Topology Change BPDU. """
+            # Received Configuration BPDU.
+            # - If received superior BPDU:
+            #    Re-calculates spanning tree.
+            # - If received Topology Change BPDU:
+            #    Throws EventTopologyChange.
+            #    Forwards Topology Change BPDU.
             (bpdu_pkt, ) = pkt.get_protocols(bpdu.ConfigurationBPDUs)
             if bpdu_pkt.message_age > bpdu_pkt.max_age:
                 log_msg = 'Drop BPDU packet which message_age exceeded.'
@@ -506,24 +506,23 @@ class Bridge(object):
                 self._forward_tc_bpdu(rcv_tc)
 
         elif bpdu.TopologyChangeNotificationBPDUs in pkt:
-            """ Receive Topology Change Notification BPDU.
-                 send Topology Change Ack BPDU.
-                 throw EventTopologyChange.
-                 - Root bridge:
-                    send Topology Change BPDU from all port.
-                 - Non root bridge:
-                    send Topology Change Notification BPDU to root bridge. """
+            # Received Topology Change Notification BPDU.
+            # Send Topology Change Ack BPDU and throws EventTopologyChange.
+            # - Root bridge:
+            #    Sends Topology Change BPDU from all port.
+            # - Non root bridge:
+            #    Sends Topology Change Notification BPDU to root bridge.
             in_port.transmit_ack_bpdu()
             self.topology_change_notify(None)
 
         elif bpdu.RstBPDUs in pkt:
-            """ Receive Rst BPDU. """
+            # Received Rst BPDU.
             # TODO: RSTP
             pass
 
         else:
-            """ Receive non BPDU packet.
-                 throw EventPacketIn. """
+            # Received non BPDU packet.
+            # Throws EventPacketIn.
             self.send_event(EventPacketIn(msg))
 
     def recalculate_spanning_tree(self, init=True):
@@ -544,7 +543,7 @@ class Bridge(object):
 
         if init:
             self.logger.info('Root bridge.', extra=self.dpid_str)
-            for port_no in self.ports.keys():
+            for port_no in self.ports:
                 port_roles[port_no] = DESIGNATED_PORT
         else:
             (port_roles,
@@ -574,7 +573,7 @@ class Bridge(object):
             root_priority = self.root_priority
             root_times = self.root_times
 
-            for port_no in self.ports.keys():
+            for port_no in self.ports:
                 if self.ports[port_no].state is not PORT_STATE_DISABLE:
                     port_roles[port_no] = DESIGNATED_PORT
         else:
@@ -726,7 +725,7 @@ class Port(object):
                       dp.ofproto.OFPPF_1GB_HD: bpdu.PORT_PATH_COST_1GB,
                       dp.ofproto.OFPPF_1GB_FD: bpdu.PORT_PATH_COST_1GB,
                       dp.ofproto.OFPPF_10GB_FD: bpdu.PORT_PATH_COST_10GB}
-        for rate in sorted(path_costs.keys(), reverse=True):
+        for rate in sorted(path_costs, reverse=True):
             if ofport.curr & rate:
                 values['path_cost'] = path_costs[rate]
                 break
@@ -859,10 +858,10 @@ class Port(object):
         if new_state is not PORT_STATE_DISABLE:
             self.ofctl.set_port_status(self.ofport, new_state)
 
-        if(new_state is PORT_STATE_FORWARD or
-                (self.state is PORT_STATE_FORWARD and
-                    (new_state is PORT_STATE_DISABLE or
-                     new_state is PORT_STATE_BLOCK))):
+        if(new_state is PORT_STATE_FORWARD
+           or (self.state is PORT_STATE_FORWARD
+               and (new_state is PORT_STATE_DISABLE
+                    or new_state is PORT_STATE_BLOCK))):
             self.topology_change_notify(new_state)
 
         if (new_state is PORT_STATE_DISABLE
@@ -927,7 +926,7 @@ class Port(object):
                      or self.role is NON_DESIGNATED_PORT)):
             self._update_wait_bpdu_timer()
             chk_flg = True
-        elif(rcv_info is INFERIOR and self.role is DESIGNATED_PORT):
+        elif rcv_info is INFERIOR and self.role is DESIGNATED_PORT:
             chk_flg = True
 
         # Check TopologyChange flag.

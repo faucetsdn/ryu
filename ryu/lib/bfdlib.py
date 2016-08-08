@@ -34,9 +34,10 @@ Please note that:
 
 
 import logging
-import six
 import time
 import random
+
+import six
 
 from ryu.base import app_manager
 from ryu.controller import event
@@ -47,7 +48,6 @@ from ryu.exception import RyuException
 from ryu.ofproto.ether import ETH_TYPE_IP, ETH_TYPE_ARP
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import inet
-from ryu.lib import ofctl_v1_3
 from ryu.lib import hub
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
@@ -462,7 +462,6 @@ class BFDSession(object):
                 self._remote_session_state == bfd.BFD_STATE_UP:
             flags |= bfd.BFD_FLAG_DEMAND
 
-        ver = 1
         diag = self._local_diag
         state = self._session_state
         detect_mult = self._detect_mult
@@ -570,13 +569,13 @@ class BFDPacket(object):
         i = iter(pkt)
         eth_pkt = next(i)
 
-        assert type(eth_pkt) == ethernet.ethernet
+        assert isinstance(eth_pkt, ethernet.ethernet)
 
         ipv4_pkt = next(i)
-        assert type(ipv4_pkt) == ipv4.ipv4
+        assert isinstance(ipv4_pkt, ipv4.ipv4)
 
-        udp_pkt = i.next()
-        assert type(udp_pkt) == udp.udp
+        udp_pkt = next(i)
+        assert isinstance(udp_pkt, udp.udp)
 
         udp_payload = next(i)
 
@@ -619,10 +618,10 @@ class ARPPacket(object):
         i = iter(pkt)
         eth_pkt = next(i)
         # Ensure it's an ethernet frame.
-        assert type(eth_pkt) == ethernet.ethernet
+        assert isinstance(eth_pkt, ethernet.ethernet)
 
         arp_pkt = next(i)
-        if type(arp_pkt) != arp.arp:
+        if not isinstance(arp_pkt, arp.arp):
             raise ARPPacket.ARPUnknownFormat()
 
         if arp_pkt.opcode not in (ARP_REQUEST, ARP_REPLY):
