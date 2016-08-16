@@ -1,0 +1,2168 @@
+CHANGES
+=======
+
+* fixed showing info error
+* enhance performance
+* puah network awareness module
+* rollback to initial state
+* del useless files
+* add information into network awareness's README
+* publish network awareness
+* add judgement of dpid
+* fixed syntax error in README
+* add needed files
+* add missing files
+* change names under the good coding style
+* change class name to fit the right coding style
+* delete dirty codes
+* move variables into network_aware class
+* delete useless files
+* fixed topology reflesh bug
+* del dirty codes
+* add info in __init__
+* fixed mininet start up cmd perse error
+* fixed local variable actions referenced before assginment
+* change loop location of start_topo
+* fixed oslo.config bug
+* add start shell
+* fixed IPV6 neighbor discovery protocol bug
+* add topo file
+* add read me
+* add read me
+* add detail info for multipath module
+* Code Refactoring:fixed multipath bugs
+* add indispensable message of README
+* add indispensable message of README
+* fix name info error of readme
+* fix name info error of readme
+* code refactoring of network_aware, network_monitor and shortest_forwarding
+* code refactoring of network_aware, network_monitor and shortest_forwarding
+* del redundant codes
+* fix bug of storage of flow and speed
+* change name model into mode
+* fix the keyerror of ipv4_dst and in_port
+* turn back normal ryu
+* show traffic info
+* update info for network awareness
+* update info for network awareness
+* del import oxproto error
+* change ip
+* add README for network awareness
+* add README for network wareness
+* add README for network wareness
+* OXP V1.0 finished
+* waiting for fixing packet_out bug
+* finish flow_mod translation
+* wait for flow_install
+* finish path calculation
+* finish packet_out translation
+* save codes
+* move install_flow to utils
+* add new folers
+* finish the topo collection
+* discover inter-links
+* save old version
+* build test topo
+* finish toporeply
+* new folder
+* finish hostupdate
+* add register access points
+* wait for features
+* add parsers
+* update oxp
+* define oxp_protocol
+* open exchange protocol
+* change some values' name
+* add files of network aware
+* modify simple_monitor
+* fix bit->byte bug
+* add simple_monitor.py
+* Get speed of flows and ports
+* add monitor
+* add multipath and simple arp proxy
+* Add_simple_arp_proxy_13
+* Simple ARP proxy application can use to reply ARP requests even in a loop topology
+* add_arp_proxy_13
+* del
+* add_arp_proxy_13
+* add arp_proxy_13
+* delete
+* Revert "arp_proxy_13"
+* Revert "Revert "arp_proxy.patch""
+* Revert "arp_proxy.patch"
+* arp_proxy.patch
+* arp_proxy_13
+* bgp: fix bug of ASPathFilter in case of iBGP peering
+* stplib.py: Should wildcard non-relevant bits in the mask field of port mod message for OpenFlow 1.2+
+* simple_switch_14: Update a comment about OVS bug
+* simple_switch_13: Update a comment about OVS bug
+* Add a simple switch for Openflow 1.4, an easy adaption of SimpleSwitch13
+* sw test tool: Fix typos
+* ofproto_v1_4: Add tun_ipv4_src and tun_ipv4_dst NXMs
+* test_parser: Update expected json representations
+* packet_data: Regen
+* packet_data_generator: Add tun_ipv4_src and tun_ipv4_dst for OF1.3
+* ofproto_v1_3: Add tun_ipv4_src and tun_ipv4_dst NXMs
+* oxm_fields: Add Nicira Extended Match (NXM) support
+* oxm_fields: Add comments
+* oxm_fields: Avoid shadowing python builtin
+* travis: Run tests via tox
+* test_addrconv: Fix a way to import the tested module
+* test_parser: Make this independent from test environment path
+* tox.ini: Add pep8 environment
+* pyang_plugins: pep8 style fix
+* bgp: fix pep8 warnings
+* bgp: supporting loopback interface as neighbour_source_address for iBGP
+* bfdlib: follow TTL/hop limit in RFC5881 explicitly
+* doc: add lib.packet.bfd classes to library_packet_ref
+* lib: add IPv4 single hop BFD (RFC5881) support
+* unit test for lib.packet.bfd
+* packet lib: add BFD support
+* ofctl_v1_0/2/3: check lock timeout by lock.is_set()
+* test: add unittests for of1.3 parser
+* of12/3: support setting the oxm_value to OFPVID_NONE
+* ofproto_v1_4_parser: Handle experimenter OXMs in TableFeatures
+* ofproto_v1_3_parser: Handle experimenter OXMs in TableFeatures
+* oxm_fields: Add a comment
+* bgp: support next_hop_self
+* Ryu 3.14
+* doc: Add ryu.app.ofctl_rest document
+* of: Fix name of class member variables
+* gui_topology: fix to work using WebSocket
+* bgp: ignore link-local address
+* bgp: local preference support IPv6, VPNv4/v6 route family
+* Improve debug messages for unsupported request Log correct debug message
+* Fix spell check in group feature message Maintain name consistency in meter type in Meter Features message in OF 1.3 Add length field in group statistics reply in OF 1.2
+* sw test tool: fix an error caused by changing enum name in of1.4
+* ofctl: Add default value to type field of OFPGroupMod
+* of: Add missing fields in OpenFlow statistics messages
+* of: Fix Enum Names and Values
+* of: Fix Enum Name for Bad Instruction Code Corrected Reset Count enum name
+* bgp: local preference support
+* sw test tool: add unit test
+* sw test tool: add a comment about specifying the port number support
+* sw test tool: support specifying the port number
+* ofctl_v1_0: correct flow modify message
+* ryu.cfg: Fix a comment
+* ofa_neutron_agent: Add a comment to explain what uses this
+* ofp_pktinfilter: add 'logging' option
+* Snort Integrate:
+* bgp: rpc-api 'core.start' method in Network Controller
+* import BGPPathAttributeCommunities in peer manager
+* bmp: add client information to each bmp message
+* Ryu 3.13
+* ws_topology: bugfix an event is dropped
+* bgp: should not use dict comprehension
+* Snort integrate: Add the snort lib supporting snort integration. Add an sample application simple_switch_snort.py which can dump alert message
+* packet lib: add linux cooked header support
+* doc: update obsolete Linux kernel SubmittingPatches url
+* packet bmp: fix Peer Down Reason
+* bgp: add parameter 'label_ranges' for 'core.start' method in BGPSpeaker
+* ofctl_rest: support OFPFlowStats filtered by fields
+* bgp: reduce duplicate codes with helper_function
+* sw test tool: add a "note" for help to understand
+* bmpstation: make configurable through environment variables
+* bgp: make reserved private variable
+* bgp: encode 'next_hop' in human readable format
+* bgp: use _class_suffixes to support various AddrPrefix
+* stringify: introduce _class_suffixes for easy jsonize
+* bgp: move _TYPE declaration of IPAddrPrefix to the appropriate place
+* bgp: add support for RFC3107
+* fix setup.cfg entry
+* bgp: simplify CLUSTER_LIST attribute parser
+* bgp: fix bug of receiving 'RouteRefresh' Message
+* bgp: refine the API for connecting to bmp server
+* bgp: add BGP capability code 64 (graceful restart)
+* bgp: add attribute ORIGINATOR_ID and CLUSTER_LIST
+* bgp: move ssh configuration to bgp config file
+* bgp: add route server function to bgpspeaker
+* bgp: fix bug of labels formatting for show VPNv4 prefix information
+* bgp: fix bug of Path(Origin) formatting for show VPNv4 prefix information
+* bgp: show VPNv4 Prefix information
+* packet/bgp: add open capability code of 128
+* bgp: support add/delete vpnv6 prefix
+* bgp: support add/delete VPNv6 VRF
+* app/bmpstation: fix to work with empty BMPMessage
+* packet/bmp: fix bug of BMP Peer Down Notification class
+* packet/bgp: add 32bit AS number support to BGPPathAttributeAsPath
+* added parameter for vrfs_get (in case of format = 'cli')
+* added parameter for rib_get
+* Ryu 3.12
+* ofctl_rest: Add support for strict matching
+* bgp: fix conflict of PEER_NEXT_HOP and NEXT_HOP value
+* bgp: add code to handle RD 0:0 at the head of nexthop network address in MP_REACH_NLRI path attribute
+* bgp: add parameter for site_of_origins to neighbor_add and vrf_add method
+* bmpstation: add copyright
+* app: add simple bmp station application
+* bgp: add bmp client function
+* bmp: add unit test
+* packet lib: add bmp(BGP Monitoring Protocol)
+* packet lib: sctp: fix default arguments
+* packet lib: udp: fix default arguments
+* packet lib: tcp: fix default arguments
+* packet lib: ipv6: fix default arguments
+* packet lib: ipv4: fix default arguments
+* bgp: fix bugs related to filter
+* bgp: fix AttributeError bug
+* bgp: fix NameError bug
+* ofproto_v1_4_parser: Remove a stale comment on OFPTableFeaturesStatsReply
+* ofproto_v1_3_parser: Remove a stale comment on OFPTableFeaturesStatsReply
+* bgp: make 'core.reset_neighbor' API asynchronously
+* bgp: add show neighbor command to ssh client
+* bgp: refine and fix filter code
+* bgp: manage filter in a peer instance instead of rtconf
+* bgp: create adjacent rib in peer instance
+* bgp: add in-filter function
+* bgp: enable filter configuration via configuration file
+* bgp: move filter class under info_base/
+* ofctl_v1_2/3: fix unsuitable log
+* ofctl_v1_2/3: fix tcp_dst/src match fields
+* unit test for ofctl_v1_2/3
+* bgp: add neighbor_reset method to bgpspeaker
+* bgp: remove an unused variable from bgpspeaker
+* bgpspeaker: refine logs
+* bgp: make marker private variable
+* bgp: fix bug when restart neighbor
+* bgp: add neighbor_update
+* bgp: add med parameter to neighbor_add
+* bgp: shut up runtime warning due to configuration file loading
+* bgp: fix bug in net_ctrl listen_tcp
+* bgp: fix logic for checking BGP capability
+* bgp: fix the way of getting RouteFamily object
+* bgp: add out-filter function
+* ofctl_rest: enable getting Description of a port
+* ofctl_rest: support Port Modification Message
+* ws_topology: fix typo
+* Correct tcp option values in the test set
+* ofctl_v1_2/3: fix POP_MPLS action and some match fields
+* adding FloatOpt to the config parser
+* add --pid-file option to cli
+* bgp: support specifying nexthop per prefix
+* pip-requires: gui_topology requires webob>=1.2
+* bgp: fix send_notificaiton crash
+* Ryu 3.11
+* ospf: describe prefix in one attribute 'prefix' for ease of use
+* ospf: add segment routing opaque types
+* ospf: fix bug in encoding
+* ospf: support for opaque message
+* bgp: support md5 authentication for re-active sessions
+* bgp: support md5 authentication for pro-active sessions
+* bgp: fix withdraw in EventPrefix notification
+* sw test too: use assured Forwarding behavior DSCP value for dscp_remark
+* bgp: support specifying next hop for neighbor
+* bgp: add IPv6 advertisement support
+* packet/bgp: fix BGPPathAttributeMpReachNLRI next_hop parser and serializer
+* bgp: clean up getpeername() and getsockname() usage
+* Initializing the variable 's' so that the get_desc_stats() call does not cause an exceptions when there are no messages
+* Add a small library to deal with TCP-MD5 socket option
+* doc: improve the appearance of the table
+* doc: leave out too large samples
+* bgp: add ssh_console option for bgpspeaker module
+* document: ryu.app.gui_topology
+* sw test tool: Add default test files (of14: new features)
+* sw test tool: Add default test files (of14: group:all/select)
+* sw test tool: Add default test files (of14: meter)
+* sw test tool: Add default test files (of14: match)
+* sw test tool: Add default test files (of14: action with set-field only)
+* sw test tool: Add default test files (of14: action without set-field)
+* sw test tool: run_mininet: support Open vSwitch with OpenFlow 1.4
+* sw test tool: Modify OFPActionSetField to normalize
+* sw test tool: Modify OFPMatch to normalize
+* sw test tool: Enable using connected switches to compare
+* sw test tool: Enable using user-specified versions to parse
+* sw test tool: Add support for using user-specified versions
+* ryu/flags: Add config parameters related sw test tool
+* sw test tool: Modify conditions of ofp_packet_in_reason
+* bgp: fix ipv6 peering regression
+* bgp: fix best_path_change_handler for best_path_lost
+* bgp: fix example code
+* bgp: fix another crash (recv_open -> recv_open_msg)
+* bgp: fix some leftover of transition to packet lib bgp
+* bgp: fix a crash in path comparison
+* library_bgp_speaker.rst: make an example more complete
+* ofa_neutron_agent: Change the copyright notice
+* ofa_neutron_agent: Remove unused logger instance
+* ofa_neutron_agent: Use AppManager.run_apps
+* AppManager: Add a convenient method to run apps
+* ofa_neutron_agent: Simplify
+* app_manager: prevent loading unnecessary RyuApps
+* package: add python-ryu-doc
+* sw test tool: Enable IPv6 flow label maskable
+* document ryu.app.ofctl
+* ws_topology: shut up pep8 for long lines in a comment
+* bgp: support IPv6 peering
+* Add GUI app
+* ws_topology: Handle WebSocket disconnection
+* ws_topology: Avoid controller name confliction
+* add debian files to make packages for Ubuntu
+* app_manager: Stop checking h.callers in get_handlers()
+* bgp: catch socket error with sendall
+* bgp: use sendall with lock
+* bgp: use TCP_NODELAY for bgp connection
+* ryu.lib.hub: add logging wrapper for wsgi server
+* contrib: import tinyrpc library
+* downgrade required version of msgpack-python
+* app_manager: Let application module to use require_app()
+* bgp: add bgpspaker module for non Ryu application usage
+* fix failure of instantiating app
+* fix: wrong copyright
+* sw test tool: Improve readability of IP mask values
+* sw test tool: Improve readability of MAC mask values
+* sw test tool: Improve readability of padding data
+* sw test tool: Improve readability of tcp options
+* rest_qos: Enable queue setting to interface individually
+* packet lib: add Connectivity Fault Management Protocol(CFM, IEEE 802.1ag)
+* app_manager: Fix a crash in unregister_handler
+* Ryu 3.10
+* doc: add test-of-config-with-linc page
+* doc: add test-vrrp page
+* ofctl_v1_2: fix errors of get_flow_stats
+* ofctl_v1_2: fix pep8
+* bgp: remove unnecessary OutgoingRoute attribute 'bgp4_format'
+* bgp: fix typo
+* bgp: fix bug of exchanging paths between vrf and global_table
+* packet/bgp: add route distinguisher classes and refine codes
+* bgp: keep and use nexthop value as a string internally
+* ofctl_v1_2/3: MAC arbitrary bitmask support
+* bgp: add 'neighbors.get' and 'show.rib' JSON RPC API
+* bgp: add JSON RPC API
+* bgp: set bgp-config-file default None
+* bgp: fix non configured peer exception
+* bgp: import lacking constants
+* doc: add components page
+* bgp: use host's ssh host key if not specified
+* sw test tool: Add default test files (group:all/select)
+* sw test tool: Enable sending packets using random values
+* sw test tool: Enable parsing OFPGroupMod messages in 'prerequisite'
+* sw test tool: Add support for confirmation of installed group entries
+* sw test tool: Add support for installation of group tables
+* sw test tool: Add support for initialization of group tables
+* sw test tool: Add a link between switches
+* wsgi: add ws_topology application
+* rest_topology: use decorator api
+* sw test tool: pylint
+* sw test tool: Reduce similar methods of checking entries exist
+* sw test tool: Reduce similar methods of handling events
+* sw test tool: Reduce similar methods of initializing flows
+* sw test tool: Reduce similar methods of deleting flows
+* sw test tool: Reduce similar classes
+* sw test tool: Remove an unnecessary wrapper method
+* simple_switch_websocket_13: Add get_arp_table RPC method
+* pip-requires: WebSocket-RPC requires tinyrpc
+* Add WebSocket JSON RPC feature
+* simple_switch_websocket_13: fix typo
+* New API for WebSocket support
+* Add PacketIn dumper websocket application
+* wsgi: Support WebSocket
+* Import eventlet.websocket from master branch
+* hub: import semaphore
+* tester: cleanup the code of couting the results
+* tester: let each attribute of meter had a chance to be compared
+* add openflow api reference for of1.4
+* app/rest_qos: fix pep8
+* add pep8 options to tox.ini
+* tests/unit: fix pep8
+* tests: fix pep8
+* services/protocols: fix pep8
+* lib/xflow: fix pep8
+* lib/packet: fix pep8
+* lib/of_config: fix pep8
+* lib: fix pep8
+* controller: fix pep8
+* app: fix pep8
+* topology/switches: fix pep8
+* base/app_manager: fix pep8
+* ofproto: fix pep8
+* Added rest_qos module
+* packet/bgp: bug fix of route target nlri class
+* bgp: fix bug of accessing dead socket
+* bgp: improve how to show rib
+* bgp: fix typo
+* packet/bgp: enhanced route refresh support
+* packet/bgp: fix bug in serializing AS PATH path attribute
+* bgp: add ssh client
+* bgp: fix wrong module path
+* packet/bgp: add helper methods to nlri class for bgp ssh client
+* bgp: don't block at start method
+* bgp: bug fix when the peer initiated the connection
+* bgp: remove unnecessary log message
+* set default attributes for OFPPortMod
+* sw test tool: pylint
+* sw test tool: Remove unused codes
+* sw test tool: Reduce similar methods
+* Added queue stats request
+* Added ovs-vsctl commands of QoS-related
+* Ryu 3.9
+* sw test tool: Modify lengths of pad fields for ARP
+* sw test tool: Revert changes of test files
+* tests/integrated: Enable MPLS set-field and push MPLS tests
+* tests/integrated: Match on MPLS dl_type for flows with MPLS TTL actions
+* tests/integrated: Match on MPLS dl_type for flows with pop MPLS actions
+* tests/integrated: Match on IP dl_type for flows with set IPv6 addresses
+* tests/integrated: Enable ARP tests
+* tests/integrated: Match on IP dl_type for flows with set NW TTL actions
+* tests/integrated: Match on VLAN tag for flows which set VLAN tags
+* tests/integrated: Match on VLAN tag for flows with pop VLAN TTL actions
+* tests/integrated: Match on IP dl_type for flows with dec NW TTL actions
+* tests/integrated: Do not verify buffer_id of packet_in resulting from packet_out
+* sw test tool: Modify lengths of pad fields for ARP
+* packet lib: ipv6: support Routing header (type3)
+* sw test tool: Fix MAC addresses used in tests
+* tests/integrated: Use table_id greater than the current table for goto-table instruction
+* tests/integrated: Specify table_id for flow_mod modify tests
+* bgp: fix connect timeout error
+* bgp: add __init__.py files
+* packet lib: ipv6: Fix to calculate AH length
+* bgp: fix pep8
+* bgp: add sample configuration file
+* bgp: improve log visibility
+* bgp: avoid the trouble of having to explicitly specify IDs in configuration
+* bgp: enable to use system IP addr implicitly for binding
+* bgp: enable default label range
+* bgp: make bgpspeaker RyuApp
+* bgp: use ryu.lib.hub instead of the direct use of eventlet
+* bgp: clean up codes which constructs an update message
+* bgp: fix typo
+* remove obsolete man pages (rpc_cli and neutron_ofagent_agent)
+* delete bin/neutron-ofagent-agent
+* delete ryu/tests/bin/of-config-cli
+* delete bin/rpc-cli
+* document ryu command
+* add bin/ryu to PYLINT_INCLUDE
+* add bin/ryu
+* pip-requires: require oslo.config >= 1.2.0
+* allow overriding argv and progname
+* ryu.cfg: re-export some more stuff for convenience
+* sw test tool: Fix to compare OFPMatch using masks without byte boundary
+* bgp: remove original bgp packet library
+* bgp: use ryu bgp packet library instead of original one
+* bgp: add stuff for integration with bgp speaker
+* Rename to CONTRIBUTING.rst
+* of14: set default attributes for group-related classes
+* of13: set default attributes for group-related classes
+* of12: set default attributes for group-related classes
+* sw test tool: Correct the comparison method to treat matches as the set
+* sw test tool: Fix to compare OFPMatch ignoring fields that masks are all zero bits
+* sw test tool: Fix to compare OFPMatch ignoring masks that are all one bits
+* fix pbb itag related tests
+* RyuApp: delete a key without handlers when unregistering a handler
+* ryu.app.ofctl: raise exceptions on openflow error messages
+* ryu.app.ofctl: implement multipart
+* ryu.app.ofctl: implement reception of reply message
+* ofp_event: add a function to find Event class for given OFP class
+* RyuApp: add methods to observe/unobserve specific event dynamically
+* RyuApp: allow observing events without having handlers
+* RyuApp.get_handlers: restructure code and add a comment
+* RyuApp: add a method to unregister a handler
+* controller.handler: simplify code
+* controller.handler: use normal classes rather than a namedtuple
+* controller.handler: g/c now unused code
+* igmplib: Fix a problem that querier stops sending a query message
+* Ryu 3.8
+* bgp: fix pep8
+* bgp: enable to propagate ipv4 networks
+* bgp: improved debug message in neighbor creation
+* bgp: changed default configuration value for ease of use with bgp4
+* bgp: use hub.Event to wait for the core_service boot instead of sleep
+* bgp: enable to show ipv4 rib
+* bgp: send BGP UPDATE msg in BGP4 format when nlri is ipv4
+* bgp: handle non-MPBGP UPDATE msg
+* bgp: remove inappropriate assertion assuming only MPBGP (not BGP4)
+* bgp: fix wrong path
+* add BGP daemon feature
+* ofctl_v1_3: Fix to enable using meter flags multiply
+* stplib: reduce unnecessary constant
+* sw test tool: Add default test files (meter)
+* sw test tool: Add support for throughput analysis
+* sw test tool: Enable throughput analysis
+* sw test tool: Add support for getting throughput
+* sw test tool: Add support for installation of flows for throughput analysis
+* sw test tool: Add support for deletion of flows for throughput analysis
+* sw test tool: Enable parsing a new 'egress' format
+* sw test tool: Enable sending packets continuously
+* sw test tool: Rename STATE_UNMATCH_PKT_SEND to STATE_SEND_BARRIER
+* sw test tool: Refactor packet sending processes
+* sw test tool: Add support for sending packets continuously
+* sw test tool: Enable parsing a new 'ingress' format
+* sw test tool: Enable parsing OFPMeterMod messages in 'prerequisite'
+* sw test tool: Add support for confirmation of installed meter entries
+* sw test tool: Add support for installation of meter entries
+* sw test tool: Add support for initialization of meter tables
+* sw test tool: Rename STATE_INIT to STATE_INIT_FLOW
+* remove ryu.cmd.ofa_neutron_agent from console_scripts in setup.cfg
+* of: set TCP_NODELAY for secure channel socket
+* vrrp tests: update comments
+* vrrp.api: request ryu.services.protocols.vrrp.manager
+* ryu.topology.api: request ryu.topology.switches
+* test_vrrp_multi.sh: allow overriding ovs-vsctl
+* vrrp: update after ryu.topology.api change
+* rest_topology: update after ryu.topology.api change
+* topology: split out exported API from the implementation
+* ofa_neutron_agent: no need to load ofctl.service explicitly anymore
+* ryu.app.ofctl.api: request ryu.app.ofctl.service
+* app_manager: add a function to request to load the server application
+* doc: remove a stale reference
+* add ryu-manager to PYLINT_INCLUDE
+* ofctl_rest: use multistage @set_ev_cls
+* enable multistage @set_ev_cls or @set_ev_handler
+* ofproto: get rid of fragile and slow glob'ing modules
+* topology/switches: duplicate datapath connections handling
+* Add request forward message unit test
+* Add request forward message support
+* of14: Add bundle add message unit test
+* of14: Add bundle add message support
+* Allow messages inside messages
+* ofctl_v1_2:support whole of match fields
+* rest_router: fix OFPSetAsync bit mask
+* ofp_event: fix a typo
+* ofctl_v1_2/3: IP arbitrary bitmask support
+* sw test tool: Fix a problem for disconnection
+* of14: Add bundle control message unit test
+* of14: Add bundle control message support
+* of14: Remove incorrect OFP_ASYNC_CONFIG_{PACK_STR, SIZE}
+* of14: Update get async reply and set async implementation to follow spec
+* of14: Add OFPAsyncConfigProp
+* of14: Add table status unit test
+* of14: Add table status support
+* of14: Add flow monitor reply message unit test
+* of14: Add flow monitor request unit test
+* packet_data_generator: New ofproto dependency for v5 updates
+* of14: Add flow monitor reply support
+* of14: Add flow monitor request support
+* of14: Add OFPFlowUpdate
+* dpset: absorb *args, **kwargs passed to __init__
+* ofctl_v1_2/3: Convert IP fields to string with dotted decimal mask
+* sw test tool: avoid test termination in initialization
+* ofctl_v1_2: Fix unsuitable log
+* ofctl_v1_3: Fix unsuitable log
+* library_packet.rst: fix an example code
+* pyang plugin to generate of_config.generated_classes
+* fix NX_EXPERIMENTER_ID
+* reduce direct uses of oslo.config.cfg.CONF
+* ryu.cfg: re-export some frequently used stuff for convenience
+* add ryu.cfg
+* ryu.conf: obsoleted argument used in sample configuration
+* ofctl_v1_2/3: IPv4 dotted decimal subnet mask support
+* Ryu 3.7
+* test_parser: update expected json representation
+* OFPPropCommonExperimenter4ByteData: change payload to bytes
+* Apply normalize_json.py
+* of14: Correct documentation of table mod flags and properties
+* of13: Correct documentation of meter mod flags
+* of13: Correct documentation of flow mod flags
+* of13: Correct documentation of set config flags
+* of13: Correct documentation and example of get config reply flags
+* of14: Correct documentation of flow mod flags
+* of14: Correct documentation of meter mod flags
+* of14: Correct documentation of set config flags
+* of14: Correct documentation and example of get config reply flags
+* of14: set default attributes for meter-related classes
+* of13: set default attributes for meter-related classes
+* fix load_apps() in AppManager class
+* six.add_metaclass requires six>=1.4.0
+* of14: Add experimenter property to port mod reply unit test
+* of14: Add port mod experimenter property
+* of14: Add optical property to port mod reply unit test
+* of14: Add port mod optical property
+* of14: Remove _PACK_STR from port mod ethernet property
+* of14: Add experimenter property to port stats reply unit test
+* of14: Add port stats experimenter property
+* of14: Add optical property to port stats reply unit test
+* of14: Add experimenter property to port status unit test
+* ofctl_v1_3:support whole of match fields
+* of14: Add port stats optical property
+* of14: Add experimenter property to queue stats reply unit test
+* of14: Add queue stats experimenter property
+* of14: Rename QueueProp as QueueStatsProp
+* of14: Add experimenter property to table features request unit test
+* of14: Add experimenter property to table features reply unit test
+* of14: Add table feature experimenter property
+* of14: Add table feature table sync from property
+* of14: Add experimenter property to port desc reply unit test
+* of14: Add port desc experimenter property
+* of14: Add optical property to port desc reply unit test
+* of14: Add optical property to port status unit test
+* of14: Add port desc optical property
+* of14: Add action experimenter to flow mod unit test
+* of14: Add action experimenter support
+* of13: Add experimenter property to table features reply unit test
+* of13: Add experimenter property to table features request unit test
+* of13: Add table feature experimenter property
+* ofproto_v1_3_parser: update OFPActionSetField docstring
+* ofproto_v1_2_parser: update OFPActionSetField docstring
+* ofproto_v1_4_parser: update OFPActionSetField docstring
+* of14: Remove supruious comment from OFPPropBase
+* of14: Add role status unit test
+* packet_data_generator: of14: Add role status message
+* of14: Add role status support
+* of14: Add OFPRoleProp
+* of14: Add OFPPropCommonExperimenter4ByteData
+* of14: Add queue desc reply unit test
+* packet_data_generator: of14: Add queue desc reply
+* of14: Add queue desc request support
+* of14: Add queue desc request unit test
+* packet_data_generator: of14: Add queue desc request
+* of14: Add queue desc request support
+* of14: Add OFPQueueDesc
+* of14: Add OFPQueueDescProp
+* of14: table mod with properties
+* of14: Add properties support to flow mod
+* of14: Add OFPTableModProp serialization
+* of14: Add table desc unit tests
+* packet_data_generator: of14: Add table desc
+* of14: Add table desc request and reply message support
+* of14: Add OFPTableDesc
+* of14: Add OFPTableModProp
+* sw test tool: fix missing to receive error of PacketOut
+* of13: support OFPAactionExperimenter with data
+* sw test tool: fix pop_pbb action
+* of14: Document OFPRR_{METER_DELETE, EVICTION} reasons for flow removed message
+* sw test tool: add test report output
+* ofproto: correct typo
+* test_add_flow_v12_actions: fix a typo
+* rename neutron agent from "ofswitch" to "ofagent"
+* of13/14: fix OFPFMFC_TABLE_FULL typo
+* ofconfig: add commit and discard_changes operation support
+* of_config: add OFPortStateType class
+* topology: support OF1.2 and 1.4
+* handler.register_service: comment
+* use six.add_metaclass
+* pip-requires: sort in alphabetical order
+* of14: set default attributes for OFPMeterMod
+* of13: set default attributes for OFPMeterMod
+* neutron-ofswitch-agent man page
+* setup.cfg: add neutron-ofswitch-agent to console_scrpits
+* run_tests.sh: add neutron-ofswitch-agent to PYLINT_INCLUDE
+* neutron-ofswitch-agent: neutron agent for ofswitch ML2 mechanism driver
+* ofproto_v1_3_parser: add a comment about extensions support
+* pbb: add a comment
+* of_config_cli: remove a unused import
+* run_tests.sh: add of-config-cli to PYLINT_INCLUDE
+* ofctl_v1_3: let action group can be converted to string
+* sw test tool: FIX: return the transaction id when flow entries were deleted
+* sw test tool: correct the comparison method to treat instructions as the set
+* sw test tool: correct error message
+* sw test tool: remove unnecessary debug code
+* of12: fix InstructionWriteMetadata json decoder
+* sw test tool: fix wrong match(ipv6_exthdr) value of test file
+* sw test tool: fix wrong instruction(write metadata) value of test files
+* test_ofctl_v1_3: replace a hack with ProtocolDesc
+* test_parser_v12: replace a hack with ProtocolDesc
+* test_ofp_pktinfilter: replace a hack with ProtocolDesc
+* ProtocolDesc: provide supported_ofp_version for ofp_handler
+* ofproto_protocol: fix UnboundLocalError
+* tests: add a test case for ofproto_protocol
+* test_ofp_pktinfilter: simplify
+* OFPGroupMod: Fix OFPGC_* typo in examples
+* test_parser: replace a hack with ProtocolDesc
+* controller: use ProtocolDesc
+* ofproto_protocol: provide a class to describe an openflow version
+* ofproto_v1_3_parser: import ofproto_v1_3 as 'ofproto'
+* ofproto_v1_2_parser: import ofproto_v1_2 as 'ofproto'
+* ofproto_v1_0_parser: import ofproto_v1_0 as 'ofproto'
+* of14: Add to ofproto unit tests
+* of14: Add port mod message support
+* of14: Add queue stats request and reply message support
+* of14: Add port stats request and reply message support
+* of14: Add generic OFPropBase class
+* of14: Rename OFPPortDescPropUnknown as OFPPortPropUnknown
+* of14: Add port status message support
+* of14: Add meter mod message support
+* of14: Add OFPMeterBandDscpRemark and OFPMeterBandExperimenter
+* of14: Move OFPMeterBand* to above OFPMeterConfigStats
+* of14: Add table features stats request and reply message support
+* of14: Add _ordered_fields to .4 OFPMatch
+* of14: Fix OFPInstructionWriteMetadata JSON decode
+* of14: set default attributes for OFPMultipartRequest subclasses
+* of14: add some assertions
+* Ryu 3.6
+* of13: set default attributes for OFPMultipartRequest subclasses
+* of12: set default attributes for OFPStatsRequest subclasses
+* allow application to specify its logger name
+* fix syslogd usage on OSX
+* vrrp: fix busy timer by the default parameter
+* of14: fix OFPMatch from_jsondict method
+* of14: Fix OFPInstructionMeter json format
+* of14: default ethernet type for PUSH_VLAN action
+* of14: set default ethernet types for MPLS actions
+* of14: remove of1.2/1.3 old SetField aciton API
+* doc: announce OF1.4 support in README
+* Add OF1.4 set async message support
+* Add OF1.4 get async request and reply support
+* Add OF1.4 meter features stats request and reply message support
+* Add OF1.4 meter stats request and reply message support
+* Add OF1.4 meter config stats request and reply message support
+* Add OF1.4 meter band drop
+* Add OF1.4 group mod message supoort
+* Add OF1.4 table mod message support
+* Add OF1.4 flow removed message support
+* Add OF1.4 group desc stats request and reply message support
+* Add OF1.4 OFPBucket
+* Add OF1.4 group features stats request and reply message support
+* Add OF1.4 table stats request and reply message support
+* Add OF1.4 aggregate stats request and reply message support
+* Add OF1.4 role request and reply message support
+* Add OF1.4 barrier request and reply message support
+* Add OF1.4 experimenter message support
+* Add OF1.4 error message support
+* Add OF1.4 echo request and reply message support
+* Add OF1.4 SetNwTtl action support
+* Add OF1.4 DecNwTtl action support
+* Add OF1.4 DecMplsTtl action support
+* Add OF1.4 PushVlan action support
+* Add OF1.4 PopVlan action support
+* Add OF1.4 PushMpls action support
+* Add OF1.4 PopMpls action support
+* Add OF1.4 PushPbb action support
+* Add OF1.4 PopPbb action support
+* Add OF1.4 CopyTtlIn action support
+* Add OF1.4 CopyTtlOut action support
+* Add OF1.4 SetField action support
+* Add OF1.4 OFPMatchField support
+* Add OF1.4 desc stats request and reply message support
+* Add OF1.4 group stats request and reply message support
+* Add OF1.4 multipart experimenter request and reply message support
+* packet_data_generator: Remove OF1.4 queue set config request and reply message support
+* Correct OF1.4 OFPMatch JSON serialisation and formatting
+* Correct OF1.4 OFP_ACTION_HEADER_PACK_STR
+* of12: set default ethernet types for MPLS actions
+* of13: set default ethernet types for MPLS actions
+* ofproto_v1_3_parser: have a default value for push_vlan ethertype
+* ofproto_v1_2_parser: have a default value for push_vlan ethertype
+* ofproto_v1_3_parser: put some assertions
+* ofproto_v1_2_parser: put some assertions
+* Make type and len class attributes of OFPInstructionMeter
+* doc: improve RyuApp documentation
+* doc: update after the sync request change
+* vrrp: Add RPC API
+* ofctl.service: fix a crash on error msg
+* ofctl.service: reduce log level of some messages
+* ofctl.service: fix some crashes
+* Fix OFPInstructionWriteMetadata JSON decode
+* dpset: start up dpset if there are subscribers of dpset events
+* fix bidirectional event confusion
+* packet_data_generator: Add OF1.4
+* ofctl_v1_2/3: fix SET_FIELD action and some match fields
+* bgp: fix IP/MPLS_VPN addresses
+* bgp: comments about notification data
+* bgp: a comment
+* bgp: RFC 4486
+* bgp: constants for NOTIFICATION code/subcode
+* bgp: a comment
+* ryu.app.ofctl: Add a proxy application to send OF messages
+* test tool: run_mininet: support CPqD Software Switch
+* bgp: implement the rest of RFC 3107
+* bgp: implement BGPOptParamCapabilityCarryingLabelInfo
+* bgp: add a constant for enhanced route refresh
+* safi: add a constant for route target constrain
+* rest_firewall: support IPv6 match conditions
+* ofctl_v1_2/3: fix match conditions about ARP
+* enable OpenFlow 1.4
+* packet_data_generator: update of_protocol upstream
+* test_bpdu: add unit test
+* bpdu: handling based on version and type
+* ofctl_rest: improve readability of the result of MeterFeatures
+* ofctl_rest: support group-related messages
+* lib.of_config: import ryu.contrib
+* tests: add some tests for ryu.lib.of_config.classes
+* A happy new year 2014
+* Ryu 3.5
+* firewall: correct acquisition result of DENY rule
+* ofctl_rest: fix mod_meter_entry in OpenFlow1.0/1.2
+* ofctl_rest: support OFPExperimenter message
+* ofctl_rest: fix delete_flow_entry
+* topology: Setting highest rule priority to LLDP packets
+* Fix Windows setup dependency bug
+* add IGMP snooping application
+* packet lib: icmpv6: support MLD (v1/v2)
+* packet lib: igmp: support IGMP v3
+* firewall: packet blocking log for DENY rule
+* ofctl_v1_2/3: support IPv6
+* ofctl_v1_2/3: support OXM field names
+* ofctl_rest: support OpenFlow1.2
+* of_config_cli: remove no longer necessary "_pythonify" stuff
+* of_config: allows both of of-config element names and python style names
+* of_config_cli: add add_queue command
+* of_config_cli: add delete_config and copy_config
+* a simple of-config client command
+* of_config.capable_switch: add delete_config and copy_config
+* tests.integrated.test_of_config: update after capable_switch api change
+* of_config.capable_switch: api tweak
+* add some convenient OF-Config classes
+* requires lxml
+* oxm_fields: make a crash less cryptic
+* ofctl_v1_3: support OFPMeterConfigStats
+* ofctl_v1_3: fix match for metadata
+* ofctl_v1_3: correct MeterStats and MeterFeatures
+* topology: add of13 support
+* ofctl_v1_3: support meter
+* ofctl_v1_3: support metadata
+* packet.ospf: workaround a bytearray vs buffer problem
+* rest_firewall: use the explicit max_len of flow_mod
+* lib: ofctl: support the specified max_len of flow_mod
+* packet lib: improve readability of json
+* add license to ospf files
+* test tool: add a script to make the test environment on mininet
+* test tool: add default test files (match)
+* test tool: add default test files (action with set-field only)
+* test tool: add default test files (action without set-field)
+* test tool: add OpenFlowSwitch test tool
+* unit test for lib.packet.ospf
+* packet lib: add ospf
+* lib/packet/packet_utils: Add a function to calculate fletcher checksum
+* packet lib: ipv6: correct a default parameter of opt_header
+* packet lib: add unittests for reversibility about json
+* packet lib: slow: fix reversibility about json
+* packet lib: sctp: fix reversibility about json
+* packet lib: lldp: fix reversibility about json
+* packet lib: llc: fix reversibility about json
+* packet lib: ipv6: fix reversibility about json
+* packet lib: icmpv6: fix reversibility about json
+* packet lib: icmp: fix reversibility about json
+* packet lib: dhcp: fix reversibility about json
+* packet lib: bpdu: fix reversibility about json
+* packet lib: bgp: fix reversibility about json
+* packet lib: packet_base: add a method which makes '_class_prefixes' easy to use
+* stplib: support OF 1.2/1.3
+* stplib: Reduction of the number of threads
+* add OpenFlow 1.4 definitions
+* packet lib: igmp: support default parameters
+* Ryu 3.4
+* vrrp: handle interface failure
+* rpc-cli man page
+* a simple command line msgpack-rpc client
+* add rpc.Client.peek_notification
+* msgpack-rpc: unit tests
+* rpc: prefix closed_by_peer with _ as it's private
+* rpc: If the socket is closed by peer, endpoint stop the serve
+* msgpack-rpc fixes and improvements
+* msgpack rpc helper
+* test_parser: expected json for onf_flow_monitor_request
+* packet_data: regen for onf_flow_monitor_request
+* packet_data_generator: add a case for onf_flow_monitor_request
+* packet_data_generator: update of_protocol for onf_flow_monitor_request
+* of13: implement ONFFlowMonitorStatsRequest
+* ofproto_parser.StringifyMixin: add "ONF" to the list of class prefixes
+* of13: EXT-187 definitions
+* of13 OFPExperimenterStatsRequest: api tweak
+* of13: add a bunch of ONFERR_ constants from OF Extensions for 1.3.X
+* of13 OFPTableFeaturesStatsRequest: remove an unused argument
+* unit test: test ryu.cmd.manager
+* vrrp: declare event.py to be dependent for manager.py
+* vrrp: add statistics support
+* Add support for admin_state (role)
+* fix vrrp utils
+* register monitor_linux and monitor_openflow for VRRPInterfaceMonitor class
+* vrrp: use sysfs instead of ioctl to get ifindex
+* rest_firewall: support OF 1.3
+* ofctl_v1_3: support some actions
+* ofctl_v1_3: correct the output result of get_flow_stats()
+* rest_router: support OF 1.3
+* ofp: use RyuApp start() to return Greenlet thread
+* allow RyuApp start() method returns Greenlet thread
+* Revert "doc: update tls example"
+* run OFP if no application is specified
+* fix the regression due to e45f382e51c9a3d57a6d8c01cec9e70f7ca364fd
+* a script to set up an environment for test_vrrp_multi.py
+* a script to set up an environment for test_vrrp_linux_multi.py
+* test apps for VRRP service
+* vrrp service
+* packet.vrrp: some convenient routines
+* base/app_manager: context might be RyuApp
+* base/app_manager: create/destroy RyuApp instances dynamically
+* base/app_manager: introduce singleton pattern to AppManager
+* base/app_manager: RyuApp initialization race at startup
+* topology.switches: stop abusing Packet.next()
+* test_lldp: stop abusing Packet.next()
+* Packet: fix iterator
+* skip malformed OF messages and continue instead of stopping
+* of13: fix wrong comments
+* test_parser: update expected json representations for EXT-256
+* packet_data: regen
+* packet_data_generator: add a case for EXT-256 (PBB UCA match field)
+* packet_data_generator: update of_protocol upstream
+* of13: implement EXT-256 (PBB UCA match field)
+* lacplib: reduce unnecessary constant
+* of13: OFPTableFeaturesStatsRequest: update docstring
+* of13: OFPOxmId: update comment
+* ryu.app.client: comments
+* ryu.app.tunnel_port_updater: comments
+* ryu.app.gre_tunnel: comments
+* ryu.app.rest_quantum: comments
+* ryu.app.rest_conf_switch: comments
+* ryu.app.rest: comments
+* doc: update tls example
+* of12: implment OFPT_EXPERIMENTER serializer
+* of13: implment OFPT_EXPERIMENTER serializer
+* test_parser: enable serializer tests for OFPT_EXPERIMENTER
+* solve application dependency via @set_ev_cls
+* dpset: fix a reconnect race
+* doc: hook up dpset
+* dpset: add some docstrings
+* dpset: remove dead code
+* dpset: prefix private methods with _
+* ofproto: fixed comments of ofp_capabilities
+* test_parser: expected json representations for OFPMP_EXPERIMENTER
+* packet_data: regen
+* packet_data_generator: add cases for experimenter mp request/reply
+* of13: implement OFPMP_EXPERIMENTER request and reply
+* packet lib: ipv6: change some default parameters
+* packet lib: ethernet: support default parameters
+* bgp: add tests for extended communities
+* bgp: implement extended communities
+* test_parser: test OFPET_EXPERIMENTER serializer as we now have it
+* test_parser: expected json representation
+* packet_data: regen
+* packet_data_generator: uncomment ofp_error_msg_experimenter
+* of13: OFPErrorExperimenterMsg: implement serializer
+* of12: OFPErrorExperimenterMsg: implement serializer
+* of13: implement OFPErrorExperimenterMsg
+* of12: reduce unnecessary diffs from of13
+* ofproto_common: define some experimenter id
+* add STP application
+* packet lib: add unittests that use default parameters of IPv4/IPv6 and ICMP/ICMPv6
+* packet lib: icmp: support default parameters
+* packet lib: icmp: support len(icmp.*)
+* packet lib: icmpv6: support default parameters and the auto calculation of lengths
+* packet lib: icmpv6: support len(icmpv6.*)
+* packet lib: icmpv6: omit type of nd_option object
+* packet lib: icmpv6: include type and length in nd_option object
+* packet lib: icmpv6: move ND_OPTION_* constants from classes to the module
+* packet lib: icmpv6: change the timing of bit shift
+* packet lib: icmpv6: correct typos
+* ofctl_rest.py: Fix compatibily for both OF 1.0 & 1.3 datapaths
+* ofctl_v1_3.py: Add get_desc_stats & get_port_stats from ofctl_v1_0.py
+* lacplib: set the max priority to LACP flow entries
+* packet lib: add unittests that use default parameters of IPv4/6 and TCP/UDP/SCTP
+* packet lib: ipv6: support default parameters and the auto calculation of payload_length
+* packet lib: udp: support default parameters
+* packet lib: tcp: support default parameters and the auto calculation of offset
+* packet lib: sctp: correct len(sctp)
+* SubmittingPatches: mention tools/normalize_json.py
+* test_parser: expected json representations for new test cases
+* packet_data: regen
+* packet_data_generator: add cases to use all oxm types
+* packet_data_generator: update of_protocol
+* normalize *.json files
+* Ryu 3.3
+* Decoration Based PacketIn Filter
+* of13: correct variable name same as spec
+* ofproto_parser: dump packets if error is encountered during parse
+* packet lib: support Provider Backbone Bridges (PBB, IEEE 802.1ah)
+* packet lib: vlan: support Q-in-Q (IEEE 802.1ad)
+* rest_router: fix mac address conversion
+* packet lib: sctp: change the timing of the auto calculation
+* packet lib: sctp: remove the past 'TODO' comments
+* rest_router: bug fix of match parameter
+* test_parser: expected json output for ofp_table_features_request/reply
+* packet_data: regen
+* packet_data_generator: uncomment ofp_table_features_request
+* packet_data_generator: update of_protocol upstream
+* of13: implement table features request/reply
+* OFPMultipartRequest: remove a wrong assertion
+* oxm_fields: allow None values
+* packet lib: sctp: support default parameters and the auto calculation of lengths
+* packet lib: sctp: aggregate the same method into the base class
+* packet lib: sctp: correct typos
+* packet lib: sctp: correct sphinx document format
+* correct typos
+* test_parser: update expected json output
+* packet_data: regen
+* packet_data_generator: use more actions
+* packet_data_generator: update upstream
+* tests: apply tools/normalize_json.py
+* ofproto.test_parser: fix an expected json output
+* packet_data: regen
+* packet_data_generator: adapt to of_protocol upstream api change
+* packet_data_generator: change of_protocol upstream
+* packet lib: sctp: correct comments
+* of13: support PUSH_PBB/POP_PBB actions
+* of1.0, of1.2, of1.3: Modify the default of max_len in OFPActionOutput
+* packet lib: sctp: support the auto calculation of lengths of parameters and causes
+* packet lib: sctp: fill up lack of decolators
+* packet lib: sctp: remove unnecessary __init__()
+* packet lib: sctp: reduce computation
+* To specify a logging configuration file
+* bgp: implement communities attribute
+* bgp: well known communities
+* bgp: implement multiprotocol capability
+* bgp: implement MP_UNREACH_NLRI
+* bgp: implement MP_REACH_NLRI
+* bgp: update a comment
+* packet lib: sctp: add tests for protocol stack
+* packet lib: sctp: fix problems about padding
+* lib.packet.sctp: fix misuses of abstractproperty
+* doc: hook up lib.packet.sctp
+* packet lib: sctp: add a unittest for SCTP
+* packet lib: add Stream Control Transmission Protocol
+* packet lib: icmpv6.nd_router_advert: skip unknown options correctly
+* packet lib: icmpv6: comment
+* packet lib: ipv6: correct parser() about flow_label
+* simple_switch_13: using table-miss flow
+* of13: fix OFPGroupStats
+* ofproto tests: add expected json outputs
+* packet_data: regen
+* packet_data_generator: add of1.3 group_stats_request/reply
+* of10: fix pep8
+* of13: correct parser() in several OFPActions
+* of10: Register TCP_DST and UDP_DST headers in NXM
+* simple_switch: use packet library
+* packet.bgp: parse/serialize FOUR OCTET AS NUMBER capability
+* packet.bgp: parse/serialize ROUTE REFRESH capability
+* packet.bgp: implement ROUTE REFRESH message
+* packet lib: some AFI/SAFI constants
+* packet.bgp: parse/serialize capability options
+* packet.bgp: some capability related constants
+* bgp test: appease pep8
+* packet.bgp: appease pep8
+* of13: fix InstructionMeter parser
+* Switch how to call the API of Routes for every version
+* To specify a context of a controller from WSGIApplication#register()
+* packet.bgp test: parse real packets taken from quagga
+* packet.bgp test: some on-wire packets snooped from running quagga
+* packet.bgp: implement RFC 4893
+* packet.bgp: parse/serialize path attribute values
+* python-oslo-config is necessary for Ryu built by RPM
+* Ryu 3.2
+* fix setup from a tarball again
+* avoid pbr's non multi-version aware script
+* revert "support setup.py install with git archive tarballs" commit
+* revert "stick with pbr 0.5.19" commit
+* Ryu 3.1
+* packet lib: dhcp: remove unnecessary import
+* packet lib: dhcp: add unittest
+* packet lib: dhcp: use text addresses
+* packet lib: add get_protocol API
+* of1.3: set default arguments for FlowStatsRequest
+* of1.2: set default arguments for FlowStatsRequest
+* topology.switches: fix link discovery
+* ofproto: remove a bogus comment
+* ofproto: remove unused definitions
+* ofproto: fix OF1.0 packet_in parser
+* packet lib: icmp: rewrite unittest
+* tests/integrated: fix mac address format
+* Advanced WSGI API
+* doc: hook up streaming parser docs
+* implement BGP-4 streaming parser
+* streaming parser base class
+* doc: hook up lib.packet.bgp
+* unit test for lib.packet.bgp
+* packet lib: implement basic part of BGP-4
+* test_addrconv: add more test
+* packet lib: ipv6: avoid dangerous default value [] as argument
+* packet lib: ipv6: simplify the operations of __init__()
+* packet lib: ipv6: support udp
+* packet lib: ipv6: remove unnecessary import
+* packet lib: icmp: correct parser() of TimeExceeded
+* unit test for import_module
+* import_module: deal with cases mod.__file__ is not accessible
+* packet lib: ipv6: correct a comment
+* packet lib: ipv6: add test for multi extension headers
+* packet lib: ipv6: support IP Authentication header
+* packet lib: ipv6: support fragment header
+* packet lib: ipv6: support destination header
+* packet lib: ipv6: support Hop-by-Hop Options header
+* packet lib: ipv6: prepare to support Hop-by-Hop Options header and destination header
+* packet lib: ipv6: support options for Hop-by-Hop Options header and destination header
+* packet lib: ipv6: prepare to support extension headers
+* rest_firewall: improve REST response
+* comment on OFP_xxx_PORT
+* vlan: remove unnecessary import
+* doc: ryu app api overview
+* document OFPTableFeaturesStatsRequest/OFPTableFeaturesStatsReply
+* doc: sprinkle of13 json examples
+* doc: sprinkle of12 json examples
+* document MsgBase
+* add some docstring on StringifyMixin and relevant code
+* lib: lacplib: correct comments
+* lib: lacplib: add underscore to a protected member
+* lib: lacplib: support OpenFlow1.2/1.3
+* packet lib: Simpler API to assemble a packet
+* of12, of13: fix OFPActionSetField padding
+* test: update expected json outputs
+* packet_data: regen
+* tweak packet_data_generator
+* rest_firewall: remove of unused constant values
+* rest_firewall: remove of an unnecessary comma of json response
+* rest_firewall: remove of a redundant code
+* rest_firewall: bug fix of handling an empty dict
+* ofproto: raise an exception for unsupported operation
+* test_parser: test serializing a message multiple times
+* ofproto: remove some assertions
+* ryu-manager: copyright notice
+* of10: change OFPMatch to support ipv4 src and dst mask when wildcards are omitted in __init__
+* Support old style class
+* simple_switch: simplify
+* simple_switch_12: reduce difference from simple_switch_13
+* test: update of12 expected *.json outputs after utf-8 change
+* test: update of13 expected *.json outputs after utf-8 change
+* test: regen *.packet after utf-8 changes
+* packet_data_generator: use utf-8 in table name and port name
+* of13: update expected *.json outputs for table name change
+* of13: assume OFPTableFeaturesStats.name UTF-8
+* of12: update expected *.json outputs for table name change
+* of12: assume OFPTableStats.name UTF-8
+* of10: assume OFPTableStats.name UTF-8
+* of13: update expected *.json results for OFPPort.name change
+* of13: assume OFPPort.name UTF-8
+* of12: update expected *.json results for OFPPort.name change
+* of12: assume OFPPort.name UTF-8
+* of10: update expected *.json results for OFPPhyPort.name change
+* of10: assume OFPPhyPort.name UTF-8
+* stringify: add 'utf-8' type
+* packet lib: update icmpv6 doc
+* use run_tests.sh -N for Travis CI
+* Ryu 3.0
+* rest_firewall: blocked packet logging
+* ofctl v1.0/v1.2: add miss_send_len for packet in
+* restore bin/ryu-manager
+* packet lib: bpdu: add some constant values
+* rest_firewall: bug fix of dict keyError
+* doc: update format of pages for ofproto
+* doc: fix warnings
+* doc: update reference page for ofproto
+* of12, of13: small update of the document
+* test_parser: ensure that "len" "length" fields can be omitted
+* of13: update after OFPMeterBand changes
+* of13: make OFPMeterBand's "type" and "len" visible to users
+* of13: update *.json after OFPHelloElemVersionBitmap changes
+* of13: make OFPHelloElemVersionBitmap's "type" and "length" to users
+* of13: update *.json after OFPxxxStats.length changes
+* of13: make OFPxxxStats.length visible to users
+* of13: update *.json after multipart request/reply's "type" changes
+* of13: make multipart request/reply's "type" visible to users
+* of13: update *.json after OFPPacketOut.actions_len changes
+* of13: make OFPPacketOut.actions_len visible to users
+* of13: update *.json after OFPMatch "type" and "length" changes
+* of13: make OFPMatch "type" and "length" visible to users
+* of13: update *.json after OFPQueuePropHeader.property change
+* of13: make OFPQueuePropHeader.property visible to user
+* of13: update *.json after "len" "type" changes
+* of13: some "len" "type" attributes visible to user
+* test_parser_v12: update after OFPxxxStats.length changes
+* of12: update *.json after OFPxxxStats.length changes
+* of12: make OFPxxxStats.length visible to users
+* of12: update *.json after OFPStatsReply.type changes
+* of12: make OFPStatsReply.type visible to users
+* test_parser_v12: update after OFPPacketOut.actions_len changes
+* of12: update *.json after OFPPacketOut.actions_len changes
+* of12: make OFPPacketOut.actions_len visible to users
+* test_parser_v12: update after OFPErrorExperimenterMsg.type changes
+* of12: update *.json after OFPErrorExperimenterMsg.type changes
+* of12: make OFPErrorExperimenterMsg.type visible to users
+* of12: update *.json after OFPMatch "type" and "length" changes
+* of12: make OFPMatch "type" and "length" visible to users
+* of12: update *.json after OFPQueuePropHeader.property change
+* test_parser_v12: update after OFPQueuePropHeader.property change
+* of12: make OFPQueuePropHeader.property visible to user
+* test_parser_v12: update after "len" changes
+* of12: update *.json after "len" "type" changes
+* of12: some "len" "type" attributes visible to user
+* packet lib: icmpv6: add nd_router messages
+* add .tox/ to .gitignore
+* workaround a python bug
+* stick with pbr 0.5.19
+* new way to use pbr
+* remove bin/ryu-manager from the list of files for pylint/pep8
+* move ryu-manager to entrypoints
+* test_parser: update expected json results
+* packet_data: regen
+* packet_data_generator: follow the recent fixes in of_protocol upstream
+* packet_data_generator: be specific about versions of dependencies
+* packet_data_generator: move of_protocol upstream back to the origin
+* rest_router: make pep8 comfortable
+* Revert "packet lib: igmp: add some constant values"
+* Add a configuration file for tox (http://testrun.org/tox/)
+* Fix POP_MPLS of ofctl_v1_3.to_actions() problem
+* packet lib: igmp: add some constant values
+* packet lib: bpdu: use text address
+* packet lib: igmp: add a constant value
+* packet lib: llc: correct a variable name
+* of12: add docstrings for openflow messages
+* of13: add docstrings for openflow messages
+* packet lib: igmp: add some constant values
+* add LACP application
+* rest_router: convert haddr to bin for OFPActionSetDlSrc/Dst
+* rest_router: avoid assertion when ip_text is 0
+* avoid importing a module twice
+* of13: set default args for FlowMod
+* of12: set default args for FlowMod
+* fix of match from_jsondict mask bug
+* of13: update expected *.json output for OFPTableFeaturesStats.name
+* of13: remove trailing NULs in OFPTableFeaturesStats.name
+* test_parser_v12: update after OFPTableStats.name change
+* of12: update expected *.json output for OFPTableStats.name
+* of12: remove trailing NULs in OFPTableStats.name
+* of10: remove trailing NULs in OFPTableStats.name
+* of13: update expected *.json output after OFPPort.name change
+* of13: remove trailing NULs in OFPPort.name
+* of12: update expected *.json output after OFPPort.name change
+* of12: remove trailing NULs in OFPPort.name
+* of10: update expected *.json output after OFPPhyPort.name change
+* of10: remove trailing NULs in OFPPhyPort.name
+* regen after "packet_data_generator: fix port names" commit
+* packet_data_generator: fix port names
+* of13: update expected *.json after OFPDescStats changes
+* of13: make OFPDescStats more human readable
+* of12: update expected *.json after OFPDescStats changes
+* of12: make OFPDescStats more human readable
+* of10: make OFPDescStats more human readable
+* rest_router: update after ofproto hw_addr changes
+* rest_router: fix of10 case
+* a simple script to plot rest_topology's output
+* topology.switches: fix bin vs text address problem
+* of13: update tests
+* of13: fix json representation of OFPPort.hw_addr and OFPPortMod.hw_addr
+* of12: update tests
+* of12: fix json representation of OFPPort.hw_addr and OFPPortMod.hw_addr
+* of10: update tests
+* of10: fix json representation of OFPPhyPort.hw_addr and OFPPortMod.hw_addr
+* stringify: allow user classes to annotate type of their attributes
+* of13: use text address for OFPPort.hw_addr and OFPPortMod.hw_addr
+* of12: use text address for OFPPort.hw_addr and OFPPortMod.hw_addr
+* of10: use text address for OFPPhyPort.hw_addr and OFPPortMod.hw_addr
+* MANIFEST.in: exclude packet_data_generator
+* add simple learning switch app for OF1.2
+* add simple learning switch app for OF1.3
+* of13: set ActionOutput default max_len to zero
+* of12: set ActionOutput default max_len to zero
+* fix the commit 833328a mess-up
+* lib/packet: update docstrings to fix broken tables in latex/pdf
+* doc: fix overflow from the page in latex/pdf
+* of1.2, of1.3: update document for OFPMatch
+* packet lib: fix ipv6 parser
+* ofctl lib: Actions is a list
+* of13: test_parser: update expected *.json results
+* of13: test_parser: regen *.packet
+* of13: packet_data_generator: use set_field action
+* of13: change OFPActionSetField api, following the recent OFPMatch api
+* of12: test_parser: update expected *.json results
+* of12: test_parser: regen *.packet
+* of12: packet_data_generator: use set_field action
+* of12: change OFPActionSetField api, following the recent OFPMatch api
+* of13: update *.json after OFPMatch changes
+* of13: change OFPMatch json representation to match with on-wire
+* of13: make OFPMatch use oxm_fields routines
+* of12: update *.json after OFPMatch changes
+* of12: change OFPMatch json representation to match with on-wire
+* of12: make OFPMatch use oxm_fields routines
+* oxm_fields: add some routines
+* doc: add reference for ofproto api document
+* packet_base: update docstring
+* doc: fix some sphinx warnings and errors
+* doc: fix a typo
+* ofproto_v1_3_parser: add docstring to OFPMatch
+* normalize json files using tools/normalize_json.py
+* a script to normalize json
+* lib/packet: add Internet Group Management Protocol
+* test_parser: stop testing unsupported operations
+* test_parser: have a list of operations expected to work
+* unit test: test OFPMatch.append_field
+* unit test for OFPMatch old/new api compatibility
+* app/rest_firewall: add API for VLAN configuration
+* ofproto: _baseattribute can be class attribute
+* ofproto: make binary code loadable
+* packet lib: make vrrp get_payload robust
+* packet lib to string: unit tests
+* packet lib to string: add __str__ to base
+* packet lib to string: inherits StringifyMixin
+* unit tests for the new OFPMatch api
+* of13: fix old parser and serializer of PBB_ID
+* of12: stop assuming OFPXMC_OPENFLOW_BASIC
+* dpset: support OF1.3
+* packet lib: provide bpdu._MIN_LEN
+* packet lib: provide llc._MIN_LEN
+* packet lib: implement lacp.__len__
+* packet lib: implement ryu.lib.packet.lldp.lldp.__len__
+* packet lib: provide a default impl of __len__
+* support setup.py install with git archive tarballs
+* use d2to1 and pbr for packaging
+* tests: stop comparing text addresses
+* correct file permission
+* note about network address representation
+* packet lib: pydoc update/improvements after api change
+* packet lib api: update documentation
+* rest_router: update after packet lib api changes
+* topology.switches: update after packet lib api changes
+* packet lib: change the api to use text addresses
+* Ryu 2.2
+* sync README with the web site
+* add 2013 to copyright for documentations
+* test_parser: update of13 expected results
+* of13 OFPMatch: remove now unused code
+* of13: more OFPMatch old api compat
+* of13: make OFPMatch.to_jsondict work on instances composed with old api
+* of13 OFPMatchField: make this safe to serialize multiple times
+* of13: OFPMatch api compat
+* of13: OFPMatch from_json/to_json for new api
+* of13: add OFPMatch.get for convenience
+* of13: add OFPMatch.iteritems for convenience
+* of13: new OFPMatch field query api
+* of13: new match field parser
+* of13: new OFPMatch composer api
+* test_parser: update of12 expected results
+* of12 OFPMatch: remove now unused code
+* of12: OFPMatch more old api compat
+* of12: make OFPMatch.to_jsondict work on instances composed with old api
+* of12 OFPMatchField: make this safe to serialize multiple times
+* of12: OFPMatch api compat
+* of12: OFPMatch from_json/to_json for new api
+* of12: add OFPMatch.get for convenience
+* of12: add OFPMatch.iteritems for convenience
+* of12: new OFPMatch field query api
+* of12: new match field parser
+* of12: new OFPMatch composer api
+* oxm_fields: accept [value, mask] as well as (value, mask)
+* oxm_fields: generate OFPXMT_OFB_ and OXM_OF_ from a single source
+* add unit test for packet library llc
+* update library_packet_ref.rst
+* link to LLC sub layer
+* lib/packet/llc
+* lib/packet/bpdu
+* The trick for installing argparse is deleted
+* update packet generator code comment
+* test_addrconv: fix a copy and paste mistake
+* Remove contrib/oslo directory
+* addrconv: remove embedded test code
+* add a test for ryu.lib.addrconv
+* regenerate packet_data for meter_mod
+* test_parser: an expected result for meter_mod
+* packet_data_generator: uncomment ofp_meter_mod
+* of13 OFPMeterMod: fix _len vs len mismatch
+* of13 OFPMeterBandExperimenter: fix super
+* ryu/app/ofctl_rest: add of1.3 support
+* add ofctl_v1_3 library
+* rest_router: follow packet lib api change
+* addrconv: use bytes instead of int to represent ipv4 addresses
+* addrconv: replace bin<->text converters for ipv6
+* addrconv: replace bin<->text converters for mac addresses
+* addrconv: binary <-> text conversion of mac/ipv4/ipv6 addresses
+* lib/packet: add Link Aggregation Control Protocol
+* of-wire json test: a program to generate test data for unit tests
+* dist: pypi tar ball misses tools directory
+* stringify.StringifyMixin.__str__: simplify
+* rest_router: stop catching Exception
+* of-wire json test: unit test
+* of-wire json test: generated *.packet
+* of-wire json test: expected results
+* of-wire json: adapt OF13 OFPMeterBand
+* of-wire json: adapt OF13 OFPTableFeaturesStatsReply
+* of-wire json: adapt OF13 OFPPortDescStatsReply
+* of13: fix OFPTableFeaturesStats.parser
+* of13: fix OFP_TABLE_FEATURES_PACK_STR
+* of1.3: fix OFPort parser
+* appease pep8
+* add router Ryu application
+* app/quantum_adapter: Lazily initialize neutron client
+* ofproto v1.3: implement MeterBand parsers
+* Send MeterMod messages
+* quantum_adapter: race between ovs port deletion and plugin port deletion
+* simple_vlan.py: race condition
+* gre_tunnel.py: race condition
+* network: add a helper function to list ports that doesn't raise
+* gre_tunnel: exception due to race condition
+* network.py: exception in Networks.remove_port()
+* network: sort out order between event and actual deletion of network
+* network.py: sort out order between event and actual deletion of port
+* app/gre_tunnel.py: typo has_network -> has_networks
+* app/quantum_adapter: pylint
+* app/simple_vlan: pylint
+* controller/network: pylint
+* add a test for ryu.lib.stringify
+* test_parser_v12: abuse this to test to_jsondict and from_jsondict
+* of1.3: omit mask attribute from str() when appropriate
+* of1.3: of-wire json adapt
+* of1.2: omit mask attribute from str() when appropriate
+* of1.2: of-wire json adapt
+* of1.0: of-wire json adapt
+* StringifyMixin: json support
+* ryu/flags: rename config paramerters related to openstack
+* app/quantum_adapter: fix missing change to neutron
+* app/quantum_adapter: project rename quantum -> neutron
+* app/client: update for quantum->neutron change
+* fix comment typos (ofprotp -> ofproto)
+* fix typos (mpls_lable -> mpls_label)
+* base/app_manager: teach event dispatcher state
+* use ofproto.OFP_NO_BUFFER in some places
+* define OFP_NO_BUFFER
+* ryu/app/conf_switch_key: fix a comment
+* update the site url
+* man: remove man page of ryu client
+* packege: rpmlint warning
+* MANIFEST.in: fix up to address warning
+* openstack copyright notice
+* lib/packet: teach packet library to truncate padding octet
+* lib/packet: make packet_base.parser abstract method
+* lib/packet: make protocol_name property instead of attributes
+* Ryu 2.1
+* rename ryu-client under ryu/tests
+* of1.3: fix OFPSetConfig default arguments
+* of1.2: OFPGroupFeaturesStats: tuple -> list
+* of1.3: fix OFP_GROUP_DESC_STATS_PACK_STR
+* of1.3: fix OFPMeterStats
+* topology/switches: exception during serialization
+* topology/switches: packet in handler
+* packet lib: stop tlv parsing when finding LLDP_TLV_END
+* packet lib: add ICMP sub encoder/decoder class
+* ofctl_v1_2.actions_to_str: ignore unknown instructions
+* of13: prefix private attributes of OFPMatch with _
+* of12: prefix private attributes of OFPMatch with _
+* nx_match: some comments
+* datapath_connection_factory deal with None datapath.id
+* of13: Added InstructionMeter
+* packet lib: avoid exception for bogus protocol header parsing
+* quantum_adapter: check if quantum_controller_addr is valid
+* of13 OFPBucket: fix a fatal typo
+* of13 OFPGroupDescStats: fix super call
+* of13 OFPExperimenter: fix parser and remove completely broken serializer
+* of13 fix OFPQueueProp parsing
+* of13 fix multipart reply parsing
+* of13 fix OFPGroupFeaturesStats parser
+* of13: add missing itertools import
+* of12 OFPGroupFeaturesStats: add missing self.length
+* of12: fix OFPExperimenter parser
+* of1.3: Fix parsing of OFP_QUEUE_GET_CONFIG_REPLY
+* packet lib: packet class supports get_protocol method
+* packet lib: add Packet.__contains__
+* packet lib: packet class accepts protocols list argument
+* packet lib: arp default args
+* packet lib: vlan default args
+* packet lib: mpls default args
+* packet lib: ipv4 default args
+* packet lib: icmp support time exceeded type
+* of1.2: fix OFPSetConfig default arguments
+* fix travis config file
+* Add config file for Travis
+* packet lib: allow packet type to be specified when parsing packet
+* packet lib: For convenience, make packet into a sequence type
+* Ryu 2.0
+* of1.3: various fixes
+* fix 77effb29 regression
+* packet lib: make test_packet work stand-alone
+* Add Packet library API Reference
+* lib/packet: DHCP packet parser/serializer
+* ofproto/ofproto_parser: pylint
+* of1.0: use tun_id instead of tun_id_
+* docs: fix ryu module import
+* tests/unit/packet/test_vrrp: add tests for is_valid()
+* lib/packet/vrrp: fix is_valid()
+* test_parser_v10: remove tests for __str__
+* of13: Fix for OFPQueueGetConfigReply/Request
+* run_tests: make python interpreter overridable
+* app/gre_tunnel: pylint
+* app/quantum_adapter: unbreak quantum change
+* of10: sprinkle StringifyMixin
+* of: StringifyMixin
+* use dpid_to_str in some places
+* tests/ofproto: add unit test for ofproto automatic detection
+* ofproto: exception during startup related ofp module detaction
+* tests/ofproto: add unit test for ofproto automatic detection
+* ofproto: exception during startup related ofp module detaction
+* of13: add missing UINTxx_MAX
+* controller/ofp_event: don't hardcode supported OFP parser module
+* ofproto: detect supported OFP versions automatically
+* ofproto_parser: simplify msg_str_attr() a bit
+* update requirements
+* Support bind IPv6 addresses in StreamServer
+* Revert "add eventlet to test requirement"
+* ofproto: change the way __str__ is implemented for of-wire messages
+* controller: stop catching GreenletExit
+* hub: add some more tests
+* hub: handle GreenletExit internally
+* hub: comment
+* of1.0: simplify NXAction initialization
+* of1.0: simplify OFPActionVendor
+* of1.0: NXActionHeader should be subclass of OFPActionVendor
+* of1.3: fix OFPPortStatus parser
+* of1.3: fix parser of OFPGetAsyncReply
+* of1.3: fix serializer of OFPSetAsync
+* of1.3: fix wrong method name in OFPQueueGetConfigRequest
+* of1.3: fix pack string of OFPMeterStatsRequest
+* of1.3: fix wrong class name in OFPGroupFeaturesStatsRequest.__init__()
+* of1.3: fix attribute name of OFPGroupDescStats
+* of1.3: fix lacking argument in OFPAggregateStatsRequest.__init__()
+* add eventlet to test requirement
+* lib/hub: Event.wait should return its internal flag
+* of1.0: match accepts partial parameters
+* limit the size of ryu app's event queue
+* controller: fix send queue draining again
+* sweep the tree to change from gevent to ryu.lib.hub
+* add a threading hub module
+* Ryu 1.9
+* of1.0: add nx_aggregate_stats support
+* of1.0: OFPMatch support keyword-style parameters
+* ovs.poller: workaround a bug in eventlet
+* run_tests.sh: support integrated tests
+* tests/integrated: auto testing script using Mininet and OVS
+* tests/integrated: Skip MPLS related test
+* Fix typo in comments in GRE tunnel class
+* ryu/app/simple_vlan: fix typo
+* add a template for ryu.lib.packet class documentation
+* ryu.lib.packet: docstring tweaks for better rendering
+* nx_match: support IPv4 mask
+* rest_tunnel: fix comment typos
+* of1.3: parser should return msg, not implicit None
+* nx_match: remove an unnecessary import
+* of1.3: remove port_no argument
+* of1.3: fix typos in ofproto_v1_3.py
+* ryu/app/rest_firewall.py: handling of no switch connection
+* ryu.lib.packet: docstring
+* ryu.lib.packet: docstring
+* of1.0: add nx_match to NXFlowStatsRequest
+* lib: ip address presentation convert helper methods
+* g/c a stale reference to find_protocol
+* packet lib: docstring
+* tests/unit, lib/packet/vrrp: unit test for vrrp packet parser/serializer
+* lib/packet: VRRP packet parser/serializer
+* lib/packet/ipv6: add constants for parse/serialize
+* lib/packet/ipv4: add constants for parse/serialize
+* ofproto/inet: add VRRP protocol number
+* lib/packet/arp.py: add convenience function to create arp for ip
+* ofproto/nx_match: pep8
+* doc: fix the mailing list address
+* of1.3: Add special group identifier values defined on OpenFlow 1.3.1
+* lib/packet/lldp.py: pylint
+* ryu/lib/packet/lldp.py: remove __str__ method from class LLDPBasicTLV and class lldp
+* tests/integrated/test_of_config: comment on how to run
+* tests/integrated/test_of_config: disable known host check
+* setup.py: install xsd files
+* nx: match_tuple() function now handles nw src/dst
+* nx: make pack string of IPv6 address consistent with OF1.2/1.3
+* topology/dumper: define contexts to receive events
+* ryu/topology/switches: simplify Switches with RyuApp.reply_to_request
+* ryu/base/app_manager: introduce RyuApp:replay_to_request()
+* base/app_manager.py: sort out registering bricks
+* ryu/base/app_manager: pylint unused variables
+* topology/dumper: use handler.set_ev_cls instead of set_ev_handler
+* remove openstack related document
+* ryu/lib/packet/packet.py: should use isinstance instead of __class__.__base__
+* lib/packet/packet_utils: optimize checksum
+* Ryu 1.8
+* rest_firewall: fix comments
+* topology/dumper: fix RyuApp.__init__ signature
+* doc: fix a program name
+* of1.0: fix import error
+* of1.0: utils.round_up cleanup
+* lib/packet/tcp: use checksum_ip()
+* lib/packet/udp: use checksum_ip()
+* lib/packet/icmpv6: use checksum_ip()
+* lib/packet: checksum function with pseudo ipv4/ipv6 header
+* lib/packet/packet_utils: improve checksum byteswap
+* lib/packet/packet_utils: improve checksum padding
+* tests/unit/packet/test_tcp.py: typo UDP -> TCP
+* test_icmpv6: correct icmpv6 checksum
+* ryu-client: print http response
+* ryu-client: support Topology REST API
+* topology: Add REST API
+* topology: exported function returns Switch/Link list instead of event
+* lib/port_no: handling port_no as string
+* support parse OFPAction in NXFlowStats
+* test_parser_v10: fix unittest breakage
+* lib/packet/packet_base: fix signature of PacketBase.{parser, serialize}
+* of1.0: fix NXActionHeader typo
+* lib ofctl_v1_2: add VLAN_ID setting means
+* ofproto_v1_0_parser: add nx_flow_stats_{request, reply}
+* ofproto_v1_0: add nx_stats constants
+* nx_match: add MFField parser
+* lib ofctl_v1_2: fix file modes
+* add ofctl_v1_2 library
+* update ofctl_v1_0 library
+* add firewall Ryu application
+* app_manager: fix close dict handling bug
+* ryu-manager: use try-finally statement
+* nx_match: add vlan and vlan_pop
+* topology: support link discovery
+* topology: switch discovering module
+* event: Add sync flag and event src for request/reply
+* TLS: use a full spelling of a cli option
+* TLS: test cli options consistently in the same line
+* TLS: update an example output
+* ofconfig: use ElementTree iterator instead of getchildren
+* ryu.controller.controller.Datapath: keep handler list regardless of state
+* vsctl: fix timeout
+* tunnel_port_updater: g/c _LOCK
+* packet lib: fix icmpv6.nd parser
+* doc: of_config library
+* of_config: sample test code to use ofconfig capable_switch
+* of_config: OF capable switch class to issue OFConfig request
+* of_config: constants for of-config
+* of_config/schema: add missing import
+* of_config: import XML schema files for OF config
+* netconf: add constants for netconf
+* netconf: improve schema for netconf
+* netconf: import XML schema for netconf
+* netconf: import xml schema
+* MANIFEST.in: include XML schema files
+* ofp: send events to others before calling own handlers
+* wsgi: remove unused logging code
+* doc: fix bug in tls.rst
+* log-cleanup: honor --default-log-level in case of --verbose
+* log-cleanup: per RyuApp logger
+* log-cleanup: remove an unused logger instance
+* log-cleanup: remove an unused logger instance
+* ryu-manager: stop modifying CONF.app_list
+* of1.3: fix error in group_mod
+* Add request/reply event support to support communication between apps
+* ryu.log: change type of --use_syslog option to Boolean
+* contrib ncclient: missing comma
+* contrib: import ncclient library (NETCONF clients)
+* of1.3: fix a comment typo
+* revert s/_/-/ changes for ryu.conf
+* fix missing parameter in calling 'msg_pack_info' of OFPActionPushMpls/PopMpls
+* add missing 'field' parameter to __init__ function of OFPActionSetField
+* fix incorrect naming '__serialize_body' in OFPRoleRequest
+* fix OFPMatch decode error in 'parser' function of OFPFlowRemoved
+* add missing 'length' field of OFPPort when decoding
+* add missing 'match' parameter to __init__ function of OFPAggregateStatsRequest
+* fix error in OFP_DESC_PACK_STR (change 'c' to 's')
+* remove port_no argument of OFPPortDescStatsRequest.__init__
+* fix OFPMultipartRequest._serialize_stats_body
+* test of1.2: fix typos from mid to min
+* g/c --monkey-patch option
+* test of1.2: add test code of OFPErrorExperimenterMsg
+* Ryu 1.7
+* RyuApp: allows observers to specify state
+* lib/mac: fix raise ValueError
+* app_manager: allow separated modules of Event and RyuApp
+* of1.2: fix OFPErrorExperimenterMsg
+* try to sync documentation with the reality
+* mechanical documentation update after option name changes
+* update an example after option name changes
+* change --foo_bar options to --foo-bar
+* appease pep8
+* test of1.2: add test code of max, min, and pattern. review of the test code
+* xflow: add sflow support
+* remove no longer used contrib/openstack
+* switch from openstack.common.cfg to oslo.config.cfg
+* import oslo-config
+* controller: fix that sender thread is never terminated
+* test: remove unnecessary variables
+* packet lib: fix icmpv6.nd_s.parser() and support NDP option type
+* of1.3: fix error in port_mod and get_config_reply logic
+* ryu/controller/dpset.py: duplicate import
+* of1.2: fix OFPGroupDescStats parser
+* doc: internal document on openstack cooperation
+* test: tuning integration test for OFPT_FLOW_REMOVED
+* of1.3: fix ACTION_POP_MPLS
+* stop requiring gflags
+* fix a typo in the help message of quantum_controller_addr
+* update a sample and documentation
+* adjust import order in ryu-manager and add a comment
+* use openstack.common.cfg instead of gflags
+* import cfg.py from oslo-incubator
+* controller: fix send_q draining
+* of1.2: fix OFPQueueProp parser
+* fix breakage the commit 68f3259754fdbd7b5351c9739bf6f238c7ffb313
+* controller/ofp_handler: improve version negotiation
+* quantum_adapter: exception when VM deletion
+* LICENCE: change end-of-line code CRLF to LF
+* tests: make run_tests.py, test_lib.py executable as it includes #!
+* doc: man pages for ryu-manager and ryu-client
+* doc: eliminate sphinx warnings
+* fix typos in comments
+* fix a fatal typo in network.py
+* fix a fatal typo in GRETunnel _CONTEXTS
+* gre_tunnel: adapt to the new world order after dispatcher removal
+* tunnel_port_updater: adapt to the new world order after dispatcher removal
+* controller/handler: allow set_ev_handler without dispatchers
+* app_manager: add some assertions and LOG.info
+* app_manager: print event flow for --verbose
+* app_manager: print some info about event flows for --verbose
+* app_manager: add an function to register an app instance explicitly
+* Add support live-migration
+* ryu/controller/controller: add a helper method, is_reserved_port()
+* ovs/bridge: more helper methods
+* ovs/vsctl: more commands
+* lib/ovs/db_client: library for low-level ovsdb manipulation
+* app/client: add mac support
+* app/rest: add requirements to path component
+* app/rest: add API to register/update mac address for a given port
+* app/tunnel_port_updater: application that creates/deletes tunnel ports
+* ryu/controller/network.py: add helper functions for tunnel updater
+* app/gre_tunnel: implement GRETunnel app
+* packet lib: rename icmp6 to icmpv6
+* test: fix integration tests: reflects 978f3e5c
+* dpset: fix the new event mechnism breakage
+* dpset: improve debug message
+* packet lib: fix a bug in ipv6
+* test: update integration tests
+* ryu/app/simple_vlan: simple VLAN app for OVS
+* app: Add quantum adapter
+* bin/ryu-client: teach quantum iface rest api
+* ryu/app/client: teach quantum iface api
+* rest/quantum: quantum iface REST API
+* ryu/lib/quantum_ifaces.py: track the relation of quantum iface-id
+* bin/ryu-client: support switch_conf
+* bin/ryu-client: support gre tunnel client
+* ryu/app/client: support conf_switch
+* ryu/app: REST API to set per-switch configuration
+* controller/switch_conf: introduce a class to manage per-switch configuration
+* app/client: add tunnel client
+* app/rest_tunnel: REST API for tunnel
+* controller/tunnel: introduce new class for tunneling
+* dpset: add port event support
+* controller/network: add event supports
+* controller/handler: allow set_ev_cls not to specify dispatchers
+* packet lib: add ipv6 ICMP support
+* packet lib: add ipv6 support
+* packet lib: add LLDP support
+* xflow: add netflow support
+* remove event dumper application
+* remove old dispatcher and friends
+* bin/ryu-manager: import ryu.flags for common options
+* app/client: add helper function to ignore NOT_FOUND, 404
+* ryu/app/client: factor out rest client code
+* app/rest_nw_id: add port type for reserved port and vport-gre
+* app/rest: add requirements to path component
+* replace dispatcher mechanism
+* lib/ovs/bridge: helper class to manipulate ovs bridge
+* lib/ovs/vsctl: python reimplementation of ovs-vsctl
+* lib/ovs: add constants for ovsdb Open_vSwitch db
+* contrib: fix a comment typo
+* dpset: fix join race
+* packet lib: pep8 warning fix
+* test: remove some unnecessary bash dependencies
+* Ryu 1.6
+* test: add mininet-test suite
+* test: Add "Decrement IP TTL" integration test
+* ofctl_v1_0: fix stats timeout handling
+* fix lack of comma in flagfile list
+* of1.3: Fix a typo in OFPPacketOut
+* setup: update installation infos
+* test: change the branch of openvswitch to 'of12'
+* ofp_handler: receiving side of OFPHelloElem version negotiation
+* of1.3: improve OFPHello and OFPHelloElemVerionsBitmap
+* ofctl_{rest, v1_0}: update and clean up
+* ryu-manager: fix keyError
+* don't abuse __dict__ attribute
+* ofp_handler: Improve hello version negotiation
+* of1.3: fix OFPMultipartReply parser
+* of1.3: support OFPHET_VERSIONBITMAP
+* doc: setup TLS connection
+* of1.3: fix OFPT_PACKET_IN parser
+* Ryu 1.5
+* set setup.py install_requires properly
+* python/ovs/stream: Fix Stream.connect() retval for incomplete connection
+* Revert "contrib/ovs/stream.py: TypeError: bad operand type for unary -: 'NoneType'"
+* ryu/log: bugfix
+* ofctl_v1_0: update and clean up
+* enable OF1.3 support
+* of1.3: fix OFPMP_FLOW
+* of1.3: support OFPMatch
+* Add workaround to switch_features_handler for OF1.3
+* of1.3: fix OFPPacketQueue
+* of1.3: fix OFPSetAsyn
+* of1.3: fix OFPQueueProp
+* of1.3: fix OFPMeterFeaturesStatsRequest
+* of1.3: fix OFPMeterConfigStatsReply
+* of1.3: fix OFPPortStatsReply
+* of1.3: fix OFPMP_AGGREGATE
+* of1.3: fix OFP_DESC_PACK_STR
+* of1.3: fix OFP_METER_BAND_DSCP_REMARK_PACK_STR assert
+* of1.3: fix OFP_TABLE_MOD_PACK_STR assert
+* of1.3: fix OFP_OXM_EXPERIMENTER_HEADER_SIZE assert
+* contrib/ovs: TypeError: bad operand type for unary -: 'NoneType'
+* of1.2: fix some error constant typos
+* packet lib: add arp constants
+* add TLS support
+* of1.2: Fix MTVlanVid() parser and serializer
+* don't use select.POLL* constants
+* ofctl_v1_0: update get_flow_stats() to dump actions
+* wsgi/routes: add regex pattern for each REST component
+* contrib/ovs/dirs: replace @variables@ which is replaced by configure
+* import ovs python binding library
+* prepare contrib directory which holds third party library
+* of1.2: Fix OFPActionExperimenter parser
+* packet lib: remove unnecessary ICMP debug message
+* Ryu 1.4
+* ryu/app/ofctl_rest: implements ofctl_rest app
+* ryu/lib/ofctl_v1_0: introduce OF interface
+* test: add unittests for packet library
+* silence unhandled event message
+* test: add unittests for packet library
+* packet lib: fix udp header length
+* packet lib: fix ipv4 assertion of option field
+* tools/pip-requires: add routes which is used by wsgi.py module
+* packet lib: add unparsed data to Packet.protocols
+* doc: update packet library
+* packet lib: kill find_protocol in Packet class
+* packet lib: set protocol_name in each protocol
+* packet lib: make Packet class iterator
+* packet lib: fix icmp echo serialize
+* packet lib: add mpls
+* test: fix unittests for of parser
+* packet lib: add icmp.py
+* ofp_handler: print msg.data in hex format, not raw string
+* utils: a helper function to convert byte array into hex string
+* of1.0: fix/add PortMod message
+* Removed leading '/' from data_files
+* Ryu 1.3
+* Fix zero padding
+* packet lib: fix vlan pcp bitshift
+* packet lib: ipv4 option data support
+* test: add more of1.2 integration tests
+* packet lib: tcp option support
+* doc: fix typo in openstack.rst
+* doc: rearrange top page
+* doc: use README as getting_started
+* doc: rename getting_started.rst -> parameters.rst
+* doc: rearrange openstack docs
+* doc: packet library
+* app/simple_isolation: update handler registration
+* packet lib: fix ipv4 flags bitshift
+* simplify handler registration core
+* register OFP handlers via register_instance
+* doc: integrate HACKING.rst into SubmittingPatches.rst
+* doc: rename SubmittingPatches to SubmittingPatches.rst
+* doc: convert SubmittingPatches into reST style
+* doc: update README.rst about migration from osrg.net
+* doc: set PYTHONPATH for ryu version constant
+* doc: write Ryu application
+* doc: use ryu version constant
+* doc: change Sphinx style to haiku
+* doc: fix the link in README.rst
+* Ryu 1.2
+* remove OFPFlowRemoved and OFPPortStatus handlers in MAIN_DISPATCHER
+* remove unnecessary OFPFlowRemoved and OFPBarrierReply handlers in CONFIG_DISPATCHER
+* remove unnecessary OFPEchoReply handler in dispatchers
+* packet lib: fix ipv4 option field handling
+* packet lib: set _MIN_LEN class variable
+* packet lib: add tcp support
+* packet lib: convert ip to use the checksum helper function
+* packet lib: add udp data transmit and checksum support
+* packet lib: add packet_utils.py
+* packet lib: add data serialize support to Packet class
+* packet lib: calculate the udp length
+* packet lib: calculate the ip total length
+* packet lib: serialize in reverse order
+* of1.2: fix OFPFlowRemoved parser
+* of1.2: fix ofp_port_stats pack format
+* test: fix pep8 1.3.3 warnings
+* fix pep8 1.3.3 warnings
+* test: use the latest version of pep8
+* add packet library
+* controller: print backtrace when exception in addition to stacktrace
+* test: add stats and config tests to integrated test suite
+* of: Fix OFPEchoRequest serialize
+* of1.2: pretty OFPGetConfigReply parser
+* clean up ETH_TYPE_ constants
+* add ethernet type constants
+* test: fix SET_NW_TOS action in test_add_flow_v10
+* clean up IPPROTO_ constants
+* add IPPROTO_SCTP constant
+* rename ryu/ofproto/in.py to ryu/ofproto/inet.py
+* test: specify OF version in integrated test suite
+* Add SubmittingPatches doc
+* Ryu 1.1
+* of1.2: handle unknown match field properly
+* test: simplify integrated OVS test suite
+* test: add more of1.2 unittests
+* of1.2: fix IPv6 match parsers
+* of1.2: make set_metadata implementation consistent with the rest
+* of1.2: fix OFPExperimenter parser
+* of1.2: fix Instruction parser
+* of1.2: add OXM_OF_METADATA support
+* fix 475ca44ef4f87b00945ccd5be8ee4ab196c4e86f regression
+* test: add integrated OVS test suite
+* of1.2: fix OFPPortStatsRequest typo
+* of1.2: OFPGroupMod and OFPGroupFeaturesStats
+* simple_switch: remove outside module dependence
+* cbench: specify OF1.0
+* simple_switch: specify OF1.0
+* stop import ofproto_v1_0 as ofproto
+* nxm: remove import ofproto
+* of1.2: OFPMatch serialiser: fix ARP_SPA, ARP_TPA and IPV6_FLABEL masking
+* simple_switch: fix port_status_handler
+* of1.2: add OFPSF_REPLY_MORE constant
+* of1.2: remove unused mask in MTEthType
+* enable applications to specify OF versions
+* of1.2: add OFPQueuePropMinRate and OFPQueuePropMaxRate
+* nxm: fix nxm to OFPMatch conversion
+* of1.2: fix OFPGroupMod serialize
+* of1.2: OFPSetField serializer pads too much
+* of1.2: fix OFPPacketIn parser
+* of1.2: fix MTIPv6NdTarget
+* of1.2: fix OFPActionPopVlan parser
+* of1.2: fix OFPActionSetField padding
+* of1.2: fix vlan_vid match
+* app/rest: fix value error exception
+* of1.2: change IPv6 address representation
+* of1.2: fix OFPActionSetField
+* of1.2: Correct pad calculation for OFPMatch
+* of1.2: fix OFPBucket parser and serialize methods
+* of1.2: fix OFAActionCopyTtlOut and OFPActionCopyTtlIn's parsers
+* of1.2: fix OFPActionSetField
+* of1.2: remove match argument in MT* class serialize method
+* of1.2: add the common serialize method for MT* classes
+* of1.2: make MT* class make method take value and mask
+* of1.2: set value and mask in MT* instance
+* of1.2: remove unused parser method in MT* classes
+* of1.2: add common field_parser for MT* classes
+* of1.2: make pack_str class variable
+* test: add more of1.2 unittests
+* of1.2: add missing struct ofp_bucket definition
+* of1.2: implement FlowStats instruction parser
+* Ryu 1.0
+* of1.2: add unittest workaround to OFPPortStatus parser
+* of1.2: fix bugs
+* add '--version' command line option
+* of1.2: add OFPG_ constants
+* of1.3: Add OFPQ_ALL
+* of1.2: Add OFPQ_ALL
+* test: improve the framework
+* doc: add the supported OF versions to README.rst
+* of1.2: add OFPFlowStats support
+* of1.2: fix OFPPacketIn parser to set ethernet frame
+* of1.2: improve OFPMatch parser
+* nxm: fix NXM_NX_REG
+* of1.2: add OXM_OF_IPV6_ND_SLL and OXM_OF_IPV6_ND_TLL
+* of1.2: add OXM_OF_IPV6_ND_TARGET
+* of1.2: add OXM_OF_ICMPV6_TYPE and OXM_OF_ICMPV6_CODE
+* of1.2: add OXM_OF_IPV6_FLABEL
+* of1.2: add OXM_OF_IPV6_SRC and XM_OF_IPV6_DST
+* don't call send_delete_all_flows function in the core
+* add round_up utility function
+* of1.2: Correct arguments to OFPMatch.parser() in OFPPacketIn
+* of1.2: support ofp_instruction for OFPFlowMod
+* of1.2: add OXM_OF_ICMPV4_TYPE and OXM_OF_ICMPV4_CODE
+* of1.2: add OXM_OF_SCTP_SRC and OXM_OF_SCTP_DST
+* of1.2: add OXM_OF_UDP_SRC and OXM_OF_UDP_DST
+* of1.2: add OXM_OF_TCP_SRC and OXM_OF_TCP_DST
+* of1.2: add OXM_OF_IP_SRC and OXM_OF_IP_DST
+* of1.2: add OXM_OF_IP_PROTO
+* of1.2: add OXM_OF_IP_ECN
+* of1.2: add OXM_OF_IP_DSCP
+* of1.2: remove FWW_* constants
+* of1.2: fix OFPFlowMod and OFPFlowRemoved
+* Add OFPBarrierRequest and OFPBarrierReply
+* Remove duplicated OFPMatch definition
+* of1.3: initial OF1.3 support
+* nxm: add NXM_NX_REG
+* fix test_lib.py for SkipTest
+* nxm: add NXM_NX_IP_FRAG
+* nxm: add NXM_NX_ND_TARGET
+* nxm: add NXM_NX_IPV6_SRC and NXM_NX_IPV6_DST
+* nxm: add NXM_NX_IPV6_LABEL
+* nxm: add NXM_OF_ARP_SPA and NXM_OF_ARP_TPA
+* nxm: fix MFField putw
+* of1.2: initial ofp_match support
+* of1.2: reorder the arguments of OFPPacketOut
+* nxm: add NXM_NX_ICMPV6_TYPE and NXM_NX_ICMPV6_CODE support
+* add IPPROTO_ constants
+* nxm: fix NXM_OF_ICMP_TYPE and NXM_OF_ICMP_CODE
+* nxm: fix nxm_put()
+* Fix README.rst format
+* Move version string to ryu/__init__.py
+* Update setup.py
+* Update REAME.rst
+* of1.2: Add OXM_OF_ constants
+* of1.2: fix typo
+* of1.2: fix some typos
+* update the official site url
+* ofproto/nx_match: various minor clean up
+* ofproto/nx_match: simplify set_dl_{src, dst}_mask()
+* of1.2: add MAX_XID constant
+* update setup.py for PyPI
+* nxm: add NXM_OF_ICMP_TYPE and NXM_OF_ICMP_ICMP_CODE support
+* nxm: add NXM_OF_IP_SRC and NXM_OF_IP_DST support
+* nxm: add NXM_NX_ARP_* support
+* nxm: add NXM_OF_TCP_* and NXM_OF_UDP_* support
+* nxm: add NXM_OF_ETH_SRC_W support
+* nxm: support arbitrary dl_dst masks
+* nxm: add NXM_OF_IP_PROTO support
+* nxm: add NXM_NX_IP_TTL support
+* of1.2: cleanup and update
+* nxm: add NXM_OF_VLAN_TCI support
+* kill unused function in utils.py
+* support commandline application initialization
+* Pass AppManager module name instead of class name
+* Make clear that ryu supports all the NX actions
+* Add Nicira Extension NXAST_LEARN support
+* Add Nicira Extension NXT_SET_ASYNC_CONFIG support
+* Add Nicira Extension NXT_FLOW_AGE support
+* Add Nicira Extension NXT_PACKET_IN support
+* Add Nicira Extension NXT_SET_PACKET_IN_FORMAT support
+* Add Nicira Extension NXT_FLOW_REMOVED support
+* rename NXMatch parse method to parser
+* update setup.py and setup.cfg for better packaging
+* doc: update the requirement in README
+* Replace wsapi
+* add Nicira Extension NXAST_NOTE support
+* add Nicira Extension NXAST_DEC_TTL support
+* add Nicira Extension NXAST_FIN_TIMEOUT support
+* add Nicira Extension NXAST_CONTROLLER support
+* Add Nicira Extension NXT_SET_CONTROLLER_ID support
+* silence pep8 warning
+* fix NX_ACTION_HEADER pack string and size
+* don't close connection when getting OFPT_ERROR_MSG
+* rename OFPGetSwitchConfig to OFPGetConfigReply class
+* discard sample/test_simple_switch because of unittest fail
+* test: add NTT copyright to unittest files
+* app/simple_switch: fix commit e5e4b844250d36788f9b1bf71cfd36a6e14d5315 regression
+* ryu/app: convert existing application to new style ryu application
+* base/app_manager: introduce application context
+* add NXT_ROLE_REPLY support
+* Add Switch to Controller Nicira extension message support
+* Add Switch to Controller Vendor message support
+* test: add more unittests
+* Fix NXActionAutopath parser
+* test: add unittests for of1.2 parser
+* test: add more unittests for of1.0 parser
+* test: add more unittests for of parser
+* Fix OFPFlowRemoved __str__ method typo
+* Fix OFPVendorStats parser method
+* Fix OFPSwitchFeatures parser (of 1.2)
+* Fix the commit 458042d4032ad52dff93deb0f78d94cadb4f2d37 messup
+* Fix the commit eea434b8e45bc8ee91aa02096903a66af898ae35 messup
+* Fix OFPFlowStats parser
+* Add Nicira Extension NXAST_POP_QUEUE support
+* Add Nicira Extension NXAST_SET_QUEUE support
+* add Nicira Extension NXAST_AUTOPATH support
+* add Nicira Extension NXAST_EXIT support
+* Fix NXActionSetTunnel64 parser
+* Fix NXAactionOutputReg parser
+* rename NXTRequest to NiciraHeader
+* add NXT_ROLE_REQUEST support
+* Add NXT_ROLE_REQUEST/REPLY constants
+* ryu/controller/dpset.py: code simplification
+* lib/dpid: dpid formatter/parser
+* Kill parser_stats_body_array method in OFPFlowStats class
+* fix OFPQueueGetConfigReply parser
+* fix OFPVendor parser
+* fix typo in ofproto_v1_0_parser comment
+* fix StatsReply parser
+* Fix OFPQueuePropMinRate class
+* fix OFPPacketQueue class parser
+* ryu/app/wsapi: make json_parse_message_body work
+* Pretty NXAcationBundleBase parser up
+* fix NXActionRegLoad parser
+* fix NXActionRegMove parser
+* fix NXActionMultipath parser
+* add Nicira Extension NXAST_OUTPUT_REG support
+* add Nicira Extension NXAST_BUNDLE and NXAST_BUNDLE_LOAD support
+* add Nicira Extension NXAST_REG_LOAD support
+* add Nicira Extension NXAST_REG_MOVE support
+* Fix OFPStatsReply parser
+* Add NXAction parser support
+* Add OFPActionStripVlan class
+* lib/mac: improve helper functions
+* ofproto/ofproto_v1_0_parser: PacketIn parser
+* ofproto_v1_0_parser: fix OFPPacketOut serializer
+* remote COPYRIGHT file from MANIFEST.in
+* README: added the pointer to Gmane ML archive
+* add Nicira Extension NXAST_MULTIPATH action
+* Added test framework, ported from Quantum
+* doc/source/step_by_step.rst: add item to setup quantum db
+* Fix OFP_ACTION_DL_ADDR_PACK_STR
+* Fix OFPActionHeader class 'serialize' method
+* controller/controller: make send_flow_mod() allow default value for priority
+* app: use symbol instead of 32678 for default priority
+* ofproto/ofproto_v1_0_parser: flowmod default parameter
+* ofproto/ofproto_v1_0_parser: make FlowMod allow meaningful default parameter
+* controller, ofproto_v1_0: avoid format for argument
+* ofproto/ofproto_v1_0_parser: serializer for NXActionResbumit
+* ofproto/ofproto_v1_0_parser: serializer for nxt_flow_mod_table_id
+* ofproto/ofproto_v1_0_parser: improve NXTRequest initializer
+* ofproto/ofproto_v1_0: more constants for nx
+* app/wsapi: make WSPathComponent inherit object
+* app/wsapi/WSPathArbitraryString: wrong indent
+* add missing super().__init__()
+* app/simple_isolation: unbreak nx patch
+* fix find_flagfile path handling bug
+* update docs on the license switch
+* Switch to Apache 2.0 license
+* Use the original file license
+* ryu 0.2
+* ignore GreenletExit exception
+* Add NXActionSetTunnel and NXActionSetTunnel64
+* Allow send_flow_mod() to send NXTFlowMod messages
+* Add match_tuple() and flow_format() methods to ClsRule
+* Add NXTFlowMod
+* NXM: Add MFIPDSCP and MFIPECN classes
+* NXM: Add MFEthType class
+* NXM: Add MFEthSrc class
+* NXM: Add MFEthDst class
+* NXM: Add MFTunId class
+* NXM: Add MFInPort class
+* Add base for serialising NXM matches
+* Add support for NXT_SET_FLOW_FORMAT
+* Add Nicira vendor extensions
+* ryu/handler: class decorator should return class object
+* controller: print stack trace when datapath main loop goes wrong and log it
+* controller/network: fix key error
+* Avoid loop in OFPAction.parser()
+* Increment offset in OFPFlowStats.parser()
+* Use struct.unpack_from() in OFPFlowStats.parser()
+* doc: update README.rst (OpenStack mainline inclusion status)
+* Correct typos in OFPFlowStatsRequestBase class
+* yield the CPU to other greenlets
+* avoid reading too much data from socket
+* limit the queue size (send_q)
+* kill recv_q
+* dispatcher: eliminate weakref.WeakValueDictionary
+* dispatcher: eliminate use of weakref for EventQueue event queue
+* controller: eliminate weakref of datapath.ev_q.aux
+* dispatcher: use TrackInstances and kill some WeakValueDictionary
+* lib: mixin class to track all instances of a given class
+* controller: make Controller::serve more robust
+* ryu/controller/ofp_event: use utils.load_module
+* ryu/utils: make import_module() reliable
+* controller/dispatcher: eliminate unregistering handlers
+* enable OF1.2 support
+* add initial OF1.2 support
+* doc: update using_with_openstack.rst to catch up openstack
+* add HACKING.rst: style guide
+* doc: update osrg/nova, quantum repository
+* setup.py: typo autor -> author
+* dpset: pep8
+* ryu/controller/handler: pep8
+* ofproto_parser: pep8
+* ofproto_v1_0_parser: typo
+* ofproto/ofproto_v1_0_parser: unbreak 0bff34ca87af74b7eb13d9c996fd869172a7f0a4
+* doc: sample configuration files
+* doc: step-by-step example
+* app/simple_isolation: various improvement
+* controller/{mac_to_port, network}: add more methods to track port status change
+* controller/datapath: add a helper function to delete flow entries
+* controller/dispatcher: eliminate the use of WeakSet
+* fix ofp_event conversion messup
+* add cbench application
+* move to the main mode right after sending BARRIER
+* fix datapath disconnection cleanup
+* rest: add '/network' prefix to its path
+* remove unused members in Datapath class
+* client: pass http responce when an error occurs
+* controller: factor out ofp message event from event.py
+* pylint: various fixes for pylint
+* doc: how to invoke ryu-manager, its options and example
+* app: event dumper application
+* controller/dpset: Introduce datapath enter/leave event
+* dispatcher, handler: constantiate dispatcher name
+* controller: pass datapath to EventQueue for EventQueueCreate event
+* dispacher: introduce inheritable handler
+* controller/dispatcher: introduce events on event queue itself
+* dispatcher: pass name to EventQueue and track all instances
+* controller/dispatcher: allow handler that accepts any event type
+* controller/dispatcher: pylint
+* use 0 dl_{src, dst} for OFPMatch
+* move _pack_into and _str_attr to ofproto_parser.py
+* xid: improve xid handling
+* ofproto_v1_0: add a constant, MAX_XID
+* ofproto/ofproto_v1_0_parser: more parsers/serializers
+* ofproto_v1_0_parser: allows 0 as dl_{src, dst} for OFPMatch
+* lib/mac: add helper function/values
+* ofproto/ofproto_v1_0: typo, missing consts
+* move MsgBase class to ofproto_parser.py from ofproto_parser_v1_0.py
+* remove OF version dependence from MsgBase class
+* pylint: add a script to run pylint and pylintrc
+* pep8: utils.py
+* pep8: ryu/ofproto/ofproto_v1_0.py
+* ryu.conf: eliminate obsolete config
+* Use from gevent.queue import Queue
+* Fix to send OFPT_HELLO with the highest OpenFlow protocol version
+* doc: how-l2-segregation-works: update images a bit
+* doc: fix typos
+* doc: use Network Operating System instead of Network OS for consistency
+* doc: fix typo
+* doc: clarify our goal for OpenStack
+* initial commit
