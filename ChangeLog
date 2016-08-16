@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* del dirty files of simple_monitor.py
 * fixed showing info error
 * enhance performance
 * puah network awareness module
