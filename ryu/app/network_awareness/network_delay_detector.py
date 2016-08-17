@@ -61,6 +61,7 @@ class NetworkDelayDetector(app_manager.RyuApp):
 
     def _detector(self):
         while CONF.weight == 'delay':
+            self._send_echo_request()
             self.create_link_delay()
             try:
                 self.awareness.shortest_paths = {}
@@ -69,7 +70,6 @@ class NetworkDelayDetector(app_manager.RyuApp):
                 self.awareness = lookup_service_brick('awareness')
 
             self.show_delay_statis()
-            self._send_echo_request()
             hub.sleep(setting.DELAY_DETECTING_PERIOD)
 
     def _send_echo_request(self):
