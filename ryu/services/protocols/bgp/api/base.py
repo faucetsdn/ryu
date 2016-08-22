@@ -43,6 +43,12 @@ VPN_LABEL = 'label'
 API_SYM = 'name'
 ORIGIN_RD = 'origin_rd'
 ROUTE_FAMILY = 'route_family'
+EVPN_ROUTE_TYPE = 'route_type'
+EVPN_ESI = 'esi'
+EVPN_ETHERNET_TAG_ID = 'ethernet_tag_id'
+MAC_ADDR = 'mac_addr'
+IP_ADDR = 'ip_addr'
+MPLS_LABELS = 'mpls_labels'
 
 # API call registry
 _CALL_REGISTRY = {}

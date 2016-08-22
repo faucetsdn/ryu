@@ -1,6 +1,7 @@
 import logging
-import netaddr
 from collections import OrderedDict
+
+import netaddr
 
 from ryu.services.protocols.bgp.base import SUPPORTED_GLOBAL_RF
 from ryu.services.protocols.bgp.info_base.rtc import RtcTable
@@ -14,20 +15,27 @@ from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Table
 from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Table
 from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Table
+from ryu.services.protocols.bgp.info_base.evpn import EvpnPath
+from ryu.services.protocols.bgp.info_base.evpn import EvpnTable
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
+from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
 
+from ryu.lib import type_desc
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import EvpnArbitraryEsi
+from ryu.lib.packet.bgp import EvpnNLRI
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 
@@ -76,7 +84,7 @@ class TableCoreManager(object):
     def remove_vrf_by_vrf_conf(self, vrf_conf):
 
         route_family = vrf_conf.route_family
-        assert route_family in (vrfs.VRF_RF_IPV4, vrfs.VRF_RF_IPV6)
+        assert route_family in SUPPORTED_VRF_RF
         table_id = (vrf_conf.route_dist, route_family)
 
         vrf_table = self._tables.pop(table_id)
@@ -171,10 +179,10 @@ class TableCoreManager(object):
             global_table = self.get_ipv6_table()
         elif route_family == RF_IPv4_VPN:
             global_table = self.get_vpn4_table()
-
         elif route_family == RF_IPv6_VPN:
             global_table = self.get_vpn6_table()
-
+        elif route_family == RF_L2_EVPN:
+            global_table = self.get_evpn_table()
         elif route_family == RF_RTC_UC:
             global_table = self.get_rtc_table()
 
@@ -244,6 +252,20 @@ class TableCoreManager(object):
             self._tables[(None, RF_IPv4_VPN)] = vpn_table
 
         return vpn_table
+
+    def get_evpn_table(self):
+        """Returns global EVPN table.
+
+        Creates the table if it does not exist.
+        """
+        evpn_table = self._global_tables.get(RF_L2_EVPN)
+        # Lazy initialization of the table.
+        if not evpn_table:
+            evpn_table = EvpnTable(self._core_service, self._signal_bus)
+            self._global_tables[RF_L2_EVPN] = evpn_table
+            self._tables[(None, RF_L2_EVPN)] = evpn_table
+
+        return evpn_table
 
     def get_rtc_table(self):
         """Returns global RTC table.
@@ -526,6 +548,41 @@ class TableCoreManager(object):
                      is_withdraw=is_withdraw)
 
         # add to global ipv4 table and propagates to neighbors
+        self.learn_path(new_path)
+
+    def add_to_global_evpn_table(self, route_type, route_dist, next_hop=None,
+                                 is_withdraw=False, **kwargs):
+        """Adds BGP EVPN Route to global EVPN Table with given `next_hop`.
+
+        If `is_withdraw` is set to `True`, removes the given route from
+        global EVPN Table.
+        """
+
+        # construct EVPN NLRI instance
+        subclass = EvpnNLRI._lookup_type_name(route_type)
+        kwargs['route_dist'] = route_dist
+        esi = kwargs.get('esi', None)
+        if esi is not None:
+            # Note: Currently, we support arbitrary 9-octet ESI value only.
+            kwargs['esi'] = EvpnArbitraryEsi(type_desc.Int9.from_user(esi))
+        nlri = subclass(**kwargs)
+
+        # set mandatory path attributes
+        origin = BGPPathAttributeOrigin(BGP_ATTR_ORIGIN_IGP)
+        aspath = BGPPathAttributeAsPath([[]])
+        pathattrs = OrderedDict()
+        pathattrs[BGP_ATTR_TYPE_ORIGIN] = origin
+        pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
+
+        # set the default next_hop address
+        if next_hop is None:
+            next_hop = '0.0.0.0'
+
+        new_path = EvpnPath(source=None, nlri=nlri, src_ver_num=1,
+                            pattrs=pathattrs, nexthop=next_hop,
+                            is_withdraw=is_withdraw)
+
+        # add to global EVPN table and propagates to neighbors
         self.learn_path(new_path)
 
     def remove_from_vrf(self, route_dist, prefix, route_family):

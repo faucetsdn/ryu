@@ -17,9 +17,23 @@
  Module provides utilities for validation.
 """
 import numbers
+import re
 import socket
 
 import six
+
+
+def is_valid_mac(mac):
+    """Returns True if the given MAC address is valid.
+
+    The given MAC address should be a colon hexadecimal notation string.
+
+    Samples:
+        - valid address: aa:bb:cc:dd:ee:ff, 11:22:33:44:55:66
+        - invalid address: aa:bb:cc:dd, 11-22-33-44-55-66, etc.
+    """
+    return bool(re.match(r'^' + r'[\:\-]'.join([r'([0-9a-f]{2})'] * 6)
+                         + r'$', mac.lower()))
 
 
 def is_valid_ipv4(ipv4):
@@ -190,14 +204,25 @@ def is_valid_mpls_label(label):
     A value of 3 represents the "Implicit NULL Label".
     Values 4-15 are reserved.
     """
-    valid = True
-
     if (not isinstance(label, numbers.Integral) or
-            (label >= 4 and label <= 15) or
+            (4 <= label <= 15) or
             (label < 0 or label > 2 ** 20)):
-        valid = False
+        return False
 
-    return valid
+    return True
+
+
+def is_valid_mpls_labels(labels):
+    """Returns True if the given value is a list of valid MPLS labels.
+    """
+    if not isinstance(labels, (list, tuple)):
+        return False
+
+    for label in labels:
+        if not is_valid_mpls_label(label):
+            return False
+
+    return True
 
 
 def is_valid_route_dist(route_dist):
@@ -237,3 +262,17 @@ def is_valid_ext_comm_attr(attr):
             is_valid = False
 
     return is_valid
+
+
+def is_valid_esi(esi):
+    """Returns True if the given EVPN Ethernet SegmentEthernet ID is valid."""
+    # Note: Currently, only integer type value is supported
+    return isinstance(esi, numbers.Integral)
+
+
+def is_valid_ethernet_tag_id(etag_id):
+    """Returns True if the given EVPN Ethernet Tag ID is valid.
+
+    Ethernet Tag ID should be a 32-bit field number.
+    """
+    return isinstance(etag_id, numbers.Integral) and 0 <= etag_id <= 0xffffffff

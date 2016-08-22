@@ -49,6 +49,7 @@ Int2 = IntDescr(2)
 Int3 = IntDescr(3)
 Int4 = IntDescr(4)
 Int8 = IntDescr(8)
+Int9 = IntDescr(9)
 Int16 = IntDescr(16)
 
 

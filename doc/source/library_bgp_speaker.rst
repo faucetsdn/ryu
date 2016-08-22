@@ -6,8 +6,8 @@ Introduction
 ============
 
 Ryu BGP speaker library helps you to enable your code to speak BGP
-protocol. The library supports ipv4, ipv4 vpn, and ipv6 vpn address
-families.
+protocol. The library supports IPv4, IPv4 MPLS-labeled VPN, IPv6
+MPLS-labeled VPN and L2VPN EVPN address families.
 
 Example
 =======

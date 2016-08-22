@@ -23,9 +23,16 @@ from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
 from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.api.base import PREFIX
+from ryu.services.protocols.bgp.api.base import EVPN_ROUTE_TYPE
+from ryu.services.protocols.bgp.api.base import EVPN_ESI
+from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
+from ryu.services.protocols.bgp.api.base import IP_ADDR
+from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
+from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
+from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
@@ -44,6 +51,7 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_EVPN
 from ryu.services.protocols.bgp.rtconf.base import CAP_ENHANCED_REFRESH
 from ryu.services.protocols.bgp.rtconf.base import CAP_FOUR_OCTET_AS_NUMBER
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
@@ -51,6 +59,7 @@ from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
+from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_EVPN
 from ryu.services.protocols.bgp.rtconf.neighbors import (
     DEFAULT_CAP_ENHANCED_REFRESH, DEFAULT_CAP_FOUR_OCTET_AS_NUMBER)
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
@@ -237,6 +246,7 @@ class BGPSpeaker(object):
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
+                     enable_evpn=DEFAULT_CAP_MBGP_EVPN,
                      enable_enhanced_refresh=DEFAULT_CAP_ENHANCED_REFRESH,
                      enable_four_octet_as_number=DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
                      next_hop=None, password=None, multi_exit_disc=None,
@@ -262,6 +272,9 @@ class BGPSpeaker(object):
         neighbor. The default is False.
 
         ``enable_vpnv6`` enables VPNv6 address family for this
+        neighbor. The default is False.
+
+        ``enable_evpn`` enables Ethernet VPN address family for this
         neighbor. The default is False.
 
         ``enable_enhanced_refresh`` enables Enhanced Route Refresh for this
@@ -320,11 +333,13 @@ class BGPSpeaker(object):
             bgp_neighbor[CAP_MBGP_IPV6] = False
             bgp_neighbor[CAP_MBGP_VPNV4] = enable_vpnv4
             bgp_neighbor[CAP_MBGP_VPNV6] = enable_vpnv6
+            bgp_neighbor[CAP_MBGP_EVPN] = enable_evpn
         elif netaddr.valid_ipv6(address):
             bgp_neighbor[CAP_MBGP_IPV4] = False
             bgp_neighbor[CAP_MBGP_IPV6] = True
             bgp_neighbor[CAP_MBGP_VPNV4] = False
             bgp_neighbor[CAP_MBGP_VPNV6] = False
+            bgp_neighbor[CAP_MBGP_EVPN] = enable_evpn
         else:
             # FIXME: should raise an exception
             pass
@@ -466,6 +481,98 @@ class BGPSpeaker(object):
             networks[PREFIX] = p
 
         call(func_name, **networks)
+
+    def evpn_prefix_add(self, route_type, route_dist, esi=0,
+                        ethernet_tag_id=None, mac_addr=None, ip_addr=None,
+                        next_hop=None):
+        """ This method adds a new EVPN route to be advertised.
+
+        ``route_type`` specifies one of the EVPN route type name. The
+        supported route types are EVPN_MAC_IP_ADV_ROUTE and
+        EVPN_MULTICAST_ETAG_ROUTE.
+
+        ``route_dist`` specifies a route distinguisher value.
+
+        ``esi`` is an integer value to specify the Ethernet Segment
+        Identifier. 0 is the default and denotes a single-homed site.
+
+        ``ethernet_tag_id`` specifies the Ethernet Tag ID.
+
+        ``mac_addr`` specifies a MAC address to advertise.
+
+        ``ip_addr`` specifies an IPv4 or IPv6 address to advertise.
+
+        ``next_hop`` specifies the next hop address for this prefix.
+        """
+        func_name = 'evpn_prefix.add_local'
+
+        # Check the default values
+        if not next_hop:
+            next_hop = '0.0.0.0'
+
+        # Set required arguments
+        kwargs = {EVPN_ROUTE_TYPE: route_type,
+                  ROUTE_DISTINGUISHER: route_dist,
+                  NEXT_HOP: next_hop}
+
+        # Set route type specific arguments
+        if route_type == EVPN_MAC_IP_ADV_ROUTE:
+            kwargs.update({
+                EVPN_ESI: esi,
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                MAC_ADDR: mac_addr,
+                IP_ADDR: ip_addr,
+            })
+        elif route_type == EVPN_MULTICAST_ETAG_ROUTE:
+            kwargs.update({
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                IP_ADDR: ip_addr,
+            })
+        else:
+            raise ValueError('Unsupported EVPN route type: %s' % route_type)
+
+        call(func_name, **kwargs)
+
+    def evpn_prefix_del(self, route_type, route_dist, esi=0,
+                        ethernet_tag_id=None, mac_addr=None, ip_addr=None):
+        """ This method deletes an advertised EVPN route.
+
+        ``route_type`` specifies one of the EVPN route type name.
+
+        ``route_dist`` specifies a route distinguisher value.
+
+        ``esi`` is an integer value to specify the Ethernet Segment
+        Identifier. 0 is the default and denotes a single-homed site.
+
+        ``ethernet_tag_id`` specifies the Ethernet Tag ID.
+
+        ``mac_addr`` specifies a MAC address to advertise.
+
+        ``ip_addr`` specifies an IPv4 or IPv6 address to advertise.
+        """
+        func_name = 'evpn_prefix.delete_local'
+
+        # Set required arguments
+        kwargs = {EVPN_ROUTE_TYPE: route_type,
+                  ROUTE_DISTINGUISHER: route_dist}
+
+        # Set route type specific arguments
+        if route_type == EVPN_MAC_IP_ADV_ROUTE:
+            kwargs.update({
+                EVPN_ESI: esi,
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                MAC_ADDR: mac_addr,
+                IP_ADDR: ip_addr,
+            })
+        elif route_type == EVPN_MULTICAST_ETAG_ROUTE:
+            kwargs.update({
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                IP_ADDR: ip_addr,
+            })
+        else:
+            raise ValueError('Unsupported EVPN route type: %s' % route_type)
+
+        call(func_name, **kwargs)
 
     def vrf_add(self, route_dist, import_rts, export_rts, site_of_origins=None,
                 route_family=RF_VPN_V4, multi_exit_disc=None):

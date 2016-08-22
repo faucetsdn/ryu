@@ -39,6 +39,7 @@ from ryu.lib.packet import stream_parser
 from ryu.lib import addrconv
 from ryu.lib import type_desc
 from ryu.lib.pack_utils import msg_pack_into
+from ryu.utils import binary_str
 
 reduce = six.moves.reduce
 
@@ -666,7 +667,7 @@ class _RouteDistinguisher(StringifyMixin, _TypeDisp, _Value):
 
     @property
     def formatted_str(self):
-        return "%s:%s" % (str(self.admin), str(self.assigned))
+        return "%s:%s" % (self.admin, self.assigned)
 
 
 @_RouteDistinguisher.register_type(_RouteDistinguisher.TWO_OCTET_AS)
@@ -1046,6 +1047,8 @@ class EvpnEsi(StringifyMixin, _TypeDisp, _Value):
     AS_BASED = 0x05
     MAX = 0xff  # Reserved
 
+    _TYPE_NAME = None  # must be defined in subclass
+
     def __init__(self, type_=None):
         if type_ is None:
             type_ = self._rev_lookup_type(self.__class__)
@@ -1063,18 +1066,29 @@ class EvpnEsi(StringifyMixin, _TypeDisp, _Value):
         msg_pack_into(EvpnEsi._PACK_STR, buf, 0, self.type)
         return six.binary_type(buf + self.serialize_value())
 
+    @property
+    def formatted_str(self):
+        return '%s(%s)' % (
+            self._TYPE_NAME,
+            ','.join(str(getattr(self, v)) for v in self._VALUE_FIELDS))
+
 
 @EvpnEsi.register_unknown_type()
 class EvpnUnknownEsi(EvpnEsi):
     """
     ESI value for unknown type
     """
+    _TYPE_NAME = 'unknown'
     _VALUE_PACK_STR = '!9s'
     _VALUE_FIELDS = ['value']
 
     def __init__(self, value, type_=None):
         super(EvpnUnknownEsi, self).__init__(type_)
         self.value = value
+
+    @property
+    def formatted_str(self):
+        return '%s(%s)' % (self._TYPE_NAME, binary_str(self.value))
 
 
 @EvpnEsi.register_type(EvpnEsi.ARBITRARY)
@@ -1085,12 +1099,17 @@ class EvpnArbitraryEsi(EvpnEsi):
     This type indicates an arbitrary 9-octet ESI value,
     which is managed and configured by the operator.
     """
+    _TYPE_NAME = 'arbitrary'
     _VALUE_PACK_STR = '!9s'
     _VALUE_FIELDS = ['value']
 
     def __init__(self, value, type_=None):
         super(EvpnArbitraryEsi, self).__init__(type_)
         self.value = value
+
+    @property
+    def formatted_str(self):
+        return '%s(%s)' % (self._TYPE_NAME, binary_str(self.value))
 
 
 @EvpnEsi.register_type(EvpnEsi.LACP)
@@ -1102,6 +1121,7 @@ class EvpnLACPEsi(EvpnEsi):
     this ESI type indicates an auto-generated ESI value
     determined from LACP.
     """
+    _TYPE_NAME = 'lacp'
     _VALUE_PACK_STR = '!6sHx'
     _VALUE_FIELDS = ['mac_addr', 'port_key']
     _TYPE = {
@@ -1139,6 +1159,7 @@ class EvpnL2BridgeEsi(EvpnEsi):
     The ESI Value is auto-generated and determined based
     on the Layer 2 bridge protocol.
     """
+    _TYPE_NAME = 'l2_bridge'
     _VALUE_PACK_STR = '!6sHx'
     _VALUE_FIELDS = ['mac_addr', 'priority']
     _TYPE = {
@@ -1174,6 +1195,7 @@ class EvpnMacBasedEsi(EvpnEsi):
     This type indicates a MAC-based ESI Value that
     can be auto-generated or configured by the operator.
     """
+    _TYPE_NAME = 'mac_based'
     _VALUE_PACK_STR = '!6s3s'
     _VALUE_FIELDS = ['mac_addr', 'local_disc']
     _TYPE = {
@@ -1210,6 +1232,7 @@ class EvpnRouterIDEsi(EvpnEsi):
     This type indicates a router-ID ESI Value that
     can be auto-generated or configured by the operator.
     """
+    _TYPE_NAME = 'router_id'
     _VALUE_PACK_STR = '!4sIx'
     _VALUE_FIELDS = ['router_id', 'local_disc']
     _TYPE = {
@@ -1246,6 +1269,7 @@ class EvpnASBasedEsi(EvpnEsi):
     ESI Value that can be auto-generated or configured by
     the operator.
     """
+    _TYPE_NAME = 'as_based'
     _VALUE_PACK_STR = '!IIx'
     _VALUE_FIELDS = ['as_number', 'local_disc']
 
@@ -1277,12 +1301,44 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
     INCLUSIVE_MULTICAST_ETHERNET_TAG = 0x03
     ETHERNET_SEGMENT = 0x04
 
+    ROUTE_TYPE_NAME = None  # must be defined in subclass
+
+    # Dictionary of ROUTE_TYPE_NAME to subclass.
+    # e.g.)
+    #   _NAMES = {'eth_ad': EvpnEthernetAutoDiscoveryNLRI, ...}
+    _NAMES = {}
+
+    # List of the fields considered to be part of the prefix in the NLRI.
+    # This list should be defined in subclasses to format NLRI string
+    # representation.
+    NLRI_PREFIX_FIELDS = []
+
     def __init__(self, type_=None, length=None):
         if type_ is None:
             type_ = self._rev_lookup_type(self.__class__)
         self.type = type_
         self.length = length
         self.route_dist = None  # should be initialized in subclass
+
+    @classmethod
+    def register_type(cls, type_):
+        cls._TYPES = cls._TYPES.copy()
+        cls._NAMES = cls._NAMES.copy()
+
+        def _register_type(subcls):
+            cls._TYPES[type_] = subcls
+            cls._NAMES[subcls.ROUTE_TYPE_NAME] = subcls
+            cls._REV_TYPES = None
+            return subcls
+
+        return _register_type
+
+    @classmethod
+    def _lookup_type_name(cls, type_name):
+        try:
+            return cls._NAMES[type_name]
+        except KeyError:
+            return EvpnUnknownNLRI
 
     @classmethod
     def parser(cls, buf):
@@ -1390,12 +1446,32 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
             label = label << 4 | 1
         return six.binary_type(_LabelledAddrPrefix._label_to_bin(label))
 
+    @property
+    def prefix(self):
+        def _format(i):
+            pairs = []
+            for k in i.NLRI_PREFIX_FIELDS:
+                v = getattr(i, k)
+                if k == 'esi':
+                    pairs.append('%s:%s' % (k, v.formatted_str))
+                else:
+                    pairs.append('%s:%s' % (k, v))
+            return ','.join(pairs)
+
+        return '%s(%s)' % (self.ROUTE_TYPE_NAME, _format(self))
+
+    @property
+    def formatted_nlri_str(self):
+        return '%s:%s' % (self.route_dist, self.prefix)
+
 
 @EvpnNLRI.register_unknown_type()
 class EvpnUnknownNLRI(EvpnNLRI):
     """
     Unknown route type specific EVPN NLRI
     """
+    ROUTE_TYPE_NAME = 'unknown'
+    NLRI_PREFIX_FIELDS = ['value']
 
     def __init__(self, value, type_, length=None):
         super(EvpnUnknownNLRI, self).__init__(type_, length)
@@ -1410,12 +1486,17 @@ class EvpnUnknownNLRI(EvpnNLRI):
     def serialize_value(self):
         return self.value
 
+    @property
+    def formatted_nlri_str(self):
+        return '%s(%s)' % (self.ROUTE_TYPE_NAME, binary_str(self.value))
+
 
 @EvpnNLRI.register_type(EvpnNLRI.ETHERNET_AUTO_DISCOVERY)
 class EvpnEthernetAutoDiscoveryNLRI(EvpnNLRI):
     """
     Ethernet A-D route type specific EVPN NLRI
     """
+    ROUTE_TYPE_NAME = 'eth_ad'
 
     # +---------------------------------------+
     # |  Route Distinguisher (RD) (8 octets)  |
@@ -1427,6 +1508,7 @@ class EvpnEthernetAutoDiscoveryNLRI(EvpnNLRI):
     # |  MPLS Label (3 octets)                |
     # +---------------------------------------+
     _PACK_STR = "!8s10sI3s"
+    NLRI_PREFIX_FIELDS = ['esi', 'ethernet_tag_id']
 
     def __init__(self, route_dist, esi, ethernet_tag_id, mpls_label,
                  type_=None, length=None):
@@ -1456,12 +1538,17 @@ class EvpnEthernetAutoDiscoveryNLRI(EvpnNLRI):
             self._PACK_STR, route_dist.serialize(), self.esi.serialize(),
             self.ethernet_tag_id, self._mpls_label_to_bin(self.mpls_label))
 
+    @property
+    def label_list(self):
+        return [self.mpls_label]
+
 
 @EvpnNLRI.register_type(EvpnNLRI.MAC_IP_ADVERTISEMENT)
 class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
     """
     MAC/IP Advertisement route type specific EVPN NLRI
     """
+    ROUTE_TYPE_NAME = 'mac_ip_adv'
 
     # +---------------------------------------+
     # |  RD (8 octets)                        |
@@ -1483,6 +1570,8 @@ class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
     # |  MPLS Label2 (0 or 3 octets)          |
     # +---------------------------------------+
     _PACK_STR = "!8s10sIB6sB%ds3s%ds"
+    # Note: mac_addr_len and ip_addr_len are omitted for readability.
+    NLRI_PREFIX_FIELDS = ['ethernet_tag_id', 'mac_addr', 'ip_addr']
     _TYPE = {
         'ascii': [
             'mac_addr',
@@ -1561,12 +1650,17 @@ class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
             self.ip_addr_len, ip_addr,
             mpls_label1, mpls_label2)
 
+    @property
+    def label_list(self):
+        return self.mpls_labels
+
 
 @EvpnNLRI.register_type(EvpnNLRI.INCLUSIVE_MULTICAST_ETHERNET_TAG)
 class EvpnInclusiveMulticastEthernetTagNLRI(EvpnNLRI):
     """
     Inclusive Multicast Ethernet Tag route type specific EVPN NLRI
     """
+    ROUTE_TYPE_NAME = 'multicast_etag'
 
     # +---------------------------------------+
     # |  RD (8 octets)                        |
@@ -1579,6 +1673,7 @@ class EvpnInclusiveMulticastEthernetTagNLRI(EvpnNLRI):
     # |          (4 or 16 octets)             |
     # +---------------------------------------+
     _PACK_STR = '!8sIB%ds'
+    NLRI_PREFIX_FIELDS = ['ethernet_tag_id', 'ip_addr']
     _TYPE = {
         'ascii': [
             'ip_addr'
@@ -1624,6 +1719,7 @@ class EvpnEthernetSegmentNLRI(EvpnNLRI):
     """
     Ethernet Segment route type specific EVPN NLRI
     """
+    ROUTE_TYPE_NAME = 'eth_seg'
 
     # +---------------------------------------+
     # |  RD (8 octets)                        |
@@ -1636,6 +1732,7 @@ class EvpnEthernetSegmentNLRI(EvpnNLRI):
     # |          (4 or 16 octets)             |
     # +---------------------------------------+
     _PACK_STR = '!8s10sB%ds'
+    NLRI_PREFIX_FIELDS = ['esi', 'ip_addr']
     _TYPE = {
         'ascii': [
             'ip_addr'

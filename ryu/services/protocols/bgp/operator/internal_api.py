@@ -6,6 +6,7 @@ from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
@@ -82,10 +83,12 @@ class InternalApi(object):
             'ipv6': RF_IPv6_UC,
             'vpnv4': RF_IPv4_VPN,
             'vpnv6': RF_IPv6_VPN,
+            'evpn': RF_L2_EVPN,
             'rtfilter': RF_RTC_UC
         }
         if addr_family not in rfs:
-            raise WrongParamError('Unknown or unsupported family')
+            raise WrongParamError('Unknown or unsupported family: %s' %
+                                  addr_family)
 
         rf = rfs.get(addr_family)
         table_manager = self.get_core_service().table_manager

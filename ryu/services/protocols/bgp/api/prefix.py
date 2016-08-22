@@ -18,6 +18,14 @@
 """
 import logging
 
+from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
+from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
+from ryu.services.protocols.bgp.api.base import EVPN_ROUTE_TYPE
+from ryu.services.protocols.bgp.api.base import EVPN_ESI
+from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
+from ryu.services.protocols.bgp.api.base import MAC_ADDR
+from ryu.services.protocols.bgp.api.base import IP_ADDR
+from ryu.services.protocols.bgp.api.base import MPLS_LABELS
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
 from ryu.services.protocols.bgp.api.base import PREFIX
 from ryu.services.protocols.bgp.api.base import RegisterWithArgChecks
@@ -28,6 +36,7 @@ from ryu.services.protocols.bgp.base import PREFIX_ERROR_CODE
 from ryu.services.protocols.bgp.base import validate
 from ryu.services.protocols.bgp.core import BgpCoreError
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
+from ryu.services.protocols.bgp.rtconf.base import ConfigValueError
 from ryu.services.protocols.bgp.rtconf.base import RuntimeConfigError
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
@@ -35,6 +44,14 @@ from ryu.services.protocols.bgp.utils import validation
 
 
 LOG = logging.getLogger('bgpspeaker.api.prefix')
+
+# Constants used in API calls for EVPN
+EVPN_MAC_IP_ADV_ROUTE = EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME
+EVPN_MULTICAST_ETAG_ROUTE = EvpnInclusiveMulticastEthernetTagNLRI.ROUTE_TYPE_NAME
+SUPPORTED_EVPN_ROUTE_TYPES = [
+    EVPN_MAC_IP_ADV_ROUTE,
+    EVPN_MULTICAST_ETAG_ROUTE,
+]
 
 
 @add_bgp_error_metadata(code=PREFIX_ERROR_CODE,
@@ -53,6 +70,49 @@ def is_valid_prefix(ipv4_prefix):
 @validate(name=NEXT_HOP)
 def is_valid_next_hop(next_hop_addr):
     return validation.is_valid_ipv4(next_hop_addr)
+
+
+@validate(name=EVPN_ROUTE_TYPE)
+def is_valid_evpn_route_type(route_type):
+    if route_type not in SUPPORTED_EVPN_ROUTE_TYPES:
+        raise ConfigValueError(conf_name=EVPN_ROUTE_TYPE,
+                               conf_value=route_type)
+
+
+@validate(name=EVPN_ESI)
+def is_valid_esi(esi):
+    if not validation.is_valid_esi(esi):
+        raise ConfigValueError(conf_name=EVPN_ESI,
+                               conf_value=esi)
+
+
+@validate(name=EVPN_ETHERNET_TAG_ID)
+def is_valid_ethernet_tag_id(ethernet_tag_id):
+    if not validation.is_valid_ethernet_tag_id(ethernet_tag_id):
+        raise ConfigValueError(conf_name=EVPN_ETHERNET_TAG_ID,
+                               conf_value=ethernet_tag_id)
+
+
+@validate(name=MAC_ADDR)
+def is_valid_mac_addr(addr):
+    if not validation.is_valid_mac(addr):
+        raise ConfigValueError(conf_name=MAC_ADDR,
+                               conf_value=addr)
+
+
+@validate(name=IP_ADDR)
+def is_valid_ip_addr(addr):
+    if not (validation.is_valid_ipv4(addr)
+            or validation.is_valid_ipv6(addr)):
+        raise ConfigValueError(conf_name=IP_ADDR,
+                               conf_value=addr)
+
+
+@validate(name=MPLS_LABELS)
+def is_valid_mpls_labels(labels):
+    if not validation.is_valid_mpls_labels(labels):
+        raise ConfigValueError(conf_name=MPLS_LABELS,
+                               conf_value=labels)
 
 
 @RegisterWithArgChecks(name='prefix.add_local',
@@ -93,3 +153,29 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                  VRF_RF: route_family}]
     except BgpCoreError as e:
         raise PrefixError(desc=e)
+
+
+# =============================================================================
+# BGP EVPN Routes related APIs
+# =============================================================================
+
+@RegisterWithArgChecks(name='evpn_prefix.add_local',
+                       req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER,
+                                 NEXT_HOP],
+                       opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
+                                 IP_ADDR])
+def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.add_to_global_evpn_table(route_type, route_dist, next_hop, **kwargs)
+    return True
+
+
+@RegisterWithArgChecks(name='evpn_prefix.delete_local',
+                       req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER],
+                       opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
+                                 IP_ADDR])
+def delete_evpn_local(route_type, route_dist, **kwargs):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.add_to_global_evpn_table(route_type, route_dist, is_withdraw=True,
+                                **kwargs)
+    return True

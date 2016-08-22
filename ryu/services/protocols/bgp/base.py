@@ -35,6 +35,7 @@ from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
+from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.services.protocols.bgp.utils.circlist import CircularListType
 from ryu.services.protocols.bgp.utils.evtlet import LoopingCall
@@ -48,12 +49,14 @@ OrderedDict = OrderedDict
 
 
 # Currently supported address families.
-SUPPORTED_GLOBAL_RF = set([RF_IPv4_UC,
-                           RF_IPv6_UC,
-                           RF_IPv4_VPN,
-                           RF_RTC_UC,
-                           RF_IPv6_VPN
-                           ])
+SUPPORTED_GLOBAL_RF = {
+    RF_IPv4_UC,
+    RF_IPv6_UC,
+    RF_IPv4_VPN,
+    RF_RTC_UC,
+    RF_IPv6_VPN,
+    RF_L2_EVPN,
+}
 
 
 # Various error codes

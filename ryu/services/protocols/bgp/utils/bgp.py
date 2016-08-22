@@ -25,6 +25,7 @@ from ryu.lib.packet.bgp import (
     RF_IPv6_UC,
     RF_IPv4_VPN,
     RF_IPv6_VPN,
+    RF_L2_EVPN,
     RF_RTC_UC,
     RouteTargetMembershipNLRI,
     BGP_ATTR_TYPE_MULTI_EXIT_DISC,
@@ -41,6 +42,7 @@ from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Path
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
+from ryu.services.protocols.bgp.info_base.evpn import EvpnPath
 
 
 LOG = logging.getLogger('utils.bgp')
@@ -50,6 +52,7 @@ _ROUTE_FAMILY_TO_PATH_MAP = {RF_IPv4_UC: Ipv4Path,
                              RF_IPv6_UC: Ipv6Path,
                              RF_IPv4_VPN: Vpnv4Path,
                              RF_IPv6_VPN: Vpnv6Path,
+                             RF_L2_EVPN: EvpnPath,
                              RF_RTC_UC: RtcPath}
 
 
