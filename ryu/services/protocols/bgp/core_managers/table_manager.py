@@ -9,15 +9,12 @@ from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Table
 from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Path
 from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Table
-from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Table
-from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Table
 from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Table
 from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Table
 from ryu.services.protocols.bgp.info_base.vrfevpn import VrfEvpnTable
 from ryu.services.protocols.bgp.info_base.evpn import EvpnTable
-from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN

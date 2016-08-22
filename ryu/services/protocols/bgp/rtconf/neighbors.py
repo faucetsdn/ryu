@@ -18,8 +18,9 @@
 """
 from abc import abstractmethod
 import logging
-import netaddr
 import numbers
+
+import netaddr
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC

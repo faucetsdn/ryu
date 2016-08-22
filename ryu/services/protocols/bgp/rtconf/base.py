@@ -21,8 +21,9 @@ from abc import abstractmethod
 import functools
 import numbers
 import logging
-import six
 import uuid
+
+import six
 
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -211,8 +212,7 @@ class BaseConf(object):
         if unknown_attrs:
             raise RuntimeConfigError(desc=(
                 'Unknown attributes: %s' %
-                ', '.join([str(i) for i in unknown_attrs]))
-            )
+                ', '.join([str(i) for i in unknown_attrs])))
         missing_req_settings = self._req_settings - given_attrs
         if missing_req_settings:
             raise MissingRequiredConf(conf_name=list(missing_req_settings))
@@ -687,7 +687,7 @@ def validate_med(med):
 def validate_soo_list(soo_list):
     if not isinstance(soo_list, list):
         raise ConfigTypeError(conf_name=SITE_OF_ORIGINS, conf_value=soo_list)
-    if not (len(soo_list) <= MAX_NUM_SOO):
+    if len(soo_list) > MAX_NUM_SOO:
         raise ConfigValueError(desc='Max. SOO is limited to %s' %
                                MAX_NUM_SOO)
     if not all(validation.is_valid_ext_comm_attr(attr) for attr in soo_list):

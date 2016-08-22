@@ -107,7 +107,7 @@ class InternalApi(object):
 
             path_seg_list = path.get_pattr(BGP_ATTR_TYPE_AS_PATH).path_seg_list
 
-            if type(path_seg_list) == list:
+            if isinstance(path_seg_list, list):
                 aspath = []
                 for as_path_seg in path_seg_list:
                     for as_num in as_path_seg:
@@ -157,10 +157,7 @@ class InternalApi(object):
         return ret
 
     def check_logging(self):
-        if self.log_handler and self._has_log_handler(self.log_handler):
-            return True
-        else:
-            return False
+        return self.log_handler and self._has_log_handler(self.log_handler)
 
     def check_logging_level(self):
         return logging.getLevelName(self.log_handler.level)

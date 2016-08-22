@@ -20,13 +20,13 @@ from __future__ import absolute_import
 import abc
 from collections import OrderedDict
 import logging
-import six
 import socket
 import time
 import traceback
 import weakref
 
 import netaddr
+import six
 
 from ryu.lib import hub
 from ryu.lib import sockopt
@@ -106,17 +106,17 @@ def add_bgp_error_metadata(code, sub_code, def_desc='unknown'):
         raise ValueError('BGPSException with code %d and sub-code %d '
                          'already defined.' % (code, sub_code))
 
-    def decorator(klass):
+    def decorator(subclass):
         """Sets class constants for exception code and sub-code.
 
         If given class is sub-class of BGPSException we sets class constants.
         """
-        if issubclass(klass, BGPSException):
-            _EXCEPTION_REGISTRY[(code, sub_code)] = klass
-            klass.CODE = code
-            klass.SUB_CODE = sub_code
-            klass.DEF_DESC = def_desc
-        return klass
+        if issubclass(subclass, BGPSException):
+            _EXCEPTION_REGISTRY[(code, sub_code)] = subclass
+            subclass.CODE = code
+            subclass.SUB_CODE = sub_code
+            subclass.DEF_DESC = def_desc
+        return subclass
     return decorator
 
 
@@ -326,11 +326,11 @@ class Activity(object):
 
     def get_remotename(self, sock):
         addr, port = sock.getpeername()[:2]
-        return (self._canonicalize_ip(addr), str(port))
+        return self._canonicalize_ip(addr), str(port)
 
     def get_localname(self, sock):
         addr, port = sock.getsockname()[:2]
-        return (self._canonicalize_ip(addr), str(port))
+        return self._canonicalize_ip(addr), str(port)
 
     def _create_listen_socket(self, family, loc_addr):
         s = socket.socket(family)
@@ -358,7 +358,7 @@ class Activity(object):
                                   socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
         listen_sockets = {}
         for res in info:
-            af, socktype, proto, cannonname, sa = res
+            af, socktype, proto, _, sa = res
             sock = None
             try:
                 sock = socket.socket(af, socktype, proto)
@@ -377,7 +377,7 @@ class Activity(object):
 
         count = 0
         server = None
-        for sa in listen_sockets.keys():
+        for sa in listen_sockets:
             name = self.name + '_server@' + str(sa[0])
             self._asso_socket_map[name] = listen_sockets[sa]
             if count == 0:
@@ -412,7 +412,7 @@ class Activity(object):
             if password:
                 sockopt.set_tcp_md5sig(sock, peer_addr[0], password)
             sock.connect(peer_addr)
-            # socket.error exception is rasied in cese of timeout and
+            # socket.error exception is raised in case of timeout and
             # the following code is executed only when the connection
             # is established.
 
@@ -450,14 +450,14 @@ class Sink(object):
     @staticmethod
     def next_index():
         """Increments the sink index and returns the value."""
-        Sink.idx = Sink.idx + 1
+        Sink.idx += 1
         return Sink.idx
 
     def __init__(self):
         # A small integer that represents this sink.
         self.index = Sink.next_index()
 
-        # Event used to signal enqueing.
+        # Create an event for signal enqueuing.
         from .utils.evtlet import EventletIOFactory
         self.outgoing_msg_event = EventletIOFactory.create_custom_event()
 
@@ -487,7 +487,7 @@ class Sink(object):
 
         If message list currently has no messages, the calling thread will
         be put to sleep until we have at-least one message in the list that
-        can be poped and returned.
+        can be popped and returned.
         """
         # We pick the first outgoing available and send it.
         outgoing_msg = self.outgoing_msg_list.pop_first()

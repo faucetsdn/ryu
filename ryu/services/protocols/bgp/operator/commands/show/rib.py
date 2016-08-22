@@ -1,15 +1,13 @@
 from __future__ import absolute_import
 
-from .route_formatter_mixin import RouteFormatterMixin
-
+from ryu.services.protocols.bgp.base import ActivityException
 from ryu.services.protocols.bgp.operator.command import Command
 from ryu.services.protocols.bgp.operator.command import CommandsResponse
 from ryu.services.protocols.bgp.operator.command import STATUS_ERROR
 from ryu.services.protocols.bgp.operator.command import STATUS_OK
-
-from ryu.services.protocols.bgp.base import ActivityException
-from ryu.services.protocols.bgp.operator.commands.responses import \
-    WrongParamResp
+from ryu.services.protocols.bgp.operator.commands.responses import (
+    WrongParamResp)
+from .route_formatter_mixin import RouteFormatterMixin
 
 
 class RibBase(Command, RouteFormatterMixin):

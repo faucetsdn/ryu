@@ -37,10 +37,8 @@ from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_PORT
-from ryu.services.protocols.bgp.rtconf.common \
-    import DEFAULT_REFRESH_MAX_EOR_TIME
-from ryu.services.protocols.bgp.rtconf.common \
-    import DEFAULT_REFRESH_STALEPATH_TIME
+from ryu.services.protocols.bgp.rtconf.common import (
+    DEFAULT_REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_STALEPATH_TIME)
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
@@ -158,13 +156,14 @@ class BGPSpeaker(object):
         """
         super(BGPSpeaker, self).__init__()
 
-        settings = {}
-        settings[LOCAL_AS] = as_number
-        settings[ROUTER_ID] = router_id
-        settings[BGP_SERVER_PORT] = bgp_server_port
-        settings[REFRESH_STALEPATH_TIME] = refresh_stalepath_time
-        settings[REFRESH_MAX_EOR_TIME] = refresh_max_eor_time
-        settings[LABEL_RANGE] = label_range
+        settings = {
+            LOCAL_AS: as_number,
+            ROUTER_ID: router_id,
+            BGP_SERVER_PORT: bgp_server_port,
+            REFRESH_STALEPATH_TIME: refresh_stalepath_time,
+            REFRESH_MAX_EOR_TIME: refresh_max_eor_time,
+            LABEL_RANGE: label_range,
+        }
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
@@ -329,7 +328,7 @@ class BGPSpeaker(object):
             CAP_ENHANCED_REFRESH: enable_enhanced_refresh,
             CAP_FOUR_OCTET_AS_NUMBER: enable_four_octet_as_number,
         }
-        # v6 advertizement is available with only v6 peering
+        # v6 advertisement is available with only v6 peering
         if netaddr.valid_ipv4(address):
             bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
             bgp_neighbor[CAP_MBGP_IPV6] = False
@@ -371,8 +370,10 @@ class BGPSpeaker(object):
         the string representation of an IP address.
 
         """
-        bgp_neighbor = {}
-        bgp_neighbor[neighbors.IP_ADDRESS] = address
+        bgp_neighbor = {
+            neighbors.IP_ADDRESS: address,
+        }
+
         call('neighbor.delete', **bgp_neighbor)
 
     def neighbor_reset(self, address):
@@ -382,8 +383,10 @@ class BGPSpeaker(object):
         the string representation of an IP address.
 
         """
-        bgp_neighbor = {}
-        bgp_neighbor[neighbors.IP_ADDRESS] = address
+        bgp_neighbor = {
+            neighbors.IP_ADDRESS: address,
+        }
+
         call('core.reset_neighbor', **bgp_neighbor)
 
     def neighbor_update(self, address, conf_type, conf_value):
@@ -408,6 +411,7 @@ class BGPSpeaker(object):
 
         param = {neighbors.IP_ADDRESS: address,
                  neighbors.CHANGES: attribute_param}
+
         call(func_name, **param)
 
     def neighbor_state_get(self, address=None, format='json'):
@@ -418,11 +422,13 @@ class BGPSpeaker(object):
         state of all the peers return.
 
         """
-        show = {}
-        show['params'] = ['neighbor', 'summary']
+        show = {
+            'params': ['neighbor', 'summary'],
+            'format': format,
+        }
         if address:
             show['params'].append(address)
-        show['format'] = format
+
         return call('operator.show', **show)
 
     def prefix_add(self, prefix, next_hop=None, route_dist=None):
@@ -441,8 +447,9 @@ class BGPSpeaker(object):
 
         """
         func_name = 'network.add'
-        networks = {}
-        networks[PREFIX] = prefix
+        networks = {
+            PREFIX: prefix,
+        }
         if next_hop:
             networks[NEXT_HOP] = next_hop
         if route_dist:
@@ -472,8 +479,9 @@ class BGPSpeaker(object):
 
         """
         func_name = 'network.del'
-        networks = {}
-        networks[PREFIX] = prefix
+        networks = {
+            PREFIX: prefix,
+        }
         if route_dist:
             func_name = 'prefix.delete_local'
             networks[ROUTE_DISTINGUISHER] = route_dist
@@ -617,9 +625,11 @@ class BGPSpeaker(object):
         call('vrf.delete', **vrf)
 
     def vrfs_get(self, format='json'):
-        show = {}
-        show['params'] = ['vrf', 'routes', 'all']
-        show['format'] = format
+        show = {
+            'params': ['vrf', 'routes', 'all'],
+            'format': format,
+        }
+
         return call('operator.show', **show)
 
     def rib_get(self, family='ipv4', format='json'):
@@ -629,9 +639,11 @@ class BGPSpeaker(object):
         ``family`` specifies the address family of the RIB.
 
         """
-        show = {}
-        show['params'] = ['rib', family]
-        show['format'] = format
+        show = {
+            'params': ['rib', family],
+            'format': format
+        }
+
         return call('operator.show', **show)
 
     def neighbor_get(self, routetype, address, format='json'):
@@ -649,12 +661,14 @@ class BGPSpeaker(object):
         the string representation of an IP address.
 
         """
-        show = {}
+        show = {
+            'format': format,
+        }
         if routetype == 'sent-routes' or routetype == 'received-routes':
             show['params'] = ['neighbor', routetype, address, 'all']
         else:
             show['params'] = ['neighbor', 'received-routes', address, 'all']
-        show['format'] = format
+
         return call('operator.show', **show)
 
     def _set_filter(self, filter_type, address, filters):
@@ -668,12 +682,14 @@ class BGPSpeaker(object):
             filters = []
 
         func_name = 'neighbor.' + filter_type + '_filter.set'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
+        param = {
+            neighbors.IP_ADDRESS: address,
+        }
         if filter_type == 'in':
             param[neighbors.IN_FILTER] = filters
         else:
             param[neighbors.OUT_FILTER] = filters
+
         call(func_name, **param)
 
     def out_filter_set(self, address, filters):
@@ -714,10 +730,11 @@ class BGPSpeaker(object):
         """
 
         func_name = 'neighbor.out_filter.get'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
-        out_filter = call(func_name, **param)
-        return out_filter
+        param = {
+            neighbors.IP_ADDRESS: address,
+        }
+
+        return call(func_name, **param)
 
     def in_filter_set(self, address, filters):
         """This method sets in-bound filters to a neighbor.
@@ -742,10 +759,11 @@ class BGPSpeaker(object):
         """
 
         func_name = 'neighbor.in_filter.get'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
-        in_filter = call(func_name, **param)
-        return in_filter
+        param = {
+            neighbors.IP_ADDRESS: address,
+        }
+
+        return call(func_name, **param)
 
     def bmp_server_add(self, address, port):
         """This method registers a new BMP (BGP monitoring Protocol)
@@ -758,9 +776,11 @@ class BGPSpeaker(object):
         """
 
         func_name = 'bmp.start'
-        param = {}
-        param['host'] = address
-        param['port'] = port
+        param = {
+            'host': address,
+            'port': port,
+        }
+
         call(func_name, **param)
 
     def bmp_server_del(self, address, port):
@@ -772,9 +792,11 @@ class BGPSpeaker(object):
         """
 
         func_name = 'bmp.stop'
-        param = {}
-        param['host'] = address
-        param['port'] = port
+        param = {
+            'host': address,
+            'port': port,
+        }
+
         call(func_name, **param)
 
     def attribute_map_set(self, address, attribute_maps,
@@ -811,12 +833,14 @@ class BGPSpeaker(object):
             'route_family must be RF_VPN_V4 or RF_VPN_V6'
 
         func_name = 'neighbor.attribute_map.set'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
-        param[neighbors.ATTRIBUTE_MAP] = attribute_maps
+        param = {
+            neighbors.IP_ADDRESS: address,
+            neighbors.ATTRIBUTE_MAP: attribute_maps,
+        }
         if route_dist is not None:
             param[vrfs.ROUTE_DISTINGUISHER] = route_dist
             param[vrfs.VRF_RF] = route_family
+
         call(func_name, **param)
 
     def attribute_map_get(self, address, route_dist=None,
@@ -838,13 +862,14 @@ class BGPSpeaker(object):
             'route_family must be RF_VPN_V4 or RF_VPN_V6'
 
         func_name = 'neighbor.attribute_map.get'
-        param = {}
-        param[neighbors.IP_ADDRESS] = address
+        param = {
+            neighbors.IP_ADDRESS: address,
+        }
         if route_dist is not None:
             param[vrfs.ROUTE_DISTINGUISHER] = route_dist
             param[vrfs.VRF_RF] = route_family
-        attribute_maps = call(func_name, **param)
-        return attribute_maps
+
+        return call(func_name, **param)
 
     @staticmethod
     def _check_rf_and_normalize(prefix):
