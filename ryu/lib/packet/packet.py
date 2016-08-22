@@ -14,14 +14,32 @@
 # limitations under the License.
 
 import inspect
-import six
 import struct
+import base64
+
+import six
 
 from . import packet_base
 from . import ethernet
 
+from ryu import utils
+from ryu.lib.stringify import StringifyMixin
 
-class Packet(object):
+
+# Packet class dictionary
+mod = inspect.getmembers(utils.import_module("ryu.lib.packet"),
+                         lambda cls: (inspect.ismodule(cls)))
+cls_list = []
+for _, m in mod:
+    cl = inspect.getmembers(m,
+                            lambda cls: (
+                                inspect.isclass(cls) and
+                                issubclass(cls, packet_base.PacketBase)))
+    cls_list.extend(list(cl))
+PKT_CLS_DICT = dict(cls_list)
+
+
+class Packet(StringifyMixin):
     """A packet decoder/encoder class.
 
     An instance is used to either decode or encode a single packet.
@@ -34,6 +52,9 @@ class Packet(object):
 
     *data* should be omitted when encoding a packet.
     """
+
+    # Ignore data field when outputting json representation.
+    _base_attributes = ['data']
 
     def __init__(self, data=None, protocols=None, parse_cls=ethernet.ethernet):
         super(Packet, self).__init__()
@@ -76,6 +97,20 @@ class Packet(object):
             else:
                 data = six.binary_type(p)
             self.data = bytearray(data + self.data)
+
+    @classmethod
+    def from_jsondict(cls, dict_, decode_string=base64.b64decode,
+                      **additional_args):
+        protocols = []
+        for proto in dict_['protocols']:
+            for key, value in proto.items():
+                if key in PKT_CLS_DICT:
+                    pkt_cls = PKT_CLS_DICT[key]
+                    protocols.append(pkt_cls.from_jsondict(value))
+                else:
+                    raise ValueError('unknown protocol name %s' % key)
+
+        return cls(protocols=protocols)
 
     def add_protocol(self, proto):
         """Register a protocol *proto* for this packet.
