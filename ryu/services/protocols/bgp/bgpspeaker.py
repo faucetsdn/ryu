@@ -76,7 +76,7 @@ from ryu.services.protocols.bgp.info_base.vpnv4 import Vpnv4Path
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 
 
-NEIGHBOR_CONF_MED = 'multi_exit_disc'
+NEIGHBOR_CONF_MED = MULTI_EXIT_DISC  # for backward compatibility
 RF_VPN_V4 = vrfs.VRF_RF_IPV4
 RF_VPN_V6 = vrfs.VRF_RF_IPV6
 RF_L2_EVPN = vrfs.VRF_RF_L2_EVPN
@@ -393,18 +393,18 @@ class BGPSpeaker(object):
         """ This method changes the neighbor configuration.
 
         ``conf_type`` specifies configuration type which you want to change.
-        Currently ryu.services.protocols.bgp.bgpspeaker.NEIGHBOR_CONF_MED
+        Currently ryu.services.protocols.bgp.bgpspeaker.MULTI_EXIT_DISC
         can be specified.
 
         ``conf_value`` specifies value for the configuration type.
 
         """
 
-        assert conf_type == NEIGHBOR_CONF_MED or conf_type == CONNECT_MODE
+        assert conf_type == MULTI_EXIT_DISC or conf_type == CONNECT_MODE
 
         func_name = 'neighbor.update'
         attribute_param = {}
-        if conf_type == NEIGHBOR_CONF_MED:
+        if conf_type == MULTI_EXIT_DISC:
             attribute_param = {neighbors.MULTI_EXIT_DISC: conf_value}
         elif conf_type == CONNECT_MODE:
             attribute_param = {neighbors.CONNECT_MODE: conf_value}
@@ -610,6 +610,7 @@ class BGPSpeaker(object):
             vrfs.EXPORT_RTS: export_rts,
             vrfs.SITE_OF_ORIGINS: site_of_origins,
             vrfs.VRF_RF: route_family,
+            vrfs.MULTI_EXIT_DISC: multi_exit_disc,
         }
 
         call('vrf.create', **vrf)
