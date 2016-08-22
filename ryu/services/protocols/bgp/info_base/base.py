@@ -337,6 +337,10 @@ class Destination(object):
         return self._nlri
 
     @property
+    def nlri_str(self):
+        return self._nlri.formatted_nlri_str
+
+    @property
     def best_path(self):
         return self._best_path
 
@@ -776,6 +780,10 @@ class Path(object):
     @property
     def nlri(self):
         return self._nlri
+
+    @property
+    def nlri_str(self):
+        return self._nlri.formatted_nlri_str
 
     @property
     def is_withdraw(self):

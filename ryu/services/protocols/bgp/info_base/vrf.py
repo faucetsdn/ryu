@@ -299,6 +299,13 @@ class VrfDest(Destination):
         super(VrfDest, self).__init__(table, nlri)
         self._route_dist = self._table.vrf_conf.route_dist
 
+    @property
+    def nlri_str(self):
+        # Returns `prefix` without the route distinguisher value, because
+        # a destination in VRF space can be identified without the route
+        # distinguisher.
+        return self._nlri.prefix
+
     def _best_path_lost(self):
         # Have to send update messages for withdraw of best-path to Network
         # controller or Global table.
@@ -482,6 +489,13 @@ class VrfPath(Path):
     @property
     def label_list(self):
         return self._label_list[:]
+
+    @property
+    def nlri_str(self):
+        # Returns `prefix` without the route distinguisher value, because
+        # a destination in VRF space can be identified without the route
+        # distinguisher.
+        return self._nlri.prefix
 
     @staticmethod
     def create_puid(route_dist, ip_prefix):

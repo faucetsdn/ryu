@@ -101,7 +101,7 @@ class InternalApi(object):
 
     def _dst_to_dict(self, dst):
         ret = {'paths': [],
-               'prefix': dst.nlri.formatted_nlri_str}
+               'prefix': dst.nlri_str}
 
         def _path_to_dict(dst, path):
 
@@ -143,7 +143,7 @@ class InternalApi(object):
 
             return {'best': (path == dst.best_path),
                     'bpr': bpr,
-                    'prefix': path.nlri.formatted_nlri_str,
+                    'prefix': path.nlri_str,
                     'labels': labels,
                     'nexthop': nexthop,
                     'metric': med,
