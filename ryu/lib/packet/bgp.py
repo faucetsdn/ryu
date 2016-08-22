@@ -3321,7 +3321,7 @@ class BGPNotification(BGPMessage):
     def __init__(self,
                  error_code,
                  error_subcode,
-                 data='',
+                 data=b'',
                  type_=BGP_MSG_NOTIFICATION, len_=None, marker=None):
         super(BGPNotification, self).__init__(marker=marker, len_=len_,
                                               type_=type_)
