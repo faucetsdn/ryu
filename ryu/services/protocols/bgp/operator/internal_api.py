@@ -180,7 +180,7 @@ class InternalApi(object):
                 route_families.extend(SUPPORTED_GLOBAL_RF)
             else:
                 route_family = RouteFamily(afi, safi)
-                if (route_family not in SUPPORTED_GLOBAL_RF):
+                if route_family not in SUPPORTED_GLOBAL_RF:
                     raise WrongParamError('Not supported address-family'
                                           ' %s, %s' % (afi, safi))
                 route_families.append(route_family)

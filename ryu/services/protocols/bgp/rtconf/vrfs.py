@@ -22,6 +22,7 @@ import logging
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
+from ryu.lib.packet.bgp import RF_L2_EVPN
 
 from ryu.services.protocols.bgp.utils import validation
 from ryu.services.protocols.bgp.base import get_validator
@@ -54,10 +55,11 @@ VRF_DESC = 'vrf_desc'
 VRF_RF = 'route_family'
 IMPORT_MAPS = 'import_maps'
 
-# Two supported VRF route-families
-VRF_RF_IPV6 = 'ipv6'
+# Supported VRF route-families
 VRF_RF_IPV4 = 'ipv4'
-SUPPORTED_VRF_RF = (VRF_RF_IPV4, VRF_RF_IPV6)
+VRF_RF_IPV6 = 'ipv6'
+VRF_RF_L2_EVPN = 'evpn'
+SUPPORTED_VRF_RF = (VRF_RF_IPV4, VRF_RF_IPV6, VRF_RF_L2_EVPN)
 
 
 # Default configuration values.
@@ -77,8 +79,7 @@ def validate_import_rts(import_rts):
     # Check if we have duplicates
     unique_rts = set(import_rts)
     if len(unique_rts) != len(import_rts):
-        raise ConfigValueError(desc='Duplicate value provided %s' %
-                               (import_rts))
+        raise ConfigValueError(desc='Duplicate value provided %s' % import_rts)
 
     return import_rts
 
@@ -97,7 +98,7 @@ def validate_export_rts(export_rts):
     unique_rts = set(export_rts)
     if len(unique_rts) != len(export_rts):
         raise ConfigValueError(desc='Duplicate value provided in %s' %
-                               (export_rts))
+                               export_rts)
     return export_rts
 
 
@@ -223,6 +224,8 @@ class VrfConf(ConfWithId, ConfWithStats):
             return RF_IPv4_UC
         elif vrf_rf == VRF_RF_IPV6:
             return RF_IPv6_UC
+        elif vrf_rf == VRF_RF_L2_EVPN:
+            return RF_L2_EVPN
         else:
             raise ValueError('Unsupported VRF route family given %s' % vrf_rf)
 
@@ -232,6 +235,8 @@ class VrfConf(ConfWithId, ConfWithStats):
             return VRF_RF_IPV4
         elif route_family == RF_IPv6_UC:
             return VRF_RF_IPV6
+        elif route_family == RF_L2_EVPN:
+            return VRF_RF_L2_EVPN
         else:
             raise ValueError('No supported mapping for route family '
                              'to vrf_route_family exists for %s' %
@@ -322,7 +327,7 @@ class VrfConf(ConfWithId, ConfWithStats):
 
         import_rts = set(import_rts)
         if not import_rts.symmetric_difference(curr_import_rts):
-            return (None, None)
+            return None, None
 
         # Get the difference between current and new RTs
         new_import_rts = import_rts - curr_import_rts
@@ -330,7 +335,7 @@ class VrfConf(ConfWithId, ConfWithStats):
 
         # Update current RTs and notify listeners.
         self._settings[IMPORT_RTS] = import_rts
-        return (new_import_rts, old_import_rts)
+        return new_import_rts, old_import_rts
 
     def _update_export_rts(self, **kwargs):
         export_rts = kwargs.get(EXPORT_RTS)
@@ -381,7 +386,7 @@ class VrfConf(ConfWithId, ConfWithStats):
                                     self.export_rts, self.soo_list))
 
     def __str__(self):
-        return ('VrfConf-%s' % (self.route_dist))
+        return 'VrfConf-%s' % self.route_dist
 
 
 class VrfsConf(BaseConf):
@@ -451,7 +456,7 @@ class VrfsConf(BaseConf):
         vrf_rfs = SUPPORTED_VRF_RF
         # If asked to delete specific route family vrf conf.
         if vrf_rf:
-            vrf_rfs = (vrf_rf)
+            vrf_rfs = vrf_rf
 
         # For all vrf route family asked to be deleted, we collect all deleted
         # VrfConfs
@@ -478,7 +483,6 @@ class VrfsConf(BaseConf):
         if route_dist is None and vrf_id is None:
             raise RuntimeConfigError(desc='To get VRF supply route_dist '
                                      'or vrf_id.')
-        vrf = None
         if route_dist is not None and vrf_id is not None:
             vrf1 = self._vrfs_by_id.get(vrf_id)
             rd_rf_id = VrfConf.create_rd_rf_id(route_dist, vrf_rf)
@@ -500,8 +504,8 @@ class VrfsConf(BaseConf):
         return dict(self._vrfs_by_rd_rf)
 
     @classmethod
-    def get_valid_evts(self):
-        self_valid_evts = super(VrfsConf, self).get_valid_evts()
+    def get_valid_evts(cls):
+        self_valid_evts = super(VrfsConf, cls).get_valid_evts()
         self_valid_evts.update(VrfsConf.VALID_EVT)
         return self_valid_evts
 

@@ -15,11 +15,12 @@ from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Table
 from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Table
 from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Table
-from ryu.services.protocols.bgp.info_base.evpn import EvpnPath
+from ryu.services.protocols.bgp.info_base.vrfevpn import VrfEvpnTable
 from ryu.services.protocols.bgp.info_base.evpn import EvpnTable
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN
 from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
 
 from ryu.lib import type_desc
@@ -102,24 +103,25 @@ class TableCoreManager(object):
         LOG.debug('VRF with RD %s marked for removal', vrf_conf.route_dist)
 
     def import_all_vpn_paths_to_vrf(self, vrf_table, import_rts=None):
-        """Imports Vpnv4/6 paths from Global/VPN table into given Vrfv4/6
-         table.
+        """Imports VPNv4/6 or EVPN paths from Global/VPN table into given
+        VRFv4/6  or VRFEVPN table.
         :param vrf_table: Vrf table to which we import
         :type vrf_table: VrfTable
         :param import_rts: import RTs to override default import_rts of
          vrf table for this import
         :type import_rts: set of strings
 
-
         Checks if we have any path RT common with VRF table's import RT.
         """
-        rfs = (Vrf4Table.ROUTE_FAMILY, Vrf6Table.ROUTE_FAMILY)
-        assert vrf_table.route_family in rfs, 'Invalid VRF table.'
-
         if vrf_table.route_family == Vrf4Table.ROUTE_FAMILY:
             vpn_table = self.get_vpn4_table()
-        else:
+        elif vrf_table.route_family == Vrf6Table.ROUTE_FAMILY:
             vpn_table = self.get_vpn6_table()
+        elif vrf_table.route_family == VrfEvpnTable.ROUTE_FAMILY:
+            vpn_table = self.get_evpn_table()
+        else:
+            raise ValueError('Invalid VRF table route family: %s' %
+                             vrf_table.route_family)
 
         vrf_table.import_vpn_paths_from_table(vpn_table, import_rts)
 
@@ -320,8 +322,8 @@ class TableCoreManager(object):
             for path in dest.known_path_list:
                 if path.source is None:
                     vrf_table.insert_vrf_path(
-                        path.nlri,
-                        path.nexthop,
+                        nlri=path.nlri,
+                        next_hop=path.nexthop,
                         gen_lbl=True
                     )
         LOG.debug('Re-installed NC paths with current policy for table %s.',
@@ -364,26 +366,24 @@ class TableCoreManager(object):
         importing/installing of paths from global tables.
         Returns created table.
         """
-
         route_family = vrf_conf.route_family
-        assert route_family in (VRF_RF_IPV4, VRF_RF_IPV6)
-        vrf_table = None
-        if route_family == VRF_RF_IPV4:
-            vrf_table = Vrf4Table(
-                vrf_conf, self._core_service, self._signal_bus
-            )
-            table_id = (vrf_conf.route_dist, route_family)
-            self._tables[table_id] = vrf_table
 
+        if route_family == VRF_RF_IPV4:
+            vrf_table = Vrf4Table
         elif route_family == VRF_RF_IPV6:
-            vrf_table = Vrf6Table(
-                vrf_conf, self._core_service, self._signal_bus
-            )
-            table_id = (vrf_conf.route_dist, route_family)
-            self._tables[table_id] = vrf_table
+            vrf_table = Vrf6Table
+        elif route_family == VRF_RF_L2_EVPN:
+            vrf_table = VrfEvpnTable
+        else:
+            raise ValueError('Unsupported route family for VRF: %s' %
+                             route_family)
+
+        vrf_table = vrf_table(vrf_conf, self._core_service, self._signal_bus)
+        table_id = (vrf_conf.route_dist, route_family)
+        self._tables[table_id] = vrf_table
 
         assert vrf_table is not None
-        LOG.debug('Added new VrfTable with rd: %s and add_fmly: %s',
+        LOG.debug('Added new VrfTable with route_dist:%s and route_family:%s',
                   vrf_conf.route_dist, route_family)
 
         import_rts = vrf_conf.import_rts
@@ -435,13 +435,11 @@ class TableCoreManager(object):
                   uninteresting_dest_count)
 
     def import_single_vpn_path_to_all_vrfs(self, vpn_path, path_rts=None):
-        """Imports *vpnv4_path* to qualifying VRF tables.
+        """Imports *vpn_path* to qualifying VRF tables.
 
         Import RTs of VRF table is matched with RTs from *vpn4_path* and if we
         have any common RTs we import the path into VRF.
         """
-        assert (vpn_path.route_family in
-                (Vpnv4Path.ROUTE_FAMILY, Vpnv6Path.ROUTE_FAMILY))
         LOG.debug('Importing path %s to qualifying VRFs', vpn_path)
 
         # If this path has no RTs we are done.
@@ -453,9 +451,16 @@ class TableCoreManager(object):
         interested_tables = set()
 
         # Get route family of VRF to when this VPN Path can be imported to
-        route_family = RF_IPv4_UC
-        if vpn_path.route_family != RF_IPv4_VPN:
+        if vpn_path.route_family == RF_IPv4_VPN:
+            route_family = RF_IPv4_UC
+        elif vpn_path.route_family == RF_IPv6_VPN:
             route_family = RF_IPv6_UC
+        elif vpn_path.route_family == RF_L2_EVPN:
+            route_family = RF_L2_EVPN
+        else:
+            raise ValueError('Unsupported route family for VRF: %s' %
+                             vpn_path.route_family)
+
         for rt in path_rts:
             rt_rf_id = rt + ':' + str(route_family)
             vrf_rt_tables = self._tables_for_rt.get(rt_rf_id)
@@ -478,44 +483,70 @@ class TableCoreManager(object):
             # If we do not have any VRF with import RT that match with path RT
             LOG.debug('No VRF table found that imports RTs: %s', path_rts)
 
-    def add_to_vrf(self, route_dist, prefix, next_hop, route_family):
-        """Adds `prefix` to VRF identified by `route_dist` with given
-         `next_hop`.
+    def update_vrf_table(self, route_dist, prefix=None, next_hop=None,
+                         route_family=None, route_type=None,
+                         is_withdraw=False, **kwargs):
+        """Update a BGP route in the VRF table identified by `route_dist`
+        with the given `next_hop`.
+
+        If `is_withdraw` is False, which is the default, add a BGP route
+        to the VRF table identified by `route_dist` with the given
+        `next_hop`.
+        If `is_withdraw` is True, remove a BGP route from the VRF table
+        and the given `next_hop` is ignored.
+
+        If `route_family` is VRF_RF_L2_EVPN, `route_type` and `kwargs`
+        are required to construct EVPN NLRI and `prefix` is ignored.
 
         Returns assigned VPN label.
         """
         from ryu.services.protocols.bgp.core import BgpCoreError
 
-        assert route_dist and prefix and next_hop
-        if route_family not in (VRF_RF_IPV4, VRF_RF_IPV6):
-            raise ValueError('Given route_family %s is not supported.' %
-                             route_family)
+        assert route_dist
 
-        vrf_table = None
-        table_id = (route_dist, route_family)
+        if is_withdraw:
+            gen_lbl = False
+            next_hop = None
+        else:
+            gen_lbl = True
+            if not (is_valid_ipv4(next_hop) or is_valid_ipv6(next_hop)):
+                raise BgpCoreError(
+                    desc='Invalid IPv4/IPv6 nexthop: %s' % next_hop)
+
+        vrf_table = self._tables.get((route_dist, route_family))
+        if vrf_table is None:
+            raise BgpCoreError(
+                desc='VRF table  does not exist: route_dist=%s, '
+                     'route_family=%s' % (route_dist, route_family))
+
         if route_family == VRF_RF_IPV4:
-            vrf_table = self._tables.get(table_id)
-            if vrf_table is None:
-                raise BgpCoreError(desc='VRF table for RD: %s does not '
-                                        'exist.' % route_dist)
-            if not is_valid_ipv4_prefix(prefix) or not is_valid_ipv4(next_hop):
-                raise BgpCoreError(desc='Invalid Ipv4 prefix or nexthop.')
+            if not is_valid_ipv4_prefix(prefix):
+                raise BgpCoreError(desc='Invalid IPv4 prefix: %s' % prefix)
             ip, masklen = prefix.split('/')
             prefix = IPAddrPrefix(int(masklen), ip)
         elif route_family == VRF_RF_IPV6:
-            vrf_table = self._tables.get(table_id)
-            if vrf_table is None:
-                raise BgpCoreError(desc='VRF table for RD: %s does not '
-                                        'exist.' % route_dist)
-            if not is_valid_ipv6_prefix(prefix) or not is_valid_ipv6(next_hop):
-                raise BgpCoreError(desc='Invalid Ipv6 prefix or nexthop.')
+            if not is_valid_ipv6_prefix(prefix):
+                raise BgpCoreError(desc='Invalid IPv6 prefix: %s' % prefix)
             ip6, masklen = prefix.split('/')
             prefix = IP6AddrPrefix(int(masklen), ip6)
+        elif route_family == VRF_RF_L2_EVPN:
+            assert route_type
+            subclass = EvpnNLRI._lookup_type_name(route_type)
+            kwargs['route_dist'] = route_dist
+            esi = kwargs.get('esi', None)
+            if esi is not None:
+                # Note: Currently, we support arbitrary 9-octet ESI value only.
+                kwargs['esi'] = EvpnArbitraryEsi(type_desc.Int9.from_user(esi))
+            prefix = subclass(**kwargs)
+        else:
+            raise BgpCoreError(
+                desc='Unsupported route family %s' % route_family)
 
+        # We do not check if we have a path to given prefix, we issue
+        # withdrawal. Hence multiple withdrawals have not side effect.
         return vrf_table.insert_vrf_path(
-            prefix, next_hop=next_hop,
-            gen_lbl=True
-        )
+            nlri=prefix, next_hop=next_hop, gen_lbl=gen_lbl,
+            is_withdraw=is_withdraw)
 
     def add_to_global_table(self, prefix, nexthop=None,
                             is_withdraw=False):
@@ -549,78 +580,6 @@ class TableCoreManager(object):
 
         # add to global ipv4 table and propagates to neighbors
         self.learn_path(new_path)
-
-    def add_to_global_evpn_table(self, route_type, route_dist, next_hop=None,
-                                 is_withdraw=False, **kwargs):
-        """Adds BGP EVPN Route to global EVPN Table with given `next_hop`.
-
-        If `is_withdraw` is set to `True`, removes the given route from
-        global EVPN Table.
-        """
-
-        # construct EVPN NLRI instance
-        subclass = EvpnNLRI._lookup_type_name(route_type)
-        kwargs['route_dist'] = route_dist
-        esi = kwargs.get('esi', None)
-        if esi is not None:
-            # Note: Currently, we support arbitrary 9-octet ESI value only.
-            kwargs['esi'] = EvpnArbitraryEsi(type_desc.Int9.from_user(esi))
-        nlri = subclass(**kwargs)
-
-        # set mandatory path attributes
-        origin = BGPPathAttributeOrigin(BGP_ATTR_ORIGIN_IGP)
-        aspath = BGPPathAttributeAsPath([[]])
-        pathattrs = OrderedDict()
-        pathattrs[BGP_ATTR_TYPE_ORIGIN] = origin
-        pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
-
-        # set the default next_hop address
-        if next_hop is None:
-            next_hop = '0.0.0.0'
-
-        new_path = EvpnPath(source=None, nlri=nlri, src_ver_num=1,
-                            pattrs=pathattrs, nexthop=next_hop,
-                            is_withdraw=is_withdraw)
-
-        # add to global EVPN table and propagates to neighbors
-        self.learn_path(new_path)
-
-    def remove_from_vrf(self, route_dist, prefix, route_family):
-        """Removes `prefix` from VRF identified by `route_dist`.
-
-        Returns assigned VPN label.
-        """
-        from ryu.services.protocols.bgp.core import BgpCoreError
-        # Validate given
-        if route_family not in (VRF_RF_IPV4, VRF_RF_IPV6):
-            raise BgpCoreError(desc='Unsupported route family %s' %
-                                    route_family)
-        val_ipv4 = route_family == VRF_RF_IPV4\
-            and is_valid_ipv4_prefix(prefix)
-        val_ipv6 = route_family == VRF_RF_IPV6\
-            and is_valid_ipv6_prefix(prefix)
-
-        if not val_ipv4 and not val_ipv6:
-            raise BgpCoreError(desc='Invalid prefix or nexthop.')
-
-        table_id = (route_dist, route_family)
-        if route_family == VRF_RF_IPV4:
-            vrf_table = self._tables.get(table_id)
-            if not vrf_table:
-                raise BgpCoreError(desc='Vrf for route distinguisher %s does '
-                                        'not exist.' % route_dist)
-            ip, masklen = prefix.split('/')
-            prefix = IPAddrPrefix(int(masklen), ip)
-        else:
-            vrf_table = self._tables.get(table_id)
-            if not vrf_table:
-                raise BgpCoreError(desc='Vrf for route distinguisher %s does '
-                                        'not exist.' % route_dist)
-            ip6, masklen = prefix.split('/')
-            prefix = IP6AddrPrefix(int(masklen), ip6)
-            # We do not check if we have a path to given prefix, we issue
-        # withdrawal. Hence multiple withdrawals have not side effect.
-        return vrf_table.insert_vrf_path(prefix, is_withdraw=True)
 
     def clean_stale_routes(self, peer, route_family=None):
         """Removes old routes from `peer` from `route_family` table.

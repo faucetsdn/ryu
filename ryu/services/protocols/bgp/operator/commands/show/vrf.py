@@ -15,10 +15,12 @@ from .route_formatter_mixin import RouteFormatterMixin
 
 LOG = logging.getLogger('bgpspeaker.operator.commands.show.vrf')
 
+SUPPORTED_VRF_RF = ('ipv4', 'ipv6', 'evpn')
+
 
 class Routes(Command, RouteFormatterMixin):
     help_msg = 'show routes present for vrf'
-    param_help_msg = '<vpn-name> <route-family>(ipv4, ipv6)'
+    param_help_msg = '<vpn-name> <route-family>%s' % str(SUPPORTED_VRF_RF)
     command = 'routes'
 
     def __init__(self, *args, **kwargs):
@@ -32,8 +34,9 @@ class Routes(Command, RouteFormatterMixin):
             return WrongParamResp()
         vrf_name = params[0]
         vrf_rf = params[1]
-        if vrf_rf not in ('ipv4', 'ipv6'):
-            return WrongParamResp('route-family not one of (ipv4, ipv6)')
+        if vrf_rf not in SUPPORTED_VRF_RF:
+            return WrongParamResp('route-family not one of %s' %
+                                  str(SUPPORTED_VRF_RF))
 
         from ryu.services.protocols.bgp.operator.internal_api import \
             WrongParamError

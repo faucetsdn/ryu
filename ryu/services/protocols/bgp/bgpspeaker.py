@@ -70,6 +70,7 @@ from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
 from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
+from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
 from ryu.services.protocols.bgp.info_base.base import Filter
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
 from ryu.services.protocols.bgp.info_base.ipv6 import Ipv6Path
@@ -80,6 +81,7 @@ from ryu.services.protocols.bgp.info_base.vpnv6 import Vpnv6Path
 NEIGHBOR_CONF_MED = 'multi_exit_disc'
 RF_VPN_V4 = vrfs.VRF_RF_IPV4
 RF_VPN_V6 = vrfs.VRF_RF_IPV6
+RF_L2_EVPN = vrfs.VRF_RF_L2_EVPN
 
 
 class EventPrefix(object):
@@ -588,29 +590,30 @@ class BGPSpeaker(object):
         This parameter must be a list of string.
 
         ``route_family`` specifies route family of the VRF.
-        This parameter must be RF_VPN_V4 or RF_VPN_V6.
+        This parameter must be RF_VPN_V4, RF_VPN_V6 or RF_L2_EVPN.
         """
 
-        assert route_family in (RF_VPN_V4, RF_VPN_V6),\
-            'route_family must be RF_VPN_V4 or RF_VPN_V6'
+        assert route_family in SUPPORTED_VRF_RF,\
+            'route_family must be RF_VPN_V4, RF_VPN_V6 or RF_L2_EVPN'
 
-        vrf = {}
-        vrf[vrfs.ROUTE_DISTINGUISHER] = route_dist
-        vrf[vrfs.IMPORT_RTS] = import_rts
-        vrf[vrfs.EXPORT_RTS] = export_rts
-        vrf[vrfs.SITE_OF_ORIGINS] = site_of_origins
-        vrf[vrfs.VRF_RF] = route_family
+        vrf = {
+            vrfs.ROUTE_DISTINGUISHER: route_dist,
+            vrfs.IMPORT_RTS: import_rts,
+            vrfs.EXPORT_RTS: export_rts,
+            vrfs.SITE_OF_ORIGINS: site_of_origins,
+            vrfs.VRF_RF: route_family,
+        }
+
         call('vrf.create', **vrf)
 
     def vrf_del(self, route_dist):
         """ This method deletes the existing vrf.
 
         ``route_dist`` specifies a route distinguisher value.
-
         """
 
-        vrf = {}
-        vrf[vrfs.ROUTE_DISTINGUISHER] = route_dist
+        vrf = {vrfs.ROUTE_DISTINGUISHER: route_dist}
+
         call('vrf.delete', **vrf)
 
     def vrfs_get(self, format='json'):

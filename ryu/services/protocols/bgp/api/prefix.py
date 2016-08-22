@@ -40,6 +40,7 @@ from ryu.services.protocols.bgp.rtconf.base import ConfigValueError
 from ryu.services.protocols.bgp.rtconf.base import RuntimeConfigError
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN
 from ryu.services.protocols.bgp.utils import validation
 
 
@@ -125,7 +126,7 @@ def add_local(route_dist, prefix, next_hop, route_family=VRF_RF_IPV4):
     try:
         # Create new path and insert into appropriate VRF table.
         tm = CORE_MANAGER.get_core_service().table_manager
-        label = tm.add_to_vrf(route_dist, prefix, next_hop, route_family)
+        label = tm.update_vrf_table(route_dist, prefix, next_hop, route_family)
         # Currently we only allocate one label per local_prefix,
         # so we share first label from the list.
         if label:
@@ -147,8 +148,9 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
     """
     try:
         tm = CORE_MANAGER.get_core_service().table_manager
-        tm.remove_from_vrf(route_dist, prefix, route_family)
-        # Send success response to ApgwAgent.
+        tm.update_vrf_table(route_dist, prefix,
+                            route_family=route_family, is_withdraw=True)
+        # Send success response.
         return [{ROUTE_DISTINGUISHER: route_dist, PREFIX: prefix,
                  VRF_RF: route_family}]
     except BgpCoreError as e:
@@ -165,9 +167,26 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
                                  IP_ADDR])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
-    tm = CORE_MANAGER.get_core_service().table_manager
-    tm.add_to_global_evpn_table(route_type, route_dist, next_hop, **kwargs)
-    return True
+    """Adds EVPN route from VRF identified by *route_dist*.
+    """
+    try:
+        # Create new path and insert into appropriate VRF table.
+        tm = CORE_MANAGER.get_core_service().table_manager
+        label = tm.update_vrf_table(route_dist, next_hop=next_hop,
+                                    route_family=VRF_RF_L2_EVPN,
+                                    route_type=route_type, **kwargs)
+        # Currently we only allocate one label per local route,
+        # so we share first label from the list.
+        if label:
+            label = label[0]
+
+        # Send success response with new label.
+        return [{EVPN_ROUTE_TYPE: route_type,
+                 ROUTE_DISTINGUISHER: route_dist,
+                 VRF_RF: VRF_RF_L2_EVPN,
+                 VPN_LABEL: label}.update(kwargs)]
+    except BgpCoreError as e:
+        raise PrefixError(desc=e)
 
 
 @RegisterWithArgChecks(name='evpn_prefix.delete_local',
@@ -175,7 +194,16 @@ def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
                                  IP_ADDR])
 def delete_evpn_local(route_type, route_dist, **kwargs):
-    tm = CORE_MANAGER.get_core_service().table_manager
-    tm.add_to_global_evpn_table(route_type, route_dist, is_withdraw=True,
-                                **kwargs)
-    return True
+    """Deletes/withdraws EVPN route from VRF identified by *route_dist*.
+    """
+    try:
+        tm = CORE_MANAGER.get_core_service().table_manager
+        tm.update_vrf_table(route_dist,
+                            route_family=VRF_RF_L2_EVPN,
+                            route_type=route_type, is_withdraw=True, **kwargs)
+        # Send success response.
+        return [{EVPN_ROUTE_TYPE: route_type,
+                 ROUTE_DISTINGUISHER: route_dist,
+                 VRF_RF: VRF_RF_L2_EVPN}.update(kwargs)]
+    except BgpCoreError as e:
+        raise PrefixError(desc=e)
