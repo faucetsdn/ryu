@@ -19,6 +19,7 @@ import logging
 
 from . import packet_base
 from . import packet_utils
+from . import bgp
 from ryu.lib import stringify
 
 
@@ -108,6 +109,13 @@ class tcp(packet_base.PacketBase):
         mask = sum(flags)
         return (self.bits & mask) == mask
 
+    @staticmethod
+    def get_payload_type(src_port, dst_port):
+        if bgp.TCP_SERVER_PORT in [src_port, dst_port]:
+            return bgp.BGPMessage
+        else:
+            return None
+
     @classmethod
     def parser(cls, buf):
         (src_port, dst_port, seq, ack, offset, bits, window_size,
@@ -132,7 +140,7 @@ class tcp(packet_base.PacketBase):
         msg = cls(src_port, dst_port, seq, ack, offset, bits,
                   window_size, csum, urgent, option)
 
-        return msg, None, buf[length:]
+        return msg, cls.get_payload_type(src_port, dst_port), buf[length:]
 
     def serialize(self, payload, prev):
         offset = self.offset << 4

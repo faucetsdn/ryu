@@ -22,6 +22,7 @@ import unittest
 from nose.tools import eq_
 from nose.tools import ok_
 
+from ryu.lib import pcaplib
 from ryu.lib.packet import packet
 from ryu.lib.packet import bgp
 from ryu.lib.packet import afi
@@ -45,7 +46,7 @@ class Test_bgp(unittest.TestCase):
     def test_open1(self):
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.1')
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 29)
         eq_(rest, b'')
@@ -67,7 +68,7 @@ class Test_bgp(unittest.TestCase):
         msg = bgp.BGPOpen(my_as=30000, bgp_identifier='192.0.2.2',
                           opt_param=opt_param)
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         ok_(len(msg) > 29)
         eq_(rest, b'')
@@ -75,7 +76,7 @@ class Test_bgp(unittest.TestCase):
     def test_update1(self):
         msg = bgp.BGPUpdate()
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 23)
         eq_(rest, b'')
@@ -153,7 +154,7 @@ class Test_bgp(unittest.TestCase):
                             path_attributes=path_attributes,
                             nlri=nlri)
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         ok_(len(msg) > 23)
         eq_(rest, b'')
@@ -161,7 +162,7 @@ class Test_bgp(unittest.TestCase):
     def test_keepalive(self):
         msg = bgp.BGPKeepAlive()
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 19)
         eq_(rest, b'')
@@ -170,7 +171,7 @@ class Test_bgp(unittest.TestCase):
         data = b'hoge'
         msg = bgp.BGPNotification(error_code=1, error_subcode=2, data=data)
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 21 + len(data))
         eq_(rest, b'')
@@ -178,7 +179,7 @@ class Test_bgp(unittest.TestCase):
     def test_route_refresh(self):
         msg = bgp.BGPRouteRefresh(afi=afi.IP, safi=safi.MPLS_VPN)
         binmsg = msg.serialize()
-        msg2, rest = bgp.BGPMessage.parser(binmsg)
+        msg2, _, rest = bgp.BGPMessage.parser(binmsg)
         eq_(str(msg), str(msg2))
         eq_(len(msg), 23)
         eq_(rest, b'')
@@ -208,11 +209,13 @@ class Test_bgp(unittest.TestCase):
         ]
 
         for f in files:
-            print('testing %s' % f)
-            msg_buf = open(BGP4_PACKET_DATA_DIR + f + '.pcap', 'rb').read()
-            pkt = packet.Packet(msg_buf)
-            pkt.serialize()
-            eq_(msg_buf, pkt.data)
+            print('\n*** testing %s ...' % f)
+            for _, buf in pcaplib.Reader(
+                    open(BGP4_PACKET_DATA_DIR + f + '.pcap', 'rb')):
+                pkt = packet.Packet(buf)
+                print(pkt)
+                pkt.serialize()
+                eq_(buf, pkt.data)
 
     def test_json1(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,

@@ -327,7 +327,7 @@ class BMPRouteMonitoring(BMPPeerMessage):
     def parser(cls, buf):
         kwargs, buf = super(BMPRouteMonitoring, cls).parser(buf)
 
-        bgp_update, buf = BGPMessage.parser(buf)
+        bgp_update, _, buf = BGPMessage.parser(buf)
 
         kwargs['bgp_update'] = bgp_update
 
@@ -498,11 +498,11 @@ class BMPPeerDownNotification(BMPPeerMessage):
         buf = buf[struct.calcsize('!B'):]
 
         if reason == BMP_PEER_DOWN_REASON_LOCAL_BGP_NOTIFICATION:
-            data, rest = BGPMessage.parser(buf)
+            data, _, rest = BGPMessage.parser(buf)
         elif reason == BMP_PEER_DOWN_REASON_LOCAL_NO_NOTIFICATION:
             data = struct.unpack_from('!H', six.binary_type(buf))
         elif reason == BMP_PEER_DOWN_REASON_REMOTE_BGP_NOTIFICATION:
-            data, rest = BGPMessage.parser(buf)
+            data, _, rest = BGPMessage.parser(buf)
         elif reason == BMP_PEER_DOWN_REASON_REMOTE_NO_NOTIFICATION:
             data = None
         else:
@@ -609,8 +609,8 @@ class BMPPeerUpNotification(BMPPeerMessage):
 
         rest = rest[cls._MIN_LEN:]
 
-        sent_open_msg, rest = BGPMessage.parser(rest)
-        received_open_msg, rest = BGPMessage.parser(rest)
+        sent_open_msg, _, rest = BGPMessage.parser(rest)
+        received_open_msg, _, rest = BGPMessage.parser(rest)
 
         kwargs['sent_open_message'] = sent_open_msg
         kwargs['received_open_message'] = received_open_msg

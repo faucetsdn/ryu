@@ -350,7 +350,7 @@ class BgpProtocol(Protocol, Activity):
             # If we have partial message we wait for rest of the message.
             if len(self._recv_buff) < length:
                 return
-            msg, rest = BGPMessage.parser(self._recv_buff)
+            msg, _, rest = BGPMessage.parser(self._recv_buff)
             self._recv_buff = rest
 
             # If we have a valid bgp message we call message handler.

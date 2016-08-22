@@ -41,6 +41,8 @@ from ryu.lib.pack_utils import msg_pack_into
 
 reduce = six.moves.reduce
 
+TCP_SERVER_PORT = 179
+
 BGP_MSG_OPEN = 1
 BGP_MSG_UPDATE = 2
 BGP_MSG_NOTIFICATION = 3
@@ -2238,7 +2240,8 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
         rest = buf[msglen:]
         subcls = cls._lookup_type(type_)
         kwargs = subcls.parser(binmsg)
-        return subcls(marker=marker, len_=len_, type_=type_, **kwargs), rest
+        return subcls(marker=marker, len_=len_, type_=type_,
+                      **kwargs), None, rest
 
     def serialize(self, payload=None, prev=None):
         # fixup
@@ -2661,4 +2664,5 @@ class StreamParser(stream_parser.StreamParser):
     """
 
     def try_parse(self, data):
-        return BGPMessage.parser(data)
+        msg, _, rest = BGPMessage.parser(data)
+        return msg, rest
