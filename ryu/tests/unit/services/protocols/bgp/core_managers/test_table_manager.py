@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import OrderedDict
 import unittest
 import logging
 try:
@@ -22,6 +23,11 @@ except ImportError:
 
 from nose.tools import ok_, eq_, raises
 
+from ryu.lib.packet.bgp import BGPPathAttributeOrigin
+from ryu.lib.packet.bgp import BGPPathAttributeAsPath
+from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
@@ -262,3 +268,88 @@ class Test_TableCoreManager(unittest.TestCase):
         self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
                                     next_hop, route_family, route_type,
                                     **kwargs)
+
+    @mock.patch(
+        'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
+        mock.MagicMock(return_value=None))
+    @mock.patch(
+        'ryu.services.protocols.bgp.core_managers.TableCoreManager.learn_path')
+    def _test_update_global_table(self, learn_path_mock, prefix, next_hop,
+                                  is_withdraw, expected_next_hop):
+        # Prepare test data
+        origin = BGPPathAttributeOrigin(BGP_ATTR_ORIGIN_IGP)
+        aspath = BGPPathAttributeAsPath([[]])
+        pathattrs = OrderedDict()
+        pathattrs[BGP_ATTR_TYPE_ORIGIN] = origin
+        pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
+        pathattrs = str(pathattrs)
+
+        # Instantiate TableCoreManager
+        tbl_mng = table_manager.TableCoreManager(None, None)
+
+        # Test
+        tbl_mng.update_global_table(
+            prefix=prefix,
+            next_hop=next_hop,
+            is_withdraw=is_withdraw,
+        )
+
+        # Check
+        call_args_list = learn_path_mock.call_args_list
+        ok_(len(call_args_list) == 1)  # learn_path should be called once
+        args, kwargs = call_args_list[0]
+        ok_(len(kwargs) == 0)  # no keyword argument
+        output_path = args[0]
+        eq_(None, output_path.source)
+        eq_(prefix, output_path.nlri.prefix)
+        eq_(pathattrs, str(output_path.pathattr_map))
+        eq_(expected_next_hop, output_path.nexthop)
+        eq_(is_withdraw, output_path.is_withdraw)
+
+    def test_update_global_table_ipv4(self):
+        self._test_update_global_table(
+            prefix='192.168.0.0/24',
+            next_hop='10.0.0.1',
+            is_withdraw=False,
+            expected_next_hop='10.0.0.1',
+        )
+
+    def test_update_global_table_ipv4_withdraw(self):
+        self._test_update_global_table(
+            prefix='192.168.0.0/24',
+            next_hop='10.0.0.1',
+            is_withdraw=True,
+            expected_next_hop='10.0.0.1',
+        )
+
+    def test_update_global_table_ipv4_no_next_hop(self):
+        self._test_update_global_table(
+            prefix='192.168.0.0/24',
+            next_hop=None,
+            is_withdraw=True,
+            expected_next_hop='0.0.0.0',
+        )
+
+    def test_update_global_table_ipv6(self):
+        self._test_update_global_table(
+            prefix='fe80::/64',
+            next_hop='fe80::0011:aabb:ccdd:eeff',
+            is_withdraw=False,
+            expected_next_hop='fe80::0011:aabb:ccdd:eeff',
+        )
+
+    def test_update_global_table_ipv6_withdraw(self):
+        self._test_update_global_table(
+            prefix='fe80::/64',
+            next_hop='fe80::0011:aabb:ccdd:eeff',
+            is_withdraw=True,
+            expected_next_hop='fe80::0011:aabb:ccdd:eeff',
+        )
+
+    def test_update_global_table_ipv6_no_next_hop(self):
+        self._test_update_global_table(
+            prefix='fe80::/64',
+            next_hop=None,
+            is_withdraw=True,
+            expected_next_hop='::',
+        )
