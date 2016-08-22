@@ -22,3 +22,4 @@ address-family-numbers.xhtml
 
 IP = 1
 IP6 = 2
+L2VPN = 25

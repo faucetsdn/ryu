@@ -22,5 +22,6 @@ http://www.iana.org/assignments/safi-namespace/safi-namespace.xhtml
 UNICAST = 1
 MULTICAST = 2
 MPLS_LABEL = 4  # RFC 3107
+EVPN = 70       # RFC 7432
 MPLS_VPN = 128  # RFC 4364
 ROUTE_TARGET_CONSTRAINTS = 132  # RFC 4684
