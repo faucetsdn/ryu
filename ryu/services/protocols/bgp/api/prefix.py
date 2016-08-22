@@ -64,13 +64,19 @@ class PrefixError(RuntimeConfigError):
 
 
 @validate(name=PREFIX)
-def is_valid_prefix(ipv4_prefix):
-    return validation.is_valid_ipv4_prefix(ipv4_prefix)
+def is_valid_prefix(prefix):
+    if not (validation.is_valid_ipv4_prefix(prefix)
+            or validation.is_valid_ipv6_prefix(prefix)):
+        raise ConfigValueError(conf_name=PREFIX,
+                               conf_value=prefix)
 
 
 @validate(name=NEXT_HOP)
-def is_valid_next_hop(next_hop_addr):
-    return validation.is_valid_ipv4(next_hop_addr)
+def is_valid_next_hop(next_hop):
+    if not (validation.is_valid_ipv4(next_hop)
+            or validation.is_valid_ipv6(next_hop)):
+        raise ConfigValueError(conf_name=NEXT_HOP,
+                               conf_value=next_hop)
 
 
 @validate(name=EVPN_ROUTE_TYPE)
