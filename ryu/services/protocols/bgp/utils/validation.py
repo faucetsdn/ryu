@@ -20,7 +20,7 @@ import numbers
 import re
 import socket
 
-import six
+import netaddr
 
 
 def is_valid_mac(mac):
@@ -36,25 +36,31 @@ def is_valid_mac(mac):
                          + r'$', mac.lower()))
 
 
+def is_valid_ip_prefix(prefix, bits):
+    """Returns True if *prefix* is a valid IPv4 or IPv6 address prefix.
+
+    *prefix* should be a number between 0 to *bits* length.
+    """
+    try:
+        # Prefix should be a number
+        prefix = int(prefix)
+    except ValueError:
+        return False
+
+    # Prefix should be a number between 0 to *bits*
+    return 0 <= prefix <= bits
+
+
 def is_valid_ipv4(ipv4):
     """Returns True if given is a valid ipv4 address.
 
     Given value should be a dot-decimal notation string.
+
+    Samples:
+        - valid address: 10.0.0.1, 192.168.0.1
+        - invalid address: 11.0.0, 192:168:0:1, etc.
     """
-    valid = True
-
-    if not isinstance(ipv4, str):
-        valid = False
-    else:
-        try:
-            a, b, c, d = [int(x) for x in ipv4.split('.')]
-            if (a < 0 or a > 255 or b < 0 or b > 255 or c < 0 or c > 255 or
-                    d < 0 or d > 255):
-                valid = False
-        except ValueError:
-            valid = False
-
-    return valid
+    return netaddr.valid_ipv4(ipv4)
 
 
 def is_valid_ipv4_prefix(ipv4_prefix):
@@ -67,39 +73,18 @@ def is_valid_ipv4_prefix(ipv4_prefix):
     if not isinstance(ipv4_prefix, str):
         return False
 
-    valid = True
     tokens = ipv4_prefix.split('/')
     if len(tokens) != 2:
-        valid = False
-    else:
-        if not is_valid_ipv4(tokens[0]):
-            valid = False
-        else:
-            # Validate mask
-            try:
-                # Mask is a number
-                mask = int(tokens[1])
-                # Mask is number between 0 to 32
-                if mask < 0 or mask > 32:
-                    valid = False
-            except ValueError:
-                valid = False
+        return False
 
-    return valid
+    # Validate address/mask and return
+    return is_valid_ipv4(tokens[0]) and is_valid_ip_prefix(tokens[1], 32)
 
 
 def is_valid_ipv6(ipv6):
     """Returns True if given `ipv6` is a valid IPv6 address
-
-    Uses `socket.inet_pton` to determine validity.
     """
-    valid = True
-    try:
-        socket.inet_pton(socket.AF_INET6, ipv6)
-    except socket.error:
-        valid = False
-
-    return valid
+    return netaddr.valid_ipv6(ipv6)
 
 
 def is_valid_ipv6_prefix(ipv6_prefix):
@@ -109,41 +94,22 @@ def is_valid_ipv6_prefix(ipv6_prefix):
     if not isinstance(ipv6_prefix, str):
         return False
 
-    valid = True
     tokens = ipv6_prefix.split('/')
     if len(tokens) != 2:
-        valid = False
-    else:
-        if not is_valid_ipv6(tokens[0]):
-            valid = False
-        else:
-            # Validate mask
-            try:
-                # Mask is a number
-                mask = int(tokens[1])
-                # Mask is number between 0 to 128
-                if mask < 0 or mask > 128:
-                    valid = False
-            except ValueError:
-                valid = False
+        return False
 
-    return valid
+    # Validate address/mask and return
+    return is_valid_ipv6(tokens[0]) and is_valid_ip_prefix(tokens[1], 128)
 
 
 def is_valid_old_asn(asn):
     """Returns True if the given AS number is Two Octet."""
-    if isinstance(asn, six.integer_types) and 0 <= asn <= 0xffff:
-        return True
-    else:
-        return False
+    return isinstance(asn, numbers.Integral) and 0 <= asn <= 0xffff
 
 
 def is_valid_asn(asn):
     """Returns True if the given AS number is Two or Four Octet."""
-    if isinstance(asn, six.integer_types) and 0 <= asn <= 0xffffffff:
-        return True
-    else:
-        return False
+    return isinstance(asn, numbers.Integral) and 0 <= asn <= 0xffffffff
 
 
 def is_valid_vpnv4_prefix(prefix):
@@ -152,45 +118,51 @@ def is_valid_vpnv4_prefix(prefix):
     Vpnv4 prefix is made up of RD:Ipv4, where RD is represents route
     distinguisher and Ipv4 represents valid dot-decimal ipv4 notation string.
     """
-    valid = True
-
     if not isinstance(prefix, str):
-        valid = False
-    else:
-        # Split the prefix into route distinguisher and IP
-        tokens = prefix.split(':')
-        if len(tokens) != 3:
-            valid = False
-        else:
-            # Check if first two tokens can form a valid RD
-            try:
-                # admin_subfield
-                int(tokens[0])
-                # assigned_subfield
-                int(tokens[1])
-            except ValueError:
-                valid = False
+        return False
 
-            # Check if ip part is valid
-            valid = is_valid_ipv4_prefix(tokens[2])
+    # Split the prefix into route distinguisher and IP
+    tokens = prefix.split(':', 2)
+    if len(tokens) != 3:
+        return False
 
-    return valid
+    # Validate route distinguisher
+    if not is_valid_route_dist(':'.join([tokens[0], tokens[1]])):
+        return False
+
+    # Validate IPv4 prefix and return
+    return is_valid_ipv4_prefix(tokens[2])
+
+
+def is_valid_vpnv6_prefix(prefix):
+    """Returns True if given prefix is a string represent vpnv6 prefix.
+
+    Vpnv6 prefix is made up of RD:Ipv6, where RD is represents route
+    distinguisher and Ipv6 represents valid colon hexadecimal notation string.
+    """
+    if not isinstance(prefix, str):
+        return False
+
+    # Split the prefix into route distinguisher and IP
+    tokens = prefix.split(':', 2)
+    if len(tokens) != 3:
+        return False
+
+    # Validate route distinguisher
+    if not is_valid_route_dist(':'.join([tokens[0], tokens[1]])):
+        return False
+
+    # Validate IPv6 prefix and return
+    return is_valid_ipv6_prefix(tokens[2])
 
 
 def is_valid_med(med):
     """Returns True if value of *med* is valid as per RFC.
 
-    According to RFC MED is a four octet non-negative integer.
+    According to RFC MED is a four octet non-negative integer and
+    value '((2 ** 32) - 1) =  0xffffffff' denotes an "infinity" metric.
     """
-    valid = True
-
-    if not isinstance(med, numbers.Integral):
-        valid = False
-    else:
-        if med < 0 or med > (2 ** 32) - 1:
-            valid = False
-
-    return valid
+    return isinstance(med, numbers.Integral) and 0 <= med <= 0xffffffff
 
 
 def is_valid_mpls_label(label):
@@ -246,22 +218,24 @@ def is_valid_ext_comm_attr(attr):
     False. Our convention is to represent RT/SOO is a string with format:
     *global_admin_part:local_admin_path*
     """
-    is_valid = True
-
     if not isinstance(attr, str):
-        is_valid = False
-    else:
-        first, second = attr.split(':')
-        try:
-            if '.' in first:
-                socket.inet_aton(first)
-            else:
-                int(first)
-                int(second)
-        except (ValueError, socket.error):
-            is_valid = False
+        return False
 
-    return is_valid
+    tokens = attr.rsplit(':', 1)
+    if len(tokens) != 2:
+        return False
+
+    try:
+        if '.' in tokens[0]:
+            if not is_valid_ipv4(tokens[0]):
+                return False
+        else:
+            int(tokens[0])
+        int(tokens[1])
+    except (ValueError, socket.error):
+        return False
+
+    return True
 
 
 def is_valid_esi(esi):
