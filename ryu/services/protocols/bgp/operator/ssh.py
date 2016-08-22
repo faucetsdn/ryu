@@ -152,6 +152,7 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def _handle_csi_seq(self):
         c = self.chan.recv(1)
+        c = c.decode()  # For Python3 compatibility
         if c == 'A':
             self._lookup_hist_up()
         elif c == 'B':
@@ -165,13 +166,14 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def _handle_esc_seq(self):
         c = self.chan.recv(1)
+        c = c.decode()  # For Python3 compatibility
         if c == '[':
             self._handle_csi_seq()
         else:
             LOG.error("non CSI sequence. do nothing")
 
     def _send_csi_seq(self, cmd):
-        self.chan.send(b'\x1b[' + cmd)
+        self.chan.send('\x1b[' + cmd)
 
     def _movcursor(self, curpos):
         if self.prompted and curpos < len(self.PROMPT):
@@ -347,6 +349,7 @@ Hello, this is Ryu BGP speaker (version %s).
 
         while True:
             c = self.chan.recv(1)
+            c = c.decode()  # For Python3 compatibility
 
             if len(c) == 0:
                 break
