@@ -1,0 +1,61 @@
+{
+   "OFPPacketOut": {
+      "actions": [
+         {
+            "OFPActionOutput": {
+               "len": 16, 
+               "max_len": 65535, 
+               "port": 4294967292, 
+               "type": 0
+            }
+         }
+      ], 
+      "actions_len": 16, 
+      "buffer_id": 4294967295, 
+      "data": { 
+         "Packet": {
+            "protocols": [
+               {
+                  "ethernet": {
+                     "dst": "f2:0b:a4:d0:3f:70",
+                     "ethertype": 2048,
+                     "src": "f2:0b:a4:7d:f8:ea"
+                  }
+               },
+               {
+                  "ipv4": {
+                     "csum": 44939,
+                     "dst": "10.0.0.2",
+                     "flags": 0,
+                     "header_length": 5,
+                     "identification": 63514,
+                     "offset": 0,
+                     "option": null,
+                     "proto": 1,
+                     "src": "10.0.0.1",
+                     "tos": 0,
+                     "total_length": 84,
+                     "ttl": 255,
+                     "version": 4
+                  }
+               },
+               {
+                  "icmp": {
+                     "code": 0,
+                     "csum": 520,
+                     "data": {
+                        "echo": {
+                           "data": "MdYCAAAAAACrjS0xAAAAABAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vAAAAAAAAAAA=",
+                           "id": 63328,
+                           "seq": 0
+                        }
+                     },
+                     "type": 8
+                  }
+               }
+            ]
+         }
+      }, 
+      "in_port": 4294967293
+   }
+}
