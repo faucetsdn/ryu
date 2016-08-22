@@ -863,7 +863,6 @@ class Filter(object):
     ================ ==================================================
     policy           Filter.POLICY_PERMIT or Filter.POLICY_DENY
     ================ ==================================================
-
     """
 
     ROUTE_FAMILY = RF_IPv4_UC
@@ -888,7 +887,6 @@ class Filter(object):
         this method returns True as the matching result.
 
         ``path`` specifies the path. prefix must be string.
-
         """
         raise NotImplementedError()
 
@@ -897,7 +895,6 @@ class Filter(object):
         """ This method clones Filter object.
 
         Returns Filter object that has the same values with the original one.
-
         """
         raise NotImplementedError()
 
@@ -905,33 +902,34 @@ class Filter(object):
 @functools.total_ordering
 class PrefixFilter(Filter):
     """
-    used to specify a prefix for filter.
+    Used to specify a prefix for filter.
 
-    We can create PrefixFilter object as follows.
+    We can create PrefixFilter object as follows::
 
-    prefix_filter = PrefixFilter('10.5.111.0/24',
-                                 policy=PrefixFilter.POLICY_PERMIT)
+        prefix_filter = PrefixFilter('10.5.111.0/24',
+                                     policy=PrefixFilter.POLICY_PERMIT)
 
     ================ ==================================================
     Attribute        Description
     ================ ==================================================
     prefix           A prefix used for this filter
-    policy           PrefixFilter.POLICY.PERMIT or PrefixFilter.POLICY_DENY
+    policy           One of the following values.
+
+                     | PrefixFilter.POLICY.PERMIT
+                     | PrefixFilter.POLICY_DENY
     ge               Prefix length that will be applied to this filter.
                      ge means greater than or equal.
     le               Prefix length that will be applied to this filter.
                      le means less than or equal.
     ================ ==================================================
 
+    For example, when PrefixFilter object is created as follows::
 
-    For example, when PrefixFilter object is created as follows:
+        p = PrefixFilter('10.5.111.0/24',
+                         policy=PrefixFilter.POLICY_DENY,
+                         ge=26, le=28)
 
-    * p = PrefixFilter('10.5.111.0/24',
-                       policy=PrefixFilter.POLICY_DENY,
-                       ge=26, le=28)
-
-
-    prefixes which match 10.5.111.0/24 and its length matches
+    Prefixes which match 10.5.111.0/24 and its length matches
     from 26 to 28 will be filtered.
     When this filter is used as an out-filter, it will stop sending
     the path to neighbor because of POLICY_DENY.
@@ -942,12 +940,11 @@ class PrefixFilter(Filter):
 
     If you don't want to send prefixes 10.5.111.64/26 and 10.5.111.32/27
     and 10.5.111.16/28, and allow to send other 10.5.111.0's prefixes,
-    you can do it by specifying as follows;
+    you can do it by specifying as follows::
 
-    * p = PrefixFilter('10.5.111.0/24',
-                       policy=PrefixFilter.POLICY_DENY,
-                       ge=26, le=28).
-
+        p = PrefixFilter('10.5.111.0/24',
+                         policy=PrefixFilter.POLICY_DENY,
+                         ge=26, le=28).
     """
 
     def __init__(self, prefix, policy, ge=None, le=None):
@@ -995,7 +992,6 @@ class PrefixFilter(Filter):
         this method returns True as the matching result.
 
         ``path`` specifies the path that has prefix.
-
         """
         nlri = path.nlri
 
@@ -1026,7 +1022,6 @@ class PrefixFilter(Filter):
 
         Returns PrefixFilter object that has the same values with the
         original one.
-
         """
 
         return self.__class__(self.prefix,
@@ -1038,39 +1033,40 @@ class PrefixFilter(Filter):
 @functools.total_ordering
 class ASPathFilter(Filter):
     """
-    used to specify a prefix for AS_PATH attribute.
+    Used to specify a prefix for AS_PATH attribute.
 
-    We can create ASPathFilter object as follows;
+    We can create ASPathFilter object as follows::
 
-    * as_path_filter = ASPathFilter(65000,policy=ASPathFilter.TOP)
+        as_path_filter = ASPathFilter(65000,policy=ASPathFilter.TOP)
 
     ================ ==================================================
     Attribute        Description
     ================ ==================================================
     as_number        A AS number used for this filter
-    policy           ASPathFilter.POLICY_TOP and ASPathFilter.POLICY_END,
-                     ASPathFilter.POLICY_INCLUDE and
-                     ASPathFilter.POLICY_NOT_INCLUDE are available.
+    policy           One of the following values.
+
+                     | ASPathFilter.POLICY_TOP
+                     | ASPathFilter.POLICY_END
+                     | ASPathFilter.POLICY_INCLUDE
+                     | ASPathFilter.POLICY_NOT_INCLUDE
     ================ ==================================================
 
-    Meaning of each policy is as follows;
+    Meaning of each policy is as follows:
 
-    * POLICY_TOP :
+    * POLICY_TOP
         Filter checks if the specified AS number is at the top of
         AS_PATH attribute.
 
-    * POLICY_END :
+    * POLICY_END
         Filter checks is the specified AS number
         is at the last of AS_PATH attribute.
 
-    * POLICY_INCLUDE :
+    * POLICY_INCLUDE
         Filter checks if specified AS number
         exists in AS_PATH attribute
 
-    * POLICY_NOT_INCLUDE :
-        opposite to POLICY_INCLUDE
-
-
+    * POLICY_NOT_INCLUDE
+        Opposite to POLICY_INCLUDE
     """
 
     POLICY_TOP = 2
@@ -1117,7 +1113,6 @@ class ASPathFilter(Filter):
         this method returns True as the matching result.
 
         ``path`` specifies the path.
-
         """
 
         path_aspath = path.pathattr_map.get(BGP_ATTR_TYPE_AS_PATH)
@@ -1158,7 +1153,6 @@ class ASPathFilter(Filter):
 
         Returns ASPathFilter object that has the same values with the
         original one.
-
         """
 
         return self.__class__(self._as_number,
@@ -1169,15 +1163,15 @@ class AttributeMap(object):
     """
     This class is used to specify an attribute to add if the path matches
     filters.
-    We can create AttributeMap object as follows;
+    We can create AttributeMap object as follows::
 
-      pref_filter = PrefixFilter('192.168.103.0/30',
-                                 PrefixFilter.POLICY_PERMIT)
+        pref_filter = PrefixFilter('192.168.103.0/30',
+                                   PrefixFilter.POLICY_PERMIT)
 
-      attribute_map = AttributeMap([pref_filter],
-                    AttributeMap.ATTR_LOCAL_PREF, 250)
+        attribute_map = AttributeMap([pref_filter],
+                                     AttributeMap.ATTR_LOCAL_PREF, 250)
 
-      speaker.attribute_map_set('192.168.50.102', [attribute_map])
+        speaker.attribute_map_set('192.168.50.102', [attribute_map])
 
     AttributeMap.ATTR_LOCAL_PREF means that 250 is set as a
     local preference value if nlri in the path matches pref_filter.
@@ -1194,7 +1188,6 @@ class AttributeMap(object):
                         AttributeMap.ATTR_LOCAL_PREF is available.
     attr_value          A attribute value
     =================== ==================================================
-
     """
 
     ATTR_LOCAL_PREF = '_local_pref'
@@ -1215,7 +1208,6 @@ class AttributeMap(object):
         that this object contains.
 
         ``path`` specifies the path.
-
         """
         result = False
         cause = None
@@ -1241,7 +1233,6 @@ class AttributeMap(object):
 
         Returns AttributeMap object that has the same values with the
         original one.
-
         """
 
         cloned_filters = [f.clone() for f in self.filters]

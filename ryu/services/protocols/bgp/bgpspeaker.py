@@ -97,7 +97,6 @@ class EventPrefix(object):
     label            mpls label for vpnv4 prefix
     is_withdraw      True if this prefix has gone otherwise False
     ================ ======================================================
-
     """
 
     def __init__(self, remote_as, route_dist, prefix, nexthop, label,
@@ -152,7 +151,6 @@ class BGPSpeaker(object):
 
         ``peer_up_handler``, if specified, is called when BGP peering
         session goes up.
-
         """
         super(BGPSpeaker, self).__init__()
 
@@ -239,7 +237,6 @@ class BGPSpeaker(object):
 
     def shutdown(self):
         """ Shutdown BGP speaker
-
         """
         call('core.stop')
 
@@ -260,7 +257,7 @@ class BGPSpeaker(object):
         from the peer and also tries to connect to it).
 
         ``address`` specifies the IP address of the peer. It must be
-        the string representation of an IP address. Only IP v4 is
+        the string representation of an IP address. Only IPv4 is
         supported now.
 
         ``remote_as`` specifies the AS number of the peer. It must be
@@ -368,7 +365,6 @@ class BGPSpeaker(object):
 
         ``address`` specifies the IP address of the peer. It must be
         the string representation of an IP address.
-
         """
         bgp_neighbor = {
             neighbors.IP_ADDRESS: address,
@@ -381,7 +377,6 @@ class BGPSpeaker(object):
 
         ``address`` specifies the IP address of the peer. It must be
         the string representation of an IP address.
-
         """
         bgp_neighbor = {
             neighbors.IP_ADDRESS: address,
@@ -392,12 +387,13 @@ class BGPSpeaker(object):
     def neighbor_update(self, address, conf_type, conf_value):
         """ This method changes the neighbor configuration.
 
+        ``address`` specifies the IP address of the peer.
+
         ``conf_type`` specifies configuration type which you want to change.
         Currently ryu.services.protocols.bgp.bgpspeaker.MULTI_EXIT_DISC
         can be specified.
 
         ``conf_value`` specifies value for the configuration type.
-
         """
 
         assert conf_type == MULTI_EXIT_DISC or conf_type == CONNECT_MODE
@@ -421,6 +417,8 @@ class BGPSpeaker(object):
         ``address`` specifies the address of a peer. If not given, the
         state of all the peers return.
 
+        ``format`` specifies the format of the response.
+        This parameter must be 'json' or 'cli'.
         """
         show = {
             'params': ['neighbor', 'summary'],
@@ -444,7 +442,6 @@ class BGPSpeaker(object):
         ``route_dist`` specifies a route distinguisher value. This
         parameter is necessary for only VPNv4 and VPNv6 address
         families.
-
         """
         func_name = 'network.add'
         networks = {
@@ -476,7 +473,6 @@ class BGPSpeaker(object):
         ``route_dist`` specifies a route distinguisher value. This
         parameter is necessary for only VPNv4 and VPNv6 address
         families.
-
         """
         func_name = 'network.del'
         networks = {
@@ -590,15 +586,18 @@ class BGPSpeaker(object):
 
         ``route_dist`` specifies a route distinguisher value.
 
-        ``import_rts`` specifies route targets to be imported.
+        ``import_rts`` specifies a list of route targets to be imported.
 
-        ``export_rts`` specifies route targets to be exported.
+        ``export_rts`` specifies a list of route targets to be exported.
 
         ``site_of_origins`` specifies site_of_origin values.
         This parameter must be a list of string.
 
         ``route_family`` specifies route family of the VRF.
         This parameter must be RF_VPN_V4, RF_VPN_V6 or RF_L2_EVPN.
+
+        ``multi_exit_disc`` specifies multi exit discriminator (MED) value.
+        It must be an integer.
         """
 
         assert route_family in SUPPORTED_VRF_RF,\
@@ -626,6 +625,11 @@ class BGPSpeaker(object):
         call('vrf.delete', **vrf)
 
     def vrfs_get(self, format='json'):
+        """ This method returns the existing vrfs.
+
+        ``format`` specifies the format of the response.
+        This parameter must be 'json' or 'cli'.
+        """
         show = {
             'params': ['vrf', 'routes', 'all'],
             'format': format,
@@ -639,6 +643,8 @@ class BGPSpeaker(object):
 
         ``family`` specifies the address family of the RIB.
 
+        ``format`` specifies the format of the response.
+        This parameter must be 'json' or 'cli'.
         """
         show = {
             'params': ['rib', family],
@@ -661,6 +667,8 @@ class BGPSpeaker(object):
         ``address`` specifies the IP address of the peer. It must be
         the string representation of an IP address.
 
+        ``format`` specifies the format of the response.
+        This parameter must be 'json' or 'cli'.
         """
         show = {
             'format': format,
@@ -702,21 +710,21 @@ class BGPSpeaker(object):
         The contents must be an instance of Filter sub-class
 
         If you want to define out-filter that send only a particular
-        prefix to neighbor, filters can be created as follows;
+        prefix to neighbor, filters can be created as follows::
 
-          p = PrefixFilter('10.5.111.0/24',
-                           policy=PrefixFilter.POLICY_PERMIT)
+            p = PrefixFilter('10.5.111.0/24',
+                             policy=PrefixFilter.POLICY_PERMIT)
 
-          all = PrefixFilter('0.0.0.0/0',
-                             policy=PrefixFilter.POLICY_DENY)
+            all = PrefixFilter('0.0.0.0/0',
+                               policy=PrefixFilter.POLICY_DENY)
 
-          pList = [p, all]
+            pList = [p, all]
 
-          self.bgpspeaker.out_filter_set(neighbor_address, pList)
+            self.bgpspeaker.out_filter_set(neighbor_address, pList)
 
-        NOTE:
-        out-filter evaluates paths in the order of Filter in the pList.
+        .. Note::
 
+            out-filter evaluates paths in the order of Filter in the pList.
         """
 
         self._set_filter('out', address, filters)
@@ -727,7 +735,6 @@ class BGPSpeaker(object):
         ``address`` specifies the IP address of the peer.
 
         Returns a list object containing an instance of Filter sub-class
-
         """
 
         func_name = 'neighbor.out_filter.get'
@@ -745,7 +752,6 @@ class BGPSpeaker(object):
         ``filters`` specifies filter list applied before advertised paths are
         imported to the global rib. All the items in the list must be an
         instance of Filter sub-class.
-
         """
 
         self._set_filter('in', address, filters)
@@ -756,7 +762,6 @@ class BGPSpeaker(object):
         ``address`` specifies the IP address of the neighbor.
 
         Returns a list object containing an instance of Filter sub-class
-
         """
 
         func_name = 'neighbor.in_filter.get'
@@ -818,16 +823,15 @@ class BGPSpeaker(object):
         ``route_family`` specifies route family of the VRF.
         This parameter must be RF_VPN_V4 or RF_VPN_V6.
 
-        We can set AttributeMap to a neighbor as follows;
+        We can set AttributeMap to a neighbor as follows::
 
-          pref_filter = PrefixFilter('192.168.103.0/30',
-                                     PrefixFilter.POLICY_PERMIT)
+            pref_filter = PrefixFilter('192.168.103.0/30',
+                                       PrefixFilter.POLICY_PERMIT)
 
-          attribute_map = AttributeMap([pref_filter],
-                                       AttributeMap.ATTR_LOCAL_PREF, 250)
+            attribute_map = AttributeMap([pref_filter],
+                                         AttributeMap.ATTR_LOCAL_PREF, 250)
 
-          speaker.attribute_map_set('192.168.50.102', [attribute_map])
-
+            speaker.attribute_map_set('192.168.50.102', [attribute_map])
         """
 
         assert route_family in (RF_VPN_V4, RF_VPN_V6),\
@@ -856,7 +860,6 @@ class BGPSpeaker(object):
         This parameter must be RF_VPN_V4 or RF_VPN_V6.
 
         Returns a list object containing an instance of AttributeMap
-
         """
 
         assert route_family in (RF_VPN_V4, RF_VPN_V6),\
@@ -878,7 +881,6 @@ class BGPSpeaker(object):
         IPv6 address, return IPv6 route_family and normalized IPv6 address.
         If the address is IPv4 address, return IPv4 route_family
         and the prefix itself.
-
         """
         ip, masklen = prefix.split('/')
         if netaddr.valid_ipv6(ip):
