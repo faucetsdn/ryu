@@ -18,11 +18,14 @@
 Decoder/Encoder implementations of OpenFlow 1.5.
 """
 
-import six
 import struct
+import base64
+
+import six
 
 from ryu.lib import addrconv
 from ryu.lib.pack_utils import msg_pack_into
+from ryu.lib.packet import packet
 from ryu import utils
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase
 from ryu.ofproto import ether
@@ -5015,7 +5018,8 @@ class OFPPacketOut(MsgBase):
     match            Instance of ``OFPMatch``
                      (``in_port`` is mandatory in the match field)
     actions          list of OpenFlow action class
-    data             Packet data
+    data             Packet data of a binary type value or
+                     an instances of packet.Packet.
     ================ ======================================================
 
     Example::
@@ -5057,13 +5061,34 @@ class OFPPacketOut(MsgBase):
 
         if self.buffer_id == ofproto.OFP_NO_BUFFER:
             assert self.data is not None
-            self.buf += self.data
+            if isinstance(self.data, packet.Packet):
+                self.data.serialize()
+                self.buf += self.data.data
+            else:
+                self.buf += self.data
         else:
             assert self.data is None
 
         msg_pack_into(ofproto.OFP_PACKET_OUT_0_PACK_STR,
                       self.buf, ofproto.OFP_HEADER_SIZE,
                       self.buffer_id, self.actions_len)
+
+    @classmethod
+    def from_jsondict(cls, dict_, decode_string=base64.b64decode,
+                      **additional_args):
+        if isinstance(dict_['data'], dict):
+            data = dict_.pop('data')
+            ins = super(OFPPacketOut, cls).from_jsondict(dict_,
+                                                         decode_string,
+                                                         **additional_args)
+            ins.data = packet.Packet.from_jsondict(data['Packet'])
+            dict_['data'] = data
+        else:
+            ins = super(OFPPacketOut, cls).from_jsondict(dict_,
+                                                         decode_string,
+                                                         **additional_args)
+
+        return ins
 
 
 @_register_parser

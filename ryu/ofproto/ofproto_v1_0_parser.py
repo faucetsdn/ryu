@@ -19,7 +19,8 @@ Decoder/Encoder implementations of OpenFlow 1.0.
 """
 
 import struct
-import binascii
+import base64
+
 import six
 import netaddr
 
@@ -27,6 +28,7 @@ from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase
 from ryu.lib import addrconv
 from ryu.lib import ip
 from ryu.lib import mac
+from ryu.lib.packet import packet
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.ofproto import nx_match
 from ryu.ofproto import ofproto_common
@@ -2605,7 +2607,8 @@ class OFPPacketOut(MsgBase):
     buffer_id        ID assigned by datapath (0xffffffff if none).
     in_port          Packet's input port (OFPP_NONE if none).
     actions          ist of ``OFPAction*`` instance.
-    data             Packet data.
+    data             Packet data of a binary type value or
+                     an instances of packet.Packet.
     ================ ======================================================
 
     Example::
@@ -2644,11 +2647,32 @@ class OFPPacketOut(MsgBase):
 
         if self.data is not None:
             assert self.buffer_id == 0xffffffff
-            self.buf += self.data
+            if isinstance(self.data, packet.Packet):
+                self.data.serialize()
+                self.buf += self.data.data
+            else:
+                self.buf += self.data
 
         msg_pack_into(ofproto.OFP_PACKET_OUT_PACK_STR,
                       self.buf, ofproto.OFP_HEADER_SIZE,
                       self.buffer_id, self.in_port, self._actions_len)
+
+    @classmethod
+    def from_jsondict(cls, dict_, decode_string=base64.b64decode,
+                      **additional_args):
+        if isinstance(dict_['data'], dict):
+            data = dict_.pop('data')
+            ins = super(OFPPacketOut, cls).from_jsondict(dict_,
+                                                         decode_string,
+                                                         **additional_args)
+            ins.data = packet.Packet.from_jsondict(data['Packet'])
+            dict_['data'] = data
+        else:
+            ins = super(OFPPacketOut, cls).from_jsondict(dict_,
+                                                         decode_string,
+                                                         **additional_args)
+
+        return ins
 
 
 @_register_parser
