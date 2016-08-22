@@ -552,8 +552,14 @@ class TableCoreManager(object):
             nlri=prefix, next_hop=next_hop, gen_lbl=gen_lbl,
             is_withdraw=is_withdraw)
 
-    def add_to_global_table(self, prefix, nexthop=None,
-                            is_withdraw=False):
+    def update_global_table(self, prefix, next_hop=None, is_withdraw=False):
+        """Update a BGP route in the Global table for the given `prefix`
+        with the given `next_hop`.
+
+        If `is_withdraw` is False, which is the default, add a BGP route
+        to the Global table.
+        If `is_withdraw` is True, remove a BGP route from the Global table.
+        """
         src_ver_num = 1
         peer = None
         # set mandatory path attributes
@@ -569,17 +575,17 @@ class TableCoreManager(object):
         masklen = net.prefixlen
         if netaddr.valid_ipv4(ip):
             _nlri = IPAddrPrefix(masklen, ip)
-            if nexthop is None:
-                nexthop = '0.0.0.0'
+            if next_hop is None:
+                next_hop = '0.0.0.0'
             p = Ipv4Path
         else:
             _nlri = IP6AddrPrefix(masklen, ip)
-            if nexthop is None:
-                nexthop = '::'
+            if next_hop is None:
+                next_hop = '::'
             p = Ipv6Path
 
         new_path = p(peer, _nlri, src_ver_num,
-                     pattrs=pathattrs, nexthop=nexthop,
+                     pattrs=pathattrs, nexthop=next_hop,
                      is_withdraw=is_withdraw)
 
         # add to global ipv4 table and propagates to neighbors
