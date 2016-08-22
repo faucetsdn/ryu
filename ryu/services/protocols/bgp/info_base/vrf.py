@@ -31,6 +31,7 @@ from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
 from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
 from ryu.lib.packet.bgp import RF_L2_EVPN
+from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.constants import VPN_TABLE
@@ -263,6 +264,10 @@ class VrfTable(Table):
             elif gen_lbl:
                 # If we do not have next_hop, get a new label.
                 label_list.append(table_manager.get_next_vpnv4_label())
+
+            # Set MPLS labels with the generated labels
+            if isinstance(nlri, EvpnMacIPAdvertisementNLRI):
+                nlri.mpls_labels = label_list[:2]
 
         puid = self.VRF_PATH_CLASS.create_puid(
             vrf_conf.route_dist, nlri.prefix)

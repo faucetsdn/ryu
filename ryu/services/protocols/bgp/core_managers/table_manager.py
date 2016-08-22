@@ -37,6 +37,7 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
 from ryu.lib.packet.bgp import EvpnNLRI
+from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 
@@ -531,6 +532,9 @@ class TableCoreManager(object):
             prefix = IP6AddrPrefix(int(masklen), ip6)
         elif route_family == VRF_RF_L2_EVPN:
             assert route_type
+            if route_type == EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME:
+                # MPLS labels will be assigned automatically
+                kwargs['mpls_labels'] = []
             subclass = EvpnNLRI._lookup_type_name(route_type)
             kwargs['route_dist'] = route_dist
             esi = kwargs.get('esi', None)
