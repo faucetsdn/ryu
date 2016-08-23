@@ -275,7 +275,7 @@ class NetworkAwareness(app_manager.RyuApp):
             self.register_access_info(datapath.id, in_port, arp_src_ip, mac)
 
     def show_topology(self):
-        switch_num = len(self.graph.nodes())
+        switch_num = len(list(self.graph.nodes()))
         if self.pre_graph != self.graph and setting.TOSHOW:
             print "---------------------Topo Link---------------------"
             print '%10s' % ("switch"),
