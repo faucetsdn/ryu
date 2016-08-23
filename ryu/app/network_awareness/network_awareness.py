@@ -83,7 +83,7 @@ class NetworkAwareness(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         """
-            Initial opration, send miss-table flow entry to datapaths.
+            Initial operation, send miss-table flow entry to datapaths.
         """
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
