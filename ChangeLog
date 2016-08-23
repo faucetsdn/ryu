@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+* add Class docs and comments
+* add Class docs and comments
+* get echo delay before it was used
+* del useless files including scripts
 * del dirty files of simple_monitor.py
 * fixed showing info error
 * enhance performance
