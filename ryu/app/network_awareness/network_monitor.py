@@ -34,6 +34,10 @@ CONF = cfg.CONF
 
 
 class NetworkMonitor(app_manager.RyuApp):
+    """
+        NetworkMonitor is a Ryu app for collecting traffic information.
+
+    """
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
@@ -51,12 +55,17 @@ class NetworkMonitor(app_manager.RyuApp):
         self.graph = None
         self.capabilities = None
         self.best_paths = None
+        # Start to green thread to monitor traffic and calculating
+        # free bandwidth of links respectively.
         self.monitor_thread = hub.spawn(self._monitor)
         self.save_freebandwidth_thread = hub.spawn(self._save_bw_graph)
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
+        """
+            Record datapath's info
+        """
         datapath = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             if not datapath.id in self.datapaths:
@@ -68,6 +77,9 @@ class NetworkMonitor(app_manager.RyuApp):
                 del self.datapaths[datapath.id]
 
     def _monitor(self):
+        """
+            Main entry method of monitoring traffic.
+        """
         while CONF.weight == 'bw':
             self.stats['flow'] = {}
             self.stats['port'] = {}
@@ -84,12 +96,18 @@ class NetworkMonitor(app_manager.RyuApp):
                 hub.sleep(1)
 
     def _save_bw_graph(self):
+        """
+            Save bandwidth data into networkx graph object.
+        """
         while CONF.weight == 'bw':
             self.graph = self.create_bw_graph(self.free_bandwidth)
             self.logger.debug("save_freebandwidth")
             hub.sleep(setting.MONITOR_PERIOD)
 
     def _request_stats(self, datapath):
+        """
+            Sending request msg to datapath
+        """
         self.logger.debug('send stats request: %016x', datapath.id)
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -104,6 +122,10 @@ class NetworkMonitor(app_manager.RyuApp):
         datapath.send_msg(req)
 
     def get_min_bw_of_links(self, graph, path, min_bw):
+        """
+            Getting bandwidth of path. Actually, the mininum bandwidth
+            of links is the bandwith, because it is the neck bottle of path.
+        """
         _len = len(path)
         if _len > 1:
             minimal_band_width = min_bw
@@ -118,6 +140,9 @@ class NetworkMonitor(app_manager.RyuApp):
         return min_bw
 
     def get_best_path_by_bw(self, graph, paths):
+        """
+            Get best path by comparing paths.
+        """
         capabilities = {}
         best_paths = copy.deepcopy(paths)
 
@@ -145,6 +170,9 @@ class NetworkMonitor(app_manager.RyuApp):
         return capabilities, best_paths
 
     def create_bw_graph(self, bw_dict):
+        """
+            Save bandwidth data into networkx graph object.
+        """
         try:
             graph = self.awareness.graph
             link_to_port = self.awareness.link_to_port
@@ -155,6 +183,7 @@ class NetworkMonitor(app_manager.RyuApp):
                     bw_src = bw_dict[src_dpid][src_port]
                     bw_dst = bw_dict[dst_dpid][dst_port]
                     bandwidth = min(bw_src, bw_dst)
+                    # add key:value of bandwidth into graph.
                     graph[src_dpid][dst_dpid]['bandwidth'] = bandwidth
                 else:
                     graph[src_dpid][dst_dpid]['bandwidth'] = 0
@@ -166,6 +195,7 @@ class NetworkMonitor(app_manager.RyuApp):
             return self.awareness.graph
 
     def _save_freebandwidth(self, dpid, port_no, speed):
+        # Calculate free bandwidth of port and save it.
         port_state = self.port_features.get(dpid).get(port_no)
         if port_state:
             capacity = port_state[2]
@@ -201,6 +231,10 @@ class NetworkMonitor(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
+        """
+            Save flow stats reply info into self.flow_stats.
+            Calculate flow speed and Save it.
+        """
         body = ev.msg.body
         dpid = ev.msg.datapath.id
         self.stats['flow'][dpid] = body
@@ -231,6 +265,10 @@ class NetworkMonitor(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
+        """
+            Save port's stats info
+            Calculate port's speed and save it.
+        """
         body = ev.msg.body
         dpid = ev.msg.datapath.id
         self.stats['port'][dpid] = body
@@ -263,6 +301,9 @@ class NetworkMonitor(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
+        """
+            Save port description info.
+        """
         msg = ev.msg
         dpid = msg.datapath.id
         ofproto = msg.datapath.ofproto
@@ -303,6 +344,9 @@ class NetworkMonitor(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
+        """
+            Handle the port status changed event.
+        """
         msg = ev.msg
         reason = msg.reason
         port_no = msg.desc.port_no
@@ -321,6 +365,7 @@ class NetworkMonitor(app_manager.RyuApp):
 
     def show_stat(self, type):
         '''
+            Show statistics info according to data type.
             type: 'port' 'flow'
         '''
         if setting.TOSHOW is False:

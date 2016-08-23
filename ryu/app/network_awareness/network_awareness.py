@@ -42,6 +42,13 @@ CONF = cfg.CONF
 
 
 class NetworkAwareness(app_manager.RyuApp):
+    """
+        NetworkAwareness is a Ryu app for discover topology information.
+        This App can provide many data services for other App, such as
+        link_to_port, access_table, switch_port_table,access_ports,
+        interior_ports,topology graph and shorteest paths.
+
+    """
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
@@ -60,6 +67,7 @@ class NetworkAwareness(app_manager.RyuApp):
         self.pre_link_to_port = {}
         self.shortest_paths = None
 
+        # Start a green thread to discover network resource.
         self.discover_thread = hub.spawn(self._discover)
 
     def _discover(self):
@@ -74,6 +82,9 @@ class NetworkAwareness(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
+        """
+            Initial opration, send miss-table flow entry to datapaths.
+        """
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -100,6 +111,9 @@ class NetworkAwareness(app_manager.RyuApp):
         dp.send_msg(mod)
 
     def get_host_location(self, host_ip):
+        """
+            Get host location info:(datapath, port) according to host ip.
+        """
         for key in self.access_table.keys():
             if self.access_table[key][0] == host_ip:
                 return key
@@ -112,8 +126,11 @@ class NetworkAwareness(app_manager.RyuApp):
     def get_links(self):
         return self.link_to_port
 
-    # get Adjacency matrix from link_to_port
+
     def get_graph(self, link_list):
+        """
+            Get Adjacency matrix from link_to_port
+        """
         for src in self.switches:
             for dst in self.switches:
                 if src == dst:
@@ -123,6 +140,9 @@ class NetworkAwareness(app_manager.RyuApp):
         return self.graph
 
     def create_port_map(self, switch_list):
+        """
+            Create interior_port table and access_port table. 
+        """
         for sw in switch_list:
             dpid = sw.dp.id
             self.switch_port_table.setdefault(dpid, set())
@@ -132,29 +152,36 @@ class NetworkAwareness(app_manager.RyuApp):
             for p in sw.ports:
                 self.switch_port_table[dpid].add(p.port_no)
 
-    # get links`srouce port to dst port  from link_list,
-    # link_to_port:(src_dpid,dst_dpid)->(src_port,dst_port)
     def create_interior_links(self, link_list):
+        """
+            Get links`srouce port to dst port  from link_list,
+            link_to_port:(src_dpid,dst_dpid)->(src_port,dst_port)
+        """
         for link in link_list:
             src = link.src
             dst = link.dst
             self.link_to_port[
                 (src.dpid, dst.dpid)] = (src.port_no, dst.port_no)
 
-            # find the access ports and interiorior ports
+            # Find the access ports and interiorior ports
             if link.src.dpid in self.switches:
                 self.interior_ports[link.src.dpid].add(link.src.port_no)
             if link.dst.dpid in self.switches:
                 self.interior_ports[link.dst.dpid].add(link.dst.port_no)
 
-    # get ports without link into access_ports
     def create_access_ports(self):
+        """
+            Get ports without link into access_ports
+        """
         for sw in self.switch_port_table:
             all_port_table = self.switch_port_table[sw]
             interior_port = self.interior_ports[sw]
             self.access_ports[sw] = all_port_table - interior_port
 
     def k_shortest_paths(self, graph, src, dst, weight='weight', k=1):
+        """
+            Great K shortest paths of src to dst.
+        """
         generator = nx.shortest_simple_paths(graph, source=src,
                                              target=dst, weight=weight)
         shortest_paths = []
@@ -169,10 +196,13 @@ class NetworkAwareness(app_manager.RyuApp):
             self.logger.debug("No path between %s and %s" % (src, dst))
 
     def all_k_shortest_paths(self, graph, weight='weight', k=1):
+        """
+            Creat all K shortest paths between datapaths.
+        """
         _graph = copy.deepcopy(graph)
         paths = {}
 
-        # find ksp in graph.
+        # Find ksp in graph.
         for src in _graph.nodes():
             paths.setdefault(src, {src: [[src] for i in xrange(k)]})
             for dst in _graph.nodes():
@@ -183,6 +213,7 @@ class NetworkAwareness(app_manager.RyuApp):
                                                         weight=weight, k=k)
         return paths
 
+    # List the event list should be listened.
     events = [event.EventSwitchEnter,
               event.EventSwitchLeave, event.EventPortAdd,
               event.EventPortDelete, event.EventPortModify,
@@ -190,6 +221,9 @@ class NetworkAwareness(app_manager.RyuApp):
 
     @set_ev_cls(events)
     def get_topology(self, ev):
+        """
+            Get topology info and calculate shortest paths.
+        """
         switch_list = get_switch(self.topology_api_app, None)
         self.create_port_map(switch_list)
         self.switches = self.switch_port_table.keys()
@@ -201,6 +235,9 @@ class NetworkAwareness(app_manager.RyuApp):
             self.graph, weight='weight', k=CONF.k_paths)
 
     def register_access_info(self, dpid, in_port, ip, mac):
+        """
+            Register access host info into access table.
+        """
         if in_port in self.access_ports[dpid]:
             if (dpid, in_port) in self.access_table:
                 if self.access_table[(dpid, in_port)] == (ip, mac):
@@ -215,6 +252,9 @@ class NetworkAwareness(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
+        """
+            Hanle the packet in packet, and register the access info.
+        """
         msg = ev.msg
         datapath = msg.datapath
 
@@ -231,7 +271,7 @@ class NetworkAwareness(app_manager.RyuApp):
             arp_dst_ip = arp_pkt.dst_ip
             mac = arp_pkt.src_mac
 
-            # record the access info
+            # Record the access info
             self.register_access_info(datapath.id, in_port, arp_src_ip, mac)
 
     def show_topology(self):

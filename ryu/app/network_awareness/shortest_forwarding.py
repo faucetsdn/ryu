@@ -43,6 +43,14 @@ CONF = cfg.CONF
 
 
 class ShortestForwarding(app_manager.RyuApp):
+    """
+        ShortestForwarding is a Ryu app for forwarding packets in shortest
+        path.
+        This App does not defined the path computation method.
+        To get shortest path, this module depends on network awareness,
+        network monitor and network delay detecttor modules.
+    """
+
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
         "network_awareness": network_awareness.NetworkAwareness,
@@ -61,6 +69,9 @@ class ShortestForwarding(app_manager.RyuApp):
         self.weight = self.WEIGHT_MODEL[CONF.weight]
 
     def set_weight_mode(self, weight):
+        """
+            set weight mode of path calculating.
+        """
         self.weight = weight
         if self.weight == self.WEIGHT_MODEL['hop']:
             self.awareness.get_shortest_paths(weight=self.weight)
@@ -69,6 +80,9 @@ class ShortestForwarding(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
+        """
+            Collect datapath information.
+        """
         datapath = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             if not datapath.id in self.datapaths:
@@ -80,6 +94,9 @@ class ShortestForwarding(app_manager.RyuApp):
                 del self.datapaths[datapath.id]
 
     def add_flow(self, dp, p, match, actions, idle_timeout=0, hard_timeout=0):
+        """
+            Send a flow entry to datapath.
+        """
         ofproto = dp.ofproto
         parser = dp.ofproto_parser
 
@@ -93,6 +110,9 @@ class ShortestForwarding(app_manager.RyuApp):
         dp.send_msg(mod)
 
     def send_flow_mod(self, datapath, flow_info, src_port, dst_port):
+        """
+            Build flow entry, and send it to datapath.
+        """
         parser = datapath.ofproto_parser
         actions = []
         actions.append(parser.OFPActionOutput(dst_port))
@@ -105,6 +125,9 @@ class ShortestForwarding(app_manager.RyuApp):
                       idle_timeout=15, hard_timeout=60)
 
     def _build_packet_out(self, datapath, buffer_id, src_port, dst_port, data):
+        """
+            Build packet out object.
+        """
         actions = []
         if dst_port:
             actions.append(datapath.ofproto_parser.OFPActionOutput(dst_port))
@@ -121,13 +144,19 @@ class ShortestForwarding(app_manager.RyuApp):
         return out
 
     def send_packet_out(self, datapath, buffer_id, src_port, dst_port, data):
+        """
+            Send packet out packet to assigned datapath.
+        """
         out = self._build_packet_out(datapath, buffer_id,
                                      src_port, dst_port, data)
         if out:
             datapath.send_msg(out)
 
     def get_port(self, dst_ip, access_table):
-        # access_table: {(sw,port) :(ip, mac)}
+        """
+            Get access port if dst host.
+            access_table: {(sw,port) :(ip, mac)}
+        """
         if access_table:
             if isinstance(access_table.values()[0], tuple):
                 for key in access_table.keys():
@@ -137,6 +166,9 @@ class ShortestForwarding(app_manager.RyuApp):
         return None
 
     def get_port_pair_from_link(self, link_to_port, src_dpid, dst_dpid):
+        """
+            Get port pair of link, so that controller can install flow entry.
+        """
         if (src_dpid, dst_dpid) in link_to_port:
             return link_to_port[(src_dpid, dst_dpid)]
         else:
@@ -145,6 +177,10 @@ class ShortestForwarding(app_manager.RyuApp):
             return None
 
     def flood(self, msg):
+        """
+            Flood ARP packet to the access port
+            which has no record of host.
+        """
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -160,6 +196,10 @@ class ShortestForwarding(app_manager.RyuApp):
         self.logger.debug("Flooding msg")
 
     def arp_forwarding(self, msg, src_ip, dst_ip):
+        """ Send ARP packet to the destination host,
+            if the dst host record is existed,
+            else, flow it to the unknow access port.
+        """
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -177,13 +217,16 @@ class ShortestForwarding(app_manager.RyuApp):
             self.flood(msg)
 
     def get_path(self, src, dst, weight):
+        """
+            Get shortest path from network awareness module.
+        """
         shortest_paths = self.awareness.shortest_paths
         graph = self.awareness.graph
 
         if weight == self.WEIGHT_MODEL['hop']:
             return shortest_paths.get(src).get(dst)[0]
         elif weight == self.WEIGHT_MODEL['delay']:
-            # If paths existed, return it, else figure it out and save it.
+            # If paths existed, return it, else calculate it and save it.
             try:
                 paths = shortest_paths.get(src).get(dst)
                 return paths[0]
@@ -195,10 +238,16 @@ class ShortestForwarding(app_manager.RyuApp):
                 shortest_paths[src].setdefault(dst, paths)
                 return paths[0]
         elif weight == self.WEIGHT_MODEL['bw']:
+            # Because all paths will be calculate
+            # when call self.monitor.get_best_path_by_bw
+            # So we just need to call it once in a period,
+            # and then, we can get path directly.
             try:
+                # if path is existed, return it.
                 path = self.monitor.best_paths.get(src).get(dst)
                 return path
             except:
+                # else, calculate it, and return.
                 result = self.monitor.get_best_path_by_bw(graph,
                                                           shortest_paths)
                 paths = result[1]
@@ -206,6 +255,9 @@ class ShortestForwarding(app_manager.RyuApp):
                 return best_path
 
     def get_sw(self, dpid, in_port, src, dst):
+        """
+            Get pair of source and destination switches.
+        """
         src_sw = dpid
         dst_sw = None
 
@@ -224,8 +276,10 @@ class ShortestForwarding(app_manager.RyuApp):
 
     def install_flow(self, datapaths, link_to_port, access_table, path,
                      flow_info, buffer_id, data=None):
-        ''' path=[dpid1, dpid2...]
-            flow_info=(eth_type, src_ip, dst_ip, in_port)
+        ''' 
+            Install flow entires for roundtrip: go and back.
+            @parameter: path=[dpid1, dpid2...]
+                        flow_info=(eth_type, src_ip, dst_ip, in_port)
         '''
         if path is None or len(path) == 0:
             self.logger.info("Path error!")
@@ -234,6 +288,7 @@ class ShortestForwarding(app_manager.RyuApp):
         first_dp = datapaths[path[0]]
         out_port = first_dp.ofproto.OFPP_LOCAL
         back_info = (flow_info[0], flow_info[2], flow_info[1])
+
         # inter_link
         if len(path) > 2:
             for i in xrange(1, len(path)-1):
@@ -287,6 +342,10 @@ class ShortestForwarding(app_manager.RyuApp):
             self.send_packet_out(first_dp, buffer_id, in_port, out_port, data)
 
     def shortest_forwarding(self, msg, eth_type, ip_src, ip_dst):
+        """
+            To calculate shortest forwarding path and install them into datapaths.
+
+        """
         datapath = msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -296,9 +355,11 @@ class ShortestForwarding(app_manager.RyuApp):
         if result:
             src_sw, dst_sw = result[0], result[1]
             if dst_sw:
+                # Path has already calculated, just get it.
                 path = self.get_path(src_sw, dst_sw, weight=self.weight)
                 self.logger.info("[PATH]%s<-->%s: %s" % (ip_src, ip_dst, path))
                 flow_info = (eth_type, ip_src, ip_dst, in_port)
+                # install flow entries to datapath along side the path.
                 self.install_flow(self.datapaths,
                                   self.awareness.link_to_port,
                                   self.awareness.access_table, path,

@@ -34,11 +34,18 @@ CONF = cfg.CONF
 
 
 class NetworkDelayDetector(app_manager.RyuApp):
+    """
+        NetworkDelayDetector is a Ryu app for collecting link delay.
+
+    """
+
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(NetworkDelayDetector, self).__init__(*args, **kwargs)
         self.name = 'delaydetector'
+        # Get the active object of swicthes and awareness module.
+        # So that this module can use their data.
         self.sw_module = lookup_service_brick('switches')
         self.awareness = lookup_service_brick('awareness')
 
@@ -60,6 +67,10 @@ class NetworkDelayDetector(app_manager.RyuApp):
                 del self.datapaths[datapath.id]
 
     def _detector(self):
+        """
+            Delay detecting functon.
+            Send echo request and calculate link delay periodically
+        """
         while CONF.weight == 'delay':
             self._send_echo_request()
             self.create_link_delay()
@@ -73,6 +84,9 @@ class NetworkDelayDetector(app_manager.RyuApp):
             hub.sleep(setting.DELAY_DETECTING_PERIOD)
 
     def _send_echo_request(self):
+        """
+            Seng echo request msg to datapath.
+        """
         for datapath in self.datapaths.values():
             parser = datapath.ofproto_parser
             data = "%.6f" % time.time()
@@ -81,13 +95,28 @@ class NetworkDelayDetector(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPEchoReply, MAIN_DISPATCHER)
     def echo_reply_handler(self, ev):
+        """
+            Handle the echo reply msg, and get the latency of link.
+        """
         try:
             latency = time.time() - eval(ev.msg.data)
             self.echo_latency[ev.msg.datapath.id] = latency
         except:
             return
 
-    def get_dalay(self, src, dst):
+    def get_delay(self, src, dst):
+        """
+            Get link delay.
+                        Controller
+                        |        |
+        src echo latency|        |dst echo latency
+                        |        |
+                   SwitchA-------SwitchB
+                        
+                    fwd_delay--->
+                        <----reply_delay
+            delay = (forward delay + reply delay - src datapath's echo latency
+        """
         try:
             fwd_delay = self.awareness.graph[src][dst]['lldpdelay']
             re_delay = self.awareness.graph[dst][src]['lldpdelay']
@@ -108,13 +137,16 @@ class NetworkDelayDetector(app_manager.RyuApp):
             return
 
     def create_link_delay(self):
+        """
+            Create link delay data, and save it into graph object.
+        """
         try:
             for src in self.awareness.graph:
                 for dst in self.awareness.graph[src]:
                     if src == dst:
                         self.awareness.graph[src][dst]['delay'] = 0
                         continue
-                    delay = self.get_dalay(src, dst)
+                    delay = self.get_delay(src, dst)
                     self.awareness.graph[src][dst]['delay'] = delay
         except:
             if self.awareness is None:
@@ -123,6 +155,9 @@ class NetworkDelayDetector(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
+        """
+            Parsing LLDP packet and get the delay of link.
+        """
         msg = ev.msg
         try:
             src_dpid, src_port_no = LLDPPacket.lldp_parse(msg.data)
