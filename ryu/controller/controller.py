@@ -229,12 +229,15 @@ class Datapath(ofproto_protocol.ProtocolDesc):
     @_deactivate
     def _recv_loop(self):
         buf = bytearray()
-        required_len = ofproto_common.OFP_HEADER_SIZE
-
         count = 0
+        min_read_len = remaining_read_len = ofproto_common.OFP_HEADER_SIZE
+
         while self.state != DEAD_DISPATCHER:
             try:
-                ret = self.socket.recv(required_len)
+                read_len = min_read_len
+                if (remaining_read_len > min_read_len):
+                    read_len = remaining_read_len
+                ret = self.socket.recv(read_len)
             except SocketTimeout:
                 continue
             except ssl.SSLError:
@@ -248,10 +251,16 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                 break
 
             buf += ret
-            while len(buf) >= required_len:
+            buf_len = len(buf)
+            while buf_len >= min_read_len:
                 (version, msg_type, msg_len, xid) = ofproto_parser.header(buf)
-                required_len = msg_len
-                if len(buf) < required_len:
+                if (msg_len < min_read_len):
+                    # Someone isn't playing nicely; log it, and try something sane.
+                    LOG.debug("Message with invalid length %s received from switch at address %s",
+                              msg_len, self.address)
+                    msg_len = min_read_len
+                if buf_len < msg_len:
+                    remaining_read_len = (msg_len - buf_len)
                     break
 
                 msg = ofproto_parser.msg(
@@ -268,8 +277,9 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                     for handler in handlers:
                         handler(ev)
 
-                buf = buf[required_len:]
-                required_len = ofproto_common.OFP_HEADER_SIZE
+                buf = buf[msg_len:]
+                buf_len = len(buf)
+                remaining_read_len = min_read_len
 
                 # We need to schedule other greenlets. Otherwise, ryu
                 # can't accept new switches or handle the existing
