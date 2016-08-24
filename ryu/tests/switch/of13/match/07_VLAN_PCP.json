@@ -135,8 +135,8 @@
                                 {
                                     "OXMTlv":{
                                         "field":"vlan_vid",
-                                        "mask":null,
-                                        "value":4196
+                                        "mask":4096,
+                                        "value":4096
                                     }
                                 },
                                 {
@@ -315,8 +315,8 @@
                                 {
                                     "OXMTlv":{
                                         "field":"vlan_vid",
-                                        "mask":null,
-                                        "value":4196
+                                        "mask":4096,
+                                        "value":4096
                                     }
                                 },
                                 {
@@ -491,8 +491,8 @@
                                 {
                                     "OXMTlv":{
                                         "field":"vlan_vid",
-                                        "mask":null,
-                                        "value":4196
+                                        "mask":4096,
+                                        "value":4096
                                     }
                                 },
                                 {

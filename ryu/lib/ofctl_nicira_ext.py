@@ -72,7 +72,7 @@ def action_to_str(act, ofctl_action_to_str):
 
                 else:
                     src = spec.src
-                    start_end = ''
+                    src_start_end = '[]'
 
                 if isinstance(spec.dst, (tuple, list)):
                     dst = spec.dst[0]
@@ -82,7 +82,7 @@ def action_to_str(act, ofctl_action_to_str):
 
                 else:
                     dst = spec.dst
-                    start_end = '[]'
+                    dst_start_end = '[]'
 
                 add_spec('NX_LOAD {%s%s: %s%s}' % (dst, dst_start_end,
                                                    src, src_start_end))
@@ -108,11 +108,16 @@ def action_to_str(act, ofctl_action_to_str):
                 'table_id: %s, '
                 'fin_idle_timeout: %s, '
                 'fin_hard_timeout: %s, '
-                'specs: %s}' % (act.idle_timeout, act.hard_timeout,
-                                act.priority, act.cookie, act.flags,
-                                act.fin_idle_timeout,
-                                act.self.fin_hard_timeout,
-                                specs))
+                'specs: %s}' %
+                (act.idle_timeout,
+                 act.hard_timeout,
+                 act.priority,
+                 act.cookie,
+                 act.flags,
+                 act.table_id,
+                 act.fin_idle_timeout,
+                 act.self.fin_hard_timeout,
+                 specs))
 
     elif sub_type == nicira_ext.NXAST_CONJUNCTION:
         return ('NX_CONJUNCTION: {clause: %s, number_of_clauses: %s, id: %s}' %

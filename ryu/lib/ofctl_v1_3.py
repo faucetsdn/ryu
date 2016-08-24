@@ -55,8 +55,8 @@ def to_actions(dp, acts):
             if action_type == 'WRITE_ACTIONS':
                 write_actions = []
                 write_acts = a.get('actions')
-                for a in write_acts:
-                    action = to_action(dp, a)
+                for act in write_acts:
+                    action = to_action(dp, act)
                     if action is not None:
                         write_actions.append(action)
                     else:
@@ -66,8 +66,8 @@ def to_actions(dp, acts):
                         parser.OFPInstructionActions(ofp.OFPIT_WRITE_ACTIONS,
                                                      write_actions))
             elif action_type == 'CLEAR_ACTIONS':
-                inst.append(parser.OFPInstructionActions(
-                            ofp.OFPIT_CLEAR_ACTIONS, []))
+                inst.append(
+                    parser.OFPInstructionActions(ofp.OFPIT_CLEAR_ACTIONS, []))
             elif action_type == 'GOTO_TABLE':
                 table_id = UTIL.ofp_table_from_user(a.get('table_id'))
                 inst.append(parser.OFPInstructionGotoTable(table_id))
@@ -133,7 +133,7 @@ def action_to_str(act):
         if act.experimenter == ofproto_common.NX_EXPERIMENTER_ID:
             try:
                 return ofctl_nicira_ext.action_to_str(act, action_to_str)
-            except:
+            except Exception:
                 LOG.debug('Error parsing NX_ACTION(%s)',
                           act.__class__.__name__, exc_info=True)
 
@@ -299,8 +299,7 @@ def match_to_str(ofmatch):
             'tcp_src': 'tp_src',
             'tcp_dst': 'tp_dst',
             'udp_src': 'tp_src',
-            'udp_dst': 'tp_dst'
-            }
+            'udp_dst': 'tp_dst'}
 
     match = {}
 
@@ -395,8 +394,7 @@ def get_queue_config(dp, waiters, port=None, to_user=True):
 
     prop_type = {dp.ofproto.OFPQT_MIN_RATE: 'MIN_RATE',
                  dp.ofproto.OFPQT_MAX_RATE: 'MAX_RATE',
-                 dp.ofproto.OFPQT_EXPERIMENTER: 'EXPERIMENTER',
-                 }
+                 dp.ofproto.OFPQT_EXPERIMENTER: 'EXPERIMENTER'}
 
     configs = []
     for config in msgs:
@@ -564,8 +562,7 @@ def get_table_features(dp, waiters, to_user=True):
                  ofproto.OFPTFPT_APPLY_SETFIELD: 'APPLY_SETFIELD',
                  ofproto.OFPTFPT_APPLY_SETFIELD_MISS: 'APPLY_SETFIELD_MISS',
                  ofproto.OFPTFPT_EXPERIMENTER: 'EXPERIMENTER',
-                 ofproto.OFPTFPT_EXPERIMENTER_MISS: 'EXPERIMENTER_MISS'
-                 }
+                 ofproto.OFPTFPT_EXPERIMENTER_MISS: 'EXPERIMENTER_MISS'}
 
     if not to_user:
         prop_type = dict((k, k) for k in prop_type.keys())
@@ -600,41 +597,42 @@ def get_table_features(dp, waiters, to_user=True):
                 p = {'type': prop_type.get(prop.type, 'UNKNOWN')}
                 if prop.type in p_type_instructions:
                     instruction_ids = []
-                    for id in prop.instruction_ids:
-                        i = {'len': id.len,
-                             'type': id.type}
-                        instruction_ids.append(i)
+                    for i in prop.instruction_ids:
+                        inst = {'len': i.len,
+                                'type': i.type}
+                        instruction_ids.append(inst)
                     p['instruction_ids'] = instruction_ids
                 elif prop.type in p_type_next_tables:
                     table_ids = []
-                    for id in prop.table_ids:
-                        table_ids.append(id)
+                    for i in prop.table_ids:
+                        table_ids.append(i)
                     p['table_ids'] = table_ids
                 elif prop.type in p_type_actions:
                     action_ids = []
-                    for id in prop.action_ids:
-                        i = {'len': id.len,
-                             'type': id.type}
-                        action_ids.append(i)
+                    for i in prop.action_ids:
+                        act = {'len': i.len,
+                               'type': i.type}
+                        action_ids.append(act)
                     p['action_ids'] = action_ids
                 elif prop.type in p_type_oxms:
                     oxm_ids = []
-                    for id in prop.oxm_ids:
-                        i = {'hasmask': id.hasmask,
-                             'length': id.length,
-                             'type': id.type}
-                        oxm_ids.append(i)
+                    for i in prop.oxm_ids:
+                        oxm = {'hasmask': i.hasmask,
+                               'length': i.length,
+                               'type': i.type}
+                        oxm_ids.append(oxm)
                     p['oxm_ids'] = oxm_ids
                 elif prop.type in p_type_experimenter:
                     pass
                 properties.append(p)
-            s = {'name': stat.name.decode('utf-8'),
-                 'metadata_match': stat.metadata_match,
-                 'metadata_write': stat.metadata_write,
-                 'config': stat.config,
-                 'max_entries': stat.max_entries,
-                 'properties': properties,
-                 }
+            s = {
+                'name': stat.name.decode('utf-8'),
+                'metadata_match': stat.metadata_match,
+                'metadata_write': stat.metadata_write,
+                'config': stat.config,
+                'max_entries': stat.max_entries,
+                'properties': properties,
+            }
 
             if to_user:
                 s['table_id'] = UTIL.ofp_table_to_user(stat.table_id)

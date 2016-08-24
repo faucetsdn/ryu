@@ -479,6 +479,7 @@ class OrganizationallySpecific(LLDPBasicTLV):
         if buf:
             (self.oui, self.subtype) = struct.unpack(
                 self._PACK_STR, self.tlv_info[:self._PACK_SIZE])
+            self.info = self.tlv_info[self._PACK_SIZE:]
         else:
             self.oui = kwargs['oui']
             self.subtype = kwargs['subtype']
@@ -488,7 +489,8 @@ class OrganizationallySpecific(LLDPBasicTLV):
             self.typelen = (self.tlv_type << LLDP_TLV_TYPE_SHIFT) | self.len
 
     def serialize(self):
-        return struct.pack('!H3sB', self.typelen, self.oui, self.subtype)
+        return struct.pack('!H3sB', self.typelen, self.oui,
+                           self.subtype) + self.info
 
 
 lldp.set_classes(lldp._tlv_parsers)

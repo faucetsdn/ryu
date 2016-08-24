@@ -386,6 +386,7 @@ class AppManager(object):
         self.applications = {}
         self.contexts_cls = {}
         self.contexts = {}
+        self.close_sem = hub.Semaphore()
 
     def load_app(self, name):
         mod = utils.import_module(name)
@@ -541,7 +542,10 @@ class AppManager(object):
                 self._close(app)
             close_dict.clear()
 
-        for app_name in list(self.applications.keys()):
-            self.uninstantiate(app_name)
-        assert not self.applications
-        close_all(self.contexts)
+        # This semaphore prevents parallel execution of this function,
+        # as run_apps's finally clause starts another close() call.
+        with self.close_sem:
+            for app_name in list(self.applications.keys()):
+                self.uninstantiate(app_name)
+            assert not self.applications
+            close_all(self.contexts)

@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 
 import six
 
@@ -28,20 +29,20 @@ class IntDescr(TypeDescr):
     def __init__(self, size):
         self.size = size
 
-    def to_user(self, bin):
+    def to_user(self, binary):
         i = 0
-        for x in range(self.size):
-            c = bin[:1]
+        for _ in range(self.size):
+            c = binary[:1]
             i = i * 256 + ord(c)
-            bin = bin[1:]
+            binary = binary[1:]
         return i
 
     def from_user(self, i):
-        bin = b''
-        for x in range(self.size):
-            bin = six.int2byte(i & 255) + bin
+        binary = b''
+        for _ in range(self.size):
+            binary = six.int2byte(i & 255) + binary
             i //= 256
-        return bin
+        return binary
 
 Int1 = IntDescr(1)
 Int2 = IntDescr(2)
@@ -65,13 +66,13 @@ class IntDescrMlt(TypeDescr):
         self.num = num
         self.size = length * num
 
-    def to_user(self, bin):
-        assert len(bin) == self.size
-        lb = _split_str(bin, self.length)
+    def to_user(self, binary):
+        assert len(binary) == self.size
+        lb = _split_str(binary, self.length)
         li = []
         for b in lb:
             i = 0
-            for x in range(self.length):
+            for _ in range(self.length):
                 c = b[:1]
                 i = i * 256 + ord(c)
                 b = b[1:]
@@ -80,14 +81,14 @@ class IntDescrMlt(TypeDescr):
 
     def from_user(self, li):
         assert len(li) == self.num
-        bin = b''
+        binary = b''
         for i in li:
             b = b''
-            for x in range(self.length):
+            for _ in range(self.length):
                 b = six.int2byte(i & 255) + b
                 i //= 256
-            bin += b
-        return bin
+            binary += b
+        return binary
 
 Int4Double = IntDescrMlt(4, 2)
 
@@ -111,13 +112,12 @@ class IPv6Addr(TypeDescr):
 
 
 class UnknownType(TypeDescr):
-    import base64
 
-    b64encode = base64.b64encode
-    if six.PY3:
-        @classmethod
-        def to_user(cls, data):
-            return cls.b64encode(data).decode('ascii')
-    else:
-        to_user = staticmethod(base64.b64encode)
+    @staticmethod
+    def to_user(data):
+        if six.PY3:
+            return base64.b64encode(data).decode('ascii')
+        else:
+            return base64.b64encode(data)
+
     from_user = staticmethod(base64.b64decode)

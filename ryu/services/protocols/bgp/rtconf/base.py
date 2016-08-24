@@ -30,7 +30,7 @@ from ryu.services.protocols.bgp.base import get_validator
 from ryu.services.protocols.bgp.base import RUNTIME_CONF_ERROR_CODE
 from ryu.services.protocols.bgp.base import validate
 from ryu.services.protocols.bgp.utils import validation
-from ryu.services.protocols.bgp.utils.validation import is_valid_old_asn
+from ryu.services.protocols.bgp.utils.validation import is_valid_asn
 
 LOG = logging.getLogger('bgpspeaker.rtconf.base')
 
@@ -39,6 +39,7 @@ LOG = logging.getLogger('bgpspeaker.rtconf.base')
 #
 CAP_REFRESH = 'cap_refresh'
 CAP_ENHANCED_REFRESH = 'cap_enhanced_refresh'
+CAP_FOUR_OCTET_AS_NUMBER = 'cap_four_octet_as_number'
 CAP_MBGP_IPV4 = 'cap_mbgp_ipv4'
 CAP_MBGP_IPV6 = 'cap_mbgp_ipv6'
 CAP_MBGP_VPNV4 = 'cap_mbgp_vpnv4'
@@ -143,13 +144,13 @@ class ConfigValueError(RuntimeConfigError):
 # Configuration base classes.
 # =============================================================================
 
+@six.add_metaclass(ABCMeta)
 class BaseConf(object):
     """Base class for a set of configuration values.
 
     Configurations can be required or optional. Also acts as a container of
     configuration change listeners.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, **kwargs):
         self._req_settings = self.get_req_settings()
@@ -426,9 +427,9 @@ class ConfWithStats(BaseConf):
                                   **kwargs)
 
 
+@six.add_metaclass(ABCMeta)
 class BaseConfListener(object):
     """Base class of all configuration listeners."""
-    __metaclass__ = ABCMeta
 
     def __init__(self, base_conf):
         pass
@@ -594,6 +595,14 @@ def validate_cap_enhanced_refresh(cer):
     return cer
 
 
+@validate(name=CAP_FOUR_OCTET_AS_NUMBER)
+def validate_cap_four_octet_as_number(cfoan):
+    if cfoan not in (True, False):
+        raise ConfigTypeError(desc='Invalid Four-Octet AS Number capability '
+                              'settings: %s boolean value expected' % cfoan)
+    return cfoan
+
+
 @validate(name=CAP_MBGP_IPV4)
 def validate_cap_mbgp_ipv4(cmv4):
     if cmv4 not in (True, False):
@@ -641,7 +650,7 @@ def validate_cap_rtc(cap_rtc):
 
 @validate(name=RTC_AS)
 def validate_cap_rtc_as(rtc_as):
-    if not is_valid_old_asn(rtc_as):
+    if not is_valid_asn(rtc_as):
         raise ConfigValueError(desc='Invalid RTC AS configuration value: %s'
                                % rtc_as)
     return rtc_as

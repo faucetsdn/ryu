@@ -79,6 +79,8 @@ class OfctlService(app_manager.RyuApp):
         self.logger.debug('add dpid %s datapath %s new_info %s old_info %s',
                           id, datapath, new_info, old_info)
         self._switches[id] = new_info
+        if old_info:
+            old_info.datapath.close()
 
     @set_ev_cls(ofp_event.EventOFPStateChange, DEAD_DISPATCHER)
     def _handle_dead(self, ev):

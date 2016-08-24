@@ -66,11 +66,11 @@ def main(args=None, prog=None):
              project='ryu', version='ryu-manager %s' % version)
 
     log.init_log()
+    logger = logging.getLogger(__name__)
 
     if CONF.enable_debugger:
-        LOG = logging.getLogger('ryu.cmd.manager')
         msg = 'debugging is available (--enable-debugger option is turned on)'
-        LOG.info(msg)
+        logger.info(msg)
     else:
         hub.patch(thread=True)
 
@@ -80,7 +80,7 @@ def main(args=None, prog=None):
             pid_file.write(str(os.getpid()))
 
     app_lists = CONF.app_lists + CONF.app
-    # keep old behaivor, run ofp if no application is specified.
+    # keep old behavior, run ofp if no application is specified.
     if not app_lists:
         app_lists = ['ryu.controller.ofp_handler']
 
@@ -97,6 +97,9 @@ def main(args=None, prog=None):
 
     try:
         hub.joinall(services)
+    except KeyboardInterrupt:
+        logger.debug("Keyboard Interrupt received. "
+                     "Closing RYU application manager...")
     finally:
         app_mgr.close()
 

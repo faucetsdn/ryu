@@ -166,8 +166,7 @@ def to_match(dp, attrs):
                'pbb_isid': ofctl_utils.to_match_masked_int,
                'tunnel_id': ofctl_utils.to_match_masked_int,
                'ipv6_exthdr': ofctl_utils.to_match_masked_int,
-               'pbb_uca': int,
-               }
+               'pbb_uca': int}
 
     keys = {'dl_dst': 'eth_dst',
             'dl_src': 'eth_src',
@@ -430,27 +429,27 @@ def get_table_features(dp, waiters, to_user=True):
                 p['type'] = t if t != prop.type else 'UNKNOWN'
                 if prop.type in p_type_instructions:
                     instruction_ids = []
-                    for id in prop.instruction_ids:
-                        i = {'len': id.len,
-                             'type': id.type}
-                        instruction_ids.append(i)
+                    for i in prop.instruction_ids:
+                        inst = {'len': i.len,
+                                'type': i.type}
+                        instruction_ids.append(inst)
                     p['instruction_ids'] = instruction_ids
                 elif prop.type in p_type_next_tables:
                     table_ids = []
-                    for id in prop.table_ids:
-                        table_ids.append(id)
+                    for i in prop.table_ids:
+                        table_ids.append(i)
                     p['table_ids'] = table_ids
                 elif prop.type in p_type_actions:
                     action_ids = []
-                    for id in prop.action_ids:
-                        i = id.to_jsondict()[id.__class__.__name__]
-                        action_ids.append(i)
+                    for i in prop.action_ids:
+                        act = i.to_jsondict()[i.__class__.__name__]
+                        action_ids.append(act)
                     p['action_ids'] = action_ids
                 elif prop.type in p_type_oxms:
                     oxm_ids = []
-                    for id in prop.oxm_ids:
-                        i = id.to_jsondict()[id.__class__.__name__]
-                        oxm_ids.append(i)
+                    for i in prop.oxm_ids:
+                        oxm = i.to_jsondict()[i.__class__.__name__]
+                        oxm_ids.append(oxm)
                     p['oxm_ids'] = oxm_ids
                 elif prop.type in p_type_experimenter:
                     pass
@@ -677,8 +676,7 @@ def get_group_features(dp, waiters, to_user=True):
                    ofp.OFPAT_SET_FIELD: 'SET_FIELD',
                    ofp.OFPAT_PUSH_PBB: 'PUSH_PBB',
                    ofp.OFPAT_POP_PBB: 'POP_PBB',
-                   ofp.OFPAT_EXPERIMENTER: 'EXPERIMENTER',
-                   }
+                   ofp.OFPAT_EXPERIMENTER: 'EXPERIMENTER'}
 
     stats = dp.ofproto_parser.OFPGroupFeaturesStatsRequest(dp, 0)
     msgs = []

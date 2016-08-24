@@ -19,8 +19,10 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class Protocol(object):
     """Interface for various protocols.
 
@@ -31,7 +33,6 @@ class Protocol(object):
     facilitate or provide hooks to sub-classes to override behavior as
     appropriate.
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def data_received(self, data):
@@ -62,12 +63,12 @@ class Protocol(object):
         pass
 
 
+@six.add_metaclass(ABCMeta)
 class Factory(object):
     """This is a factory which produces protocols.
 
     Can also act as context for protocols.
     """
-    __metaclass__ = ABCMeta
 
     # Put a subclass of Protocol here:
     protocol = None

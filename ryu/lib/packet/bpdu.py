@@ -379,7 +379,7 @@ class ConfigurationBPDUs(bpdu):
 
     @staticmethod
     def _encode_timer(timer):
-        return timer * 0x100
+        return int(timer) * 0x100
 
 
 @bpdu.register_bpdu_type

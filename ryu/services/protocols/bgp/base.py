@@ -20,6 +20,7 @@ from __future__ import absolute_import
 import abc
 from collections import OrderedDict
 import logging
+import six
 import socket
 import time
 import traceback
@@ -125,6 +126,7 @@ class ActivityException(BGPSException):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class Activity(object):
     """Base class for a thread of execution that provides some custom settings.
 
@@ -133,7 +135,6 @@ class Activity(object):
     to start another activity or greenthread. Activity is also holds pointers
     to sockets that it or its child activities of threads have create.
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, name=None):
         self._name = name

@@ -25,6 +25,7 @@ from copy import copy
 import logging
 import functools
 import netaddr
+import six
 
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RouteTargetMembershipNLRI
@@ -43,6 +44,7 @@ from ryu.services.protocols.bgp.processor import BPR_UNKNOWN
 LOG = logging.getLogger('bgpspeaker.info_base.base')
 
 
+@six.add_metaclass(ABCMeta)
 class Table(object):
     """A container for holding information about destination/prefixes.
 
@@ -50,7 +52,6 @@ class Table(object):
     This is a base class which should be sub-classed for different route
     family. A table can be uniquely identified by (Route Family, Scope Id).
     """
-    __metaclass__ = abc.ABCMeta
     ROUTE_FAMILY = RF_IPv4_UC
 
     def __init__(self, scope_id, core_service, signal_bus):
@@ -82,9 +83,6 @@ class Table(object):
         raise NotImplementedError()
 
     def values(self):
-        return self._destinations.values()
-
-    def itervalues(self):
         return iter(self._destinations.values())
 
     def insert(self, path):
@@ -278,6 +276,7 @@ class NonVrfPathProcessingMixin(object):
                 self._sent_routes = {}
 
 
+@six.add_metaclass(ABCMeta)
 class Destination(object):
     """State about a particular destination.
 
@@ -285,7 +284,6 @@ class Destination(object):
     a routing information base table *Table*.
     """
 
-    __metaclass__ = abc.ABCMeta
     ROUTE_FAMILY = RF_IPv4_UC
 
     def __init__(self, table, nlri):
@@ -668,13 +666,13 @@ class Destination(object):
         return result
 
 
+@six.add_metaclass(ABCMeta)
 class Path(object):
     """Represents a way of reaching an IP destination.
 
     Also contains other meta-data given to us by a specific source (such as a
     peer).
     """
-    __metaclass__ = ABCMeta
     __slots__ = ('_source', '_path_attr_map', '_nlri', '_source_version_num',
                  '_exported_from', '_nexthop', 'next_path', 'prev_path',
                  '_is_withdraw', 'med_set_by_target_neighbor')
@@ -838,6 +836,7 @@ class Path(object):
             self._path_attr_map, self._nexthop, self._is_withdraw))
 
 
+@six.add_metaclass(ABCMeta)
 class Filter(object):
     """Represents a general filter for in-bound and out-bound filter
 
@@ -848,7 +847,6 @@ class Filter(object):
     ================ ==================================================
 
     """
-    __metaclass__ = ABCMeta
 
     ROUTE_FAMILY = RF_IPv4_UC
 

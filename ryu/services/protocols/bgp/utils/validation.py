@@ -19,6 +19,8 @@
 import numbers
 import socket
 
+import six
+
 
 def is_valid_ipv4(ipv4):
     """Returns True if given is a valid ipv4 address.
@@ -115,17 +117,19 @@ def is_valid_ipv6_prefix(ipv6_prefix):
 
 
 def is_valid_old_asn(asn):
-    """Returns true if given asn is a 16 bit number.
+    """Returns True if the given AS number is Two Octet."""
+    if isinstance(asn, six.integer_types) and 0 <= asn <= 0xffff:
+        return True
+    else:
+        return False
 
-    Old AS numbers are 16 but unsigned number.
-    """
-    valid = True
-    # AS number should be a 16 bit number
-    if (not isinstance(asn, numbers.Integral) or (asn < 0) or
-            (asn > ((2 ** 16) - 1))):
-        valid = False
 
-    return valid
+def is_valid_asn(asn):
+    """Returns True if the given AS number is Two or Four Octet."""
+    if isinstance(asn, six.integer_types) and 0 <= asn <= 0xffffffff:
+        return True
+    else:
+        return False
 
 
 def is_valid_vpnv4_prefix(prefix):

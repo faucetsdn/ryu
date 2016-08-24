@@ -5536,13 +5536,11 @@ class OFPSetAsync(MsgBase):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            properties = [ofp_parser.OFPAsyncConfigPropReasons(
-                          8, ofp_parser.OFPACPT_PACKET_IN_SLAVE,
-                          (ofp_parser.OFPR_APPLY_ACTION |
-                           ofp_parser.OFPR_INVALID_TTL)),
-                          ofp_parser.OFPAsyncConfigPropExperimenter(
-                          ofp.OFPTFPT_EXPERIMENTER_MASTER,
-                          16, 100, 2, bytearray())]
+            properties = [
+                ofp_parser.OFPAsyncConfigPropReasons(
+                    ofp.OFPACPT_PACKET_IN_SLAVE, 8,
+                    (1 << ofp.OFPR_APPLY_ACTION
+                     | 1 << ofp.OFPR_INVALID_TTL))]
             req = ofp_parser.OFPSetAsync(datapath, properties)
             datapath.send_msg(req)
     """

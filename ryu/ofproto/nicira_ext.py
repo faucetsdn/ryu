@@ -44,9 +44,24 @@ NXAST_EXIT = 17
 NXAST_DEC_TTL = 18
 NXAST_FIN_TIMEOUT = 19
 NXAST_CONTROLLER = 20
+NXAST_DEC_TTL_CNT_IDS = 21
+NXAST_PUSH_MPLS = 23
+NXAST_POP_MPLS = 24
+NXAST_SET_MPLS_TTL = 25
+NXAST_DEC_MPLS_TTL = 26
+NXAST_STACK_PUSH = 27
+NXAST_STACK_POP = 28
+NXAST_SAMPLE = 29
+NXAST_SET_MPLS_LABEL = 30
+NXAST_SET_MPLS_TC = 31
+NXAST_OUTPUT_REG2 = 32
+NXAST_REG_LOAD2 = 33
 NXAST_CONJUNCTION = 34
 NXAST_CT = 35
 NXAST_NAT = 36
+NXAST_CONTROLLER2 = 37
+NXAST_SAMPLE2 = 38
+NXAST_OUTPUT_TRUNC = 39
 
 NX_ACTION_RESUBMIT_PACK_STR = '!HHIHHB3x'
 NX_ACTION_RESUBMIT_SIZE = 16
@@ -144,6 +159,13 @@ NXPIF_NXM = 1
 NXST_FLOW = 0
 NXST_AGGREGATE = 1
 NXST_FLOW_MONITOR = 2
+
+# enum nx_action_controller2_prop_type
+NXAC2PT_MAX_LEN = 0
+NXAC2PT_CONTROLLER_ID = 1
+NXAC2PT_REASON = 2
+NXAC2PT_USERDATA = 3
+NXAC2PT_PAUSE = 4
 
 NICIRA_HEADER_PACK_STR = '!II'
 NICIRA_HEADER_SIZE = 16
@@ -254,6 +276,39 @@ NX_NAT_RANGE_IPV6_MIN = 1 << 2
 NX_NAT_RANGE_IPV6_MAX = 1 << 3
 NX_NAT_RANGE_PROTO_MIN = 1 << 4
 NX_NAT_RANGE_PROTO_MAX = 1 << 5
+
+
+def ofs_nbits(start, end):
+    """
+    The utility method for ofs_nbits
+
+    This method is used in the class to set the ofs_nbits.
+
+    This method converts start/end bits into ofs_nbits required to
+    specify the bit range of OXM/NXM fields.
+
+    ofs_nbits can be calculated as following::
+
+      ofs_nbits = (start << 6) + (end - start)
+
+    The parameter start/end  means the OXM/NXM field of ovs-ofctl command.
+
+    ..
+      field[start..end]
+    ..
+
+    +------------------------------------------+
+    | *field*\ **[**\ *start*\..\ *end*\ **]** |
+    +------------------------------------------+
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    start            Start bit for OXM/NXM field
+    end              End bit for OXM/NXM field
+    ================ ======================================================
+    """
+    return (start << 6) + (end - start)
 
 
 def nxm_header__(vendor, field, hasmask, length):

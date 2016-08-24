@@ -19,6 +19,7 @@ import logging
 import netaddr
 import six
 
+from ryu.lib import dpid
 from ryu.lib import hub
 
 
@@ -194,7 +195,7 @@ def to_match_vid(value, ofpvid_present):
 def to_match_masked_int(value):
     if isinstance(value, str) and '/' in value:
         value = value.split('/')
-        return (str_to_int(value[0]), str_to_int(value[1]))
+        return str_to_int(value[0]), str_to_int(value[1])
 
     return str_to_int(value)
 
@@ -229,7 +230,12 @@ def send_msg(dp, msg, logger=None):
     if msg.xid is None:
         dp.set_xid(msg)
 
-    get_logger(logger).debug('Sending message with xid(%x): %s', msg.xid, msg)
+    log = get_logger(logger)
+    # NOTE(jkoelker) Prevent unnecessary string formating by including the
+    #                format rules in the log_msg
+    log_msg = ('Sending message with xid(%x) to '
+               'datapath(' + dpid._DPID_FMT + '): %s')
+    log.debug(log_msg, msg.xid, dp.id, msg)
     dp.send_msg(msg)
 
 

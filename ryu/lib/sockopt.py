@@ -21,6 +21,10 @@ import struct
 from ryu.lib import sockaddr
 
 
+TCP_MD5SIG_LINUX = 0x0e
+TCP_MD5SIG_BSD = 0x10
+
+
 def _set_tcp_md5sig_linux(s, addr, key):
     # struct tcp_md5sig {
     #     struct sockaddr_storage addr;
@@ -29,7 +33,6 @@ def _set_tcp_md5sig_linux(s, addr, key):
     #     u32 pad2;
     #     u8 key[80];
     # }
-    TCP_MD5SIG = 14
     af = s.family
     if af == socket.AF_INET:
         sa = sockaddr.sa_in4(addr)
@@ -39,14 +42,13 @@ def _set_tcp_md5sig_linux(s, addr, key):
         raise ValueError("unsupported af %s" % (af,))
     ss = sockaddr.sa_to_ss(sa)
     tcp_md5sig = ss + struct.pack("2xH4x80s", len(key), key)
-    s.setsockopt(socket.IPPROTO_TCP, TCP_MD5SIG, tcp_md5sig)
+    s.setsockopt(socket.IPPROTO_TCP, TCP_MD5SIG_LINUX, tcp_md5sig)
 
 
 def _set_tcp_md5sig_bsd(s, _addr, _key):
     # NOTE: On this platform, address and key need to be set using setkey(8).
-    TCP_MD5SIG = 0x10
     tcp_md5sig = struct.pack("I", 1)
-    s.setsockopt(socket.IPPROTO_TCP, TCP_MD5SIG, tcp_md5sig)
+    s.setsockopt(socket.IPPROTO_TCP, TCP_MD5SIG_BSD, tcp_md5sig)
 
 
 def set_tcp_md5sig(s, addr, key):

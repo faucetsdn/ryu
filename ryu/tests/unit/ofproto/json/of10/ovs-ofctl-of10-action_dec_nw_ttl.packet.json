@@ -1,0 +1,37 @@
+{
+    "OFPFlowMod": {
+        "actions": [
+            {
+                "NXActionDecTtl": {
+                    "subtype": 18, 
+                    "vendor": 8992
+                }
+            }
+        ], 
+        "buffer_id": 4294967295, 
+        "command": 0, 
+        "cookie": 0, 
+        "flags": 0, 
+        "hard_timeout": 0, 
+        "idle_timeout": 0, 
+        "match": {
+            "OFPMatch": {
+                "dl_dst": "00:00:00:00:00:00", 
+                "dl_src": "00:00:00:00:00:00", 
+                "dl_type": 34887, 
+                "dl_vlan": 0, 
+                "dl_vlan_pcp": 0, 
+                "in_port": 0, 
+                "nw_dst": "0.0.0.0", 
+                "nw_proto": 0, 
+                "nw_src": "0.0.0.0", 
+                "nw_tos": 0, 
+                "tp_dst": 0, 
+                "tp_src": 0, 
+                "wildcards": 3678447
+            }
+        }, 
+        "out_port": 65535, 
+        "priority": 100
+    }
+}

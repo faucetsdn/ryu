@@ -54,7 +54,8 @@ class Packet(object):
                 break
             if proto:
                 self.protocols.append(proto)
-        if rest_data:
+        # If rest_data is all padding, we ignore rest_data
+        if rest_data and six.binary_type(rest_data).strip(b'\x00'):
             self.protocols.append(rest_data)
 
     def serialize(self):
@@ -74,7 +75,7 @@ class Packet(object):
                 data = p.serialize(self.data, prev)
             else:
                 data = six.binary_type(p)
-            self.data = data + self.data
+            self.data = bytearray(data + self.data)
 
     def add_protocol(self, proto):
         """Register a protocol *proto* for this packet.

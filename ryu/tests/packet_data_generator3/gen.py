@@ -108,7 +108,7 @@ MESSAGES = [
      'args': (['table=3,',
               'importance=39032'] +
               ['dl_type=0x0800,ct_state=-trk'] +
-              ['actions=ct(table=4)'])},
+              ['actions=ct(table=4,zone=NXM_NX_REG0[4..31])'])},
     {'name': 'action_ct_exec',
      'versions': [4],
      'cmd': 'add-flow',
@@ -145,6 +145,84 @@ MESSAGES = [
      'cmd': 'add-flow',
      'args': (['priority=100,tcp'] +
               ['actions=fin_timeout(idle_timeout=30,hard_timeout=60)'])},
+    {'name': 'action_dec_nw_ttl',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=dec_ttl'])},
+    {'name': 'action_push_mpls',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,ip'] +
+              ['actions=push_mpls:0x8847'])},
+    {'name': 'action_pop_mpls',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=pop_mpls:0x0800'])},
+    {'name': 'action_set_mpls_ttl',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=set_mpls_ttl(127)'])},
+    {'name': 'action_dec_mpls_ttl',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=dec_mpls_ttl'])},
+    {'name': 'action_set_mpls_label',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=set_mpls_label(10)'])},
+    {'name': 'action_set_mpls_tc',
+     'versions': [1],
+     'cmd': 'add-flow',
+     'args': (['priority=100,mpls'] +
+              ['actions=set_mpls_tc(10)'])},
+    {'name': 'action_dec_ttl_cnt_ids',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100,tcp'] +
+              ['actions=dec_ttl(1,2,3,4,5)'])},
+    {'name': 'action_stack_push',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=push:NXM_NX_REG2[1..5]'])},
+    {'name': 'action_stack_pop',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=pop:NXM_NX_REG2[1..5]'])},
+    {'name': 'action_sample',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=sample(probability=3,collector_set_id=1,' +
+               'obs_domain_id=2,obs_point_id=3)'])},
+    {'name': 'action_sample2',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=sample(probability=3,collector_set_id=1,' +
+               'obs_domain_id=2,obs_point_id=3,sampling_port=8080)'])},
+    {'name': 'action_controller2',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=controller(reason=packet_out,max_len=1024,' +
+               'id=10,userdata=01.02.03.04.05,pause)'])},
+    {'name': 'action_output_trunc',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['priority=100'] +
+              ['actions=output(port=8080,max_len=1024)'])},
+
+
+    # ToDo: The following actions are not eligible
+    # {'name': 'action_regload2'},
+    # {'name': 'action_outputreg2'},
 ]
 
 buf = []
