@@ -2512,6 +2512,33 @@ Delete a meter entry
             "meter_id": 1
          }' http://localhost:8080/stats/meterentry/delete
 
+Modify role
+--------------------
+
+    modify the role of the switch.
+
+    Usage:
+
+        ======= =========================
+        Method  POST
+        URI     /stats/role
+        ======= =========================
+
+    Request message body:
+
+        =========== ============================ ========= =================
+        Attribute   Description                  Example   Default
+        =========== ============================ ========= =================
+        dpid        Datapath ID (int)            1         (Mandatory)
+        role        One of OFPCR_ROLE_*(string)  "MASTER"  OFPCR_ROLE_EQUAL
+        =========== ============================ ========= =================
+
+    Example of use::
+
+        $ curl -X POST -d '{
+            "dpid": 1,
+            "role": "MASTER"
+         }' http://localhost:8080/stats/role
 
 Support for experimenter multipart
 ==================================

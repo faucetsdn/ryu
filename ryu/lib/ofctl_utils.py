@@ -424,3 +424,6 @@ class OFCtlUtil(object):
 
     def ofp_queue_to_user(self, queue):
         return self._reserved_num_to_user(queue, 'OFPQ_')
+
+    def ofp_role_from_user(self, role):
+        return self._reserved_num_from_user(role, 'OFPCR_ROLE_')
