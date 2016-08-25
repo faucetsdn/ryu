@@ -177,6 +177,9 @@ supported_ofctl = {
 # modify behavior of the physical port
 # POST /stats/portdesc/modify
 #
+# modify role of controller
+# POST /stats/role
+#
 #
 # send a experimeter message
 # POST /stats/experimenter/<dpid>
@@ -488,6 +491,10 @@ class StatsController(ControllerBase):
     def send_experimenter(self, req, dp, ofctl, exp, **kwargs):
         ofctl.send_experimenter(dp, exp)
 
+    @command_method
+    def set_role(self, req, dp, ofctl, role, **kwargs):
+        ofctl.set_role(dp, role)
+
 
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
@@ -696,6 +703,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/experimenter/{dpid}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='send_experimenter',
+                       conditions=dict(method=['POST']))
+
+        uri = path + '/role'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='set_role',
                        conditions=dict(method=['POST']))
 
     @set_ev_cls([ofp_event.EventOFPStatsReply,
