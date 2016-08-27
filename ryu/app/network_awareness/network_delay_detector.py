@@ -36,7 +36,6 @@ CONF = cfg.CONF
 class NetworkDelayDetector(app_manager.RyuApp):
     """
         NetworkDelayDetector is a Ryu app for collecting link delay.
-
     """
 
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -44,6 +43,7 @@ class NetworkDelayDetector(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(NetworkDelayDetector, self).__init__(*args, **kwargs)
         self.name = 'delaydetector'
+        self.sending_echo_request_interval = 0.05
         # Get the active object of swicthes and awareness module.
         # So that this module can use their data.
         self.sw_module = lookup_service_brick('switches')
@@ -89,17 +89,24 @@ class NetworkDelayDetector(app_manager.RyuApp):
         """
         for datapath in self.datapaths.values():
             parser = datapath.ofproto_parser
-            data = "%.6f" % time.time()
-            echo_req = parser.OFPEchoRequest(datapath, data=data)
+            echo_req = parser.OFPEchoRequest(datapath,
+                                             data="%.12f" % time.time())
             datapath.send_msg(echo_req)
+            # Important! Don't send echo request together, Because it will
+            # generate a lot of echo reply almost in the same time.
+            # which will generate a lot of delay of waiting in queue
+            # when processing echo reply in echo_reply_handler.
+
+            hub.sleep(self.sending_echo_request_interval)
 
     @set_ev_cls(ofp_event.EventOFPEchoReply, MAIN_DISPATCHER)
     def echo_reply_handler(self, ev):
         """
             Handle the echo reply msg, and get the latency of link.
         """
+        now_timestamp = time.time()
         try:
-            latency = time.time() - eval(ev.msg.data)
+            latency = now_timestamp - eval(ev.msg.data)
             self.echo_latency[ev.msg.datapath.id] = latency
         except:
             return
@@ -122,7 +129,7 @@ class NetworkDelayDetector(app_manager.RyuApp):
             re_delay = self.awareness.graph[dst][src]['lldpdelay']
             src_latency = self.echo_latency[src]
             dst_latency = self.echo_latency[dst]
-
+            
             delay = (fwd_delay + re_delay - src_latency - dst_latency)/2
             return max(delay, 0)
         except:
@@ -162,18 +169,14 @@ class NetworkDelayDetector(app_manager.RyuApp):
         try:
             src_dpid, src_port_no = LLDPPacket.lldp_parse(msg.data)
             dpid = msg.datapath.id
-            in_port = msg.match['in_port']
             if self.sw_module is None:
                 self.sw_module = lookup_service_brick('switches')
 
             for port in self.sw_module.ports.keys():
                 if src_dpid == port.dpid and src_port_no == port.port_no:
-                    port_data = self.sw_module.ports[port]
-                    timestamp = port_data.timestamp
-                    if timestamp:
-                        delay = time.time() - timestamp
-                        self._save_lldp_delay(src=src_dpid, dst=dpid,
-                                              lldpdelay=delay)
+                    delay = self.sw_module.ports[port].delay
+                    self._save_lldp_delay(src=src_dpid, dst=dpid,
+                                          lldpdelay=delay)
         except LLDPPacket.LLDPUnknownFormat as e:
             return
 
