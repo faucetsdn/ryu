@@ -827,7 +827,7 @@ def mod_flow_entry(dp, flow, cmd):
     flow_mod = dp.ofproto_parser.OFPFlowMod(
         dp, cookie, cookie_mask, table_id, cmd, idle_timeout,
         hard_timeout, priority, buffer_id, out_port, out_group,
-        importance, flags, match, inst)
+        flags, importance, match, inst)
 
     ofctl_utils.send_msg(dp, flow_mod, LOG)
 
