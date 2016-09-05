@@ -116,6 +116,8 @@ class Test_bgp(unittest.TestCase):
                 subtype=3, ipv4_address='192.0.2.1',
                 local_administrator=65432),
             bgp.BGPOpaqueExtendedCommunity(subtype=13, opaque=b'abcdef'),
+            bgp.BGPEncapsulationExtendedCommunity(
+                subtype=0x0c, tunnel_type=10),
             bgp.BGPEvpnMacMobilityExtendedCommunity(
                 subtype=0, flags=0xff, sequence_number=0x11223344),
             bgp.BGPEvpnEsiLabelExtendedCommunity(
@@ -280,6 +282,8 @@ class Test_bgp(unittest.TestCase):
                 subtype=3, ipv4_address='192.0.2.1',
                 local_administrator=65432),
             bgp.BGPOpaqueExtendedCommunity(subtype=13, opaque=b'abcdef'),
+            bgp.BGPEncapsulationExtendedCommunity(
+                subtype=0x0c, tunnel_type=10),
             bgp.BGPEvpnMacMobilityExtendedCommunity(
                 subtype=0, flags=0xff, sequence_number=0x11223344),
             bgp.BGPEvpnEsiLabelExtendedCommunity(

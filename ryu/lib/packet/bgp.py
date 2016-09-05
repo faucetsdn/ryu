@@ -2679,10 +2679,15 @@ class _ExtendedCommunity(StringifyMixin, _TypeDisp, _Value):
     IPV4_ADDRESS_SPECIFIC = 0x01
     FOUR_OCTET_AS_SPECIFIC = 0x02
     OPAQUE = 0x03
+    SUBTYPE_ENCAPSULATION = 0x0c
+    ENCAPSULATION = (OPAQUE, SUBTYPE_ENCAPSULATION)
     EVPN = 0x06
-    EVPN_MAC_MOBILITY = (EVPN, 0x00)
-    EVPN_ESI_LABEL = (EVPN, 0x01)
-    EVPN_ES_IMPORT_RT = (EVPN, 0x02)
+    SUBTYPE_EVPN_MAC_MOBILITY = 0x00
+    SUBTYPE_EVPN_ESI_LABEL = 0x01
+    SUBTYPE_EVPN_ES_IMPORT_RT = 0x02
+    EVPN_MAC_MOBILITY = (EVPN, SUBTYPE_EVPN_MAC_MOBILITY)
+    EVPN_ESI_LABEL = (EVPN, SUBTYPE_EVPN_ESI_LABEL)
+    EVPN_ES_IMPORT_RT = (EVPN, SUBTYPE_EVPN_ES_IMPORT_RT)
 
     def __init__(self, type_=None):
         if type_ is None:
@@ -2701,12 +2706,10 @@ class _ExtendedCommunity(StringifyMixin, _TypeDisp, _Value):
         (type_, value) = struct.unpack_from(cls._PACK_STR, buf)
         rest = buf[cls._PACK_STR_SIZE:]
         type_low = type_ & cls._TYPE_HIGH_MASK
-        if type_low == cls.EVPN:
-            subtype = cls.parse_subtype(value)
-            subcls = cls._lookup_type((type_low, subtype))
-        else:
+        subtype = cls.parse_subtype(value)
+        subcls = cls._lookup_type((type_low, subtype))
+        if subcls == cls._UNKNOWN_TYPE:
             subcls = cls._lookup_type(type_low)
-
         return subcls(type_=type_, **subcls.parse_value(value)), rest
 
     def serialize(self):
@@ -2769,6 +2772,28 @@ class BGPOpaqueExtendedCommunity(_ExtendedCommunity):
     def __init__(self, **kwargs):
         super(BGPOpaqueExtendedCommunity, self).__init__()
         self.do_init(BGPOpaqueExtendedCommunity, self, kwargs)
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.ENCAPSULATION)
+class BGPEncapsulationExtendedCommunity(_ExtendedCommunity):
+    _VALUE_PACK_STR = '!B4xH'
+    _VALUE_FIELDS = ['subtype', 'tunnel_type']
+
+    # BGP Tunnel Encapsulation Attribute Tunnel Types
+    # http://www.iana.org/assignments/bgp-parameters/bgp-parameters.xhtml#tunnel-types
+    TUNNEL_TYPE_L2TPV3 = 1
+    TUNNEL_TYPE_GRE = 2
+    TUNNEL_TYPE_IP_IN_IP = 7
+    TUNNEL_TYPE_VXLAN = 8
+    TUNNEL_TYPE_NVGRE = 9
+    TUNNEL_TYPE_MPLS = 10
+    TUNNEL_TYPE_MPLS_IN_GRE = 11
+    TUNNEL_TYPE_VXLAN_GRE = 12
+    TUNNEL_TYPE_MPLS_IN_UDP = 13
+
+    def __init__(self, **kwargs):
+        super(BGPEncapsulationExtendedCommunity, self).__init__()
+        self.do_init(BGPEncapsulationExtendedCommunity, self, kwargs)
 
 
 @_ExtendedCommunity.register_type(_ExtendedCommunity.EVPN_MAC_MOBILITY)
