@@ -157,6 +157,55 @@ class Test_TableCoreManager(unittest.TestCase):
                                     next_hop, route_family, route_type,
                                     **kwargs)
 
+    @mock.patch(
+        'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
+        mock.MagicMock(return_value=None))
+    def test_update_vrf_table_l2_evpn_with_vni(self):
+        # Prepare test data
+        route_dist = '65000:100'
+        prefix_str = None  # should be ignored
+        kwargs = {
+            'ethernet_tag_id': 100,
+            'mac_addr': 'aa:bb:cc:dd:ee:ff',
+            'ip_addr': '192.168.0.1',
+            'vni': 500,
+        }
+        esi = EvpnArbitraryEsi(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        prefix_inst = EvpnMacIPAdvertisementNLRI(
+            route_dist=route_dist,
+            esi=esi,
+            **kwargs)
+        next_hop = '10.0.0.1'
+        route_family = VRF_RF_L2_EVPN
+        route_type = EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME
+        tunnel_type = 'vxlan'
+        kwargs['esi'] = 0
+
+        # Instantiate TableCoreManager
+        tbl_mng = table_manager.TableCoreManager(None, None)
+        vrf_table_mock = mock.MagicMock()
+        tbl_mng._tables = {(route_dist, route_family): vrf_table_mock}
+
+        # Test
+        tbl_mng.update_vrf_table(
+            route_dist=route_dist,
+            prefix=prefix_str,
+            next_hop=next_hop,
+            route_family=route_family,
+            route_type=route_type,
+            tunnel_type=tunnel_type,
+            **kwargs)
+
+        # Check
+        call_args_list = vrf_table_mock.insert_vrf_path.call_args_list
+        ok_(len(call_args_list) == 1)  # insert_vrf_path should be called once
+        args, kwargs = call_args_list[0]
+        ok_(len(args) == 0)  # no positional argument
+        eq_(str(prefix_inst), str(kwargs['nlri']))
+        eq_(next_hop, kwargs['next_hop'])
+        eq_(False, kwargs['gen_lbl'])  # should not generate MPLS labels
+        eq_(tunnel_type, kwargs['tunnel_type'])
+
     def test_update_vrf_table_ipv4_withdraw(self):
         # Prepare test data
         route_dist = '65000:100'

@@ -201,3 +201,15 @@ class Test_Utils_Validation(unittest.TestCase):
 
     def test_is_valid_ethernet_tag_id_over(self):
         eq_(False, validation.is_valid_ethernet_tag_id(0xffffffff + 1))
+
+    def test_is_valid_vni(self):
+        ok_(validation.is_valid_vni(100))
+
+    def test_is_valid_vni_not_int(self):
+        eq_(False, validation.is_valid_vni('foo'))
+
+    def test_is_valid_vni_negative(self):
+        eq_(False, validation.is_valid_vni(-1))
+
+    def test_is_valid_vni_over(self):
+        eq_(False, validation.is_valid_vni(0xffffff + 1))
