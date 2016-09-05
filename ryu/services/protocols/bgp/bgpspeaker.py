@@ -31,8 +31,10 @@ from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
+from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
+from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_MPLS
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
@@ -490,7 +492,7 @@ class BGPSpeaker(object):
 
     def evpn_prefix_add(self, route_type, route_dist, esi=0,
                         ethernet_tag_id=None, mac_addr=None, ip_addr=None,
-                        next_hop=None):
+                        next_hop=None, tunnel_type=TUNNEL_TYPE_MPLS):
         """ This method adds a new EVPN route to be advertised.
 
         ``route_type`` specifies one of the EVPN route type name. The
@@ -509,6 +511,9 @@ class BGPSpeaker(object):
         ``ip_addr`` specifies an IPv4 or IPv6 address to advertise.
 
         ``next_hop`` specifies the next hop address for this prefix.
+
+        ``tunnel_type`` specifies the data plane encapsulation type
+        to advertise. The default is the MPLS encapsulation type.
         """
         func_name = 'evpn_prefix.add_local'
 
@@ -520,6 +525,10 @@ class BGPSpeaker(object):
         kwargs = {EVPN_ROUTE_TYPE: route_type,
                   ROUTE_DISTINGUISHER: route_dist,
                   NEXT_HOP: next_hop}
+
+        # Set optional arguments
+        if tunnel_type:
+            kwargs[TUNNEL_TYPE] = tunnel_type
 
         # Set route type specific arguments
         if route_type == EVPN_MAC_IP_ADV_ROUTE:

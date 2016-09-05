@@ -31,6 +31,7 @@ from ryu.services.protocols.bgp.api.base import PREFIX
 from ryu.services.protocols.bgp.api.base import RegisterWithArgChecks
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import VPN_LABEL
+from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import PREFIX_ERROR_CODE
 from ryu.services.protocols.bgp.base import validate
@@ -52,6 +53,20 @@ EVPN_MULTICAST_ETAG_ROUTE = EvpnInclusiveMulticastEthernetTagNLRI.ROUTE_TYPE_NAM
 SUPPORTED_EVPN_ROUTE_TYPES = [
     EVPN_MAC_IP_ADV_ROUTE,
     EVPN_MULTICAST_ETAG_ROUTE,
+]
+
+# Constants for BGP Tunnel Encapsulation Attribute
+TUNNEL_TYPE_VXLAN = 'vxlan'
+TUNNEL_TYPE_NVGRE = 'nvgre'
+TUNNEL_TYPE_MPLS = 'mpls'
+TUNNEL_TYPE_MPLS_IN_GRE = 'mpls_in_gre'
+TUNNEL_TYPE_VXLAN_GRE = 'vxlan_gre'
+SUPPORTED_TUNNEL_TYPES = [
+    TUNNEL_TYPE_VXLAN,
+    TUNNEL_TYPE_NVGRE,
+    TUNNEL_TYPE_MPLS,
+    TUNNEL_TYPE_MPLS_IN_GRE,
+    TUNNEL_TYPE_VXLAN_GRE,
 ]
 
 
@@ -122,6 +137,13 @@ def is_valid_mpls_labels(labels):
                                conf_value=labels)
 
 
+@validate(name=TUNNEL_TYPE)
+def is_valid_tunnel_type(tunnel_type):
+    if tunnel_type not in SUPPORTED_TUNNEL_TYPES:
+        raise ConfigValueError(conf_name=TUNNEL_TYPE,
+                               conf_value=tunnel_type)
+
+
 @RegisterWithArgChecks(name='prefix.add_local',
                        req_args=[ROUTE_DISTINGUISHER, PREFIX, NEXT_HOP],
                        opt_args=[VRF_RF])
@@ -171,7 +193,7 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER,
                                  NEXT_HOP],
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR])
+                                 IP_ADDR, TUNNEL_TYPE])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
     """Adds EVPN route from VRF identified by *route_dist*.
     """

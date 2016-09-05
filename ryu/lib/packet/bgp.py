@@ -2795,6 +2795,26 @@ class BGPEncapsulationExtendedCommunity(_ExtendedCommunity):
         super(BGPEncapsulationExtendedCommunity, self).__init__()
         self.do_init(BGPEncapsulationExtendedCommunity, self, kwargs)
 
+    @classmethod
+    def from_str(cls, tunnel_type):
+        """
+        Returns an instance identified with the given `tunnel_type`.
+
+        `tunnel_type` should be a str type value and corresponding to
+        BGP Tunnel Encapsulation Attribute Tunnel Type constants name
+        omitting `TUNNEL_TYPE_` prefix.
+
+        Example:
+            - `gre` means TUNNEL_TYPE_GRE
+            - `vxlan` means TUNNEL_TYPE_VXLAN
+
+        And raises AttributeError when the corresponding Tunnel Type
+        is not found to the given `tunnel_type`.
+        """
+        return cls(subtype=_ExtendedCommunity.SUBTYPE_ENCAPSULATION,
+                   tunnel_type=getattr(cls,
+                                       'TUNNEL_TYPE_' + tunnel_type.upper()))
+
 
 @_ExtendedCommunity.register_type(_ExtendedCommunity.EVPN_MAC_MOBILITY)
 class BGPEvpnMacMobilityExtendedCommunity(_ExtendedCommunity):

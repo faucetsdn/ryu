@@ -49,6 +49,7 @@ EVPN_ETHERNET_TAG_ID = 'ethernet_tag_id'
 MAC_ADDR = 'mac_addr'
 IP_ADDR = 'ip_addr'
 MPLS_LABELS = 'mpls_labels'
+TUNNEL_TYPE = 'tunnel_type'
 
 # API call registry
 _CALL_REGISTRY = {}

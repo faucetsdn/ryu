@@ -482,7 +482,7 @@ class TableCoreManager(object):
             LOG.debug('No VRF table found that imports RTs: %s', path_rts)
 
     def update_vrf_table(self, route_dist, prefix=None, next_hop=None,
-                         route_family=None, route_type=None,
+                         route_family=None, route_type=None, tunnel_type=None,
                          is_withdraw=False, **kwargs):
         """Update a BGP route in the VRF table identified by `route_dist`
         with the given `next_hop`.
@@ -547,7 +547,7 @@ class TableCoreManager(object):
         # withdrawal. Hence multiple withdrawals have not side effect.
         return vrf_table.insert_vrf_path(
             nlri=prefix, next_hop=next_hop, gen_lbl=gen_lbl,
-            is_withdraw=is_withdraw)
+            is_withdraw=is_withdraw, tunnel_type=tunnel_type)
 
     def update_global_table(self, prefix, next_hop=None, is_withdraw=False):
         """Update a BGP route in the Global table for the given `prefix`

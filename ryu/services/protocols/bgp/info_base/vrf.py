@@ -30,6 +30,7 @@ from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
 from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
+from ryu.lib.packet.bgp import BGPEncapsulationExtendedCommunity
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 
@@ -211,7 +212,7 @@ class VrfTable(Table):
         return changed_dests
 
     def insert_vrf_path(self, nlri, next_hop=None,
-                        gen_lbl=False, is_withdraw=False):
+                        gen_lbl=False, is_withdraw=False, **kwargs):
         assert nlri
         pattrs = None
         label_list = []
@@ -243,6 +244,12 @@ class VrfTable(Table):
                                    local_administrator=int(local_admin),
                                    subtype=subtype))
 
+            # Set Tunnel Encapsulation Attribute
+            tunnel_type = kwargs.get('tunnel_type', None)
+            if tunnel_type:
+                communities.append(
+                    BGPEncapsulationExtendedCommunity.from_str(tunnel_type))
+
             pattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = \
                 BGPPathAttributeExtendedCommunities(communities=communities)
             if vrf_conf.multi_exit_disc:
@@ -266,7 +273,7 @@ class VrfTable(Table):
                 label_list.append(table_manager.get_next_vpnv4_label())
 
             # Set MPLS labels with the generated labels
-            if isinstance(nlri, EvpnMacIPAdvertisementNLRI):
+            if gen_lbl and isinstance(nlri, EvpnMacIPAdvertisementNLRI):
                 nlri.mpls_labels = label_list[:2]
 
         puid = self.VRF_PATH_CLASS.create_puid(
