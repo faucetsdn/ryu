@@ -175,7 +175,7 @@ class VrfTable(Table):
             pattrs=vpn_path.pathattr_map,
             nexthop=vpn_path.nexthop,
             is_withdraw=vpn_path.is_withdraw,
-            label_list=vpn_path.nlri.label_list
+            label_list=getattr(vpn_path.nlri, 'label_list', None),
         )
         if self._is_vrf_path_already_in_table(vrf_path):
             return None
