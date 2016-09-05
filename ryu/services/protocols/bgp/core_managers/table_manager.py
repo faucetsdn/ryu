@@ -470,7 +470,7 @@ class TableCoreManager(object):
             # of the given path and import this path into them.
             route_dist = vpn_path.nlri.route_dist
             for vrf_table in interested_tables:
-                if (vpn_path.source is not None and
+                if (vpn_path.source is not None or
                         route_dist != vrf_table.vrf_conf.route_dist):
                     update_vrf_dest = vrf_table.import_vpn_path(vpn_path)
                     # Queue the destination for further processing.
