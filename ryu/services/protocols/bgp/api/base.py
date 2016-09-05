@@ -50,6 +50,7 @@ MAC_ADDR = 'mac_addr'
 IP_ADDR = 'ip_addr'
 MPLS_LABELS = 'mpls_labels'
 TUNNEL_TYPE = 'tunnel_type'
+EVPN_VNI = 'vni'
 
 # API call registry
 _CALL_REGISTRY = {}

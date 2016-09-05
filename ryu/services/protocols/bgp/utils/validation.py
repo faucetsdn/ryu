@@ -250,3 +250,12 @@ def is_valid_ethernet_tag_id(etag_id):
     Ethernet Tag ID should be a 32-bit field number.
     """
     return isinstance(etag_id, numbers.Integral) and 0 <= etag_id <= 0xffffffff
+
+
+def is_valid_vni(vni):
+    """Returns True if the given Virtual Network Identifier for VXLAN
+    is valid.
+
+    Virtual Network Identifier should be a 24-bit field number.
+    """
+    return isinstance(vni, numbers.Integral) and 0 <= vni <= 0xffffff

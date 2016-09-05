@@ -31,6 +31,7 @@ from ryu.services.protocols.bgp.api.base import PREFIX
 from ryu.services.protocols.bgp.api.base import RegisterWithArgChecks
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import VPN_LABEL
+from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import PREFIX_ERROR_CODE
@@ -137,6 +138,13 @@ def is_valid_mpls_labels(labels):
                                conf_value=labels)
 
 
+@validate(name=EVPN_VNI)
+def is_valid_vni(vni):
+    if not validation.is_valid_vni(vni):
+        raise ConfigValueError(conf_name=EVPN_VNI,
+                               conf_value=vni)
+
+
 @validate(name=TUNNEL_TYPE)
 def is_valid_tunnel_type(tunnel_type):
     if tunnel_type not in SUPPORTED_TUNNEL_TYPES:
@@ -193,7 +201,7 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER,
                                  NEXT_HOP],
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR, TUNNEL_TYPE])
+                                 IP_ADDR, EVPN_VNI, TUNNEL_TYPE])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
     """Adds EVPN route from VRF identified by *route_dist*.
     """
@@ -220,7 +228,7 @@ def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
 @RegisterWithArgChecks(name='evpn_prefix.delete_local',
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER],
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR])
+                                 IP_ADDR, EVPN_VNI])
 def delete_evpn_local(route_type, route_dist, **kwargs):
     """Deletes/withdraws EVPN route from VRF identified by *route_dist*.
     """

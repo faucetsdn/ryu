@@ -538,6 +538,13 @@ class TableCoreManager(object):
             if esi is not None:
                 # Note: Currently, we support arbitrary 9-octet ESI value only.
                 kwargs['esi'] = EvpnArbitraryEsi(type_desc.Int9.from_user(esi))
+            if 'vni' in kwargs:
+                # Disable to generate MPLS labels, because encapsulation type
+                # is not MPLS.
+                from ryu.services.protocols.bgp.api.prefix import (
+                    TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE)
+                assert tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]
+                gen_lbl = False
             prefix = subclass(**kwargs)
         else:
             raise BgpCoreError(

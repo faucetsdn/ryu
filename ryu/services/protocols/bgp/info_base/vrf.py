@@ -157,10 +157,9 @@ class VrfTable(Table):
             source = VRF_TABLE
 
         if self.VPN_ROUTE_FAMILY == RF_L2_EVPN:
-            nlri_cls = self.NLRI_CLASS._lookup_type(vpn_path.nlri.type)
-            kwargs = dict(vpn_path.nlri.__dict__)
-            kwargs.pop('type', None)
-            vrf_nlri = nlri_cls(**kwargs)
+            # Because NLRI class is the same if the route family is EVPN,
+            # we re-use the NLRI instance.
+            vrf_nlri = vpn_path.nlri
         else:  # self.VPN_ROUTE_FAMILY in [RF_IPv4_VPN, RF_IPv6_VPN]
             # Copy NLRI instance
             ip, masklen = vpn_path.nlri.prefix.split('/')
@@ -528,10 +527,9 @@ class VrfPath(Path):
 
     def clone_to_vpn(self, route_dist, for_withdrawal=False):
         if self.ROUTE_FAMILY == RF_L2_EVPN:
-            nlri_cls = self.VPN_NLRI_CLASS._lookup_type(self._nlri.type)
-            kwargs = dict(self._nlri.__dict__)
-            kwargs.pop('type', None)
-            vpn_nlri = nlri_cls(**kwargs)
+            # Because NLRI class is the same if the route family is EVPN,
+            # we re-use the NLRI instance.
+            vpn_nlri = self._nlri
         else:  # self.ROUTE_FAMILY in [RF_IPv4_UC, RF_IPv6_UC]
             ip, masklen = self._nlri.prefix.split('/')
             vpn_nlri = self.VPN_NLRI_CLASS(length=int(masklen),

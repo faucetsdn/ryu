@@ -31,10 +31,12 @@ from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
+from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
-from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_MPLS
+from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_VXLAN
+from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_NVGRE
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
@@ -492,7 +494,7 @@ class BGPSpeaker(object):
 
     def evpn_prefix_add(self, route_type, route_dist, esi=0,
                         ethernet_tag_id=None, mac_addr=None, ip_addr=None,
-                        next_hop=None, tunnel_type=TUNNEL_TYPE_MPLS):
+                        vni=None, next_hop=None, tunnel_type=None):
         """ This method adds a new EVPN route to be advertised.
 
         ``route_type`` specifies one of the EVPN route type name. The
@@ -510,10 +512,15 @@ class BGPSpeaker(object):
 
         ``ip_addr`` specifies an IPv4 or IPv6 address to advertise.
 
+        ``vni`` specifies an Virtual Network Identifier for VXLAN
+        or Virtual Subnet Identifier for NVGRE.
+        If tunnel_type is not 'vxlan' or 'nvgre', this field is ignored.
+
         ``next_hop`` specifies the next hop address for this prefix.
 
         ``tunnel_type`` specifies the data plane encapsulation type
-        to advertise. The default is the MPLS encapsulation type.
+        to advertise. By the default, this encapsulation attribute is
+        not advertised.
         """
         func_name = 'evpn_prefix.add_local'
 
@@ -538,6 +545,9 @@ class BGPSpeaker(object):
                 MAC_ADDR: mac_addr,
                 IP_ADDR: ip_addr,
             })
+            # Set tunnel type specific arguments
+            if tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]:
+                kwargs[EVPN_VNI] = vni
         elif route_type == EVPN_MULTICAST_ETAG_ROUTE:
             kwargs.update({
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,

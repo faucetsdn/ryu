@@ -65,10 +65,9 @@ class VpnPath(Path):
 
     def clone_to_vrf(self, is_withdraw=False):
         if self.ROUTE_FAMILY == RF_L2_EVPN:
-            nlri_cls = self.NLRI_CLASS._lookup_type(self._nlri.type)
-            kwargs = dict(self._nlri.__dict__)
-            kwargs.pop('type', None)
-            vrf_nlri = nlri_cls(**kwargs)
+            # Because NLRI class is the same if the route family is EVPN,
+            # we re-use the NLRI instance.
+            vrf_nlri = self._nlri
         else:  # self.ROUTE_FAMILY in [RF_IPv4_VPN, RF_IPv46_VPN]
             vrf_nlri = self.NLRI_CLASS(self._nlri.prefix)
 
