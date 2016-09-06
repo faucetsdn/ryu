@@ -260,19 +260,17 @@ class Activity(object):
     def _stop_child_activities(self):
         """Stop all child activities spawn by this activity.
         """
-        # Iterating over items list instead of iteritems to avoid dictionary
-        # changed size during iteration
-        child_activities = self._child_activity_map.items()
-        for child_name, child_activity in child_activities:
+        # Makes a list copy of items() to avoid dictionary size changed
+        # during iteration
+        for child_name, child in list(self._child_activity_map.items()):
             LOG.debug('%s: Stopping child activity %s ', self.name, child_name)
-            if child_activity.started:
-                child_activity.stop()
+            if child.started:
+                child.stop()
 
     def _stop_child_threads(self, name=None):
         """Stops all threads spawn by this activity.
         """
-        child_threads = self._child_thread_map.items()
-        for thread_name, thread in child_threads:
+        for thread_name, thread in list(self._child_thread_map.items()):
             if not name or thread_name is name:
                 LOG.debug('%s: Stopping child thread %s',
                           self.name, thread_name)
@@ -282,14 +280,12 @@ class Activity(object):
     def _close_asso_sockets(self):
         """Closes all the sockets linked to this activity.
         """
-        asso_sockets = self._asso_socket_map.items()
-        for sock_name, sock in asso_sockets:
+        for sock_name, sock in list(self._asso_socket_map.items()):
             LOG.debug('%s: Closing socket %s - %s', self.name, sock_name, sock)
             sock.close()
 
     def _stop_timers(self):
-        timers = self._timers.items()
-        for timer_name, timer in timers:
+        for timer_name, timer in list(self._timers.items()):
             LOG.debug('%s: Stopping timer %s', self.name, timer_name)
             timer.stop()
 
