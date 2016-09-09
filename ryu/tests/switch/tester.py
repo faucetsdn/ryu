@@ -972,7 +972,7 @@ class OfTester(app_manager.RyuApp):
             else:
                 model_p = ''
                 for p in model_pkt.protocols:
-                    if isinstance(rcv_p, six.binary_type):
+                    if isinstance(p, six.binary_type):
                         model_p = p
                         break
                 if model_p != rcv_p:
