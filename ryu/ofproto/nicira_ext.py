@@ -431,6 +431,8 @@ eth_src_nxm      MAC address     Ethernet source address.
 eth_type_nxm     Integer 16bit   Ethernet type.  Needed to support Nicira
                                  extensions that require the eth_type to
                                  be set. (i.e. tcp_flags_nxm)
+vlan_tci         Integer 16bit   VLAN TCI. Basically same as vlan_vid plus
+                                 vlan_pcp.
 ip_proto_nxm     Integer 8bit    IP protocol. Needed to support Nicira
                                  extensions that require the ip_proto to
                                  be set. (i.e. tcp_flags_nxm)
@@ -482,6 +484,7 @@ oxm_types = [
     oxm_fields.NiciraExtended0('eth_dst_nxm', 1, type_desc.MacAddr),
     oxm_fields.NiciraExtended0('eth_src_nxm', 2, type_desc.MacAddr),
     oxm_fields.NiciraExtended0('eth_type_nxm', 3, type_desc.Int2),
+    oxm_fields.NiciraExtended0('vlan_tci', 4, type_desc.Int2),
     oxm_fields.NiciraExtended0('ip_proto_nxm', 6, type_desc.Int1),
     oxm_fields.NiciraExtended1('tunnel_id_nxm', 16, type_desc.Int8),
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
