@@ -211,8 +211,8 @@ class BGPSpeaker(object):
             hub.spawn(ssh.SSH_CLI_CONTROLLER.start)
 
     def _notify_peer_down(self, peer):
-        remote_ip = peer.protocol.recv_open_msg.bgp_identifier
-        remote_as = peer.protocol.recv_open_msg.my_as
+        remote_ip = peer.ip_address
+        remote_as = peer.remote_as
         if self._peer_down_handler:
             self._peer_down_handler(remote_ip, remote_as)
 
