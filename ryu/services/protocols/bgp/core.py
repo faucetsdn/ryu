@@ -397,7 +397,7 @@ class CoreService(Factory, Activity):
 
     def on_peer_removed(self, peer):
         if peer._neigh_conf.password:
-            # seting zero length key means deleting the key
+            # setting zero length key means deleting the key
             self._set_password(peer._neigh_conf.ip_address, '')
 
         if peer.rtc_as != self.asn:

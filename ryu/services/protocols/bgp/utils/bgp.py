@@ -47,7 +47,7 @@ from ryu.services.protocols.bgp.info_base.evpn import EvpnPath
 
 LOG = logging.getLogger('utils.bgp')
 
-# RouteFmaily to path sub-class mapping.
+# RouteFamily to path sub-class mapping.
 _ROUTE_FAMILY_TO_PATH_MAP = {RF_IPv4_UC: Ipv4Path,
                              RF_IPv6_UC: Ipv6Path,
                              RF_IPv4_VPN: Vpnv4Path,

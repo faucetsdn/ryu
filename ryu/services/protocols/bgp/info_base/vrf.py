@@ -585,7 +585,7 @@ class VrfNlriImportMap(ImportMap):
     def match(self, vrf_path):
         if vrf_path.route_family != self.VRF_PATH_CLASS.ROUTE_FAMILY:
             LOG.error(
-                "vrf_paths route_family doesn\'t match importmaps"
+                "vrf_paths route_family does not match importmaps"
                 "route_family. Applied to wrong table?")
             return False
 

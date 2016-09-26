@@ -252,7 +252,7 @@ class Activity(object):
     def pause(self, seconds=0):
         """Relinquishes hub for given number of seconds.
 
-        In other words is puts to sleep to give other greeenthread a chance to
+        In other words is puts to sleep to give other greenthread a chance to
         run.
         """
         hub.sleep(seconds)

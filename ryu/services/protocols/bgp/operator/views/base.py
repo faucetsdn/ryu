@@ -92,7 +92,7 @@ class OperatorAbstractView(object):
     @property
     def model(self):
         """Getter for data model being presented by this view. Every view is
-        associatetd with some data model.
+        associated with some data model.
 
         :return: underlaying data of this view
         """

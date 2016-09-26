@@ -225,7 +225,7 @@ def compute_best_path(local_asn, path1, path2):
         best_path = _cmp_by_reachable_nh(path1, path2)
         best_path_reason = BPR_REACHABLE_NEXT_HOP
     if best_path is None:
-        best_path = _cmp_by_higest_wg(path1, path2)
+        best_path = _cmp_by_highest_wg(path1, path2)
         best_path_reason = BPR_HIGHEST_WEIGHT
     if best_path is None:
         best_path = _cmp_by_local_pref(path1, path2)
@@ -267,7 +267,7 @@ def _cmp_by_reachable_nh(path1, path2):
     return None
 
 
-def _cmp_by_higest_wg(path1, path2):
+def _cmp_by_highest_wg(path1, path2):
     """Selects a path with highest weight.
 
     Weight is BGPS specific parameter. It is local to the router on which it

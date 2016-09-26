@@ -249,7 +249,7 @@ class PeerState(object):
 
     @property
     def total_msg_recv(self):
-        """Returns total number of UPDATE, NOTIFCATION and ROUTE_REFRESH
+        """Returns total number of UPDATE, NOTIFICATION and ROUTE_REFRESH
         messages received from this peer.
         """
         return (self.get_count(PeerCounterNames.RECV_UPDATES) +
@@ -1164,7 +1164,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     communities=communities
                 )
 
-            # UNKOWN Attributes.
+            # UNKNOWN Attributes.
             # Get optional transitive path attributes
             unknown_opttrans_attrs = bgp_utils.get_unknown_opttrans_attr(path)
 
@@ -1203,7 +1203,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         return update
 
     def _connect_loop(self, client_factory):
-        """In the current greeenlet we try to establish connection with peer.
+        """In the current greenlet we try to establish connection with peer.
 
         This greenlet will spin another greenlet to handle incoming data
         from the peer once connection is established.
@@ -1379,7 +1379,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             else:
                 yield L
         opts = list(flatten(
-            list(self._neigh_conf.get_configured_capabilites().values())))
+            list(self._neigh_conf.get_configured_capabilities().values())))
         open_msg = BGPOpen(
             my_as=asnum,
             bgp_identifier=bgpid,
@@ -2143,7 +2143,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             return
 
         # If this peer is a route server client, we forward the path
-        # regardless of AS PATH loop, whether the connction is iBGP or eBGP,
+        # regardless of AS PATH loop, whether the connection is iBGP or eBGP,
         # or path's communities.
         if self.is_route_server_client:
             outgoing_route = OutgoingRoute(path)
@@ -2166,7 +2166,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         # If path from a bgp-peer is new best path, we share it with
         # all bgp-peers except the source peer and other peers in his AS.
-        # This is default JNOS setting that in JNOS can be disabled with
+        # This is default Junos setting that in Junos can be disabled with
         # 'advertise-peer-as' setting.
         elif (self != path.source or
               self.remote_as != path.source.remote_as):

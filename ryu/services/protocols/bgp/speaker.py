@@ -70,7 +70,7 @@ class BgpProtocolException(BGPSException):
     pass
 
 
-def nofitication_factory(code, subcode):
+def notification_factory(code, subcode):
     """Returns a `Notification` message corresponding to given codes.
 
     Parameters:
@@ -573,7 +573,7 @@ class BgpProtocol(Protocol, Activity):
     def connection_made(self):
         """Connection to peer handler.
 
-        We send bgp open message to peer and intialize related attributes.
+        We send bgp open message to peer and initialize related attributes.
         """
         assert self.state == BGP_FSM_CONNECT
         # We have a connection with peer we send open message.

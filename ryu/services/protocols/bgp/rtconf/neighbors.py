@@ -587,7 +587,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
 
         return does_exceed
 
-    def get_configured_capabilites(self):
+    def get_configured_capabilities(self):
         """Returns configured capabilities."""
 
         capabilities = OrderedDict()

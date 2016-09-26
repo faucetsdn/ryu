@@ -161,7 +161,7 @@ class RouteTargetManager(object):
                 if desired_rts.intersection(new_rts):
                     peer.communicate_path(dest.best_path)
 
-    def _compute_global_intrested_rts(self):
+    def _compute_global_interested_rts(self):
         """Computes current global interested RTs for global tables.
 
         Computes interested RTs based on current RT filters for peers. This
@@ -187,7 +187,7 @@ class RouteTargetManager(object):
         interesting RTs.
         """
         prev_global_rts = self._global_interested_rts
-        curr_global_rts = self._compute_global_intrested_rts()
+        curr_global_rts = self._compute_global_interested_rts()
 
         new_global_rts = curr_global_rts - prev_global_rts
         removed_global_rts = prev_global_rts - curr_global_rts

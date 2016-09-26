@@ -61,7 +61,7 @@ def stop(**kwargs):
 
 
 @register(name='core.reset_neighbor')
-def reset_neighor(ip_address):
+def reset_neighbor(ip_address):
     neighs_conf = CORE_MANAGER.neighbors_conf
     neigh_conf = neighs_conf.get_neighbor_conf(ip_address)
     # Check if we have neighbor with given IP.

@@ -440,7 +440,7 @@ class VrfsConf(BaseConf):
                         vrf_rf=None):
         """Removes any matching `VrfConf` for given `route_dist` or `vrf_id`
 
-        Paramters:
+        Parameters:
             - `route_dist`: (str) route distinguisher of a configured VRF
             - `vrf_id`: (str) vrf ID
             - `vrf_rf`: (str) route family of the VRF configuration

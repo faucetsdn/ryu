@@ -85,7 +85,7 @@ class Command(object):
             int subcommand and eth1 / 1 is param for subcommand.
         :return: returns tuple of CommandsResponse and class of
             sub - command on which _action was called. (last sub - command)
-            CommandsResposne.status is action status,
+            CommandsResponse.status is action status,
             and CommandsResponse.value is formatted response.
         """
         if len(params) == 0:
@@ -162,7 +162,7 @@ class Command(object):
 
         :param params: list of text parameters applied to this command.
         :return: returns CommandsResponse instance.
-                 CommandsResposne.status can be STATUS_OK or STATUS_ERROR
+                 CommandsResponse.status can be STATUS_OK or STATUS_ERROR
                  CommandsResponse.value should be dict or str
         """
         return CommandsResponse(STATUS_ERROR, 'Not implemented')

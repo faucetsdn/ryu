@@ -150,7 +150,7 @@ class Table(object):
         uninteresting_dest_count = 0
         for dest in self.values():
             added_withdraw = \
-                dest.withdraw_unintresting_paths(interested_rts)
+                dest.withdraw_uninteresting_paths(interested_rts)
             if added_withdraw:
                 self._signal_bus.dest_changed(dest)
                 uninteresting_dest_count += 1
@@ -617,7 +617,7 @@ class Destination(object):
 
         return current_best_path, best_path_reason
 
-    def withdraw_unintresting_paths(self, interested_rts):
+    def withdraw_uninteresting_paths(self, interested_rts):
         """Withdraws paths that are no longer interesting.
 
         For all known paths that do not have any route target in common with
