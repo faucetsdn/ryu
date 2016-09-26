@@ -20,7 +20,6 @@
 """
 from __future__ import absolute_import
 
-import inspect
 import logging
 import traceback
 
@@ -87,43 +86,6 @@ def register(**kwargs):
         return func
 
     return decorator
-
-
-def register_method(name):
-    """Decorator for registering methods that provide BGPS public API.
-    """
-    def decorator(func):
-        setattr(func, '__api_method_name__', name)
-        return func
-
-    return decorator
-
-
-def register_class(cls):
-    """Decorator for the registering class whose instance methods provide BGPS
-    public API.
-    """
-    old_init = cls.__init__
-
-    def new_init(self, *args, **kwargs):
-        old_init(self, *args, **kwargs)
-        api_registered_methods = \
-            [(m_name, m) for m_name, m in
-             inspect.getmembers(cls, predicate=inspect.ismethod)
-             if hasattr(m, '__api_method_name__')]
-
-        for _, method in api_registered_methods:
-            api_name = getattr(method, '__api_method_name__')
-
-            def create_wrapper(method):
-                def api_method_wrapper(*args, **kwargs):
-                    return method(self, *args, **kwargs)
-                return api_method_wrapper
-
-            register(name=api_name)(create_wrapper(method))
-
-    cls.__init__ = new_init
-    return cls
 
 
 class RegisterWithArgChecks(object):
