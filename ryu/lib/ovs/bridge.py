@@ -191,6 +191,10 @@ class OVSBridge(object):
         self.add_tunnel_port(name, 'gre', remote_ip,
                              local_ip=local_ip, key=key)
 
+    def add_vxlan_port(self, name, remote_ip, local_ip=None, key=None):
+        self.add_tunnel_port(name, 'vxlan', remote_ip,
+                             local_ip=local_ip, key=key)
+
     def del_port(self, port_name):
         command = ovs_vsctl.VSCtlCommand('del-port', (self.br_name, port_name))
         self.run_command([command])
