@@ -264,7 +264,7 @@ class VSCtlContext(object):
 
     def add_port_to_cache(self, vsctl_bridge_parent, ovsrec_port):
         tag = getattr(ovsrec_port, vswitch_idl.OVSREC_PORT_COL_TAG, None)
-        if (tag is not None and tag >= 0 and tag < 4096):
+        if tag is not None and tag != [] and 0 <= tag < 4096:
             vlan_bridge = vsctl_bridge_parent.find_vlan_bridge()
             if vlan_bridge:
                 vsctl_bridge_parent = vlan_bridge
