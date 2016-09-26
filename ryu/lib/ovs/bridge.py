@@ -173,11 +173,13 @@ class OVSBridge(object):
         self.run_command([command])
         return command.result
 
-    def add_tunnel_port(self, name, tunnel_type, local_ip, remote_ip,
-                        key=None):
-        options = 'local_ip=%(local_ip)s,remote_ip=%(remote_ip)s' % locals()
+    def add_tunnel_port(self, name, tunnel_type, remote_ip,
+                        local_ip=None, key=None):
+        options = 'remote_ip=%(remote_ip)s' % locals()
         if key:
             options += ',key=%(key)s' % locals()
+        if local_ip:
+            options += ',local_ip=%(local_ip)s' % locals()
 
         command_add = ovs_vsctl.VSCtlCommand('add-port', (self.br_name, name))
         command_set = ovs_vsctl.VSCtlCommand(
@@ -185,8 +187,9 @@ class OVSBridge(object):
                     'type=%s' % tunnel_type, 'options=%s' % options))
         self.run_command([command_add, command_set])
 
-    def add_gre_port(self, name, local_ip, remote_ip, key=None):
-        self.add_tunnel_port(name, 'gre', local_ip, remote_ip, key=key)
+    def add_gre_port(self, name, remote_ip, local_ip=None, key=None):
+        self.add_tunnel_port(name, 'gre', remote_ip,
+                             local_ip=local_ip, key=key)
 
     def del_port(self, port_name):
         command = ovs_vsctl.VSCtlCommand('del-port', (self.br_name, port_name))
