@@ -25,6 +25,7 @@ from ryu.controller.handler import set_ev_cls
 from ryu.exception import RyuException
 from ryu.exception import OFPUnknownVersion
 from ryu.lib import hub
+from ryu.lib import mac
 from ryu.lib.dpid import dpid_to_str
 from ryu.lib.packet import bpdu
 from ryu.lib.packet import ethernet
@@ -351,7 +352,8 @@ class Stp(app_manager.RyuApp):
                 if not result:
                     result1 = Stp._cmp_value(
                         rcv_priority.designated_bridge_id.value,
-                        my_priority.designated_bridge_id.mac_addr)
+                        mac.haddr_to_int(
+                            my_priority.designated_bridge_id.mac_addr))
                     result2 = Stp._cmp_value(
                         rcv_priority.designated_port_id.value,
                         my_priority.designated_port_id.port_no)
@@ -363,7 +365,7 @@ class Stp(app_manager.RyuApp):
 
     @staticmethod
     def _cmp_value(value1, value2):
-        result = cmp(str(value1), str(value2))
+        result = cmp(value1, value2)
         if result < 0:
             return SUPERIOR
         elif result == 0:

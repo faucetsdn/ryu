@@ -49,6 +49,15 @@ def haddr_to_str(addr):
         raise AssertionError
 
 
+def haddr_to_int(addr):
+    """Convert mac address string in human readable format into
+    integer value"""
+    try:
+        return int(addr.replace(':', ''), 16)
+    except:
+        raise ValueError
+
+
 def haddr_to_bin(string):
     """Parse mac address string in human readable format into
     internal representation"""
