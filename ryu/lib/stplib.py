@@ -295,10 +295,10 @@ class Stp(app_manager.RyuApp):
             elif reason is dp.ofproto.OFPPR_DELETE:
                 self.logger.info('[port=%d] Port delete.',
                                  port.port_no, extra=dpid_str)
-                bridge.port_delete(port.port_no)
+                bridge.port_delete(port)
             else:
                 assert reason is dp.ofproto.OFPPR_MODIFY
-                if bridge.dp.ports[port.port_no].state == port.state:
+                if bridge.ports_state[port.port_no] == port.state:
                     # Do nothing
                     self.logger.debug('[port=%d] Link status not changed.',
                                       port.port_no, extra=dpid_str)
@@ -306,11 +306,11 @@ class Stp(app_manager.RyuApp):
                 if link_down_flg:
                     self.logger.info('[port=%d] Link down.',
                                      port.port_no, extra=dpid_str)
-                    bridge.link_down(port.port_no)
+                    bridge.link_down(port)
                 else:
                     self.logger.info('[port=%d] Link up.',
                                      port.port_no, extra=dpid_str)
-                    bridge.link_up(port.port_no)
+                    bridge.link_up(port)
 
     @staticmethod
     def compare_root_path(path_cost1, path_cost2, bridge_id1, bridge_id2,
@@ -415,6 +415,7 @@ class Bridge(object):
         self.root_times = self.bridge_times
         # Ports
         self.ports = {}
+        self.ports_state = {}
         self.ports_conf = config.get('ports', {})
         for ofport in dp.ports.values():
             self.port_add(ofport)
@@ -442,23 +443,27 @@ class Bridge(object):
                                               self.bridge_id,
                                               self.bridge_times,
                                               ofport)
+            self.ports_state[ofport.port_no] = ofport.state
 
-    def port_delete(self, port_no):
-        self.link_down(port_no)
-        self.ports[port_no].delete()
-        del self.ports[port_no]
+    def port_delete(self, ofp_port):
+        self.link_down(ofp_port)
+        self.ports[ofp_port.port_no].delete()
+        del self.ports[ofp_port.port_no]
+        del self.ports_state[ofp_port.port_no]
 
-    def link_up(self, port_no):
-        port = self.ports[port_no]
+    def link_up(self, ofp_port):
+        port = self.ports[ofp_port.port_no]
         port.up(DESIGNATED_PORT, self.root_priority, self.root_times)
+        self.ports_state[ofp_port.port_no] = ofp_port.state
 
-    def link_down(self, port_no):
+    def link_down(self, ofp_port):
         """ DESIGNATED_PORT/NON_DESIGNATED_PORT: change status to DISABLE.
             ROOT_PORT: change status to DISABLE and recalculate STP. """
-        port = self.ports[port_no]
+        port = self.ports[ofp_port.port_no]
         init_stp_flg = bool(port.role is ROOT_PORT)
 
         port.down(PORT_STATE_DISABLE, msg_init=True)
+        self.ports_state[ofp_port.port_no] = ofp_port.state
         if init_stp_flg:
             self.recalculate_spanning_tree()
 
