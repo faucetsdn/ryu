@@ -26,6 +26,7 @@ import six
 from ryu.lib import addrconv
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.lib.packet import packet
+from ryu import exception
 from ryu import utils
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase, MsgInMsgBase
 from ryu.ofproto import ether
@@ -1857,8 +1858,11 @@ class OFPMultipartReply(MsgBase):
         body = []
         while offset < msg_len:
             b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
+            offset_step = b.length if hasattr(b, 'length') else b.len
+            if offset_step < 1:
+                raise exception.OFPMalformedMessage()
             body.append(b)
-            offset += b.length if hasattr(b, 'length') else b.len
+            offset += offset_step
 
         if stats_type_cls.cls_body_single_struct:
             msg.body = body[0]
