@@ -69,6 +69,9 @@ class Packet(StringifyMixin):
     def _parser(self, cls):
         rest_data = self.data
         while cls:
+            # Ignores an empty buffer
+            if not six.binary_type(rest_data).strip(b'\x00'):
+                break
             try:
                 proto, cls, rest_data = cls.parser(rest_data)
             except struct.error:
