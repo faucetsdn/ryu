@@ -487,6 +487,11 @@ oxm_types = [
     oxm_fields.NiciraExtended0('vlan_tci', 4, type_desc.Int2),
     oxm_fields.NiciraExtended0('ip_proto_nxm', 6, type_desc.Int1),
     oxm_fields.NiciraExtended1('tunnel_id_nxm', 16, type_desc.Int8),
+
+    #ttl match 
+    oxm_fields.NiciraExtended1('nw_ttl_nxm', 29, type_desc.Int1),
+
+
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
