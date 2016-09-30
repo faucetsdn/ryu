@@ -5,3 +5,4 @@ oslo.config>=1.15.0
 routes  # wsgi
 six>=1.4.0
 webob>=1.2  # wsgi
+ovs>=2.6.0  # OVSDB
