@@ -426,6 +426,7 @@ The following arguments are available.
 ================ =============== ==============================================
 Argument         Value           Description
 ================ =============== ==============================================
+in_port_nxm      Integer 16bit   OpenFlow port number.
 eth_dst_nxm      MAC address     Ethernet destination address.
 eth_src_nxm      MAC address     Ethernet source address.
 eth_type_nxm     Integer 16bit   Ethernet type.  Needed to support Nicira
@@ -433,27 +434,148 @@ eth_type_nxm     Integer 16bit   Ethernet type.  Needed to support Nicira
                                  be set. (i.e. tcp_flags_nxm)
 vlan_tci         Integer 16bit   VLAN TCI. Basically same as vlan_vid plus
                                  vlan_pcp.
+nw_tos           Integer 8bit    IP ToS or IPv6 traffic class field dscp.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
 ip_proto_nxm     Integer 8bit    IP protocol. Needed to support Nicira
                                  extensions that require the ip_proto to
                                  be set. (i.e. tcp_flags_nxm)
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+ipv4_src_nxm     IPv4 address    IPv4 source address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0800 (IPv4)
+ipv4_dst_nxm     IPv4 address    IPv4 destination address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0800 (IPv4)
+tcp_src_nxm      Integer 16bit   TCP source port.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+                                 and ip_proto_nxm = 6 (TCP)
+tcp_dst_nxm      Integer 16bit   TCP destination port.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+                                 and ip_proto_nxm = 6 (TCP)
+udp_src_nxm      Integer 16bit   UDP source port.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+                                 and ip_proto_nxm = 17 (UDP)
+udp_dst_nxm      Integer 16bit   UDP destination port.
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+                                 and ip_proto_nxm = 17 (UDP)
+icmpv4_type_nxm  Integer 8bit    Type  matches  the ICMP type and code matches
+                                 the ICMP code.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0800 (IPv4) and
+                                 ip_proto_nxm = 1 (ICMP)
+icmpv4_code_nxm  Integer 8bit    Type  matches  the ICMP type and code matches
+                                 the ICMP code.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0800 (IPv4) and
+                                 ip_proto_nxm = 1 (ICMP)
+arp_op_nxm       Integer 16bit   Only ARP opcodes between 1 and 255 should be
+                                 specified for matching.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0806 (ARP)
+arp_spa_nxm      IPv4 address    An address may be specified as an IP address
+                                 or host name.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0806 (ARP)
+arp_tpa_nxm      IPv4 address    An address may be specified as an IP address
+                                 or host name.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0806 (ARP)
 tunnel_id_nxm    Integer 64bit   Tunnel identifier.
+arp_sha_nxm      MAC address     An address is specified as 6 pairs of
+                                 hexadecimal digits delimited by colons.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0806 (ARP)
+arp_tha_nxm      MAC address     An address is specified as 6 pairs of
+                                 hexadecimal digits delimited by colons.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0806 (ARP)
+ipv6_src_nxm     IPv6 address    IPv6 source address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6)
+ipv6_dst_nxm     IPv6 address    IPv6 destination address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6)
+icmpv6_type_nxm  Integer 8bit    Type  matches the ICMP type and code matches
+                                 the ICMP code.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6) and
+                                 ip_proto_nxm = 58 (ICMP for IPv6)
+icmpv6_code_nxm  Integer 8bit    Type  matches the ICMP type and code matches
+                                 the ICMP code.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6) and
+                                 ip_proto_nxm = 58 (ICMP for IPv6)
+nd_target        IPv6 address    The target address ipv6.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6) and
+                                 ip_proto_nxm = 58 (ICMP for IPv6)
+nd_sll           MAC address     The source link-layer address option.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6) and
+                                 ip_proto_nxm = 58 (ICMP for IPv6) and
+                                 icmpv6_type_nxm = 135 (Neighbor solicitation)
+nd_tll           MAC address     The target link-layer address option.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6) and
+                                 ip_proto_nxm = 58 (ICMP for IPv6) and
+                                 icmpv6_type_nxm = 136 (Neighbor advertisement)
+ip_frag          Integer 8bit    frag_type specifies what kind of IP fragments
+                                 or non-fragments to match.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+ipv6_label       Integer 32bit   Matches IPv6 flow label.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6)
+ip_ecn_nxm       Integer 8bit    Matches ecn bits in IP ToS or IPv6 traffic
+                                 class fields.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+nw_ttl           Integer 8bit    IP TTL or IPv6 hop limit value ttl.
+                                 Requires setting fields:
+                                 eth_type_nxm = [0x0800 (IPv4)|0x86dd (IPv6)]
+mpls_ttl         Integer 8bit    The TTL of the outer MPLS label stack entry
+                                 of a packet.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x8847 (MPLS Unicast)
 tun_ipv4_src     IPv4 address    Tunnel IPv4 source address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0800 (IPv4)
 tun_ipv4_dst     IPv4 address    Tunnel IPv4 destination address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x0800 (IPv4)
 pkt_mark         Integer 32bit   Packet metadata mark.
 tcp_flags_nxm    Integer 16bit   TCP Flags.  Requires setting fields:
                                  eth_type_nxm = [0x0800 (IP)|0x86dd (IPv6)] and
                                  ip_proto_nxm = 6 (TCP)
 conj_id          Integer 32bit   Conjunction ID used only with
                                  the conjunction action
+tun_gbp_id       Integer 16bit   The group policy identifier in the
+                                 VXLAN header.
+tun_gbp_flags    Integer 8bit    The group policy flags in the
+                                 VXLAN header.
+tun_flags        Integer 16bit   Flags indicating various aspects of
+                                 the tunnel encapsulation.
 ct_state         Integer 32bit   Conntrack state.
 ct_zone          Integer 16bit   Conntrack zone.
 ct_mark          Integer 32bit   Conntrack mark.
 ct_label         Integer 128bit  Conntrack label.
 tun_ipv6_src     IPv6 address    Tunnel IPv6 source address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6)
 tun_ipv6_dst     IPv6 address    Tunnel IPv6 destination address.
+                                 Requires setting fields:
+                                 eth_type_nxm = 0x86dd (IPv6)
+_recirc_id       Integer 32bit   ID for recirculation.
 _dp_hash         Integer 32bit   Flow hash computed in Datapath.
 reg<idx>         Integer 32bit   Packet register.
-                                 <idx> is register number 0-7.
+                                 <idx> is register number 0-15.
+xxreg<idx>       Integer 128bit  Packet extended-extended register.
+                                 <idx> is register number 0-3.
 ================ =============== ==============================================
 
 .. Note::
@@ -481,17 +603,50 @@ reg<idx>         Integer 32bit   Packet register.
 """
 
 oxm_types = [
+    # OFPXMC_NXM_0
+    oxm_fields.NiciraExtended0('in_port_nxm', 0, type_desc.Int2),
     oxm_fields.NiciraExtended0('eth_dst_nxm', 1, type_desc.MacAddr),
     oxm_fields.NiciraExtended0('eth_src_nxm', 2, type_desc.MacAddr),
     oxm_fields.NiciraExtended0('eth_type_nxm', 3, type_desc.Int2),
     oxm_fields.NiciraExtended0('vlan_tci', 4, type_desc.Int2),
+    oxm_fields.NiciraExtended0('nw_tos', 5, type_desc.Int1),
     oxm_fields.NiciraExtended0('ip_proto_nxm', 6, type_desc.Int1),
+    oxm_fields.NiciraExtended0('ipv4_src_nxm', 7, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended0('ipv4_dst_nxm', 8, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended0('tcp_src_nxm', 9, type_desc.Int2),
+    oxm_fields.NiciraExtended0('tcp_dst_nxm', 10, type_desc.Int2),
+    oxm_fields.NiciraExtended0('udp_src_nxm', 11, type_desc.Int2),
+    oxm_fields.NiciraExtended0('udp_dst_nxm', 12, type_desc.Int2),
+    oxm_fields.NiciraExtended0('icmpv4_type_nxm', 13, type_desc.Int1),
+    oxm_fields.NiciraExtended0('icmpv4_code_nxm', 14, type_desc.Int1),
+    oxm_fields.NiciraExtended0('arp_op_nxm', 15, type_desc.Int2),
+    oxm_fields.NiciraExtended0('arp_spa_nxm', 16, type_desc.IPv4Addr),
+    oxm_fields.NiciraExtended0('arp_tpa_nxm', 17, type_desc.IPv4Addr),
+
+    # OFPXMC_NXM_1
     oxm_fields.NiciraExtended1('tunnel_id_nxm', 16, type_desc.Int8),
+    oxm_fields.NiciraExtended1('arp_sha_nxm', 17, type_desc.MacAddr),
+    oxm_fields.NiciraExtended1('arp_tha_nxm', 18, type_desc.MacAddr),
+    oxm_fields.NiciraExtended1('ipv6_src_nxm', 19, type_desc.IPv6Addr),
+    oxm_fields.NiciraExtended1('ipv6_dst_nxm', 20, type_desc.IPv6Addr),
+    oxm_fields.NiciraExtended1('icmpv6_type_nxm', 21, type_desc.Int1),
+    oxm_fields.NiciraExtended1('icmpv6_code_nxm', 22, type_desc.Int1),
+    oxm_fields.NiciraExtended1('nd_target', 23, type_desc.IPv6Addr),
+    oxm_fields.NiciraExtended1('nd_sll', 24, type_desc.MacAddr),
+    oxm_fields.NiciraExtended1('nd_tll', 25, type_desc.MacAddr),
+    oxm_fields.NiciraExtended1('ip_frag', 26, type_desc.Int1),
+    oxm_fields.NiciraExtended1('ipv6_label', 27, type_desc.Int4),
+    oxm_fields.NiciraExtended1('ip_ecn_nxm', 28, type_desc.Int1),
+    oxm_fields.NiciraExtended1('nw_ttl', 29, type_desc.Int1),
+    oxm_fields.NiciraExtended1('mpls_ttl', 30, type_desc.Int1),
     oxm_fields.NiciraExtended1('tun_ipv4_src', 31, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('tun_ipv4_dst', 32, type_desc.IPv4Addr),
     oxm_fields.NiciraExtended1('pkt_mark', 33, type_desc.Int4),
     oxm_fields.NiciraExtended1('tcp_flags_nxm', 34, type_desc.Int2),
     oxm_fields.NiciraExtended1('conj_id', 37, type_desc.Int4),
+    oxm_fields.NiciraExtended1('tun_gbp_id', 38, type_desc.Int2),
+    oxm_fields.NiciraExtended1('tun_gbp_flags', 39, type_desc.Int1),
+    oxm_fields.NiciraExtended1('tun_flags', 104, type_desc.Int2),
     oxm_fields.NiciraExtended1('ct_state', 105, type_desc.Int4),
     oxm_fields.NiciraExtended1('ct_zone', 106, type_desc.Int2),
     oxm_fields.NiciraExtended1('ct_mark', 107, type_desc.Int4),
@@ -499,13 +654,19 @@ oxm_types = [
     oxm_fields.NiciraExtended1('tun_ipv6_src', 109, type_desc.IPv6Addr),
     oxm_fields.NiciraExtended1('tun_ipv6_dst', 110, type_desc.IPv6Addr),
 
+    # Prefix the name with '_' to indicate this is not intended to be used
+    # in wild.
+    # Because the following definitions are supposed to be internal use only
+    # in OVS.
+    oxm_fields.NiciraExtended1('_recirc_id', 36, type_desc.Int4),
+
     # The following definition is merely for testing 64-bit experimenter OXMs.
     # Following Open vSwitch, we use dp_hash for this purpose.
     # Prefix the name with '_' to indicate this is not intended to be used
     # in wild.
     oxm_fields.NiciraExperimenter('_dp_hash', 0, type_desc.Int4),
 
-    # Support for matching/setting NX registers 0-7
+    # Support for matching/setting NX registers 0-15
     oxm_fields.NiciraExtended1('reg0', 0, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg1', 1, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg2', 2, type_desc.Int4),
@@ -514,4 +675,19 @@ oxm_types = [
     oxm_fields.NiciraExtended1('reg5', 5, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg6', 6, type_desc.Int4),
     oxm_fields.NiciraExtended1('reg7', 7, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg8', 8, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg9', 9, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg10', 10, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg11', 11, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg12', 12, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg13', 13, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg14', 14, type_desc.Int4),
+    oxm_fields.NiciraExtended1('reg15', 15, type_desc.Int4),
+
+    # Support for matching/setting NX extended-extended registers 0-3
+    oxm_fields.NiciraExtended1('xxreg0', 111, type_desc.Int16),
+    oxm_fields.NiciraExtended1('xxreg1', 112, type_desc.Int16),
+    oxm_fields.NiciraExtended1('xxreg2', 113, type_desc.Int16),
+    oxm_fields.NiciraExtended1('xxreg3', 114, type_desc.Int16),
+
 ]
