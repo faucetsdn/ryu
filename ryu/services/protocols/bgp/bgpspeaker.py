@@ -663,24 +663,42 @@ class BGPSpeaker(object):
 
         call('vrf.delete', **vrf)
 
-    def vrfs_get(self, format='json'):
+    def vrfs_get(self, subcommand='routes', route_dist=None,
+                 route_family='all', format='json'):
         """ This method returns the existing vrfs.
+
+        ``subcommand`` specifies the subcommand.
+
+          'routes': shows routes present for vrf
+
+          'summary': shows configuration and summary of vrf
+
+        ``route_dist`` specifies a route distinguisher value.
+        If route_family is not 'all', this value must be specified.
+
+        ``route_family`` specifies route family of the VRF.
+        This parameter must be RF_VPN_V4, RF_VPN_V6 or RF_L2_EVPN
+        or 'all'.
 
         ``format`` specifies the format of the response.
         This parameter must be 'json' or 'cli'.
         """
         show = {
-            'params': ['vrf', 'routes', 'all'],
             'format': format,
         }
+        if route_family in SUPPORTED_VRF_RF:
+            assert route_dist is not None
+            show['params'] = ['vrf', subcommand, route_dist, route_family]
+        else:
+            show['params'] = ['vrf', subcommand, 'all']
 
         return call('operator.show', **show)
 
-    def rib_get(self, family='ipv4', format='json'):
+    def rib_get(self, family='all', format='json'):
         """ This method returns the BGP routing information in a json
         format. This will be improved soon.
 
-        ``family`` specifies the address family of the RIB.
+        ``family`` specifies the address family of the RIB (e.g. 'ipv4').
 
         ``format`` specifies the format of the response.
         This parameter must be 'json' or 'cli'.
@@ -692,11 +710,11 @@ class BGPSpeaker(object):
 
         return call('operator.show', **show)
 
-    def neighbor_get(self, routetype, address, format='json'):
-        """ This method returns the BGP adj-RIB-in information in a json
-        format.
+    def neighbor_get(self, route_type, address, format='json'):
+        """ This method returns the BGP adj-RIB-in/adj-RIB-out information
+        in a json format.
 
-        ``routetype`` This parameter is necessary for only received-routes
+        ``route_type`` This parameter is necessary for only received-routes
         and sent-routes.
 
           received-routes : paths received and not withdrawn by given peer
@@ -712,10 +730,23 @@ class BGPSpeaker(object):
         show = {
             'format': format,
         }
-        if routetype == 'sent-routes' or routetype == 'received-routes':
-            show['params'] = ['neighbor', routetype, address, 'all']
+        if route_type == 'sent-routes' or route_type == 'received-routes':
+            show['params'] = ['neighbor', route_type, address, 'all']
         else:
             show['params'] = ['neighbor', 'received-routes', address, 'all']
+
+        return call('operator.show', **show)
+
+    def neighbors_get(self, format='json'):
+        """ This method returns a list of the BGP neighbors.
+
+        ``format`` specifies the format of the response.
+        This parameter must be 'json' or 'cli'.
+        """
+        show = {
+            'params': ['neighbor'],
+            'format': format,
+        }
 
         return call('operator.show', **show)
 
