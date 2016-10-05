@@ -1014,7 +1014,7 @@ def get_port_desc(dp, waiters, to_user=True):
         stats = msg.body
         for stat in stats:
             d = {'hw_addr': stat.hw_addr,
-                 'name': stat.name.decode('utf-8'),
+                 'name': stat.name.decode('utf-8', errors='replace'),
                  'config': stat.config,
                  'state': stat.state,
                  'curr': stat.curr,
