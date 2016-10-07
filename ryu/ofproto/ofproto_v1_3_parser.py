@@ -49,6 +49,7 @@ from ryu.lib import addrconv
 from ryu.lib import mac
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.lib.packet import packet
+from ryu import exception
 from ryu import utils
 from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase
 from ryu.ofproto import ether
@@ -1269,17 +1270,28 @@ class OFPMatch(StringifyMixin):
         offset += 4
         length -= 4
 
+        exc = None
+        residue = None
         # XXXcompat
-        cls.parser_old(match, buf, offset, length)
+        try:
+            cls.parser_old(match, buf, offset, length)
+        except struct.error as e:
+            exc = e
 
         fields = []
-        while length > 0:
-            n, value, mask, field_len = ofproto.oxm_parse(buf, offset)
-            k, uv = ofproto.oxm_to_user(n, value, mask)
-            fields.append((k, uv))
-            offset += field_len
-            length -= field_len
+        try:
+            while length > 0:
+                n, value, mask, field_len = ofproto.oxm_parse(buf, offset)
+                k, uv = ofproto.oxm_to_user(n, value, mask)
+                fields.append((k, uv))
+                offset += field_len
+                length -= field_len
+        except struct.error as e:
+            exc = e
+            residue = buf[offset:]
         match._fields2 = fields
+        if exc is not None:
+            raise exception.OFPTruncatedMessage(match, residue, exc)
         return match
 
     @staticmethod
@@ -2696,14 +2708,31 @@ class OFPFlowMod(MsgBase):
             ofproto.OFP_HEADER_SIZE)
         offset = ofproto.OFP_FLOW_MOD_SIZE - ofproto.OFP_HEADER_SIZE
 
-        msg.match = OFPMatch.parser(buf, offset)
+        try:
+            msg.match = OFPMatch.parser(buf, offset)
+        except exception.OFPTruncatedMessage as e:
+            msg.match = e.ofpmsg
+            e.ofpmsg = msg
+            raise e
+
         offset += utils.round_up(msg.match.length, 8)
 
         instructions = []
-        while offset < msg_len:
-            i = OFPInstruction.parser(buf, offset)
-            instructions.append(i)
-            offset += i.len
+        try:
+            while offset < msg_len:
+                i = OFPInstruction.parser(buf, offset)
+                instructions.append(i)
+                offset += i.len
+        except exception.OFPTruncatedMessage as e:
+            instructions.append(e.ofpmsg)
+            msg.instructions = instructions
+            e.ofpmsg = msg
+            raise e
+        except struct.error as e:
+            msg.instructions = instructions
+            raise exception.OFPTruncatedMessage(ofpmsg=msg,
+                                                residue=buf[offset:],
+                                                original_exception=e)
         msg.instructions = instructions
 
         return msg
@@ -2830,14 +2859,22 @@ class OFPInstructionActions(OFPInstruction):
         offset += ofproto.OFP_INSTRUCTION_ACTIONS_SIZE
         actions = []
         actions_len = len_ - ofproto.OFP_INSTRUCTION_ACTIONS_SIZE
-        while actions_len > 0:
-            a = OFPAction.parser(buf, offset)
-            actions.append(a)
-            actions_len -= a.len
-            offset += a.len
+        exc = None
+        try:
+            while actions_len > 0:
+                a = OFPAction.parser(buf, offset)
+                actions.append(a)
+                actions_len -= a.len
+                offset += a.len
+        except struct.error as e:
+            exc = e
 
         inst = cls(type_, actions)
         inst.len = len_
+        if exc is not None:
+            raise exception.OFPTruncatedMessage(ofpmsg=inst,
+                                                residue=buf[offset:],
+                                                original_exception=exc)
         return inst
 
     def serialize(self, buf, offset):

@@ -53,21 +53,30 @@ def register_msg_parser(version):
 
 
 def msg(datapath, version, msg_type, msg_len, xid, buf):
-    assert len(buf) >= msg_len
+    exp = None
+    try:
+        assert len(buf) >= msg_len
+    except AssertionError as e:
+        exp = e
 
     msg_parser = _MSG_PARSERS.get(version)
     if msg_parser is None:
         raise exception.OFPUnknownVersion(version=version)
 
     try:
-        return msg_parser(datapath, version, msg_type, msg_len, xid, buf)
+        msg = msg_parser(datapath, version, msg_type, msg_len, xid, buf)
+    except exception.OFPTruncatedMessage as e:
+        raise e
     except:
         LOG.exception(
             'Encountered an error while parsing OpenFlow packet from switch. '
             'This implies the switch sent a malformed OpenFlow packet. '
             'version 0x%02x msg_type %d msg_len %d xid %d buf %s',
             version, msg_type, msg_len, xid, utils.hex_array(buf))
-        return None
+        msg = None
+    if exp:
+        raise exp
+    return msg
 
 
 def create_list_of_base_attributes(f):
