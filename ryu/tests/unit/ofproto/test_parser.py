@@ -29,6 +29,7 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
 from ryu.ofproto import ofproto_v1_5
 from ryu.tests import test_lib
+from ryu import exception
 import json
 
 
@@ -199,12 +200,18 @@ class Test_Parser(unittest.TestCase):
 
         dp = ofproto_protocol.ProtocolDesc(version=version)
         if has_parser:
-            msg = ofproto_parser.msg(dp, version, msg_type, msg_len, xid,
-                                     wire_msg)
-            json_dict2 = self._msg_to_jsondict(msg)
+            try:
+                msg = ofproto_parser.msg(dp, version, msg_type, msg_len, xid,
+                                         wire_msg)
+                json_dict2 = self._msg_to_jsondict(msg)
+            except exception.OFPTruncatedMessage as e:
+                json_dict2 = {'OFPTruncatedMessage':
+                              self._msg_to_jsondict(e.ofpmsg)}
             # XXXdebug code
             open(('/tmp/%s.json' % name), 'w').write(json.dumps(json_dict2))
             eq_(json_dict, json_dict2)
+            if 'OFPTruncatedMessage' in json_dict2:
+                return
 
         # json -> OFPxxx -> json
         xid = json_dict[list(json_dict.keys())[0]].pop('xid', None)
@@ -243,7 +250,6 @@ class Test_Parser(unittest.TestCase):
 def _add_tests():
     import os
     import os.path
-    import fnmatch
     import functools
 
     this_dir = os.path.dirname(sys.modules[__name__].__file__)
@@ -262,11 +268,28 @@ def _add_tests():
         jdir = json_dir + '/' + ver
         n_added = 0
         for file in os.listdir(pdir):
-            if not fnmatch.fnmatch(file, '*.packet'):
+            if file.endswith('.packet'):
+                truncated = None
+            elif '.truncated' in file:
+                # contents of .truncated files aren't relevant
+                s1, s2 = file.split('.truncated')
+                try:
+                    truncated = int(s2)
+                except ValueError:
+                    continue
+                file = s1 + '.packet'
+            else:
                 continue
             wire_msg = open(pdir + '/' + file, 'rb').read()
-            json_str = open(jdir + '/' + file + '.json', 'r').read()
+            if not truncated:
+                json_str = open(jdir + '/' + file + '.json', 'r').read()
+            else:
+                json_str = open(jdir + '/' + file +
+                                '.truncated%d.json' % truncated, 'r').read()
+                wire_msg = wire_msg[:truncated]
             method_name = ('test_' + file).replace('-', '_').replace('.', '_')
+            if truncated:
+                method_name += '_truncated%d' % truncated
 
             def _run(self, name, wire_msg, json_str):
                 print('processing %s ...' % name)
