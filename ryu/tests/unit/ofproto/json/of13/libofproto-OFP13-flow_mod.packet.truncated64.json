@@ -1,0 +1,33 @@
+{
+   "OFPTruncatedMessage": {
+      "OFPFlowMod": {
+         "buffer_id": 0, 
+         "command": 0, 
+         "cookie": 1311768467463790320, 
+         "cookie_mask": 18446744073709551615, 
+         "flags": 0, 
+         "hard_timeout": 0, 
+         "idle_timeout": 0, 
+         "instructions": [], 
+         "match": {
+            "OFPMatch": {
+               "length": 70, 
+               "oxm_fields": [
+                  {
+                     "OXMTlv": {
+                        "field": "in_port", 
+                        "mask": null, 
+                        "value": 43981
+                     }
+                  }
+               ], 
+               "type": 1
+            }
+         }, 
+         "out_group": 0, 
+         "out_port": 0, 
+         "priority": 0, 
+         "table_id": 2
+      }
+   }
+}
