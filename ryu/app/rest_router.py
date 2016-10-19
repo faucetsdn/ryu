@@ -40,6 +40,7 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import icmp
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import packet
+from ryu.lib.packet import packet_base
 from ryu.lib.packet import tcp
 from ryu.lib.packet import udp
 from ryu.lib.packet import vlan
@@ -569,7 +570,8 @@ class Router(dict):
         # TODO: Packet library convert to string
         # self.logger.debug('Packet in = %s', str(pkt), self.sw_id)
         header_list = dict((p.protocol_name, p)
-                           for p in pkt.protocols if type(p) != str)
+                           for p in pkt.protocols
+                           if isinstance(p, packet_base.PacketBase))
         if header_list:
             # Check vlan-tag
             vlan_id = VLANID_NONE
