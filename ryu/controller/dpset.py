@@ -218,7 +218,7 @@ class DPSet(app_manager.RyuApp):
         # Now datapath is already dead, so port status change event doesn't
         # interfere us.
         ev = EventDP(dp, False)
-        for port in self.port_state.get(dp.id, {}).values():
+        for port in list(self.port_state.get(dp.id, {}).values()):
             self._port_deleted(dp, port)
             ev.ports.append(port)
 
