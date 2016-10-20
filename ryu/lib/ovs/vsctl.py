@@ -319,7 +319,13 @@ class VSCtlContext(object):
 
     @staticmethod
     def port_is_fake_bridge(ovsrec_port):
-        return ovsrec_port.fake_bridge and 0 <= ovsrec_port.tag <= 4095
+        tag = ovsrec_port.tag
+        if isinstance(tag, list):
+            if len(tag) == 0:
+                tag = 0
+            else:
+                tag = tag[0]
+        return ovsrec_port.fake_bridge and 0 <= tag <= 4095
 
     def _populate_cache(self, ovsrec_bridges):
         if self.cache_valid:
@@ -1129,11 +1135,13 @@ class VSCtl(object):
             'add-br': (self._pre_add_br, self._cmd_add_br),
             'del-br': (self._pre_get_info, self._cmd_del_br),
             'list-br': (self._pre_get_info, self._cmd_list_br),
-            # 'br-exists':
-            # 'br-to-vlan':
-            # 'br-to-parent':
-            # 'br-set-external-id':
-            # 'br-get-external-id':
+            'br-exists': (self._pre_get_info, self._cmd_br_exists),
+            'br-to-vlan': (self._pre_get_info, self._cmd_br_to_vlan),
+            'br-to-parent': (self._pre_get_info, self._cmd_br_to_parent),
+            'br-set-external-id': (self._pre_cmd_br_set_external_id,
+                                   self._cmd_br_set_external_id),
+            'br-get-external-id': (self._pre_cmd_br_get_external_id,
+                                   self._cmd_br_get_external_id),
 
             # Port. commands
             'list-ports': (self._pre_get_info, self._cmd_list_ports),
@@ -1380,6 +1388,98 @@ class VSCtl(object):
     def _cmd_del_br(self, ctx, command):
         br_name = command.args[0]
         self._del_br(ctx, br_name)
+
+    def _br_exists(self, ctx, br_name):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, must_exist=False)
+        return br is not None
+
+    def _cmd_br_exists(self, ctx, command):
+        br_name = command.args[0]
+        command.result = self._br_exists(ctx, br_name)
+
+    def _br_to_vlan(self, ctx, br_name):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, must_exist=True)
+        vlan = br.vlan
+        if isinstance(vlan, list):
+            if len(vlan) == 0:
+                vlan = 0
+            else:
+                vlan = vlan[0]
+        return vlan
+
+    def _cmd_br_to_vlan(self, ctx, command):
+        br_name = command.args[0]
+        command.result = self._br_to_vlan(ctx, br_name)
+
+    def _br_to_parent(self, ctx, br_name):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, must_exist=True)
+        return br if br.parent is None else br.parent
+
+    def _cmd_br_to_parent(self, ctx, command):
+        br_name = command.args[0]
+        command.result = self._br_to_parent(ctx, br_name)
+
+    def _pre_cmd_br_set_external_id(self, ctx, _command):
+        table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
+        columns = [vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS]
+        self._pre_mod_columns(ctx, table_name, columns)
+
+    def _br_add_external_id(self, ctx, br_name, key, value):
+        table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
+        column = vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, br_name)
+
+        ctx.add_column(ovsrec_row, column, key, value)
+        ctx.invalidate_cache()
+
+    def _br_clear_external_id(self, ctx, br_name, key):
+        table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
+        column = vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, br_name)
+
+        values = getattr(ovsrec_row, column, {})
+        values.pop(key, None)
+        setattr(ovsrec_row, column, values)
+        ctx.invalidate_cache()
+
+    def _cmd_br_set_external_id(self, ctx, command):
+        br_name = command.args[0]
+        key = command.args[1]
+        if len(command.args) > 2:
+            self._br_add_external_id(ctx, br_name, key, command.args[2])
+        else:
+            self._br_clear_external_id(ctx, br_name, key)
+
+    def _pre_cmd_br_get_external_id(self, ctx, _command):
+        table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
+        columns = [vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS]
+        self._pre_get_columns(ctx, table_name, columns)
+
+    def _br_get_external_id_value(self, ctx, br_name, key):
+        external_id = self._br_get_external_id_list(ctx, br_name)
+
+        return external_id.get(key, None)
+
+    def _br_get_external_id_list(self, ctx, br_name):
+        table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
+        column = vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, br_name)
+
+        return ctx.get_column(ovsrec_row, column)
+
+    def _cmd_br_get_external_id(self, ctx, command):
+        br_name = command.args[0]
+        if len(command.args) > 1:
+            command.result = self._br_get_external_id_value(ctx, br_name,
+                                                            command.args[1])
+        else:
+            command.result = self._br_get_external_id_list(ctx, br_name)
 
     # Port commands:
 
