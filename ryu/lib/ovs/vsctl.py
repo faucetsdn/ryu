@@ -1098,7 +1098,7 @@ class VSCtl(object):
             # 'emer-reset':
 
             # Database commands.
-            # 'list':
+            'list': (self._pre_cmd_list, self._cmd_list),
             'find': (self._pre_cmd_find, self._cmd_find),
             'get': (self._pre_cmd_get, self._cmd_get),
             'set': (self._pre_cmd_set, self._cmd_set),
@@ -1809,6 +1809,27 @@ class VSCtl(object):
         values = self._get(ctx, table_name, record_id, column_keys,
                            id_, if_exists)
         command.result = values
+
+    def _pre_cmd_list(self, ctx, command):
+        table_name = command.args[0]
+        self._pre_get_table(ctx, table_name)
+
+    def _list(self, ctx, table_name, record_id=None):
+        result = []
+        for ovsrec_row in ctx.idl.tables[table_name].rows.values():
+            if record_id is not None and ovsrec_row.name != record_id:
+                continue
+            result.append(ovsrec_row)
+
+        return result
+
+    def _cmd_list(self, ctx, command):
+        table_name = command.args[0]
+        record_id = None
+        if len(command.args) > 1:
+            record_id = command.args[1]
+
+        command.result = self._list(ctx, table_name, record_id)
 
     def _pre_cmd_find(self, ctx, command):
         table_name = command.args[0]
