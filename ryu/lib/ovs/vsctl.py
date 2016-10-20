@@ -776,6 +776,30 @@ class VSCtlContext(object):
 
         setattr(ovsrec_row, column, values)
 
+    def remove_column(self, ovsrec_row, column, key, value_json):
+        column_schema = ovsrec_row._table.columns[column]
+        datum = self._pre_mod_column(ovsrec_row, column, key, value_json)
+
+        if column_schema.type.is_map():
+            values = getattr(ovsrec_row, column, {})
+            for datum_key, datum_value in datum.items():
+                v = values.get(datum_key, None)
+                if v == datum_value:
+                    values.pop(datum_key)
+            setattr(ovsrec_row, column, values)
+        elif column_schema.type.is_set():
+            values = getattr(ovsrec_row, column, [])
+            for d in datum:
+                if d in values:
+                    values.remove(d)
+            setattr(ovsrec_row, column, values)
+        else:
+            values = getattr(ovsrec_row, column, None)
+            default = ovs.db.data.Datum.default(column_schema.type)
+            default = default.to_python(ovs.db.idl._uuid_to_row).to_json()
+            if values == datum:
+                setattr(ovsrec_row, column, default)
+
     def _get_row_by_id(self, table_name, vsctl_row_id, record_id):
         if not vsctl_row_id.table:
             return None
@@ -1124,7 +1148,7 @@ class VSCtl(object):
             'get': (self._pre_cmd_get, self._cmd_get),
             'set': (self._pre_cmd_set, self._cmd_set),
             'add': (self._pre_cmd_add, self._cmd_add),
-            # 'remove':
+            'remove': (self._pre_cmd_remove, self._cmd_remove),
             'clear': (self._pre_cmd_clear, self._cmd_clear),
             # 'create':
             # 'destroy':
@@ -1973,6 +1997,45 @@ class VSCtl(object):
             for key_value in command.args[3:]]
 
         self._add(ctx, table_name, record_id, column_key_values)
+
+    def _pre_remove(self, ctx, table_name, columns):
+        self._pre_get_table(ctx, table_name)
+        for column in columns:
+            self._pre_get_column(ctx, table_name, column)
+            self._check_mutable(table_name, column)
+
+    def _pre_cmd_remove(self, ctx, command):
+        table_name = command.args[0]
+        table_schema = self.schema.tables[table_name]
+        column = command.args[2]
+        columns = [
+            ctx.parse_column_key_value(
+                table_schema, '%s=%s' % (column, key_value))[0]
+            for key_value in command.args[3:]]
+        self._pre_set(ctx, table_name, columns)
+
+    def _remove(self, ctx, table_name, record_id, column_key_values):
+        """
+        :type column_key_values: list of (column, key_string, value_json)
+        """
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
+        for column, key, value in column_key_values:
+            ctx.remove_column(ovsrec_row, column, key, value)
+        ctx.invalidate_cache()
+
+    def _cmd_remove(self, ctx, command):
+        table_name = command.args[0]
+        record_id = command.args[1]
+        column = command.args[2]
+
+        table_schema = self.schema.tables[table_name]
+        column_key_values = [
+            ctx.parse_column_key_value(
+                table_schema, '%s=%s' % (column, key_value))
+            for key_value in command.args[3:]]
+
+        self._remove(ctx, table_name, record_id, column_key_values)
 
     def _pre_clear(self, ctx, table_name, column):
         self._pre_get_table(ctx, table_name)
