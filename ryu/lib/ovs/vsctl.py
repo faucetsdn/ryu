@@ -1148,7 +1148,7 @@ class VSCtl(object):
             'add-port': (self._pre_cmd_add_port, self._cmd_add_port),
             'add-bond': (self._pre_cmd_add_bond, self._cmd_add_bond),
             'del-port': (self._pre_get_info, self._cmd_del_port),
-            # 'port-to-br':
+            'port-to-br': (self._pre_get_info, self._cmd_port_to_br),
 
             # Interface commands.
             'list-ifaces': (self._pre_get_info, self._cmd_list_ifaces),
@@ -1595,6 +1595,20 @@ class VSCtl(object):
         target = command.args[-1]
         br_name = command.args[0] if len(command.args) == 2 else None
         self._del_port(ctx, br_name, target, must_exist, with_iface)
+
+    def _port_to_br(self, ctx, port_name):
+        ctx.populate_cache()
+        port = ctx.find_port(port_name, True)
+        bridge = port.bridge()
+        if bridge is None:
+            vsctl_fatal('Bridge associated to port "%s" does not exist' %
+                        port_name)
+
+        return bridge.name
+
+    def _cmd_port_to_br(self, ctx, command):
+        iface_name = command.args[0]
+        command.result = self._iface_to_br(ctx, iface_name)
 
     # Interface commands:
 
