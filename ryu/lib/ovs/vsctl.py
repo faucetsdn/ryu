@@ -478,7 +478,8 @@ class VSCtlContext(object):
             ovsrec_qos = qos[0]
         ovsrec_qos.type = type
         if max_rate is not None:
-            self.set_column(ovsrec_qos, 'other_config', 'max-rate', max_rate)
+            value_json = ['map', [['max-rate', max_rate]]]
+            self.set_column(ovsrec_qos, 'other_config', value_json)
         self.add_qos_to_cache(vsctl_port, [ovsrec_qos])
         return ovsrec_qos
 
@@ -492,13 +493,13 @@ class VSCtlContext(object):
             ovsrec_queue = self.txn.insert(
                 self.txn.idl.tables[vswitch_idl.OVSREC_TABLE_QUEUE])
         if max_rate is not None:
-            self.set_column(ovsrec_queue, 'other_config',
-                            'max-rate', max_rate)
+            value_json = ['map', [['max-rate', max_rate]]]
+            self.add_column(ovsrec_queue, 'other_config', value_json)
         if min_rate is not None:
-            self.set_column(ovsrec_queue, 'other_config',
-                            'min-rate', min_rate)
-        self.set_column(ovsrec_qos, 'queues', queue_id,
-                        ['uuid', str(ovsrec_queue.uuid)])
+            value_json = ['map', [['min-rate', min_rate]]]
+            self.add_column(ovsrec_queue, 'other_config', value_json)
+        value_json = ['map', [[queue_id, ['uuid', str(ovsrec_queue.uuid)]]]]
+        self.add_column(ovsrec_qos, 'queues', value_json)
         self.add_queue_to_cache(vsctl_qos, ovsrec_queue)
         return ovsrec_queue
 
@@ -582,8 +583,8 @@ class VSCtlContext(object):
     def add_port(self, br_name, port_name, may_exist, fake_iface,
                  iface_names, settings=None):
         """
-        :type settings: list of (column, key, value_json)
-                                where column and key are str,
+        :type settings: list of (column, value_json)
+                                where column is str,
                                       value_json is json that is represented
                                       by Datum.to_json()
         """
@@ -630,10 +631,9 @@ class VSCtlContext(object):
         if vsctl_bridge.parent:
             tag = vsctl_bridge.vlan
             ovsrec_port.tag = tag
-        for setting in settings:
+        for column, value in settings:
             # TODO:XXX self.symtab:
-            column, key, value = setting
-            self.set_column(ovsrec_port, column, key, value)
+            self.set_column(ovsrec_port, column, value)
 
         if vsctl_bridge.parent:
             ovsrec_bridge = vsctl_bridge.parent.br_cfg
@@ -734,26 +734,25 @@ class VSCtlContext(object):
     @staticmethod
     def parse_column_key_value(table_schema, setting_string):
         """
-        parse <column>[:<key>]=<value>
+        Parses 'setting_string' as str formatted in <column>[:<key>]=<value>
+        and returns str type 'column' and json formatted 'value'
         """
-        column_value = setting_string.split('=', 1)
-        if len(column_value) == 1:
-            column = column_value[0]
+        if ':' in setting_string:
+            # splits <column>:<key>=<value> into <column> and <key>=<value>
+            column, value = setting_string.split(':', 1)
+        elif '=' in setting_string:
+            # splits <column>=<value> into <column> and <value>
+            column, value = setting_string.split('=', 1)
+        else:
+            # stores <column> and <value>=None
+            column = setting_string
             value = None
-        else:
-            column, value = column_value
 
-        if ':' in column:
-            column, key = column.split(':', 1)
-        else:
-            key = None
         if value is not None:
-            LOG.debug("columns %s", list(table_schema.columns.keys()))
             type_ = table_schema.columns[column].type
             value = datum_from_string(type_, value)
-            LOG.debug("column %s value %s", column, value)
 
-        return column, key, value
+        return column, value
 
     def get_column(self, ovsrec_row, column, key=None, if_exists=False):
         value = getattr(ovsrec_row, column, None)
@@ -769,25 +768,19 @@ class VSCtlContext(object):
 
         return value
 
-    def _pre_mod_column(self, ovsrec_row, column, key, value_json):
+    def _pre_mod_column(self, ovsrec_row, column, value_json):
         if column not in ovsrec_row._table.columns:
             vsctl_fatal('%s does not contain a column whose name matches "%s"'
                         % (ovsrec_row._table.name, column))
 
         column_schema = ovsrec_row._table.columns[column]
-        if key is not None:
-            value_json = ['map', [[key, value_json]]]
-            if column_schema.type.value.type == ovs.db.types.VoidType:
-                vsctl_fatal('cannot specify key to set for non-map column %s' %
-                            column)
-
         datum = ovs.db.data.Datum.from_json(
             column_schema.type, value_json, self.symtab)
         return datum.to_python(ovs.db.idl._uuid_to_row)
 
-    def set_column(self, ovsrec_row, column, key, value_json):
+    def set_column(self, ovsrec_row, column, value_json):
         column_schema = ovsrec_row._table.columns[column]
-        datum = self._pre_mod_column(ovsrec_row, column, key, value_json)
+        datum = self._pre_mod_column(ovsrec_row, column, value_json)
 
         if column_schema.type.is_map():
             values = getattr(ovsrec_row, column, {})
@@ -797,9 +790,9 @@ class VSCtlContext(object):
 
         setattr(ovsrec_row, column, values)
 
-    def add_column(self, ovsrec_row, column, key, value_json):
+    def add_column(self, ovsrec_row, column, value_json):
         column_schema = ovsrec_row._table.columns[column]
-        datum = self._pre_mod_column(ovsrec_row, column, key, value_json)
+        datum = self._pre_mod_column(ovsrec_row, column, value_json)
 
         if column_schema.type.is_map():
             values = getattr(ovsrec_row, column, {})
@@ -812,9 +805,9 @@ class VSCtlContext(object):
 
         setattr(ovsrec_row, column, values)
 
-    def remove_column(self, ovsrec_row, column, key, value_json):
+    def remove_column(self, ovsrec_row, column, value_json):
         column_schema = ovsrec_row._table.columns[column]
-        datum = self._pre_mod_column(ovsrec_row, column, key, value_json)
+        datum = self._pre_mod_column(ovsrec_row, column, value_json)
 
         if column_schema.type.is_map():
             values = getattr(ovsrec_row, column, {})
@@ -1433,7 +1426,8 @@ class VSCtl(object):
         vsctl_table = self._get_table(table_name)
         ovsrec_row = ctx.must_get_row(vsctl_table, br_name)
 
-        ctx.add_column(ovsrec_row, column, key, value)
+        value_json = ['map', [[key, value]]]
+        ctx.add_column(ovsrec_row, column, value_json)
         ctx.invalidate_cache()
 
     def _br_clear_external_id(self, ctx, br_name, key):
@@ -1526,8 +1520,9 @@ class VSCtl(object):
 
         columns = [
             ctx.parse_column_key_value(
-                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT],
-                setting)[0] for setting in command.args[3:]]
+                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT], setting)[0]
+            for setting in command.args[3:]]
+
         self._pre_add_port(ctx, columns)
 
     def _cmd_add_port(self, ctx, command):
@@ -1553,8 +1548,9 @@ class VSCtl(object):
         iface_names = list(command.args[2])
         settings = [
             ctx.parse_column_key_value(
-                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT],
-                setting) for setting in command.args[3:]]
+                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT], setting)
+            for setting in command.args[3:]]
+
         ctx.add_port(br_name, port_name, may_exist, fake_iface,
                      iface_names, settings)
 
@@ -2048,28 +2044,36 @@ class VSCtl(object):
         columns = [
             ctx.parse_column_key_value(table_schema, column_key_value)[0]
             for column_key_value in command.args[1:]]
+
         self._pre_get_columns(ctx, table_name, columns)
 
-    def _check_value(self, ovsrec_row, column_key_value):
-        column, key, value_json = column_key_value
+    def _check_value(self, ovsrec_row, column_value):
+        """
+        :type column_value: tuple of column and value_json
+        """
+        column, value_json = column_value
         column_schema = ovsrec_row._table.columns[column]
         value = ovs.db.data.Datum.from_json(
             column_schema.type, value_json).to_python(ovs.db.idl._uuid_to_row)
         datum = getattr(ovsrec_row, column)
-        if key is None:
-            if datum == value:
-                return True
-        else:
-            if datum[key] != value:
-                return True
+        if column_schema.type.is_map():
+            for k, v in value.items():
+                if k in datum and datum[k] == v:
+                    return True
+        elif datum == value:
+            return True
+
         return False
 
-    def _find(self, ctx, table_name, column_key_values):
+    def _find(self, ctx, table_name, column_values):
+        """
+        :type column_values: list of (column, value_json)
+        """
         result = []
         for ovsrec_row in ctx.idl.tables[table_name].rows.values():
             LOG.debug('ovsrec_row %s', ovsrec_row_to_string(ovsrec_row))
-            if all(self._check_value(ovsrec_row, column_key_value)
-                   for column_key_value in column_key_values):
+            if all(self._check_value(ovsrec_row, column_value)
+                   for column_value in column_values):
                 result.append(ovsrec_row)
 
         return result
@@ -2077,10 +2081,10 @@ class VSCtl(object):
     def _cmd_find(self, ctx, command):
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
-        column_key_values = [ctx.parse_column_key_value(table_schema,
-                                                        column_key_value)
-                             for column_key_value in command.args[1:]]
-        command.result = self._find(ctx, table_name, column_key_values)
+        column_values = [
+            ctx.parse_column_key_value(table_schema, column_key_value)
+            for column_key_value in command.args[1:]]
+        command.result = self._find(ctx, table_name, column_values)
 
     def _pre_cmd_get(self, ctx, command):
         table_name = command.args[0]
@@ -2138,19 +2142,20 @@ class VSCtl(object):
     def _pre_cmd_set(self, ctx, command):
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
-        columns = [ctx.parse_column_key_value(table_schema,
-                                              column_key_value)[0]
-                   for column_key_value in command.args[2:]]
+        columns = [
+            ctx.parse_column_key_value(table_schema, column_key_value)[0]
+            for column_key_value in command.args[2:]]
+
         self._pre_mod_columns(ctx, table_name, columns)
 
-    def _set(self, ctx, table_name, record_id, column_key_values):
+    def _set(self, ctx, table_name, record_id, column_values):
         """
-        :type column_key_values: list of (column, key_string, value_json)
+        :type column_values: list of (column, value_json)
         """
         vsctl_table = self._get_table(table_name)
         ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
-        for column, key, value in column_key_values:
-            ctx.set_column(ovsrec_row, column, key, value)
+        for column, value in column_values:
+            ctx.set_column(ovsrec_row, column, value)
         ctx.invalidate_cache()
 
     def _cmd_set(self, ctx, command):
@@ -2159,30 +2164,26 @@ class VSCtl(object):
 
         # column_key_value: <column>[:<key>]=<value>
         table_schema = self.schema.tables[table_name]
-        column_key_values = [ctx.parse_column_key_value(table_schema,
-                                                        column_key_value)
-                             for column_key_value in command.args[2:]]
+        column_values = [
+            ctx.parse_column_key_value(table_schema, column_key_value)
+            for column_key_value in command.args[2:]]
 
-        self._set(ctx, table_name, record_id, column_key_values)
+        self._set(ctx, table_name, record_id, column_values)
 
     def _pre_cmd_add(self, ctx, command):
         table_name = command.args[0]
-        table_schema = self.schema.tables[table_name]
-        column = command.args[2]
-        columns = [
-            ctx.parse_column_key_value(
-                table_schema, '%s=%s' % (column, key_value))[0]
-            for key_value in command.args[3:]]
+        columns = [command.args[2]]
+
         self._pre_mod_columns(ctx, table_name, columns)
 
-    def _add(self, ctx, table_name, record_id, column_key_values):
+    def _add(self, ctx, table_name, record_id, column_values):
         """
-        :type column_key_values: list of (column, key_string, value_json)
+        :type column_values: list of (column, value_json)
         """
         vsctl_table = self._get_table(table_name)
         ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
-        for column, key, value in column_key_values:
-            ctx.add_column(ovsrec_row, column, key, value)
+        for column, value in column_values:
+            ctx.add_column(ovsrec_row, column, value)
         ctx.invalidate_cache()
 
     def _cmd_add(self, ctx, command):
@@ -2190,32 +2191,36 @@ class VSCtl(object):
         record_id = command.args[1]
         column = command.args[2]
 
-        table_schema = self.schema.tables[table_name]
-        column_key_values = [
-            ctx.parse_column_key_value(
-                table_schema, '%s=%s' % (column, key_value))
-            for key_value in command.args[3:]]
+        column_key_value_strings = []
+        for value in command.args[3:]:
+            if '=' in value:
+                # construct <column>:<key>=value
+                column_key_value_strings.append('%s:%s' % (column, value))
+            else:
+                # construct <column>=value
+                column_key_value_strings.append('%s=%s' % (column, value))
 
-        self._add(ctx, table_name, record_id, column_key_values)
+        table_schema = self.schema.tables[table_name]
+        column_values = [
+            ctx.parse_column_key_value(table_schema, column_key_value_string)
+            for column_key_value_string in column_key_value_strings]
+
+        self._add(ctx, table_name, record_id, column_values)
 
     def _pre_cmd_remove(self, ctx, command):
         table_name = command.args[0]
-        table_schema = self.schema.tables[table_name]
-        column = command.args[2]
-        columns = [
-            ctx.parse_column_key_value(
-                table_schema, '%s=%s' % (column, key_value))[0]
-            for key_value in command.args[3:]]
+        columns = [command.args[2]]
+
         self._pre_mod_columns(ctx, table_name, columns)
 
-    def _remove(self, ctx, table_name, record_id, column_key_values):
+    def _remove(self, ctx, table_name, record_id, column_values):
         """
-        :type column_key_values: list of (column, key_string, value_json)
+        :type column_values: list of (column, value_json)
         """
         vsctl_table = self._get_table(table_name)
         ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
-        for column, key, value in column_key_values:
-            ctx.remove_column(ovsrec_row, column, key, value)
+        for column, value in column_values:
+            ctx.remove_column(ovsrec_row, column, value)
         ctx.invalidate_cache()
 
     def _cmd_remove(self, ctx, command):
@@ -2223,13 +2228,21 @@ class VSCtl(object):
         record_id = command.args[1]
         column = command.args[2]
 
-        table_schema = self.schema.tables[table_name]
-        column_key_values = [
-            ctx.parse_column_key_value(
-                table_schema, '%s=%s' % (column, key_value))
-            for key_value in command.args[3:]]
+        column_key_value_strings = []
+        for value in command.args[3:]:
+            if '=' in value:
+                # construct <column>:<key>=value
+                column_key_value_strings.append('%s:%s' % (column, value))
+            else:
+                # construct <column>=value
+                column_key_value_strings.append('%s=%s' % (column, value))
 
-        self._remove(ctx, table_name, record_id, column_key_values)
+        table_schema = self.schema.tables[table_name]
+        column_values = [
+            ctx.parse_column_key_value(table_schema, column_key_value_string)
+            for column_key_value_string in column_key_value_strings]
+
+        self._remove(ctx, table_name, record_id, column_values)
 
     def _pre_cmd_clear(self, ctx, command):
         table_name = command.args[0]

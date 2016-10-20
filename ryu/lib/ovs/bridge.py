@@ -299,7 +299,7 @@ class OVSBridge(object):
             options += ',local_ip=%(local_ip)s' % locals()
 
         args = ['Interface', name, 'type=%s' % tunnel_type,
-                'options=%s' % options]
+                'options:%s' % options]
         if ofport:
             args.append('ofport_request=%(ofport)s' % locals())
 
