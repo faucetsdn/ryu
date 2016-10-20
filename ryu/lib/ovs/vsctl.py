@@ -38,6 +38,8 @@ from ovs.db import idl
 
 from ryu.lib import hub
 from ryu.lib.ovs import vswitch_idl
+from ryu.lib.stringify import StringifyMixin
+
 
 LOG = logging.getLogger(__name__)       # use ovs.vlog?
 
@@ -841,7 +843,7 @@ class _VSCtlTable(object):
         self.row_ids = vsctl_row_id_list
 
 
-class VSCtlCommand(object):
+class VSCtlCommand(StringifyMixin):
 
     def __init__(self, command, args=None, options=None):
         super(VSCtlCommand, self).__init__()
