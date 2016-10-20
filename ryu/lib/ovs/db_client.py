@@ -48,9 +48,8 @@ class DBClient(object):
         error, stream_ = stream.Stream.open_block(
             stream.Stream.open(self.remote))
         if error:
-            RuntimeError('can not open socket to %s: %s' %
-                         (self.remote, os.strerror(error)))
-            raise
+            raise RuntimeError('can not open socket to %s: %s' %
+                               (self.remote, os.strerror(error)))
         rpc = jsonrpc.Connection(stream_)
 
         ret = _COMMANDS[command](rpc, *args)
@@ -85,7 +84,7 @@ class DBClient(object):
                                                                  database))
 
     # commands
-    def _list_dbs(self, rpc, *_args):
+    def _list_dbs(self, rpc, *_):
         return self._fetch_dbs(rpc)
 
     def _get_schema(self, rpc, *args):

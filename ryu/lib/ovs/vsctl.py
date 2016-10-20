@@ -17,17 +17,20 @@
 
 from __future__ import print_function
 
-import itertools
 import logging
 import operator
 import os
-import six
 import sys
 import weakref
 
+import six
+
 import ovs.db.data
+import ovs.db.parser
+import ovs.db.schema
 import ovs.db.types
 import ovs.poller
+import ovs.json
 from ovs import jsonrpc
 from ovs import ovsuuid
 from ovs import stream
@@ -311,8 +314,7 @@ class VSCtlContext(object):
 
     @staticmethod
     def port_is_fake_bridge(ovsrec_port):
-        return (ovsrec_port.fake_bridge and
-                ovsrec_port.tag >= 0 and ovsrec_port.tag <= 4095)
+        return ovsrec_port.fake_bridge and 0 <= ovsrec_port.tag <= 4095
 
     def _populate_cache(self, ovsrec_bridges):
         if self.cache_valid:
@@ -585,8 +587,8 @@ class VSCtlContext(object):
                                  vsctl_port.port_cfg.interfaces)
                 if vsctl_port.bridge().name != br_name:
                     vsctl_fatal('"%s" but %s is actually attached to '
-                                'vsctl_bridge %s',
-                                br_name, port_name, vsctl_port.bridge().name)
+                                'vsctl_bridge %s' %
+                                (br_name, port_name, vsctl_port.bridge().name))
                 if want_names != have_names:
                     want_names_string = ','.join(want_names)
                     have_names_string = ','.join(have_names)
@@ -724,7 +726,7 @@ class VSCtlContext(object):
             value = datum_from_string(type_, value)
             LOG.debug("column %s value %s", column, value)
 
-        return (column, key, value)
+        return column, key, value
 
     def set_column(self, ovsrec_row, column, key, value_json):
         if column not in ovsrec_row._table.columns:
@@ -764,9 +766,9 @@ class VSCtlContext(object):
             for ovsrec_row in self.idl.tables[
                     vsctl_row_id.table].rows.values():
                 name = getattr(ovsrec_row, vsctl_row_id.name_column)
-                assert type(name) in (list, str, six.text_type)
-                if type(name) != list and name == record_id:
-                    if (referrer):
+                assert isinstance(name, (list, str, six.text_type))
+                if not isinstance(name, list) and name == record_id:
+                    if referrer:
                         vsctl_fatal('multiple rows in %s match "%s"' %
                                     (table_name, record_id))
                     referrer = ovsrec_row
@@ -782,7 +784,7 @@ class VSCtlContext(object):
             uuid_ = referrer._data[vsctl_row_id.uuid_column]
             assert uuid_.type.key.type == ovs.db.types.UuidType
             assert uuid_.type.value is None
-            assert type(uuid) == list
+            assert isinstance(uuid, list)
 
             if len(uuid) == 1:
                 final = uuid[0]
@@ -935,18 +937,17 @@ class VSCtl(object):
             ctx.done()
 
     def _do_vsctl(self, idl_, commands):
-        txn = idl.Transaction(idl_)
-        self.txn = txn
+        self.txn = idl.Transaction(idl_)
         if self.dry_run:
-            txn.dry_run = True
+            self.txn.dry_run = True
 
-        txn.add_comment('ovs-vsctl')  # TODO:XXX add operation name. args
+        self.txn.add_comment('ovs-vsctl')  # TODO:XXX add operation name. args
         ovs_rows = idl_.tables[vswitch_idl.OVSREC_TABLE_OPEN_VSWITCH].rows
         if ovs_rows:
             ovs_ = list(ovs_rows.values())[0]
         else:
             # XXX add verification that table is empty
-            ovs_ = txn.insert(
+            ovs_ = self.txn.insert(
                 idl_.tables[vswitch_idl.OVSREC_TABLE_OPEN_VSWITCH])
 
         if self.wait_for_reload:
@@ -954,7 +955,7 @@ class VSCtl(object):
 
         # TODO:XXX
         # symtab = ovsdb_symbol_table_create()
-        ctx = VSCtlContext(idl_, txn, ovs_)
+        ctx = VSCtlContext(idl_, self.txn, ovs_)
         for command in commands:
             if not command._run:
                 continue
@@ -966,10 +967,10 @@ class VSCtl(object):
 
         # TODO:XXX check if created symbols are really created, referenced.
 
-        status = txn.commit_block()
+        status = self.txn.commit_block()
         next_cfg = 0
         if self.wait_for_reload and status == idl.Transaction.SUCCESS:
-            next_cfg = txn.get_increment_new_value()
+            next_cfg = self.txn.get_increment_new_value()
 
         # TODO:XXX
         # if status in (idl.Transaction.UNCHANGED, idl.Transaction.SUCCESS):
@@ -982,7 +983,6 @@ class VSCtl(object):
 
         txn_ = self.txn
         self.txn = None
-        txn = None
 
         if status in (idl.Transaction.UNCOMMITTED, idl.Transaction.INCOMPLETE):
             not_reached()
@@ -1004,7 +1004,7 @@ class VSCtl(object):
         if self.wait_for_reload and status != idl.Transaction.UNCHANGED:
             while True:
                 idl_.run()
-                if (ovs_.cur_cfg >= next_cfg):
+                if ovs_.cur_cfg >= next_cfg:
                     break
                 self._idl_block(idl_)
 
@@ -1190,7 +1190,7 @@ class VSCtl(object):
         for column in show.columns:
             datum = row._data[column]
             key = datum.type.key
-            if (key.type == ovs.db.types.UuidType and key.ref_table_name):
+            if key.type == ovs.db.types.UuidType and key.ref_table_name:
                 ref_show = VSCtl._cmd_show_find_table_by_name(
                     key.ref_table_name)
                 if ref_show:
@@ -1257,9 +1257,10 @@ class VSCtl(object):
 
     def _cmd_add_br(self, ctx, command):
         br_name = command.args[0]
+        parent_name = None
+        vlan = 0
         if len(command.args) == 1:
-            parent_name = None
-            vlan = 0
+            pass
         elif len(command.args) == 3:
             parent_name = command.args[1]
             vlan = int(command.args[2])
@@ -1308,9 +1309,11 @@ class VSCtl(object):
     def _pre_cmd_add_port(self, ctx, command):
         self._pre_get_info(ctx, command)
 
-        columns = [ctx.parse_column_key_value(
-            self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT], setting)[0]
+        columns = [
+            ctx.parse_column_key_value(
+                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT], setting)[0]
             for setting in command.args[2:]]
+
         self._pre_add_port(ctx, columns)
 
     def _cmd_add_port(self, ctx, command):
@@ -1319,9 +1322,11 @@ class VSCtl(object):
         br_name = command.args[0]
         port_name = command.args[1]
         iface_names = [command.args[1]]
-        settings = [ctx.parse_column_key_value(
-            self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT], setting)
+        settings = [
+            ctx.parse_column_key_value(
+                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT], setting)
             for setting in command.args[2:]]
+
         ctx.add_port(br_name, port_name, may_exist,
                      False, iface_names, settings)
 
@@ -1423,7 +1428,7 @@ class VSCtl(object):
                 iface_cfgs.extend(
                     self._iface_to_dict(vsctl_iface.iface_cfg)
                     for vsctl_iface in vsctl_port.ifaces
-                    if (vsctl_iface.iface_cfg.name == port_name))
+                    if vsctl_iface.iface_cfg.name == port_name)
 
         return iface_cfgs
 
@@ -1735,7 +1740,7 @@ class VSCtl(object):
             row.verify(column)
             datum = getattr(row, column)
             if key_string:
-                if type(datum) != dict:
+                if not isinstance(datum, dict):
                     vsctl_fatal('cannot specify key to get for non-map column '
                                 '%s' % column)
                 values.append(datum[key_string])

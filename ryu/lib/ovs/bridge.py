@@ -19,9 +19,9 @@ slimmed down version of OVSBridge in quantum agent
 """
 
 import functools
-from ryu import cfg
 import logging
 
+from ryu import cfg
 import ryu.exception as ryu_exc
 import ryu.lib.dpid as dpid_lib
 import ryu.lib.ovs.vsctl as ovs_vsctl
@@ -115,11 +115,10 @@ class OVSBridge(object):
             ('Bridge',
              'datapath_id=%s' % dpid_lib.dpid_to_str(self.datapath_id)))
         self.run_command([command])
-        result = command.result
-        if len(result) == 0 or len(result) > 1:
+        if not isinstance(command.result, list) or len(command.result) != 1:
             raise OVSBridgeNotFound(
                 datapath_id=dpid_lib.dpid_to_str(self.datapath_id))
-        return result[0].name
+        return command.result[0].name
 
     def get_controller(self):
         command = ovs_vsctl.VSCtlCommand('get-controller', [self.br_name])
@@ -152,7 +151,7 @@ class OVSBridge(object):
 
     def db_get_map(self, table, record, column):
         val = self.db_get_val(table, record, column)
-        assert type(val) == dict
+        assert isinstance(val, dict)
         return val
 
     def get_datapath_id(self):
@@ -160,7 +159,7 @@ class OVSBridge(object):
 
     def delete_port(self, port_name):
         command = ovs_vsctl.VSCtlCommand(
-            'del-port', (self.br_name, port_name), ('--if-exists'))
+            'del-port', (self.br_name, port_name), '--if-exists')
         self.run_command([command])
 
     def get_ofport(self, port_name):
@@ -227,7 +226,7 @@ class OVSBridge(object):
             return self._vifport(name, external_ids)
 
     def get_vif_ports(self):
-        'returns a VIF object for each VIF port'
+        """ Returns a VIF object for each VIF port """
         return self._get_ports(self._get_vif_port)
 
     def _get_external_port(self, name):
