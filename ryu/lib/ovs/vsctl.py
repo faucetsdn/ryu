@@ -710,6 +710,22 @@ class VSCtlContext(object):
         self.invalidate_cache()
 
     @staticmethod
+    def parse_column_key(setting_string):
+        """
+        Parses 'setting_string' as str formatted in <column>[:<key>]
+        and returns str type 'column' and 'key'
+        """
+        if ':' in setting_string:
+            # splits <column>:<key> into <column> and <key>
+            column, key = setting_string.split(':', 1)
+        else:
+            # stores <column> and <value>=None
+            column = setting_string
+            key = None
+
+        return column, key
+
+    @staticmethod
     def parse_column_key_value(table_schema, setting_string):
         """
         parse <column>[:<key>]=<value>
@@ -732,6 +748,20 @@ class VSCtlContext(object):
             LOG.debug("column %s value %s", column, value)
 
         return column, key, value
+
+    def get_column(self, ovsrec_row, column, key=None, if_exists=False):
+        value = getattr(ovsrec_row, column, None)
+        if isinstance(value, dict) and key is not None:
+            value = value.get(key, None)
+            column = '%s:%s' % (column, key)
+
+        if value is None:
+            if if_exists:
+                return None
+            vsctl_fatal('%s does not contain a column whose name matches "%s"'
+                        % (ovsrec_row._table.name, column))
+
+        return value
 
     def _pre_mod_column(self, ovsrec_row, column, key, value_json):
         if column not in ovsrec_row._table.columns:
@@ -1175,7 +1205,8 @@ class VSCtl(object):
             with hub.Timeout(timeout_sec, exception):
                 self._run_command(commands)
 
-    # commands
+    # Open vSwitch commands:
+
     def _cmd_init(self, _ctx, _command):
         # nothing. Just check connection to ovsdb
         pass
@@ -1281,6 +1312,8 @@ class VSCtl(object):
             output = self._cmd_show_row(ctx, row, 0)
             command.result = output
 
+    # Bridge commands:
+
     def _pre_get_info(self, _ctx, _command):
         schema_helper = self.schema_helper
 
@@ -1347,6 +1380,8 @@ class VSCtl(object):
     def _cmd_del_br(self, ctx, command):
         br_name = command.args[0]
         self._del_br(ctx, br_name)
+
+    # Port commands:
 
     def _list_ports(self, ctx, br_name):
         ctx.populate_cache()
@@ -1461,6 +1496,8 @@ class VSCtl(object):
         br_name = command.args[0] if len(command.args) == 2 else None
         self._del_port(ctx, br_name, target, must_exist, with_iface)
 
+    # Interface commands:
+
     def _list_ifaces(self, ctx, br_name):
         ctx.populate_cache()
 
@@ -1479,6 +1516,8 @@ class VSCtl(object):
         br_name = command.args[0]
         iface_names = self._list_ifaces(ctx, br_name)
         command.result = sorted(iface_names)
+
+    # Utility commands for quantum_adapter:
 
     def _pre_cmd_list_ifaces_verbose(self, ctx, command):
         self._pre_get_info(ctx, command)
@@ -1533,6 +1572,8 @@ class VSCtl(object):
         LOG.debug('command.args %s', command.args)
         iface_cfgs = self._list_ifaces_verbose(ctx, datapath_id, port_name)
         command.result = sorted(iface_cfgs)
+
+    # Controller commands:
 
     def _verify_controllers(self, ovsrec_bridge):
         ovsrec_bridge.verify(vswitch_idl.OVSREC_BRIDGE_COL_CONTROLLER)
@@ -1602,6 +1643,8 @@ class VSCtl(object):
         controller_names = command.args[1:]
         self._set_controller(ctx, br_name, controller_names)
 
+    # Utility commands:
+
     def _del_qos(self, ctx, port_name):
         assert port_name is not None
 
@@ -1662,6 +1705,8 @@ class VSCtl(object):
             [vswitch_idl.OVSREC_QUEUE_COL_DSCP,
              vswitch_idl.OVSREC_QUEUE_COL_EXTERNAL_IDS,
              vswitch_idl.OVSREC_QUEUE_COL_OTHER_CONFIG])
+
+    # Database commands:
 
     _TABLES = [
         _VSCtlTable(vswitch_idl.OVSREC_TABLE_BRIDGE,
@@ -1798,62 +1843,10 @@ class VSCtl(object):
         column_name = self._get_column(table_name, column)
         self.schema_helper.register_columns(table_name, [column_name])
 
-    def _pre_get(self, ctx, table_name, columns):
-        vsctl_table = self._pre_get_table(ctx, table_name)
+    def _pre_get_columns(self, ctx, table_name, columns):
+        self._pre_get_table(ctx, table_name)
         for column in columns:
-            self._pre_get_column(ctx, vsctl_table.table_name, column)
-
-    def _pre_cmd_get(self, ctx, command):
-        table_name = command.args[0]
-        table_schema = self.schema.tables[table_name]
-        columns = [ctx.parse_column_key_value(table_schema, column_key)[0]
-                   for column_key in command.args[2:]]
-        self._pre_get(ctx, table_name, columns)
-
-    def _get(self, ctx, table_name, record_id, column_keys,
-             id_=None, if_exists=False):
-        """
-        :type column_keys: list of (column, key_string)
-                                   where column and key are str
-        """
-        vsctl_table = self._get_table(table_name)
-        row = ctx.must_get_row(vsctl_table, record_id)
-        if id_:
-            raise NotImplementedError()  # TODO:XXX
-
-            symbol, new = ctx.create_symbol(id_)
-            if not new:
-                vsctl_fatal('row id "%s" specified on "get" command was used '
-                            'before it was defined' % id_)
-            symbol.uuid = row.uuid
-            symbol.strong_ref = True
-
-        values = []
-        for column, key_string in column_keys:
-            row.verify(column)
-            datum = getattr(row, column)
-            if key_string:
-                if not isinstance(datum, dict):
-                    vsctl_fatal('cannot specify key to get for non-map column '
-                                '%s' % column)
-                values.append(datum[key_string])
-            else:
-                values.append(datum)
-
-        return values
-
-    def _cmd_get(self, ctx, command):
-        id_ = None      # TODO:XXX      --id
-        if_exists = command.has_option('--if-exists')
-        table_name = command.args[0]
-        record_id = command.args[1]
-        table_schema = self.schema.tables[table_name]
-        column_keys = [ctx.parse_column_key_value(table_schema, column_key)[:2]
-                       for column_key in command.args[2:]]
-
-        values = self._get(ctx, table_name, record_id, column_keys,
-                           id_, if_exists)
-        command.result = values
+            self._pre_get_column(ctx, table_name, column)
 
     def _pre_cmd_list(self, ctx, command):
         table_name = command.args[0]
@@ -1879,11 +1872,10 @@ class VSCtl(object):
     def _pre_cmd_find(self, ctx, command):
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
-        columns = [ctx.parse_column_key_value(table_schema,
-                                              column_key_value)[0]
-                   for column_key_value in command.args[1:]]
-        LOG.debug('columns %s', columns)
-        self._pre_get(ctx, table_name, columns)
+        columns = [
+            ctx.parse_column_key_value(table_schema, column_key_value)[0]
+            for column_key_value in command.args[1:]]
+        self._pre_get_columns(ctx, table_name, columns)
 
     def _check_value(self, ovsrec_row, column_key_value):
         column, key, value_json = column_key_value
@@ -1917,13 +1909,54 @@ class VSCtl(object):
                              for column_key_value in command.args[1:]]
         command.result = self._find(ctx, table_name, column_key_values)
 
+    def _pre_cmd_get(self, ctx, command):
+        table_name = command.args[0]
+        columns = [
+            ctx.parse_column_key(column_key)[0]
+            for column_key in command.args[2:]]
+
+        self._pre_get_columns(ctx, table_name, columns)
+
+    def _get(self, ctx, table_name, record_id, column_keys,
+             id_=None, if_exists=False):
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
+
+        # TODO: Support symbol name
+        # if id_:
+        #     symbol, new = ctx.create_symbol(id_)
+        #     if not new:
+        #         vsctl_fatal('row id "%s" specified on "get" command was '
+        #                     'used before it was defined' % id_)
+        #     symbol.uuid = row.uuid
+        #     symbol.strong_ref = True
+
+        result = []
+        for column, key in column_keys:
+            result.append(ctx.get_column(ovsrec_row, column, key, if_exists))
+
+        return result
+
+    def _cmd_get(self, ctx, command):
+        id_ = None  # TODO: Support --id option
+        if_exists = command.has_option('--if-exists')
+        table_name = command.args[0]
+        record_id = command.args[1]
+
+        column_keys = [
+            ctx.parse_column_key(column_key)
+            for column_key in command.args[2:]]
+
+        command.result = self._get(
+            ctx, table_name, record_id, column_keys, id_, if_exists)
+
     def _check_mutable(self, table_name, column):
         column_schema = self.schema.tables[table_name].columns[column]
         if not column_schema.mutable:
             vsctl_fatal('cannot modify read-only column %s in table %s' %
                         (column, table_name))
 
-    def _pre_set(self, ctx, table_name, columns):
+    def _pre_mod_columns(self, ctx, table_name, columns):
         self._pre_get_table(ctx, table_name)
         for column in columns:
             self._pre_get_column(ctx, table_name, column)
@@ -1935,7 +1968,7 @@ class VSCtl(object):
         columns = [ctx.parse_column_key_value(table_schema,
                                               column_key_value)[0]
                    for column_key_value in command.args[2:]]
-        self._pre_set(ctx, table_name, columns)
+        self._pre_mod_columns(ctx, table_name, columns)
 
     def _set(self, ctx, table_name, record_id, column_key_values):
         """
@@ -1959,12 +1992,6 @@ class VSCtl(object):
 
         self._set(ctx, table_name, record_id, column_key_values)
 
-    def _pre_add(self, ctx, table_name, columns):
-        self._pre_get_table(ctx, table_name)
-        for column in columns:
-            self._pre_get_column(ctx, table_name, column)
-            self._check_mutable(table_name, column)
-
     def _pre_cmd_add(self, ctx, command):
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
@@ -1973,7 +2000,7 @@ class VSCtl(object):
             ctx.parse_column_key_value(
                 table_schema, '%s=%s' % (column, key_value))[0]
             for key_value in command.args[3:]]
-        self._pre_add(ctx, table_name, columns)
+        self._pre_mod_columns(ctx, table_name, columns)
 
     def _add(self, ctx, table_name, record_id, column_key_values):
         """
@@ -1998,12 +2025,6 @@ class VSCtl(object):
 
         self._add(ctx, table_name, record_id, column_key_values)
 
-    def _pre_remove(self, ctx, table_name, columns):
-        self._pre_get_table(ctx, table_name)
-        for column in columns:
-            self._pre_get_column(ctx, table_name, column)
-            self._check_mutable(table_name, column)
-
     def _pre_cmd_remove(self, ctx, command):
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
@@ -2012,7 +2033,7 @@ class VSCtl(object):
             ctx.parse_column_key_value(
                 table_schema, '%s=%s' % (column, key_value))[0]
             for key_value in command.args[3:]]
-        self._pre_set(ctx, table_name, columns)
+        self._pre_mod_columns(ctx, table_name, columns)
 
     def _remove(self, ctx, table_name, record_id, column_key_values):
         """
@@ -2037,15 +2058,10 @@ class VSCtl(object):
 
         self._remove(ctx, table_name, record_id, column_key_values)
 
-    def _pre_clear(self, ctx, table_name, column):
-        self._pre_get_table(ctx, table_name)
-        self._pre_get_column(ctx, table_name, column)
-        self._check_mutable(table_name, column)
-
     def _pre_cmd_clear(self, ctx, command):
         table_name = command.args[0]
         column = command.args[2]
-        self._pre_clear(ctx, table_name, column)
+        self._pre_mod_columns(ctx, table_name, [column])
 
     def _clear(self, ctx, table_name, record_id, column):
         vsctl_table = self._get_table(table_name)
