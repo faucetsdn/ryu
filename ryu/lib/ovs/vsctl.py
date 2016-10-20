@@ -1048,17 +1048,23 @@ class VSCtl(object):
             # Open vSwitch commands.
             'init': (None, self._cmd_init),
             'show': (self._pre_cmd_show, self._cmd_show),
+            # 'emer-reset':
 
             # Bridge commands.
             'add-br': (self._pre_add_br, self._cmd_add_br),
             'del-br': (self._pre_get_info, self._cmd_del_br),
             'list-br': (self._pre_get_info, self._cmd_list_br),
+            # 'br-exists':
+            # 'br-to-vlan':
+            # 'br-to-parent':
+            # 'br-set-external-id':
+            # 'br-get-external-id':
 
             # Port. commands
             'list-ports': (self._pre_get_info, self._cmd_list_ports),
             'add-port': (self._pre_cmd_add_port, self._cmd_add_port),
-            'del-port': (self._pre_get_info, self._cmd_del_port),
             # 'add-bond':
+            'del-port': (self._pre_get_info, self._cmd_del_port),
             # 'port-to-br':
 
             # Interface commands.
@@ -1078,21 +1084,32 @@ class VSCtl(object):
             # 'del-manager':
             # 'set-manager':
 
+            # SSL commands.
+            # 'get-ssl':
+            # 'del-ssl':
+            # 'set-ssl':
+
+            # Auto Attach commands.
+            # 'add-aa-mapping':
+            # 'del-aa-mapping':
+            # 'get-aa-mapping':
+
             # Switch commands.
             # 'emer-reset':
 
             # Database commands.
-            # 'comment':
-            'get': (self._pre_cmd_get, self._cmd_get),
             # 'list':
             'find': (self._pre_cmd_find, self._cmd_find),
+            'get': (self._pre_cmd_get, self._cmd_get),
             'set': (self._pre_cmd_set, self._cmd_set),
             # 'add':
+            # 'remove':
             'clear': (self._pre_cmd_clear, self._cmd_clear),
             # 'create':
             # 'destroy':
             # 'wait-until':
 
+            # Utility commands. (No corresponding command in ovs-vsctl)
             'set-qos': (self._pre_cmd_set_qos, self._cmd_set_qos),
             'set-queue': (self._pre_cmd_set_queue, self._cmd_set_queue),
             'del-qos': (self._pre_get_info, self._cmd_del_qos),
