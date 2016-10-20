@@ -1158,9 +1158,9 @@ class VSCtl(object):
             'get-controller': (self._pre_controller, self._cmd_get_controller),
             'del-controller': (self._pre_controller, self._cmd_del_controller),
             'set-controller': (self._pre_controller, self._cmd_set_controller),
-            # 'get-fail-mode':
-            # 'del-fail-mode':
-            # 'set-fail-mode':
+            'get-fail-mode': (self._pre_fail_mode, self._cmd_get_fail_mode),
+            'del-fail-mode': (self._pre_fail_mode, self._cmd_del_fail_mode),
+            'set-fail-mode': (self._pre_fail_mode, self._cmd_set_fail_mode),
 
             # Manager commands.
             # 'get-manager':
@@ -1774,6 +1774,47 @@ class VSCtl(object):
         br_name = command.args[0]
         controller_names = command.args[1:]
         self._set_controller(ctx, br_name, controller_names)
+
+    def _pre_fail_mode(self, ctx, command):
+        self._pre_get_info(ctx, command)
+        self.schema_helper.register_columns(
+            vswitch_idl.OVSREC_TABLE_BRIDGE,
+            [vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE])
+
+    def _get_fail_mode(self, ctx, br_name):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, True)
+
+        # Note: Returns first element of fail_mode column
+        return getattr(br.br_cfg, vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE)[0]
+
+    def _cmd_get_fail_mode(self, ctx, command):
+        br_name = command.args[0]
+        command.result = self._get_fail_mode(ctx, br_name)
+
+    def _del_fail_mode(self, ctx, br_name):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, True)
+        # Note: assuming that [] means empty
+        setattr(br.br_cfg, vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE, [])
+        ctx.invalidate_cache()
+
+    def _cmd_del_fail_mode(self, ctx, command):
+        br_name = command.args[0]
+        self._del_fail_mode(ctx, br_name)
+
+    def _set_fail_mode(self, ctx, br_name, mode):
+        ctx.populate_cache()
+        br = ctx.find_bridge(br_name, True)
+        setattr(br.br_cfg, vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE, mode)
+        ctx.invalidate_cache()
+
+    def _cmd_set_fail_mode(self, ctx, command):
+        br_name = command.args[0]
+        mode = command.args[1]
+        if mode not in ('standalone', 'secure'):
+            vsctl_fatal('fail-mode must be "standalone" or "secure"')
+        self._set_fail_mode(ctx, br_name, mode)
 
     # Utility commands:
 
