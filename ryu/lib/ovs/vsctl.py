@@ -733,7 +733,7 @@ class VSCtlContext(object):
 
         return column, key, value
 
-    def set_column(self, ovsrec_row, column, key, value_json):
+    def _pre_mod_column(self, ovsrec_row, column, key, value_json):
         if column not in ovsrec_row._table.columns:
             vsctl_fatal('%s does not contain a column whose name matches "%s"'
                         % (ovsrec_row._table.name, column))
@@ -744,16 +744,37 @@ class VSCtlContext(object):
             if column_schema.type.value.type == ovs.db.types.VoidType:
                 vsctl_fatal('cannot specify key to set for non-map column %s' %
                             column)
-            datum = ovs.db.data.Datum.from_json(column_schema.type, value_json,
-                                                self.symtab)
+
+        datum = ovs.db.data.Datum.from_json(
+            column_schema.type, value_json, self.symtab)
+        return datum.to_python(ovs.db.idl._uuid_to_row)
+
+    def set_column(self, ovsrec_row, column, key, value_json):
+        column_schema = ovsrec_row._table.columns[column]
+        datum = self._pre_mod_column(ovsrec_row, column, key, value_json)
+
+        if column_schema.type.is_map():
             values = getattr(ovsrec_row, column, {})
-            values.update(datum.to_python(ovs.db.idl._uuid_to_row))
-            setattr(ovsrec_row, column, values)
+            values.update(datum)
         else:
-            datum = ovs.db.data.Datum.from_json(column_schema.type, value_json,
-                                                self.symtab)
-            setattr(ovsrec_row, column,
-                    datum.to_python(ovs.db.idl._uuid_to_row))
+            values = datum
+
+        setattr(ovsrec_row, column, values)
+
+    def add_column(self, ovsrec_row, column, key, value_json):
+        column_schema = ovsrec_row._table.columns[column]
+        datum = self._pre_mod_column(ovsrec_row, column, key, value_json)
+
+        if column_schema.type.is_map():
+            values = getattr(ovsrec_row, column, {})
+            values.update(datum)
+        elif column_schema.type.is_set():
+            values = getattr(ovsrec_row, column, [])
+            values.extend(datum)
+        else:
+            values = datum
+
+        setattr(ovsrec_row, column, values)
 
     def _get_row_by_id(self, table_name, vsctl_row_id, record_id):
         if not vsctl_row_id.table:
@@ -1102,7 +1123,7 @@ class VSCtl(object):
             'find': (self._pre_cmd_find, self._cmd_find),
             'get': (self._pre_cmd_get, self._cmd_get),
             'set': (self._pre_cmd_set, self._cmd_set),
-            # 'add':
+            'add': (self._pre_cmd_add, self._cmd_add),
             # 'remove':
             'clear': (self._pre_cmd_clear, self._cmd_clear),
             # 'create':
@@ -1913,6 +1934,45 @@ class VSCtl(object):
                              for column_key_value in command.args[2:]]
 
         self._set(ctx, table_name, record_id, column_key_values)
+
+    def _pre_add(self, ctx, table_name, columns):
+        self._pre_get_table(ctx, table_name)
+        for column in columns:
+            self._pre_get_column(ctx, table_name, column)
+            self._check_mutable(table_name, column)
+
+    def _pre_cmd_add(self, ctx, command):
+        table_name = command.args[0]
+        table_schema = self.schema.tables[table_name]
+        column = command.args[2]
+        columns = [
+            ctx.parse_column_key_value(
+                table_schema, '%s=%s' % (column, key_value))[0]
+            for key_value in command.args[3:]]
+        self._pre_add(ctx, table_name, columns)
+
+    def _add(self, ctx, table_name, record_id, column_key_values):
+        """
+        :type column_key_values: list of (column, key_string, value_json)
+        """
+        vsctl_table = self._get_table(table_name)
+        ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
+        for column, key, value in column_key_values:
+            ctx.add_column(ovsrec_row, column, key, value)
+        ctx.invalidate_cache()
+
+    def _cmd_add(self, ctx, command):
+        table_name = command.args[0]
+        record_id = command.args[1]
+        column = command.args[2]
+
+        table_schema = self.schema.tables[table_name]
+        column_key_values = [
+            ctx.parse_column_key_value(
+                table_schema, '%s=%s' % (column, key_value))
+            for key_value in command.args[3:]]
+
+        self._add(ctx, table_name, record_id, column_key_values)
 
     def _pre_clear(self, ctx, table_name, column):
         self._pre_get_table(ctx, table_name)
