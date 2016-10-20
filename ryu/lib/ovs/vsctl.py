@@ -990,9 +990,9 @@ class VSCtl(object):
         elif status == idl.Transaction.ABORTED:
             vsctl_fatal('transaction aborted')
         elif status == idl.Transaction.UNCHANGED:
-            LOG.info('unchanged')
+            LOG.debug('unchanged')
         elif status == idl.Transaction.SUCCESS:
-            LOG.info('success')
+            LOG.debug('success')
         elif status == idl.Transaction.TRY_AGAIN:
             return False
         elif status == idl.Transaction.ERROR:
