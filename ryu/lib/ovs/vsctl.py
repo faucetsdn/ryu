@@ -25,15 +25,12 @@ import six
 import sys
 import weakref
 
-import ryu.contrib
-ryu.contrib.update_module_path()
-
 import ovs.db.data
 import ovs.db.types
 import ovs.poller
-from ovs import (jsonrpc,
-                 ovsuuid,
-                 stream)
+from ovs import jsonrpc
+from ovs import ovsuuid
+from ovs import stream
 from ovs.db import idl
 
 from ryu.lib import hub
