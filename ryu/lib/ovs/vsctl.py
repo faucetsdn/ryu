@@ -126,8 +126,8 @@ def datum_from_string(type_, value_string, symtab=None):
 
 def ifind(pred, seq):
     try:
-        return next(filter(pred, seq))
-    except StopIteration:
+        return [i for i in seq if pred(i)][0]
+    except IndexError:
         return None
 
 
