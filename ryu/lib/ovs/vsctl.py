@@ -1063,7 +1063,7 @@ class VSCtl(object):
             # Port. commands
             'list-ports': (self._pre_get_info, self._cmd_list_ports),
             'add-port': (self._pre_cmd_add_port, self._cmd_add_port),
-            # 'add-bond':
+            'add-bond': (self._pre_cmd_add_bond, self._cmd_add_bond),
             'del-port': (self._pre_get_info, self._cmd_del_port),
             # 'port-to-br':
 
@@ -1338,6 +1338,18 @@ class VSCtl(object):
 
         self._pre_add_port(ctx, columns)
 
+    def _pre_cmd_add_bond(self, ctx, command):
+        self._pre_get_info(ctx, command)
+
+        if len(command.args) < 3:
+            vsctl_fatal('this command requires at least 3 arguments')
+
+        columns = [
+            ctx.parse_column_key_value(
+                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT],
+                setting)[0] for setting in command.args[3:]]
+        self._pre_add_port(ctx, columns)
+
     def _cmd_add_port(self, ctx, command):
         may_exist = command.has_option('--may_exist')
 
@@ -1351,6 +1363,20 @@ class VSCtl(object):
 
         ctx.add_port(br_name, port_name, may_exist,
                      False, iface_names, settings)
+
+    def _cmd_add_bond(self, ctx, command):
+        may_exist = command.has_option('--may_exist')
+        fake_iface = command.has_option('--fake-iface')
+
+        br_name = command.args[0]
+        port_name = command.args[1]
+        iface_names = list(command.args[2])
+        settings = [
+            ctx.parse_column_key_value(
+                self.schema.tables[vswitch_idl.OVSREC_TABLE_PORT],
+                setting) for setting in command.args[3:]]
+        ctx.add_port(br_name, port_name, may_exist, fake_iface,
+                     iface_names, settings)
 
     def _del_port(self, ctx, br_name=None, target=None,
                   must_exist=False, with_iface=False):

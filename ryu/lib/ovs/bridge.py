@@ -172,6 +172,28 @@ class OVSBridge(object):
         self.run_command([command])
         return command.result
 
+    def add_bond(self, name, ifaces, bond_mode=None, lacp=None):
+        """
+        Creates a bonded port.
+
+        :param name: Port name to be created
+        :param ifaces: List of interfaces containing at least 2 interfaces
+        :param bond_mode: Bonding mode (active-backup, balance-tcp
+                          or balance-slb)
+        :param lacp: LACP mode (active, passive or off)
+        """
+        assert len(ifaces) >= 2
+
+        options = ''
+        if bond_mode:
+            options += 'bond_mode=%(bond_mode)s' % locals()
+        if lacp:
+            options += 'lacp=%(lacp)s' % locals()
+
+        command_add = ovs_vsctl.VSCtlCommand(
+            'add-bond', (self.br_name, name, ifaces), options)
+        self.run_command([command_add])
+
     def add_tunnel_port(self, name, tunnel_type, remote_ip,
                         local_ip=None, key=None, ofport=None):
         options = 'remote_ip=%(remote_ip)s' % locals()
