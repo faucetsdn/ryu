@@ -1152,7 +1152,7 @@ class VSCtl(object):
 
             # Interface commands.
             'list-ifaces': (self._pre_get_info, self._cmd_list_ifaces),
-            # 'iface-to-br':
+            'iface-to-br': (self._pre_get_info, self._cmd_iface_to_br),
 
             # Controller commands.
             'get-controller': (self._pre_controller, self._cmd_get_controller),
@@ -1616,6 +1616,24 @@ class VSCtl(object):
         br_name = command.args[0]
         iface_names = self._list_ifaces(ctx, br_name)
         command.result = sorted(iface_names)
+
+    def _iface_to_br(self, ctx, iface_name):
+        ctx.populate_cache()
+        iface = ctx.find_iface(iface_name, True)
+        port = iface.port()
+        if port is None:
+            vsctl_fatal('Port associated to iface "%s" does not exist' %
+                        iface_name)
+        bridge = port.bridge()
+        if bridge is None:
+            vsctl_fatal('Bridge associated to iface "%s" does not exist' %
+                        iface_name)
+
+        return bridge.name
+
+    def _cmd_iface_to_br(self, ctx, command):
+        iface_name = command.args[0]
+        command.result = self._iface_to_br(ctx, iface_name)
 
     # Utility commands for quantum_adapter:
 
