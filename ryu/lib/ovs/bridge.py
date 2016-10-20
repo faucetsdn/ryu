@@ -134,13 +134,109 @@ class OVSBridge(object):
         command = ovs_vsctl.VSCtlCommand('del-controller', [self.br_name])
         self.run_command([command])
 
-    def set_db_attribute(self, table_name, record, column, value):
+    def list_db_attributes(self, table, record=None):
+        """
+        Lists 'record' (or all records) in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl list TBL [REC]
+        """
+        command = ovs_vsctl.VSCtlCommand('list', (table, record))
+        self.run_command([command])
+        if command.result:
+            return command.result
+        return []
+
+    def find_db_attributes(self, table, *conditions):
+        """
+        Lists records satisfying 'conditions' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl find TBL CONDITION...
+
+        .. Note::
+
+            Currently, only '=' condition is supported.
+            To support other condition is TODO.
+        """
+        args = [table]
+        args.extend(conditions)
+        command = ovs_vsctl.VSCtlCommand('find', args)
+        self.run_command([command])
+        if command.result:
+            return command.result
+        return []
+
+    def get_db_attribute(self, table, record, column, key=None):
+        """
+        Gets values of 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl get TBL REC COL[:KEY]
+        """
+        if key is not None:
+            column = '%s:%s' % (column, key)
         command = ovs_vsctl.VSCtlCommand(
-            'set', (table_name, record, '%s=%s' % (column, value)))
+            'get', (table, record, column))
+        self.run_command([command])
+        if command.result:
+            return command.result[0]
+        return None
+
+    def set_db_attribute(self, table, record, column, value, key=None):
+        """
+        Sets 'value' into 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl set TBL REC COL[:KEY]=VALUE
+        """
+        if key is not None:
+            column = '%s:%s' % (column, key)
+        command = ovs_vsctl.VSCtlCommand(
+            'set', (table, record, '%s=%s' % (column, value)))
         self.run_command([command])
 
-    def clear_db_attribute(self, table_name, record, column):
-        command = ovs_vsctl.VSCtlCommand('clear', (table_name, record, column))
+    def add_db_attribute(self, table, record, column, value, key=None):
+        """
+        Adds ('key'=)'value' into 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl add TBL REC COL [KEY=]VALUE
+        """
+        if key is not None:
+            value = '%s=%s' % (key, value)
+        command = ovs_vsctl.VSCtlCommand(
+            'add', (table, record, column, value))
+        self.run_command([command])
+
+    def remove_db_attribute(self, table, record, column, value, key=None):
+        """
+        Removes ('key'=)'value' into 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl remove TBL REC COL [KEY=]VALUE
+        """
+        if key is not None:
+            value = '%s=%s' % (key, value)
+        command = ovs_vsctl.VSCtlCommand(
+            'remove', (table, record, column, value))
+        self.run_command([command])
+
+    def clear_db_attribute(self, table, record, column):
+        """
+        Clears values from 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl clear TBL REC COL
+        """
+        command = ovs_vsctl.VSCtlCommand('clear', (table, record, column))
         self.run_command([command])
 
     def db_get_val(self, table, record, column):
