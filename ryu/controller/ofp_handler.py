@@ -280,7 +280,10 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
             hex(msg.type), hex(msg.code), utils.binary_str(msg.data),
             ofp.ofp_error_type_to_str(msg.type),
             ofp.ofp_error_code_to_str(msg.type, msg.code))
-        if len(msg.data) >= ofp.OFP_HEADER_SIZE:
+        if msg.type == ofp.OFPET_HELLO_FAILED:
+            self.logger.debug(
+                " `-- data: %s", msg.data.decode('ascii'))
+        elif len(msg.data) >= ofp.OFP_HEADER_SIZE:
             (version, msg_type, msg_len, xid) = ofproto_parser.header(msg.data)
             self.logger.debug(
                 " `-- data: version=%s, msg_type=%s, msg_len=%s, xid=%s\n"
