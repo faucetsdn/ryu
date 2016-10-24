@@ -15,14 +15,14 @@
 """
   Defines bases classes to create a BGP application.
 """
-import imp
 import logging
 import traceback
+
 from oslo_config import cfg
 
 from ryu.lib import hub
+from ryu.utils import load_source
 from ryu.base.app_manager import RyuApp
-
 from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
@@ -138,7 +138,7 @@ class RyuBGPSpeaker(RyuApp):
 
         # Check if file can be read
         try:
-            return imp.load_source('settings', config_file)
+            return load_source('settings', config_file)
         except Exception as e:
             raise ApplicationException(desc=str(e))
 

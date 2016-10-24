@@ -36,7 +36,26 @@ import os
 import sys
 import re
 
+import six
+
 LOG = logging.getLogger('ryu.utils')
+
+
+def load_source(name, pathname):
+    """
+    This function provides the backward compatibility for 'imp.load_source'
+    in Python 2.
+
+    :param name: Name used to create or access a module object.
+    :param pathname: Path pointing to the source file.
+    :return: Loaded and initialized module.
+    """
+    if six.PY2:
+        import imp
+        return imp.load_source(name, pathname)
+    else:
+        loader = importlib.machinery.SourceFileLoader(name, pathname)
+        return loader.load_module(name)
 
 
 def chop_py_suffix(p):
