@@ -12,221 +12,213 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
   Defines bases classes to create a BGP application.
 """
+
 import logging
-from logging.config import dictConfig
-import traceback
+import os
 
-from oslo_config import cfg
-
+from ryu import cfg
 from ryu.lib import hub
 from ryu.utils import load_source
 from ryu.base.app_manager import RyuApp
-from ryu.services.protocols.bgp.api.base import call
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import BGPSException
 from ryu.services.protocols.bgp.base import BIN_ERROR
-from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
-from ryu.services.protocols.bgp import net_ctrl
+from ryu.services.protocols.bgp.bgpspeaker import BGPSpeaker
+from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
+from ryu.services.protocols.bgp.net_ctrl import NC_RPC_BIND_IP
+from ryu.services.protocols.bgp.net_ctrl import NC_RPC_BIND_PORT
+from ryu.services.protocols.bgp.operator.ssh import SSH_CLI_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.base import RuntimeConfigError
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_PORT
-from ryu.services.protocols.bgp.rtconf.common import \
-    DEFAULT_REFRESH_MAX_EOR_TIME
-from ryu.services.protocols.bgp.rtconf.common import \
-    DEFAULT_REFRESH_STALEPATH_TIME
+from ryu.services.protocols.bgp.rtconf.common import (
+    DEFAULT_REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_STALEPATH_TIME)
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
-from ryu.services.protocols.bgp.rtconf import neighbors
-from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
-from ryu.services.protocols.bgp.operator import ssh
+from ryu.services.protocols.bgp.utils.validation import is_valid_ipv6
 
 
 LOG = logging.getLogger('bgpspeaker.application')
-CONF = cfg.CONF
 
-CONF.register_opts([
-    cfg.IntOpt('bind-port', default=50002, help='rpc-port'),
-    cfg.StrOpt('bind-ip', default='0.0.0.0', help='rpc-bind-ip'),
-    cfg.StrOpt('bgp-config-file', default=None,
-               help='bgp-config-file')
-])
+CONF = cfg.CONF['bgp-app']
 
 
 @add_bgp_error_metadata(code=BIN_ERROR,
                         sub_code=1,
                         def_desc='Unknown bootstrap exception.')
 class ApplicationException(BGPSException):
-    """Specific Base exception related to `BSPSpeaker`."""
+    """
+    Specific Base exception related to `BSPSpeaker`.
+    """
     pass
 
 
+def validate_rpc_host(ip):
+    """
+    Validates the given ip for use as RPC server address.
+    """
+    if not is_valid_ipv4(ip) and not is_valid_ipv6(ip):
+        raise ApplicationException(
+            desc='Invalid RPC ip address: %s' % ip)
+    return ip
+
+
+def load_config(config_file):
+    """
+    Validates the given file for use as the settings file for BGPSpeaker
+    and loads the configuration from the given file as a module instance.
+    """
+    if not config_file or not os.path.isfile(config_file):
+        raise ApplicationException(
+            desc='Invalid configuration file: %s' % config_file)
+
+    # Loads the configuration from the given file, if available.
+    try:
+        return load_source('bgpspeaker.application.settings', config_file)
+    except Exception as e:
+        raise ApplicationException(desc=str(e))
+
+
 class RyuBGPSpeaker(RyuApp):
+
     def __init__(self, *args, **kwargs):
-        self.bind_ip = RyuBGPSpeaker.validate_rpc_ip(CONF.bind_ip)
-        self.bind_port = RyuBGPSpeaker.validate_rpc_port(CONF.bind_port)
-        self.config_file = CONF.bgp_config_file
         super(RyuBGPSpeaker, self).__init__(*args, **kwargs)
+        self.config_file = CONF.config_file
+
+        # BGPSpeaker instance (not instantiated yet)
+        self.speaker = None
 
     def start(self):
-        # Only two main green threads are required for APGW bgp-agent.
-        # One for NetworkController, another for BGPS core.
-
-        # If configuration file was provided and loaded successfully. We start
-        # BGPS core using these settings. If no configuration file is provided
-        # or if configuration file is missing minimum required settings BGPS
-        # core is not started.
-        if self.config_file:
-            LOG.debug('Loading config. from settings file.')
-            settings = self.load_config(self.config_file)
-            # Configure log settings, if available.
-            if getattr(settings, 'LOGGING', None):
-                dictConfig(settings.LOGGING)
-
-            if getattr(settings, 'BGP', None):
-                self._start_core(settings)
-
-            if getattr(settings, 'SSH', None) is not None:
-                hub.spawn(ssh.SSH_CLI_CONTROLLER.start, None, **settings.SSH)
-        # Start Network Controller to server RPC peers.
-        t = hub.spawn(net_ctrl.NET_CONTROLLER.start, *[],
-                      **{net_ctrl.NC_RPC_BIND_IP: self.bind_ip,
-                      net_ctrl.NC_RPC_BIND_PORT: self.bind_port})
-        LOG.debug('Started Network Controller')
-
         super(RyuBGPSpeaker, self).start()
 
-        return t
+        # If configuration file was provided and loaded successfully, we start
+        # BGPSpeaker using the given settings.
+        # If no configuration file is provided or if any minimum required
+        # setting is missing, BGPSpeaker will not be started.
+        if self.config_file:
+            LOG.debug('Loading config file %s...', self.config_file)
+            settings = load_config(self.config_file)
 
-    @classmethod
-    def validate_rpc_ip(cls, ip):
-        """Validates given ip for use as rpc host bind address.
+            # Configure logging settings, if available.
+            if hasattr(settings, 'LOGGING'):
+                # Not implemented yet.
+                LOG.debug('Loading LOGGING settings... (NOT implemented yet)')
+                # from logging.config import dictConfig
+                # logging_settings = dictConfig(settings.LOGGING)
+
+            # Configure BGP settings, if available.
+            if hasattr(settings, 'BGP'):
+                LOG.debug('Loading BGP settings...')
+                self._start_speaker(settings.BGP)
+
+            # Configure SSH settings, if available.
+            if hasattr(settings, 'SSH'):
+                LOG.debug('Loading SSH settings...')
+                hub.spawn(SSH_CLI_CONTROLLER.start, **settings.SSH)
+
+        # Start RPC server with the given RPC settings.
+        rpc_settings = {
+            NC_RPC_BIND_PORT: CONF.rpc_port,
+            NC_RPC_BIND_IP: validate_rpc_host(CONF.rpc_host),
+        }
+        return hub.spawn(NET_CONTROLLER.start, **rpc_settings)
+
+    def _start_speaker(self, settings):
         """
-        if not is_valid_ipv4(ip):
-            raise ApplicationException(desc='Invalid rpc ip address.')
-        return ip
-
-    @classmethod
-    def validate_rpc_port(cls, port):
-        """Validates give port for use as rpc server port.
+        Starts BGPSpeaker using the given settings.
         """
-        if not port:
-            raise ApplicationException(desc='Invalid rpc port number.')
-        if isinstance(port, str):
-            port = int(port)
+        # Settings for starting BGPSpeaker
+        bgp_settings = {}
 
-        return port
-
-    def load_config(self, config_file):
-        """Validates give file as settings file for BGPSpeaker.
-
-        Load the configuration from file as settings module.
-        """
-        if not config_file or not isinstance(config_file, str):
-            raise ApplicationException('Invalid configuration file.')
-
-        # Check if file can be read
+        # Get required settings.
         try:
-            return load_source('settings', config_file)
-        except Exception as e:
-            raise ApplicationException(desc=str(e))
-
-    def _start_core(self, settings):
-        """Starts BGPS core using setting and given pool.
-        """
-        # Get common settings
-        routing_settings = settings.BGP.get('routing')
-        common_settings = {}
-
-        # Get required common settings.
-        try:
-            common_settings[LOCAL_AS] = routing_settings.pop(LOCAL_AS)
-            common_settings[ROUTER_ID] = routing_settings.pop(ROUTER_ID)
+            bgp_settings['as_number'] = settings.get(LOCAL_AS)
+            bgp_settings['router_id'] = settings.get(ROUTER_ID)
         except KeyError as e:
             raise ApplicationException(
-                desc='Required minimum configuration missing %s' %
-                     e)
+                desc='Required BGP configuration missing: %s' % e)
 
-        # Get optional common settings
-        common_settings[BGP_SERVER_PORT] = \
-            routing_settings.get(BGP_SERVER_PORT, DEFAULT_BGP_SERVER_PORT)
-        common_settings[REFRESH_STALEPATH_TIME] = \
-            routing_settings.get(REFRESH_STALEPATH_TIME,
-                                 DEFAULT_REFRESH_STALEPATH_TIME)
-        common_settings[REFRESH_MAX_EOR_TIME] = \
-            routing_settings.get(REFRESH_MAX_EOR_TIME,
-                                 DEFAULT_REFRESH_MAX_EOR_TIME)
-        common_settings[LABEL_RANGE] = \
-            routing_settings.get(LABEL_RANGE, DEFAULT_LABEL_RANGE)
+        # Get optional settings.
+        bgp_settings[BGP_SERVER_PORT] = settings.get(
+            BGP_SERVER_PORT, DEFAULT_BGP_SERVER_PORT)
+        bgp_settings[REFRESH_STALEPATH_TIME] = settings.get(
+            REFRESH_STALEPATH_TIME, DEFAULT_REFRESH_STALEPATH_TIME)
+        bgp_settings[REFRESH_MAX_EOR_TIME] = settings.get(
+            REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_MAX_EOR_TIME)
+        bgp_settings[LABEL_RANGE] = settings.get(
+            LABEL_RANGE, DEFAULT_LABEL_RANGE)
 
-        # Start BGPS core service
-        waiter = hub.Event()
-        call('core.start', waiter=waiter, **common_settings)
-        waiter.wait()
+        # Create BGPSpeaker instance.
+        LOG.debug('Starting BGPSpeaker...')
+        self.speaker = BGPSpeaker(**bgp_settings)
 
-        LOG.debug('Core started %s', CORE_MANAGER.started)
-        # Core manager started add configured neighbor and vrfs
-        if CORE_MANAGER.started:
-            # Add neighbors.
-            self._add_neighbors(routing_settings)
+        # Add neighbors.
+        LOG.debug('Adding neighbors...')
+        self._add_neighbors(settings.get('neighbors', []))
 
-            # Add Vrfs.
-            self._add_vrfs(routing_settings)
+        # Add VRFs.
+        LOG.debug('Adding VRFs...')
+        self._add_vrfs(settings.get('vrfs', []))
 
-            # Add Networks
-            self._add_networks(routing_settings)
+        # Add Networks
+        LOG.debug('Adding routes...')
+        self._add_routes(settings.get('routes', []))
 
-    def _add_neighbors(self, routing_settings):
-        """Add bgp peers/neighbors from given settings to BGPS runtime.
-
-        All valid neighbors are loaded. Miss-configured neighbors are ignored
-        and error is logged.
+    def _add_neighbors(self, settings):
         """
-        bgp_neighbors = routing_settings.setdefault('bgp_neighbors', {})
-        for ip, bgp_neighbor in bgp_neighbors.items():
+        Add BGP neighbors from the given settings.
+
+        All valid neighbors are loaded.
+        Miss-configured neighbors are ignored and errors are logged.
+        """
+        for neighbor_settings in settings:
+            LOG.debug('Adding neighbor settings: %s', neighbor_settings)
             try:
-                bgp_neighbor[neighbors.IP_ADDRESS] = ip
-                call('neighbor.create', **bgp_neighbor)
-                LOG.debug('Added neighbor %s', ip)
-            except RuntimeConfigError as re:
-                LOG.error(re)
-                LOG.error(traceback.format_exc())
-                continue
+                self.speaker.neighbor_add(**neighbor_settings)
+            except RuntimeConfigError as e:
+                LOG.exception(e)
 
-    def _add_vrfs(self, routing_settings):
-        """Add VRFs from given settings to BGPS runtime.
+    def _add_vrfs(self, settings):
+        """
+        Add BGP VRFs from the given settings.
 
-        If any of the VRFs are miss-configured errors are logged.
         All valid VRFs are loaded.
+        Miss-configured VRFs are ignored and errors are logged.
         """
-        vpns_conf = routing_settings.setdefault('vpns', {})
-        for vrfname, vrf in vpns_conf.items():
+        for vrf_settings in settings:
+            LOG.debug('Adding VRF settings: %s', vrf_settings)
             try:
-                vrf[vrfs.VRF_NAME] = vrfname
-                call('vrf.create', **vrf)
-                LOG.debug('Added vrf  %s', vrf)
+                self.speaker.vrf_add(**vrf_settings)
             except RuntimeConfigError as e:
-                LOG.error(e)
+                LOG.exception(e)
+
+    def _add_routes(self, settings):
+        """
+        Add BGP routes from given settings.
+
+        All valid routes are loaded.
+        Miss-configured routes are ignored and errors are logged.
+        """
+        for route_settings in settings:
+            if 'prefix' in route_settings:
+                prefix_add = self.speaker.prefix_add
+            elif 'route_type' in route_settings:
+                prefix_add = self.speaker.evpn_prefix_add
+            else:
+                LOG.debug('Skip invalid route settings: %s', route_settings)
                 continue
 
-    def _add_networks(self, routing_settings):
-        """Add networks from given settings to BGPS runtime.
-
-        If any of the networks are miss-configured errors are logged.
-        All valid networks are loaded.
-        """
-        networks = routing_settings.setdefault('networks', [])
-        for prefix in networks:
+            LOG.debug('Adding route settings: %s', route_settings)
             try:
-                call('network.add', prefix=prefix)
-                LOG.debug('Added network %s', prefix)
+                prefix_add(**route_settings)
             except RuntimeConfigError as e:
-                LOG.error(e)
-                continue
+                LOG.exception(e)

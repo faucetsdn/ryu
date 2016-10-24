@@ -1,49 +1,98 @@
 import os
 
+from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V4
+from ryu.services.protocols.bgp.bgpspeaker import RF_L2_EVPN
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAC_IP_ADV_ROUTE
+from ryu.services.protocols.bgp.bgpspeaker import TUNNEL_TYPE_VXLAN
+
+
 # =============================================================================
 # BGP configuration.
 # =============================================================================
 BGP = {
 
-    # General BGP configuration.
-    'routing': {
-        # ASN for this BGP instance.
-        'local_as': 64512,
+    # AS number for this BGP instance.
+    'local_as': 65001,
 
-        # BGP Router ID.
-        'router_id': '10.10.0.1',
+    # BGP Router ID.
+    'router_id': '172.17.0.1',
 
-        # We list all BGP neighbors below. We establish EBGP sessions with peer
-        # with different AS number then configured above. We will
-        # establish IBGP session if AS number is same.
-        'bgp_neighbors': {
-            '10.0.0.1': {
-                'remote_as': 64513,
-                'multi_exit_disc': 100
-            },
-            '10.10.0.2': {
-                'remote_as': 64514,
-            },
+    # List of BGP neighbors.
+    # The parameters for each neighbor are the same as the arguments of
+    # BGPSpeaker.neighbor_add() method.
+    'neighbors': [
+        {
+            'address': '172.17.0.2',
+            'remote_as': 65002,
+            'enable_ipv4': True,
+            'enable_vpnv4': True,
         },
+        {
+            'address': '172.17.0.3',
+            'remote_as': 65000,
+            'enable_evpn': True,
+        },
+    ],
 
-        'networks': [
-            '10.20.0.0/24',
-            '10.30.0.0/24',
-            '10.40.0.0/16',
-            '10.50.0.0/16',
-        ],
-    },
+    # List of BGP VRF tables.
+    # The parameters for each VRF table are the same as the arguments of
+    # BGPSpeaker.vrf_add() method.
+    'vrfs': [
+        {
+            'route_dist': '65001:100',
+            'import_rts': ['65001:100'],
+            'export_rts': ['65001:100'],
+            'route_family': RF_VPN_V4,
+        },
+        {
+            'route_dist': '65000:200',
+            'import_rts': ['65000:200'],
+            'export_rts': ['65000:200'],
+            'route_family': RF_L2_EVPN,
+        },
+    ],
 
+    # List of BGP routes.
+    # The parameters for each route are the same as the arguments of
+    # BGPSpeaker.prefix_add() or BGPSpeaker.evpn_prefix_add() method.
+    'routes': [
+        # Example of IPv4 prefix
+        {
+            'prefix': '10.10.1.0/24',
+        },
+        # Example of VPNv4 prefix
+        {
+            'prefix': '10.20.1.0/24',
+            'next_hop': '172.17.0.1',
+            'route_dist': '65001:100',
+        },
+        # Example of EVPN prefix
+        {
+            'route_type': EVPN_MAC_IP_ADV_ROUTE,
+            'route_dist': '65000:200',
+            'esi': 0,
+            'ethernet_tag_id': 0,
+            'tunnel_type': TUNNEL_TYPE_VXLAN,
+            'vni': 200,
+            'mac_addr': 'aa:bb:cc:dd:ee:ff',
+            'ip_addr': '10.30.1.1',
+            'next_hop': '172.17.0.1',
+        },
+    ],
 }
 
 
-# SSH = {
-#     'ssh_port': 4990,
-#     'ssh_host': 'localhost',
-#     'ssh_hostkey': '/etc/ssh_host_rsa_key',
-#     'ssh_username': 'ryu',
-#     'ssh_password': 'ryu'
-# }
+# =============================================================================
+# SSH server configuration.
+# =============================================================================
+SSH = {
+    'ssh_port': 4990,
+    'ssh_host': 'localhost',
+    # 'ssh_host_key': '/etc/ssh_host_rsa_key',
+    # 'ssh_username': 'ryu',
+    # 'ssh_password': 'ryu',
+}
+
 
 # =============================================================================
 # Logging configuration.
@@ -101,7 +150,6 @@ LOGGING = {
     'loggers': {
         'bgpspeaker': {
             'handlers': ['console', 'log_file'],
-            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
