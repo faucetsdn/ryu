@@ -57,3 +57,18 @@ CONF.register_cli_opts([
                help='interval time in seconds of each test '
                '(default: 0)'),
 ], group='test-switch')
+
+
+DEFAULT_RPC_PORT = 50002
+DEFAULT_RPC_HOST = '0.0.0.0'
+
+CONF = cfg.CONF
+CONF.register_cli_opts([
+    cfg.IntOpt('rpc-port', default=DEFAULT_RPC_PORT,
+               help='Port for RPC server (default: %s)' % DEFAULT_RPC_PORT),
+    cfg.StrOpt('rpc-host', default=DEFAULT_RPC_HOST,
+               help='IP for RPC server (default: %s)' % DEFAULT_RPC_HOST),
+    cfg.StrOpt('config-file', default=None,
+               help='The config file formatted in Python source file. '
+                    'Please refer to "bgp_sample_conf.py" for details.')
+], group='bgp-app')
