@@ -110,6 +110,8 @@ class SshServer(paramiko.ServerInterface):
         self.transport.add_server_key(host_key)
         self.transport.start_server(server=self)
 
+        self.is_connected = True
+
         # For pylint
         self.buf = None
         self.chan = None
@@ -350,11 +352,15 @@ class SshServer(paramiko.ServerInterface):
     def _execute_cmd(self, cmds):
         result, _ = self.root(cmds)
         LOG.debug("result: %s", result)
+        if cmds[0] == 'quit':
+            self.is_connected = False
+            return result.status
         self.prompted = False
         self._startnewline()
         output = result.value.replace('\n', '\n\r').rstrip()
         self.chan.send(output)
         self.prompted = True
+        self._startnewline()
         return result.status
 
     def end_session(self):
@@ -377,7 +383,7 @@ class SshServer(paramiko.ServerInterface):
         self.chan.send(self.WELCOME)
         self._startnewline()
 
-        while True:
+        while self.is_connected:
             c = self.chan.recv(1)
             c = c.decode()  # For Python3 compatibility
 
@@ -477,9 +483,14 @@ class SshServer(paramiko.ServerInterface):
                         self.history.insert(0, self.buf)
                         self.histindex = 0
                         self._execute_cmd(cmds)
+                    else:
+                        LOG.debug("no command is interpreted. "
+                                  "just start a new line.")
+                        self._startnewline()
                 else:
-                    LOG.debug("blank buf. just start a new line.")
-                self._startnewline()
+                    LOG.debug("blank buf is detected. "
+                              "just start a new line.")
+                    self._startnewline()
 
             LOG.debug("curpos: %d, buf: %s, prompted: %s", self.curpos,
                       self.buf, self.prompted)
