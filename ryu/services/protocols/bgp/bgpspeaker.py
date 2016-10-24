@@ -37,6 +37,7 @@ from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_VXLAN
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_NVGRE
+from ryu.services.protocols.bgp.operator import ssh
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
@@ -156,6 +157,9 @@ class BGPSpeaker(object):
                  peer_down_handler=None,
                  peer_up_handler=None,
                  ssh_console=False,
+                 ssh_port=ssh.DEFAULT_SSH_PORT,
+                 ssh_host=ssh.DEFAULT_SSH_HOST,
+                 ssh_host_key=ssh.DEFAULT_SSH_HOST_KEY,
                  label_range=DEFAULT_LABEL_RANGE):
         """Create a new BGPSpeaker object with as_number and router_id to
         listen on bgp_server_port.
@@ -189,6 +193,18 @@ class BGPSpeaker(object):
 
         ``peer_up_handler``, if specified, is called when BGP peering
         session goes up.
+
+        ``ssh_console`` specifies whether or not SSH CLI need to be started.
+
+        ``ssh_port`` specifies the port number for SSH CLI server.
+
+        ``ssh_host`` specifies the IP address for SSH CLI server.
+
+        ``ssh_host_key`` specifies the path to the host key added to
+        the keys list used by SSH CLI server.
+
+        ``label_range`` specifies the range of MPLS labels generated
+        automatically.
         """
         super(BGPSpeaker, self).__init__()
 
@@ -206,9 +222,12 @@ class BGPSpeaker(object):
         self._peer_down_handler = peer_down_handler
         self._peer_up_handler = peer_up_handler
         if ssh_console:
-            from ryu.services.protocols.bgp.operator import ssh
-
-            hub.spawn(ssh.SSH_CLI_CONTROLLER.start)
+            ssh_settings = {
+                ssh.SSH_PORT: ssh_port,
+                ssh.SSH_HOST: ssh_host,
+                ssh.SSH_HOST_KEY: ssh_host_key,
+            }
+            hub.spawn(ssh.SSH_CLI_CONTROLLER.start, **ssh_settings)
 
     def _notify_peer_down(self, peer):
         remote_ip = peer.ip_address
