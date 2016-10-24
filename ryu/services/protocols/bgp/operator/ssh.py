@@ -14,40 +14,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# a management cli application.
+"""
+ CLI application for SSH management.
+"""
 
-import logging
-import paramiko
-import sys
 from copy import copy
+import logging
 import os.path
+import sys
 
-from ryu.lib import hub
+import paramiko
+
 from ryu import version
+from ryu.lib import hub
+from ryu.services.protocols.bgp.base import Activity
 from ryu.services.protocols.bgp.operator.command import Command
 from ryu.services.protocols.bgp.operator.command import CommandsResponse
+from ryu.services.protocols.bgp.operator.command import STATUS_OK
 from ryu.services.protocols.bgp.operator.commands.root import RootCmd
 from ryu.services.protocols.bgp.operator.internal_api import InternalApi
-from ryu.services.protocols.bgp.operator.command import STATUS_OK
-from ryu.services.protocols.bgp.base import Activity
+
+SSH_PORT = "ssh_port"
+SSH_HOST = "ssh_host"
+SSH_HOST_KEY = "ssh_host_key"
+SSH_USERNAME = "ssh_username"
+SSH_PASSWORD = "ssh_password"
+
+DEFAULT_SSH_PORT = 4990
+DEFAULT_SSH_HOST = "localhost"
+DEFAULT_SSH_HOST_KEY = None
+DEFAULT_SSH_USERNAME = "ryu"
+DEFAULT_SSH_PASSWORD = "ryu"
 
 CONF = {
-    "ssh_port": 4990,
-    "ssh_host": "localhost",
-    "ssh_hostkey": None,
-    "ssh_username": "ryu",
-    "ssh_password": "ryu",
+    SSH_PORT: DEFAULT_SSH_PORT,
+    SSH_HOST: DEFAULT_SSH_HOST,
+    SSH_HOST_KEY: DEFAULT_SSH_HOST_KEY,
+    SSH_USERNAME: DEFAULT_SSH_USERNAME,
+    SSH_PASSWORD: DEFAULT_SSH_PASSWORD,
 }
 
 LOG = logging.getLogger('bgpspeaker.cli')
 
 
+def find_ssh_server_key():
+    if CONF[SSH_HOST_KEY]:
+        return paramiko.RSAKey.from_private_key_file(CONF[SSH_HOST_KEY])
+    elif os.path.exists("/etc/ssh_host_rsa_key"):
+        # OSX
+        return paramiko.RSAKey.from_private_key_file(
+            "/etc/ssh_host_rsa_key")
+    elif os.path.exists("/etc/ssh/ssh_host_rsa_key"):
+        # Linux
+        return paramiko.RSAKey.from_private_key_file(
+            "/etc/ssh/ssh_host_rsa_key")
+    else:
+        return paramiko.RSAKey.generate(1024)
+
+
 class SshServer(paramiko.ServerInterface):
     TERM = "ansi"
     PROMPT = "bgpd> "
-    WELCOME = """
-Hello, this is Ryu BGP speaker (version %s).
-""" % version
+    WELCOME = "\n\rHello, this is Ryu BGP speaker (version %s).\n\r" % version
 
     class HelpCmd(Command):
         help_msg = 'show this help'
@@ -66,6 +94,8 @@ Hello, this is Ryu BGP speaker (version %s).
 
     def __init__(self, sock, addr):
         super(SshServer, self).__init__()
+        self.sock = sock
+        self.addr = addr
 
         # tweak InternalApi and RootCmd for non-bgp related commands
         self.api = InternalApi(log_handler=logging.StreamHandler(sys.stderr))
@@ -74,33 +104,27 @@ Hello, this is Ryu BGP speaker (version %s).
         self.root.subcommands['help'] = self.HelpCmd
         self.root.subcommands['quit'] = self.QuitCmd
 
-        transport = paramiko.Transport(sock)
-        transport.load_server_moduli()
-        host_key = self._find_ssh_server_key()
-        transport.add_server_key(host_key)
-        self.transport = transport
-        transport.start_server(server=self)
+        self.transport = paramiko.Transport(self.sock)
+        self.transport.load_server_moduli()
+        host_key = find_ssh_server_key()
+        self.transport.add_server_key(host_key)
+        self.transport.start_server(server=self)
 
-    def _find_ssh_server_key(self):
-        if CONF["ssh_hostkey"]:
-            return paramiko.RSAKey.from_private_key_file(CONF['ssh_hostkey'])
-        elif os.path.exists("/etc/ssh_host_rsa_key"):
-            # OSX
-            return paramiko.RSAKey.from_private_key_file(
-                "/etc/ssh_host_rsa_key")
-        elif os.path.exists("/etc/ssh/ssh_host_rsa_key"):
-            # Linux
-            return paramiko.RSAKey.from_private_key_file(
-                "/etc/ssh/ssh_host_rsa_key")
-        else:
-            return paramiko.RSAKey.generate(1024)
+        # For pylint
+        self.buf = None
+        self.chan = None
+        self.curpos = None
+        self.histindex = None
+        self.history = None
+        self.prompted = None
+        self.promptlen = None
 
     def check_auth_none(self, username):
         return paramiko.AUTH_SUCCESSFUL
 
     def check_auth_password(self, username, password):
-        if username == CONF["ssh_username"] and \
-                password == CONF["ssh_password"]:
+        if (username == CONF[SSH_USERNAME]
+                and password == CONF[SSH_PASSWORD]):
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
 
@@ -109,45 +133,51 @@ Hello, this is Ryu BGP speaker (version %s).
             return paramiko.OPEN_SUCCEEDED
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
-    def check_channel_shell_request(self, chan):
+    def check_channel_shell_request(self, channel):
         hub.spawn(self._handle_shell_request)
         return True
 
-    def check_channel_pty_request(self, chan, term, width, height,
+    def check_channel_pty_request(self, channel, term, width, height,
                                   pixelwidth, pixelheight, modes):
-        LOG.debug("termtype: %s", term)
         self.TERM = term
         return True
 
-    def check_channel_window_change_request(self, chan, width, height, pwidth,
-                                            pheight):
-        LOG.info("channel window change")
+    def check_channel_window_change_request(self, channel, width, height,
+                                            pixelwidth, pixelheight):
         return True
 
-    def _is_echoable(self, c):
+    @staticmethod
+    def _is_echoable(c):
         return not (c < chr(0x20) or c == chr(0x7F))
 
-    def _is_enter(self, c):
+    @staticmethod
+    def _is_enter(c):
         return c == chr(0x0d)
 
-    def _is_eof(self, c):
+    @staticmethod
+    def _is_eof(c):
         return c == chr(0x03)
 
-    def _is_esc(self, c):
+    @staticmethod
+    def _is_esc(c):
         return c == chr(0x1b)
 
-    def _is_hist(self, c):
+    @staticmethod
+    def _is_hist(c):
         return c == chr(0x10) or c == chr(0x0e)
 
-    def _is_del(self, c):
-        return c == chr(0x04) or c == chr(0x08) or c == chr(0x15) \
-            or c == chr(0x17) or c == chr(0x0c) or c == chr(0x7f)
+    @staticmethod
+    def _is_del(c):
+        return (c == chr(0x04) or c == chr(0x08) or c == chr(0x15)
+                or c == chr(0x17) or c == chr(0x0c) or c == chr(0x7f))
 
-    def _is_curmov(self, c):
+    @staticmethod
+    def _is_curmov(c):
         return c == chr(0x01) or c == chr(0x02) or c == chr(0x05) \
             or c == chr(0x06)
 
-    def _is_cmpl(self, c):
+    @staticmethod
+    def _is_cmpl(c):
         return c == chr(0x09)
 
     def _handle_csi_seq(self):
@@ -231,7 +261,7 @@ Hello, this is Ryu BGP speaker (version %s).
     def _startnewline(self, prompt=None, buf=''):
         if not prompt and self.prompted:
             prompt = self.PROMPT
-        if type(buf) == str:
+        if isinstance(buf, str):
             buf = list(buf)
         if self.chan:
             self.buf = buf
@@ -309,7 +339,7 @@ Hello, this is Ryu BGP speaker (version %s).
                         self._startnewline(buf='Error: Ambiguous command')
                     else:
                         self._startnewline(buf=', '.join(matches))
-                ret = False
+                ret = []
                 self.prompted = True
                 if not is_exec:
                     self._startnewline(buf=buf)
@@ -318,7 +348,7 @@ Hello, this is Ryu BGP speaker (version %s).
         return ret
 
     def _execute_cmd(self, cmds):
-        result, cmd = self.root(cmds)
+        result, _ = self.root(cmds)
         LOG.debug("result: %s", result)
         self.prompted = False
         self._startnewline()
@@ -457,12 +487,8 @@ Hello, this is Ryu BGP speaker (version %s).
         LOG.info("session end")
 
 
-class SshServerFactory(object):
-    def __init__(self, *args, **kwargs):
-        super(SshServerFactory, self).__init__(*args, **kwargs)
-
-    def streamserver_handle(self, sock, addr):
-        SshServer(sock, addr)
+def ssh_server_factory(sock, addr):
+    SshServer(sock, addr)
 
 
 class Cli(Activity):
@@ -474,11 +500,9 @@ class Cli(Activity):
             if k in CONF:
                 CONF[k] = v
 
-        LOG.info("starting ssh server at %s:%d", CONF["ssh_host"],
-                 CONF["ssh_port"])
-        factory = SshServerFactory()
-        server = hub.StreamServer((CONF["ssh_host"], CONF["ssh_port"]),
-                                  factory.streamserver_handle)
+        listen_info = (CONF[SSH_HOST], CONF[SSH_PORT])
+        LOG.info("starting ssh server at %s:%d" % listen_info)
+        server = hub.StreamServer(listen_info, ssh_server_factory)
         server.serve_forever()
 
 SSH_CLI_CONTROLLER = Cli()
