@@ -16,6 +16,7 @@
   Defines bases classes to create a BGP application.
 """
 import logging
+from logging.config import dictConfig
 import traceback
 
 from oslo_config import cfg
@@ -46,11 +47,6 @@ from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.operator import ssh
-
-try:
-    from logging.config import dictConfig
-except Exception:
-    from ryu.services.protocols.bgp.utils.dictconfig import dictConfig
 
 
 LOG = logging.getLogger('bgpspeaker.application')
