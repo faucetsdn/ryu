@@ -483,7 +483,7 @@ class TableCoreManager(object):
 
     def update_vrf_table(self, route_dist, prefix=None, next_hop=None,
                          route_family=None, route_type=None, tunnel_type=None,
-                         is_withdraw=False, **kwargs):
+                         is_withdraw=False, pmsi_tunnel_type=None, **kwargs):
         """Update a BGP route in the VRF table identified by `route_dist`
         with the given `next_hop`.
 
@@ -495,6 +495,11 @@ class TableCoreManager(object):
 
         If `route_family` is VRF_RF_L2_EVPN, `route_type` and `kwargs`
         are required to construct EVPN NLRI and `prefix` is ignored.
+
+`       `pmsi_tunnel_type` specifies the type of the PMSI tunnel attribute
+         used to encode the multicast tunnel identifier.
+        This field is advertised only if route_type is
+        EVPN_MULTICAST_ETAG_ROUTE.
 
         Returns assigned VPN label.
         """
@@ -554,7 +559,8 @@ class TableCoreManager(object):
         # withdrawal. Hence multiple withdrawals have not side effect.
         return vrf_table.insert_vrf_path(
             nlri=prefix, next_hop=next_hop, gen_lbl=gen_lbl,
-            is_withdraw=is_withdraw, tunnel_type=tunnel_type)
+            is_withdraw=is_withdraw, tunnel_type=tunnel_type,
+            pmsi_tunnel_type=pmsi_tunnel_type)
 
     def update_global_table(self, prefix, next_hop=None, is_withdraw=False):
         """Update a BGP route in the Global table for the given `prefix`

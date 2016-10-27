@@ -33,10 +33,14 @@ from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
+from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_VXLAN
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_NVGRE
+from ryu.services.protocols.bgp.api.prefix import (
+    PMSI_TYPE_NO_TUNNEL_INFO,
+    PMSI_TYPE_INGRESS_REP)
 from ryu.services.protocols.bgp.operator import ssh
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
@@ -533,7 +537,8 @@ class BGPSpeaker(object):
 
     def evpn_prefix_add(self, route_type, route_dist, esi=0,
                         ethernet_tag_id=None, mac_addr=None, ip_addr=None,
-                        vni=None, next_hop=None, tunnel_type=None):
+                        vni=None, next_hop=None, tunnel_type=None,
+                        pmsi_tunnel_type=None):
         """ This method adds a new EVPN route to be advertised.
 
         ``route_type`` specifies one of the EVPN route type name. The
@@ -560,6 +565,11 @@ class BGPSpeaker(object):
         ``tunnel_type`` specifies the data plane encapsulation type
         to advertise. By the default, this encapsulation attribute is
         not advertised.
+
+        ```pmsi_tunnel_type`` specifies the type of the PMSI tunnel attribute
+         used to encode the multicast tunnel identifier.
+        This field is advertised only if route_type is
+        EVPN_MULTICAST_ETAG_ROUTE.
         """
         func_name = 'evpn_prefix.add_local'
 
@@ -592,6 +602,15 @@ class BGPSpeaker(object):
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
                 IP_ADDR: ip_addr,
             })
+
+            # Set PMSI Tunnel Attribute arguments
+            if pmsi_tunnel_type in [
+                    PMSI_TYPE_NO_TUNNEL_INFO,
+                    PMSI_TYPE_INGRESS_REP]:
+                kwargs[PMSI_TUNNEL_TYPE] = pmsi_tunnel_type
+            elif pmsi_tunnel_type is not None:
+                raise ValueError('Unsupported PMSI tunnel type: %s' %
+                                 pmsi_tunnel_type)
         else:
             raise ValueError('Unsupported EVPN route type: %s' % route_type)
 

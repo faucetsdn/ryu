@@ -20,6 +20,7 @@ import logging
 
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
+from ryu.lib.packet.bgp import BGPPathAttributePmsiTunnel
 from ryu.services.protocols.bgp.api.base import EVPN_ROUTE_TYPE
 from ryu.services.protocols.bgp.api.base import EVPN_ESI
 from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
@@ -33,6 +34,7 @@ from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import VPN_LABEL
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
+from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
 from ryu.services.protocols.bgp.base import add_bgp_error_metadata
 from ryu.services.protocols.bgp.base import PREFIX_ERROR_CODE
 from ryu.services.protocols.bgp.base import validate
@@ -68,6 +70,17 @@ SUPPORTED_TUNNEL_TYPES = [
     TUNNEL_TYPE_MPLS,
     TUNNEL_TYPE_MPLS_IN_GRE,
     TUNNEL_TYPE_VXLAN_GRE,
+]
+# Constants for PMSI Tunnel Attribute
+PMSI_TYPE_NO_TUNNEL_INFO = (
+    BGPPathAttributePmsiTunnel.TYPE_NO_TUNNEL_INFORMATION_PRESENT
+)
+PMSI_TYPE_INGRESS_REP = (
+    BGPPathAttributePmsiTunnel.TYPE_INGRESS_REPLICATION
+)
+SUPPORTED_PMSI_TUNNEL_TYPES = [
+    PMSI_TYPE_NO_TUNNEL_INFO,
+    PMSI_TYPE_INGRESS_REP,
 ]
 
 
@@ -152,6 +165,13 @@ def is_valid_tunnel_type(tunnel_type):
                                conf_value=tunnel_type)
 
 
+@validate(name=PMSI_TUNNEL_TYPE)
+def is_valid_pmsi_tunnel_type(pmsi_tunnel_type):
+    if pmsi_tunnel_type not in SUPPORTED_PMSI_TUNNEL_TYPES:
+        raise ConfigValueError(conf_name=PMSI_TUNNEL_TYPE,
+                               conf_value=pmsi_tunnel_type)
+
+
 @RegisterWithArgChecks(name='prefix.add_local',
                        req_args=[ROUTE_DISTINGUISHER, PREFIX, NEXT_HOP],
                        opt_args=[VRF_RF])
@@ -201,7 +221,8 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER,
                                  NEXT_HOP],
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR, EVPN_VNI, TUNNEL_TYPE])
+                                 IP_ADDR, EVPN_VNI, TUNNEL_TYPE,
+                                 PMSI_TUNNEL_TYPE])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
     """Adds EVPN route from VRF identified by *route_dist*.
     """

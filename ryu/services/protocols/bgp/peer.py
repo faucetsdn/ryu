@@ -91,6 +91,7 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MP_UNREACH_NLRI
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
+from ryu.lib.packet.bgp import BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE
 
 from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
 from ryu.lib.packet.bgp import BGPIPv4AddressSpecificExtendedCommunity
@@ -988,6 +989,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             extcomm_attr = None
             community_attr = None
             localpref_attr = None
+            pmsi_tunnel_attr = None
             unknown_opttrans_attrs = None
             nlri_list = [path.nlri]
 
@@ -1164,6 +1166,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                     communities=communities
                 )
 
+                pmsi_tunnel_attr = pathattr_map.get(
+                    BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE
+                )
+
             # UNKNOWN Attributes.
             # Get optional transitive path attributes
             unknown_opttrans_attrs = bgp_utils.get_unknown_opttrans_attr(path)
@@ -1192,6 +1198,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 new_pathattr.append(community_attr)
             if extcomm_attr:
                 new_pathattr.append(extcomm_attr)
+            if pmsi_tunnel_attr:
+                new_pathattr.append(pmsi_tunnel_attr)
             if unknown_opttrans_attrs:
                 new_pathattr.extend(unknown_opttrans_attrs.values())
 
