@@ -86,3 +86,29 @@ class Test_ip(unittest.TestCase):
         res = ip.ipv6_to_str(ipv6_bin)
         print('%s %s' % (val, res))
         eq_(val, res)
+
+    def test_text_to_bin_from_ipv4_text(self):
+        ipv4_str = '10.28.197.1'
+        val = struct.pack('!4B', 10, 28, 197, 1)
+        res = ip.text_to_bin(ipv4_str)
+        eq_(val, res)
+
+    def test_text_to_bin_from_ipv6_text(self):
+        ipv6_str = '2013:da8:215:8f2:aa20:66ff:fe4c:9c3c'
+        val = struct.pack('!8H', 0x2013, 0xda8, 0x215, 0x8f2, 0xaa20,
+                          0x66ff, 0xfe4c, 0x9c3c)
+        res = ip.text_to_bin(ipv6_str)
+        eq_(val, res)
+
+    def test_bin_to_text_from_ipv4_text(self):
+        ipv4_bin = struct.pack('!4B', 10, 28, 197, 1)
+        val = '10.28.197.1'
+        res = ip.bin_to_text(ipv4_bin)
+        eq_(val, res)
+
+    def test_bin_to_text_from_ipv6_text(self):
+        ipv6_bin = struct.pack('!8H', 0x2013, 0xda8, 0x215, 0x8f2, 0xaa20,
+                               0x66ff, 0xfe4c, 0x9c3c)
+        val = '2013:da8:215:8f2:aa20:66ff:fe4c:9c3c'
+        res = ip.bin_to_text(ipv6_bin)
+        eq_(val, res)

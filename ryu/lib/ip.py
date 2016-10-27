@@ -64,3 +64,34 @@ def ipv6_to_str(ip):
     :return: IPv6 address string
     """
     return addrconv.ipv6.bin_to_text(ip)
+
+
+def text_to_bin(ip):
+    """
+    Converts human readable IPv4 or IPv6 string to binary representation.
+    :param str ip: IPv4 or IPv6 address string
+    :return: binary representation of IPv4 or IPv6 address
+    """
+
+    if ':' not in ip:
+        data = addrconv.ipv4.text_to_bin(ip)
+    else:
+        data = addrconv.ipv6.text_to_bin(ip)
+
+    return data
+
+
+def bin_to_text(ip):
+    """
+    Converts binary representation to human readable IPv4 or IPv6 string.
+    :param ip: binary representation of IPv4 or IPv6 address
+    :return: IPv4 or IPv6 address string
+    """
+    if len(ip) == 4:
+        data = addrconv.ipv4.bin_to_text(ip)
+    elif len(ip) == 16:
+        data = addrconv.ipv6.bin_to_text(ip)
+    else:
+        raise struct.error('Invalid ip address length: %s' % len(ip))
+
+    return data
