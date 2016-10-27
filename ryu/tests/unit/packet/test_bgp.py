@@ -32,6 +32,13 @@ from ryu.lib.packet import safi
 BGP4_PACKET_DATA_DIR = os.path.join(
     os.path.dirname(sys.modules[__name__].__file__), '../../packet_data/bgp4/')
 
+PMSI_TYPE_NO_TUNNEL_INFORMATION_PRESENT = (
+    bgp.BGPPathAttributePmsiTunnel.TYPE_NO_TUNNEL_INFORMATION_PRESENT
+)
+PMSI_TYPE_INGRESS_REPLICATION = (
+    bgp.BGPPathAttributePmsiTunnel.TYPE_INGRESS_REPLICATION
+)
+
 
 class Test_bgp(unittest.TestCase):
     """ Test case for ryu.lib.packet.bgp
@@ -140,6 +147,31 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeOriginatorId(value='10.1.1.1'),
             bgp.BGPPathAttributeClusterList(value=['1.1.1.1', '2.2.2.2']),
             bgp.BGPPathAttributeExtendedCommunities(communities=ecommunities),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_NO_TUNNEL_INFORMATION_PRESENT,
+                label=b'\xFF\xFF\xFF'),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_NO_TUNNEL_INFORMATION_PRESENT,
+                tunnel_id=None),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_INGRESS_REPLICATION,
+                mpls_label=0xfffff,
+                tunnel_id=bgp.PmsiTunnelIdIngressReplication(
+                    tunnel_endpoint_ip="1.1.1.1")),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_INGRESS_REPLICATION,
+                vni=0xffffff,
+                tunnel_id=bgp.PmsiTunnelIdIngressReplication(
+                    tunnel_endpoint_ip="aa:bb:cc::dd:ee:ff")),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=2,
+                label=b'\xFF\xFF\xFF',
+                tunnel_id=bgp.PmsiTunnelIdUnknown(value=b'test')),
             bgp.BGPPathAttributeAs4Path(value=[[1000000], {1000001, 1002},
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,
@@ -304,6 +336,31 @@ class Test_bgp(unittest.TestCase):
                                            addr='192.0.2.99'),
             bgp.BGPPathAttributeCommunities(communities=communities),
             bgp.BGPPathAttributeExtendedCommunities(communities=ecommunities),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_NO_TUNNEL_INFORMATION_PRESENT,
+                label=b'\xFF\xFF\xFF'),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_NO_TUNNEL_INFORMATION_PRESENT,
+                tunnel_id=None),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_INGRESS_REPLICATION,
+                mpls_label=0xfffff,
+                tunnel_id=bgp.PmsiTunnelIdIngressReplication(
+                    tunnel_endpoint_ip="1.1.1.1")),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=PMSI_TYPE_INGRESS_REPLICATION,
+                vni=0xffffff,
+                tunnel_id=bgp.PmsiTunnelIdIngressReplication(
+                    tunnel_endpoint_ip="aa:bb:cc::dd:ee:ff")),
+            bgp.BGPPathAttributePmsiTunnel(
+                pmsi_flags=1,
+                tunnel_type=2,
+                label=b'\xFF\xFF\xFF',
+                tunnel_id=bgp.PmsiTunnelIdUnknown(value=b'test')),
             bgp.BGPPathAttributeAs4Path(value=[[1000000], {1000001, 1002},
                                                [1003, 1000004]]),
             bgp.BGPPathAttributeAs4Aggregator(as_number=100040000,

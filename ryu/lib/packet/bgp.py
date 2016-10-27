@@ -28,6 +28,7 @@ import functools
 import numbers
 import socket
 import struct
+import base64
 
 import six
 
@@ -36,10 +37,14 @@ from ryu.lib.packet import afi as addr_family
 from ryu.lib.packet import safi as subaddr_family
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
+from ryu.lib.packet import vxlan
+from ryu.lib.packet import mpls
 from ryu.lib import addrconv
 from ryu.lib import type_desc
+from ryu.lib import ip
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.utils import binary_str
+from ryu.utils import import_module
 
 reduce = six.moves.reduce
 
@@ -87,6 +92,7 @@ BGP_ATTR_TYPE_MP_UNREACH_NLRI = 15  # RFC 4760
 BGP_ATTR_TYPE_EXTENDED_COMMUNITIES = 16  # RFC 4360
 BGP_ATTR_TYPE_AS4_PATH = 17  # RFC 4893
 BGP_ATTR_TYPE_AS4_AGGREGATOR = 18  # RFC 4893
+BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE = 22  # RFC 6514
 
 BGP_ATTR_ORIGIN_IGP = 0x00
 BGP_ATTR_ORIGIN_EGP = 0x01
@@ -3170,6 +3176,215 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
     @property
     def route_family(self):
         return _rf_map[(self.afi, self.safi)]
+
+
+@_PathAttribute.register_type(BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE)
+class BGPPathAttributePmsiTunnel(_PathAttribute):
+    """
+    P-Multicast Service Interface Tunnel (PMSI Tunnel) attribute
+    """
+
+    # pmsi_flags, tunnel_type, mpls_label
+    _VALUE_PACK_STR = '!BB3s'
+    _PACK_STR_SIZE = struct.calcsize(_VALUE_PACK_STR)
+    _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE
+
+    # RFC 6514
+    # +--------------------------------+
+    # |  Flags (1 octet)               |
+    # +--------------------------------+
+    # |  Tunnel Type (1 octets)        |
+    # +--------------------------------+
+    # |  MPLS Label (3 octets)         |
+    # +--------------------------------+
+    # |  Tunnel Identifier (variable)  |
+    # +--------------------------------+
+
+    # The Flags field has the following format:
+    #  0 1 2 3 4 5 6 7
+    # +-+-+-+-+-+-+-+-+
+    # |  reserved   |L|
+    # +-+-+-+-+-+-+-+-+
+    # `L` refers to the Leaf Information Required.
+
+    # Current, Tunnel Type supports following.
+    # + 0 - No tunnel information present
+    # + 6 - Ingress Replication
+    TYPE_NO_TUNNEL_INFORMATION_PRESENT = 0
+    TYPE_INGRESS_REPLICATION = 6
+
+    # TODO:
+    # The following Tunnel Type are not supported.
+    # Therefore, we will need to support in the future.
+    # + 1 - RSVP-TE P2MP LSP
+    # + 2 - mLDP P2MP LSP
+    # + 3 - PIM-SSM Tree
+    # + 4 - PIM-SM Tree
+    # + 5 - BIDIR-PIM Tree
+    # + 7 - mLDP MP2MP LSP
+
+    def __init__(self, pmsi_flags, tunnel_type,
+                 mpls_label=None, label=None, vni=None, tunnel_id=None,
+                 flags=0, type_=None, length=None):
+        super(BGPPathAttributePmsiTunnel, self).__init__(flags=flags,
+                                                         type_=type_,
+                                                         length=length)
+        self.pmsi_flags = pmsi_flags
+        self.tunnel_type = tunnel_type
+        self.tunnel_id = tunnel_id
+
+        if label:
+            # If binary type label field value is specified, stores it
+            # and decodes as MPLS label and VNI.
+            self._label = label
+            self._mpls_label = mpls.label_from_bin(label)
+            self._vni = vxlan.vni_from_bin(label)
+        else:
+            # If either MPLS label or VNI is specified, stores it
+            # and encodes into binary type label field value.
+            self._label = self._serialize_label(mpls_label, vni)
+            self._mpls_label = mpls_label
+            self._vni = vni
+
+    @classmethod
+    def parse_value(cls, buf):
+        (pmsi_flags,
+         tunnel_type,
+         label) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+        value = buf[cls._PACK_STR_SIZE:]
+
+        return {
+            'pmsi_flags': pmsi_flags,
+            'tunnel_type': tunnel_type,
+            'label': label,
+            'tunnel_id': _PmsiTunnelId.parse(tunnel_type, value)
+        }
+
+    def serialize_value(self):
+        buf = bytearray()
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0,
+                      self.pmsi_flags, self.tunnel_type, self._label)
+
+        if self.tunnel_id is not None:
+            buf += self.tunnel_id.serialize()
+
+        return buf
+
+    def _serialize_label(self, mpls_label, vni):
+        if mpls_label:
+            return mpls.label_to_bin(mpls_label, is_bos=True)
+        elif vni:
+            return vxlan.vni_to_bin(vni)
+        else:
+            return b'\x00' * 3
+
+    @property
+    def mpls_label(self):
+        return self._mpls_label
+
+    @mpls_label.setter
+    def mpls_label(self, mpls_label):
+        self._label = mpls.label_to_bin(mpls_label, is_bos=True)
+        self._mpls_label = mpls_label
+        self._vni = None  # disables VNI
+
+    @property
+    def vni(self):
+        return self._vni
+
+    @vni.setter
+    def vni(self, vni):
+        self._label = vxlan.vni_to_bin(vni)
+        self._mpls_label = None  # disables MPLS label
+        self._vni = vni
+
+    @classmethod
+    def from_jsondict(cls, dict_, decode_string=base64.b64decode,
+                      **additional_args):
+        if isinstance(dict_['tunnel_id'], dict):
+            tunnel_id = dict_.pop('tunnel_id')
+            ins = super(BGPPathAttributePmsiTunnel,
+                        cls).from_jsondict(dict_,
+                                           decode_string,
+                                           **additional_args)
+
+            mod = import_module(cls.__module__)
+
+            for key, value in tunnel_id.items():
+                tunnel_id_cls = getattr(mod, key)
+                ins.tunnel_id = tunnel_id_cls.from_jsondict(value,
+                                                            decode_string,
+                                                            **additional_args)
+        else:
+            ins = super(BGPPathAttributePmsiTunnel,
+                        cls).from_jsondict(dict_,
+                                           decode_string,
+                                           **additional_args)
+
+        return ins
+
+
+class _PmsiTunnelId(StringifyMixin, _TypeDisp):
+
+    @classmethod
+    def parse(cls, tunnel_type, buf):
+        subcls = cls._lookup_type(tunnel_type)
+        return subcls.parser(buf)
+
+
+@_PmsiTunnelId.register_unknown_type()
+class PmsiTunnelIdUnknown(_PmsiTunnelId):
+    """
+    Unknown route type specific _PmsiTunnelId
+    """
+
+    def __init__(self, value):
+        super(PmsiTunnelIdUnknown, self).__init__()
+        self.value = value
+
+    @classmethod
+    def parser(cls, buf):
+        return cls(value=buf)
+
+    def serialize(self):
+        return self.value
+
+
+@_PmsiTunnelId.register_type(
+    BGPPathAttributePmsiTunnel.TYPE_NO_TUNNEL_INFORMATION_PRESENT)
+class _PmsiTunnelIdNoInformationPresent(_PmsiTunnelId):
+
+    @classmethod
+    def parser(cls, buf):
+        return None
+
+
+@_PmsiTunnelId.register_type(
+    BGPPathAttributePmsiTunnel.TYPE_INGRESS_REPLICATION)
+class PmsiTunnelIdIngressReplication(_PmsiTunnelId):
+    # tunnel_endpoint_ip
+    _VALUE_PACK_STR = '!%ds'
+    _TYPE = {
+        'ascii': [
+            'tunnel_endpoint_ip'
+        ]
+    }
+
+    def __init__(self, tunnel_endpoint_ip):
+        super(PmsiTunnelIdIngressReplication, self).__init__()
+        self.tunnel_endpoint_ip = tunnel_endpoint_ip
+
+    @classmethod
+    def parser(cls, buf):
+        (tunnel_endpoint_ip,
+         ) = struct.unpack_from(cls._VALUE_PACK_STR % len(buf),
+                                six.binary_type(buf))
+        return cls(tunnel_endpoint_ip=ip.bin_to_text(tunnel_endpoint_ip))
+
+    def serialize(self):
+        ip_bin = ip.text_to_bin(self.tunnel_endpoint_ip)
+        return struct.pack(self._VALUE_PACK_STR % len(ip_bin),
+                           ip.text_to_bin(self.tunnel_endpoint_ip))
 
 
 class BGPNLRI(IPAddrPrefix):
