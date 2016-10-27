@@ -73,3 +73,10 @@ class Test_vxlan(unittest.TestCase):
     def test_to_jsondict(self):
         jsondict_from_pkt = self.pkt.to_jsondict()
         eq_(self.jsondict, jsondict_from_pkt)
+
+    def test_vni_from_bin(self):
+        vni = vxlan.vni_from_bin(b'\x12\x34\x56')
+        eq_(self.vni, vni)
+
+    def test_vni_to_bin(self):
+        eq_(b'\x12\x34\x56', vxlan.vni_to_bin(self.vni))

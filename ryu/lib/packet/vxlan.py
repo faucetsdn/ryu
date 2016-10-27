@@ -42,8 +42,10 @@ VXLAN Header:
 import struct
 import logging
 
-from . import packet_base
+import six
 
+from . import packet_base
+from ryu.lib import type_desc
 
 LOG = logging.getLogger(__name__)
 
@@ -88,3 +90,21 @@ class vxlan(packet_base.PacketBase):
     def serialize(self, payload, prev):
         return struct.pack(self._PACK_STR,
                            1 << (3 + 24), self.vni << 8)
+
+
+def vni_from_bin(buf):
+    """
+    Converts binary representation VNI to integer.
+    :param buf: binary representation of VNI.
+    :return: VNI integer.
+    """
+    return type_desc.Int3.to_user(six.binary_type(buf))
+
+
+def vni_to_bin(vni):
+    """
+    Converts integer VNI to binary representation.
+    :param vni: integer of VNI
+    :return: binary representation of VNI.
+    """
+    return type_desc.Int3.from_user(vni)
