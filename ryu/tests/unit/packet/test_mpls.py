@@ -18,7 +18,7 @@ import unittest
 import logging
 import inspect
 
-from nose.tools import *
+from nose.tools import eq_
 from ryu.lib.packet import mpls
 
 
@@ -56,3 +56,37 @@ class Test_mpls(unittest.TestCase):
         jsondict = self.mp.to_jsondict()
         mp = mpls.mpls.from_jsondict(jsondict['mpls'])
         eq_(str(self.mp), str(mp))
+
+    def test_label_from_bin_true(self):
+        mpls_label = 0xfffff
+        is_bos = True
+        buf = b'\xff\xff\xf1'
+        mpls_label_out, is_bos_out = mpls.label_from_bin(buf)
+
+        eq_(mpls_label, mpls_label_out)
+        eq_(is_bos, is_bos_out)
+
+    def test_label_from_bin_false(self):
+        mpls_label = 0xfffff
+        is_bos = False
+        buf = b'\xff\xff\xf0'
+        mpls_label_out, is_bos_out = mpls.label_from_bin(buf)
+
+        eq_(mpls_label, mpls_label_out)
+        eq_(is_bos, is_bos_out)
+
+    def test_label_to_bin_true(self):
+        mpls_label = 0xfffff
+        is_bos = True
+        label = b'\xff\xff\xf1'
+        label_out = mpls.label_to_bin(mpls_label, is_bos)
+
+        eq_(label, label_out)
+
+    def test_label_to_bin_false(self):
+        mpls_label = 0xfffff
+        is_bos = False
+        label = b'\xff\xff\xf0'
+        label_out = mpls.label_to_bin(mpls_label, is_bos)
+
+        eq_(label, label_out)
