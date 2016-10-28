@@ -35,7 +35,7 @@ $ sudo mn --controller=remote --topo linear,2
 """  # noqa
 
 from socket import error as SocketError
-from ryu.contrib.tinyrpc.exc import InvalidReplyError
+from tinyrpc.exc import InvalidReplyError
 
 
 from ryu.app.wsgi import (
