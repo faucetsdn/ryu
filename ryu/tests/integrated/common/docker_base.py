@@ -133,7 +133,7 @@ class Command(object):
             if out.returncode == 0:
                 return out
             LOG.error(out.stderr)
-            if try_times + 1 >= try_times:
+            if i + 1 >= try_times:
                 break
             time.sleep(interval)
         raise CommandError(out)
