@@ -2248,12 +2248,15 @@ class _PathAttribute(StringifyMixin, _TypeDisp, _Value):
     def serialize(self):
         # fixup
         if self._ATTR_FLAGS is not None:
-            self.flags = self.flags \
-                & ~(BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE) \
-                | self._ATTR_FLAGS
+            self.flags = (
+                self.flags
+                & ~(BGP_ATTR_FLAG_OPTIONAL | BGP_ATTR_FLAG_TRANSITIVE)
+                | self._ATTR_FLAGS)
         value = self.serialize_value()
         self.length = len(value)
-        if self.length > 255:
+        if self.flags & BGP_ATTR_FLAG_EXTENDED_LENGTH:
+            len_pack_str = self._PACK_STR_EXT_LEN
+        elif self.length > 255:
             self.flags |= BGP_ATTR_FLAG_EXTENDED_LENGTH
             len_pack_str = self._PACK_STR_EXT_LEN
         else:
