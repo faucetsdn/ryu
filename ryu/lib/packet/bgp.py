@@ -25,11 +25,11 @@ RFC 4271 BGP-4
 import abc
 import copy
 import functools
-import numbers
 import socket
 import struct
 import base64
 
+import netaddr
 import six
 
 from ryu.lib.stringify import StringifyMixin
@@ -3021,10 +3021,12 @@ class BGPUnknownExtendedCommunity(_ExtendedCommunity):
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_MP_REACH_NLRI)
 class BGPPathAttributeMpReachNLRI(_PathAttribute):
-    _VALUE_PACK_STR = '!HBB'  # afi, safi, next hop len
+    _VALUE_PACK_STR = '!HBB'  # afi, safi, next_hop_len
+    _VALUE_PACK_SIZE = struct.calcsize(_VALUE_PACK_STR)
+    _RD_LENGTH = 8
+    _RESERVED_LENGTH = 1
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
     _class_suffixes = ['AddrPrefix']
-    _rd_length = 8
     _TYPE = {
         'ascii': [
             'next_hop'
@@ -3032,100 +3034,84 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
     }
 
     def __init__(self, afi, safi, next_hop, nlri,
-                 next_hop_len=0, reserved='\0',
                  flags=0, type_=None, length=None):
-        super(BGPPathAttributeMpReachNLRI, self).__init__(flags=flags,
-                                                          type_=type_,
-                                                          length=length)
+        super(BGPPathAttributeMpReachNLRI, self).__init__(
+            flags=flags, type_=type_, length=length)
         self.afi = afi
         self.safi = safi
-        self.next_hop_len = next_hop_len
+        if (not netaddr.valid_ipv4(next_hop)
+                and not netaddr.valid_ipv6(next_hop)):
+            raise ValueError('Invalid address for next_hop: %s' % next_hop)
         self.next_hop = next_hop
-        if afi == addr_family.IP or afi == addr_family.L2VPN:
-            self._next_hop_bin = addrconv.ipv4.text_to_bin(next_hop)
-        elif afi == addr_family.IP6:
-            self._next_hop_bin = addrconv.ipv6.text_to_bin(next_hop)
-        else:
-            raise ValueError('Invalid address family(%d)' % afi)
-        self._reserved = reserved
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
         for i in nlri:
-            assert isinstance(i, addr_cls)
+            if not isinstance(i, addr_cls):
+                raise ValueError('Invalid NRLI class for afi=%d and safi=%d'
+                                 % (self.afi, self.safi))
 
     @classmethod
     def parse_value(cls, buf):
-        (afi, safi, next_hop_len,) = struct.unpack_from(cls._VALUE_PACK_STR,
-                                                        six.binary_type(buf))
-        rest = buf[struct.calcsize(cls._VALUE_PACK_STR):]
+        (afi, safi, next_hop_len,) = struct.unpack_from(
+            cls._VALUE_PACK_STR, six.binary_type(buf))
+        rest = buf[cls._VALUE_PACK_SIZE:]
+
         next_hop_bin = rest[:next_hop_len]
         rest = rest[next_hop_len:]
-        reserved = rest[:1]
+        reserved = rest[:cls._RESERVED_LENGTH]
         assert reserved == b'\0'
-        binnlri = rest[1:]
+
+        nlri_bin = rest[cls._RESERVED_LENGTH:]
         addr_cls = _get_addr_class(afi, safi)
         nlri = []
-        while binnlri:
-            n, binnlri = addr_cls.parser(binnlri)
+        while nlri_bin:
+            n, nlri_bin = addr_cls.parser(nlri_bin)
             nlri.append(n)
 
         rf = RouteFamily(afi, safi)
         if rf == RF_IPv6_VPN:
-            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin[cls._rd_length:])
-            next_hop_len -= cls._rd_length
+            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin[cls._RD_LENGTH:])
+            next_hop_len -= cls._RD_LENGTH
         elif rf == RF_IPv4_VPN:
-            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin[cls._rd_length:])
-            next_hop_len -= cls._rd_length
+            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin[cls._RD_LENGTH:])
+            next_hop_len -= cls._RD_LENGTH
         elif afi == addr_family.IP or (rf == RF_L2_EVPN and next_hop_len == 4):
             next_hop = addrconv.ipv4.bin_to_text(next_hop_bin)
         elif afi == addr_family.IP6 or (rf == RF_L2_EVPN and next_hop_len > 4):
-            # next_hop_bin can include global address and link-local address
-            # according to RFC2545. Since a link-local address isn't needed in
-            # Ryu BGPSpeaker, we ignore it if both addresses were sent.
-            # The link-local address is supposed to follow after
-            # a global address and next_hop_len will be 32 bytes,
-            # so we use the first 16 bytes, which is a global address,
-            # as a next_hop and change the next_hop_len to 16.
-            if next_hop_len == 32:
-                next_hop_bin = next_hop_bin[:16]
-                next_hop_len = 16
             next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
         else:
-            raise ValueError('Invalid address family(%d)' % afi)
+            raise ValueError('Invalid address family: afi=%d, safi=%d'
+                             % (afi, safi))
 
         return {
             'afi': afi,
             'safi': safi,
-            'next_hop_len': next_hop_len,
             'next_hop': next_hop,
-            'reserved': reserved,
             'nlri': nlri,
         }
 
     def serialize_value(self):
-        # fixup
-        self.next_hop_len = len(self._next_hop_bin)
-
+        if self.afi == addr_family.IP6:
+            self.next_hop = str(netaddr.IPAddress(self.next_hop).ipv6())
+        next_hop_bin = ip.text_to_bin(self.next_hop)
         if RouteFamily(self.afi, self.safi) in (RF_IPv4_VPN, RF_IPv6_VPN):
-            empty_label_stack = b'\x00' * self._rd_length
-            next_hop_len = len(self._next_hop_bin) + len(empty_label_stack)
-            next_hop_bin = empty_label_stack
-            next_hop_bin += self._next_hop_bin
-        else:
-            next_hop_len = self.next_hop_len
-            next_hop_bin = self._next_hop_bin
+            # Empty label stack(RD=0:0) + IP address
+            next_hop_bin = b'\x00' * self._RD_LENGTH + next_hop_bin
 
-        self._reserved = b'\0'
+        # fixup
+        next_hop_len = len(next_hop_bin)
 
         buf = bytearray()
-        msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi,
-                      self.safi, next_hop_len)
+        msg_pack_into(self._VALUE_PACK_STR, buf, 0,
+                      self.afi, self.safi, next_hop_len)
         buf += next_hop_bin
-        buf += self._reserved
-        binnlri = bytearray()
+        buf += b'\0'  # reserved
+
+        nlri_bin = bytearray()
         for n in self.nlri:
-            binnlri += n.serialize()
-        buf += binnlri
+            nlri_bin += n.serialize()
+        buf += nlri_bin
+
         return buf
 
     @property
@@ -3141,26 +3127,29 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
 
     def __init__(self, afi, safi, withdrawn_routes,
                  flags=0, type_=None, length=None):
-        super(BGPPathAttributeMpUnreachNLRI, self).__init__(flags=flags,
-                                                            type_=type_,
-                                                            length=length)
+        super(BGPPathAttributeMpUnreachNLRI, self).__init__(
+            flags=flags, type_=type_, length=length)
         self.afi = afi
         self.safi = safi
         self.withdrawn_routes = withdrawn_routes
         addr_cls = _get_addr_class(afi, safi)
         for i in withdrawn_routes:
-            assert isinstance(i, addr_cls)
+            if not isinstance(i, addr_cls):
+                raise ValueError('Invalid NRLI class for afi=%d and safi=%d'
+                                 % (self.afi, self.safi))
 
     @classmethod
     def parse_value(cls, buf):
-        (afi, safi,) = struct.unpack_from(cls._VALUE_PACK_STR,
-                                          six.binary_type(buf))
-        binnlri = buf[struct.calcsize(cls._VALUE_PACK_STR):]
+        (afi, safi,) = struct.unpack_from(
+            cls._VALUE_PACK_STR, six.binary_type(buf))
+
+        nlri_bin = buf[struct.calcsize(cls._VALUE_PACK_STR):]
         addr_cls = _get_addr_class(afi, safi)
         nlri = []
-        while binnlri:
-            n, binnlri = addr_cls.parser(binnlri)
+        while nlri_bin:
+            n, nlri_bin = addr_cls.parser(nlri_bin)
             nlri.append(n)
+
         return {
             'afi': afi,
             'safi': safi,
@@ -3170,10 +3159,12 @@ class BGPPathAttributeMpUnreachNLRI(_PathAttribute):
     def serialize_value(self):
         buf = bytearray()
         msg_pack_into(self._VALUE_PACK_STR, buf, 0, self.afi, self.safi)
-        binnlri = bytearray()
+
+        nlri_bin = bytearray()
         for n in self.withdrawn_routes:
-            binnlri += n.serialize()
-        buf += binnlri
+            nlri_bin += n.serialize()
+        buf += nlri_bin
+
         return buf
 
     @property
