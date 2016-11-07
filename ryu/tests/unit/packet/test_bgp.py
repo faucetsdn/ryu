@@ -247,6 +247,8 @@ class Test_bgp(unittest.TestCase):
         files = [
             'bgp4-open',
             'bgp4-update',
+            'bgp4-update_ipv6',
+            'bgp4-update_vpnv6',
             'bgp4-keepalive',
             'evpn_esi_arbitrary',
             'evpn_esi_lacp',
