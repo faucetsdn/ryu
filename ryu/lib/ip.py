@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numbers
 import struct
 
 from ryu.lib import addrconv
+from ryu.lib import type_desc
 
 
 def ipv4_to_bin(ip):
@@ -39,7 +41,7 @@ def ipv4_to_int(ip):
 def ipv4_to_str(ip):
     """
     Converts binary or int type representation to human readable IPv4 string.
-    :param str ip: binary or int type representation of IPv4 address
+    :param ip: binary or int type representation of IPv4 address
     :return: IPv4 address string
     """
     if isinstance(ip, int):
@@ -57,13 +59,25 @@ def ipv6_to_bin(ip):
     return addrconv.ipv6.text_to_bin(ip)
 
 
+def ipv6_to_int(ip):
+    """
+    Converts human readable IPv6 string to int type representation.
+    :param str ip: IPv6 address string
+    :returns: int type representation of IPv6 address
+    """
+    return type_desc.Int16.to_user(addrconv.ipv6.text_to_bin(ip))
+
+
 def ipv6_to_str(ip):
     """
-    Converts binary representation to human readable IPv6 string.
-    :param str ip: binary representation of IPv6 address
+    Converts binary or int type representation to human readable IPv6 string.
+    :param ip: binary or int type representation of IPv6 address
     :return: IPv6 address string
     """
-    return addrconv.ipv6.bin_to_text(ip)
+    if isinstance(ip, numbers.Integral):
+        return addrconv.ipv6.bin_to_text(type_desc.Int16.from_user(ip))
+    else:
+        return addrconv.ipv6.bin_to_text(ip)
 
 
 def text_to_bin(ip):
@@ -74,11 +88,22 @@ def text_to_bin(ip):
     """
 
     if ':' not in ip:
-        data = addrconv.ipv4.text_to_bin(ip)
+        return ipv4_to_bin(ip)
     else:
-        data = addrconv.ipv6.text_to_bin(ip)
+        return ipv6_to_bin(ip)
 
-    return data
+
+def text_to_int(ip):
+    """
+    Converts human readable IPv4 or IPv6 string to int type representation.
+    :param str ip: IPv4 or IPv6 address string
+    :return: int type representation of IPv4 or IPv6 address
+    """
+
+    if ':' not in ip:
+        return ipv4_to_int(ip)
+    else:
+        return ipv6_to_int(ip)
 
 
 def bin_to_text(ip):
@@ -88,10 +113,8 @@ def bin_to_text(ip):
     :return: IPv4 or IPv6 address string
     """
     if len(ip) == 4:
-        data = addrconv.ipv4.bin_to_text(ip)
+        return ipv4_to_str(ip)
     elif len(ip) == 16:
-        data = addrconv.ipv6.bin_to_text(ip)
+        return ipv6_to_str(ip)
     else:
         raise struct.error('Invalid ip address length: %s' % len(ip))
-
-    return data
