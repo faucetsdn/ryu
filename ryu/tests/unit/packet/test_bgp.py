@@ -16,8 +16,10 @@
 
 from __future__ import print_function
 
+import logging
 import os
 import sys
+
 import unittest
 from nose.tools import eq_
 from nose.tools import ok_
@@ -28,6 +30,8 @@ from ryu.lib.packet import bgp
 from ryu.lib.packet import afi
 from ryu.lib.packet import safi
 
+
+LOG = logging.getLogger(__name__)
 
 BGP4_PACKET_DATA_DIR = os.path.join(
     os.path.dirname(sys.modules[__name__].__file__), '../../packet_data/bgp4/')
@@ -241,10 +245,7 @@ class Test_bgp(unittest.TestCase):
     def test_parser(self):
         files = [
             'bgp4-open',
-            # commented out because
-            # 1. we don't support 32 bit AS numbers in AS_PATH
-            # 2. quagga always uses EXTENDED for AS_PATH
-            # 'bgp4-update',
+            'bgp4-update',
             'bgp4-keepalive',
             'evpn_esi_arbitrary',
             'evpn_esi_lacp',
@@ -259,11 +260,11 @@ class Test_bgp(unittest.TestCase):
         ]
 
         for f in files:
-            print('\n*** testing %s ...' % f)
+            LOG.debug('*** testing %s ...', f)
             for _, buf in pcaplib.Reader(
                     open(BGP4_PACKET_DATA_DIR + f + '.pcap', 'rb')):
                 pkt = packet.Packet(buf)
-                print(pkt)
+                LOG.debug(pkt)
                 pkt.serialize()
                 eq_(buf, pkt.data)
 
