@@ -64,6 +64,7 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_FOUR_OCTET_AS_NUMBER
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
 from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
+from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV6
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_EVPN
@@ -289,6 +290,7 @@ class BGPSpeaker(object):
 
     def neighbor_add(self, address, remote_as,
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
+                     enable_ipv6=DEFAULT_CAP_MBGP_IPV6,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
                      enable_evpn=DEFAULT_CAP_MBGP_EVPN,
@@ -312,6 +314,9 @@ class BGPSpeaker(object):
 
         ``enable_ipv4`` enables IPv4 address family for this
         neighbor. The default is True.
+
+        ``enable_ipv6`` enables IPv6 address family for this
+        neighbor. The default is False.
 
         ``enable_vpnv4`` enables VPNv4 address family for this
         neighbor. The default is False.
@@ -371,23 +376,12 @@ class BGPSpeaker(object):
             CONNECT_MODE: connect_mode,
             CAP_ENHANCED_REFRESH: enable_enhanced_refresh,
             CAP_FOUR_OCTET_AS_NUMBER: enable_four_octet_as_number,
+            CAP_MBGP_IPV4: enable_ipv4,
+            CAP_MBGP_IPV6: enable_ipv6,
+            CAP_MBGP_VPNV4: enable_vpnv4,
+            CAP_MBGP_VPNV6: enable_vpnv6,
+            CAP_MBGP_EVPN: enable_evpn,
         }
-        # v6 advertisement is available with only v6 peering
-        if netaddr.valid_ipv4(address):
-            bgp_neighbor[CAP_MBGP_IPV4] = enable_ipv4
-            bgp_neighbor[CAP_MBGP_IPV6] = False
-            bgp_neighbor[CAP_MBGP_VPNV4] = enable_vpnv4
-            bgp_neighbor[CAP_MBGP_VPNV6] = enable_vpnv6
-            bgp_neighbor[CAP_MBGP_EVPN] = enable_evpn
-        elif netaddr.valid_ipv6(address):
-            bgp_neighbor[CAP_MBGP_IPV4] = False
-            bgp_neighbor[CAP_MBGP_IPV6] = True
-            bgp_neighbor[CAP_MBGP_VPNV4] = False
-            bgp_neighbor[CAP_MBGP_VPNV6] = False
-            bgp_neighbor[CAP_MBGP_EVPN] = enable_evpn
-        else:
-            # FIXME: should raise an exception
-            pass
 
         if multi_exit_disc:
             bgp_neighbor[MULTI_EXIT_DISC] = multi_exit_disc

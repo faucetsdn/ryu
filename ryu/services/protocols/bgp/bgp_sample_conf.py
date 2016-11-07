@@ -1,6 +1,7 @@
 import os
 
 from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V4
+from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V6
 from ryu.services.protocols.bgp.bgpspeaker import RF_L2_EVPN
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.bgpspeaker import TUNNEL_TYPE_VXLAN
@@ -25,11 +26,13 @@ BGP = {
             'address': '172.17.0.2',
             'remote_as': 65002,
             'enable_ipv4': True,
+            'enable_ipv6': True,
             'enable_vpnv4': True,
+            'enable_vpnv6': True,
         },
         {
             'address': '172.17.0.3',
-            'remote_as': 65000,
+            'remote_as': 65001,
             'enable_evpn': True,
         },
     ],
@@ -38,16 +41,25 @@ BGP = {
     # The parameters for each VRF table are the same as the arguments of
     # BGPSpeaker.vrf_add() method.
     'vrfs': [
+        # Example of VRF for IPv4
         {
             'route_dist': '65001:100',
             'import_rts': ['65001:100'],
             'export_rts': ['65001:100'],
             'route_family': RF_VPN_V4,
         },
+        # Example of VRF for IPv6
         {
-            'route_dist': '65000:200',
-            'import_rts': ['65000:200'],
-            'export_rts': ['65000:200'],
+            'route_dist': '65001:150',
+            'import_rts': ['65001:150'],
+            'export_rts': ['65001:150'],
+            'route_family': RF_VPN_V6,
+        },
+        # Example of VRF for EVPN
+        {
+            'route_dist': '65001:200',
+            'import_rts': ['65001:200'],
+            'export_rts': ['65001:200'],
             'route_family': RF_L2_EVPN,
         },
     ],
@@ -66,10 +78,20 @@ BGP = {
             'next_hop': '172.17.0.1',
             'route_dist': '65001:100',
         },
+        # Example of IPv6 prefix
+        {
+            'prefix': '2001:db8:1::/64',
+        },
+        # Example of VPNv6 prefix
+        {
+            'prefix': '2001:db8:2::/64',
+            'next_hop': '172.17.0.1',
+            'route_dist': '65001:150',
+        },
         # Example of EVPN prefix
         {
             'route_type': EVPN_MAC_IP_ADV_ROUTE,
-            'route_dist': '65000:200',
+            'route_dist': '65001:200',
             'esi': 0,
             'ethernet_tag_id': 0,
             'tunnel_type': TUNNEL_TYPE_VXLAN,

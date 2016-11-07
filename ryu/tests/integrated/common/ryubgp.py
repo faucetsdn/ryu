@@ -18,8 +18,6 @@ from __future__ import absolute_import
 import logging
 import time
 
-import netaddr
-
 from . import docker_base as base
 
 LOG = logging.getLogger(__name__)
@@ -61,9 +59,10 @@ class RyuBGPContainer(base.BGPContainer):
             n_addr = info['neigh_addr'].split('/')[0]
             c << "            'address': '%s'," % n_addr
             c << "            'remote_as': %s," % str(peer.asn)
-            if netaddr.IPNetwork(n_addr).version == 4:
-                c << "            'enable_ipv4': True,"
-                c << "            'enable_vpnv4': True,"
+            c << "            'enable_ipv4': True,"
+            c << "            'enable_ipv6': True,"
+            c << "            'enable_vpnv4': True,"
+            c << "            'enable_vpnv6': True,"
             c << '        },'
             c << '    ],'
         c << "    'routes': ["
@@ -201,7 +200,7 @@ class RyuBGPContainer(base.BGPContainer):
             time.sleep(1)
         return result
 
-    def run(self, wait=False):
+    def run(self, wait=False, w_time=WAIT_FOR_BOOT):
         w_time = super(RyuBGPContainer,
                        self).run(wait=wait, w_time=self.WAIT_FOR_BOOT)
         return w_time
