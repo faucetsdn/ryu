@@ -24,6 +24,7 @@ import unittest
 from nose.tools import eq_
 from nose.tools import ok_
 
+from ryu.utils import binary_str
 from ryu.lib import pcaplib
 from ryu.lib.packet import packet
 from ryu.lib.packet import bgp
@@ -263,10 +264,15 @@ class Test_bgp(unittest.TestCase):
             LOG.debug('*** testing %s ...', f)
             for _, buf in pcaplib.Reader(
                     open(BGP4_PACKET_DATA_DIR + f + '.pcap', 'rb')):
+                # Checks if BGP message can be parsed as expected.
                 pkt = packet.Packet(buf)
-                LOG.debug(pkt)
+                ok_(isinstance(pkt.protocols[-1], bgp.BGPMessage),
+                    'Failed to parse BGP message: %s' % pkt)
+
+                # Checks if BGP message can be serialized as expected.
                 pkt.serialize()
-                eq_(buf, pkt.data)
+                eq_(buf, pkt.data,
+                    "b'%s' != b'%s'" % (binary_str(buf), binary_str(pkt.data)))
 
     def test_json1(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
