@@ -495,6 +495,9 @@ class Sink(object):
 
         return outgoing_msg
 
+    # For Python 3 compatibility
+    __next__ = next
+
 
 #
 # Source
