@@ -1418,22 +1418,11 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
 
     @staticmethod
     def _ip_addr_from_bin(buf, ip_len):
-        _len = ip_len // 8
-        if _len == 4:
-            return addrconv.ipv4.bin_to_text(buf[:_len]), buf[_len:]
-        elif _len == 16:
-            return addrconv.ipv6.bin_to_text(buf[:_len]), buf[_len:]
-        else:
-            raise struct.error('Invalid ip address length: %s' % ip_len)
+        return ip.bin_to_text(buf[:ip_len]), buf[ip_len:]
 
     @staticmethod
     def _ip_addr_to_bin(ip_addr):
-        if '.' in ip_addr:
-            # IPv4 address
-            return addrconv.ipv4.text_to_bin(ip_addr)
-        else:
-            # IPv6 address
-            return addrconv.ipv6.text_to_bin(ip_addr)
+        return ip.text_to_bin(ip_addr)
 
     @staticmethod
     def _mpls_label_from_bin(buf):
@@ -1697,7 +1686,7 @@ class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
         mac_addr, rest = cls._mac_addr_from_bin(rest, mac_addr_len)
         ip_addr_len, rest = cls._ip_addr_len_from_bin(rest)
         if ip_addr_len != 0:
-            ip_addr, rest = cls._ip_addr_from_bin(rest, ip_addr_len)
+            ip_addr, rest = cls._ip_addr_from_bin(rest, ip_addr_len // 8)
         else:
             ip_addr = None
 
@@ -1796,7 +1785,7 @@ class EvpnInclusiveMulticastEthernetTagNLRI(EvpnNLRI):
         route_dist, rest = cls._rd_from_bin(buf)
         ethernet_tag_id, rest = cls._ethernet_tag_id_from_bin(rest)
         ip_addr_len, rest = cls._ip_addr_len_from_bin(rest)
-        ip_addr, rest = cls._ip_addr_from_bin(rest, ip_addr_len)
+        ip_addr, rest = cls._ip_addr_from_bin(rest, ip_addr_len // 8)
 
         return {
             'route_dist': route_dist.formatted_str,
@@ -1855,7 +1844,7 @@ class EvpnEthernetSegmentNLRI(EvpnNLRI):
         route_dist, rest = cls._rd_from_bin(buf)
         esi, rest = cls._esi_from_bin(rest)
         ip_addr_len, rest = cls._ip_addr_len_from_bin(rest)
-        ip_addr, rest = cls._ip_addr_from_bin(rest, ip_addr_len)
+        ip_addr, rest = cls._ip_addr_from_bin(rest, ip_addr_len // 8)
 
         return {
             'route_dist': route_dist.formatted_str,
