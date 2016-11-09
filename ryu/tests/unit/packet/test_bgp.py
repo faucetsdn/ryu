@@ -260,6 +260,7 @@ class Test_bgp(unittest.TestCase):
             'evpn_nlri_mac_ip_ad',
             'evpn_nlri_inc_multi_eth_tag',
             'evpn_nlri_eth_seg',
+            'evpn_nlri_ip_prefix',
         ]
 
         for f in files:

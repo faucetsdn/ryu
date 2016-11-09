@@ -1306,6 +1306,7 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
     MAC_IP_ADVERTISEMENT = 0x02
     INCLUSIVE_MULTICAST_ETHERNET_TAG = 0x03
     ETHERNET_SEGMENT = 0x04
+    IP_PREFIX_ROUTE = 0x05
 
     ROUTE_TYPE_NAME = None  # must be defined in subclass
 
@@ -1856,6 +1857,143 @@ class EvpnEthernetSegmentNLRI(EvpnNLRI):
             self._PACK_STR % len(ip_addr),
             route_dist.serialize(), self.esi.serialize(),
             self.ip_addr_len, ip_addr)
+
+
+@EvpnNLRI.register_type(EvpnNLRI.IP_PREFIX_ROUTE)
+class EvpnIpPrefixNLRI(EvpnNLRI):
+    """
+    IP Prefix advertisement route NLRI
+    """
+    ROUTE_TYPE_NAME = 'ip_prefix'
+
+    # +---------------------------------------+
+    # |      RD   (8 octets)                  |
+    # +---------------------------------------+
+    # |Ethernet Segment Identifier (10 octets)|
+    # +---------------------------------------+
+    # |  Ethernet Tag ID (4 octets)           |
+    # +---------------------------------------+
+    # |  IP Prefix Length (1 octet)           |
+    # +---------------------------------------+
+    # |  IP Prefix (4 or 16 octets)           |
+    # +---------------------------------------+
+    # |  GW IP Address (4 or 16 octets)       |
+    # +---------------------------------------+
+    # |  MPLS Label (3 octets)                |
+    # +---------------------------------------+
+    _PACK_STR = '!8s10sIB%ds%ds3s'
+    NLRI_PREFIX_FIELDS = ['ethernet_tag_id', 'ip_prefix']
+    _TYPE = {
+        'ascii': [
+            'route_dist',
+            'ip_prefix',
+            'gw_ip_addr'
+        ]
+    }
+    _LABEL_LEN = 3
+
+    def __init__(self, route_dist, ethernet_tag_id, ip_prefix,
+                 esi=0, gw_ip_addr=None, mpls_label=None, vni=None, label=None,
+                 type_=None, length=None):
+        super(EvpnIpPrefixNLRI, self).__init__(type_, length)
+        self.route_dist = route_dist
+        self.esi = esi
+        self.ethernet_tag_id = ethernet_tag_id
+        self._ip_prefix = None
+        self._ip_prefix_len = None
+        self.ip_prefix = ip_prefix
+
+        if gw_ip_addr is None:
+            if ':' not in self._ip_prefix:
+                self.gw_ip_addr = '0.0.0.0'
+            else:
+                self.gw_ip_addr = '::'
+        else:
+            self.gw_ip_addr = gw_ip_addr
+
+        if label:
+            # If binary type label field value is specified, stores it
+            # and decodes as MPLS label and VNI.
+            self._label = label
+            self._mpls_label, _, _ = self._mpls_label_from_bin(label)
+            self._vni, _ = self._vni_from_bin(label)
+        else:
+            # If either MPLS label or VNI is specified, stores it
+            # and encodes into binary type label field value.
+            self._label = self._serialize_label(mpls_label, vni)
+            self._mpls_label = mpls_label
+            self._vni = vni
+
+    def _serialize_label(self, mpls_label, vni):
+        if mpls_label:
+            return self._mpls_label_to_bin(mpls_label, is_bos=True)
+        elif vni:
+            return vxlan.vni_to_bin(vni)
+        else:
+            return b'\x00' * 3
+
+    @classmethod
+    def parse_value(cls, buf):
+        route_dist, rest = cls._rd_from_bin(buf)
+        esi, rest = cls._esi_from_bin(rest)
+        ethernet_tag_id, rest = cls._ethernet_tag_id_from_bin(rest)
+        ip_prefix_len, rest = cls._ip_addr_len_from_bin(rest)
+        _len = (len(rest) - cls._LABEL_LEN) // 2
+        ip_prefix, rest = cls._ip_addr_from_bin(rest, _len)
+        gw_ip_addr, rest = cls._ip_addr_from_bin(rest, _len)
+
+        return {
+            'route_dist': route_dist.formatted_str,
+            'esi': esi,
+            'ethernet_tag_id': ethernet_tag_id,
+            'ip_prefix': '%s/%s' % (ip_prefix, ip_prefix_len),
+            'gw_ip_addr': gw_ip_addr,
+            'label': rest,
+        }
+
+    def serialize_value(self):
+        route_dist = _RouteDistinguisher.from_str(self.route_dist)
+        ip_prefix = self._ip_addr_to_bin(self._ip_prefix)
+        gw_ip_addr = self._ip_addr_to_bin(self.gw_ip_addr)
+
+        return struct.pack(
+            self._PACK_STR % (len(ip_prefix), len(gw_ip_addr)),
+            route_dist.serialize(), self.esi.serialize(),
+            self.ethernet_tag_id, self._ip_prefix_len, ip_prefix,
+            gw_ip_addr, self._label)
+
+    @property
+    def ip_prefix(self):
+        return '%s/%s' % (self._ip_prefix, self._ip_prefix_len)
+
+    @ip_prefix.setter
+    def ip_prefix(self, ip_prefix):
+        self._ip_prefix, ip_prefix_len = ip_prefix.split('/')
+        self._ip_prefix_len = int(ip_prefix_len)
+
+    @property
+    def mpls_label(self):
+        return self._mpls_label
+
+    @mpls_label.setter
+    def mpls_label(self, mpls_label):
+        self._label = self._mpls_label_to_bin(mpls_label, is_bos=True)
+        self._mpls_label = mpls_label
+        self._vni = None  # disables VNI
+
+    @property
+    def vni(self):
+        return self._vni
+
+    @vni.setter
+    def vni(self, vni):
+        self._label = self._vni_to_bin(vni)
+        self._mpls_label = None  # disables MPLS label
+        self._vni = vni
+
+    @property
+    def label_list(self):
+        return [self.mpls_label]
 
 
 @functools.total_ordering
