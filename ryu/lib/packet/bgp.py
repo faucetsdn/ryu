@@ -1426,20 +1426,13 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
 
     @staticmethod
     def _mpls_label_from_bin(buf):
-        mpls_label, rest = _LabelledAddrPrefix._label_from_bin(buf)
-        if mpls_label & 1:
-            is_stack = False
-        else:
-            is_stack = True
-        return mpls_label >> 4, rest, is_stack
+        mpls_label, is_bos = mpls.label_from_bin(buf)
+        rest = buf[3:]
+        return mpls_label, rest, is_bos
 
     @staticmethod
-    def _mpls_label_to_bin(label, is_stack=False):
-        if is_stack:
-            label = label << 4 | 0
-        else:
-            label = label << 4 | 1
-        return six.binary_type(_LabelledAddrPrefix._label_to_bin(label))
+    def _mpls_label_to_bin(label, is_bos=True):
+        return mpls.label_to_bin(label, is_bos=is_bos)
 
     @staticmethod
     def _vni_from_bin(buf):
@@ -1540,7 +1533,7 @@ class EvpnEthernetAutoDiscoveryNLRI(EvpnNLRI):
 
     def _serialize_label(self, mpls_label, vni):
         if mpls_label:
-            return self._mpls_label_to_bin(mpls_label, is_stack=True)
+            return self._mpls_label_to_bin(mpls_label, is_bos=True)
         elif vni:
             return self._vni_to_bin(vni)
         else:
@@ -1571,7 +1564,7 @@ class EvpnEthernetAutoDiscoveryNLRI(EvpnNLRI):
 
     @mpls_label.setter
     def mpls_label(self, mpls_label):
-        self._label = self._mpls_label_to_bin(mpls_label, is_stack=True)
+        self._label = self._mpls_label_to_bin(mpls_label, is_bos=True)
         self._mpls_label = mpls_label
         self._vni = None  # disables VNI
 
@@ -1652,9 +1645,9 @@ class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
             self._vni = vni
 
     def _parse_labels(self, labels):
-        mpls_label1, rest, is_stack = self._mpls_label_from_bin(labels)
+        mpls_label1, rest, is_bos = self._mpls_label_from_bin(labels)
         mpls_labels = [mpls_label1]
-        if rest and is_stack:
+        if rest and not is_bos:
             mpls_label2, rest, _ = self._mpls_label_from_bin(rest)
             mpls_labels.append(mpls_label2)
         vni, _ = self._vni_from_bin(labels)
@@ -1670,10 +1663,10 @@ class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
 
     def _serialize_mpls_labels(self, mpls_labels):
         if len(mpls_labels) == 1:
-            return self._mpls_label_to_bin(mpls_labels[0], is_stack=False)
+            return self._mpls_label_to_bin(mpls_labels[0], is_bos=True)
         elif len(mpls_labels) == 2:
-            return (self._mpls_label_to_bin(mpls_labels[0], is_stack=True) +
-                    self._mpls_label_to_bin(mpls_labels[1], is_stack=False))
+            return (self._mpls_label_to_bin(mpls_labels[0], is_bos=False) +
+                    self._mpls_label_to_bin(mpls_labels[1], is_bos=True))
         else:
             return b'\x00' * 3
 

@@ -81,7 +81,7 @@ def label_from_bin(buf):
     return mpls_label >> 4, mpls_label & 1
 
 
-def label_to_bin(mpls_label, is_bos=False):
+def label_to_bin(mpls_label, is_bos=True):
     """
     Converts integer label to binary representation.
     :param mpls_label: MPLS Label.
