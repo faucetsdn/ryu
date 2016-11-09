@@ -17,6 +17,7 @@
 import inspect
 from types import MethodType
 
+import six
 from tinyrpc.server import RPCServer
 from tinyrpc.dispatch import RPCDispatcher
 from tinyrpc.dispatch import public as rpc_public
@@ -139,7 +140,7 @@ class WebSocketServerTransport(ServerTransport):
         return (context, message)
 
     def send_reply(self, context, reply):
-        self.ws.send(unicode(reply))
+        self.ws.send(six.text_type(reply))
 
 
 class WebSocketRPCServer(RPCServer):
@@ -169,7 +170,7 @@ class WebSocketClientTransport(ClientTransport):
         self.queue = queue
 
     def send_message(self, message, expect_reply=True):
-        self.ws.send(unicode(message))
+        self.ws.send(six.text_type(message))
 
         if expect_reply:
             return self.queue.get()
