@@ -19,19 +19,9 @@
 from ryu.lib import hub
 hub.patch(thread=False)
 
-# TODO:
-#   Right now, we have our own patched copy of ovs python bindings
-#   Once our modification is upstreamed and widely deployed,
-#   use it
-#
-# NOTE: this modifies sys.path and thus affects the following imports.
-import ryu.contrib
-ryu.contrib.update_module_path()
-
 from ryu import cfg
-import logging
-import sys
 
+import logging
 from ryu import log
 log.early_init_log(logging.DEBUG)
 

@@ -25,18 +25,15 @@
 
 from __future__ import print_function
 
-import ryu.contrib
-ryu.contrib.update_module_path()
-
-from ryu import cfg
-
 import cmd
 import sys
-import lxml.etree as ET
 
+import lxml.etree as ET
+from ncclient.operations.rpc import RPCError
+
+from ryu import cfg
 from ryu.lib import of_config
 from ryu.lib.of_config import capable_switch
-from ncclient.operations.rpc import RPCError
 import ryu.lib.of_config.classes as ofc
 
 

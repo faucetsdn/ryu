@@ -22,9 +22,6 @@ import glob
 import os.path
 import sys
 
-# we require ncclient
-import ryu.contrib
-ryu.contrib.update_module_path()
 
 SCHEMA_DIR = os.path.dirname(__file__)
 
@@ -34,7 +31,7 @@ _files = glob.glob(os.path.join(SCHEMA_DIR, 'of-config-*.xsd'))
 OF_CONFIG_XSD_FILES = dict(
     (os.path.basename(f)[len(_PREFIX):-len(_SUFFIX)], f) for f in _files)
 
-# For convinience
+# For convenience
 # OF_CONFIG_1_0_XSD = os.path.join(SCHEMA_DIR, 'of-config-1.0.xsd')
 # and so on
 _this_module = sys.modules[__name__]

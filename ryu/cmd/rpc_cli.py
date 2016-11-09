@@ -31,17 +31,13 @@
 
 from __future__ import print_function
 
-import ryu.contrib
-ryu.contrib.update_module_path()
-
-from ryu import cfg
-
 import cmd
 import signal
 import socket
 import sys
 import termios
 
+from ryu import cfg
 from ryu.lib import rpc
 
 

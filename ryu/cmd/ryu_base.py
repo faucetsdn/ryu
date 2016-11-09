@@ -14,15 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ryu.contrib
-ryu.contrib.update_module_path()
+import argparse
+import os.path
+import sys
 
 from ryu import cfg
 from ryu import utils
 from ryu import version
-import argparse
-import os.path
-import sys
 
 
 subcommands = {
