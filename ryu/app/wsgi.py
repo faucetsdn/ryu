@@ -17,6 +17,8 @@
 import inspect
 from types import MethodType
 
+from routes import Mapper
+from routes.util import URLGenerator
 import six
 from tinyrpc.server import RPCServer
 from tinyrpc.dispatch import RPCDispatcher
@@ -25,12 +27,11 @@ from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 from tinyrpc.transports import ServerTransport, ClientTransport
 from tinyrpc.client import RPCClient
 import webob.dec
+import webob.exc
 from webob.response import Response
 
 from ryu import cfg
 from ryu.lib import hub
-from routes import Mapper
-from routes.util import URLGenerator
 
 
 CONF = cfg.CONF
@@ -82,7 +83,7 @@ class _AlreadyHandledResponse(Response):
 
 def websocket(name, path):
     def _websocket(controller_func):
-        def __websocket(self, req, **kwargs):
+        def __websocket(self, req, **_):
             wrapper = WebSocketRegistrationWrapper(controller_func, self)
             ws_wsgi = hub.WebSocketWSGI(wrapper)
             ws_wsgi(req.environ, req.start_response)
@@ -107,6 +108,7 @@ class ControllerBase(object):
     def __init__(self, req, link, data, **config):
         self.req = req
         self.link = link
+        self.data = data
         self.parent = None
         for name, value in config.items():
             setattr(self, name, value)
@@ -137,7 +139,7 @@ class WebSocketServerTransport(ServerTransport):
         if message is None:
             raise WebSocketDisconnectedError()
         context = None
-        return (context, message)
+        return context, message
 
     def send_reply(self, context, reply):
         self.ws.send(six.text_type(reply))
