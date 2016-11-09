@@ -5,6 +5,8 @@ from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V6
 from ryu.services.protocols.bgp.bgpspeaker import RF_L2_EVPN
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.bgpspeaker import TUNNEL_TYPE_VXLAN
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_MULTICAST_ETAG_ROUTE
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_IP_PREFIX_ROUTE
 
 
 # =============================================================================
@@ -99,6 +101,21 @@ BGP = {
             'mac_addr': 'aa:bb:cc:dd:ee:ff',
             'ip_addr': '10.30.1.1',
             'next_hop': '172.17.0.1',
+        },
+        {
+            'route_type': EVPN_MULTICAST_ETAG_ROUTE,
+            'route_dist': '65001:200',
+            'esi': 0,
+            'ethernet_tag_id': 0,
+            'ip_addr': '10.40.1.1',
+        },
+        {
+            'route_type': EVPN_IP_PREFIX_ROUTE,
+            'route_dist': '65001:200',
+            'esi': 0,
+            'ethernet_tag_id': 0,
+            'ip_prefix': '10.50.1.0/24',
+            'gw_ip_addr': '172.16.0.1',
         },
     ],
 }

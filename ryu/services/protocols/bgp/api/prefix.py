@@ -20,12 +20,15 @@ import logging
 
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
+from ryu.lib.packet.bgp import EvpnIpPrefixNLRI
 from ryu.lib.packet.bgp import BGPPathAttributePmsiTunnel
 from ryu.services.protocols.bgp.api.base import EVPN_ROUTE_TYPE
 from ryu.services.protocols.bgp.api.base import EVPN_ESI
 from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
 from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import IP_ADDR
+from ryu.services.protocols.bgp.api.base import IP_PREFIX
+from ryu.services.protocols.bgp.api.base import GW_IP_ADDR
 from ryu.services.protocols.bgp.api.base import MPLS_LABELS
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
 from ryu.services.protocols.bgp.api.base import PREFIX
@@ -53,9 +56,11 @@ LOG = logging.getLogger('bgpspeaker.api.prefix')
 # Constants used in API calls for EVPN
 EVPN_MAC_IP_ADV_ROUTE = EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME
 EVPN_MULTICAST_ETAG_ROUTE = EvpnInclusiveMulticastEthernetTagNLRI.ROUTE_TYPE_NAME
+EVPN_IP_PREFIX_ROUTE = EvpnIpPrefixNLRI.ROUTE_TYPE_NAME
 SUPPORTED_EVPN_ROUTE_TYPES = [
     EVPN_MAC_IP_ADV_ROUTE,
     EVPN_MULTICAST_ETAG_ROUTE,
+    EVPN_IP_PREFIX_ROUTE,
 ]
 
 # Constants for BGP Tunnel Encapsulation Attribute
@@ -144,6 +149,22 @@ def is_valid_ip_addr(addr):
                                conf_value=addr)
 
 
+@validate(name=IP_PREFIX)
+def is_valid_ip_prefix(prefix):
+    if not (validation.is_valid_ipv4_prefix(prefix)
+            or validation.is_valid_ipv6_prefix(prefix)):
+        raise ConfigValueError(conf_name=IP_PREFIX,
+                               conf_value=prefix)
+
+
+@validate(name=GW_IP_ADDR)
+def is_valid_gw_ip_addr(addr):
+    if not (validation.is_valid_ipv4(addr)
+            or validation.is_valid_ipv6(addr)):
+        raise ConfigValueError(conf_name=GW_IP_ADDR,
+                               conf_value=addr)
+
+
 @validate(name=MPLS_LABELS)
 def is_valid_mpls_labels(labels):
     if not validation.is_valid_mpls_labels(labels):
@@ -221,8 +242,8 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER,
                                  NEXT_HOP],
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR, EVPN_VNI, TUNNEL_TYPE,
-                                 PMSI_TUNNEL_TYPE])
+                                 IP_ADDR, IP_PREFIX, GW_IP_ADDR, EVPN_VNI,
+                                 TUNNEL_TYPE, PMSI_TUNNEL_TYPE])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
     """Adds EVPN route from VRF identified by *route_dist*.
     """
@@ -249,7 +270,7 @@ def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
 @RegisterWithArgChecks(name='evpn_prefix.delete_local',
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER],
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR, EVPN_VNI])
+                                 IP_ADDR, IP_PREFIX, EVPN_VNI])
 def delete_evpn_local(route_type, route_dist, **kwargs):
     """Deletes/withdraws EVPN route from VRF identified by *route_dist*.
     """

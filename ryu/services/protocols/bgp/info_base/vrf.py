@@ -36,6 +36,7 @@ from ryu.lib.packet.bgp import BGPPathAttributePmsiTunnel
 from ryu.lib.packet.bgp import PmsiTunnelIdIngressReplication
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
+from ryu.lib.packet.bgp import EvpnIpPrefixNLRI
 
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.constants import VPN_TABLE
@@ -292,6 +293,8 @@ class VrfTable(Table):
             # Set MPLS labels with the generated labels
             if gen_lbl and isinstance(nlri, EvpnMacIPAdvertisementNLRI):
                 nlri.mpls_labels = label_list[:2]
+            elif gen_lbl and isinstance(nlri, EvpnIpPrefixNLRI):
+                nlri.mpls_label = label_list[0]
 
         puid = self.VRF_PATH_CLASS.create_puid(
             vrf_conf.route_dist, nlri.prefix)

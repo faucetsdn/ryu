@@ -29,6 +29,8 @@ from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
 from ryu.services.protocols.bgp.api.base import IP_ADDR
 from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
+from ryu.services.protocols.bgp.api.base import IP_PREFIX
+from ryu.services.protocols.bgp.api.base import GW_IP_ADDR
 from ryu.services.protocols.bgp.api.base import ROUTE_DISTINGUISHER
 from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
@@ -36,6 +38,7 @@ from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
+from ryu.services.protocols.bgp.api.prefix import EVPN_IP_PREFIX_ROUTE
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_VXLAN
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_NVGRE
 from ryu.services.protocols.bgp.api.prefix import (
@@ -531,13 +534,14 @@ class BGPSpeaker(object):
 
     def evpn_prefix_add(self, route_type, route_dist, esi=0,
                         ethernet_tag_id=None, mac_addr=None, ip_addr=None,
-                        vni=None, next_hop=None, tunnel_type=None,
+                        ip_prefix=None, gw_ip_addr=None, vni=None,
+                        next_hop=None, tunnel_type=None,
                         pmsi_tunnel_type=None):
         """ This method adds a new EVPN route to be advertised.
 
         ``route_type`` specifies one of the EVPN route type name. The
-        supported route types are EVPN_MAC_IP_ADV_ROUTE and
-        EVPN_MULTICAST_ETAG_ROUTE.
+        supported route types are EVPN_MAC_IP_ADV_ROUTE,
+        EVPN_MULTICAST_ETAG_ROUTE and EVPN_IP_PREFIX_ROUTE.
 
         ``route_dist`` specifies a route distinguisher value.
 
@@ -549,6 +553,11 @@ class BGPSpeaker(object):
         ``mac_addr`` specifies a MAC address to advertise.
 
         ``ip_addr`` specifies an IPv4 or IPv6 address to advertise.
+
+        ``ip_prefix`` specifies an IPv4 or IPv6 prefix to advertise.
+
+        ``gw_ip_addr`` specifies an IPv4 or IPv6 address of
+         gateway to advertise.
 
         ``vni`` specifies an Virtual Network Identifier for VXLAN
         or Virtual Subnet Identifier for NVGRE.
@@ -605,13 +614,24 @@ class BGPSpeaker(object):
             elif pmsi_tunnel_type is not None:
                 raise ValueError('Unsupported PMSI tunnel type: %s' %
                                  pmsi_tunnel_type)
+        elif route_type == EVPN_IP_PREFIX_ROUTE:
+            kwargs.update({
+                EVPN_ESI: esi,
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                IP_PREFIX: ip_prefix,
+                GW_IP_ADDR: gw_ip_addr,
+            })
+            # Set tunnel type specific arguments
+            if tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]:
+                kwargs[EVPN_VNI] = vni
         else:
             raise ValueError('Unsupported EVPN route type: %s' % route_type)
 
         call(func_name, **kwargs)
 
     def evpn_prefix_del(self, route_type, route_dist, esi=0,
-                        ethernet_tag_id=None, mac_addr=None, ip_addr=None):
+                        ethernet_tag_id=None, mac_addr=None, ip_addr=None,
+                        ip_prefix=None):
         """ This method deletes an advertised EVPN route.
 
         ``route_type`` specifies one of the EVPN route type name.
@@ -626,6 +646,8 @@ class BGPSpeaker(object):
         ``mac_addr`` specifies a MAC address to advertise.
 
         ``ip_addr`` specifies an IPv4 or IPv6 address to advertise.
+
+        ``ip_prefix`` specifies an IPv4 or IPv6 prefix to advertise.
         """
         func_name = 'evpn_prefix.delete_local'
 
@@ -645,6 +667,11 @@ class BGPSpeaker(object):
             kwargs.update({
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
                 IP_ADDR: ip_addr,
+            })
+        elif route_type == EVPN_IP_PREFIX_ROUTE:
+            kwargs.update({
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                IP_PREFIX: ip_prefix,
             })
         else:
             raise ValueError('Unsupported EVPN route type: %s' % route_type)
