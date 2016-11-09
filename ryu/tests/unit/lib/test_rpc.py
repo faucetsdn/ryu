@@ -119,13 +119,7 @@ class Test_rpc(unittest.TestCase):
         assert isinstance(obj, int)
         result = c.call(b'resp', [obj])
         assert result == obj
-        import sys
-        # note: on PyPy, result will be a long type value.
-        sv = getattr(sys, 'subversion', None)
-        if sv is not None and sv[0] == 'PyPy':
-            assert isinstance(result, long)
-        else:
-            assert isinstance(result, type(obj))
+        assert isinstance(result, numbers.Integral)
 
     def test_0_call_int3(self):
         c = rpc.Client(self._client_sock)
@@ -133,16 +127,15 @@ class Test_rpc(unittest.TestCase):
         assert isinstance(obj, int)
         result = c.call(b'resp', [obj])
         assert result == obj
-        assert isinstance(result, type(obj))
+        assert isinstance(result, numbers.Integral)
 
     def test_0_call_long(self):
         c = rpc.Client(self._client_sock)
         obj = 0xffffffffffffffff  # max value for msgpack
-        _long = int if six.PY3 else long
-        assert isinstance(obj, _long)
+        assert isinstance(obj, numbers.Integral)
         result = c.call(b'resp', [obj])
         assert result == obj
-        assert isinstance(result, type(obj))
+        assert isinstance(result, numbers.Integral)
 
     def test_0_call_long2(self):
         c = rpc.Client(self._client_sock)
