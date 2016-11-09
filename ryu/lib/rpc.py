@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# msgpack-rpc
-# http://wiki.msgpack.org/display/MSGPACK/RPC+specification
+# Specification:
+# - msgpack
+#   https://github.com/msgpack/msgpack/blob/master/spec.md
+# - msgpack-rpc
+#   https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
 
 from collections import deque
 import select
@@ -36,13 +39,8 @@ class MessageEncoder(object):
     """
     def __init__(self):
         super(MessageEncoder, self).__init__()
-        # note: on-wire msgpack has no notion of encoding.
-        # the msgpack-python library implicitly converts unicode to
-        # utf-8 encoded bytes by default.  we don't want to rely on
-        # the behaviour though because it seems to be going to change.
-        # cf. https://gist.github.com/methane/5022403
-        self._packer = msgpack.Packer(encoding=None)
-        self._unpacker = msgpack.Unpacker(encoding=None)
+        self._packer = msgpack.Packer(encoding='utf-8', use_bin_type=True)
+        self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
 
     def _create_msgid(self):
@@ -51,7 +49,7 @@ class MessageEncoder(object):
         return this_id
 
     def create_request(self, method, params):
-        assert isinstance(method, six.binary_type)
+        assert isinstance(method, (str, six.binary_type))
         assert isinstance(params, list)
         msgid = self._create_msgid()
         return (self._packer.pack(
@@ -64,7 +62,7 @@ class MessageEncoder(object):
         return self._packer.pack([MessageType.RESPONSE, msgid, error, result])
 
     def create_notification(self, method, params):
-        assert isinstance(method, six.binary_type)
+        assert isinstance(method, (str, six.binary_type))
         assert isinstance(params, list)
         return self._packer.pack([MessageType.NOTIFY, method, params])
 

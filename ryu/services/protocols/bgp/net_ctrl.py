@@ -23,6 +23,8 @@ import logging
 import socket
 import traceback
 
+import msgpack
+
 from ryu.services.protocols.bgp import api
 from ryu.services.protocols.bgp.api.base import ApiException
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
@@ -95,10 +97,8 @@ class RpcSession(Activity):
 
     def __init__(self, socket, outgoing_msg_sink_iter):
         super(RpcSession, self).__init__("RpcSession(%s)" % socket)
-        import msgpack
-
-        self._packer = msgpack.Packer()
-        self._unpacker = msgpack.Unpacker()
+        self._packer = msgpack.Packer(encoding='utf-8')
+        self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
         self._socket = socket
         self._outgoing_msg_sink_iter = outgoing_msg_sink_iter
