@@ -1436,11 +1436,11 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
 
     @staticmethod
     def _vni_from_bin(buf):
-        return type_desc.Int3.to_user(six.binary_type(buf[:3])), buf[3:]
+        return vxlan.vni_from_bin(six.binary_type(buf[:3])), buf[3:]
 
     @staticmethod
     def _vni_to_bin(vni):
-        return type_desc.Int3.from_user(vni)
+        return vxlan.vni_to_bin(vni)
 
     @property
     def prefix(self):
