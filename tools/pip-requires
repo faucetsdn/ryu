@@ -2,7 +2,8 @@ eventlet>=0.15
 msgpack-python>=0.3.0  # RPC library, BGP speaker(net_cntl)
 netaddr
 oslo.config>=1.15.0
+ovs>=2.6.0  # OVSDB
 routes  # wsgi
 six>=1.4.0
+tinyrpc  # RPC library, BGP speaker(net_cntl)
 webob>=1.2  # wsgi
-ovs>=2.6.0  # OVSDB

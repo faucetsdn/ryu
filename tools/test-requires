@@ -8,5 +8,4 @@ lxml; platform_python_implementation != 'PyPy'  # OF-Config
 lxml==3.4.0; platform_python_implementation == 'PyPy'
 cryptography==1.5
 paramiko  # NETCONF, BGP speaker
-tinyrpc   # RPC
 ncclient  # OF-Config
