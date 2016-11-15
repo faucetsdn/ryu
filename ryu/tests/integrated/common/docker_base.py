@@ -196,25 +196,39 @@ class DockerImage(object):
     def create_ryu(self, tagname='ryu', image=None, check_exist=False):
         if check_exist and self.exist(tagname):
             return tagname
-        workdir = TEST_BASE_DIR + '/' + tagname
+        workdir = '%s/%s' % (TEST_BASE_DIR, tagname)
         workdir_ctn = '/root/osrg/ryu'
-        pkges = 'telnet tcpdump iproute2 '
-        pkges += 'gcc python-pip python-dev libffi-dev libssl-dev'
+        pkges = ' '.join([
+            'telnet',
+            'tcpdump',
+            'iproute2',
+            'python-setuptools',
+            'python-pip',
+            'gcc',
+            'python-dev',
+            'libffi-dev',
+            'libssl-dev',
+            'libxml2-dev',
+            'libxslt1-dev',
+            'zlib1g-dev',
+        ])
         if image:
             use_image = image
         else:
             use_image = self.baseimage
         c = CmdBuffer()
-        c << 'FROM ' + use_image
-        c << 'RUN apt-get update'
-        c << 'RUN apt-get install -qy --no-install-recommends ' + pkges
-        c << 'RUN pip install -U six paramiko msgpack-rpc-python'
-        c << 'ADD ryu ' + workdir_ctn
-        install = 'RUN cd %s && pip install -r tools/pip-requires ' % workdir_ctn
-        install += '&& python setup.py install'
+        c << 'FROM %s' % use_image
+        c << 'ADD ryu %s' % workdir_ctn
+        install = ' '.join([
+            'RUN apt-get update',
+            '&& apt-get install -qy --no-install-recommends %s' % pkges,
+            '&& cd %s' % workdir_ctn,
+            '&& pip install -r tools/pip-requires -r tools/optional-requires',
+            '&& python setup.py install',
+        ])
         c << install
 
-        self.cmd.sudo('rm -rf ' + workdir)
+        self.cmd.sudo('rm -rf %s' % workdir)
         self.cmd.execute('mkdir -p ' + workdir)
         self.cmd.execute("echo '%s' > %s/Dockerfile" % (str(c), workdir))
         self.cmd.execute('cp -r ../ryu %s/' % workdir)
