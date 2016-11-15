@@ -21,7 +21,7 @@ Installing Ryu is quite easy::
 If you prefer to install Ryu from the source code::
 
    % git clone git://github.com/osrg/ryu.git
-   % cd ryu; python ./setup.py install
+   % cd ryu; pip install .
 
 If you want to write your Ryu application, have a look at
 `Writing ryu application <http://ryu.readthedocs.io/en/latest/writing_ryu_app.html>`_ document.
