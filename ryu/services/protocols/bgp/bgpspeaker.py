@@ -44,7 +44,6 @@ from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_NVGRE
 from ryu.services.protocols.bgp.api.prefix import (
     PMSI_TYPE_NO_TUNNEL_INFO,
     PMSI_TYPE_INGRESS_REP)
-from ryu.services.protocols.bgp.operator import ssh
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
@@ -165,9 +164,7 @@ class BGPSpeaker(object):
                  peer_down_handler=None,
                  peer_up_handler=None,
                  ssh_console=False,
-                 ssh_port=ssh.DEFAULT_SSH_PORT,
-                 ssh_host=ssh.DEFAULT_SSH_HOST,
-                 ssh_host_key=ssh.DEFAULT_SSH_HOST_KEY,
+                 ssh_port=None, ssh_host=None, ssh_host_key=None,
                  label_range=DEFAULT_LABEL_RANGE):
         """Create a new BGPSpeaker object with as_number and router_id to
         listen on bgp_server_port.
@@ -205,11 +202,14 @@ class BGPSpeaker(object):
         ``ssh_console`` specifies whether or not SSH CLI need to be started.
 
         ``ssh_port`` specifies the port number for SSH CLI server.
+        The default is bgp.operator.ssh.DEFAULT_SSH_PORT.
 
         ``ssh_host`` specifies the IP address for SSH CLI server.
+        The default is bgp.operator.ssh.DEFAULT_SSH_HOST.
 
         ``ssh_host_key`` specifies the path to the host key added to
         the keys list used by SSH CLI server.
+        The default is bgp.operator.ssh.DEFAULT_SSH_HOST_KEY.
 
         ``label_range`` specifies the range of MPLS labels generated
         automatically.
@@ -230,10 +230,13 @@ class BGPSpeaker(object):
         self._peer_down_handler = peer_down_handler
         self._peer_up_handler = peer_up_handler
         if ssh_console:
+            # Note: paramiko used in bgp.operator.ssh is the optional
+            # requirements, imports bgp.operator.ssh here.
+            from ryu.services.protocols.bgp.operator import ssh
             ssh_settings = {
-                ssh.SSH_PORT: ssh_port,
-                ssh.SSH_HOST: ssh_host,
-                ssh.SSH_HOST_KEY: ssh_host_key,
+                ssh.SSH_PORT: ssh_port or ssh.DEFAULT_SSH_PORT,
+                ssh.SSH_HOST: ssh_host or ssh.DEFAULT_SSH_HOST,
+                ssh.SSH_HOST_KEY: ssh_host_key or ssh.DEFAULT_SSH_HOST_KEY,
             }
             hub.spawn(ssh.SSH_CLI_CONTROLLER.start, **ssh_settings)
 

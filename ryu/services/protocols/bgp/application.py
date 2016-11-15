@@ -31,7 +31,6 @@ from ryu.services.protocols.bgp.bgpspeaker import BGPSpeaker
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.net_ctrl import NC_RPC_BIND_IP
 from ryu.services.protocols.bgp.net_ctrl import NC_RPC_BIND_PORT
-from ryu.services.protocols.bgp.operator.ssh import SSH_CLI_CONTROLLER
 from ryu.services.protocols.bgp.rtconf.base import RuntimeConfigError
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_PORT
@@ -123,7 +122,10 @@ class RyuBGPSpeaker(RyuApp):
             # Configure SSH settings, if available.
             if hasattr(settings, 'SSH'):
                 LOG.debug('Loading SSH settings...')
-                hub.spawn(SSH_CLI_CONTROLLER.start, **settings.SSH)
+                # Note: paramiko used in bgp.operator.ssh is the optional
+                # requirements, imports bgp.operator.ssh here.
+                from ryu.services.protocols.bgp.operator import ssh
+                hub.spawn(ssh.SSH_CLI_CONTROLLER.start, **settings.SSH)
 
         # Start RPC server with the given RPC settings.
         rpc_settings = {
