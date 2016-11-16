@@ -145,7 +145,7 @@ class Command(object):
 
 
 class DockerImage(object):
-    def __init__(self, baseimage='ubuntu:14.04.5'):
+    def __init__(self, baseimage='ubuntu:16.04'):
         self.baseimage = baseimage
         self.cmd = Command()
 
