@@ -21,6 +21,7 @@ import unittest
 from nose.tools import eq_
 from nose.tools import ok_
 
+from ryu.lib.hub import sleep
 from ryu.lib.ovs import vsctl
 
 
@@ -88,6 +89,11 @@ class TestVSCtl(unittest.TestCase):
     def _set_up_mn_container(cls):
         cls.container_mn = cls._docker_run(DOCKER_IMAGE_MININET)
         cls.container_mn_ip = cls._docker_inspect_ip_addr(cls.container_mn)
+
+        # Note: Wait for loading the OVS kernel module.
+        # If the OVS kernel module is loaded at first time, it might take
+        # a few seconds.
+        sleep(5)
 
         cls._docker_exec_mn(
             'ovs-vsctl set-manager %s' % OVSDB_MANAGER_ADDR)
