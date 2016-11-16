@@ -38,8 +38,7 @@ class BgpSpeakerTestBase(unittest.TestCase):
         cls.bridges.append(cls.brdc1)
 
         cls.dockerimg = ctn_base.DockerImage()
-        cls.r_img = cls.dockerimg.create_ryu(image='osrg/ryu',
-                                             check_exist=True)
+        cls.r_img = cls.dockerimg.create_ryu(check_exist=True)
         cls.images.append(cls.r_img)
         cls.q_img = 'osrg/quagga'
         cls.images.append(cls.q_img)
