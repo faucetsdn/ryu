@@ -83,4 +83,3 @@ class udp(packet_base.PacketBase):
             h = struct.pack(udp._PACK_STR, self.src_port, self.dst_port,
                             self.total_length, self.csum)
         return h
-
