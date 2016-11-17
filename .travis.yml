@@ -15,7 +15,6 @@ services:
 sudo: required  # Required to enable Docker service
 
 install:
-  - docker build -t ut_mininet ryu/tests/docker/mininet/
   - pip install tox coveralls
 
 script:

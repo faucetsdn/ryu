@@ -27,7 +27,7 @@ from ryu.lib.ovs import vsctl
 
 LOG = logging.getLogger(__name__)
 
-DOCKER_IMAGE_MININET = 'ut_mininet'
+DOCKER_IMAGE_MININET = 'osrg/ryu-book'
 
 OVSDB_MANAGER_ADDR = 'ptcp:6640'
 OVSDB_SWITCH_ADDR = 'tcp:%s:6640'
