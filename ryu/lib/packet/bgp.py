@@ -3600,7 +3600,7 @@ class BGPMessage(packet_base.PacketBase, _TypeDisp):
         subcls = cls._lookup_type(type_)
         kwargs = subcls.parser(binmsg)
         return subcls(marker=marker, len_=len_, type_=type_,
-                      **kwargs), None, rest
+                      **kwargs), cls, rest
 
     def serialize(self, payload=None, prev=None):
         # fixup
