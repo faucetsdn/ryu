@@ -3073,25 +3073,66 @@ class BGPEvpnEsiLabelExtendedCommunity(_ExtendedCommunity):
     # |  Reserved=0   |          ESI Label                            |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _VALUE_PACK_STR = '!BB2x3s'
-    _VALUE_FIELDS = ['subtype', 'flags', 'esi_label']
+    _VALUE_FIELDS = ['subtype', 'flags']
 
-    def __init__(self, **kwargs):
+    def __init__(self, label=None, mpls_label=None, vni=None, **kwargs):
         super(BGPEvpnEsiLabelExtendedCommunity, self).__init__()
         self.do_init(BGPEvpnEsiLabelExtendedCommunity, self, kwargs)
+
+        if label:
+            # If binary type label field value is specified, stores it
+            # and decodes as MPLS label and VNI.
+            self._label = label
+            self._mpls_label, _ = mpls.label_from_bin(label)
+            self._vni = vxlan.vni_from_bin(label)
+        else:
+            # If either MPLS label or VNI is specified, stores it
+            # and encodes into binary type label field value.
+            self._label = self._serialize_label(mpls_label, vni)
+            self._mpls_label = mpls_label
+            self._vni = vni
+
+    def _serialize_label(self, mpls_label, vni):
+        if mpls_label:
+            return mpls.label_to_bin(mpls_label, is_bos=True)
+        elif vni:
+            return vxlan.vni_to_bin(vni)
+        else:
+            return b'\x00' * 3
 
     @classmethod
     def parse_value(cls, buf):
         (subtype, flags,
-         esi_label) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+         label) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
         return {
             'subtype': subtype,
             'flags': flags,
-            'esi_label': type_desc.Int3.to_user(esi_label),
+            'label': label,
         }
 
     def serialize_value(self):
         return struct.pack(self._VALUE_PACK_STR, self.subtype, self.flags,
-                           type_desc.Int3.from_user(self.esi_label))
+                           self._label)
+
+    @property
+    def mpls_label(self):
+        return self._mpls_label
+
+    @mpls_label.setter
+    def mpls_label(self, mpls_label):
+        self._label = mpls.label_to_bin(mpls_label, is_bos=True)
+        self._mpls_label = mpls_label
+        self._vni = None  # disables VNI
+
+    @property
+    def vni(self):
+        return self._vni
+
+    @vni.setter
+    def vni(self, vni):
+        self._label = vxlan.vni_to_bin(vni)
+        self._mpls_label = None  # disables ESI label
+        self._vni = vni
 
 
 @_ExtendedCommunity.register_type(_ExtendedCommunity.EVPN_ES_IMPORT_RT)

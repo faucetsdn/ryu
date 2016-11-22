@@ -133,7 +133,11 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPEvpnMacMobilityExtendedCommunity(
                 subtype=0, flags=0xff, sequence_number=0x11223344),
             bgp.BGPEvpnEsiLabelExtendedCommunity(
-                subtype=1, flags=0xff, esi_label=0x112233),
+                subtype=1, flags=0xff, label=b'\xFF\xFF\xFF'),
+            bgp.BGPEvpnEsiLabelExtendedCommunity(
+                subtype=1, flags=0xff, mpls_label=0xfffff),
+            bgp.BGPEvpnEsiLabelExtendedCommunity(
+                subtype=1, flags=0xff, vni=0xffffff),
             bgp.BGPEvpnEsImportRTExtendedCommunity(
                 subtype=2, es_import="aa:bb:cc:dd:ee:ff"),
             bgp.BGPUnknownExtendedCommunity(type_=99, value=b'abcdefg'),
@@ -329,7 +333,11 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPEvpnMacMobilityExtendedCommunity(
                 subtype=0, flags=0xff, sequence_number=0x11223344),
             bgp.BGPEvpnEsiLabelExtendedCommunity(
-                subtype=1, flags=0xff, esi_label=0x112233),
+                subtype=1, flags=0xff, label=b'\xFF\xFF\xFF'),
+            bgp.BGPEvpnEsiLabelExtendedCommunity(
+                subtype=1, flags=0xff, mpls_label=0xfffff),
+            bgp.BGPEvpnEsiLabelExtendedCommunity(
+                subtype=1, flags=0xff, vni=0xffffff),
             bgp.BGPEvpnEsImportRTExtendedCommunity(
                 subtype=2, es_import="aa:bb:cc:dd:ee:ff"),
             bgp.BGPUnknownExtendedCommunity(type_=99, value=b'abcdefg'),
