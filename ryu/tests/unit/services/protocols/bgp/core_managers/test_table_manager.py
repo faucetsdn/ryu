@@ -31,8 +31,12 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
+from ryu.lib.packet.bgp import EvpnLACPEsi
+from ryu.lib.packet.bgp import EvpnEthernetAutoDiscoveryNLRI
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAX_ET
+from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_LACP
 from ryu.services.protocols.bgp.core import BgpCoreError
 from ryu.services.protocols.bgp.core_managers import table_manager
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
@@ -115,7 +119,7 @@ class Test_TableCoreManager(unittest.TestCase):
                                     next_hop, route_family, route_type,
                                     **kwargs)
 
-    def test_update_vrf_table_l2_evpn_with_esi(self):
+    def test_update_vrf_table_l2_evpn_with_esi_int(self):
         # Prepare test data
         route_dist = '65000:100'
         prefix_str = None  # should be ignored
@@ -134,6 +138,31 @@ class Test_TableCoreManager(unittest.TestCase):
         route_family = VRF_RF_L2_EVPN
         route_type = EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME
         kwargs['esi'] = 0
+
+        self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
+                                    next_hop, route_family, route_type,
+                                    **kwargs)
+
+    def test_update_vrf_table_l2_evpn_with_esi_dict(self):
+        # Prepare test data
+        route_dist = '65000:100'
+        prefix_str = None  # should be ignored
+        kwargs = {
+            'ethernet_tag_id': EVPN_MAX_ET,
+        }
+        esi = EvpnLACPEsi(mac_addr='aa:bb:cc:dd:ee:ff', port_key=100)
+        prefix_inst = EvpnEthernetAutoDiscoveryNLRI(
+            route_dist=route_dist,
+            esi=esi,
+            **kwargs)
+        next_hop = '0.0.0.0'
+        route_family = VRF_RF_L2_EVPN
+        route_type = EvpnEthernetAutoDiscoveryNLRI.ROUTE_TYPE_NAME
+        kwargs['esi'] = {
+            'type': ESI_TYPE_LACP,
+            'mac_addr': 'aa:bb:cc:dd:ee:ff',
+            'port_key': 100,
+        }
 
         self._test_update_vrf_table(prefix_inst, route_dist, prefix_str,
                                     next_hop, route_family, route_type,

@@ -18,13 +18,18 @@
 """
 import logging
 
+from ryu.lib.packet.bgp import EvpnEsi
+from ryu.lib.packet.bgp import EvpnNLRI
+from ryu.lib.packet.bgp import EvpnEthernetAutoDiscoveryNLRI
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
+from ryu.lib.packet.bgp import EvpnEthernetSegmentNLRI
 from ryu.lib.packet.bgp import EvpnIpPrefixNLRI
 from ryu.lib.packet.bgp import BGPPathAttributePmsiTunnel
 from ryu.services.protocols.bgp.api.base import EVPN_ROUTE_TYPE
 from ryu.services.protocols.bgp.api.base import EVPN_ESI
 from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
+from ryu.services.protocols.bgp.api.base import REDUNDANCY_MODE
 from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import IP_ADDR
 from ryu.services.protocols.bgp.api.base import IP_PREFIX
@@ -53,14 +58,47 @@ from ryu.services.protocols.bgp.utils import validation
 
 LOG = logging.getLogger('bgpspeaker.api.prefix')
 
+# Maximum value of the Ethernet Tag ID
+EVPN_MAX_ET = EvpnNLRI.MAX_ET
+
+# ESI Types
+ESI_TYPE_ARBITRARY = EvpnEsi.ARBITRARY
+ESI_TYPE_LACP = EvpnEsi.LACP
+ESI_TYPE_L2_BRIDGE = EvpnEsi.L2_BRIDGE
+ESI_TYPE_MAC_BASED = EvpnEsi.MAC_BASED
+ESI_TYPE_ROUTER_ID = EvpnEsi.ROUTER_ID
+ESI_TYPE_AS_BASED = EvpnEsi.AS_BASED
+SUPPORTED_ESI_TYPES = [
+    ESI_TYPE_ARBITRARY,
+    ESI_TYPE_LACP,
+    ESI_TYPE_L2_BRIDGE,
+    ESI_TYPE_MAC_BASED,
+    ESI_TYPE_ROUTER_ID,
+    ESI_TYPE_AS_BASED,
+]
+
 # Constants used in API calls for EVPN
+EVPN_ETH_AUTO_DISCOVERY = EvpnEthernetAutoDiscoveryNLRI.ROUTE_TYPE_NAME
 EVPN_MAC_IP_ADV_ROUTE = EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME
-EVPN_MULTICAST_ETAG_ROUTE = EvpnInclusiveMulticastEthernetTagNLRI.ROUTE_TYPE_NAME
+EVPN_MULTICAST_ETAG_ROUTE = (
+    EvpnInclusiveMulticastEthernetTagNLRI.ROUTE_TYPE_NAME)
+EVPN_ETH_SEGMENT = EvpnEthernetSegmentNLRI.ROUTE_TYPE_NAME
 EVPN_IP_PREFIX_ROUTE = EvpnIpPrefixNLRI.ROUTE_TYPE_NAME
 SUPPORTED_EVPN_ROUTE_TYPES = [
+    EVPN_ETH_AUTO_DISCOVERY,
     EVPN_MAC_IP_ADV_ROUTE,
     EVPN_MULTICAST_ETAG_ROUTE,
+    EVPN_ETH_SEGMENT,
     EVPN_IP_PREFIX_ROUTE,
+]
+
+# Constants for ESI Label extended community
+REDUNDANCY_MODE_ALL_ACTIVE = 'all_active'
+REDUNDANCY_MODE_SINGLE_ACTIVE = 'single_active'
+REDUNDANCY_MODE_TYPES = [
+    None,
+    REDUNDANCY_MODE_ALL_ACTIVE,
+    REDUNDANCY_MODE_SINGLE_ACTIVE,
 ]
 
 # Constants for BGP Tunnel Encapsulation Attribute
@@ -132,6 +170,13 @@ def is_valid_ethernet_tag_id(ethernet_tag_id):
     if not validation.is_valid_ethernet_tag_id(ethernet_tag_id):
         raise ConfigValueError(conf_name=EVPN_ETHERNET_TAG_ID,
                                conf_value=ethernet_tag_id)
+
+
+@validate(name=REDUNDANCY_MODE)
+def is_valid_redundancy_mode(redundancy_mode):
+    if redundancy_mode not in REDUNDANCY_MODE_TYPES:
+        raise ConfigValueError(conf_name=REDUNDANCY_MODE,
+                               conf_value=redundancy_mode)
 
 
 @validate(name=MAC_ADDR)
@@ -241,12 +286,19 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
 @RegisterWithArgChecks(name='evpn_prefix.add_local',
                        req_args=[EVPN_ROUTE_TYPE, ROUTE_DISTINGUISHER,
                                  NEXT_HOP],
-                       opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID, MAC_ADDR,
-                                 IP_ADDR, IP_PREFIX, GW_IP_ADDR, EVPN_VNI,
-                                 TUNNEL_TYPE, PMSI_TUNNEL_TYPE])
+                       opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID,
+                                 REDUNDANCY_MODE, MAC_ADDR, IP_ADDR, IP_PREFIX,
+                                 GW_IP_ADDR, EVPN_VNI, TUNNEL_TYPE,
+                                 PMSI_TUNNEL_TYPE])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
     """Adds EVPN route from VRF identified by *route_dist*.
     """
+
+    if(route_type in [EVPN_ETH_AUTO_DISCOVERY, EVPN_ETH_SEGMENT]
+       and kwargs['esi'] == 0):
+        raise ConfigValueError(conf_name=EVPN_ESI,
+                               conf_value=kwargs['esi'])
+
     try:
         # Create new path and insert into appropriate VRF table.
         tm = CORE_MANAGER.get_core_service().table_manager

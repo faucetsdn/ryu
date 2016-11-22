@@ -26,6 +26,7 @@ from ryu.services.protocols.bgp.api.base import PREFIX
 from ryu.services.protocols.bgp.api.base import EVPN_ROUTE_TYPE
 from ryu.services.protocols.bgp.api.base import EVPN_ESI
 from ryu.services.protocols.bgp.api.base import EVPN_ETHERNET_TAG_ID
+from ryu.services.protocols.bgp.api.base import REDUNDANCY_MODE
 from ryu.services.protocols.bgp.api.base import IP_ADDR
 from ryu.services.protocols.bgp.api.base import MAC_ADDR
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
@@ -36,9 +37,17 @@ from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
+from ryu.services.protocols.bgp.api.prefix import EVPN_MAX_ET
+from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_LACP
+from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_L2_BRIDGE
+from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_MAC_BASED
+from ryu.services.protocols.bgp.api.prefix import EVPN_ETH_AUTO_DISCOVERY
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.api.prefix import EVPN_MULTICAST_ETAG_ROUTE
+from ryu.services.protocols.bgp.api.prefix import EVPN_ETH_SEGMENT
 from ryu.services.protocols.bgp.api.prefix import EVPN_IP_PREFIX_ROUTE
+from ryu.services.protocols.bgp.api.prefix import REDUNDANCY_MODE_ALL_ACTIVE
+from ryu.services.protocols.bgp.api.prefix import REDUNDANCY_MODE_SINGLE_ACTIVE
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_VXLAN
 from ryu.services.protocols.bgp.api.prefix import TUNNEL_TYPE_NVGRE
 from ryu.services.protocols.bgp.api.prefix import (
@@ -538,18 +547,25 @@ class BGPSpeaker(object):
     def evpn_prefix_add(self, route_type, route_dist, esi=0,
                         ethernet_tag_id=None, mac_addr=None, ip_addr=None,
                         ip_prefix=None, gw_ip_addr=None, vni=None,
-                        next_hop=None, tunnel_type=None,
-                        pmsi_tunnel_type=None):
+                        next_hop=None, tunnel_type=None, pmsi_tunnel_type=None,
+                        redundancy_mode=None):
         """ This method adds a new EVPN route to be advertised.
 
         ``route_type`` specifies one of the EVPN route type name. The
-        supported route types are EVPN_MAC_IP_ADV_ROUTE,
-        EVPN_MULTICAST_ETAG_ROUTE and EVPN_IP_PREFIX_ROUTE.
+        supported route types are EVPN_ETH_AUTO_DISCOVERY,
+        EVPN_MAC_IP_ADV_ROUTE, EVPN_MULTICAST_ETAG_ROUTE, EVPN_ETH_SEGMENT
+        and EVPN_IP_PREFIX_ROUTE.
 
         ``route_dist`` specifies a route distinguisher value.
 
-        ``esi`` is an integer value to specify the Ethernet Segment
-        Identifier. 0 is the default and denotes a single-homed site.
+        ``esi`` is an value to specify the Ethernet Segment Identifier.
+         0 is the default and denotes a single-homed site.
+         If you want to advertise esi other than 0,
+         it must be set as a dictionary type.
+         The following keys and values must be set.
+          - type: specifies one of the ESI type.
+         The remaining keys and values are the same as the argument of
+         the class corresponding to esi_type.
 
         ``ethernet_tag_id`` specifies the Ethernet Tag ID.
 
@@ -576,6 +592,10 @@ class BGPSpeaker(object):
          used to encode the multicast tunnel identifier.
         This field is advertised only if route_type is
         EVPN_MULTICAST_ETAG_ROUTE.
+
+        ``redundancy_mode`` specifies a redundancy mode type.
+        The supported redundancy mode types are REDUNDANCY_MODE_ALL_ACTIVE
+        and REDUNDANCY_MODE_SINGLE_ACTIVE.
         """
         func_name = 'evpn_prefix.add_local'
 
@@ -593,7 +613,16 @@ class BGPSpeaker(object):
             kwargs[TUNNEL_TYPE] = tunnel_type
 
         # Set route type specific arguments
-        if route_type == EVPN_MAC_IP_ADV_ROUTE:
+        if route_type == EVPN_ETH_AUTO_DISCOVERY:
+            # REDUNDANCY_MODE is parameter for extended community
+            kwargs.update({
+                EVPN_ESI: esi,
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                REDUNDANCY_MODE: redundancy_mode,
+            })
+            if vni is not None:
+                kwargs[EVPN_VNI] = vni
+        elif route_type == EVPN_MAC_IP_ADV_ROUTE:
             kwargs.update({
                 EVPN_ESI: esi,
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
@@ -617,6 +646,11 @@ class BGPSpeaker(object):
             elif pmsi_tunnel_type is not None:
                 raise ValueError('Unsupported PMSI tunnel type: %s' %
                                  pmsi_tunnel_type)
+        elif route_type == EVPN_ETH_SEGMENT:
+            kwargs.update({
+                EVPN_ESI: esi,
+                IP_ADDR: ip_addr,
+            })
         elif route_type == EVPN_IP_PREFIX_ROUTE:
             kwargs.update({
                 EVPN_ESI: esi,
@@ -641,8 +675,14 @@ class BGPSpeaker(object):
 
         ``route_dist`` specifies a route distinguisher value.
 
-        ``esi`` is an integer value to specify the Ethernet Segment
-        Identifier. 0 is the default and denotes a single-homed site.
+        ``esi`` is an value to specify the Ethernet Segment Identifier.
+         0 is the default and denotes a single-homed site.
+         If you want to advertise esi other than 0,
+         it must be set as a dictionary type.
+         The following keys and values must be set.
+          - type: specifies one of the ESI type.
+         The remaining keys and values are the same as the argument of
+         the class corresponding to esi_type.
 
         ``ethernet_tag_id`` specifies the Ethernet Tag ID.
 
@@ -659,7 +699,12 @@ class BGPSpeaker(object):
                   ROUTE_DISTINGUISHER: route_dist}
 
         # Set route type specific arguments
-        if route_type == EVPN_MAC_IP_ADV_ROUTE:
+        if route_type == EVPN_ETH_AUTO_DISCOVERY:
+            kwargs.update({
+                EVPN_ESI: esi,
+                EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+            })
+        elif route_type == EVPN_MAC_IP_ADV_ROUTE:
             kwargs.update({
                 EVPN_ESI: esi,
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
@@ -669,6 +714,11 @@ class BGPSpeaker(object):
         elif route_type == EVPN_MULTICAST_ETAG_ROUTE:
             kwargs.update({
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
+                IP_ADDR: ip_addr,
+            })
+        elif route_type == EVPN_ETH_SEGMENT:
+            kwargs.update({
+                EVPN_ESI: esi,
                 IP_ADDR: ip_addr,
             })
         elif route_type == EVPN_IP_PREFIX_ROUTE:

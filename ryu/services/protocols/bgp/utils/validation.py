@@ -240,8 +240,9 @@ def is_valid_ext_comm_attr(attr):
 
 def is_valid_esi(esi):
     """Returns True if the given EVPN Ethernet SegmentEthernet ID is valid."""
-    # Note: Currently, only integer type value is supported
-    return isinstance(esi, numbers.Integral)
+    if isinstance(esi, numbers.Integral):
+        return 0 <= esi <= 0xffffffffffffffffff
+    return isinstance(esi, dict)
 
 
 def is_valid_ethernet_tag_id(etag_id):

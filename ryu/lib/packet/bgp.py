@@ -1310,6 +1310,9 @@ class EvpnNLRI(StringifyMixin, _TypeDisp):
 
     ROUTE_TYPE_NAME = None  # must be defined in subclass
 
+    # Reserved value for Ethernet Tag ID.
+    MAX_ET = 0xFFFFFFFF
+
     # Dictionary of ROUTE_TYPE_NAME to subclass.
     # e.g.)
     #   _NAMES = {'eth_ad': EvpnEthernetAutoDiscoveryNLRI, ...}
@@ -3074,6 +3077,9 @@ class BGPEvpnEsiLabelExtendedCommunity(_ExtendedCommunity):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _VALUE_PACK_STR = '!BB2x3s'
     _VALUE_FIELDS = ['subtype', 'flags']
+
+    # Classification for Flags.
+    SINGLE_ACTIVE_BIT = 1 << 0
 
     def __init__(self, label=None, mpls_label=None, vni=None, **kwargs):
         super(BGPEvpnEsiLabelExtendedCommunity, self).__init__()

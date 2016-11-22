@@ -32,6 +32,7 @@ from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import EvpnEsi
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
 from ryu.lib.packet.bgp import EvpnNLRI
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
@@ -483,7 +484,8 @@ class TableCoreManager(object):
 
     def update_vrf_table(self, route_dist, prefix=None, next_hop=None,
                          route_family=None, route_type=None, tunnel_type=None,
-                         is_withdraw=False, pmsi_tunnel_type=None, **kwargs):
+                         is_withdraw=False, redundancy_mode=None,
+                         pmsi_tunnel_type=None, **kwargs):
         """Update a BGP route in the VRF table identified by `route_dist`
         with the given `next_hop`.
 
@@ -495,6 +497,8 @@ class TableCoreManager(object):
 
         If `route_family` is VRF_RF_L2_EVPN, `route_type` and `kwargs`
         are required to construct EVPN NLRI and `prefix` is ignored.
+
+        ``redundancy_mode`` specifies a redundancy mode type.
 
 `       `pmsi_tunnel_type` specifies the type of the PMSI tunnel attribute
          used to encode the multicast tunnel identifier.
@@ -522,6 +526,8 @@ class TableCoreManager(object):
                 desc='VRF table  does not exist: route_dist=%s, '
                      'route_family=%s' % (route_dist, route_family))
 
+        vni = kwargs.get('vni', None)
+
         if route_family == VRF_RF_IPV4:
             if not is_valid_ipv4_prefix(prefix):
                 raise BgpCoreError(desc='Invalid IPv4 prefix: %s' % prefix)
@@ -541,14 +547,20 @@ class TableCoreManager(object):
             kwargs['route_dist'] = route_dist
             esi = kwargs.get('esi', None)
             if esi is not None:
-                # Note: Currently, we support arbitrary 9-octet ESI value only.
-                kwargs['esi'] = EvpnArbitraryEsi(type_desc.Int9.from_user(esi))
-            if 'vni' in kwargs:
-                # Disable to generate MPLS labels, because encapsulation type
-                # is not MPLS.
+                if isinstance(esi, dict):
+                    esi_type = esi.get('type', 0)
+                    esi_class = EvpnEsi._lookup_type(esi_type)
+                    kwargs['esi'] = esi_class.from_jsondict(esi)
+                else:  # isinstance(esi, numbers.Integral)
+                    kwargs['esi'] = EvpnArbitraryEsi(
+                        type_desc.Int9.from_user(esi))
+            if vni is not None:
+                # Disable to generate MPLS labels,
+                # because encapsulation type is not MPLS.
                 from ryu.services.protocols.bgp.api.prefix import (
                     TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE)
-                assert tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]
+                assert tunnel_type in [
+                    None, TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]
                 gen_lbl = False
             prefix = subclass(**kwargs)
         else:
@@ -559,7 +571,8 @@ class TableCoreManager(object):
         # withdrawal. Hence multiple withdrawals have not side effect.
         return vrf_table.insert_vrf_path(
             nlri=prefix, next_hop=next_hop, gen_lbl=gen_lbl,
-            is_withdraw=is_withdraw, tunnel_type=tunnel_type,
+            is_withdraw=is_withdraw, redundancy_mode=redundancy_mode,
+            vni=vni, tunnel_type=tunnel_type,
             pmsi_tunnel_type=pmsi_tunnel_type)
 
     def update_global_table(self, prefix, next_hop=None, is_withdraw=False):
