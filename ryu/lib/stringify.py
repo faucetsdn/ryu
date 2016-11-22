@@ -144,6 +144,15 @@ class StringifyMixin(object):
     _class_prefixes = []
     _class_suffixes = []
 
+    # List of attributes ignored in the str and json representations.
+    _base_attributes = []
+
+    # Optional attributes included in the str and json representations.
+    # e.g.) In case of attributes are property, the attributes will be
+    # skipped in the str and json representations.
+    # Then, please specify the attributes into this list.
+    _opt_attributes = []
+
     def stringify_attrs(self):
         """an override point for sub classes"""
         return obj_python_attrs(self)
@@ -368,14 +377,17 @@ def obj_python_attrs(msg_):
             yield(k, getattr(msg_, k))
         return
     base = getattr(msg_, '_base_attributes', [])
+    opt = getattr(msg_, '_opt_attributes', [])
     for k, v in inspect.getmembers(msg_):
-        if k.startswith('_'):
+        if k in opt:
+            pass
+        elif k.startswith('_'):
             continue
-        if callable(v):
+        elif callable(v):
             continue
-        if k in base:
+        elif k in base:
             continue
-        if hasattr(msg_.__class__, k):
+        elif hasattr(msg_.__class__, k):
             continue
         yield (k, v)
 
