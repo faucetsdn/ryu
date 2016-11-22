@@ -3398,7 +3398,7 @@ class BGPPathAttributePmsiTunnel(_PathAttribute):
             # If binary type label field value is specified, stores it
             # and decodes as MPLS label and VNI.
             self._label = label
-            self._mpls_label = mpls.label_from_bin(label)
+            self._mpls_label, _ = mpls.label_from_bin(label)
             self._vni = vxlan.vni_from_bin(label)
         else:
             # If either MPLS label or VNI is specified, stores it
