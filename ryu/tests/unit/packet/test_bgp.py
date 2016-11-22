@@ -115,6 +115,17 @@ class Test_bgp(unittest.TestCase):
         mp_nlri2 = [
             bgp.LabelledIPAddrPrefix(24, '192.168.0.0', labels=[1, 2, 3])
         ]
+        mp_nlri_v6 = [
+            bgp.LabelledVPNIP6AddrPrefix(64, '2001:db8:1111::',
+                                         route_dist='200:200',
+                                         labels=[1, 2, 3]),
+            bgp.LabelledVPNIP6AddrPrefix(64, '2001:db8:2222::',
+                                         route_dist='10.0.0.1:10000',
+                                         labels=[5, 6, 7, 8]),
+        ]
+        mp_nlri2_v6 = [
+            bgp.LabelledIP6AddrPrefix(64, '2001:db8:3333::', labels=[1, 2, 3])
+        ]
         communities = [
             bgp.BGP_COMMUNITY_NO_EXPORT,
             bgp.BGP_COMMUNITY_NO_ADVERTISE,
@@ -191,6 +202,13 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_LABEL,
                                             next_hop='1.1.1.1',
                                             nlri=mp_nlri2),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP6, safi=safi.MPLS_VPN,
+                                            next_hop=['2001:db8::1'],
+                                            nlri=mp_nlri_v6),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP6, safi=safi.MPLS_LABEL,
+                                            next_hop=['2001:db8::1',
+                                                      'fe80::1'],
+                                            nlri=mp_nlri2_v6),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
             bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * b'bar')
@@ -315,6 +333,20 @@ class Test_bgp(unittest.TestCase):
                                         route_dist='10.0.0.1:10000',
                                         labels=[5, 6, 7, 8]),
         ]
+        mp_nlri2 = [
+            bgp.LabelledIPAddrPrefix(24, '192.168.0.0', labels=[1, 2, 3])
+        ]
+        mp_nlri_v6 = [
+            bgp.LabelledVPNIP6AddrPrefix(64, '2001:db8:1111::',
+                                         route_dist='200:200',
+                                         labels=[1, 2, 3]),
+            bgp.LabelledVPNIP6AddrPrefix(64, '2001:db8:2222::',
+                                         route_dist='10.0.0.1:10000',
+                                         labels=[5, 6, 7, 8]),
+        ]
+        mp_nlri2_v6 = [
+            bgp.LabelledIP6AddrPrefix(64, '2001:db8:3333::', labels=[1, 2, 3])
+        ]
         communities = [
             bgp.BGP_COMMUNITY_NO_EXPORT,
             bgp.BGP_COMMUNITY_NO_ADVERTISE,
@@ -386,6 +418,16 @@ class Test_bgp(unittest.TestCase):
             bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                             next_hop='1.1.1.1',
                                             nlri=mp_nlri),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP, safi=safi.MPLS_LABEL,
+                                            next_hop='1.1.1.1',
+                                            nlri=mp_nlri2),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP6, safi=safi.MPLS_VPN,
+                                            next_hop=['2001:db8::1'],
+                                            nlri=mp_nlri_v6),
+            bgp.BGPPathAttributeMpReachNLRI(afi=afi.IP6, safi=safi.MPLS_LABEL,
+                                            next_hop=['2001:db8::1',
+                                                      'fe80::1'],
+                                            nlri=mp_nlri2_v6),
             bgp.BGPPathAttributeMpUnreachNLRI(afi=afi.IP, safi=safi.MPLS_VPN,
                                               withdrawn_routes=mp_nlri),
             bgp.BGPPathAttributeUnknown(flags=0, type_=100, value=300 * b'bar')

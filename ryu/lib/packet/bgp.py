@@ -25,6 +25,7 @@ RFC 4271 BGP-4
 import abc
 import copy
 import functools
+import io
 import socket
 import struct
 import base64
@@ -3194,6 +3195,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
     _RESERVED_LENGTH = 1
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
     _class_suffixes = ['AddrPrefix']
+    _opt_attributes = ['next_hop']
     _TYPE = {
         'ascii': [
             'next_hop'
@@ -3206,16 +3208,40 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             flags=flags, type_=type_, length=length)
         self.afi = afi
         self.safi = safi
-        if (not netaddr.valid_ipv4(next_hop)
-                and not netaddr.valid_ipv6(next_hop)):
-            raise ValueError('Invalid address for next_hop: %s' % next_hop)
-        self.next_hop = next_hop
+        if not isinstance(next_hop, (list, tuple)):
+            next_hop = [next_hop]
+        for n in next_hop:
+            if not netaddr.valid_ipv4(n) and not netaddr.valid_ipv6(n):
+                raise ValueError('Invalid address for next_hop: %s' % n)
+        # Note: For the backward compatibility, stores the first next_hop
+        # address and all next_hop addresses separately.
+        self._next_hop = next_hop[0]
+        self._next_hop_list = next_hop
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
         for i in nlri:
             if not isinstance(i, addr_cls):
                 raise ValueError('Invalid NRLI class for afi=%d and safi=%d'
                                  % (self.afi, self.safi))
+
+    @staticmethod
+    def split_bin_with_len(buf, unit_len):
+        f = io.BytesIO(buf)
+        return [f.read(unit_len) for _ in range(0, len(buf), unit_len)]
+
+    @classmethod
+    def parse_next_hop_ipv4(cls, buf, unit_len):
+        next_hop = []
+        for next_hop_bin in cls.split_bin_with_len(buf, unit_len):
+            next_hop.append(addrconv.ipv4.bin_to_text(next_hop_bin[-4:]))
+        return next_hop
+
+    @classmethod
+    def parse_next_hop_ipv6(cls, buf, unit_len):
+        next_hop = []
+        for next_hop_bin in cls.split_bin_with_len(buf, unit_len):
+            next_hop.append(addrconv.ipv6.bin_to_text(next_hop_bin[-16:]))
+        return next_hop
 
     @classmethod
     def parse_value(cls, buf):
@@ -3236,16 +3262,20 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             nlri.append(n)
 
         rf = RouteFamily(afi, safi)
-        if rf == RF_IPv6_VPN:
-            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin[cls._RD_LENGTH:])
-            next_hop_len -= cls._RD_LENGTH
-        elif rf == RF_IPv4_VPN:
-            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin[cls._RD_LENGTH:])
-            next_hop_len -= cls._RD_LENGTH
-        elif afi == addr_family.IP or (rf == RF_L2_EVPN and next_hop_len == 4):
-            next_hop = addrconv.ipv4.bin_to_text(next_hop_bin)
-        elif afi == addr_family.IP6 or (rf == RF_L2_EVPN and next_hop_len > 4):
-            next_hop = addrconv.ipv6.bin_to_text(next_hop_bin)
+        if rf == RF_IPv4_VPN:
+            next_hop = cls.parse_next_hop_ipv4(next_hop_bin,
+                                               cls._RD_LENGTH + 4)
+            next_hop_len -= cls._RD_LENGTH * len(next_hop)
+        elif rf == RF_IPv6_VPN:
+            next_hop = cls.parse_next_hop_ipv6(next_hop_bin,
+                                               cls._RD_LENGTH + 16)
+            next_hop_len -= cls._RD_LENGTH * len(next_hop)
+        elif (afi == addr_family.IP
+              or (rf == RF_L2_EVPN and next_hop_len < 16)):
+            next_hop = cls.parse_next_hop_ipv4(next_hop_bin, 4)
+        elif (afi == addr_family.IP6
+              or (rf == RF_L2_EVPN and next_hop_len >= 16)):
+            next_hop = cls.parse_next_hop_ipv6(next_hop_bin, 16)
         else:
             raise ValueError('Invalid address family: afi=%d, safi=%d'
                              % (afi, safi))
@@ -3257,13 +3287,21 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
             'nlri': nlri,
         }
 
+    def serialize_next_hop(self):
+        buf = bytearray()
+        for next_hop in self.next_hop_list:
+            if self.afi == addr_family.IP6:
+                next_hop = str(netaddr.IPAddress(next_hop).ipv6())
+            next_hop_bin = ip.text_to_bin(next_hop)
+            if RouteFamily(self.afi, self.safi) in (RF_IPv4_VPN, RF_IPv6_VPN):
+                # Empty label stack(RD=0:0) + IP address
+                next_hop_bin = b'\x00' * self._RD_LENGTH + next_hop_bin
+            buf += next_hop_bin
+
+        return buf
+
     def serialize_value(self):
-        if self.afi == addr_family.IP6:
-            self.next_hop = str(netaddr.IPAddress(self.next_hop).ipv6())
-        next_hop_bin = ip.text_to_bin(self.next_hop)
-        if RouteFamily(self.afi, self.safi) in (RF_IPv4_VPN, RF_IPv6_VPN):
-            # Empty label stack(RD=0:0) + IP address
-            next_hop_bin = b'\x00' * self._RD_LENGTH + next_hop_bin
+        next_hop_bin = self.serialize_next_hop()
 
         # fixup
         next_hop_len = len(next_hop_bin)
@@ -3280,6 +3318,31 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         buf += nlri_bin
 
         return buf
+
+    @property
+    def next_hop(self):
+        return self._next_hop
+
+    @next_hop.setter
+    def next_hop(self, addr):
+        if not netaddr.valid_ipv4(addr) and not netaddr.valid_ipv6(addr):
+            raise ValueError('Invalid address for next_hop: %s' % addr)
+        self._next_hop = addr
+        self.next_hop_list[0] = addr
+
+    @property
+    def next_hop_list(self):
+        return self._next_hop_list
+
+    @next_hop_list.setter
+    def next_hop_list(self, addr_list):
+        if not isinstance(addr_list, (list, tuple)):
+            addr_list = [addr_list]
+        for addr in addr_list:
+            if not netaddr.valid_ipv4(addr) and not netaddr.valid_ipv6(addr):
+                raise ValueError('Invalid address for next_hop: %s' % addr)
+        self._next_hop = addr_list[0]
+        self._next_hop_list = addr_list
 
     @property
     def route_family(self):
