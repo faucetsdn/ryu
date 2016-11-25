@@ -576,7 +576,7 @@ class BGPSpeaker(object):
         ``ip_prefix`` specifies an IPv4 or IPv6 prefix to advertise.
 
         ``gw_ip_addr`` specifies an IPv4 or IPv6 address of
-         gateway to advertise.
+        gateway to advertise.
 
         ``vni`` specifies an Virtual Network Identifier for VXLAN
         or Virtual Subnet Identifier for NVGRE.
@@ -588,8 +588,8 @@ class BGPSpeaker(object):
         to advertise. By the default, this encapsulation attribute is
         not advertised.
 
-        ```pmsi_tunnel_type`` specifies the type of the PMSI tunnel attribute
-         used to encode the multicast tunnel identifier.
+        ``pmsi_tunnel_type`` specifies the type of the PMSI tunnel attribute
+        used to encode the multicast tunnel identifier.
         This field is advertised only if route_type is
         EVPN_MULTICAST_ETAG_ROUTE.
 
