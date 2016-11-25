@@ -17,15 +17,9 @@
 RFC 2328 OSPF version 2
 """
 
+from functools import reduce
 import logging
 import struct
-
-try:
-    # Python 3
-    from functools import reduce
-except ImportError:
-    # Python 2
-    pass
 
 import six
 
@@ -151,9 +145,10 @@ class LSAHeader(StringifyMixin):
             (id_,) = struct.unpack_from('4s', struct.pack('!I', id_))
 
         adv_router = addrconv.ipv4.text_to_bin(self.adv_router)
-        return bytearray(struct.pack(self._HDR_PACK_STR, self.ls_age,
-                         self.options, self.type_, id_, adv_router,
-                         self.ls_seqnum, self.checksum, self.length))
+        return bytearray(
+            struct.pack(self._HDR_PACK_STR, self.ls_age,
+                        self.options, self.type_, id_, adv_router,
+                        self.ls_seqnum, self.checksum, self.length))
 
 
 class LSA(type_desc.TypeDisp, StringifyMixin):
@@ -162,11 +157,22 @@ class LSA(type_desc.TypeDisp, StringifyMixin):
                  checksum=0, length=0, opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN,
                  opaque_id=0):
         if type_ < OSPF_OPAQUE_LINK_LSA:
-            self.header = LSAHeader(ls_age, options, type_, id_, adv_router,
-                                    ls_seqnum, 0, 0)
+            self.header = LSAHeader(
+                ls_age=ls_age,
+                options=options,
+                type_=type_,
+                id_=id_,
+                adv_router=adv_router,
+                ls_seqnum=ls_seqnum)
         else:
-            self.header = LSAHeader(ls_age, options, type_, 0, adv_router,
-                                    ls_seqnum, 0, 0, opaque_type, opaque_id)
+            self.header = LSAHeader(
+                ls_age=ls_age,
+                options=options,
+                type_=type_,
+                adv_router=adv_router,
+                ls_seqnum=ls_seqnum,
+                opaque_type=opaque_type,
+                opaque_id=opaque_id)
 
         if not (checksum or length):
             tail = self.serialize_tail()
@@ -208,6 +214,10 @@ class LSA(type_desc.TypeDisp, StringifyMixin):
         struct.pack_into("!H", head, 16, csum)
         return head + tail
 
+    def serialize_tail(self):
+        # should be implemented in subclass
+        return b''
+
 
 @LSA.register_type(OSPF_ROUTER_LSA)
 class RouterLSA(LSA):
@@ -242,8 +252,9 @@ class RouterLSA(LSA):
         def serialize(self):
             id_ = addrconv.ipv4.text_to_bin(self.id_)
             data = addrconv.ipv4.text_to_bin(self.data)
-            return bytearray(struct.pack(self._PACK_STR, id_, data, self.type_,
-                             self.tos, self.metric))
+            return bytearray(
+                struct.pack(self._PACK_STR, id_, data, self.type_, self.tos,
+                            self.metric))
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_ROUTER_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
@@ -260,20 +271,20 @@ class RouterLSA(LSA):
         links = []
         hdr = buf[:cls._PACK_LEN]
         buf = buf[cls._PACK_LEN:]
-        (flags, padding, num) = struct.unpack_from(cls._PACK_STR,
-                                                   six.binary_type(hdr))
+        (flags, _, num) = struct.unpack_from(cls._PACK_STR,
+                                             six.binary_type(hdr))
         while buf:
             link, buf = cls.Link.parser(buf)
             links.append(link)
-        assert(len(links) == num)
+        assert len(links) == num
         return {
             "flags": flags,
             "links": links,
         }
 
     def serialize_tail(self):
-        head = bytearray(struct.pack(self._PACK_STR, self.flags, 0,
-                         len(self.links)))
+        head = bytearray(
+            struct.pack(self._PACK_STR, self.flags, 0, len(self.links)))
         try:
             return head + reduce(lambda a, b: a + b,
                                  (link.serialize() for link in self.links))
@@ -320,15 +331,15 @@ class NetworkLSA(LSA):
 
     def serialize_tail(self):
         mask = addrconv.ipv4.text_to_bin(self.mask)
-        routers = [addrconv.ipv4.text_to_bin(
-                   router) for router in self.routers]
-        return bytearray(struct.pack("!" + "4s" * (1 + len(routers)), mask,
-                                     *routers))
+        routers = [addrconv.ipv4.text_to_bin(router)
+                   for router in self.routers]
+        return bytearray(
+            struct.pack("!" + "4s" * (1 + len(routers)), mask, *routers))
 
 
 @LSA.register_type(OSPF_SUMMARY_LSA)
 class SummaryLSA(LSA):
-    _PACK_STR = '!4sBBH'
+    _PACK_STR = '!4sB3s'
     _PACK_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_SUMMARY_LSA,
@@ -345,12 +356,12 @@ class SummaryLSA(LSA):
     def parser(cls, buf):
         if len(buf) < cls._PACK_LEN:
             raise stream_parser.StreamParser.TooSmallException(
-                '%d < %d' % (len(buf), cls_PACK_LEN))
+                '%d < %d' % (len(buf), cls._PACK_LEN))
         buf = buf[:cls._PACK_LEN]
-        (mask, tos, metric_fst, metric_lst) = struct.unpack_from(
+        (mask, tos, metric) = struct.unpack_from(
             cls._PACK_STR, six.binary_type(buf))
         mask = addrconv.ipv4.bin_to_text(mask)
-        metric = metric_fst << 16 | (metric_lst & 0xffff)
+        metric = type_desc.Int3.to_user(metric)
         return {
             "mask": mask,
             "tos": tos,
@@ -359,8 +370,7 @@ class SummaryLSA(LSA):
 
     def serialize_tail(self):
         mask = addrconv.ipv4.text_to_bin(self.mask)
-        metric_fst = (self.metric >> 16) & 0xff
-        metric_lst = self.metric & 0xffff
+        metric = type_desc.Int3.from_user(self.metric)
         return bytearray(struct.pack(self._PACK_STR, mask, self.tos, metric))
 
 
@@ -372,7 +382,7 @@ class ASBRSummaryLSA(LSA):
 @LSA.register_type(OSPF_AS_EXTERNAL_LSA)
 class ASExternalLSA(LSA):
     class ExternalNetwork(StringifyMixin):
-        _PACK_STR = '!4sBBH4sI'
+        _PACK_STR = '!4sB3s4sI'
         _PACK_LEN = struct.calcsize(_PACK_STR)
 
         def __init__(self, mask='0.0.0.0', flags=0, metric=0,
@@ -390,21 +400,20 @@ class ASExternalLSA(LSA):
                     '%d < %d' % (len(buf), cls._PACK_LEN))
             ext_nw = buf[:cls._PACK_LEN]
             rest = buf[cls._PACK_LEN:]
-            (mask, flags, metric_fst, metric_lst, fwd_addr,
+            (mask, flags, metric, fwd_addr,
              tag) = struct.unpack_from(cls._PACK_STR, six.binary_type(ext_nw))
             mask = addrconv.ipv4.bin_to_text(mask)
-            metric = metric_fst << 16 | (metric_lst & 0xffff)
+            metric = type_desc.Int3.to_user(metric)
             fwd_addr = addrconv.ipv4.bin_to_text(fwd_addr)
             return cls(mask, flags, metric, fwd_addr, tag), rest
 
         def serialize(self):
             mask = addrconv.ipv4.text_to_bin(self.mask)
-            metric_fst = (self.metric >> 16) & 0xff
-            metric_lst = self.metric & 0xffff
+            metric = type_desc.Int3.from_user(self.metric)
             fwd_addr = addrconv.ipv4.text_to_bin(self.fwd_addr)
-            return bytearray(struct.pack(self._PACK_STR, mask, self.flags,
-                                         metric_fst, metric_lst, fwd_addr,
-                                         self.tag))
+            return bytearray(
+                struct.pack(self._PACK_STR, mask, self.flags, metric,
+                            fwd_addr, self.tag))
 
     def __init__(self, ls_age=0, options=0, type_=OSPF_AS_EXTERNAL_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
@@ -483,6 +492,7 @@ class PrefixSIDSubTLV(ExtendedPrefixTLV):
 
     def __init__(self, type_=OSPF_EXTENDED_PREFIX_SID_SUBTLV, length=0,
                  flags=0, mt_id=0, algorithm=0, range_size=0, index=0):
+        super(PrefixSIDSubTLV, self).__init__()
         self.type_ = type_
         self.length = length
         self.flags = flags
@@ -506,6 +516,10 @@ class PrefixSIDSubTLV(ExtendedPrefixTLV):
                            OSPF_EXTENDED_PREFIX_SID_SUBTLV,
                            self._VALUE_PACK_LEN - 4, self.flags, self.mt_id,
                            self.algorithm, 0, self.range_size, 0, self.index)
+
+
+class ExtendedLinkTLV(StringifyMixin, type_desc.TypeDisp):
+    pass
 
 
 class OpaqueBody(StringifyMixin, type_desc.TypeDisp):
@@ -557,6 +571,11 @@ class ExtendedLinkOpaqueBody(OpaqueBody):
 
 
 class OpaqueLSA(LSA):
+
+    def __init__(self, data, *args, **kwargs):
+        super(OpaqueLSA, self).__init__(*args, **kwargs)
+        self.data = data
+
     @classmethod
     def parser(cls, buf, opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN):
         opaquecls = OpaqueBody._lookup_type(opaque_type)
@@ -616,6 +635,7 @@ class OSPFMessage(packet_base.PacketBase, type_desc.TypeDisp):
     def __init__(self, type_, length=None, router_id='0.0.0.0',
                  area_id='0.0.0.0', au_type=1, authentication=0, checksum=None,
                  version=_VERSION):
+        super(OSPFMessage, self).__init__()
         self.version = version
         self.type_ = type_
         self.length = length
@@ -662,11 +682,12 @@ class OSPFMessage(packet_base.PacketBase, type_desc.TypeDisp):
     def serialize(self, payload=None, prev=None):
         tail = self.serialize_tail()
         self.length = self._HDR_LEN + len(tail)
-        head = bytearray(struct.pack(self._HDR_PACK_STR, self.version,
-                         self.type_, self.length,
-                         addrconv.ipv4.text_to_bin(self.router_id),
-                         addrconv.ipv4.text_to_bin(self.area_id), 0,
-                         self.au_type, self.authentication))
+        head = bytearray(
+            struct.pack(self._HDR_PACK_STR, self.version,
+                        self.type_, self.length,
+                        addrconv.ipv4.text_to_bin(self.router_id),
+                        addrconv.ipv4.text_to_bin(self.area_id), 0,
+                        self.au_type, self.authentication))
         buf = head + tail
         csum = packet_utils.checksum(buf[:12] + buf[14:16] +
                                      buf[self._HDR_LEN:])
@@ -730,16 +751,17 @@ class OSPFHello(OSPFMessage):
         }
 
     def serialize_tail(self):
-        head = bytearray(struct.pack(self._PACK_STR,
-                         addrconv.ipv4.text_to_bin(self.mask),
-                         self.hello_interval, self.options, self.priority,
-                         self.dead_interval,
-                         addrconv.ipv4.text_to_bin(self.designated_router),
-                         addrconv.ipv4.text_to_bin(self.backup_router)))
+        head = bytearray(
+            struct.pack(self._PACK_STR,
+                        addrconv.ipv4.text_to_bin(self.mask),
+                        self.hello_interval, self.options, self.priority,
+                        self.dead_interval,
+                        addrconv.ipv4.text_to_bin(self.designated_router),
+                        addrconv.ipv4.text_to_bin(self.backup_router)))
         try:
             return head + reduce(lambda a, b: a + b,
-                                 (addrconv.ipv4.text_to_bin(
-                                  n) for n in self.neighbors))
+                                 (addrconv.ipv4.text_to_bin(n)
+                                  for n in self.neighbors))
         except TypeError:
             return head
 
@@ -793,9 +815,9 @@ class OSPFDBDesc(OSPFMessage):
         flags = ((self.i_flag & 0x1) << 2) ^ \
                 ((self.m_flag & 0x1) << 1) ^ \
                 (self.ms_flag & 0x1)
-        head = bytearray(struct.pack(self._PACK_STR, self.mtu,
-                                     self.options, flags,
-                                     self.sequence_number))
+        head = bytearray(
+            struct.pack(self._PACK_STR, self.mtu, self.options, flags,
+                        self.sequence_number))
         try:
             return head + reduce(lambda a, b: a + b,
                                  (hdr.serialize() for hdr in self.lsa_headers))
@@ -833,8 +855,7 @@ class OSPFLSReq(OSPFMessage):
         def serialize(self):
             id_ = addrconv.ipv4.text_to_bin(self.id)
             adv_router = addrconv.ipv4.text_to_bin(self.adv_router)
-            return bytearray(struct.pack(self._PACK_STR, self.type_,
-                                         id_, adv_router))
+            return struct.pack(self._PACK_STR, self.type_, id_, adv_router)
 
     def __init__(self, length=None, router_id='0.0.0.0', area_id='0.0.0.0',
                  au_type=1, authentication=0, checksum=None, version=_VERSION,
@@ -885,7 +906,7 @@ class OSPFLSUpd(OSPFMessage):
         while buf:
             lsa, _cls, buf = LSA.parser(buf)
             lsas.append(lsa)
-        assert(len(lsas) == num)
+        assert len(lsas) == num
         return {
             "lsas": lsas,
         }
