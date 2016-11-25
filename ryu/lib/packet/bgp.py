@@ -42,6 +42,7 @@ from ryu.lib.packet import vxlan
 from ryu.lib.packet import mpls
 from ryu.lib import addrconv
 from ryu.lib import type_desc
+from ryu.lib.type_desc import TypeDisp
 from ryu.lib import ip
 from ryu.lib.pack_utils import msg_pack_into
 from ryu.utils import binary_str
@@ -190,43 +191,6 @@ class _Value(object):
         for f in self._VALUE_FIELDS:
             args.append(getattr(self, f))
         return struct.pack(self._VALUE_PACK_STR, *args)
-
-
-class _TypeDisp(object):
-    _TYPES = {}
-    _REV_TYPES = None
-    _UNKNOWN_TYPE = None
-
-    @classmethod
-    def register_unknown_type(cls):
-        def _register_type(subcls):
-            cls._UNKNOWN_TYPE = subcls
-            return subcls
-        return _register_type
-
-    @classmethod
-    def register_type(cls, type_):
-        cls._TYPES = cls._TYPES.copy()
-
-        def _register_type(subcls):
-            cls._TYPES[type_] = subcls
-            cls._REV_TYPES = None
-            return subcls
-        return _register_type
-
-    @classmethod
-    def _lookup_type(cls, type_):
-        try:
-            return cls._TYPES[type_]
-        except KeyError:
-            return cls._UNKNOWN_TYPE
-
-    @classmethod
-    def _rev_lookup_type(cls, targ_cls):
-        if cls._REV_TYPES is None:
-            rev = dict((v, k) for k, v in cls._TYPES.items())
-            cls._REV_TYPES = rev
-        return cls._REV_TYPES[targ_cls]
 
 
 class BgpExc(Exception):
@@ -629,7 +593,7 @@ def pad(binary, len_):
     return binary + b'\0' * (len_ - len(binary))
 
 
-class _RouteDistinguisher(StringifyMixin, _TypeDisp, _Value):
+class _RouteDistinguisher(StringifyMixin, TypeDisp, _Value):
     _PACK_STR = '!H'
     TWO_OCTET_AS = 0
     IPV4_ADDRESS = 1
@@ -1039,7 +1003,7 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
         return "%s:%s" % (self.route_dist, self.prefix)
 
 
-class EvpnEsi(StringifyMixin, _TypeDisp, _Value):
+class EvpnEsi(StringifyMixin, TypeDisp, _Value):
     """
     Ethernet Segment Identifier
     """
@@ -1286,7 +1250,7 @@ class EvpnASBasedEsi(EvpnEsi):
         self.local_disc = local_disc
 
 
-class EvpnNLRI(StringifyMixin, _TypeDisp):
+class EvpnNLRI(StringifyMixin, TypeDisp):
     """
     BGP Network Layer Reachability Information (NLRI) for EVPN
     """
@@ -2122,7 +2086,7 @@ def _get_addr_class(afi, safi):
         return _BinAddrPrefix
 
 
-class _OptParam(StringifyMixin, _TypeDisp, _Value):
+class _OptParam(StringifyMixin, TypeDisp, _Value):
     _PACK_STR = '!BB'  # type, length
 
     def __init__(self, type_, value=None, length=None):
@@ -2169,7 +2133,7 @@ class BGPOptParamUnknown(_OptParam):
 
 
 @_OptParam.register_type(BGP_OPT_CAPABILITY)
-class _OptParamCapability(_OptParam, _TypeDisp):
+class _OptParamCapability(_OptParam, TypeDisp):
     _CAP_HDR_PACK_STR = '!BB'
 
     def __init__(self, cap_code=None, cap_value=None, cap_length=None,
@@ -2338,7 +2302,7 @@ class BGPWithdrawnRoute(IPAddrPrefix):
     pass
 
 
-class _PathAttribute(StringifyMixin, _TypeDisp, _Value):
+class _PathAttribute(StringifyMixin, TypeDisp, _Value):
     _PACK_STR = '!BB'  # flags, type
     _PACK_STR_LEN = '!B'  # length
     _PACK_STR_EXT_LEN = '!H'  # length w/ BGP_ATTR_FLAG_EXTENDED_LENGTH
@@ -2898,7 +2862,7 @@ class BGPPathAttributeExtendedCommunities(_PathAttribute):
         return self._community_list(3)
 
 
-class _ExtendedCommunity(StringifyMixin, _TypeDisp, _Value):
+class _ExtendedCommunity(StringifyMixin, TypeDisp, _Value):
     _PACK_STR = '!B7s'  # type high (+ type low), value
     _PACK_STR_SIZE = struct.calcsize(_PACK_STR)
     _SUBTYPE_PACK_STR = '!B'  # subtype
@@ -3549,7 +3513,7 @@ class BGPPathAttributePmsiTunnel(_PathAttribute):
         return ins
 
 
-class _PmsiTunnelId(StringifyMixin, _TypeDisp):
+class _PmsiTunnelId(StringifyMixin, TypeDisp):
 
     @classmethod
     def parse(cls, tunnel_type, buf):
@@ -3616,7 +3580,7 @@ class BGPNLRI(IPAddrPrefix):
     pass
 
 
-class BGPMessage(packet_base.PacketBase, _TypeDisp):
+class BGPMessage(packet_base.PacketBase, TypeDisp):
     """Base class for BGP-4 messages.
 
     An instance has the following attributes at least.

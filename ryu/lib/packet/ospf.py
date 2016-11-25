@@ -17,7 +17,7 @@
 RFC 2328 OSPF version 2
 """
 
-import six
+import logging
 import struct
 
 try:
@@ -27,13 +27,17 @@ except ImportError:
     # Python 2
     pass
 
-from ryu.lib.stringify import StringifyMixin
+import six
+
+from ryu.lib import addrconv
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import packet_utils
 from ryu.lib.packet import stream_parser
+from ryu.lib.stringify import StringifyMixin
+from ryu.lib import type_desc
 
-from ryu.lib import addrconv
-import logging
+
+LOG = logging.getLogger(__name__)
 
 _VERSION = 2
 
@@ -86,43 +90,6 @@ OSPF_EXTENDED_PREFIX_SID_SUBTLV = 2
 
 class InvalidChecksum(Exception):
     pass
-
-
-class _TypeDisp(object):
-    _TYPES = {}
-    _REV_TYPES = None
-    _UNKNOWN_TYPE = None
-
-    @classmethod
-    def register_unknown_type(cls):
-        def _register_type(subcls):
-            cls._UNKNOWN_TYPE = subcls
-            return subcls
-        return _register_type
-
-    @classmethod
-    def register_type(cls, type_):
-        cls._TYPES = cls._TYPES.copy()
-
-        def _register_type(subcls):
-            cls._TYPES[type_] = subcls
-            cls._REV_TYPES = None
-            return subcls
-        return _register_type
-
-    @classmethod
-    def _lookup_type(cls, type_):
-        try:
-            return cls._TYPES[type_]
-        except KeyError:
-            return cls._UNKNOWN_TYPE
-
-    @classmethod
-    def _rev_lookup_type(cls, targ_cls):
-        if cls._REV_TYPES is None:
-            rev = dict((v, k) for k, v in cls._TYPES.items())
-            cls._REV_TYPES = rev
-        return cls._REV_TYPES[targ_cls]
 
 
 class LSAHeader(StringifyMixin):
@@ -189,7 +156,7 @@ class LSAHeader(StringifyMixin):
                          self.ls_seqnum, self.checksum, self.length))
 
 
-class LSA(_TypeDisp, StringifyMixin):
+class LSA(type_desc.TypeDisp, StringifyMixin):
     def __init__(self, ls_age=0, options=0, type_=OSPF_UNKNOWN_LSA,
                  id_='0.0.0.0', adv_router='0.0.0.0', ls_seqnum=0,
                  checksum=0, length=0, opaque_type=OSPF_OPAQUE_TYPE_UNKNOWN,
@@ -468,7 +435,7 @@ class NSSAExternalLSA(LSA):
     pass
 
 
-class ExtendedPrefixTLV(StringifyMixin, _TypeDisp):
+class ExtendedPrefixTLV(StringifyMixin, type_desc.TypeDisp):
     pass
 
 
@@ -541,7 +508,7 @@ class PrefixSIDSubTLV(ExtendedPrefixTLV):
                            self.algorithm, 0, self.range_size, 0, self.index)
 
 
-class OpaqueBody(StringifyMixin, _TypeDisp):
+class OpaqueBody(StringifyMixin, type_desc.TypeDisp):
     def __init__(self, tlvs=None):
         tlvs = tlvs if tlvs else []
         self.tlvs = tlvs
@@ -639,7 +606,7 @@ class ASOpaqueLSA(OpaqueLSA):
                                           length, opaque_type, opaque_id)
 
 
-class OSPFMessage(packet_base.PacketBase, _TypeDisp):
+class OSPFMessage(packet_base.PacketBase, type_desc.TypeDisp):
     """Base class for OSPF version 2 messages.
     """
 
