@@ -172,6 +172,7 @@ class RyuBGPContainer(base.BGPContainer):
         else:
             try_times = 1
         cmd = "ryu-manager --verbose "
+        cmd += "--config-file %s " % self.SHARED_RYU_CONF
         cmd += "--bgp-app-config-file %s " % self.SHARED_BGP_CONF
         cmd += "ryu.services.protocols.bgp.application"
         for i in range(try_times):

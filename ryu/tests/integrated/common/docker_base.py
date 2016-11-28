@@ -132,7 +132,8 @@ class Command(object):
             LOG.info(out.command)
             if out.returncode == 0:
                 return out
-            LOG.error(out.stderr)
+            LOG.error("stdout: %s" % out)
+            LOG.error("stderr: %s" % out.stderr)
             if i + 1 >= try_times:
                 break
             time.sleep(interval)
