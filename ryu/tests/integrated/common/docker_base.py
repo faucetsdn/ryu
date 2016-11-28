@@ -23,7 +23,6 @@ import logging
 import subprocess
 import time
 
-from docker import Client
 import netaddr
 import six
 
@@ -497,18 +496,11 @@ class Container(object):
         else:
             return self.cmd.sudo(cmd, capture=capture)
 
-    def exec_on_ctn(self, cmd, capture=True, stream=False, detach=False):
+    def exec_on_ctn(self, cmd, capture=True, detach=False):
         name = self.docker_name()
-        if stream:
-            # This needs root permission.
-            dcli = Client(timeout=120, version='auto')
-            i = dcli.exec_create(container=name, cmd=cmd)
-            return dcli.exec_start(i['Id'], tty=True,
-                                   stream=stream, detach=detach)
-        else:
-            flag = '-d' if detach else ''
-            return self.dcexec('docker exec {0} {1} {2}'.format(
-                flag, name, cmd), capture=capture)
+        flag = '-d' if detach else ''
+        return self.dcexec('docker exec {0} {1} {2}'.format(
+            flag, name, cmd), capture=capture)
 
     def get_containers(self, allctn=False):
         cmd = 'docker ps --no-trunc=true'

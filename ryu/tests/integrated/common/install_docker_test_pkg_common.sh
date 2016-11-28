@@ -33,5 +33,5 @@ function install_depends_pkg {
     sudo rm -rf $DIR_BASE/pipework
     git clone https://github.com/jpetazzo/pipework.git $DIR_BASE/pipework
     sudo install -m 0755 $DIR_BASE/pipework/pipework /usr/local/bin/pipework
-    $SUDO_PIP pip install docker-py pycrypto nsenter
+    $SUDO_PIP pip install pycrypto nsenter
 }
