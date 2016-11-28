@@ -637,7 +637,6 @@ class BGPSpeaker(object):
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
                 IP_ADDR: ip_addr,
             })
-
             # Set PMSI Tunnel Attribute arguments
             if pmsi_tunnel_type in [
                     PMSI_TYPE_NO_TUNNEL_INFO,
@@ -706,7 +705,6 @@ class BGPSpeaker(object):
             })
         elif route_type == EVPN_MAC_IP_ADV_ROUTE:
             kwargs.update({
-                EVPN_ESI: esi,
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
                 MAC_ADDR: mac_addr,
                 IP_ADDR: ip_addr,

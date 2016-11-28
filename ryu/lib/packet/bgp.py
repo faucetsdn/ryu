@@ -1625,8 +1625,8 @@ class EvpnMacIPAdvertisementNLRI(EvpnNLRI):
         ]
     }
 
-    def __init__(self, route_dist, esi, ethernet_tag_id, mac_addr, ip_addr,
-                 mpls_labels=None, vni=None, labels=None,
+    def __init__(self, route_dist, ethernet_tag_id, mac_addr, ip_addr,
+                 esi=None, mpls_labels=None, vni=None, labels=None,
                  mac_addr_len=None, ip_addr_len=None,
                  type_=None, length=None):
         super(EvpnMacIPAdvertisementNLRI, self).__init__(type_, length)

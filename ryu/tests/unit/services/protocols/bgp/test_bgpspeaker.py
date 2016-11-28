@@ -466,14 +466,12 @@ class Test_BGPSpeaker(unittest.TestCase):
         # Prepare test data
         route_type = bgpspeaker.EVPN_MAC_IP_ADV_ROUTE
         route_dist = '65000:100'
-        esi = 0  # denotes single-homed
         ethernet_tag_id = 200
         mac_addr = 'aa:bb:cc:dd:ee:ff'
         ip_addr = '192.168.0.1'
         expected_kwargs = {
             'route_type': route_type,
             'route_dist': route_dist,
-            'esi': esi,
             'ethernet_tag_id': ethernet_tag_id,
             'mac_addr': mac_addr,
             'ip_addr': ip_addr,
@@ -484,7 +482,6 @@ class Test_BGPSpeaker(unittest.TestCase):
         speaker.evpn_prefix_del(
             route_type=route_type,
             route_dist=route_dist,
-            esi=esi,
             ethernet_tag_id=ethernet_tag_id,
             mac_addr=mac_addr,
             ip_addr=ip_addr,
