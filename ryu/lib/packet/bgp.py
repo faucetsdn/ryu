@@ -1897,7 +1897,8 @@ class EvpnIpPrefixNLRI(EvpnNLRI):
     _LABEL_LEN = 3
 
     def __init__(self, route_dist, ethernet_tag_id, ip_prefix,
-                 esi=0, gw_ip_addr=None, mpls_label=None, vni=None, label=None,
+                 esi=None, gw_ip_addr=None,
+                 mpls_label=None, vni=None, label=None,
                  type_=None, length=None):
         super(EvpnIpPrefixNLRI, self).__init__(type_, length)
         self.route_dist = route_dist
