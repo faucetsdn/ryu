@@ -20,6 +20,7 @@ from __future__ import absolute_import
 
 import itertools
 import logging
+import os
 import subprocess
 import time
 
@@ -60,8 +61,8 @@ class CommandError(Exception):
 
 
 def try_several_times(f, t=3, s=1):
-    e = None
-    for i in range(t):
+    e = RuntimeError()
+    for _ in range(t):
         try:
             r = f()
         except RuntimeError as e:
@@ -84,7 +85,14 @@ class CmdBuffer(list):
 
 
 class CommandOut(str):
-    pass
+
+    def __new__(cls, stdout, stderr, command, returncode, **kwargs):
+        stdout = stdout or ''
+        obj = super(CommandOut, cls).__new__(cls, stdout, **kwargs)
+        obj.stderr = stderr or ''
+        obj.command = command
+        obj.returncode = returncode
+        return obj
 
 
 class Command(object):
@@ -107,39 +115,27 @@ class Command(object):
                                stdout=p_stdout,
                                stderr=p_stderr)
         __stdout, __stderr = pop.communicate()
-        try:
-            if six.PY3 and isinstance(__stdout, six.binary_type):
-                _stdout = __stdout.decode('ascii')
-            else:
-                _stdout = __stdout
-            if six.PY3 and isinstance(__stderr, six.binary_type):
-                _stderr = __stderr.decode('ascii')
-            else:
-                _stderr = __stderr
-        except UnicodeError:
-            _stdout = __stdout
-            _stderr = __stderr
-        out = CommandOut(_stdout if _stdout else "")
-        out.stderr = _stderr if _stderr else ""
-        out.command = cmd
-        out.returncode = pop.returncode
+        _stdout = six.text_type(__stdout, 'utf-8')
+        _stderr = six.text_type(__stderr, 'utf-8')
+        out = CommandOut(_stdout, _stderr, cmd, pop.returncode)
         return out
 
     def execute(self, cmd, capture=True, try_times=1, interval=1):
+        out = None
         for i in range(try_times):
             out = self._execute(cmd, capture=capture)
             LOG.info(out.command)
             if out.returncode == 0:
                 return out
-            LOG.error("stdout: %s" % out)
-            LOG.error("stderr: %s" % out.stderr)
+            LOG.error("stdout: %s", out)
+            LOG.error("stderr: %s", out.stderr)
             if i + 1 >= try_times:
                 break
             time.sleep(interval)
         raise CommandError(out)
 
     def sudo(self, cmd, capture=True, try_times=1, interval=1):
-        cmd = 'sudo ' + cmd
+        cmd = 'sudo %s' % cmd
         return self.execute(cmd, capture=capture,
                             try_times=try_times, interval=interval)
 
@@ -157,10 +153,7 @@ class DockerImage(object):
         return images
 
     def exist(self, name):
-        if name in self.get_images():
-            return True
-        else:
-            return False
+        return name in self.get_images()
 
     def build(self, tagname, dockerfile_dir):
         self.cmd.sudo(
@@ -170,25 +163,29 @@ class DockerImage(object):
     def remove(self, tagname, check_exist=False):
         if check_exist and not self.exist(tagname):
             return tagname
-        self.cmd.sudo("docker rmi -f " + tagname, try_times=3)
+        self.cmd.sudo("docker rmi -f %s" % tagname, try_times=3)
 
     def create_quagga(self, tagname='quagga', image=None, check_exist=False):
         if check_exist and self.exist(tagname):
             return tagname
-        workdir = TEST_BASE_DIR + '/' + tagname
-        pkges = 'telnet tcpdump quagga'
+        workdir = os.path.join(TEST_BASE_DIR, tagname)
+        pkges = ' '.join([
+            'telnet',
+            'tcpdump',
+            'quagga',
+        ])
         if image:
             use_image = image
         else:
             use_image = self.baseimage
         c = CmdBuffer()
-        c << 'FROM ' + use_image
+        c << 'FROM %s' % use_image
         c << 'RUN apt-get update'
-        c << 'RUN apt-get install -qy --no-install-recommends ' + pkges
+        c << 'RUN apt-get install -qy --no-install-recommends %s' % pkges
         c << 'CMD /usr/lib/quagga/bgpd'
 
-        self.cmd.sudo('rm -rf ' + workdir)
-        self.cmd.execute('mkdir -p ' + workdir)
+        self.cmd.sudo('rm -rf %s' % workdir)
+        self.cmd.execute('mkdir -p %s' % workdir)
         self.cmd.execute("echo '%s' > %s/Dockerfile" % (str(c), workdir))
         self.build(tagname, workdir)
         return tagname
@@ -196,7 +193,7 @@ class DockerImage(object):
     def create_ryu(self, tagname='ryu', image=None, check_exist=False):
         if check_exist and self.exist(tagname):
             return tagname
-        workdir = '%s/%s' % (TEST_BASE_DIR, tagname)
+        workdir = os.path.join(TEST_BASE_DIR, tagname)
         workdir_ctn = '/root/osrg/ryu'
         pkges = ' '.join([
             'telnet',
@@ -229,7 +226,7 @@ class DockerImage(object):
         c << install
 
         self.cmd.sudo('rm -rf %s' % workdir)
-        self.cmd.execute('mkdir -p ' + workdir)
+        self.cmd.execute('mkdir -p %s' % workdir)
         self.cmd.execute("echo '%s' > %s/Dockerfile" % (str(c), workdir))
         self.cmd.execute('cp -r ../ryu %s/' % workdir)
         self.build(tagname, workdir)
@@ -257,12 +254,9 @@ class Bridge(object):
         self.name = name
         if br_type not in (BRIDGE_TYPE_DOCKER, BRIDGE_TYPE_BRCTL,
                            BRIDGE_TYPE_OVS):
-            raise Exception("argument error br_type: %s" % self.br_type)
+            raise Exception("argument error br_type: %s" % br_type)
         self.br_type = br_type
-        if self.br_type == BRIDGE_TYPE_DOCKER:
-            self.docker_nw = True
-        else:
-            self.docker_nw = False
+        self.docker_nw = bool(self.br_type == BRIDGE_TYPE_DOCKER)
         if TEST_PREFIX != '':
             self.name = '{0}_{1}'.format(TEST_PREFIX, name)
         self.with_ip = with_ip
@@ -277,10 +271,10 @@ class Bridge(object):
             else:
                 self.end_ip = netaddr.IPAddress(self.subnet.last)
 
-            def f():
+            def _ip_gen():
                 for host in netaddr.IPRange(self.start_ip, self.end_ip):
                     yield host
-            self._ip_generator = f()
+            self._ip_generator = _ip_gen()
             # throw away first network address
             self.next_ip_address()
 
@@ -296,12 +290,14 @@ class Bridge(object):
                     v6 = ''
                     if self.subnet.version == 6:
                         v6 = '--ipv6'
-                    cmd = "docker network create --driver bridge %s " % v6
-                    cmd += "%s --subnet %s %s" % (gw, subnet, self.name)
+                    cmd = ("docker network create --driver bridge %s "
+                           "%s --subnet %s %s" % (v6, gw, subnet, self.name))
                 elif self.br_type == BRIDGE_TYPE_BRCTL:
                     cmd = "ip link add {0} type bridge".format(self.name)
                 elif self.br_type == BRIDGE_TYPE_OVS:
                     cmd = "ovs-vsctl add-br {0}".format(self.name)
+                else:
+                    raise ValueError('Unsupported br_type: %s' % self.br_type)
                 self.delete()
                 self.execute(cmd, sudo=True, retry=True)
             try_several_times(f)
@@ -348,10 +344,7 @@ class Bridge(object):
             return self.get_bridges_ovs()
 
     def exist(self):
-        if self.name in self.get_bridges():
-            return True
-        else:
-            return False
+        return self.name in self.get_bridges()
 
     def execute(self, cmd, capture=True, sudo=False, retry=False):
         if sudo:
@@ -396,8 +389,8 @@ class Bridge(object):
             else:
                 opt_ip = "--ip6 %s" % ip_address
                 ipv6 = ip_address
-            cmd = "docker network connect %s " % opt_ip
-            cmd += "%s %s" % (self.name, ctn.docker_name())
+            cmd = "docker network connect %s %s %s" % (
+                opt_ip, self.name, ctn.docker_name())
             self.execute(cmd, sudo=True)
             ctn.set_addr_info(bridge=self.name, ipv4=ipv4, ipv6=ipv6,
                               ifname=name)
@@ -513,10 +506,7 @@ class Container(object):
         return containers
 
     def exist(self, allctn=False):
-        if self.docker_name() in self.get_containers(allctn=allctn):
-            return True
-        else:
-            return False
+        return self.docker_name() in self.get_containers(allctn=allctn)
 
     def run(self):
         c = CmdBuffer(' ')
@@ -546,7 +536,7 @@ class Container(object):
             if not self.exist(allctn=False):
                 return
         ctn_id = self.get_docker_id()
-        out = self.dcexec('docker stop -t 0 ' + ctn_id, retry=True)
+        out = self.dcexec('docker stop -t 0 %s' % ctn_id, retry=True)
         self.is_running = False
         return out
 
@@ -555,7 +545,7 @@ class Container(object):
             if not self.exist(allctn=True):
                 return
         ctn_id = self.get_docker_id()
-        out = self.dcexec('docker rm -f ' + ctn_id, retry=True)
+        out = self.dcexec('docker rm -f %s' % ctn_id, retry=True)
         self.is_running = False
         return out
 
@@ -584,7 +574,7 @@ class Container(object):
 
     def get_pid(self):
         if self.is_running:
-            cmd = "docker inspect -f '{{.State.Pid}}' " + self.docker_name()
+            cmd = "docker inspect -f '{{.State.Pid}}' %s" % self.docker_name()
             return int(self.dcexec(cmd))
         return -1
 
@@ -634,8 +624,8 @@ class BGPContainer(Container):
     def __init__(self, name, asn, router_id, ctn_image_name=None):
         self.config_dir = TEST_BASE_DIR
         if TEST_PREFIX:
-            self.config_dir += '/' + TEST_PREFIX
-        self.config_dir += '/' + name
+            self.config_dir = os.path.join(self.config_dir, TEST_PREFIX)
+        self.config_dir = os.path.join(self.config_dir, name)
         self.asn = asn
         self.router_id = router_id
         self.peers = {}
@@ -659,7 +649,8 @@ class BGPContainer(Container):
         return w_time
 
     def add_peer(self, peer, bridge='', reload_config=True, v6=False,
-                 peer_info={}):
+                 peer_info=None):
+        peer_info = peer_info or {}
         self.peers[peer] = self.DEFAULT_PEER_ARG.copy()
         self.peers[peer].update(peer_info)
         peer_keys = sorted(self.peers[peer].keys())
@@ -702,15 +693,16 @@ class BGPContainer(Container):
             self.reload_config()
 
     def disable_peer(self, peer):
-        raise Exception('implement disable_peer() method')
+        raise NotImplementedError()
 
     def enable_peer(self, peer):
-        raise Exception('implement enable_peer() method')
+        raise NotImplementedError()
 
     def log(self):
         return self.execute('cat {0}/*.log'.format(self.config_dir))
 
-    def add_route(self, route, reload_config=True, route_info={}):
+    def add_route(self, route, reload_config=True, route_info=None):
+        route_info = route_info or {}
         self.routes[route] = self.DEFAULT_ROUTE_ARG.copy()
         self.routes[route].update(route_info)
         route_keys = sorted(self.routes[route].keys())
@@ -751,47 +743,46 @@ class BGPContainer(Container):
         self.peers[peer]['policies'][typ] = policy
 
     def get_local_rib(self, peer, rf):
-        raise Exception('implement get_local_rib() method')
+        raise NotImplementedError()
 
     def get_global_rib(self, rf):
-        raise Exception('implement get_global_rib() method')
+        raise NotImplementedError()
 
     def get_neighbor_state(self, peer_id):
-        raise Exception('implement get_neighbor() method')
+        raise NotImplementedError()
 
     def get_reachablily(self, prefix, timeout=20):
-            version = netaddr.IPNetwork(prefix).version
-            addr = prefix.split('/')[0]
-            if version == 4:
-                ping_cmd = 'ping'
-            elif version == 6:
-                ping_cmd = 'ping6'
-            else:
-                raise Exception(
-                    'unsupported route family: {0}'.format(version))
-            cmd = '/bin/bash -c "/bin/{0} -c 1 -w 1 {1} | xargs echo"'.format(
-                ping_cmd, addr)
-            interval = 1
-            count = 0
-            while True:
-                res = self.exec_on_ctn(cmd)
-                LOG.info(res)
-                if '1 packets received' in res and '0% packet loss':
-                    break
-                time.sleep(interval)
-                count += interval
-                if count >= timeout:
-                    raise Exception('timeout')
-            return True
+        version = netaddr.IPNetwork(prefix).version
+        addr = prefix.split('/')[0]
+        if version == 4:
+            ping_cmd = 'ping'
+        elif version == 6:
+            ping_cmd = 'ping6'
+        else:
+            raise Exception(
+                'unsupported route family: {0}'.format(version))
+        cmd = '/bin/bash -c "/bin/{0} -c 1 -w 1 {1} | xargs echo"'.format(
+            ping_cmd, addr)
+        interval = 1
+        count = 0
+        while True:
+            res = self.exec_on_ctn(cmd)
+            LOG.info(res)
+            if '1 packets received' in res and '0% packet loss':
+                break
+            time.sleep(interval)
+            count += interval
+            if count >= timeout:
+                raise Exception('timeout')
+        return True
 
     def wait_for(self, expected_state, peer, timeout=120):
         interval = 1
         count = 0
         while True:
             state = self.get_neighbor_state(peer)
-            LOG.info("{0}'s peer {1} state: {2}".format(self.router_id,
-                                                        peer.router_id,
-                                                        state))
+            LOG.info("%s's peer %s state: %s",
+                     self.router_id, peer.router_id, state)
             if state == expected_state:
                 return
 
@@ -809,7 +800,7 @@ class BGPContainer(Container):
         self.exec_on_ctn(cmd)
 
     def create_config(self):
-        raise Exception('implement create_config() method')
+        raise NotImplementedError()
 
     def reload_config(self):
-        raise Exception('implement reload_config() method')
+        raise NotImplementedError()

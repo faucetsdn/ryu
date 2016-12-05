@@ -19,6 +19,7 @@
 from __future__ import absolute_import
 
 import logging
+import os
 
 import netaddr
 
@@ -39,7 +40,7 @@ class QuaggaBGPContainer(base.BGPContainer):
         self.zebra = zebra
         self._create_config_debian()
 
-    def run(self, wait=False):
+    def run(self, wait=False, w_time=WAIT_FOR_BOOT):
         w_time = super(QuaggaBGPContainer,
                        self).run(wait=wait, w_time=self.WAIT_FOR_BOOT)
         return w_time
@@ -56,9 +57,9 @@ class QuaggaBGPContainer(base.BGPContainer):
         read_next = False
 
         for line in out.split('\n'):
+            ibgp = False
             if line[:2] == '*>':
                 line = line[2:]
-                ibgp = False
                 if line[0] == 'i':
                     line = line[1:]
                     ibgp = True
@@ -179,7 +180,7 @@ class QuaggaBGPContainer(base.BGPContainer):
         c << 'watchquagga_enable=yes'
         c << 'watchquagga_options=(--daemon)'
         with open('{0}/debian.conf'.format(self.config_dir), 'w') as f:
-            LOG.info('[{0}\'s new config]'.format(self.name))
+            LOG.info("[%s's new config]", self.name)
             LOG.info(str(c))
             f.writelines(str(c))
 
@@ -194,7 +195,7 @@ class QuaggaBGPContainer(base.BGPContainer):
         c << 'isisd=no'
         c << 'babeld=no'
         with open('{0}/daemons'.format(self.config_dir), 'w') as f:
-            LOG.info('[{0}\'s new config]'.format(self.name))
+            LOG.info("[%s's new config]", self.name)
             LOG.info(str(c))
             f.writelines(str(c))
 
@@ -263,7 +264,7 @@ class QuaggaBGPContainer(base.BGPContainer):
         c << 'log file {0}/bgpd.log'.format(self.SHARED_VOLUME)
 
         with open('{0}/bgpd.conf'.format(self.config_dir), 'w') as f:
-            LOG.info('[{0}\'s new config]'.format(self.name))
+            LOG.info("[%s's new config]", self.name)
             LOG.info(str(c))
             f.writelines(str(c))
 
@@ -278,12 +279,12 @@ class QuaggaBGPContainer(base.BGPContainer):
         c << ''
 
         with open('{0}/zebra.conf'.format(self.config_dir), 'w') as f:
-            LOG.info('[{0}\'s new config]'.format(self.name))
+            LOG.info("[%s's new config]", self.name)
             LOG.info(str(c))
             f.writelines(str(c))
 
     def vtysh(self, cmd, config=True):
-        if type(cmd) is not list:
+        if not isinstance(cmd, list):
             cmd = [cmd]
         cmd = ' '.join("-c '{0}'".format(c) for c in cmd)
         if config:
@@ -325,7 +326,7 @@ class RawQuaggaBGPContainer(QuaggaBGPContainer):
                                                     ctn_image_name, zebra)
 
     def create_config(self):
-        with open('{0}/bgpd.conf'.format(self.config_dir), 'w') as f:
-            LOG.info('[{0}\'s new config]'.format(self.name))
+        with open(os.path.join(self.config_dir, 'bgpd.conf'), 'w') as f:
+            LOG.info("[%s's new config]", self.name)
             LOG.info(self.config)
             f.writelines(self.config)

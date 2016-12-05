@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 
 import logging
+import os
 import time
 
 from . import docker_base as base
@@ -31,9 +32,9 @@ class RyuBGPContainer(base.BGPContainer):
     def __init__(self, name, asn, router_id, ctn_image_name):
         super(RyuBGPContainer, self).__init__(name, asn, router_id,
                                               ctn_image_name)
-        self.RYU_CONF = self.config_dir + '/ryu.conf'
-        self.SHARED_RYU_CONF = self.SHARED_VOLUME + '/ryu.conf'
-        self.SHARED_BGP_CONF = self.SHARED_VOLUME + '/bgp_conf.py'
+        self.RYU_CONF = os.path.join(self.config_dir, 'ryu.conf')
+        self.SHARED_RYU_CONF = os.path.join(self.SHARED_VOLUME, 'ryu.conf')
+        self.SHARED_BGP_CONF = os.path.join(self.SHARED_VOLUME, 'bgp_conf.py')
         self.shared_volumes.append((self.config_dir, self.SHARED_VOLUME))
 
     def _create_config_ryu(self):
@@ -145,8 +146,8 @@ class RyuBGPContainer(base.BGPContainer):
     },
 }"""
         c << log_conf
-        with open(self.config_dir + '/bgp_conf.py', 'w') as f:
-            LOG.info("[%s's new config]" % self.name)
+        with open(os.path.join(self.config_dir, 'bgp_conf.py'), 'w') as f:
+            LOG.info("[%s's new config]", self.name)
             LOG.info(str(c))
             f.writelines(str(c))
 
@@ -175,7 +176,7 @@ class RyuBGPContainer(base.BGPContainer):
         cmd += "--config-file %s " % self.SHARED_RYU_CONF
         cmd += "--bgp-app-config-file %s " % self.SHARED_BGP_CONF
         cmd += "ryu.services.protocols.bgp.application"
-        for i in range(try_times):
+        for _ in range(try_times):
             self.exec_on_ctn(cmd, detach=True)
             if self.is_running_ryu():
                 result = True
@@ -192,7 +193,7 @@ class RyuBGPContainer(base.BGPContainer):
             try_times = 3
         else:
             try_times = 1
-        for i in range(try_times):
+        for _ in range(try_times):
             cmd = '/usr/bin/pkill ryu-manager -SIGTERM'
             self.exec_on_ctn(cmd)
             if not self.is_running_ryu():
