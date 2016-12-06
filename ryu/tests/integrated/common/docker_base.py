@@ -196,18 +196,8 @@ class DockerImage(object):
         workdir = os.path.join(TEST_BASE_DIR, tagname)
         workdir_ctn = '/root/osrg/ryu'
         pkges = ' '.join([
-            'telnet',
             'tcpdump',
             'iproute2',
-            'python-setuptools',
-            'python-pip',
-            'gcc',
-            'python-dev',
-            'libffi-dev',
-            'libssl-dev',
-            'libxml2-dev',
-            'libxslt1-dev',
-            'zlib1g-dev',
         ])
         if image:
             use_image = image

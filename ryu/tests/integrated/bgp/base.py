@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 
 import logging
+import sys
 import unittest
 
 from ryu.tests.integrated.common import docker_base as ctn_base
@@ -40,7 +41,9 @@ class BgpSpeakerTestBase(unittest.TestCase):
         cls.bridges.append(cls.brdc1)
 
         cls.dockerimg = ctn_base.DockerImage()
-        cls.r_img = cls.dockerimg.create_ryu(check_exist=True)
+        image = 'python:%d.%d' % (
+            sys.version_info.major, sys.version_info.minor)
+        cls.r_img = cls.dockerimg.create_ryu(image=image, check_exist=True)
         cls.images.append(cls.r_img)
         cls.q_img = 'osrg/quagga'
         cls.images.append(cls.q_img)
