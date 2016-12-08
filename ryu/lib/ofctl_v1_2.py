@@ -493,6 +493,9 @@ def get_flow_stats(dp, waiters, flow=None):
     cookie = int(flow.get('cookie', 0))
     cookie_mask = int(flow.get('cookie_mask', 0))
     match = to_match(dp, flow.get('match', {}))
+    # Note: OpenFlow does not allow to filter flow entries by priority,
+    # but for efficiency, ofctl provides the way to do it.
+    priority = int(flow.get('priority', -1))
 
     stats = dp.ofproto_parser.OFPFlowStatsRequest(
         dp, table_id, out_port, out_group, cookie, cookie_mask, match)
@@ -503,6 +506,9 @@ def get_flow_stats(dp, waiters, flow=None):
     flows = []
     for msg in msgs:
         for stats in msg.body:
+            if 0 <= priority != stats.priority:
+                continue
+
             actions = actions_to_str(stats.instructions)
             match = match_to_str(stats.match)
             s = {'priority': stats.priority,

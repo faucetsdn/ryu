@@ -330,6 +330,9 @@ def get_flow_stats(dp, waiters, flow=None):
         flow.get('table_id', 0xff))
     out_port = UTIL.ofp_port_from_user(
         flow.get('out_port', dp.ofproto.OFPP_NONE))
+    # Note: OpenFlow does not allow to filter flow entries by priority,
+    # but for efficiency, ofctl provides the way to do it.
+    priority = int(flow.get('priority', -1))
 
     stats = dp.ofproto_parser.OFPFlowStatsRequest(
         dp, 0, match, table_id, out_port)
@@ -340,6 +343,9 @@ def get_flow_stats(dp, waiters, flow=None):
     flows = []
     for msg in msgs:
         for stats in msg.body:
+            if 0 <= priority != stats.priority:
+                continue
+
             actions = actions_to_str(stats.actions)
             match = match_to_str(stats.match)
 

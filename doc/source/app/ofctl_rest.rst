@@ -248,7 +248,16 @@ Get flows stats filtered by fields
         cookie       Require matching entries to contain this cookie value (int)        1               0
         cookie_mask  Mask used to restrict the cookie bits that must match (int)        1               0
         match        Fields to match (dict)                                             {"in_port": 1}  {} #wildcarded
+        priority     Priority of the entry (int) (See Note)                             11111           #wildcarded
         ============ ================================================================== =============== ===============
+
+        .. NOTE::
+
+           OpenFlow Spec does not allow to filter flow entries by priority,
+           but when with a large amount of flow entries, filtering by priority
+           is convenient to get statistics efficiently.
+           So, this app provides priority field for filtering.
+
 
     Response message body:
         The same as :ref:`get-all-flows-stats`
