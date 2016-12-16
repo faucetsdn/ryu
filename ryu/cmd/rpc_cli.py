@@ -43,8 +43,12 @@ from ryu.lib import rpc
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
-    # eg. rpc-cli --peers=hoge=localhost:9998,fuga=localhost:9999
-    cfg.ListOpt('peers', default=[], help='list of peers')
+    cfg.ListOpt('peers', default=[],
+                help='List of peers, separated by commas. '
+                     '(e.g., "hoge=localhost:9998,fuga=localhost:9999")'),
+    cfg.StrOpt('command', short='c', default=None,
+               help='Command to be executed as single command. '
+                    'The default is None and opens interactive console.'),
 ])
 
 
@@ -228,6 +232,11 @@ def main(args=None, prog=None):
         name, addr = p_str.split('=')
         host, port = addr.rsplit(':', 1)
         add_peer(name, host, port)
+
+    if CONF.command:
+        command = Cmd()
+        command.onecmd(CONF.command)
+        command.do_EOF()
 
     Cmd().cmdloop()
 
