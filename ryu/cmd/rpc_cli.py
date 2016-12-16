@@ -31,6 +31,7 @@
 
 from __future__ import print_function
 
+import ast
 import cmd
 import signal
 import socket
@@ -139,9 +140,9 @@ class Cmd(cmd.Cmd):
         try:
             peer = args[0]
             method = args[1]
-            params = eval(args[2])
-        except:
-            print("argument error")
+            params = ast.literal_eval(args[2])
+        except (IndexError, ValueError) as e:
+            print("argument error: %s" % e)
             return
         try:
             p = peers[peer]
