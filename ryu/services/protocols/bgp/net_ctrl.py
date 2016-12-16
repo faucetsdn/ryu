@@ -51,11 +51,11 @@ NC_RPC_BIND_IP = 'apgw_rpc_bind_ip'
 NC_RPC_BIND_PORT = 'apgw_rpc_bind_port'
 
 # Notification symbols
-NOTF_ADD_REMOTE_PREFX = 'prefix.add_remote'
-NOTF_DELETE_REMOTE_PREFX = 'prefix.delete_remote'
-NOTF_ADD_LOCAL_PREFX = 'prefix.add_local'
-NOTF_DELETE_LOCAL_PREFX = 'prefix.delete_local'
-NOTF_LOG = 'logging'
+NOTIFICATION_ADD_REMOTE_PREFIX = 'prefix.add_remote'
+NOTIFICATION_DELETE_REMOTE_PREFIX = 'prefix.delete_remote'
+NOTIFICATION_ADD_LOCAL_PREFIX = 'prefix.add_local'
+NOTIFICATION_DELETE_LOCAL_PREFIX = 'prefix.delete_local'
+NOTIFICATION_LOG = 'logging'
 
 # MessagePackRPC message type constants
 RPC_MSG_REQUEST = 0
@@ -95,12 +95,12 @@ class RpcSession(Activity):
     RPC peer.
     """
 
-    def __init__(self, socket, outgoing_msg_sink_iter):
-        super(RpcSession, self).__init__("RpcSession(%s)" % socket)
+    def __init__(self, sock, outgoing_msg_sink_iter):
+        super(RpcSession, self).__init__("RpcSession(%s)" % sock)
         self._packer = msgpack.Packer(encoding='utf-8')
         self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
-        self._socket = socket
+        self._socket = sock
         self._outgoing_msg_sink_iter = outgoing_msg_sink_iter
 
     def stop(self):
@@ -201,18 +201,17 @@ class RpcSession(Activity):
         # graceful manner. Discuss this with other component developers.
         # TODO(PH): We should try not to sent routes from bgp peer that is not
         # in established state.
-        from ryu.services.protocols.bgp.model import \
-            FlexinetOutgoingRoute
+        from ryu.services.protocols.bgp.model import (
+            FlexinetOutgoingRoute)
         while True:
             # sink iter is Sink instance and next is blocking so this isn't
             # active wait.
             for outgoing_msg in sink_iter:
                 if isinstance(outgoing_msg, FlexinetOutgoingRoute):
-                    rpc_msg = _create_prefix_notif(outgoing_msg, self)
+                    rpc_msg = _create_prefix_notification(outgoing_msg, self)
                 else:
                     raise NotImplementedError(
-                        'Do not handle out going message'
-                        ' of type %s' %
+                        'Do not handle out going message of type %s' %
                         outgoing_msg.__class__)
                 if rpc_msg:
                     self._sendall(rpc_msg)
@@ -241,17 +240,16 @@ class RpcSession(Activity):
             self.stop()
 
 
-def _create_prefix_notif(outgoing_msg, rpc_session):
+def _create_prefix_notification(outgoing_msg, rpc_session):
     """Constructs prefix notification with data from given outgoing message.
 
     Given RPC session is used to create RPC notification message.
     """
-    assert(outgoing_msg)
+    assert outgoing_msg
     path = outgoing_msg.path
-    assert(path)
+    assert path
     vpn_nlri = path.nlri
 
-    rpc_msg = None
     assert path.source is not None
     if path.source != VRF_TABLE:
         # Extract relevant info for update-add/update-delete.
@@ -262,12 +260,12 @@ def _create_prefix_notif(outgoing_msg, rpc_session):
                    VRF_RF: VrfConf.rf_2_vrf_rf(path.route_family)}]
         if not path.is_withdraw:
             # Create notification to NetworkController.
-            rpc_msg = rpc_session.create_notification(NOTF_ADD_REMOTE_PREFX,
-                                                      params)
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_ADD_REMOTE_PREFIX, params)
         else:
-            # Create update-delete request to NetworkController.`
-            rpc_msg = rpc_session.create_notification(NOTF_DELETE_REMOTE_PREFX,
-                                                      params)
+            # Create update-delete request to NetworkController.
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_DELETE_REMOTE_PREFIX, params)
     else:
         # Extract relevant info for update-add/update-delete.
         params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_dist,
@@ -277,12 +275,12 @@ def _create_prefix_notif(outgoing_msg, rpc_session):
                    ORIGIN_RD: path.origin_rd}]
         if not path.is_withdraw:
             # Create notification to NetworkController.
-            rpc_msg = rpc_session.create_notification(NOTF_ADD_LOCAL_PREFX,
-                                                      params)
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_ADD_LOCAL_PREFIX, params)
         else:
-            # Create update-delete request to NetworkController.`
-            rpc_msg = rpc_session.create_notification(NOTF_DELETE_LOCAL_PREFX,
-                                                      params)
+            # Create update-delete request to NetworkController.
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_DELETE_LOCAL_PREFIX, params)
 
     return rpc_msg
 
@@ -336,18 +334,18 @@ class _NetworkController(FlexinetPeer, Activity):
         sock_addr = (apgw_rpc_bind_ip, apgw_rpc_bind_port)
         LOG.debug('NetworkController started listening for connections...')
 
-        server_thread, socket = self._listen_tcp(sock_addr,
-                                                 self._start_rpc_session)
+        server_thread, _ = self._listen_tcp(sock_addr,
+                                            self._start_rpc_session)
         self.pause(0)
         server_thread.wait()
 
-    def _start_rpc_session(self, socket):
+    def _start_rpc_session(self, sock):
         """Starts a new RPC session with given connection.
         """
         if self._rpc_session and self._rpc_session.started:
             self._rpc_session.stop()
 
-        self._rpc_session = RpcSession(socket, self)
+        self._rpc_session = RpcSession(sock, self)
         self._rpc_session.start()
 
     def send_rpc_notification(self, method, params):
@@ -382,16 +380,16 @@ def _handle_request(request):
         raise ApiException(desc='Invalid type for RPC parameter.')
 
 
-def _send_success_response(rpc_session, socket, request, result):
+def _send_success_response(rpc_session, sock, request, result):
     response = rpc_session.create_success_response(request[RPC_IDX_MSG_ID],
                                                    result)
-    socket.sendall(response)
+    sock.sendall(response)
 
 
-def _send_error_response(rpc_session, socket, request, emsg):
+def _send_error_response(rpc_session, sock, request, emsg):
     response = rpc_session.create_error_response(request[RPC_IDX_MSG_ID],
                                                  str(emsg))
-    socket.sendall(response)
+    sock.sendall(response)
 
 
 # Network controller singleton
