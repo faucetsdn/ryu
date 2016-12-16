@@ -53,9 +53,8 @@ class udp(packet_base.PacketBase):
 
     @staticmethod
     def get_packet_type(src_port, dst_port):
-        if ((src_port == 68 and dst_port == 67) or
-                (src_port == 67 and dst_port == 68) or
-                (src_port == 67 and dst_port == 67)):
+        if ((src_port in [67, 68] and dst_port == 67) or
+                (dst_port in [67, 68] and src_port == 67)):
             return dhcp.dhcp
         if ((src_port in [546, 547] and dst_port == 547) or
                 (dst_port in [546, 547] and src_port == 547)):
