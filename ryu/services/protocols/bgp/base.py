@@ -257,21 +257,24 @@ class Activity(object):
         """
         hub.sleep(seconds)
 
-    def _stop_child_activities(self):
+    def _stop_child_activities(self, name=None):
         """Stop all child activities spawn by this activity.
         """
         # Makes a list copy of items() to avoid dictionary size changed
         # during iteration
         for child_name, child in list(self._child_activity_map.items()):
+            if name is not None and name != child_name:
+                continue
             LOG.debug('%s: Stopping child activity %s ', self.name, child_name)
             if child.started:
                 child.stop()
+            self._child_activity_map.pop(child_name, None)
 
     def _stop_child_threads(self, name=None):
         """Stops all threads spawn by this activity.
         """
         for thread_name, thread in list(self._child_thread_map.items()):
-            if not name or thread_name is name:
+            if name is not None and thread_name is name:
                 LOG.debug('%s: Stopping child thread %s',
                           self.name, thread_name)
                 thread.kill()
