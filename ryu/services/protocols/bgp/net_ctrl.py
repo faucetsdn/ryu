@@ -156,6 +156,16 @@ class RpcSession(Activity):
         for msg in self._unpacker:
             return msg
 
+    def _send_error_response(self, request, err_msg):
+        rpc_msg = self.create_error_response(request[RPC_IDX_MSG_ID],
+                                             str(err_msg))
+        return self._sendall(rpc_msg)
+
+    def _send_success_response(self, request, result):
+        rpc_msg = self.create_success_response(request[RPC_IDX_MSG_ID],
+                                               result)
+        return self._sendall(rpc_msg)
+
     def send_notification(self, method, params):
         rpc_msg = self.create_notification(method, params)
         return self._sendall(rpc_msg)
@@ -177,10 +187,9 @@ class RpcSession(Activity):
                 if msg[0] == RPC_MSG_REQUEST:
                     try:
                         result = _handle_request(msg)
-                        _send_success_response(self, self._socket, msg, result)
+                        self._send_success_response(msg, result)
                     except BGPSException as e:
-                        _send_error_response(self, self._socket, msg,
-                                             e.message)
+                        self._send_error_response(msg, e.message)
                 elif msg[0] == RPC_MSG_RESPONSE:
                     _handle_response(msg)
                 elif msg[0] == RPC_MSG_NOTIFY:
@@ -382,18 +391,6 @@ def _handle_request(request):
     except TypeError:
         LOG.error(traceback.format_exc())
         raise ApiException(desc='Invalid type for RPC parameter.')
-
-
-def _send_success_response(rpc_session, sock, request, result):
-    response = rpc_session.create_success_response(request[RPC_IDX_MSG_ID],
-                                                   result)
-    sock.sendall(response)
-
-
-def _send_error_response(rpc_session, sock, request, emsg):
-    response = rpc_session.create_error_response(request[RPC_IDX_MSG_ID],
-                                                 str(emsg))
-    sock.sendall(response)
 
 
 # Network controller singleton
