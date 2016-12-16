@@ -158,7 +158,7 @@ class dhcp6(packet_base.PacketBase):
         self.peer_address = peer_address
 
     @classmethod
-    def _parser(cls, buf):
+    def parser(cls, buf):
         (msg_type, ) = struct.unpack_from('!B', buf)
 
         buf = b'\x00' + buf[1:]  # unpack xid as a 4-byte integer
