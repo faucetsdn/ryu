@@ -161,7 +161,7 @@ class dhcp6(packet_base.PacketBase):
     def _parser(cls, buf):
         (msg_type, ) = struct.unpack_from('!B', buf)
 
-        buf = '\x00' + buf[1:]  # unpack xid as a 4-byte integer
+        buf = b'\x00' + buf[1:]  # unpack xid as a 4-byte integer
         if msg_type == DHCPV6_RELAY_FORW or msg_type == DHCPV6_RELAY_REPL:
             (hop_count, link_address, peer_address) \
                 = struct.unpack_from(cls._DHCPV6_RELAY_UNPACK_STR, buf)
@@ -174,21 +174,15 @@ class dhcp6(packet_base.PacketBase):
         if len(buf) > length:
             parse_opt = options.parser(buf[length:])
             length += parse_opt.options_len
-
-        if msg_type == DHCPV6_RELAY_FORW or msg_type == DHCPV6_RELAY_REPL:
-            return (cls(msg_type, parse_opt, 0, hop_count,
-                        addrconv.ipv6.bin_to_text(link_address),
-                        addrconv.ipv6.bin_to_text(peer_address)),
-                    None, buf[length:])
+            if msg_type == DHCPV6_RELAY_FORW or msg_type == DHCPV6_RELAY_REPL:
+                return (cls(msg_type, parse_opt, 0, hop_count,
+                            addrconv.ipv6.bin_to_text(link_address),
+                            addrconv.ipv6.bin_to_text(peer_address)),
+                        None, buf[length:])
+            else:
+                return (cls(msg_type, parse_opt, transaction_id),
+                        None, buf[length:])
         else:
-            return (cls(msg_type, parse_opt, transaction_id),
-                    None, buf[length:])
-
-    @classmethod
-    def parser(cls, buf):
-        try:
-            return cls._parser(buf)
-        except:
             return None, None, buf
 
     def serialize(self, payload=None, prev=None):

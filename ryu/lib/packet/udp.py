@@ -57,8 +57,8 @@ class udp(packet_base.PacketBase):
                 (src_port == 67 and dst_port == 68) or
                 (src_port == 67 and dst_port == 67)):
             return dhcp.dhcp
-        if (((src_port == 546 or src_port == 547) and dst_port == 547) or
-                (src_port == 547 and (dst_port == 546 or dst_port == 547))):
+        if ((src_port in [546, 547] and dst_port == 547) or
+                (dst_port in [546, 547] and src_port == 547)):
             return dhcp6.dhcp6
         if (dst_port == vxlan.UDP_DST_PORT or
                 dst_port == vxlan.UDP_DST_PORT_OLD):
