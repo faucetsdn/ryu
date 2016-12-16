@@ -58,7 +58,6 @@ DHCP packet format
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 """
-import binascii
 import random
 import struct
 
@@ -162,7 +161,7 @@ class dhcp6(packet_base.PacketBase):
     def _parser(cls, buf):
         (msg_type, ) = struct.unpack_from('!B', buf)
 
-        buf = '\x00' + buf[1:]  # unpack xid as a  4-byte integer
+        buf = '\x00' + buf[1:]  # unpack xid as a 4-byte integer
         if msg_type == DHCPV6_RELAY_FORW or msg_type == DHCPV6_RELAY_REPL:
             (hop_count, link_address, peer_address) \
                 = struct.unpack_from(cls._DHCPV6_RELAY_UNPACK_STR, buf)
@@ -198,16 +197,15 @@ class dhcp6(packet_base.PacketBase):
                 self.msg_type == DHCPV6_RELAY_REPL):
             pack_str = '%s%ds' % (self._DHCPV6_RELAY_PACK_STR,
                                   self.options.options_len)
-            str = struct.pack(pack_str, self.hop_count,
+            buf = struct.pack(pack_str, self.hop_count,
                               addrconv.ipv6.text_to_bin(self.link_address),
                               addrconv.ipv6.text_to_bin(self.peer_address),
                               seri_opt)
         else:
             pack_str = '%s%ds' % (self._DHCPV6_PACK_STR,
                                   self.options.options_len)
-            str = struct.pack(pack_str, self.transaction_id, seri_opt)
-        str = struct.pack('!B', self.msg_type) + str[1:]
-        return str
+            buf = struct.pack(pack_str, self.transaction_id, seri_opt)
+        return struct.pack('!B', self.msg_type) + buf[1:]
 
 
 class options(stringify.StringifyMixin):
