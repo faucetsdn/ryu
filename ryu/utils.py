@@ -14,29 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Copyright 2011 OpenStack LLC.
-# All Rights Reserved.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
-
-
 import importlib
 import logging
 import os
 import sys
-import re
 
 import six
+from pip import req as pip_req
+from pip.download import PipSession
+
 
 LOG = logging.getLogger('ryu.utils')
 
@@ -139,38 +125,29 @@ def binary_str(data):
     return ''.join('\\x%02x' % byte for byte in bytearray(data))
 
 
-# the following functions are taken from OpenStack
-#
-# Get requirements from the first file that exists
-def get_reqs_from_files(requirements_files):
-    for requirements_file in requirements_files:
-        if os.path.exists(requirements_file):
-            with open(requirements_file, 'r') as fil:
-                return fil.read().split('\n')
-    return []
-
-
 def parse_requirements(requirements_files=None):
-    requirements_files = requirements_files if requirements_files else [
-        'requirements.txt', 'tools/pip-requires']
+    """
+    Parses requirements files and returns a list of requirements.
+
+    Returned list would be like::
+
+        ['foo', 'bar>=X.X', ...]
+
+    :param requirements_files: List of requirements files. The default
+     is ['requirements.txt', 'tools/pip-requires'].
+    :return: List of requirements.
+    """
+    requirements_files = requirements_files or [
+        'requirements.txt',
+        'tools/pip-requires',
+    ]
+
     requirements = []
-    for line in get_reqs_from_files(requirements_files):
-        # For the requirements list, we need to inject only the portion
-        # after egg= so that distutils knows the package it's looking for
-        # such as:
-        # -e git://github.com/openstack/nova/master#egg=nova
-        if re.match(r'\s*-e\s+', line):
-            requirements.append(re.sub(r'\s*-e\s+.*#egg=(.*)$', r'\1',
-                                line))
-        # such as:
-        # http://github.com/openstack/nova/zipball/master#egg=nova
-        elif re.match(r'\s*https?:', line):
-            requirements.append(re.sub(r'\s*https?:.*#egg=(.*)$', r'\1',
-                                line))
-        # -f lines are for index locations, and don't get used here
-        elif re.match(r'\s*-f\s+', line):
-            pass
-        else:
-            requirements.append(line)
+    for f in requirements_files:
+        if not os.path.isfile(f):
+            continue
+
+        for r in pip_req.parse_requirements(f, session=PipSession()):
+            requirements.append(str(r.req))
 
     return requirements
