@@ -56,6 +56,9 @@ Protocol Header classes
 .. automodule:: ryu.lib.packet.vxlan
    :members:
 
+.. automodule:: ryu.lib.packet.geneve
+   :members:
+
 .. automodule:: ryu.lib.packet.gre
    :members:
 
