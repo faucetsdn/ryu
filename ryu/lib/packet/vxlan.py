@@ -13,32 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-VXLAN packet parser/serializer
-
-RFC 7348
-VXLAN Header:
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|R|R|R|R|I|R|R|R|            Reserved                           |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                VXLAN Network Identifier (VNI) |   Reserved    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-- Flags (8 bits): where the I flag MUST be set to 1 for a valid
-  VXLAN Network ID (VNI).  The other 7 bits (designated "R") are
-  reserved fields and MUST be set to zero on transmission and
-  ignored on receipt.
-
-- VXLAN Segment ID/VXLAN Network Identifier (VNI): this is a
-  24-bit value used to designate the individual VXLAN overlay
-  network on which the communicating VMs are situated.  VMs in
-  different VXLAN overlay networks cannot communicate with each
-  other.
-
-- Reserved fields (24 bits and 8 bits): MUST be set to zero on
-  transmission and ignored on receipt.
-"""
-
 import struct
 import logging
 
@@ -72,6 +46,13 @@ class vxlan(packet_base.PacketBase):
     _PACK_STR = '!II'
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
+    # VXLAN Header:
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |R|R|R|R|I|R|R|R|            Reserved                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |                VXLAN Network Identifier (VNI) |   Reserved    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
     def __init__(self, vni):
         super(vxlan, self).__init__()
         self.vni = vni
@@ -95,6 +76,7 @@ class vxlan(packet_base.PacketBase):
 def vni_from_bin(buf):
     """
     Converts binary representation VNI to integer.
+
     :param buf: binary representation of VNI.
     :return: VNI integer.
     """
@@ -104,6 +86,7 @@ def vni_from_bin(buf):
 def vni_to_bin(vni):
     """
     Converts integer VNI to binary representation.
+
     :param vni: integer of VNI
     :return: binary representation of VNI.
     """

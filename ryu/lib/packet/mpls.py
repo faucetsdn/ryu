@@ -73,6 +73,7 @@ class mpls(packet_base.PacketBase):
 def label_from_bin(buf):
     """
     Converts binary representation label to integer.
+
     :param buf: Binary representation of label.
     :return: MPLS Label and BoS bit.
     """
@@ -84,6 +85,7 @@ def label_from_bin(buf):
 def label_to_bin(mpls_label, is_bos=True):
     """
     Converts integer label to binary representation.
+
     :param mpls_label: MPLS Label.
     :param is_bos: BoS bit.
     :return: Binary representation of label.
