@@ -16,7 +16,6 @@ Contents:
    developing.rst
    configuration.rst
    tests.rst
-   using_with_openstack.rst
    snort_integrate.rst
    app.rst
 

@@ -4,6 +4,13 @@
 Using Ryu Network Operating System with OpenStack as OpenFlow controller
 ************************************************************************
 
+.. CAUTION::
+
+    The Ryu plugin and OFAgent described in the following is deprecated,
+    because Ryu is officially integrated into Open vSwitch agent with
+    "of_interface = native" mode.
+
+
 Ryu cooperates with OpenStack using Quantum Ryu plugin. The plugin is
 available in the official Quantum releases.
 
