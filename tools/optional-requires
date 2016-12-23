@@ -1,4 +1,4 @@
-lxml      # OF-Config
+lxml!=3.7.0,>=2.3    # OF-Config
 ncclient  # OF-Config
 cryptography!=1.5.2  # Required by paramiko
 paramiko  # NETCONF, BGP speaker (SSH console)
