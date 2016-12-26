@@ -28,7 +28,8 @@ from tinyrpc.transports import ServerTransport, ClientTransport
 from tinyrpc.client import RPCClient
 import webob.dec
 import webob.exc
-from webob.response import Response
+from webob.request import Request as webob_Request
+from webob.response import Response as webob_Response
 
 from ryu import cfg
 from ryu.lib import hub
@@ -54,6 +55,33 @@ def route(name, path, methods=None, requirements=None):
         }
         return controller_method
     return _route
+
+
+class Request(webob_Request):
+    """
+    Wrapper class for webob.request.Request.
+
+    The behavior of this class is the same as webob.request.Request
+    except for setting "charset" to "UTF-8" automatically.
+    """
+    DEFAULT_CHARSET = "UTF-8"
+
+    def __init__(self, environ, charset=DEFAULT_CHARSET, *args, **kwargs):
+        super(Request, self).__init__(
+            environ, charset=charset, *args, **kwargs)
+
+
+class Response(webob_Response):
+    """
+    Wrapper class for webob.response.Response.
+
+    The behavior of this class is the same as webob.response.Response
+    except for setting "charset" to "UTF-8" automatically.
+    """
+    DEFAULT_CHARSET = "UTF-8"
+
+    def __init__(self, charset=DEFAULT_CHARSET, *args, **kwargs):
+        super(Response, self).__init__(charset=charset, *args, **kwargs)
 
 
 class WebSocketRegistrationWrapper(object):
