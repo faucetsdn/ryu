@@ -20,9 +20,9 @@ import socket
 import struct
 
 import json
-from webob import Response
 
 from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import Response
 from ryu.app.wsgi import WSGIApplication
 from ryu.base import app_manager
 from ryu.controller import dpset

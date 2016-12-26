@@ -14,9 +14,11 @@
 # limitations under the License.
 
 import json
-from webob import Response
 
-from ryu.app.wsgi import ControllerBase, WSGIApplication, route
+from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import Response
+from ryu.app.wsgi import route
+from ryu.app.wsgi import WSGIApplication
 from ryu.base import app_manager
 from ryu.lib import dpid as dpid_lib
 from ryu.topology.api import get_switch, get_link, get_host

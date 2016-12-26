@@ -16,11 +16,13 @@
 import json
 
 from ryu.app import simple_switch_13
-from webob import Response
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.app.wsgi import ControllerBase, WSGIApplication, route
+from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import Response
+from ryu.app.wsgi import route
+from ryu.app.wsgi import WSGIApplication
 from ryu.lib import dpid as dpid_lib
 
 simple_switch_instance_name = 'simple_switch_api_app'
