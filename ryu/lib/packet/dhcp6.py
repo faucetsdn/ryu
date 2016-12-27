@@ -19,43 +19,43 @@ DHCPv6 packet parser/serializer
 RFC 3315
 DHCP packet format
 
-   The following diagram illustrates the format of DHCP messages sent
-   between clients and servers:
+The following diagram illustrates the format of DHCP messages sent
+between clients and servers:
 
-       0                   1                   2                   3
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |    msg_type   |               transaction_id                  |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |                                                               |
-      .                            options                            .
-      .                           (variable)                          .
-      |                                                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+\ 0                   1                   2                   3
+\ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    msg_type   |               transaction_id                  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
+.                            options                            .
+.                           (variable)                          .
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-   There are two relay agent messages, which share the following format:
+There are two relay agent messages, which share the following format:
 
-       0                   1                   2                   3
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |    msg_type   |   hop_count   |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      |                                                               |
-      |                         link_address                          |
-      |                                                               |
-      |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-      |                               |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      |                                                               |
-      |                         peer_address                          |
-      |                                                               |
-      |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-      |                               |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      .                                                               .
-      .            options (variable number and length)   ....        .
-      |                                                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+\ 0                   1                   2                   3
+\ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    msg_type   |   hop_count   |                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+|                                                               |
+|                         link_address                          |
+|                                                               |
+|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+|                               |                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+|                                                               |
+|                         peer_address                          |
+|                                                               |
+|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+|                               |                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+.                                                               .
+.            options (variable number and length)   ....        .
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 """
 import random
@@ -119,20 +119,16 @@ class dhcp6(packet_base.PacketBase):
     Attribute      Description
     ============== ====================
     msg_type       Identifies the DHCP message type
-
-    * For unrelayed messages only:
-    transaction_id The transaction ID for this message exchange.
-
-    * For relayed messages only
-    hop_count      Number of relay agents that have relayed this
-                   message.
-    link_address   A global or site-local address that will be used by
-                   the server to identify the link on which the client
-                   is located.
-    peer_address   The address of the client or relay agent from which
-                   the message to be relayed was received.
-
-    * For unrelayed and relayed messages:
+    transaction_id For unrelayed messages only: the transaction ID for\
+                   this message exchange.
+    hop_count      For relayed messages only: number of relay agents that\
+                   have relayed this message.
+    link_address   For relayed messages only: a global or site-local address\
+                   that will be used by the server to identify the link on\
+                   which the client is located.
+    peer_address   For relayed messages only: the address of the client or\
+                   relay agent from which the message to be relayed was\
+                   received.
     options        Options carried in this message
     ============== ====================
     """
@@ -246,25 +242,27 @@ class option(stringify.StringifyMixin):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the corresponding args in this order.
 
-   The format of DHCP options is:
+    The format of DHCP options is:
 
-       0                   1                   2                   3
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |          option-code          |           option-len          |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |                          option-data                          |
-      |                      (option-len octets)                      |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    \ 0                   1                   2                   3
+    \ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |          option-code          |           option-len          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                          option-data                          |
+    |                      (option-len octets)                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-      option-code   An unsigned integer identifying the specific option
-                    type carried in this option.
-
-      option-len    An unsigned integer giving the length of the
-                    option-data field in this option in octets.
-
-      option-data   The data for the option; the format of this data
-                    depends on the definition of the option.
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    option-code    An unsigned integer identifying the specific option\
+                   type carried in this option.
+    option-len     An unsigned integer giving the length of the\
+                   option-data field in this option in octets.
+    option-data    The data for the option; the format of this data\
+                   depends on the definition of the option.
+    ============== ====================
     """
     _UNPACK_STR = '!H'
     _UNPACK_STR_LEN = struct.calcsize(_UNPACK_STR)
