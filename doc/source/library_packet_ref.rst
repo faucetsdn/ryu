@@ -74,6 +74,13 @@ Protocol Header classes
 .. automodule:: ryu.lib.packet.dhcp
    :members:
 
+.. autoclass:: ryu.lib.packet.dhcp6.dhcp6
+   :members:
+.. autoclass:: ryu.lib.packet.dhcp6.options
+   :members:
+.. autoclass:: ryu.lib.packet.dhcp6.option
+   :members:
+
 .. autoclass:: ryu.lib.packet.vrrp.vrrp
    :members:
 .. autoclass:: ryu.lib.packet.vrrp.vrrpv2
