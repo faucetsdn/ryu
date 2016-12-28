@@ -128,6 +128,21 @@ Protocol Header classes
 .. autoclass:: ryu.lib.packet.bgp.BGPNotification
    :members:
 
+.. autoclass:: ryu.lib.packet.bgp.EvpnEsi
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.EvpnArbitraryEsi
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.EvpnLACPEsi
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.EvpnL2BridgeEsi
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.EvpnMacBasedEsi
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.EvpnRouterIDEsi
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.EvpnASBasedEsi
+   :members:
+
 .. automodule:: ryu.lib.packet.bmp
    :members:
 

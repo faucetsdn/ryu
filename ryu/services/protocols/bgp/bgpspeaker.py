@@ -559,13 +559,14 @@ class BGPSpeaker(object):
         ``route_dist`` specifies a route distinguisher value.
 
         ``esi`` is an value to specify the Ethernet Segment Identifier.
-         0 is the default and denotes a single-homed site.
-         If you want to advertise esi other than 0,
-         it must be set as a dictionary type.
-         The following keys and values must be set.
-          - type: specifies one of the ESI type.
-         The remaining keys and values are the same as the argument of
-         the class corresponding to esi_type.
+        0 is the default and denotes a single-homed site.
+        If you want to advertise esi other than 0,
+        it must be set as dictionary type.
+        If esi is dictionary type, 'type' key must be set
+        and specifies ESI type.
+        For the supported ESI type, see :py:mod:`ryu.lib.packet.bgp.EvpnEsi`.
+        The remaining arguments are the same as that for
+        the corresponding class.
 
         ``ethernet_tag_id`` specifies the Ethernet Tag ID.
 
@@ -675,13 +676,6 @@ class BGPSpeaker(object):
         ``route_dist`` specifies a route distinguisher value.
 
         ``esi`` is an value to specify the Ethernet Segment Identifier.
-         0 is the default and denotes a single-homed site.
-         If you want to advertise esi other than 0,
-         it must be set as a dictionary type.
-         The following keys and values must be set.
-          - type: specifies one of the ESI type.
-         The remaining keys and values are the same as the argument of
-         the class corresponding to esi_type.
 
         ``ethernet_tag_id`` specifies the Ethernet Tag ID.
 

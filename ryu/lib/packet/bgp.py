@@ -1006,6 +1006,20 @@ class LabelledVPNIP6AddrPrefix(_LabelledAddrPrefix, _VPNAddrPrefix,
 class EvpnEsi(StringifyMixin, TypeDisp, _Value):
     """
     Ethernet Segment Identifier
+
+    The supported ESI Types:
+
+     - ``EvpnEsi.ARBITRARY`` indicates EvpnArbitraryEsi.
+
+     - ``EvpnEsi.LACP`` indicates EvpnLACPEsi.
+
+     - ``EvpnEsi.L2_BRIDGE`` indicates EvpnL2BridgeEsi.
+
+     - ``EvpnEsi.MAC_BASED`` indicates EvpnMacBasedEsi.
+
+     - ``EvpnEsi.ROUTER_ID`` indicates EvpnRouterIDEsi.
+
+     - ``EvpnEsi.AS_BASED`` indicates EvpnASBasedEsi.
     """
     _PACK_STR = "!B"  # ESI Type
     _ESI_LEN = 10
