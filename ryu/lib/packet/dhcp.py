@@ -141,14 +141,15 @@ class dhcp(packet_base.PacketBase):
     _class_prefixes = ['options']
     _TYPE = {
         'ascii': [
-            'ciaddr', 'yiaddr', 'siaddr', 'giaddr', 'chaddr', 'sname'
+            'ciaddr', 'yiaddr', 'siaddr', 'giaddr', 'chaddr',
+            'sname', 'boot_file'
         ]
     }
 
     def __init__(self, op, chaddr, options=None, htype=_HARDWARE_TYPE_ETHERNET,
                  hlen=0, hops=0, xid=None, secs=0, flags=0,
                  ciaddr='0.0.0.0', yiaddr='0.0.0.0', siaddr='0.0.0.0',
-                 giaddr='0.0.0.0', sname='', boot_file=b''):
+                 giaddr='0.0.0.0', sname='', boot_file=''):
         super(dhcp, self).__init__()
         self.op = op
         self.htype = htype
@@ -189,7 +190,7 @@ class dhcp(packet_base.PacketBase):
                     addrconv.ipv4.bin_to_text(yiaddr),
                     addrconv.ipv4.bin_to_text(siaddr),
                     addrconv.ipv4.bin_to_text(giaddr),
-                    sname.decode('ascii'), boot_file),
+                    sname.decode('ascii'), boot_file.decode('ascii')),
                 None, buf[length:])
 
     def serialize(self, _payload=None, _prev=None):
@@ -209,7 +210,7 @@ class dhcp(packet_base.PacketBase):
                            addrconv.ipv4.text_to_bin(self.giaddr),
                            chaddr,
                            self.sname.encode('ascii'),
-                           self.boot_file) + opt_buf
+                           self.boot_file.encode('ascii')) + opt_buf
 
 
 class options(stringify.StringifyMixin):
