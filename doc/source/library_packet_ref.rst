@@ -155,6 +155,9 @@ Protocol Header classes
 .. autoclass:: ryu.lib.packet.bfd.MeticulousKeyedSHA1
    :members:
 
+.. automodule:: ryu.lib.packet.openflow
+   :members:
+
 .. autoclass:: ryu.lib.packet.ospf.OSPFMessage
    :members:
 
