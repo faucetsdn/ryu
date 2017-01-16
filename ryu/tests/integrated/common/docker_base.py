@@ -374,14 +374,15 @@ class Bridge(object):
             ipv4 = None
             ipv6 = None
             ip_address = self.next_ip_address()
+            ip_address_ip = ip_address.split('/')[0]
             version = 4
             if netaddr.IPNetwork(ip_address).version == 6:
                 version = 6
-            opt_ip = "--ip %s" % ip_address
+            opt_ip = "--ip %s" % ip_address_ip
             if version == 4:
                 ipv4 = ip_address
             else:
-                opt_ip = "--ip6 %s" % ip_address
+                opt_ip = "--ip6 %s" % ip_address_ip
                 ipv6 = ip_address
             cmd = "docker network connect %s %s %s" % (
                 opt_ip, self.name, ctn.docker_name())
