@@ -4,7 +4,6 @@ set -ex
 function init_variables {
     APTLINE_DOCKER=0
     DIR_BASE=/tmp
-    SUDO_PIP=""
 }
 
 function process_options {
@@ -21,17 +20,20 @@ function process_options {
                 shift; ((i++))
                 DIR_BASE=$1
                 ;;
-            -s|--sudo-pip)
-                SUDO_PIP=sudo
-                ;;
         esac
         shift; ((i++))
     done
 }
 
+function install_pipework {
+    if ! which /usr/local/bin/pipework >/dev/null
+    then
+        sudo rm -rf $DIR_BASE/pipework
+        git clone https://github.com/jpetazzo/pipework.git $DIR_BASE/pipework
+        sudo install -m 0755 $DIR_BASE/pipework/pipework /usr/local/bin/pipework
+    fi
+}
+
 function install_depends_pkg {
-    sudo rm -rf $DIR_BASE/pipework
-    git clone https://github.com/jpetazzo/pipework.git $DIR_BASE/pipework
-    sudo install -m 0755 $DIR_BASE/pipework/pipework /usr/local/bin/pipework
-    $SUDO_PIP pip install docker-py pycrypto nsenter
+    install_pipework
 }

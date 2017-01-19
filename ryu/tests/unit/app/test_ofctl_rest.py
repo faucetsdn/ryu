@@ -18,17 +18,17 @@
 import functools
 import json
 import logging
-from nose.tools import eq_
 import os
 import sys
 import unittest
-from webob.request import Request
 try:
     import mock  # Python 2
 except ImportError:
     from unittest import mock  # Python 3
+from nose.tools import eq_
 
 from ryu.app import ofctl_rest
+from ryu.app.wsgi import Request
 from ryu.app.wsgi import WSGIApplication
 from ryu.controller.dpset import DPSet
 from ryu.ofproto import ofproto_protocol
@@ -71,7 +71,7 @@ class DummyDatapath(ofproto_protocol.ProtocolDesc):
 class Test_ofctl_rest(unittest.TestCase):
 
     def _test(self, name, dp, method, path, body):
-        print('processing %s ...' % name)
+        # print('processing %s ...' % name)
 
         dpset = DPSet()
         dpset._register(dp)
@@ -104,13 +104,13 @@ def _add_tests():
     this_dir = os.path.dirname(sys.modules[__name__].__file__)
     ofctl_rest_json_dir = os.path.join(this_dir, 'ofctl_rest_json/')
 
-    for ofp_ver in _ofp_vers.keys():
+    for ofp_ver in _ofp_vers:
         # read a json file
         json_path = os.path.join(ofctl_rest_json_dir, ofp_ver + '.json')
         if os.path.exists(json_path):
             _test_cases = json.load(open(json_path))
         else:
-            print("Skip to load test cases for %s" % ofp_ver)
+            # print("Skip to load test cases for %s" % ofp_ver)
             continue
 
         # add test
@@ -120,7 +120,7 @@ def _add_tests():
             body = test.get('body', {})
 
             name = 'test_ofctl_rest_' + method + '_' + ofp_ver + '_' + path
-            print('adding %s ...' % name)
+            # print('adding %s ...' % name)
             f = functools.partial(
                 Test_ofctl_rest._test,
                 name=name,

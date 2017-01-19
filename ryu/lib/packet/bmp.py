@@ -17,13 +17,15 @@
 BGP Monitoring Protocol draft-ietf-grow-bmp-07
 """
 
-import six
 import struct
 
+import six
+
+from ryu.lib import addrconv
 from ryu.lib.packet import packet_base
 from ryu.lib.packet import stream_parser
 from ryu.lib.packet.bgp import BGPMessage
-from ryu.lib import addrconv
+from ryu.lib.type_desc import TypeDisp
 
 VERSION = 3
 
@@ -66,44 +68,7 @@ BMP_PEER_DOWN_REASON_REMOTE_BGP_NOTIFICATION = 3
 BMP_PEER_DOWN_REASON_REMOTE_NO_NOTIFICATION = 4
 
 
-class _TypeDisp(object):
-    _TYPES = {}
-    _REV_TYPES = None
-    _UNKNOWN_TYPE = None
-
-    @classmethod
-    def register_unknown_type(cls):
-        def _register_type(subcls):
-            cls._UNKNOWN_TYPE = subcls
-            return subcls
-        return _register_type
-
-    @classmethod
-    def register_type(cls, type_):
-        cls._TYPES = cls._TYPES.copy()
-
-        def _register_type(subcls):
-            cls._TYPES[type_] = subcls
-            cls._REV_TYPES = None
-            return subcls
-        return _register_type
-
-    @classmethod
-    def _lookup_type(cls, type_):
-        try:
-            return cls._TYPES[type_]
-        except KeyError:
-            return cls._UNKNOWN_TYPE
-
-    @classmethod
-    def _rev_lookup_type(cls, targ_cls):
-        if cls._REV_TYPES is None:
-            rev = dict((v, k) for k, v in cls._TYPES.items())
-            cls._REV_TYPES = rev
-        return cls._REV_TYPES[targ_cls]
-
-
-class BMPMessage(packet_base.PacketBase, _TypeDisp):
+class BMPMessage(packet_base.PacketBase, TypeDisp):
     """Base class for BGP Monitoring Protocol messages.
 
     An instance has the following attributes at least.

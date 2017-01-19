@@ -18,8 +18,8 @@ from __future__ import absolute_import
 
 import time
 
-from . import base
 from ryu.tests.integrated.common import docker_base as ctn_base
+from . import base
 
 
 class BgpSpeakerBasicTest(base.BgpSpeakerTestBase):
@@ -29,7 +29,8 @@ class BgpSpeakerBasicTest(base.BgpSpeakerTestBase):
         self.r1.start_ryubgp(retry=True)
 
     def test_check_neighbor_established(self):
-        for i in range(0, self.checktime):
+        neighbor_state = ctn_base.BGP_FSM_IDLE
+        for _ in range(0, self.checktime):
             neighbor_state = self.q1.get_neighbor_state(self.r1)
             if neighbor_state == ctn_base.BGP_FSM_ESTABLISHED:
                 break
@@ -37,7 +38,8 @@ class BgpSpeakerBasicTest(base.BgpSpeakerTestBase):
         self.assertEqual(neighbor_state, ctn_base.BGP_FSM_ESTABLISHED)
 
     def test_check_rib_nexthop(self):
-        for i in range(0, self.checktime):
+        neighbor_state = ctn_base.BGP_FSM_IDLE
+        for _ in range(0, self.checktime):
             neighbor_state = self.q1.get_neighbor_state(self.r1)
             if neighbor_state == ctn_base.BGP_FSM_ESTABLISHED:
                 break

@@ -20,7 +20,7 @@
 import logging
 
 from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
-from ryu.services.protocols.bgp.net_ctrl import NOTF_LOG
+from ryu.services.protocols.bgp.net_ctrl import NOTIFICATION_LOG
 
 
 class RpcLogHandler(logging.Handler):
@@ -28,7 +28,7 @@ class RpcLogHandler(logging.Handler):
     def emit(self, record):
         msg = self.format(record)
         NET_CONTROLLER.send_rpc_notification(
-            NOTF_LOG,
+            NOTIFICATION_LOG,
             {
                 'level': record.levelname,
                 'msg': msg

@@ -16,10 +16,13 @@
 
 import inspect
 import logging
-import six
 import struct
 import unittest
+
+import six
 from nose.tools import eq_
+from nose.tools import ok_
+
 from ryu.lib import addrconv
 from ryu.lib.packet import dhcp
 
@@ -42,7 +45,7 @@ class Test_dhcp_offer(unittest.TestCase):
     siaddr = '192.168.30.30'
     giaddr = '192.168.40.40'
     sname = 'abc'
-    boot_file = b''
+    boot_file = ''
 
     option_list = [
         dhcp.option(dhcp.DHCP_MESSAGE_TYPE_OPT, b'\x02', 1),
@@ -62,24 +65,25 @@ class Test_dhcp_offer(unittest.TestCase):
                    ciaddr=ciaddr, yiaddr=yiaddr, siaddr=siaddr,
                    giaddr=giaddr, sname=sname, boot_file=boot_file)
 
-    buf = b"\x02\x01\x06\x00\x00\x00\x00\x01\x00\x00\x00\x01\xc0\xa8\x0a\x0a"\
-        + b"\xc0\xa8\x14\x14\xc0\xa8\x1e\x1e\xc0\xa8\x28\x28\xaa\xaa\xaa\xaa"\
-        + b"\xaa\xaa\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x61\x62\x63\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-        + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x63\x82\x53\x63"\
-        + b"\x35\x01\x02\x01\x04\xff\xff\xff\x00\x03\x04\xc0\xa8\x0a\x09\x06"\
-        + b"\x04\xc0\xa8\x0a\x09\x33\x04\x00\x03\xf4\x80\x3a\x04\x00\x01\xfa"\
-        + b"\x40\x3b\x04\x00\x03\x75\xf0\x36\x04\xc0\xa8\x0a\x09\xff"
+    buf = (
+        b"\x02\x01\x06\x00\x00\x00\x00\x01\x00\x00\x00\x01\xc0\xa8\x0a\x0a"
+        b"\xc0\xa8\x14\x14\xc0\xa8\x1e\x1e\xc0\xa8\x28\x28\xaa\xaa\xaa\xaa"
+        b"\xaa\xaa\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x61\x62\x63\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x63\x82\x53\x63"
+        b"\x35\x01\x02\x01\x04\xff\xff\xff\x00\x03\x04\xc0\xa8\x0a\x09\x06"
+        b"\x04\xc0\xa8\x0a\x09\x33\x04\x00\x03\xf4\x80\x3a\x04\x00\x01\xfa"
+        b"\x40\x3b\x04\x00\x03\x75\xf0\x36\x04\xc0\xa8\x0a\x09\xff")
 
     def setUp(self):
         pass
@@ -105,11 +109,7 @@ class Test_dhcp_offer(unittest.TestCase):
         eq_(str(self.options), str(self.dh.options))
 
     def test_parser(self):
-        _res = self.dh.parser(self.buf)
-        if type(_res) is tuple:
-            res = _res[0]
-        else:
-            res = _res
+        res, _, rest = dhcp.dhcp.parser(self.buf)
 
         eq_(self.op, res.op)
         eq_(self.htype, res.htype)
@@ -126,19 +126,29 @@ class Test_dhcp_offer(unittest.TestCase):
         # sname is 64 byte length. rest of data is filled by '\x00'.
         eq_(self.sname.ljust(64, '\x00'), res.sname)
         # boof_file is 128 byte length. rest of data is filled by '\x00'.
-        eq_(self.boot_file.ljust(128, b'\x00'), res.boot_file)
+        eq_(self.boot_file.ljust(128, '\x00'), res.boot_file)
         eq_(str(self.options), str(res.options))
+        eq_(b'', rest)
 
     def test_parser_corrupted(self):
-        buf = self.buf[:128 - (14 + 20 + 8)]
-        _res = self.dh.parser(buf)
+        corrupt_buf = self.buf[:-4]
+        pkt, _, rest = dhcp.dhcp.parser(corrupt_buf)
+
+        ok_(isinstance(pkt, dhcp.dhcp))
+        ok_(isinstance(pkt.options, dhcp.options))
+        for opt in pkt.options.option_list[:-1]:
+            ok_(isinstance(opt, dhcp.option))
+        ok_(isinstance(pkt.options.option_list[-1], six.binary_type))
+
+        buf = pkt.serialize()
+        eq_(str(buf), str(corrupt_buf))
+        eq_(b'', rest)
 
     def test_serialize(self):
-        data = bytearray()
-        prev = None
-        buf = self.dh.serialize(data, prev)
+        buf = self.dh.serialize()
 
-        res = struct.unpack_from(dhcp.dhcp._DHCP_PACK_STR, six.binary_type(buf))
+        res = struct.unpack_from(dhcp.dhcp._DHCP_PACK_STR,
+                                 six.binary_type(buf))
 
         eq_(self.op, res[0])
         eq_(self.htype, res[1])
@@ -155,7 +165,7 @@ class Test_dhcp_offer(unittest.TestCase):
         # sname is 64 byte length. rest of data is filled by '\x00'.
         eq_(self.sname.ljust(64, '\x00'), res[12].decode('ascii'))
         # boof_file is 128 byte length. rest of data is filled by '\x00'.
-        eq_(self.boot_file.ljust(128, b'\x00'), res[13])
+        eq_(self.boot_file.ljust(128, '\x00'), res[13].decode('ascii'))
         options = dhcp.options.parser(
             buf[struct.calcsize(dhcp.dhcp._DHCP_PACK_STR):])
         eq_(str(self.options), str(options))
@@ -206,56 +216,3 @@ class Test_dhcp_offer(unittest.TestCase):
         jsondict = self.dh.to_jsondict()
         dh = dhcp.dhcp.from_jsondict(jsondict['dhcp'])
         eq_(str(self.dh), str(dh))
-
-
-class Test_dhcp_offer_with_hlen_zero(unittest.TestCase):
-
-    op = dhcp.DHCP_BOOT_REPLY
-    chaddr = 'aa:aa:aa:aa:aa:aa'
-    htype = 1
-    hlen = 6
-    hops = 0
-    xid = 1
-    secs = 0
-    flags = 1
-    ciaddr = '192.168.10.10'
-    yiaddr = '192.168.20.20'
-    siaddr = '192.168.30.30'
-    giaddr = '192.168.40.40'
-    sname = 'abc'
-    boot_file = ''
-
-    option_list = [
-        dhcp.option(dhcp.DHCP_MESSAGE_TYPE_OPT, b'\x02', 1),
-        dhcp.option(dhcp.DHCP_SUBNET_MASK_OPT, b'\xff\xff\xff\x00', 4),
-        dhcp.option(dhcp.DHCP_GATEWAY_ADDR_OPT, b'\xc0\xa8\x0a\x09', 4),
-        dhcp.option(dhcp.DHCP_DNS_SERVER_ADDR_OPT, b'\xc0\xa8\x0a\x09', 4),
-        dhcp.option(dhcp.DHCP_IP_ADDR_LEASE_TIME_OPT, b'\x00\x03\xf4\x80', 4),
-        dhcp.option(dhcp.DHCP_RENEWAL_TIME_OPT, b'\x00\x01\xfa\x40', 4),
-        dhcp.option(dhcp.DHCP_REBINDING_TIME_OPT, b'\x00\x03\x75\xf0', 4),
-        dhcp.option(dhcp.DHCP_SERVER_IDENTIFIER_OPT, b'\xc0\xa8\x0a\x09', 4)]
-    magic_cookie = '99.130.83.99'
-    options = dhcp.options(option_list=option_list, options_len=50,
-                           magic_cookie=magic_cookie)
-
-    dh = dhcp.dhcp(op, chaddr, options, htype=htype, hlen=0,
-                   hops=hops, xid=xid, secs=secs, flags=flags,
-                   ciaddr=ciaddr, yiaddr=yiaddr, siaddr=siaddr,
-                   giaddr=giaddr, sname=sname, boot_file=boot_file)
-
-    def test_init(self):
-        eq_(self.op, self.dh.op)
-        eq_(self.htype, self.dh.htype)
-        eq_(self.hlen, self.dh.hlen)
-        eq_(self.hops, self.dh.hops)
-        eq_(self.xid, self.dh.xid)
-        eq_(self.secs, self.dh.secs)
-        eq_(self.flags, self.dh.flags)
-        eq_(self.ciaddr, self.dh.ciaddr)
-        eq_(self.yiaddr, self.dh.yiaddr)
-        eq_(self.siaddr, self.dh.siaddr)
-        eq_(self.giaddr, self.dh.giaddr)
-        eq_(self.chaddr, self.dh.chaddr)
-        eq_(self.sname, self.dh.sname)
-        eq_(self.boot_file, self.dh.boot_file)
-        eq_(str(self.options), str(self.dh.options))

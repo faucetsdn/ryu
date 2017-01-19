@@ -14,10 +14,8 @@
 # limitations under the License.
 
 import logging
-
 import json
 import ast
-from webob import Response
 
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -35,8 +33,9 @@ from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
 from ryu.lib import ofctl_v1_4
 from ryu.lib import ofctl_v1_5
-from ryu.app.wsgi import ControllerBase, WSGIApplication
-
+from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import Response
+from ryu.app.wsgi import WSGIApplication
 
 LOG = logging.getLogger('ryu.app.ofctl_rest')
 

@@ -28,10 +28,13 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
+from ryu.lib.packet.bgp import EvpnEthernetSegmentNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
 from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
 from ryu.lib.packet.bgp import BGPEncapsulationExtendedCommunity
+from ryu.lib.packet.bgp import BGPEvpnEsiLabelExtendedCommunity
+from ryu.lib.packet.bgp import BGPEvpnEsImportRTExtendedCommunity
 from ryu.lib.packet.bgp import BGPPathAttributePmsiTunnel
 from ryu.lib.packet.bgp import PmsiTunnelIdIngressReplication
 from ryu.lib.packet.bgp import RF_L2_EVPN
@@ -221,6 +224,28 @@ class VrfTable(Table):
         label_list = []
         vrf_conf = self.vrf_conf
         if not is_withdraw:
+            table_manager = self._core_service.table_manager
+            if gen_lbl and next_hop:
+                # Label per next_hop demands we use a different label
+                # per next_hop. Here connected interfaces are advertised per
+                # VRF.
+                label_key = (vrf_conf.route_dist, next_hop)
+                nh_label = table_manager.get_nexthop_label(label_key)
+                if not nh_label:
+                    nh_label = table_manager.get_next_vpnv4_label()
+                    table_manager.set_nexthop_label(label_key, nh_label)
+                label_list.append(nh_label)
+
+            elif gen_lbl:
+                # If we do not have next_hop, get a new label.
+                label_list.append(table_manager.get_next_vpnv4_label())
+
+            # Set MPLS labels with the generated labels
+            if gen_lbl and isinstance(nlri, EvpnMacIPAdvertisementNLRI):
+                nlri.mpls_labels = label_list[:2]
+            elif gen_lbl and isinstance(nlri, EvpnIpPrefixNLRI):
+                nlri.mpls_label = label_list[0]
+
             # Create a dictionary for path-attrs.
             pattrs = OrderedDict()
 
@@ -232,6 +257,15 @@ class VrfTable(Table):
                 EXPECTED_ORIGIN)
             pattrs[BGP_ATTR_TYPE_AS_PATH] = BGPPathAttributeAsPath([])
             communities = []
+
+            # Set ES-Import Route Target
+            if isinstance(nlri, EvpnEthernetSegmentNLRI):
+                subtype = 2
+                es_import = nlri.esi.mac_addr
+                communities.append(BGPEvpnEsImportRTExtendedCommunity(
+                                   subtype=subtype,
+                                   es_import=es_import))
+
             for rt in vrf_conf.export_rts:
                 as_num, local_admin = rt.split(':')
                 subtype = 2
@@ -253,27 +287,34 @@ class VrfTable(Table):
                 communities.append(
                     BGPEncapsulationExtendedCommunity.from_str(tunnel_type))
 
+            # Set ESI Label Extended Community
+            redundancy_mode = kwargs.get('redundancy_mode', None)
+            if redundancy_mode is not None:
+                subtype = 1
+                flags = 0
+
+                from ryu.services.protocols.bgp.api.prefix import (
+                    REDUNDANCY_MODE_SINGLE_ACTIVE)
+                if redundancy_mode == REDUNDANCY_MODE_SINGLE_ACTIVE:
+                    flags |= BGPEvpnEsiLabelExtendedCommunity.SINGLE_ACTIVE_BIT
+
+                vni = kwargs.get('vni', None)
+                if vni is not None:
+                    communities.append(BGPEvpnEsiLabelExtendedCommunity(
+                        subtype=subtype,
+                        flags=flags,
+                        vni=vni))
+                else:
+                    communities.append(BGPEvpnEsiLabelExtendedCommunity(
+                                       subtype=subtype,
+                                       flags=flags,
+                                       mpls_label=label_list[0]))
+
             pattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = \
                 BGPPathAttributeExtendedCommunities(communities=communities)
             if vrf_conf.multi_exit_disc:
                 pattrs[BGP_ATTR_TYPE_MULTI_EXIT_DISC] = \
                     BGPPathAttributeMultiExitDisc(vrf_conf.multi_exit_disc)
-
-            table_manager = self._core_service.table_manager
-            if gen_lbl and next_hop:
-                # Label per next_hop demands we use a different label
-                # per next_hop. Here connected interfaces are advertised per
-                # VRF.
-                label_key = (vrf_conf.route_dist, next_hop)
-                nh_label = table_manager.get_nexthop_label(label_key)
-                if not nh_label:
-                    nh_label = table_manager.get_next_vpnv4_label()
-                    table_manager.set_nexthop_label(label_key, nh_label)
-                label_list.append(nh_label)
-
-            elif gen_lbl:
-                # If we do not have next_hop, get a new label.
-                label_list.append(table_manager.get_next_vpnv4_label())
 
             # Set PMSI Tunnel Attribute
             pmsi_tunnel_type = kwargs.get('pmsi_tunnel_type', None)
@@ -289,12 +330,6 @@ class VrfTable(Table):
                     BGPPathAttributePmsiTunnel(pmsi_flags=0,
                                                tunnel_type=pmsi_tunnel_type,
                                                tunnel_id=tunnel_id)
-
-            # Set MPLS labels with the generated labels
-            if gen_lbl and isinstance(nlri, EvpnMacIPAdvertisementNLRI):
-                nlri.mpls_labels = label_list[:2]
-            elif gen_lbl and isinstance(nlri, EvpnIpPrefixNLRI):
-                nlri.mpls_label = label_list[0]
 
         puid = self.VRF_PATH_CLASS.create_puid(
             vrf_conf.route_dist, nlri.prefix)

@@ -3,11 +3,16 @@ import os
 from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V4
 from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V6
 from ryu.services.protocols.bgp.bgpspeaker import RF_L2_EVPN
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAX_ET
+from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_LACP
+from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_MAC_BASED
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_ETH_AUTO_DISCOVERY
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAC_IP_ADV_ROUTE
 from ryu.services.protocols.bgp.bgpspeaker import TUNNEL_TYPE_VXLAN
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MULTICAST_ETAG_ROUTE
+from ryu.services.protocols.bgp.bgpspeaker import EVPN_ETH_SEGMENT
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_IP_PREFIX_ROUTE
-
+from ryu.services.protocols.bgp.bgpspeaker import REDUNDANCY_MODE_SINGLE_ACTIVE
 
 # =============================================================================
 # BGP configuration.
@@ -92,6 +97,17 @@ BGP = {
         },
         # Example of EVPN prefix
         {
+            'route_type': EVPN_ETH_AUTO_DISCOVERY,
+            'route_dist': '65001:200',
+            'esi': {
+                'type': ESI_TYPE_LACP,
+                'mac_addr': 'aa:bb:cc:dd:ee:ff',
+                'port_key': 100,
+            },
+            'ethernet_tag_id': EVPN_MAX_ET,
+            'redundancy_mode': REDUNDANCY_MODE_SINGLE_ACTIVE,
+        },
+        {
             'route_type': EVPN_MAC_IP_ADV_ROUTE,
             'route_dist': '65001:200',
             'esi': 0,
@@ -108,6 +124,16 @@ BGP = {
             'esi': 0,
             'ethernet_tag_id': 0,
             'ip_addr': '10.40.1.1',
+        },
+        {
+            'route_type': EVPN_ETH_SEGMENT,
+            'route_dist': '65001:200',
+            'esi': {
+                'type': ESI_TYPE_MAC_BASED,
+                'mac_addr': 'aa:bb:cc:dd:ee:ff',
+                'local_disc': 100,
+            },
+            'ip_addr': '172.17.0.1',
         },
         {
             'route_type': EVPN_IP_PREFIX_ROUTE,

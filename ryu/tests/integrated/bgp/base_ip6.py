@@ -16,6 +16,8 @@
 
 from __future__ import absolute_import
 
+import logging
+import sys
 import unittest
 
 from ryu.tests.integrated.common import docker_base as ctn_base
@@ -23,23 +25,25 @@ from ryu.tests.integrated.common import ryubgp
 from ryu.tests.integrated.common import quagga
 
 
-class BgpSpeakerTestBase(unittest.TestCase):
+LOG = logging.getLogger(__name__)
 
+
+class BgpSpeakerTestBase(unittest.TestCase):
+    images = []
+    containers = []
+    bridges = []
     checktime = 120
 
     @classmethod
     def setUpClass(cls):
-        cls.images = []
-        cls.containers = []
-        cls.bridges = []
-
         cls.brdc1 = ctn_base.Bridge(name='brip6dc1',
                                     subnet='2001:10::/32')
         cls.bridges.append(cls.brdc1)
 
         cls.dockerimg = ctn_base.DockerImage()
-        cls.r_img = cls.dockerimg.create_ryu(image='osrg/ryu',
-                                             check_exist=True)
+        image = 'python:%d.%d' % (
+            sys.version_info.major, sys.version_info.minor)
+        cls.r_img = cls.dockerimg.create_ryu(image=image, check_exist=True)
         cls.images.append(cls.r_img)
         cls.q_img = 'osrg/quagga'
         cls.images.append(cls.q_img)
@@ -73,7 +77,7 @@ class BgpSpeakerTestBase(unittest.TestCase):
             try:
                 ctn.stop()
             except ctn_base.CommandError as e:
-                pass
+                LOG.exception('Exception when stopping containers: %s', e)
             ctn.remove()
         for br in cls.bridges:
             br.delete()

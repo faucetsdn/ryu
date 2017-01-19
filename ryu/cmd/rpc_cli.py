@@ -31,6 +31,7 @@
 
 from __future__ import print_function
 
+import ast
 import cmd
 import signal
 import socket
@@ -43,8 +44,12 @@ from ryu.lib import rpc
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
-    # eg. rpc-cli --peers=hoge=localhost:9998,fuga=localhost:9999
-    cfg.ListOpt('peers', default=[], help='list of peers')
+    cfg.ListOpt('peers', default=[],
+                help='List of peers, separated by commas. '
+                     '(e.g., "hoge=localhost:9998,fuga=localhost:9999")'),
+    cfg.StrOpt('command', short='c', default=None,
+               help='Command to be executed as single command. '
+                    'The default is None and opens interactive console.'),
 ])
 
 
@@ -52,16 +57,18 @@ class Peer(object):
     def __init__(self, name, addr):
         self._name = name
         self._addr = addr
+        self.socket = None
         self.client = None
         try:
             self.connect()
-        except:
-            pass
+        except ConnectionError as e:
+            print('Exception when connecting to peer "%s": %s' % (name, e))
+            raise e
 
     def connect(self):
-        self.client = None
-        s = socket.create_connection(self._addr)
-        self.client = rpc.Client(s, notification_callback=self.notification)
+        self.socket = socket.create_connection(self._addr)
+        self.client = rpc.Client(self.socket,
+                                 notification_callback=self.notification)
 
     def try_to_connect(self, verbose=False):
         if self.client:
@@ -100,12 +107,25 @@ class Peer(object):
             print("connected.  retrying the request...")
             return g()
 
+    def close(self):
+        self.socket.close()
+
 
 peers = {}
 
 
 def add_peer(name, host, port):
-    peers[name] = Peer(name, (host, port))
+    try:
+        peer = Peer(name, (host, port))
+    except ConnectionError:
+        return
+
+    peers[name] = peer
+
+
+def close_peers():
+    for peer in peers.values():
+        peer.socket.close()
 
 
 class Cmd(cmd.Cmd):
@@ -120,9 +140,9 @@ class Cmd(cmd.Cmd):
         try:
             peer = args[0]
             method = args[1]
-            params = eval(args[2])
-        except:
-            print("argument error")
+            params = ast.literal_eval(args[2])
+        except (IndexError, ValueError) as e:
+            print("argument error: %s" % e)
             return
         try:
             p = peers[peer]
@@ -170,7 +190,8 @@ class Cmd(cmd.Cmd):
     def complete_notify(self, text, line, begidx, endidx):
         return self._complete_peer(text, line, begidx, endidx)
 
-    def do_EOF(self, _line):
+    def do_EOF(self, _line=None):
+        close_peers()
         sys.exit(0)
 
     def emptyline(self):
@@ -201,6 +222,9 @@ class Cmd(cmd.Cmd):
         signal.signal(signal.SIGALRM, self._timeout)
         signal.alarm(1)
 
+    def postloop(self):
+        close_peers()
+
     def onecmd(self, string):
         self._in_onecmd = True
         try:
@@ -228,6 +252,11 @@ def main(args=None, prog=None):
         name, addr = p_str.split('=')
         host, port = addr.rsplit(':', 1)
         add_peer(name, host, port)
+
+    if CONF.command:
+        command = Cmd()
+        command.onecmd(CONF.command)
+        command.do_EOF()
 
     Cmd().cmdloop()
 

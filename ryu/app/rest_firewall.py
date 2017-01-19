@@ -17,9 +17,8 @@
 import logging
 import json
 
-from webob import Response
-
 from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import Response
 from ryu.app.wsgi import WSGIApplication
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -679,8 +678,7 @@ class Firewall(object):
 
     def _set_log_status(self, is_enable, waiters):
         if is_enable:
-            actions = Action.to_openflow(self.dp,
-                                         {REST_ACTION: REST_ACTION_PACKETIN})
+            actions = Action.to_openflow({REST_ACTION: REST_ACTION_PACKETIN})
             details = 'Log collection started.'
         else:
             actions = []
@@ -722,7 +720,7 @@ class Firewall(object):
         priority = ARP_FLOW_PRIORITY
         match = {REST_DL_TYPE: ether.ETH_TYPE_ARP}
         action = {REST_ACTION: REST_ACTION_ALLOW}
-        actions = Action.to_openflow(self.dp, action)
+        actions = Action.to_openflow(action)
         flow = self._to_of_flow(cookie=cookie, priority=priority,
                                 match=match, actions=actions)
 
@@ -754,7 +752,7 @@ class Firewall(object):
             result = self.get_log_status(waiters)
             if result[REST_LOG_STATUS] == REST_STATUS_ENABLE:
                 rest[REST_ACTION] = REST_ACTION_PACKETIN
-        actions = Action.to_openflow(self.dp, rest)
+        actions = Action.to_openflow(rest)
         flow = self._to_of_flow(cookie=cookie, priority=priority,
                                 match=match, actions=actions)
 
@@ -881,7 +879,7 @@ class Firewall(object):
         rule = {REST_RULE_ID: ruleid}
         rule.update({REST_PRIORITY: flow[REST_PRIORITY]})
         rule.update(Match.to_rest(flow))
-        rule.update(Action.to_rest(self.dp, flow))
+        rule.update(Action.to_rest(flow))
         return rule
 
 
@@ -1079,19 +1077,17 @@ class Match(object):
 class Action(object):
 
     @staticmethod
-    def to_openflow(dp, rest):
+    def to_openflow(rest):
         value = rest.get(REST_ACTION, REST_ACTION_ALLOW)
 
         if value == REST_ACTION_ALLOW:
-            out_port = dp.ofproto.OFPP_NORMAL
             action = [{'type': 'OUTPUT',
-                       'port': out_port}]
+                       'port': 'NORMAL'}]
         elif value == REST_ACTION_DENY:
             action = []
         elif value == REST_ACTION_PACKETIN:
-            out_port = dp.ofproto.OFPP_CONTROLLER
             action = [{'type': 'OUTPUT',
-                       'port': out_port,
+                       'port': 'CONTROLLER',
                        'max_len': 128}]
         else:
             raise ValueError('Invalid action type.')
@@ -1099,9 +1095,9 @@ class Action(object):
         return action
 
     @staticmethod
-    def to_rest(dp, openflow):
+    def to_rest(openflow):
         if REST_ACTION in openflow:
-            action_allow = 'OUTPUT:%d' % dp.ofproto.OFPP_NORMAL
+            action_allow = 'OUTPUT:NORMAL'
             if openflow[REST_ACTION] == [action_allow]:
                 action = {REST_ACTION: REST_ACTION_ALLOW}
             else:

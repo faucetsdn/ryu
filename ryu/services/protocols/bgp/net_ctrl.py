@@ -51,11 +51,11 @@ NC_RPC_BIND_IP = 'apgw_rpc_bind_ip'
 NC_RPC_BIND_PORT = 'apgw_rpc_bind_port'
 
 # Notification symbols
-NOTF_ADD_REMOTE_PREFX = 'prefix.add_remote'
-NOTF_DELETE_REMOTE_PREFX = 'prefix.delete_remote'
-NOTF_ADD_LOCAL_PREFX = 'prefix.add_local'
-NOTF_DELETE_LOCAL_PREFX = 'prefix.delete_local'
-NOTF_LOG = 'logging'
+NOTIFICATION_ADD_REMOTE_PREFIX = 'prefix.add_remote'
+NOTIFICATION_DELETE_REMOTE_PREFIX = 'prefix.delete_remote'
+NOTIFICATION_ADD_LOCAL_PREFIX = 'prefix.add_local'
+NOTIFICATION_DELETE_LOCAL_PREFIX = 'prefix.delete_local'
+NOTIFICATION_LOG = 'logging'
 
 # MessagePackRPC message type constants
 RPC_MSG_REQUEST = 0
@@ -94,20 +94,22 @@ class RpcSession(Activity):
     and utilities that use these. It also cares about socket communication w/
     RPC peer.
     """
+    NAME_FMT = 'RpcSession%s'
 
-    def __init__(self, socket, outgoing_msg_sink_iter):
-        super(RpcSession, self).__init__("RpcSession(%s)" % socket)
+    def __init__(self, sock, outgoing_msg_sink_iter):
+        self.peer_name = str(sock.getpeername())
+        super(RpcSession, self).__init__(self.NAME_FMT % self.peer_name)
         self._packer = msgpack.Packer(encoding='utf-8')
         self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
-        self._socket = socket
+        self._socket = sock
         self._outgoing_msg_sink_iter = outgoing_msg_sink_iter
+        self.is_connected = True
 
     def stop(self):
         super(RpcSession, self).stop()
-        LOG.critical(
-            'RPC Session to %s stopped', str(self._socket.getpeername())
-        )
+        self.is_connected = False
+        LOG.info('RPC Session to %s stopped', self.peer_name)
 
     def _run(self):
         # Process outgoing messages in new thread.
@@ -117,9 +119,7 @@ class RpcSession(Activity):
         # Process incoming messages in new thread.
         green_in = self._spawn('net_ctrl._process_incoming',
                                self._process_incoming_msgs)
-        LOG.critical(
-            'RPC Session to %s started', str(self._socket.getpeername())
-        )
+        LOG.info('RPC Session to %s started', self.peer_name)
         green_in.wait()
         green_out.wait()
 
@@ -158,6 +158,16 @@ class RpcSession(Activity):
         for msg in self._unpacker:
             return msg
 
+    def _send_error_response(self, request, err_msg):
+        rpc_msg = self.create_error_response(request[RPC_IDX_MSG_ID],
+                                             str(err_msg))
+        return self._sendall(rpc_msg)
+
+    def _send_success_response(self, request, result):
+        rpc_msg = self.create_success_response(request[RPC_IDX_MSG_ID],
+                                               result)
+        return self._sendall(rpc_msg)
+
     def send_notification(self, method, params):
         rpc_msg = self.create_notification(method, params)
         return self._sendall(rpc_msg)
@@ -166,21 +176,22 @@ class RpcSession(Activity):
         LOG.debug('NetworkController started processing incoming messages')
         assert self._socket
 
-        while True:
+        while self.is_connected:
             # Wait for request/response/notification from peer.
             msg_buff = self._recv()
             if len(msg_buff) == 0:
-                LOG.info('Peer %r disconnected.', self._socket)
+                LOG.info('Peer %s disconnected.', self.peer_name)
+                self.is_connected = False
+                self._socket.close()
                 break
             messages = self.feed_and_get_messages(msg_buff)
             for msg in messages:
                 if msg[0] == RPC_MSG_REQUEST:
                     try:
                         result = _handle_request(msg)
-                        _send_success_response(self, self._socket, msg, result)
+                        self._send_success_response(msg, result)
                     except BGPSException as e:
-                        _send_error_response(self, self._socket, msg,
-                                             e.message)
+                        self._send_error_response(msg, e.message)
                 elif msg[0] == RPC_MSG_RESPONSE:
                     _handle_response(msg)
                 elif msg[0] == RPC_MSG_NOTIFY:
@@ -197,22 +208,22 @@ class RpcSession(Activity):
         it loops forever.
         """
         LOG.debug('NetworkController processing outgoing request list.')
-        # TODO(Team): handle un-expected exception breaking the loop in
-        # graceful manner. Discuss this with other component developers.
         # TODO(PH): We should try not to sent routes from bgp peer that is not
         # in established state.
-        from ryu.services.protocols.bgp.model import \
-            FlexinetOutgoingRoute
-        while True:
+        from ryu.services.protocols.bgp.model import (
+            FlexinetOutgoingRoute)
+        while self.is_connected:
             # sink iter is Sink instance and next is blocking so this isn't
             # active wait.
             for outgoing_msg in sink_iter:
+                if not self.is_connected:
+                    self._socket.close()
+                    return
                 if isinstance(outgoing_msg, FlexinetOutgoingRoute):
-                    rpc_msg = _create_prefix_notif(outgoing_msg, self)
+                    rpc_msg = _create_prefix_notification(outgoing_msg, self)
                 else:
                     raise NotImplementedError(
-                        'Do not handle out going message'
-                        ' of type %s' %
+                        'Do not handle out going message of type %s' %
                         outgoing_msg.__class__)
                 if rpc_msg:
                     self._sendall(rpc_msg)
@@ -241,17 +252,16 @@ class RpcSession(Activity):
             self.stop()
 
 
-def _create_prefix_notif(outgoing_msg, rpc_session):
+def _create_prefix_notification(outgoing_msg, rpc_session):
     """Constructs prefix notification with data from given outgoing message.
 
     Given RPC session is used to create RPC notification message.
     """
-    assert(outgoing_msg)
+    assert outgoing_msg
     path = outgoing_msg.path
-    assert(path)
+    assert path
     vpn_nlri = path.nlri
 
-    rpc_msg = None
     assert path.source is not None
     if path.source != VRF_TABLE:
         # Extract relevant info for update-add/update-delete.
@@ -262,12 +272,12 @@ def _create_prefix_notif(outgoing_msg, rpc_session):
                    VRF_RF: VrfConf.rf_2_vrf_rf(path.route_family)}]
         if not path.is_withdraw:
             # Create notification to NetworkController.
-            rpc_msg = rpc_session.create_notification(NOTF_ADD_REMOTE_PREFX,
-                                                      params)
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_ADD_REMOTE_PREFIX, params)
         else:
-            # Create update-delete request to NetworkController.`
-            rpc_msg = rpc_session.create_notification(NOTF_DELETE_REMOTE_PREFX,
-                                                      params)
+            # Create update-delete request to NetworkController.
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_DELETE_REMOTE_PREFIX, params)
     else:
         # Extract relevant info for update-add/update-delete.
         params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_dist,
@@ -277,12 +287,12 @@ def _create_prefix_notif(outgoing_msg, rpc_session):
                    ORIGIN_RD: path.origin_rd}]
         if not path.is_withdraw:
             # Create notification to NetworkController.
-            rpc_msg = rpc_session.create_notification(NOTF_ADD_LOCAL_PREFX,
-                                                      params)
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_ADD_LOCAL_PREFIX, params)
         else:
-            # Create update-delete request to NetworkController.`
-            rpc_msg = rpc_session.create_notification(NOTF_DELETE_LOCAL_PREFX,
-                                                      params)
+            # Create update-delete request to NetworkController.
+            rpc_msg = rpc_session.create_notification(
+                NOTIFICATION_DELETE_LOCAL_PREFIX, params)
 
     return rpc_msg
 
@@ -322,7 +332,8 @@ class _NetworkController(FlexinetPeer, Activity):
         # Outstanding requests, i.e. requests for which we are yet to receive
         # response from peer. We currently do not have any requests going out.
         self._outstanding_reqs = {}
-        self._rpc_session = None
+        # Dictionary for Peer name to RPC session.
+        self._rpc_sessions = {}
 
     def _run(self, *args, **kwargs):
         """Runs RPC server.
@@ -336,24 +347,36 @@ class _NetworkController(FlexinetPeer, Activity):
         sock_addr = (apgw_rpc_bind_ip, apgw_rpc_bind_port)
         LOG.debug('NetworkController started listening for connections...')
 
-        server_thread, socket = self._listen_tcp(sock_addr,
-                                                 self._start_rpc_session)
+        server_thread, _ = self._listen_tcp(sock_addr,
+                                            self._start_rpc_session)
         self.pause(0)
         server_thread.wait()
 
-    def _start_rpc_session(self, socket):
+    def _start_rpc_session(self, sock):
         """Starts a new RPC session with given connection.
         """
-        if self._rpc_session and self._rpc_session.started:
-            self._rpc_session.stop()
+        session_name = RpcSession.NAME_FMT % str(sock.getpeername())
+        self._stop_child_activities(session_name)
 
-        self._rpc_session = RpcSession(socket, self)
-        self._rpc_session.start()
+        rpc_session = RpcSession(sock, self)
+        self._spawn_activity(rpc_session)
+
+    def _send_rpc_notification_to_session(self, session, method, params):
+        if not session.is_connected:
+            # Stops disconnected RPC session.
+            self._stop_child_activities(session.name)
+            return
+
+        return session.send_notification(method, params)
 
     def send_rpc_notification(self, method, params):
-        if (self.started and self._rpc_session is not None and
-                self._rpc_session.started):
-            return self._rpc_session.send_notification(method, params)
+        if not self.started:
+            return
+
+        for session in list(self._child_activity_map.values()):
+            if not isinstance(session, RpcSession):
+                continue
+            self._send_rpc_notification_to_session(session, method, params)
 
 
 def _handle_response(response):
@@ -380,18 +403,6 @@ def _handle_request(request):
     except TypeError:
         LOG.error(traceback.format_exc())
         raise ApiException(desc='Invalid type for RPC parameter.')
-
-
-def _send_success_response(rpc_session, socket, request, result):
-    response = rpc_session.create_success_response(request[RPC_IDX_MSG_ID],
-                                                   result)
-    socket.sendall(response)
-
-
-def _send_error_response(rpc_session, socket, request, emsg):
-    response = rpc_session.create_error_response(request[RPC_IDX_MSG_ID],
-                                                 str(emsg))
-    socket.sendall(response)
 
 
 # Network controller singleton

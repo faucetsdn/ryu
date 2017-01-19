@@ -42,15 +42,14 @@ Get arp table:
 15:0c:de:49": 2}}}
 """
 
-import json
-
-from webob import Response
 from ryu.app import simple_switch_13
-from ryu.app.wsgi import route, websocket, ControllerBase, WSGIApplication
-from ryu.app.wsgi import rpc_public, WebSocketRPCServer
+from ryu.app.wsgi import ControllerBase
+from ryu.app.wsgi import rpc_public
+from ryu.app.wsgi import websocket
+from ryu.app.wsgi import WebSocketRPCServer
+from ryu.app.wsgi import WSGIApplication
 from ryu.controller import ofp_event
 from ryu.controller.handler import set_ev_cls
-from ryu.lib import hub
 from ryu.lib.packet import packet
 
 
