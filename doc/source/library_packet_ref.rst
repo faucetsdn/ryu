@@ -170,3 +170,5 @@ Protocol Header classes
 
 .. automodule:: ryu.lib.packet.sctp
    :members:
+
+.. autoclass:: ryu.lib.packet.zebra.ZebraMessage
