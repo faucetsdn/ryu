@@ -210,6 +210,10 @@ class DockerImage(object):
             'RUN apt-get update',
             '&& apt-get install -qy --no-install-recommends %s' % pkges,
             '&& cd %s' % workdir_ctn,
+            # Note: Clean previous builds, because "python setup.py install"
+            # might fail if the current directory contains the symlink to
+            # Docker host file systems.
+            '&& rm -rf *.egg-info/ build/ dist/ .tox/ *.log'
             '&& pip install -r tools/pip-requires -r tools/optional-requires',
             '&& python setup.py install',
         ])
