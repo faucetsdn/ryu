@@ -19,6 +19,8 @@
 import logging
 import socket
 
+import netaddr
+
 from ryu.lib.packet.bgp import (
     BGPUpdate,
     RF_IPv4_UC,
@@ -36,6 +38,9 @@ from ryu.lib.packet.bgp import (
     BGPPathAttributeUnknown,
     BGP_ATTR_FLAG_OPTIONAL,
     BGP_ATTR_FLAG_TRANSITIVE,
+    BGPTwoOctetAsSpecificExtendedCommunity,
+    BGPIPv4AddressSpecificExtendedCommunity,
+    BGPFourOctetAsSpecificExtendedCommunity,
 )
 from ryu.services.protocols.bgp.info_base.rtc import RtcPath
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
@@ -141,3 +146,36 @@ def create_end_of_rib_update():
 
 # Bgp update message instance that can used as End of RIB marker.
 UPDATE_EOR = create_end_of_rib_update()
+
+
+def create_rt_extended_community(value, subtype=2):
+    """
+    Creates an instance of the BGP Route Target Community (if "subtype=2")
+    or Route Origin Community ("subtype=3").
+
+    :param value: String of Route Target or Route Origin value.
+    :param subtype: Subtype of Extended Community.
+    :return: An instance of Route Target or Route Origin Community.
+    """
+    global_admin, local_admin = value.split(':')
+    local_admin = int(local_admin)
+    if global_admin.isdigit() and 0 <= int(global_admin) <= 0xffff:
+        ext_com = BGPTwoOctetAsSpecificExtendedCommunity(
+            subtype=subtype,
+            as_number=int(global_admin),
+            local_administrator=local_admin)
+    elif global_admin.isdigit() and 0xffff < int(global_admin) <= 0xffffffff:
+        ext_com = BGPFourOctetAsSpecificExtendedCommunity(
+            subtype=subtype,
+            as_number=int(global_admin),
+            local_administrator=local_admin)
+    elif netaddr.valid_ipv4(global_admin):
+        ext_com = BGPIPv4AddressSpecificExtendedCommunity(
+            subtype=subtype,
+            ipv4_address=global_admin,
+            local_administrator=local_admin)
+    else:
+        raise ValueError(
+            'Invalid Route Target or Route Origin value: %s' % value)
+
+    return ext_com

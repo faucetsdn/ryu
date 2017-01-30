@@ -30,7 +30,6 @@ from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import EvpnEthernetSegmentNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
-from ryu.lib.packet.bgp import BGPTwoOctetAsSpecificExtendedCommunity
 from ryu.lib.packet.bgp import BGPPathAttributeMultiExitDisc
 from ryu.lib.packet.bgp import BGPEncapsulationExtendedCommunity
 from ryu.lib.packet.bgp import BGPEvpnEsiLabelExtendedCommunity
@@ -47,6 +46,7 @@ from ryu.services.protocols.bgp.constants import VRF_TABLE
 from ryu.services.protocols.bgp.info_base.base import Destination
 from ryu.services.protocols.bgp.info_base.base import Path
 from ryu.services.protocols.bgp.info_base.base import Table
+from ryu.services.protocols.bgp.utils.bgp import create_rt_extended_community
 from ryu.services.protocols.bgp.utils.stats import LOCAL_ROUTES
 from ryu.services.protocols.bgp.utils.stats import REMOTE_ROUTES
 from ryu.services.protocols.bgp.utils.stats import RESOURCE_ID
@@ -267,19 +267,9 @@ class VrfTable(Table):
                                    es_import=es_import))
 
             for rt in vrf_conf.export_rts:
-                as_num, local_admin = rt.split(':')
-                subtype = 2
-                communities.append(BGPTwoOctetAsSpecificExtendedCommunity(
-                                   as_number=int(as_num),
-                                   local_administrator=int(local_admin),
-                                   subtype=subtype))
+                communities.append(create_rt_extended_community(rt, 2))
             for soo in vrf_conf.soo_list:
-                as_num, local_admin = soo.split(':')
-                subtype = 3
-                communities.append(BGPTwoOctetAsSpecificExtendedCommunity(
-                                   as_number=int(as_num),
-                                   local_administrator=int(local_admin),
-                                   subtype=subtype))
+                communities.append(create_rt_extended_community(soo, 3))
 
             # Set Tunnel Encapsulation Attribute
             tunnel_type = kwargs.get('tunnel_type', None)
