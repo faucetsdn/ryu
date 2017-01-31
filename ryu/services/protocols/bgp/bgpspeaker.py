@@ -581,18 +581,25 @@ class BGPSpeaker(object):
 
         ``vni`` specifies an Virtual Network Identifier for VXLAN
         or Virtual Subnet Identifier for NVGRE.
-        If tunnel_type is not 'vxlan' or 'nvgre', this field is ignored.
+        If tunnel_type is not TUNNEL_TYPE_VXLAN or TUNNEL_TYPE_NVGRE,
+        this field is ignored.
 
         ``next_hop`` specifies the next hop address for this prefix.
 
         ``tunnel_type`` specifies the data plane encapsulation type
-        to advertise. By the default, this encapsulation attribute is
-        not advertised.
+        to advertise.
+        By the default, this attribute is not advertised.
+        The supported encapsulation types are TUNNEL_TYPE_VXLAN and
+        TUNNEL_TYPE_NVGRE.
 
         ``pmsi_tunnel_type`` specifies the type of the PMSI tunnel attribute
         used to encode the multicast tunnel identifier.
         This field is advertised only if route_type is
         EVPN_MULTICAST_ETAG_ROUTE.
+        By the default, this attribute is not advertised.
+        The supported PMSI tunnel types are PMSI_TYPE_NO_TUNNEL_INFO and
+        PMSI_TYPE_INGRESS_REP.
+        This attribute can also carry vni if tunnel_type is specified.
 
         ``redundancy_mode`` specifies a redundancy mode type.
         The supported redundancy mode types are REDUNDANCY_MODE_ALL_ACTIVE
@@ -638,6 +645,9 @@ class BGPSpeaker(object):
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
                 IP_ADDR: ip_addr,
             })
+            # Set tunnel type specific arguments
+            if tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]:
+                kwargs[EVPN_VNI] = vni
             # Set PMSI Tunnel Attribute arguments
             if pmsi_tunnel_type in [
                     PMSI_TYPE_NO_TUNNEL_INFO,

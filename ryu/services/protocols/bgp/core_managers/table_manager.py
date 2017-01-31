@@ -36,6 +36,7 @@ from ryu.lib.packet.bgp import EvpnEsi
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
 from ryu.lib.packet.bgp import EvpnNLRI
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
+from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 
@@ -543,6 +544,10 @@ class TableCoreManager(object):
             if route_type == EvpnMacIPAdvertisementNLRI.ROUTE_TYPE_NAME:
                 # MPLS labels will be assigned automatically
                 kwargs['mpls_labels'] = []
+            if route_type == EvpnInclusiveMulticastEthernetTagNLRI.ROUTE_TYPE_NAME:
+                # Inclusive Multicast Ethernet Tag Route does not have "vni",
+                # omit "vni" from "kwargs" here.
+                vni = kwargs.pop('vni', None)
             subclass = EvpnNLRI._lookup_type_name(route_type)
             kwargs['route_dist'] = route_dist
             esi = kwargs.get('esi', None)

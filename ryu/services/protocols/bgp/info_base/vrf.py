@@ -319,7 +319,8 @@ class VrfTable(Table):
                 pattrs[BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE] = \
                     BGPPathAttributePmsiTunnel(pmsi_flags=0,
                                                tunnel_type=pmsi_tunnel_type,
-                                               tunnel_id=tunnel_id)
+                                               tunnel_id=tunnel_id,
+                                               vni=kwargs.get('vni', None))
 
         puid = self.VRF_PATH_CLASS.create_puid(
             vrf_conf.route_dist, nlri.prefix)
