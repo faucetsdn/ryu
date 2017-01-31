@@ -188,7 +188,10 @@ def is_valid_mac_addr(addr):
 
 @validate(name=IP_ADDR)
 def is_valid_ip_addr(addr):
-    if not (validation.is_valid_ipv4(addr)
+    # Note: Allows empty IP Address (means length=0).
+    # e.g.) L2VPN MAC advertisement of Cisco NX-OS
+    if not (addr is None
+            or validation.is_valid_ipv4(addr)
             or validation.is_valid_ipv6(addr)):
         raise ConfigValueError(conf_name=IP_ADDR,
                                conf_value=addr)
