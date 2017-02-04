@@ -48,7 +48,7 @@ Please refer to tools/optional-requires for details.
 
 Support
 =======
-Ryu Official site is `<http://osrg.github.io/ryu/>`_.
+Ryu Official site is `<https://osrg.github.io/ryu/>`_.
 
 If you have any
 questions, suggestions, and patches, the mailing list is available at
