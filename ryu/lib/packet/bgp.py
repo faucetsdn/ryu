@@ -2806,13 +2806,12 @@ class _BGPPathAttributeAsPathCommon(_PathAttribute):
 
         return count
 
-    def has_local_as(self, local_as):
+    def has_local_as(self, local_as, max_count=0):
         """Check if *local_as* is already present on path list."""
+        _count = 0
         for as_path_seg in self.value:
-            for as_num in as_path_seg:
-                if as_num == local_as:
-                    return True
-        return False
+            _count += list(as_path_seg).count(local_as)
+        return _count > max_count
 
     def has_matching_leftmost(self, remote_as):
         """Check if leftmost AS matches *remote_as*."""

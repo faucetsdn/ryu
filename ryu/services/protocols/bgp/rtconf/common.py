@@ -41,6 +41,12 @@ LABEL_RANGE = 'label_range'
 LABEL_RANGE_MAX = 'max'
 LABEL_RANGE_MIN = 'min'
 
+# Similar to Cisco command 'allowas-in'. Allows the local ASN in the path.
+# Facilitates auto rd, auto rt import/export
+# ("rd auto/route-target both auto") and simplified spine/leaf architectures,
+# sharing an ASN between e.g. leafs.
+ALLOW_LOCAL_AS_IN_COUNT = 'allow_local_as_in_count'
+
 # Configuration that can be set at global level as well as per context
 # (session/vrf) level
 # Nested configuration override global or higher level configuration as they
@@ -78,6 +84,17 @@ DEFAULT_TCP_CONN_TIMEOUT = 30
 DEFAULT_BGP_CONN_RETRY_TIME = 30
 DEFAULT_MED = 0
 DEFAULT_MAX_PATH_EXT_RTFILTER_ALL = True
+
+
+@validate(name=ALLOW_LOCAL_AS_IN_COUNT)
+def validate_allow_local_as_in_count(count):
+    if not isinstance(count, numbers.Integral):
+        raise ConfigTypeError(desc=('Configuration value for %s has to be '
+                                    'integral type' % ALLOW_LOCAL_AS_IN_COUNT))
+    if count < 0:
+        raise ConfigValueError(desc='Invalid local AS count %s' % count)
+
+    return count
 
 
 @validate(name=LOCAL_AS)
@@ -208,13 +225,16 @@ class CommonConf(BaseConf):
                                    LABEL_RANGE, BGP_SERVER_PORT,
                                    TCP_CONN_TIMEOUT,
                                    BGP_CONN_RETRY_TIME,
-                                   MAX_PATH_EXT_RTFILTER_ALL])
+                                   MAX_PATH_EXT_RTFILTER_ALL,
+                                   ALLOW_LOCAL_AS_IN_COUNT])
 
     def __init__(self, **kwargs):
         super(CommonConf, self).__init__(**kwargs)
 
     def _init_opt_settings(self, **kwargs):
         super(CommonConf, self)._init_opt_settings(**kwargs)
+        self._settings[ALLOW_LOCAL_AS_IN_COUNT] = compute_optional_conf(
+            ALLOW_LOCAL_AS_IN_COUNT, 0, **kwargs)
         self._settings[LABEL_RANGE] = compute_optional_conf(
             LABEL_RANGE, DEFAULT_LABEL_RANGE, **kwargs)
         self._settings[REFRESH_STALEPATH_TIME] = compute_optional_conf(
@@ -246,6 +266,10 @@ class CommonConf(BaseConf):
     # =========================================================================
     # Optional attributes with valid defaults.
     # =========================================================================
+
+    @property
+    def allow_local_as_in_count(self):
+        return self._settings[ALLOW_LOCAL_AS_IN_COUNT]
 
     @property
     def bgp_conn_retry_time(self):

@@ -1622,7 +1622,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
         # Check if AS_PATH has loops.
-        if aspath.has_local_as(self.local_as):
+        if aspath.has_local_as(self.local_as, max_count=self._common_conf.allow_local_as_in_count):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
                       ' UPDATE. %s', update_msg)
             return
@@ -1750,7 +1750,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
 
         aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
         # Check if AS_PATH has loops.
-        if aspath.has_local_as(self.local_as):
+        if aspath.has_local_as(self.local_as, max_count=self._common_conf.allow_local_as_in_count):
             LOG.error('Update message AS_PATH has loops. Ignoring this'
                       ' UPDATE. %s', update_msg)
             return
