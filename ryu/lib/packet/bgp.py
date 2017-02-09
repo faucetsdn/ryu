@@ -3579,9 +3579,9 @@ class PmsiTunnelIdIngressReplication(_PmsiTunnelId):
 
     @classmethod
     def parser(cls, buf):
-        (tunnel_endpoint_ip,
-         ) = struct.unpack_from(cls._VALUE_PACK_STR % len(buf),
-                                six.binary_type(buf))
+        (tunnel_endpoint_ip, ) = struct.unpack_from(
+            cls._VALUE_PACK_STR % len(buf),
+            six.binary_type(buf))
         return cls(tunnel_endpoint_ip=ip.bin_to_text(tunnel_endpoint_ip))
 
     def serialize(self):
