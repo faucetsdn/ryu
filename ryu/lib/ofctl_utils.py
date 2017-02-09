@@ -83,7 +83,7 @@ def to_action(dic, ofp, parser, action_type, util):
         return actions[action_type]()
 
     elif action_type in need_ethertype:
-        ethertype = int(dic.get('ethertype'))
+        ethertype = str_to_int(dic.get('ethertype'))
         return need_ethertype[action_type](ethertype)
 
     elif action_type == OUTPUT:
@@ -92,7 +92,7 @@ def to_action(dic, ofp, parser, action_type, util):
         return parser.OFPActionOutput(out_port, max_len)
 
     elif action_type == SET_MPLS_TTL:
-        mpls_ttl = int(dic.get('mpls_ttl'))
+        mpls_ttl = str_to_int(dic.get('mpls_ttl'))
         return parser.OFPActionSetMplsTtl(mpls_ttl)
 
     elif action_type == SET_QUEUE:
@@ -104,7 +104,7 @@ def to_action(dic, ofp, parser, action_type, util):
         return parser.OFPActionGroup(group_id)
 
     elif action_type == SET_NW_TTL:
-        nw_ttl = int(dic.get('nw_ttl'))
+        nw_ttl = str_to_int(dic.get('nw_ttl'))
         return parser.OFPActionSetNwTtl(nw_ttl)
 
     elif action_type == SET_FIELD:
@@ -113,9 +113,9 @@ def to_action(dic, ofp, parser, action_type, util):
         return parser.OFPActionSetField(**{field: value})
 
     elif action_type == 'COPY_FIELD':
-        n_bits = int(dic.get('n_bits'))
-        src_offset = int(dic.get('src_offset'))
-        dst_offset = int(dic.get('dst_offset'))
+        n_bits = str_to_int(dic.get('n_bits'))
+        src_offset = str_to_int(dic.get('src_offset'))
+        dst_offset = str_to_int(dic.get('dst_offset'))
         oxm_ids = [parser.OFPOxmId(str(dic.get('src_oxm_id'))),
                    parser.OFPOxmId(str(dic.get('dst_oxm_id')))]
         return parser.OFPActionCopyField(
@@ -124,14 +124,14 @@ def to_action(dic, ofp, parser, action_type, util):
     elif action_type == 'METER':
         if hasattr(parser, 'OFPActionMeter'):
             # OpenFlow 1.5 or later
-            meter_id = int(dic.get('meter_id'))
+            meter_id = str_to_int(dic.get('meter_id'))
             return parser.OFPActionMeter(meter_id)
         else:
             # OpenFlow 1.4 or earlier
             return None
 
     elif action_type == EXPERIMENTER:
-        experimenter = int(dic.get('experimenter'))
+        experimenter = str_to_int(dic.get('experimenter'))
         data_type = dic.get('data_type', 'ascii')
 
         if data_type not in ('ascii', 'base64'):
@@ -182,14 +182,14 @@ def to_match_vid(value, ofpvid_present):
     else:
         if '/' in value:
             val = value.split('/')
-            return int(val[0], 0), int(val[1], 0)
+            return str_to_int(val[0]), str_to_int(val[1])
 
         else:
             if value.isdigit():
                 # described as decimal string value
                 return int(value, 10) | ofpvid_present
 
-            return int(value, 0)
+            return str_to_int(value)
 
 
 def to_match_masked_int(value):
