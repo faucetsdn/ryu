@@ -219,8 +219,7 @@ def match_to_str(ofmatch):
         mask = match_field['OXMTlv']['mask']
         value = match_field['OXMTlv']['value']
         if key == 'vlan_vid':
-            value = ofctl_utils.match_vid_to_str(value, mask,
-                                                 ofproto_v1_5.OFPVID_PRESENT)
+            value = match_vid_to_str(value, mask)
         elif key == 'in_port':
             value = UTIL.ofp_port_to_user(value)
         elif key == 'packet_type':
@@ -231,6 +230,11 @@ def match_to_str(ofmatch):
         match.setdefault(key, value)
 
     return match
+
+
+def match_vid_to_str(value, mask):
+    return ofctl_utils.match_vid_to_str(
+        value, mask, ofproto_v1_5.OFPVID_PRESENT)
 
 
 def wrap_dpid_dict(dp, value, to_user=True):
@@ -1101,6 +1105,7 @@ def set_role(dp, role):
     r = UTIL.ofp_role_from_user(role.get('role', dp.ofproto.OFPCR_ROLE_EQUAL))
     role_request = dp.ofproto_parser.OFPRoleRequest(dp, r, 0)
     ofctl_utils.send_msg(dp, role_request, LOG)
+
 
 # NOTE(jkoelker) Alias common funcitons
 send_experimenter = ofctl_utils.send_experimenter

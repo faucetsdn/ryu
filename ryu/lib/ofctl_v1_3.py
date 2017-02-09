@@ -314,8 +314,7 @@ def match_to_str(ofmatch):
         mask = match_field['OXMTlv']['mask']
         value = match_field['OXMTlv']['value']
         if key == 'dl_vlan':
-            value = ofctl_utils.match_vid_to_str(value, mask,
-                                                 ofproto_v1_3.OFPVID_PRESENT)
+            value = match_vid_to_str(value, mask)
         elif key == 'in_port':
             value = UTIL.ofp_port_to_user(value)
         else:
@@ -324,6 +323,11 @@ def match_to_str(ofmatch):
         match.setdefault(key, value)
 
     return match
+
+
+def match_vid_to_str(value, mask):
+    return ofctl_utils.match_vid_to_str(
+        value, mask, ofproto_v1_3.OFPVID_PRESENT)
 
 
 def wrap_dpid_dict(dp, value, to_user=True):

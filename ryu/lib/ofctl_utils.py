@@ -21,6 +21,7 @@ import six
 
 from ryu.lib import dpid
 from ryu.lib import hub
+from ryu.ofproto import ofproto_v1_2
 
 
 LOG = logging.getLogger(__name__)
@@ -71,13 +72,15 @@ def to_action(dic, ofp, parser, action_type, util):
                COPY_TTL_IN: parser.OFPActionCopyTtlIn,
                DEC_MPLS_TTL: parser.OFPActionDecMplsTtl,
                POP_VLAN: parser.OFPActionPopVlan,
-               DEC_NW_TTL: parser.OFPActionDecNwTtl,
-               POP_PBB: parser.OFPActionPopPbb}
+               DEC_NW_TTL: parser.OFPActionDecNwTtl}
+    if ofp.OFP_VERSION > ofproto_v1_2.OFP_VERSION:
+        actions[POP_PBB] = parser.OFPActionPopPbb
 
     need_ethertype = {PUSH_VLAN: parser.OFPActionPushVlan,
                       PUSH_MPLS: parser.OFPActionPushMpls,
-                      POP_MPLS: parser.OFPActionPopMpls,
-                      PUSH_PBB: parser.OFPActionPushPbb}
+                      POP_MPLS: parser.OFPActionPopMpls}
+    if ofp.OFP_VERSION > ofproto_v1_2.OFP_VERSION:
+        need_ethertype[PUSH_PBB] = parser.OFPActionPushPbb
 
     if action_type in actions:
         return actions[action_type]()
