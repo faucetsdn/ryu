@@ -283,6 +283,12 @@ class Test_bgp(unittest.TestCase):
             'evpn_nlri_inc_multi_eth_tag',
             'evpn_nlri_eth_seg',
             'evpn_nlri_ip_prefix',
+            'flowspec_nlri_ipv4',
+            'flowspec_nlri_vpn4',
+            'flowspec_action_traffic_rate',
+            'flowspec_action_traffic_action',
+            'flowspec_action_redirect',
+            'flowspec_action_traffic_marking',
         ]
 
         for f in files:
