@@ -23,12 +23,14 @@ RFC 4271 BGP-4
 # - RFC 4364 BGP/MPLS IP Virtual Private Networks (VPNs)
 
 import abc
+import base64
 import copy
 import functools
 import io
+import itertools
+import math
 import socket
 import struct
-import base64
 
 import netaddr
 import six
@@ -569,6 +571,8 @@ RF_IPv6_VPN = RouteFamily(addr_family.IP6, subaddr_family.MPLS_VPN)
 RF_IPv4_MPLS = RouteFamily(addr_family.IP, subaddr_family.MPLS_LABEL)
 RF_IPv6_MPLS = RouteFamily(addr_family.IP6, subaddr_family.MPLS_LABEL)
 RF_L2_EVPN = RouteFamily(addr_family.L2VPN, subaddr_family.EVPN)
+RF_IPv4_FLOW_SPEC = RouteFamily(addr_family.IP, subaddr_family.IP_FLOW_SPEC)
+RF_VPNv4_FLOW_SPEC = RouteFamily(addr_family.IP, subaddr_family.VPN_FLOW_SPEC)
 RF_RTC_UC = RouteFamily(addr_family.IP,
                         subaddr_family.ROUTE_TARGET_CONSTRAINTS)
 
@@ -580,6 +584,8 @@ _rf_map = {
     (addr_family.IP, subaddr_family.MPLS_LABEL): RF_IPv4_MPLS,
     (addr_family.IP6, subaddr_family.MPLS_LABEL): RF_IPv6_MPLS,
     (addr_family.L2VPN, subaddr_family.EVPN): RF_L2_EVPN,
+    (addr_family.IP, subaddr_family.IP_FLOW_SPEC): RF_IPv4_FLOW_SPEC,
+    (addr_family.IP, subaddr_family.VPN_FLOW_SPEC): RF_VPNv4_FLOW_SPEC,
     (addr_family.IP, subaddr_family.ROUTE_TARGET_CONSTRAINTS): RF_RTC_UC
 }
 
@@ -1979,6 +1985,378 @@ class EvpnIpPrefixNLRI(EvpnNLRI):
         return [self.mpls_label]
 
 
+class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
+    """
+    Base class for Flow Specification NLRI
+    """
+
+    # flow-spec NLRI:
+    # +-----------------------------------+
+    # |    length (0xnn or 0xfn nn)       |
+    # +-----------------------------------+
+    # |     NLRI value  (variable)        |
+    # +-----------------------------------+
+
+    _LENGTH_SHORT_FMT = '!B'
+    LENGTH_SHORT_SIZE = struct.calcsize(_LENGTH_SHORT_FMT)
+    _LENGTH_LONG_FMT = '!H'
+    LENGTH_LONG_SIZE = struct.calcsize(_LENGTH_LONG_FMT)
+    _LENGTH_THRESHOLD = 0xf000
+
+    def __init__(self, length=0, rules=None):
+        self.length = length
+        rules = rules or []
+        for r in rules:
+            assert isinstance(r, _FlowSpecComponentBase)
+        self.rules = rules
+
+    @classmethod
+    def parser(cls, buf):
+        (length, ) = struct.unpack_from(
+            cls._LENGTH_LONG_FMT, six.binary_type(buf))
+
+        if length < cls._LENGTH_THRESHOLD:
+            length >>= 8
+            offset = cls.LENGTH_SHORT_SIZE
+        else:
+            offset = cls.LENGTH_LONG_SIZE
+
+        rest = buf[offset:offset + length]
+        rules = []
+
+        while rest:
+            subcls, rest = _FlowSpecComponentBase.parse_header(rest)
+
+            while rest:
+                rule, rest = subcls.parse_body(rest)
+                rules.append(rule)
+
+                if (not isinstance(rule, _FlowSpecOperatorBase) or
+                        rule.operator & rule.END_OF_LIST):
+                    break
+
+        return cls(length, rules), rest
+
+    def serialize(self):
+        rules_bin = bytearray()
+        self.rules.sort(key=lambda x: x.type)
+        for _, rules in itertools.groupby(self.rules, key=lambda x: x.type):
+            rules = list(rules)
+            rules_bin += rules[0].serialize_header()
+
+            if isinstance(rules[-1], _FlowSpecOperatorBase):
+                rules[-1].operator |= rules[-1].END_OF_LIST
+
+            for r in rules:
+                rules_bin += r.serialize_body()
+
+        self.length = len(rules_bin)
+
+        if self.length < self._LENGTH_THRESHOLD:
+            buf = struct.pack(self._LENGTH_SHORT_FMT, self.length)
+        else:
+            buf = struct.pack(self._LENGTH_LONG_FMT, self.length)
+
+        return buf + rules_bin
+
+
+class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
+    """
+    Flow Specification NLRI class for IPv4 [RFC 5575]
+    """
+    ROUTE_FAMILY = RF_IPv4_FLOW_SPEC
+
+
+class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
+    """
+    Flow Specification NLRI class for VPNv4 [RFC 5575]
+    """
+    ROUTE_FAMILY = RF_VPNv4_FLOW_SPEC
+
+
+class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
+    """
+    Base class for Flow Specification NLRI component
+    """
+    _BASE_STR = '!B'
+    _BASE_STR_SIZE = struct.calcsize(_BASE_STR)
+
+    TYPE_DESTINATION_PREFIX = 0x01
+    TYPE_SOURCE_PREFIX = 0x02
+    TYPE_PROTOCOL = 0x03
+    TYPE_PORT = 0x04
+    TYPE_DESTINATION_PORT = 0x05
+    TYPE_SOURCE_PORT = 0x06
+    TYPE_ICMP = 0x07
+    TYPE_ICMP_CODE = 0x08
+    TYPE_TCP_FLAGS = 0x09
+    TYPE_PACKET_LENGTH = 0x0a
+    TYPE_DIFFSERV_CODE_POINT = 0x0b
+    TYPE_FRAGMENT = 0x0c
+
+    def __init__(self, type_=None):
+        if type_ is None:
+            type_ = self._rev_lookup_type(self.__class__)
+        self.type = type_
+
+    @classmethod
+    def parse_header(cls, rest):
+        (type_,) = struct.unpack_from(
+            cls._BASE_STR, six.binary_type(rest))
+        rest = rest[cls._BASE_STR_SIZE:]
+        return cls._lookup_type(type_), rest
+
+    def serialize_header(self):
+        return struct.pack(self._BASE_STR, self.type)
+
+
+@_FlowSpecComponentBase.register_unknown_type()
+class FlowSpecComponentUnknown(_FlowSpecComponentBase):
+    """
+    Unknown component type for Flow Specification NLRI component
+    """
+
+    def __init__(self, buf, type_=None):
+        super(FlowSpecComponentUnknown, self).__init__(type_)
+        self.buf = buf
+
+    @classmethod
+    def parse_body(cls, buf):
+        return cls(buf), None
+
+    def serialize_body(self):
+        return self.buf
+
+
+class _FlowSpecPrefixBase(_FlowSpecComponentBase, IPAddrPrefix):
+    """
+    Prefix base class for Flow Specification NLRI component
+    """
+
+    def __init__(self, length, addr, type_=None):
+        super(_FlowSpecPrefixBase, self).__init__(type_)
+        self.length = length
+        self.addr = addr
+
+    @classmethod
+    def parse_body(cls, buf):
+        return cls.parser(buf)
+
+    def serialize_body(self):
+        return self.serialize()
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecComponentBase.TYPE_DESTINATION_PREFIX)
+class FlowSpecDestPrefix(_FlowSpecPrefixBase):
+    """
+    Destination Prefix for Flow Specification NLRI component
+    """
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecComponentBase.TYPE_SOURCE_PREFIX)
+class FlowSpecSrcPrefix(_FlowSpecPrefixBase):
+    """
+    Source Prefix for Flow Specification NLRI component
+    """
+
+
+class _FlowSpecOperatorBase(_FlowSpecComponentBase):
+    """Operator base class for Flow Specification NLRI component
+
+    ===================== ===============================================
+    Attribute             Description
+    ===================== ===============================================
+    operator              Match conditions.
+    value                 Value of component.
+    ===================== ===============================================
+    """
+
+    _OPE_PACK_STR = '!B'
+    _OPE_PACK_STR_SIZE = struct.calcsize(_OPE_PACK_STR)
+    _VAL_PACK_STR = '!%ds'
+
+    END_OF_LIST = 1 << 7     # END OF LIST bit
+    AND = 1 << 6             # AND bit
+    _LENGTH_BIT_MASK = 0x30  # The mask for length of the value
+
+    def __init__(self, operator, value, type_=None):
+        super(_FlowSpecOperatorBase, self).__init__(type_)
+        self.operator = operator
+        self.value = value
+
+    @classmethod
+    def parse_body(cls, rest):
+        (operator,) = struct.unpack_from(cls._OPE_PACK_STR,
+                                         six.binary_type(rest))
+        rest = rest[cls._OPE_PACK_STR_SIZE:]
+        length = 1 << ((operator & cls._LENGTH_BIT_MASK) >> 4)
+        value_type = type_desc.IntDescr(length)
+        value = value_type.to_user(rest)
+        rest = rest[length:]
+
+        return cls(operator, value), rest
+
+    def serialize_body(self):
+        length = (self.value.bit_length() + 7) // 8 or 1
+        self.operator |= int(math.log(length, 2)) << 4
+        buf = struct.pack(self._OPE_PACK_STR, self.operator)
+        value_type = type_desc.IntDescr(length)
+        buf += struct.pack(self._VAL_PACK_STR % length,
+                           value_type.from_user(self.value))
+
+        return buf
+
+
+class _FlowSpecNumeric(_FlowSpecOperatorBase):
+    """
+    Numeric operator class for Flow Specification NLRI component
+    """
+    # Numeric operator format
+    #  0   1   2   3   4   5   6   7
+    # +---+---+---+---+---+---+---+---+
+    # | e | a |  len  | 0 |lt |gt |eq |
+    # +---+---+---+---+---+---+---+---+
+
+    LT = 1 << 2  # Less than comparison bit
+    GT = 1 << 1  # Greater than comparison bit
+    EQ = 1 << 0  # Equality bit
+
+
+class _FlowSpecBitmask(_FlowSpecOperatorBase):
+    """
+    Bitmask operator class for Flow Specification NLRI component
+    """
+    # Bitmask operator format
+    #  0   1   2   3   4   5   6   7
+    # +---+---+---+---+---+---+---+---+
+    # | e | a |  len  | 0 | 0 |not| m |
+    # +---+---+---+---+---+---+---+---+
+
+    NOT = 1 << 1    # NOT bit
+    MATCH = 1 << 0  # MATCH bit
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PROTOCOL)
+class FlowSpecIPProtocol(_FlowSpecNumeric):
+    """IP Protocol for Flow Specification NLRI component
+
+    Set the IP protocol number at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PORT)
+class FlowSpecPort(_FlowSpecNumeric):
+    """Port number for Flow Specification NLRI component
+
+    Set the source or destination TCP/UDP ports at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecComponentBase.TYPE_DESTINATION_PORT)
+class FlowSpecDestPort(_FlowSpecNumeric):
+    """Destination port number for Flow Specification NLRI component
+
+    Set the destination port of a TCP or UDP packet at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_SOURCE_PORT)
+class FlowSpecSrcPort(_FlowSpecNumeric):
+    """Source port number for Flow Specification NLRI component
+
+    Set the source port of a TCP or UDP packet at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_ICMP)
+class FlowSpecIcmpType(_FlowSpecNumeric):
+    """ICMP type for Flow Specification NLRI component
+
+    Set the type field of an ICMP packet at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_ICMP_CODE)
+class FlowSpecIcmpCode(_FlowSpecNumeric):
+    """ICMP code Flow Specification NLRI component
+
+    Set the code field of an ICMP packet at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_TCP_FLAGS)
+class FlowSpecTCPFlags(_FlowSpecBitmask):
+    """TCP flags for Flow Specification NLRI component
+
+    Supported TCP flags are CWR, ECN, URGENT, ACK, PUSH, RST, SYN and FIN.
+    """
+
+    # bitmask format
+    #  0    1    2    3    4    5    6    7
+    # +----+----+----+----+----+----+----+----+
+    # |CWR |ECN |URG |ACK |PSH |RST |SYN |FIN |
+    # +----+----+----+----+----+----+----+----+
+
+    CWR = 1 << 6
+    ECN = 1 << 5
+    URGENT = 1 << 5
+    ACK = 1 << 4
+    PUSH = 1 << 3
+    RST = 1 << 2
+    SYN = 1 << 1
+    FIN = 1 << 0
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecComponentBase.TYPE_PACKET_LENGTH)
+class FlowSpecPacketLen(_FlowSpecNumeric):
+    """Packet length for Flow Specification NLRI component
+
+    Set the total IP packet length at value.
+    """
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecComponentBase.TYPE_DIFFSERV_CODE_POINT)
+class FlowSpecDSCP(_FlowSpecNumeric):
+    """Diffserv Code Point for Flow Specification NLRI component
+
+    Set the 6-bit DSCP field at value. [RFC2474]
+    """
+
+
+@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_FRAGMENT)
+class FlowSpecFragment(_FlowSpecBitmask):
+    """Fragment for Flow Specification NLRI component
+
+    Set the bitmask for operand format at value.
+    The following values are supported.
+
+    ========== ===============================================
+    Attribute  Description
+    ========== ===============================================
+    LF         Last fragment
+    FF         First fragment
+    ISF        Is a fragment
+    DF         Don't fragment
+    ========== ===============================================
+    """
+
+    # bitmask format
+    #  0   1   2   3   4   5   6   7
+    # +---+---+---+---+---+---+---+---+
+    # |   Reserved    |LF |FF |IsF|DF |
+    # +---+---+---+---+---+---+---+---+
+
+    LF = 1 << 3
+    FF = 1 << 2
+    ISF = 1 << 1
+    DF = 1 << 0
+
+
 @functools.total_ordering
 class RouteTargetMembershipNLRI(StringifyMixin):
     """Route Target Membership NLRI.
@@ -2089,6 +2467,8 @@ _ADDR_CLASSES = {
     _addr_class_key(RF_IPv4_VPN): LabelledVPNIPAddrPrefix,
     _addr_class_key(RF_IPv6_VPN): LabelledVPNIP6AddrPrefix,
     _addr_class_key(RF_L2_EVPN): EvpnNLRI,
+    _addr_class_key(RF_IPv4_FLOW_SPEC): FlowSpecIPv4NLRI,
+    _addr_class_key(RF_VPNv4_FLOW_SPEC): FlowSpecVPNv4NLRI,
     _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
 }
 
@@ -2824,6 +3204,7 @@ class BGPPathAttributeClusterList(_PathAttribute):
 # 01    03          Route Origin Community (IPv4 address specific)
 # 02    03          Route Origin Community (four-octet AS specific, RFC 5668)
 # 06    sub-type    Ethernet VPN Extended Community (RFC 7432)
+# 80    sub-type    Flow Specification Extended Community (RFC 5575)
 
 @_PathAttribute.register_type(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
 class BGPPathAttributeExtendedCommunities(_PathAttribute):
@@ -2897,6 +3278,15 @@ class _ExtendedCommunity(StringifyMixin, TypeDisp, _Value):
     EVPN_MAC_MOBILITY = (EVPN, SUBTYPE_EVPN_MAC_MOBILITY)
     EVPN_ESI_LABEL = (EVPN, SUBTYPE_EVPN_ESI_LABEL)
     EVPN_ES_IMPORT_RT = (EVPN, SUBTYPE_EVPN_ES_IMPORT_RT)
+    FLOWSPEC = 0x80
+    SUBTYPE_FLOWSPEC_TRAFFIC_RATE = 0x06
+    SUBTYPE_FLOWSPEC_TRAFFIC_ACTION = 0x07
+    SUBTYPE_FLOWSPEC_REDIRECT = 0x08
+    SUBTYPE_FLOWSPEC_TRAFFIC_REMARKING = 0x09
+    FLOWSPEC_TRAFFIC_RATE = (FLOWSPEC, SUBTYPE_FLOWSPEC_TRAFFIC_RATE)
+    FLOWSPEC_TRAFFIC_ACTION = (FLOWSPEC, SUBTYPE_FLOWSPEC_TRAFFIC_ACTION)
+    FLOWSPEC_REDIRECT = (FLOWSPEC, SUBTYPE_FLOWSPEC_REDIRECT)
+    FLOWSPEC_TRAFFIC_REMARKING = (FLOWSPEC, SUBTYPE_FLOWSPEC_TRAFFIC_REMARKING)
 
     def __init__(self, type_=None):
         if type_ is None:
@@ -3157,6 +3547,105 @@ class BGPEvpnEsImportRTExtendedCommunity(_ExtendedCommunity):
                            addrconv.mac.text_to_bin(self.es_import))
 
 
+@_ExtendedCommunity.register_type(_ExtendedCommunity.FLOWSPEC_TRAFFIC_RATE)
+class BGPFlowSpecTrafficRateCommunity(_ExtendedCommunity):
+    """
+    Flow Specification Traffic Filtering Actions for Traffic Rate
+    """
+    # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Type=0x80     | Sub-Type=0x06 |           AS number           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |                      Rate information                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _VALUE_PACK_STR = '!BHf'
+    _VALUE_FIELDS = ['subtype', 'as_number', 'rate_info']
+
+    def __init__(self, **kwargs):
+        super(BGPFlowSpecTrafficRateCommunity, self).__init__()
+        self.do_init(BGPFlowSpecTrafficRateCommunity, self, kwargs)
+
+    @classmethod
+    def parse_value(cls, buf):
+        (subtype, as_number,
+         rate_info) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+        return {
+            'subtype': subtype,
+            'as_number': as_number,
+            'rate_info': rate_info,
+        }
+
+    def serialize_value(self):
+        return struct.pack(self._VALUE_PACK_STR, self.subtype,
+                           self.as_number, self.rate_info)
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.FLOWSPEC_TRAFFIC_ACTION)
+class BGPFlowSpecTrafficActionCommunity(_ExtendedCommunity):
+    """
+    Flow Specification Traffic Filtering Actions for Traffic Action
+    """
+    # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Type=0x80     | Sub-Type=0x07 |          Traffic-action       |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |                     Traffic-action Cont'd                     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    # Traffic-action format
+    #  40  41  42  43  44  45  46  47
+    # +---+---+---+---+---+---+---+---+
+    # |        reserved       | S | T |
+    # +---+---+---+---+---+---+---+---+
+
+    _VALUE_PACK_STR = '!B5xB'
+    _VALUE_FIELDS = ['subtype', 'action']
+    SAMPLE = 1 << 1
+    TERMINAL = 1 << 0
+
+    def __init__(self, **kwargs):
+        super(BGPFlowSpecTrafficActionCommunity, self).__init__()
+        self.do_init(BGPFlowSpecTrafficActionCommunity, self, kwargs)
+
+
+@_ExtendedCommunity.register_type(_ExtendedCommunity.FLOWSPEC_REDIRECT)
+class BGPFlowSpecRedirectCommunity(BGPTwoOctetAsSpecificExtendedCommunity):
+    """
+    Flow Specification Traffic Filtering Actions for Redirect
+    """
+
+
+@_ExtendedCommunity.register_type(
+    _ExtendedCommunity.FLOWSPEC_TRAFFIC_REMARKING)
+class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
+    """
+    Flow Specification Traffic Filtering Actions for Traffic Marking
+    """
+    # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Type=0x80     | Sub-Type=0x09 |           Reserved=0          |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |                    Reserved=0                 |      Dscp     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _VALUE_PACK_STR = '!B5xB'
+    _VALUE_FIELDS = ['subtype', 'dscp']
+
+    def __init__(self, **kwargs):
+        super(BGPFlowSpecTrafficMarkingCommunity, self).__init__()
+        self.do_init(BGPFlowSpecTrafficMarkingCommunity, self, kwargs)
+
+    @classmethod
+    def parse_value(cls, buf):
+        (subtype, dscp) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+        return {
+            'subtype': subtype,
+            'dscp': dscp,
+        }
+
+    def serialize_value(self):
+        return struct.pack(self._VALUE_PACK_STR, self.subtype, self.dscp)
+
+
 @_ExtendedCommunity.register_unknown_type()
 class BGPUnknownExtendedCommunity(_ExtendedCommunity):
     _VALUE_PACK_STR = '!7s'  # opaque value
@@ -3194,7 +3683,10 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
                 raise ValueError('Invalid address for next_hop: %s' % n)
         # Note: For the backward compatibility, stores the first next_hop
         # address and all next_hop addresses separately.
-        self._next_hop = next_hop[0]
+        if next_hop:
+            self._next_hop = next_hop[0]
+        else:
+            self._next_hop = None
         self._next_hop_list = next_hop
         self.nlri = nlri
         addr_cls = _get_addr_class(afi, safi)
