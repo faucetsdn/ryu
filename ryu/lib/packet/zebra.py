@@ -1250,6 +1250,8 @@ class _ZebraIPRoute(_ZebraMessageBody):
         prefix = _serialize_ip_prefix(self.prefix)
 
         nexthops = _serialize_nexthops(self.nexthops)
+        if self.nexthops:
+            self.message |= ZAPI_MESSAGE_NEXTHOP  # fixup
 
         options = self._serialize_message_option(
             self.distance, ZAPI_MESSAGE_DISTANCE, '!B')

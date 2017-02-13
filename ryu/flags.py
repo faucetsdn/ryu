@@ -62,7 +62,6 @@ CONF.register_cli_opts([
 DEFAULT_RPC_PORT = 50002
 DEFAULT_RPC_HOST = '0.0.0.0'
 
-CONF = cfg.CONF
 CONF.register_cli_opts([
     cfg.IntOpt('rpc-port', default=DEFAULT_RPC_PORT,
                help='Port for RPC server (default: %s)' % DEFAULT_RPC_PORT),
@@ -72,3 +71,34 @@ CONF.register_cli_opts([
                help='The config file formatted in Python source file. '
                     'Please refer to "bgp_sample_conf.py" for details.')
 ], group='bgp-app')
+
+
+DEFAULT_ZSERV_HOST = '/var/run/quagga/zserv.api'
+DEFAULT_ZSERV_PORT = 2600
+DEFAULT_ZSERV_VERSION = 2  # Version of Ubuntu 16.04 LTS packaged Quagga
+DEFAULT_ZSERV_CLIENT_ROUTE_TYPE = 'BGP'
+DEFAULT_ZSERV_INTERVAL = 10
+
+CONF.register_cli_opts([
+    cfg.StrOpt(
+        'server-host', default=DEFAULT_ZSERV_HOST,
+        help='Path to Unix Socket or IP address of Zebra server '
+             '(default: %s)' % DEFAULT_ZSERV_HOST),
+    cfg.IntOpt(
+        'server-port', default=DEFAULT_ZSERV_PORT,
+        help='Port number of Zebra server '
+             '(default: %s)'
+        % DEFAULT_ZSERV_PORT),
+    cfg.IntOpt(
+        'server-version', default=DEFAULT_ZSERV_VERSION,
+        help='Zebra protocol version of Zebra server '
+             '(default: %s)' % DEFAULT_ZSERV_VERSION),
+    cfg.StrOpt(
+        'client-route-type', default=DEFAULT_ZSERV_CLIENT_ROUTE_TYPE,
+        help='Zebra route type advertised by Zebra client service. '
+             '(default: %s)' % DEFAULT_ZSERV_CLIENT_ROUTE_TYPE),
+    cfg.IntOpt(
+        'retry-interval', default=DEFAULT_ZSERV_INTERVAL,
+        help='Retry interval connecting to Zebra server '
+             '(default: %s)' % DEFAULT_ZSERV_INTERVAL),
+], group='zapi')
