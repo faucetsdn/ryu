@@ -28,6 +28,7 @@ import netaddr
 import six
 
 from ryu.lib import addrconv
+from ryu.lib import ip
 from ryu.lib import stringify
 from ryu.lib import type_desc
 from . import packet_base
@@ -199,6 +200,28 @@ MAX_CLASS_TYPE = 8
 
 IPv4Prefix = bgp.IPAddrPrefix
 IPv6Prefix = bgp.IP6AddrPrefix
+
+
+def _parse_ip_prefix(family, buf):
+    if family == socket.AF_INET:
+        prefix, rest = bgp.IPAddrPrefix.parser(buf)
+    elif family == socket.AF_INET6:
+        prefix, rest = IPv6Prefix.parser(buf)
+    else:
+        raise struct.error('Unsupported family: %d' % family)
+
+    return prefix.prefix, rest
+
+
+def _serialize_ip_prefix(prefix):
+    if ip.valid_ipv4(prefix):
+        prefix_addr, prefix_num = prefix.split('/')
+        return bgp.IPAddrPrefix(int(prefix_num), prefix_addr).serialize()
+    elif ip.valid_ipv6(prefix):
+        prefix_addr, prefix_num = prefix.split('/')
+        return IPv6Prefix(int(prefix_num), prefix_addr).serialize()
+    else:
+        raise ValueError('Invalid prefix: %s' % prefix)
 
 
 class InterfaceLinkParams(stringify.StringifyMixin):
@@ -588,6 +611,8 @@ class RegisteredNexthop(stringify.StringifyMixin):
         super(RegisteredNexthop, self).__init__()
         self.connected = connected
         self.family = family
+        if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+            prefix = prefix.prefix
         self.prefix = prefix
 
     @classmethod
@@ -595,19 +620,14 @@ class RegisteredNexthop(stringify.StringifyMixin):
         (connected, family) = struct.unpack_from(cls._HEADER_FMT, buf)
         rest = buf[cls.HEADER_SIZE:]
 
-        if family == socket.AF_INET:
-            prefix, rest = IPv4Prefix.parser(rest)
-        elif family == socket.AF_INET6:
-            prefix, rest = IPv6Prefix.parser(rest)
-        else:
-            raise struct.error('Unsupported family: %d' % family)
+        prefix, rest = _parse_ip_prefix(family, rest)
 
         return cls(connected, family, prefix), rest
 
     def serialize(self):
         buf = struct.pack(self._HEADER_FMT, self.connected, self.family)
 
-        return buf + self.prefix.serialize()
+        return buf + _serialize_ip_prefix(self.prefix)
 
 
 # Zebra message class
@@ -1047,7 +1067,8 @@ class _ZebraInterfaceAddress(_ZebraMessageBody):
         self.ifindex = ifindex
         self.ifc_flags = ifc_flags
         self.family = family
-        assert isinstance(prefix, (IPv4Prefix, IPv6Prefix))
+        if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+            prefix = prefix.prefix
         self.prefix = prefix
         assert netaddr.valid_ipv4(dest) or netaddr.valid_ipv6(dest)
         self.dest = dest
@@ -1061,12 +1082,12 @@ class _ZebraInterfaceAddress(_ZebraMessageBody):
         if socket.AF_INET == family:
             (prefix, p_len,
              dest) = struct.unpack_from(cls._IPV4_BODY_FMT, rest)
-            prefix = IPv4Prefix(p_len, addrconv.ipv4.bin_to_text(prefix))
+            prefix = '%s/%d' % (addrconv.ipv4.bin_to_text(prefix), p_len)
             dest = addrconv.ipv4.bin_to_text(dest)
         elif socket.AF_INET6 == family:
             (prefix, p_len,
              dest) = struct.unpack_from(cls._IPV6_BODY_FMT, rest)
-            prefix = IPv6Prefix(p_len, addrconv.ipv6.bin_to_text(prefix))
+            prefix = '%s/%d' % (addrconv.ipv6.bin_to_text(prefix), p_len)
             dest = addrconv.ipv6.bin_to_text(dest)
         else:
             raise struct.error('Unsupported family: %d' % family)
@@ -1074,25 +1095,25 @@ class _ZebraInterfaceAddress(_ZebraMessageBody):
         return cls(ifindex, ifc_flags, family, prefix, dest)
 
     def serialize(self):
-        if (netaddr.valid_ipv4(self.prefix.addr)
-                and netaddr.valid_ipv4(self.dest)):
+        if ip.valid_ipv4(self.prefix):
             self.family = socket.AF_INET  # fixup
+            prefix_addr, prefix_num = self.prefix.split('/')
             body_bin = struct.pack(
                 self._IPV4_BODY_FMT,
-                addrconv.ipv4.text_to_bin(self.prefix.addr),
-                self.prefix.length,
+                addrconv.ipv4.text_to_bin(prefix_addr),
+                int(prefix_num),
                 addrconv.ipv4.text_to_bin(self.dest))
-        elif (netaddr.valid_ipv6(self.prefix.addr)
-              and netaddr.valid_ipv6(self.dest)):
+        elif ip.valid_ipv6(self.prefix):
             self.family = socket.AF_INET6  # fixup
+            prefix_addr, prefix_num = self.prefix.split('/')
             body_bin = struct.pack(
                 self._IPV6_BODY_FMT,
-                addrconv.ipv6.text_to_bin(self.prefix.addr),
-                self.prefix.length,
+                addrconv.ipv6.text_to_bin(prefix_addr),
+                int(prefix_num),
                 addrconv.ipv6.text_to_bin(self.dest))
         else:
             raise ValueError(
-                'Invalid address family: prefix=%s, dest=%s'
+                'Invalid address family for prefix=%s and dest=%s'
                 % (self.prefix, self.dest))
 
         buf = struct.pack(self._HEADER_FMT,
@@ -1161,7 +1182,7 @@ class _ZebraIPRoute(_ZebraMessageBody):
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
 
     # API type specific constants
-    PREFIX_CLS = None  # either IPAddrPrefix or IP6AddrPrefix
+    _FAMILY = None  # either socket.AF_INET or socket.AF_INET6
 
     def __init__(self, route_type, flags, message, safi, prefix,
                  nexthops=None,
@@ -1172,7 +1193,8 @@ class _ZebraIPRoute(_ZebraMessageBody):
         self.flags = flags
         self.message = message
         self.safi = safi
-        assert isinstance(prefix, (IPv4Prefix, IPv6Prefix))
+        if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+            prefix = prefix.prefix
         self.prefix = prefix
         nexthops = nexthops or []
         for nexthop in nexthops:
@@ -1198,7 +1220,7 @@ class _ZebraIPRoute(_ZebraMessageBody):
             cls._HEADER_FMT, buf)
         rest = buf[cls.HEADER_SIZE:]
 
-        prefix, rest = cls.PREFIX_CLS.parser(rest)
+        prefix, rest = _parse_ip_prefix(cls._FAMILY, rest)
 
         nexthops, rest = _parse_nexthops(rest)
 
@@ -1225,7 +1247,7 @@ class _ZebraIPRoute(_ZebraMessageBody):
         return struct.pack(fmt, option)
 
     def serialize(self):
-        prefix = self.prefix.serialize()
+        prefix = _serialize_ip_prefix(self.prefix)
 
         nexthops = _serialize_nexthops(self.nexthops)
 
@@ -1249,7 +1271,7 @@ class _ZebraIPv4Route(_ZebraIPRoute):
     """
     Base class for ZEBRA_IPV4_ROUTE_* message body.
     """
-    PREFIX_CLS = IPv4Prefix
+    _FAMILY = socket.AF_INET
 
 
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_ROUTE_ADD)
@@ -1270,7 +1292,7 @@ class _ZebraIPv6Route(_ZebraIPRoute):
     """
     Base class for ZEBRA_IPV6_ROUTE_* message body.
     """
-    PREFIX_CLS = IPv6Prefix
+    _FAMILY = socket.AF_INET6
 
 
 @_ZebraMessageBody.register_type(ZEBRA_IPV6_ROUTE_ADD)
@@ -1555,7 +1577,8 @@ class ZebraRouterIDUpdate(_ZebraMessageBody):
     def __init__(self, family, prefix):
         super(ZebraRouterIDUpdate, self).__init__()
         self.family = family
-        assert isinstance(prefix, (IPv4Prefix, IPv6Prefix))
+        if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+            prefix = prefix.prefix
         self.prefix = prefix
 
     @classmethod
@@ -1565,28 +1588,30 @@ class ZebraRouterIDUpdate(_ZebraMessageBody):
 
         if socket.AF_INET == family:
             (prefix, p_len) = struct.unpack_from(cls._IPV4_BODY_FMT, rest)
-            prefix = IPv4Prefix(p_len, addrconv.ipv4.bin_to_text(prefix))
+            prefix = '%s/%d' % (addrconv.ipv4.bin_to_text(prefix), p_len)
         elif socket.AF_INET6 == family:
             (prefix, p_len) = struct.unpack_from(cls._IPV6_BODY_FMT, rest)
-            prefix = IPv6Prefix(p_len, addrconv.ipv6.bin_to_text(prefix))
+            prefix = '%s/%d' % (addrconv.ipv6.bin_to_text(prefix), p_len)
         else:
             raise struct.error('Unsupported family: %d' % family)
 
         return cls(family, prefix)
 
     def serialize(self):
-        if netaddr.valid_ipv4(self.prefix.addr):
+        if ip.valid_ipv4(self.prefix):
             self.family = socket.AF_INET  # fixup
+            prefix_addr, prefix_num = self.prefix.split('/')
             body_bin = struct.pack(
                 self._IPV4_BODY_FMT,
-                addrconv.ipv4.text_to_bin(self.prefix.addr),
-                self.prefix.length)
-        elif netaddr.valid_ipv6(self.prefix.addr):
+                addrconv.ipv4.text_to_bin(prefix_addr),
+                int(prefix_num))
+        elif ip.valid_ipv6(self.prefix):
             self.family = socket.AF_INET6  # fixup
+            prefix_addr, prefix_num = self.prefix.split('/')
             body_bin = struct.pack(
                 self._IPV6_BODY_FMT,
-                addrconv.ipv6.text_to_bin(self.prefix.addr),
-                self.prefix.length)
+                addrconv.ipv6.text_to_bin(prefix_addr),
+                int(prefix_num))
         else:
             raise ValueError('Invalid prefix: %s' % self.prefix)
 
@@ -1809,7 +1834,8 @@ class ZebraNexthopUpdate(_ZebraMessageBody):
     def __init__(self, family, prefix, metric, nexthops=None):
         super(ZebraNexthopUpdate, self).__init__()
         self.family = family
-        assert isinstance(prefix, (IPv4Prefix, IPv6Prefix))
+        if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+            prefix = prefix.prefix
         self.prefix = prefix
         self.metric = metric
         nexthops = nexthops or []
@@ -1822,12 +1848,7 @@ class ZebraNexthopUpdate(_ZebraMessageBody):
         (family,) = struct.unpack_from(cls._FAMILY_FMT, buf)
         rest = buf[cls.FAMILY_SIZE:]
 
-        if socket.AF_INET == family:
-            prefix, rest = IPv4Prefix.parser(rest)
-        elif socket.AF_INET6 == family:
-            prefix, rest = IPv6Prefix.parser(rest)
-        else:
-            raise struct.error('Unsupported family: %d' % family)
+        prefix, rest = _parse_ip_prefix(family, rest)
 
         (metric,) = struct.unpack_from(cls._METRIC_FMT, rest)
         rest = rest[cls.METRIC_SIZE:]
@@ -1838,16 +1859,16 @@ class ZebraNexthopUpdate(_ZebraMessageBody):
 
     def serialize(self):
         # fixup
-        if netaddr.valid_ipv4(self.prefix.addr):
+        if ip.valid_ipv4(self.prefix):
             self.family = socket.AF_INET
-        elif netaddr.valid_ipv6(self.prefix.addr):
+        elif ip.valid_ipv6(self.prefix):
             self.family = socket.AF_INET6
         else:
             raise ValueError('Invalid prefix: %s' % self.prefix)
 
         buf = struct.pack(self._FAMILY_FMT, self.family)
 
-        buf += self.prefix.serialize()
+        buf += _serialize_ip_prefix(self.prefix)
 
         buf += struct.pack(self._METRIC_FMT, self.metric)
 
