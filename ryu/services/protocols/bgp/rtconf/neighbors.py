@@ -259,7 +259,7 @@ def validate_attribute_maps(attribute_maps):
 
 @validate(name=IS_ROUTE_SERVER_CLIENT)
 def validate_is_route_server_client(is_route_server_client):
-    if is_route_server_client not in (True, False):
+    if not isinstance(is_route_server_client, bool):
         raise ConfigValueError(desc='Invalid is_route_server_client(%s)' %
                                is_route_server_client)
 
@@ -268,7 +268,7 @@ def validate_is_route_server_client(is_route_server_client):
 
 @validate(name=IS_ROUTE_REFLECTOR_CLIENT)
 def validate_is_route_reflector_client(is_route_reflector_client):
-    if is_route_reflector_client not in (True, False):
+    if not isinstance(is_route_reflector_client, bool):
         raise ConfigValueError(desc='Invalid is_route_reflector_client(%s)' %
                                     is_route_reflector_client)
 
@@ -277,7 +277,7 @@ def validate_is_route_reflector_client(is_route_reflector_client):
 
 @validate(name=CHECK_FIRST_AS)
 def validate_check_first_as(check_first_as):
-    if check_first_as not in (True, False):
+    if not isinstance(check_first_as, bool):
         raise ConfigValueError(desc='Invalid check_first_as(%s)' %
                                check_first_as)
 
@@ -286,7 +286,7 @@ def validate_check_first_as(check_first_as):
 
 @validate(name=IS_NEXT_HOP_SELF)
 def validate_is_next_hop_self(is_next_hop_self):
-    if is_next_hop_self not in (True, False):
+    if not isinstance(is_next_hop_self, bool):
         raise ConfigValueError(desc='Invalid is_next_hop_self(%s)' %
                                is_next_hop_self)
 

@@ -562,7 +562,7 @@ def validate_conf_desc(description):
 
 @validate(name=ConfWithStats.STATS_LOG_ENABLED)
 def validate_stats_log_enabled(stats_log_enabled):
-    if stats_log_enabled not in (True, False):
+    if not isinstance(stats_log_enabled, bool):
         raise ConfigTypeError(desc='Statistics log enabled settings can only'
                               ' be boolean type.')
     return stats_log_enabled
@@ -582,7 +582,7 @@ def validate_stats_time(stats_time):
 
 @validate(name=CAP_REFRESH)
 def validate_cap_refresh(crefresh):
-    if crefresh not in (True, False):
+    if not isinstance(crefresh, bool):
         raise ConfigTypeError(desc='Invalid Refresh capability settings: %s. '
                               'Boolean value expected' % crefresh)
     return crefresh
@@ -590,7 +590,7 @@ def validate_cap_refresh(crefresh):
 
 @validate(name=CAP_ENHANCED_REFRESH)
 def validate_cap_enhanced_refresh(cer):
-    if cer not in (True, False):
+    if not isinstance(cer, bool):
         raise ConfigTypeError(desc='Invalid Enhanced Refresh capability '
                               'settings: %s. Boolean value expected' % cer)
     return cer
@@ -598,7 +598,7 @@ def validate_cap_enhanced_refresh(cer):
 
 @validate(name=CAP_FOUR_OCTET_AS_NUMBER)
 def validate_cap_four_octet_as_number(cfoan):
-    if cfoan not in (True, False):
+    if not isinstance(cfoan, bool):
         raise ConfigTypeError(desc='Invalid Four-Octet AS Number capability '
                               'settings: %s boolean value expected' % cfoan)
     return cfoan
@@ -606,7 +606,7 @@ def validate_cap_four_octet_as_number(cfoan):
 
 @validate(name=CAP_MBGP_IPV4)
 def validate_cap_mbgp_ipv4(cmv4):
-    if cmv4 not in (True, False):
+    if not isinstance(cmv4, bool):
         raise ConfigTypeError(desc='Invalid MP-BGP IPv4 capability '
                               'settings: %s. Boolean value expected' % cmv4)
 
@@ -615,7 +615,7 @@ def validate_cap_mbgp_ipv4(cmv4):
 
 @validate(name=CAP_MBGP_IPV6)
 def validate_cap_mbgp_ipv6(cmv6):
-    if cmv6 not in (True, False):
+    if not isinstance(cmv6, bool):
         raise ConfigTypeError(desc='Invalid MP-BGP IPv6 capability '
                               'settings: %s. Boolean value expected' % cmv6)
 
@@ -624,7 +624,7 @@ def validate_cap_mbgp_ipv6(cmv6):
 
 @validate(name=CAP_MBGP_VPNV4)
 def validate_cap_mbgp_vpnv4(cmv4):
-    if cmv4 not in (True, False):
+    if not isinstance(cmv4, bool):
         raise ConfigTypeError(desc='Invalid MP-BGP VPNv4 capability '
                               'settings: %s. Boolean value expected' % cmv4)
 
@@ -633,7 +633,7 @@ def validate_cap_mbgp_vpnv4(cmv4):
 
 @validate(name=CAP_MBGP_VPNV6)
 def validate_cap_mbgp_vpnv6(cmv6):
-    if cmv6 not in (True, False):
+    if not isinstance(cmv6, bool):
         raise ConfigTypeError(desc='Invalid MP-BGP VPNv6 capability '
                               'settings: %s. Boolean value expected' % cmv6)
 
@@ -642,7 +642,7 @@ def validate_cap_mbgp_vpnv6(cmv6):
 
 @validate(name=CAP_MBGP_EVPN)
 def validate_cap_mbgp_evpn(cmevpn):
-    if cmevpn not in (True, False):
+    if not isinstance(cmevpn, bool):
         raise ConfigTypeError(desc='Invalid Ethernet VPN capability '
                               'settings: %s. Boolean value expected' % cmevpn)
     return cmevpn
@@ -650,7 +650,7 @@ def validate_cap_mbgp_evpn(cmevpn):
 
 @validate(name=CAP_RTC)
 def validate_cap_rtc(cap_rtc):
-    if cap_rtc not in (True, False):
+    if not isinstance(cap_rtc, bool):
         raise ConfigTypeError(desc='Invalid type for specifying RTC '
                               'capability. Expected boolean got: %s' %
                               type(cap_rtc))

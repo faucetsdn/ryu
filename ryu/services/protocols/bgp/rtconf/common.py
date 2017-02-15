@@ -212,7 +212,7 @@ def validate_bgp_conn_retry_time(bgp_conn_retry_time):
 
 @validate(name=MAX_PATH_EXT_RTFILTER_ALL)
 def validate_max_path_ext_rtfilter_all(max_path_ext_rtfilter_all):
-    if max_path_ext_rtfilter_all not in (True, False):
+    if not isinstance(max_path_ext_rtfilter_all, bool):
         raise ConfigTypeError(desc=('Invalid max_path_ext_rtfilter_all'
                                     ' configuration value %s' %
                                     max_path_ext_rtfilter_all))
