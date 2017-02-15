@@ -30,6 +30,8 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_LOCAL_PREF
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGINATOR_ID
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_CLUSTER_LIST
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_INCOMPLETE
@@ -107,7 +109,7 @@ class BgpProcessor(Activity):
         dest_processed = 0
         LOG.debug('Processing destination...')
         while (dest_processed < self.work_units_per_cycle and
-                not self._dest_queue.is_empty()):
+               not self._dest_queue.is_empty()):
             # We process the first destination in the queue.
             next_dest = self._dest_queue.pop_first()
             if next_dest:
@@ -169,6 +171,7 @@ BPR_MED = 'MED'
 BPR_ASN = 'ASN'
 BPR_IGP_COST = 'IGP Cost'
 BPR_ROUTER_ID = 'Router ID'
+BPR_CLUSTER_LIST = 'Cluster List'
 
 
 def _compare_by_version(path1, path2):
@@ -212,6 +215,8 @@ def compute_best_path(local_asn, path1, path2):
     9.  Select the route with the lowest IGP cost to the next hop.
     10. Select the route received from the peer with the lowest BGP
         router ID.
+    11. Select the route received from the peer with the shorter
+        CLUSTER_LIST length.
 
     Returns None if best-path among given paths cannot be computed else best
     path.
@@ -252,9 +257,12 @@ def compute_best_path(local_asn, path1, path2):
         best_path = _cmp_by_router_id(local_asn, path1, path2)
         best_path_reason = BPR_ROUTER_ID
     if best_path is None:
+        best_path = _cmp_by_cluster_list(path1, path2)
+        best_path_reason = BPR_CLUSTER_LIST
+    if best_path is None:
         best_path_reason = BPR_UNKNOWN
 
-    return (best_path, best_path_reason)
+    return best_path, best_path_reason
 
 
 def _cmp_by_reachable_nh(path1, path2):
@@ -462,10 +470,14 @@ def _cmp_by_router_id(local_asn, path1, path2):
         else:
             return path_source.remote_as
 
-    def get_router_id(path_source, local_bgp_id):
+    def get_router_id(path, local_bgp_id):
+        path_source = path.source
         if path_source is None:
             return local_bgp_id
         else:
+            originator_id = path.get_pattr(BGP_ATTR_TYPE_ORIGINATOR_ID)
+            if originator_id:
+                return originator_id.value
             return path_source.protocol.recv_open_msg.bgp_identifier
 
     path_source1 = path1.source
@@ -482,7 +494,7 @@ def _cmp_by_router_id(local_asn, path1, path2):
     is_ebgp2 = asn2 != local_asn
     # If both paths are from eBGP peers, then according to RFC we need
     # not tie break using router id.
-    if (is_ebgp1 and is_ebgp2):
+    if is_ebgp1 and is_ebgp2:
         return None
 
     if ((is_ebgp1 is True and is_ebgp2 is False) or
@@ -497,8 +509,8 @@ def _cmp_by_router_id(local_asn, path1, path2):
         local_bgp_id = path_source2.protocol.sent_open_msg.bgp_identifier
 
     # Get router ids.
-    router_id1 = get_router_id(path_source1, local_bgp_id)
-    router_id2 = get_router_id(path_source2, local_bgp_id)
+    router_id1 = get_router_id(path1, local_bgp_id)
+    router_id2 = get_router_id(path2, local_bgp_id)
 
     # If both router ids are same/equal we cannot decide.
     # This case is possible since router ids are arbitrary.
@@ -507,7 +519,31 @@ def _cmp_by_router_id(local_asn, path1, path2):
 
     # Select the path with lowest router Id.
     from ryu.services.protocols.bgp.utils.bgp import from_inet_ptoi
-    if (from_inet_ptoi(router_id1) < from_inet_ptoi(router_id2)):
+    if from_inet_ptoi(router_id1) < from_inet_ptoi(router_id2):
         return path1
     else:
         return path2
+
+
+def _cmp_by_cluster_list(path1, path2):
+    """Selects the route received from the peer with the shorter
+    CLUSTER_LIST length. [RFC4456]
+
+    The CLUSTER_LIST length is evaluated as zero if a route does not
+    carry the CLUSTER_LIST attribute.
+    """
+    def _get_cluster_list_len(path):
+        c_list = path.get_pattr(BGP_ATTR_TYPE_CLUSTER_LIST)
+        if c_list is None:
+            return 0
+        else:
+            return len(c_list.value)
+
+    c_list_len1 = _get_cluster_list_len(path1)
+    c_list_len2 = _get_cluster_list_len(path2)
+    if c_list_len1 < c_list_len2:
+        return path1
+    elif c_list_len1 > c_list_len2:
+        return path2
+    else:
+        return None

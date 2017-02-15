@@ -37,6 +37,7 @@ LOG = logging.getLogger('bgpspeaker.rtconf.common')
 # Global configuration settings.
 LOCAL_AS = 'local_as'
 ROUTER_ID = 'router_id'
+CLUSTER_ID = 'cluster_id'
 LABEL_RANGE = 'label_range'
 LABEL_RANGE_MAX = 'max'
 LABEL_RANGE_MIN = 'min'
@@ -119,6 +120,16 @@ def validate_router_id(router_id):
         raise ConfigValueError(desc='Invalid router id %s' % router_id)
 
     return router_id
+
+
+@validate(name=CLUSTER_ID)
+def validate_router_id(cluster_id):
+    if not isinstance(cluster_id, str):
+        raise ConfigTypeError(conf_name=CLUSTER_ID)
+    if not is_valid_ipv4(cluster_id):
+        raise ConfigValueError(desc='Invalid cluster id %s' % cluster_id)
+
+    return cluster_id
 
 
 @validate(name=REFRESH_STALEPATH_TIME)
@@ -226,7 +237,8 @@ class CommonConf(BaseConf):
                                    TCP_CONN_TIMEOUT,
                                    BGP_CONN_RETRY_TIME,
                                    MAX_PATH_EXT_RTFILTER_ALL,
-                                   ALLOW_LOCAL_AS_IN_COUNT])
+                                   ALLOW_LOCAL_AS_IN_COUNT,
+                                   CLUSTER_ID])
 
     def __init__(self, **kwargs):
         super(CommonConf, self).__init__(**kwargs)
@@ -250,6 +262,8 @@ class CommonConf(BaseConf):
         self._settings[MAX_PATH_EXT_RTFILTER_ALL] = compute_optional_conf(
             MAX_PATH_EXT_RTFILTER_ALL, DEFAULT_MAX_PATH_EXT_RTFILTER_ALL,
             **kwargs)
+        self._settings[CLUSTER_ID] = compute_optional_conf(
+            CLUSTER_ID, kwargs[ROUTER_ID], **kwargs)
 
     # =========================================================================
     # Required attributes
@@ -266,6 +280,9 @@ class CommonConf(BaseConf):
     # =========================================================================
     # Optional attributes with valid defaults.
     # =========================================================================
+    @property
+    def cluster_id(self):
+        return self._settings[CLUSTER_ID]
 
     @property
     def allow_local_as_in_count(self):

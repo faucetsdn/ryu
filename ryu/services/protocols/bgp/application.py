@@ -260,6 +260,8 @@ class RyuBGPSpeaker(RyuApp):
             REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_MAX_EOR_TIME)
         bgp_settings[LABEL_RANGE] = settings.get(
             LABEL_RANGE, DEFAULT_LABEL_RANGE)
+        bgp_settings['allow_local_as_in_count'] = settings.get(
+            'allow_local_as_in_count', 0)
 
         # Create BGPSpeaker instance.
         LOG.debug('Starting BGPSpeaker...')

@@ -75,6 +75,8 @@ from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGPPathAttributeAs4Path
 from ryu.lib.packet.bgp import BGPPathAttributeLocalPref
 from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
+from ryu.lib.packet.bgp import BGPPathAttributeOriginatorId
+from ryu.lib.packet.bgp import BGPPathAttributeClusterList
 from ryu.lib.packet.bgp import BGPPathAttributeMpReachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeMpUnreachNLRI
 from ryu.lib.packet.bgp import BGPPathAttributeCommunities
@@ -90,6 +92,8 @@ from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MP_REACH_NLRI
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MP_UNREACH_NLRI
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_MULTI_EXIT_DISC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_COMMUNITIES
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGINATOR_ID
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_CLUSTER_LIST
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 from ryu.lib.packet.bgp import BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE
 
@@ -437,6 +441,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
     @property
     def is_route_server_client(self):
         return self._neigh_conf.is_route_server_client
+
+    @property
+    def is_route_reflector_client(self):
+        return self._neigh_conf.is_route_reflector_client
 
     @property
     def check_first_as(self):
@@ -976,8 +984,37 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 new_pathattr.append(mpunreach_attr)
         elif self.is_route_server_client:
             nlri_list = [path.nlri]
-            for pathattr in path.pathattr_map.values():
-                new_pathattr.append(pathattr)
+            new_pathattr.extend(pathattr_map.values())
+        elif self.is_route_reflector_client:
+            nlri_list = [path.nlri]
+
+            # Append ORIGINATOR_ID attribute if not already exists.
+            if BGP_ATTR_TYPE_ORIGINATOR_ID not in pathattr_map:
+                originator_id = path.source
+                if originator_id is None:
+                    originator_id = self._common_conf.router_id
+                elif isinstance(path.source, Peer):
+                    originator_id = path.source.ip_address
+                new_pathattr.append(
+                    BGPPathAttributeOriginatorId(value=originator_id))
+
+            # Append CLUSTER_LIST attribute if not already exists.
+            if BGP_ATTR_TYPE_CLUSTER_LIST not in pathattr_map:
+                new_pathattr.append(
+                    BGPPathAttributeClusterList(
+                        [self._common_conf.cluster_id]))
+
+            for t, path_attr in pathattr_map.items():
+                if t == BGP_ATTR_TYPE_CLUSTER_LIST:
+                    # Append own CLUSTER_ID into CLUSTER_LIST attribute
+                    # if already exists.
+                    cluster_list = list(path_attr.value)
+                    if self._common_conf.cluster_id not in cluster_list:
+                        cluster_list.append(self._common_conf.cluster_id)
+                    new_pathattr.append(
+                        BGPPathAttributeClusterList(cluster_list))
+                else:
+                    new_pathattr.append(path_attr)
         else:
             # Supported and un-supported/unknown attributes.
             origin_attr = None
@@ -1503,36 +1540,42 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         Assumes Multiprotocol Extensions capability is supported and enabled.
         """
         assert self.state.bgp_state == const.BGP_FSM_ESTABLISHED
+
+        # Increment count of update received.
         self.state.incr(PeerCounterNames.RECV_UPDATES)
+
         if not self._validate_update_msg(update_msg):
             # If update message was not valid for some reason, we ignore its
             # routes.
             LOG.error('UPDATE message was invalid, hence ignoring its routes.')
             return
 
-        # Increment count of update received.
-        mp_reach_attr = update_msg.get_path_attr(BGP_ATTR_TYPE_MP_REACH_NLRI)
-        mp_unreach_attr = update_msg.get_path_attr(
-            BGP_ATTR_TYPE_MP_UNREACH_NLRI)
-
         # Extract advertised path attributes and reconstruct AS_PATH attribute
         self._extract_and_reconstruct_as_path(update_msg)
 
-        nlri_list = update_msg.nlri
-        withdraw_list = update_msg.withdrawn_routes
+        # Check if path attributes have loops.
+        if self._is_looped_path_attrs(update_msg):
+            return
 
+        umsg_pattrs = update_msg.pathattr_map
+        mp_reach_attr = umsg_pattrs.get(BGP_ATTR_TYPE_MP_REACH_NLRI, None)
         if mp_reach_attr:
-            # Extract advertised paths from given message.
+            # Extract advertised MP-BGP paths from given message.
             self._extract_and_handle_mpbgp_new_paths(update_msg)
 
+        mp_unreach_attr = umsg_pattrs.get(BGP_ATTR_TYPE_MP_UNREACH_NLRI, None)
         if mp_unreach_attr:
-            # Extract withdraws from given message.
+            # Extract MP-BGP withdraws from given message.
             self._extract_and_handle_mpbgp_withdraws(mp_unreach_attr)
 
+        nlri_list = update_msg.nlri
         if nlri_list:
+            # Extract advertised BGP paths from given message.
             self._extract_and_handle_bgp4_new_paths(update_msg)
 
+        withdraw_list = update_msg.withdrawn_routes
         if withdraw_list:
+            # Extract BGP withdraws from given message.
             self._extract_and_handle_bgp4_withdraws(withdraw_list)
 
     def _extract_and_reconstruct_as_path(self, update_msg):
@@ -1597,6 +1640,48 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 as_path = self._construct_as_path_attr(as_path, as4_path)
                 update_msg.path_attributes.append(as_path)
 
+    def _is_looped_path_attrs(self, update_msg):
+        """
+        Extracts path attributes from the given UPDATE message and checks
+        if the given attributes have loops or not.
+
+        :param update_msg: UPDATE message instance.
+        :return: True if attributes have loops. Otherwise False.
+        """
+        umsg_pattrs = update_msg.pathattr_map
+        recv_open_msg = self.protocol.recv_open_msg
+
+        # Check if AS_PATH has loops.
+        aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
+        if (aspath is not None
+                and aspath.has_local_as(
+                    self.local_as,
+                    max_count=self._common_conf.allow_local_as_in_count)):
+            LOG.error(
+                'AS_PATH on UPDATE message has loops. '
+                'Ignoring this message: %s',
+                update_msg)
+            return
+
+        # Check if ORIGINATOR_ID has loops. [RFC4456]
+        originator_id = umsg_pattrs.get(BGP_ATTR_TYPE_ORIGINATOR_ID, None)
+        if (originator_id
+                and recv_open_msg.bgp_identifier == originator_id):
+            LOG.error(
+                'ORIGINATOR_ID on UPDATE message has loops. '
+                'Ignoring this message: %s',
+                update_msg)
+            return
+
+        # Check if CLUSTER_LIST has loops. [RFC4456]
+        cluster_list = umsg_pattrs.get(BGP_ATTR_TYPE_CLUSTER_LIST, None)
+        if (cluster_list
+                and self._common_conf.cluster_id in cluster_list.value):
+            LOG.error(
+                'CLUSTER_LIST on UPDATE message has loops. '
+                'Ignoring this message: %s', update_msg)
+            return
+
     def _extract_and_handle_bgp4_new_paths(self, update_msg):
         """Extracts new paths advertised in the given update message's
          *MpReachNlri* attribute.
@@ -1611,23 +1696,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         processing.
         """
         umsg_pattrs = update_msg.pathattr_map
-
-        msg_rf = RF_IPv4_UC
-        # Check if this route family is among supported route families.
-        if msg_rf not in SUPPORTED_GLOBAL_RF:
-            LOG.info(('Received route for route family %s which is'
-                      ' not supported. Ignoring paths from this UPDATE: %s') %
-                     (msg_rf, update_msg))
-            return
-
-        aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
-        # Check if AS_PATH has loops.
-        if aspath.has_local_as(self.local_as, max_count=self._common_conf.allow_local_as_in_count):
-            LOG.error('Update message AS_PATH has loops. Ignoring this'
-                      ' UPDATE. %s', update_msg)
-            return
-
         next_hop = update_msg.get_path_attr(BGP_ATTR_TYPE_NEXT_HOP).value
+
         # Nothing to do if we do not have any new NLRIs in this message.
         msg_nlri_list = update_msg.nlri
         if not msg_nlri_list:
@@ -1684,16 +1754,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         processing.
         """
         msg_rf = RF_IPv4_UC
-        # Check if this route family is among supported route families.
-        if msg_rf not in SUPPORTED_GLOBAL_RF:
-            LOG.info(
-                (
-                    'Received route for route family %s which is'
-                    ' not supported. Ignoring withdraws form this UPDATE.'
-                ) % msg_rf
-            )
-            return
-
         w_nlris = withdraw_list
         if not w_nlris:
             # If this is EOR of some kind, handle it
@@ -1748,13 +1808,6 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                      (msg_rf, update_msg))
             return
 
-        aspath = umsg_pattrs.get(BGP_ATTR_TYPE_AS_PATH)
-        # Check if AS_PATH has loops.
-        if aspath.has_local_as(self.local_as, max_count=self._common_conf.allow_local_as_in_count):
-            LOG.error('Update message AS_PATH has loops. Ignoring this'
-                      ' UPDATE. %s', update_msg)
-            return
-
         if msg_rf in (RF_IPv4_VPN, RF_IPv6_VPN):
             # Check if we have Extended Communities Attribute.
             # TODO(PH): Check if RT_NLRI afi/safi will ever have this attribute
@@ -1784,6 +1837,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 return
 
         next_hop = mpreach_nlri_attr.next_hop
+
         # Nothing to do if we do not have any new NLRIs in this message.
         msg_nlri_list = mpreach_nlri_attr.nlri
         if not msg_nlri_list:
@@ -1846,11 +1900,9 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         # Check if this route family is among supported route families.
         if msg_rf not in SUPPORTED_GLOBAL_RF:
             LOG.info(
-                (
-                    'Received route for route family %s which is'
-                    ' not supported. Ignoring withdraws form this UPDATE.'
-                ) % msg_rf
-            )
+                'Received route family %s is not supported. '
+                'Ignoring withdraw routes on this UPDATE message.',
+                msg_rf)
             return
 
         w_nlris = mp_unreach_attr.withdrawn_routes
@@ -2183,8 +2235,14 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # routing information contained in that UPDATE message to other
             # internal peers (unless the speaker acts as a BGP Route
             # Reflector) [RFC4271].
-            if (self.remote_as == self._core_service.asn and
-                    self.remote_as == path.source.remote_as):
+            if (self.remote_as == self._core_service.asn
+                    and self.remote_as == path.source.remote_as
+                    and isinstance(path.source, Peer)
+                    and not path.source.is_route_reflector_client
+                    and not self.is_route_reflector_client):
+                LOG.debug(
+                    'Skipping sending iBGP route to iBGP peer %s AS %s',
+                    self.ip_address, self.remote_as)
                 return
 
             # If new best path has community attribute, it should be taken into

@@ -3112,7 +3112,7 @@ class BGPPathAttributeOriginatorId(_PathAttribute):
     _VALUE_PACK_STR = '!4s'
     _ATTR_FLAGS = BGP_ATTR_FLAG_OPTIONAL
     _TYPE = {
-        'ascii': [
+        'asciilist': [
             'value'
         ]
     }

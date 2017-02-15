@@ -55,6 +55,7 @@ from ryu.services.protocols.bgp.api.prefix import (
     PMSI_TYPE_INGRESS_REP)
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
+from ryu.services.protocols.bgp.rtconf.common import CLUSTER_ID
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_PORT
 from ryu.services.protocols.bgp.rtconf.common import (
@@ -85,8 +86,12 @@ from ryu.services.protocols.bgp.rtconf.neighbors import (
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
 from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
-from ryu.services.protocols.bgp.rtconf.neighbors import IS_ROUTE_SERVER_CLIENT
-from ryu.services.protocols.bgp.rtconf.neighbors import IS_NEXT_HOP_SELF
+from ryu.services.protocols.bgp.rtconf.neighbors import (
+    DEFAULT_IS_ROUTE_SERVER_CLIENT, IS_ROUTE_SERVER_CLIENT)
+from ryu.services.protocols.bgp.rtconf.neighbors import (
+    DEFAULT_IS_ROUTE_REFLECTOR_CLIENT, IS_ROUTE_REFLECTOR_CLIENT)
+from ryu.services.protocols.bgp.rtconf.neighbors import (
+    DEFAULT_IS_NEXT_HOP_SELF, IS_NEXT_HOP_SELF)
 from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
 from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
@@ -176,7 +181,8 @@ class BGPSpeaker(object):
                  ssh_console=False,
                  ssh_port=None, ssh_host=None, ssh_host_key=None,
                  label_range=DEFAULT_LABEL_RANGE,
-                 allow_local_as_in_count=0):
+                 allow_local_as_in_count=0,
+                 cluster_id=None):
         """Create a new BGPSpeaker object with as_number and router_id to
         listen on bgp_server_port.
 
@@ -230,6 +236,10 @@ class BGPSpeaker(object):
         configurations in leaf/spine architecture with shared AS numbers.
         The default is 0 and means "local AS number is not allowed in
         AS_PATH".  To allow local AS, 3 is recommended (Cisco's default).
+
+        ``cluster_id`` specifies the cluster identifier for Route Reflector.
+        It must be the string representation of an IPv4 address.
+        If omitted, "router_id" is used for this field.
         """
 
         super(BGPSpeaker, self).__init__()
@@ -242,6 +252,7 @@ class BGPSpeaker(object):
             REFRESH_MAX_EOR_TIME: refresh_max_eor_time,
             LABEL_RANGE: label_range,
             ALLOW_LOCAL_AS_IN_COUNT: allow_local_as_in_count,
+            CLUSTER_ID: cluster_id,
         }
         self._core_start(settings)
         self._init_signal_listeners()
@@ -322,8 +333,11 @@ class BGPSpeaker(object):
                      enable_enhanced_refresh=DEFAULT_CAP_ENHANCED_REFRESH,
                      enable_four_octet_as_number=DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
                      next_hop=None, password=None, multi_exit_disc=None,
-                     site_of_origins=None, is_route_server_client=False,
-                     is_next_hop_self=False, local_address=None,
+                     site_of_origins=None,
+                     is_route_server_client=DEFAULT_IS_ROUTE_SERVER_CLIENT,
+                     is_route_reflector_client=DEFAULT_IS_ROUTE_REFLECTOR_CLIENT,
+                     is_next_hop_self=DEFAULT_IS_NEXT_HOP_SELF,
+                     local_address=None,
                      local_port=None, local_as=None,
                      connect_mode=DEFAULT_CONNECT_MODE):
         """ This method registers a new neighbor. The BGP speaker tries to
@@ -374,6 +388,9 @@ class BGPSpeaker(object):
         ``is_route_server_client`` specifies whether this neighbor is a
         router server's client or not.
 
+        ``is_route_reflector_client`` specifies whether this neighbor is a
+        router reflector's client or not.
+
         ``is_next_hop_self`` specifies whether the BGP speaker announces
         its own ip address to iBGP neighbor or not as path's next_hop address.
 
@@ -397,6 +414,7 @@ class BGPSpeaker(object):
             PEER_NEXT_HOP: next_hop,
             PASSWORD: password,
             IS_ROUTE_SERVER_CLIENT: is_route_server_client,
+            IS_ROUTE_REFLECTOR_CLIENT: is_route_reflector_client,
             IS_NEXT_HOP_SELF: is_next_hop_self,
             CONNECT_MODE: connect_mode,
             CAP_ENHANCED_REFRESH: enable_enhanced_refresh,
