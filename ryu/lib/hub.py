@@ -17,6 +17,8 @@
 import logging
 import os
 
+import netaddr
+
 
 # We don't bother to use cfg.py because monkey patch needs to be
 # called very early. Instead, we use an environment variable to
@@ -110,11 +112,19 @@ if HUB_TYPE == 'eventlet':
             assert backlog is None
             assert spawn == 'default'
 
-            if ':' in listen_info[0]:
+            if netaddr.valid_ipv4(listen_info[0]):
+                self.server = eventlet.listen(listen_info)
+            elif netaddr.valid_ipv6(listen_info[0]):
                 self.server = eventlet.listen(listen_info,
                                               family=socket.AF_INET6)
+            elif os.path.isdir(os.path.dirname(listen_info[0])):
+                # Case for Unix domain socket
+                self.server = eventlet.listen(listen_info[0],
+                                              family=socket.AF_UNIX)
             else:
-                self.server = eventlet.listen(listen_info)
+                raise ValueError(
+                    'Invalid listen_info: %s' % str(listen_info))
+
             if ssl_args:
                 def wrap_and_handle(sock, addr):
                     ssl_args.setdefault('server_side', True)
