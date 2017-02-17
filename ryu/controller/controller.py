@@ -48,9 +48,12 @@ from ryu.lib.dpid import dpid_to_str
 
 LOG = logging.getLogger('ryu.controller.controller')
 
+DEFAULT_OFP_HOST = '0.0.0.0'
+
 CONF = cfg.CONF
 CONF.register_cli_opts([
-    cfg.StrOpt('ofp-listen-host', default='', help='openflow listen host'),
+    cfg.StrOpt('ofp-listen-host', default=DEFAULT_OFP_HOST,
+               help='openflow listen host (default %s)' % DEFAULT_OFP_HOST),
     cfg.IntOpt('ofp-tcp-listen-port', default=None,
                help='openflow tcp listen port '
                     '(default: %d)' % ofproto_common.OFP_TCP_PORT),
