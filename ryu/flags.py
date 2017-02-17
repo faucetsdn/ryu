@@ -79,6 +79,7 @@ DEFAULT_ZSERV_VERSION = 2  # Version of Ubuntu 16.04 LTS packaged Quagga
 DEFAULT_ZSERV_CLIENT_ROUTE_TYPE = 'BGP'
 DEFAULT_ZSERV_INTERVAL = 10
 DEFAULT_ZSERV_DATABASE = 'sqlite:///zebra.db'
+DEFAULT_ZSERV_ROUTER_ID = '1.1.1.1'
 
 CONF.register_cli_opts([
     cfg.StrOpt(
@@ -106,4 +107,8 @@ CONF.register_cli_opts([
         'db-url', default=DEFAULT_ZSERV_DATABASE,
         help='URL to database used by Zebra protocol service '
              '(default: %s)' % DEFAULT_ZSERV_DATABASE),
+    cfg.StrOpt(
+        'router-id', default=DEFAULT_ZSERV_ROUTER_ID,
+        help='Initial Router ID used by Zebra protocol service '
+             '(default: %s)' % DEFAULT_ZSERV_ROUTER_ID),
 ], group='zapi')
