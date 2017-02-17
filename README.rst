@@ -38,6 +38,7 @@ Some functionalities of ryu requires extra packages:
 - OF-Config requires lxml and ncclient
 - NETCONF requires paramiko
 - BGP speaker (SSH console) requires paramiko
+- Zebra protocol service (database) requires SQLAlchemy
 
 If you want to use the functionalities, please install requirements::
 
