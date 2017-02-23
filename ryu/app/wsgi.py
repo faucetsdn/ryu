@@ -34,11 +34,17 @@ from webob.response import Response as webob_Response
 from ryu import cfg
 from ryu.lib import hub
 
+DEFAULT_WSGI_HOST = '0.0.0.0'
+DEFAULT_WSGI_PORT = 8080
 
 CONF = cfg.CONF
 CONF.register_cli_opts([
-    cfg.StrOpt('wsapi-host', default='', help='webapp listen host'),
-    cfg.IntOpt('wsapi-port', default=8080, help='webapp listen port')
+    cfg.StrOpt(
+        'wsapi-host', default=DEFAULT_WSGI_HOST,
+        help='webapp listen host (default %s)' % DEFAULT_WSGI_HOST),
+    cfg.IntOpt(
+        'wsapi-port', default=DEFAULT_WSGI_PORT,
+        help='webapp listen port (default %s)' % DEFAULT_WSGI_PORT),
 ])
 
 HEX_PATTERN = r'0x[0-9a-z]+'
