@@ -112,9 +112,7 @@ if HUB_TYPE == 'eventlet':
             assert backlog is None
             assert spawn == 'default'
 
-            if netaddr.valid_ipv4(listen_info[0]):
-                self.server = eventlet.listen(listen_info)
-            elif netaddr.valid_ipv6(listen_info[0]):
+            if netaddr.valid_ipv6(listen_info[0]):
                 self.server = eventlet.listen(listen_info,
                                               family=socket.AF_INET6)
             elif os.path.isdir(os.path.dirname(listen_info[0])):
@@ -122,8 +120,7 @@ if HUB_TYPE == 'eventlet':
                 self.server = eventlet.listen(listen_info[0],
                                               family=socket.AF_UNIX)
             else:
-                raise ValueError(
-                    'Invalid listen_info: %s' % str(listen_info))
+                self.server = eventlet.listen(listen_info)
 
             if ssl_args:
                 def wrap_and_handle(sock, addr):
