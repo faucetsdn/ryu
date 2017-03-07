@@ -69,6 +69,13 @@ class BgpWSJsonRpc(app_manager.RyuApp):
         call('network.add', **networks)
         return {}
 
+    @rpc_public('network.del')
+    def _prefix_del(self, prefix='10.20.0.0/24'):
+        networks = {}
+        networks[PREFIX] = str(prefix)
+        call('network.del', **networks)
+        return {}
+
     @rpc_public('neighbors.get')
     def _neighbors_get(self):
         return call('neighbors.get')
