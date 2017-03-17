@@ -286,11 +286,7 @@ def get_desc_stats(dp, waiters):
 
     for msg in msgs:
         stats = msg.body
-        s = {'mfr_desc': stats.mfr_desc,
-             'hw_desc': stats.hw_desc,
-             'sw_desc': stats.sw_desc,
-             'serial_num': stats.serial_num,
-             'dp_desc': stats.dp_desc}
+        s = stats.to_jsondict()[stats.__class__.__name__]
 
     return {str(dp.id): s}
 
