@@ -29,6 +29,7 @@ import functools
 import io
 import itertools
 import math
+import re
 import socket
 import struct
 
@@ -2059,6 +2060,16 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
 
         return buf + rules_bin
 
+    @classmethod
+    def _from_user(cls, **kwargs):
+        rules = []
+        for k, v in kwargs.items():
+            subcls = _FlowSpecComponentBase.lookup_type_name(k)
+            rule = subcls.from_str(str(v))
+            rules.extend(rule)
+        rules.sort(key=lambda x: x.type)
+        return cls(rules=rules)
+
 
 class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
     """
@@ -2066,18 +2077,119 @@ class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
     """
     ROUTE_FAMILY = RF_IPv4_FLOW_SPEC
 
+    @classmethod
+    def from_user(cls, **kwargs):
+        """
+        Utility method for creating a NLRI instance.
+
+        This function returns a NLRI instance from human readable format value.
+
+        :param kwargs: The following arguments are available.
+
+        =========== ============= ========= ==============================
+        Argument    Value         Operator  Description
+        =========== ============= ========= ==============================
+        dst_prefix  IPv4 Prefix   Nothing   Destination Prefix.
+        src_prefix  IPv4 Prefix   Nothing   Source Prefix.
+        ip_proto    Integer       Numeric   IP Protocol.
+        port        Integer       Numeric   Port number.
+        dst_port    Integer       Numeric   Destination port number.
+        src_port    Integer       Numeric   Source port number.
+        icmp_type   Integer       Numeric   ICMP type.
+        icmp_code   Integer       Numeric   ICMP code.
+        tcp_flags   Fixed string  Bitmask   TCP flags.
+                                            Supported values are
+                                            ``CWR``, ``ECN``, ``URGENT``,
+                                            ``ACK``, ``PUSH``, ``RST``,
+                                            ``SYN`` and ``FIN``.
+        packet_len  Integer       Numeric   Packet length.
+        dscp        Integer       Numeric   Differentiated Services
+                                            Code Point.
+        fragment    Fixed string  Bitmask   Fragment.
+                                            Supported values are
+                                            ``DF`` (Don't fragment),
+                                            ``ISF`` (Is a fragment),
+                                            ``FF`` (First fragment) and
+                                            ``LF`` (Last fragment)
+        =========== ============= ========= ==============================
+
+        Example::
+            >>> msg = bgp.FlowSpecIPv4NLRI.from_user(
+            ...     dst_prefix='10.0.0.0/24',
+            ...     src_prefix='20.0.0.1/24',
+            ...     ip_proto='==6',
+            ...     port='==80 | ==8000',
+            ...     dst_port='>9000 & <9050',
+            ...     src_port='>=8500 & <=9000',
+            ...     icmp_type='==0',
+            ...     icmp_code='==6',
+            ...     tcp_flags='SYN+ACK & !=URGENT',
+            ...     packet_len='==1000',
+            ...     dscp='==22 | ==24',
+            ...     fragment='LF | ==FF')
+            >>>
+
+        You can specify conditions with the following keywords.
+
+        The following keywords can be used when the operator type is Numeric.
+
+        ========== ============================================================
+        Keyword    Description
+        ========== ============================================================
+        <          Less than comparison between data and value.
+        <=         Less than or equal to comparison between data and value.
+        >          Greater than comparison between data and value.
+        >=         Greater than or equal to comparison between data and value.
+        ==         Equality between data and value.
+                   This operator can be omitted.
+        ========== ============================================================
+
+        The following keywords can be used when the operator type is Bitmask.
+
+        ========== ================================================
+        Keyword    Description
+        ========== ================================================
+        !=         Not equal operation.
+        ==         Exact match operation if specified.
+                   Otherwise partial match operation.
+        `+`        Used for the summation of bitmask values.
+                   (e.g., SYN+ACK)
+        ========== ================================================
+
+        You can combine the multiple conditions with the following operators.
+
+        ========== =======================================
+        Keyword    Description
+        ========== =======================================
+        `|`        Logical OR operation
+        &          Logical AND operation
+        ========== =======================================
+
+        :return: A instance of FlowSpecVPNv4NLRI.
+        """
+        return cls._from_user(**kwargs)
+
 
 class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
     """
     Flow Specification NLRI class for VPNv4 [RFC 5575]
+
+    See :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv4NLRI`
     """
     ROUTE_FAMILY = RF_VPNv4_FLOW_SPEC
+
+    @classmethod
+    def from_user(cls, **kwargs):
+
+        return cls._from_user(**kwargs)
 
 
 class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
     """
     Base class for Flow Specification NLRI component
     """
+    COMPONENT_NAME = None
+
     _BASE_STR = '!B'
     _BASE_STR_SIZE = struct.calcsize(_BASE_STR)
 
@@ -2094,10 +2206,32 @@ class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
     TYPE_DIFFSERV_CODE_POINT = 0x0b
     TYPE_FRAGMENT = 0x0c
 
+    # Dictionary of COMPONENT_NAME to subclass.
+    # e.g.)
+    #   _NAMES = {'dst_prefix': FlowSpecDestPrefix, ...}
+    _NAMES = {}
+
     def __init__(self, type_=None):
         if type_ is None:
             type_ = self._rev_lookup_type(self.__class__)
         self.type = type_
+
+    @classmethod
+    def register_type(cls, type_):
+        cls._TYPES = cls._TYPES.copy()
+        cls._NAMES = cls._NAMES.copy()
+
+        def _register_type(subcls):
+            cls._TYPES[type_] = subcls
+            cls._NAMES[subcls.COMPONENT_NAME] = subcls
+            cls._REV_TYPES = None
+            return subcls
+
+        return _register_type
+
+    @classmethod
+    def lookup_type_name(cls, type_name):
+        return cls._NAMES[type_name]
 
     @classmethod
     def parse_header(cls, rest):
@@ -2145,6 +2279,13 @@ class _FlowSpecPrefixBase(_FlowSpecComponentBase, IPAddrPrefix):
     def serialize_body(self):
         return self.serialize()
 
+    @classmethod
+    def from_str(cls, value):
+        rule = []
+        addr, length = value.split('/')
+        rule.append(cls(int(length), addr))
+        return rule
+
 
 @_FlowSpecComponentBase.register_type(
     _FlowSpecComponentBase.TYPE_DESTINATION_PREFIX)
@@ -2152,6 +2293,7 @@ class FlowSpecDestPrefix(_FlowSpecPrefixBase):
     """
     Destination Prefix for Flow Specification NLRI component
     """
+    COMPONENT_NAME = 'dst_prefix'
 
 
 @_FlowSpecComponentBase.register_type(
@@ -2160,6 +2302,7 @@ class FlowSpecSrcPrefix(_FlowSpecPrefixBase):
     """
     Source Prefix for Flow Specification NLRI component
     """
+    COMPONENT_NAME = 'src_prefix'
 
 
 class _FlowSpecOperatorBase(_FlowSpecComponentBase):
@@ -2172,14 +2315,20 @@ class _FlowSpecOperatorBase(_FlowSpecComponentBase):
     value                 Value of component.
     ===================== ===============================================
     """
-
     _OPE_PACK_STR = '!B'
     _OPE_PACK_STR_SIZE = struct.calcsize(_OPE_PACK_STR)
     _VAL_PACK_STR = '!%ds'
 
     END_OF_LIST = 1 << 7     # END OF LIST bit
     AND = 1 << 6             # AND bit
+    OR = 0                   # OR
     _LENGTH_BIT_MASK = 0x30  # The mask for length of the value
+
+    _logical_conditions = {
+        "|": OR,
+        "&": AND,
+    }
+    _comparison_conditions = {}
 
     def __init__(self, operator, value, type_=None):
         super(_FlowSpecOperatorBase, self).__init__(type_)
@@ -2208,6 +2357,52 @@ class _FlowSpecOperatorBase(_FlowSpecComponentBase):
 
         return buf
 
+    @classmethod
+    def from_str(cls, val):
+        operator = 0
+        rules = []
+
+        # e.g.)
+        # value = '80 | ==90|>=8000&<=9000 | <100 & >110'
+        # elements = ['80', '|', '==', '90', '|', '>=', '8000', '&',
+        #             '<=', '9000', '|', '<', '100', '&', '>', '110']
+        elements = [v.strip() for v in re.split(
+            r'([0-9]+)|([A-Z]+)|(\|&\+)|([!=<>]+)', val) if v and v.strip()]
+
+        elms_iter = iter(elements)
+
+        for elm in elms_iter:
+            if elm in cls._logical_conditions:
+                # ['&', '|']
+                operator |= cls._logical_conditions[elm]
+                continue
+            elif elm in cls._comparison_conditions:
+                # ['=', '<', '>', '<=', '>=' ] or ['=', '!=']
+                operator |= cls._comparison_conditions[elm]
+                continue
+            elif elm == '+':
+                # If keyword "+" is used, add the value to the previous rule.
+                #  e.g.) 'SYN+ACK' or '!=SYN+ACK'
+                rules[-1].value |= cls._to_value(next(elms_iter))
+                continue
+
+            value = cls._to_value(elm)
+
+            operator = cls.normalize_operator(operator)
+
+            rules.append(cls(operator, value))
+            operator = 0
+
+        return rules
+
+    @classmethod
+    def _to_value(cls, value):
+        return value
+
+    @classmethod
+    def normalize_operator(cls, operator):
+        return operator
+
 
 class _FlowSpecNumeric(_FlowSpecOperatorBase):
     """
@@ -2223,6 +2418,29 @@ class _FlowSpecNumeric(_FlowSpecOperatorBase):
     GT = 1 << 1  # Greater than comparison bit
     EQ = 1 << 0  # Equality bit
 
+    _comparison_conditions = {
+        '==': EQ,
+        '<': LT,
+        '>': GT,
+        '<=': LT | EQ,
+        '>=': GT | EQ
+    }
+
+    @classmethod
+    def _to_value(cls, value):
+        try:
+            return int(str(value), 0)
+        except ValueError:
+            raise ValueError('Invalid params: %s="%s"' % (
+                cls.COMPONENT_NAME, value))
+
+    @classmethod
+    def normalize_operator(cls, operator):
+        if operator & (cls.LT | cls.GT | cls.EQ):
+            return operator
+        else:
+            return operator | cls.EQ
+
 
 class _FlowSpecBitmask(_FlowSpecOperatorBase):
     """
@@ -2237,6 +2455,19 @@ class _FlowSpecBitmask(_FlowSpecOperatorBase):
     NOT = 1 << 1    # NOT bit
     MATCH = 1 << 0  # MATCH bit
 
+    _comparison_conditions = {
+        '!=': NOT,
+        '==': MATCH,
+    }
+
+    @classmethod
+    def _to_value(cls, value):
+        try:
+            return cls.__dict__[value]
+        except KeyError:
+            raise ValueError('Invalid params: %s="%s"' % (
+                cls.COMPONENT_NAME, value))
+
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PROTOCOL)
 class FlowSpecIPProtocol(_FlowSpecNumeric):
@@ -2244,6 +2475,7 @@ class FlowSpecIPProtocol(_FlowSpecNumeric):
 
     Set the IP protocol number at value.
     """
+    COMPONENT_NAME = 'ip_proto'
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PORT)
@@ -2252,6 +2484,7 @@ class FlowSpecPort(_FlowSpecNumeric):
 
     Set the source or destination TCP/UDP ports at value.
     """
+    COMPONENT_NAME = 'port'
 
 
 @_FlowSpecComponentBase.register_type(
@@ -2261,6 +2494,7 @@ class FlowSpecDestPort(_FlowSpecNumeric):
 
     Set the destination port of a TCP or UDP packet at value.
     """
+    COMPONENT_NAME = 'dst_port'
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_SOURCE_PORT)
@@ -2269,6 +2503,7 @@ class FlowSpecSrcPort(_FlowSpecNumeric):
 
     Set the source port of a TCP or UDP packet at value.
     """
+    COMPONENT_NAME = 'src_port'
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_ICMP)
@@ -2277,6 +2512,7 @@ class FlowSpecIcmpType(_FlowSpecNumeric):
 
     Set the type field of an ICMP packet at value.
     """
+    COMPONENT_NAME = 'icmp_type'
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_ICMP_CODE)
@@ -2285,6 +2521,7 @@ class FlowSpecIcmpCode(_FlowSpecNumeric):
 
     Set the code field of an ICMP packet at value.
     """
+    COMPONENT_NAME = 'icmp_code'
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_TCP_FLAGS)
@@ -2293,6 +2530,7 @@ class FlowSpecTCPFlags(_FlowSpecBitmask):
 
     Supported TCP flags are CWR, ECN, URGENT, ACK, PUSH, RST, SYN and FIN.
     """
+    COMPONENT_NAME = 'tcp_flags'
 
     # bitmask format
     #  0    1    2    3    4    5    6    7
@@ -2300,8 +2538,8 @@ class FlowSpecTCPFlags(_FlowSpecBitmask):
     # |CWR |ECN |URG |ACK |PSH |RST |SYN |FIN |
     # +----+----+----+----+----+----+----+----+
 
-    CWR = 1 << 6
-    ECN = 1 << 5
+    CWR = 1 << 7
+    ECN = 1 << 6
     URGENT = 1 << 5
     ACK = 1 << 4
     PUSH = 1 << 3
@@ -2317,6 +2555,7 @@ class FlowSpecPacketLen(_FlowSpecNumeric):
 
     Set the total IP packet length at value.
     """
+    COMPONENT_NAME = 'packet_len'
 
 
 @_FlowSpecComponentBase.register_type(
@@ -2326,6 +2565,7 @@ class FlowSpecDSCP(_FlowSpecNumeric):
 
     Set the 6-bit DSCP field at value. [RFC2474]
     """
+    COMPONENT_NAME = 'dscp'
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_FRAGMENT)
@@ -2344,6 +2584,7 @@ class FlowSpecFragment(_FlowSpecBitmask):
     DF         Don't fragment
     ========== ===============================================
     """
+    COMPONENT_NAME = 'fragment'
 
     # bitmask format
     #  0   1   2   3   4   5   6   7
