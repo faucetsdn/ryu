@@ -561,6 +561,7 @@ class Test_bgp(unittest.TestCase):
         eq_(rest, b'')
 
         msg = bgp.FlowSpecVPNv4NLRI.from_user(
+            route_dist='65001:250',
             dst_prefix='10.0.0.0/24',
             src_prefix='20.0.0.0/24',
             ip_proto='6',
@@ -573,7 +574,7 @@ class Test_bgp(unittest.TestCase):
             packet_len='1000 & 1100',
             dscp='22 24',
             fragment='LF ==FF&==ISF | !=DF')
-        msg2 = bgp.FlowSpecVPNv4NLRI(rules=rules)
+        msg2 = bgp.FlowSpecVPNv4NLRI(route_dist='65001:250', rules=rules)
         binmsg = msg.serialize()
         binmsg2 = msg2.serialize()
         eq_(str(msg), str(msg2))

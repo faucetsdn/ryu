@@ -1997,7 +1997,7 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
     # +-----------------------------------+
     # |     NLRI value  (variable)        |
     # +-----------------------------------+
-
+    ROUTE_FAMILY = None
     _LENGTH_SHORT_FMT = '!B'
     LENGTH_SHORT_SIZE = struct.calcsize(_LENGTH_SHORT_FMT)
     _LENGTH_LONG_FMT = '!H'
@@ -2013,7 +2013,7 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
 
     @classmethod
     def parser(cls, buf):
-        (length, ) = struct.unpack_from(
+        (length,) = struct.unpack_from(
             cls._LENGTH_LONG_FMT, six.binary_type(buf))
 
         if length < cls._LENGTH_THRESHOLD:
@@ -2022,7 +2022,14 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
         else:
             offset = cls.LENGTH_LONG_SIZE
 
+        kwargs = {'length': length}
         rest = buf[offset:offset + length]
+
+        if cls.ROUTE_FAMILY.safi == subaddr_family.VPN_FLOW_SPEC:
+            route_dist = _RouteDistinguisher.parser(rest[:8])
+            kwargs['route_dist'] = route_dist.formatted_str
+            rest = rest[8:]
+
         rules = []
 
         while rest:
@@ -2036,10 +2043,17 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
                         rule.operator & rule.END_OF_LIST):
                     break
 
-        return cls(length, rules), rest
+        kwargs['rules'] = rules
+
+        return cls(**kwargs), rest
 
     def serialize(self):
-        rules_bin = bytearray()
+        rules_bin = b''
+
+        if self.ROUTE_FAMILY.safi == subaddr_family.VPN_FLOW_SPEC:
+            route_dist = _RouteDistinguisher.from_str(self.route_dist)
+            rules_bin += route_dist.serialize()
+
         self.rules.sort(key=lambda x: x.type)
         for _, rules in itertools.groupby(self.rules, key=lambda x: x.type):
             rules = list(rules)
@@ -2114,18 +2128,19 @@ class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
         =========== ============= ========= ==============================
 
         Example::
+
             >>> msg = bgp.FlowSpecIPv4NLRI.from_user(
             ...     dst_prefix='10.0.0.0/24',
             ...     src_prefix='20.0.0.1/24',
-            ...     ip_proto='==6',
-            ...     port='==80 | ==8000',
+            ...     ip_proto=6,
+            ...     port='80 | 8000',
             ...     dst_port='>9000 & <9050',
             ...     src_port='>=8500 & <=9000',
-            ...     icmp_type='==0',
-            ...     icmp_code='==6',
+            ...     icmp_type=0,
+            ...     icmp_code=6,
             ...     tcp_flags='SYN+ACK & !=URGENT',
-            ...     packet_len='==1000',
-            ...     dscp='==22 | ==24',
+            ...     packet_len=1000,
+            ...     dscp='22 | 24',
             ...     fragment='LF | ==FF')
             >>>
 
@@ -2173,15 +2188,62 @@ class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
 class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
     """
     Flow Specification NLRI class for VPNv4 [RFC 5575]
-
-    See :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv4NLRI`
     """
+
+    # flow-spec NLRI:
+    # +-----------------------------------+
+    # |    length (0xnn or 0xfn nn)       |
+    # +-----------------------------------+
+    # |     RD   (8 octets)               |
+    # +-----------------------------------+
+    # |     NLRI value  (variable)        |
+    # +-----------------------------------+
     ROUTE_FAMILY = RF_VPNv4_FLOW_SPEC
 
-    @classmethod
-    def from_user(cls, **kwargs):
+    def __init__(self, length=0, route_dist=None, rules=None):
+        super(FlowSpecVPNv4NLRI, self).__init__(length, rules)
+        assert route_dist is not None
+        self.route_dist = route_dist
 
-        return cls._from_user(**kwargs)
+    @classmethod
+    def _from_user(cls, route_dist, **kwargs):
+        rules = []
+        for k, v in kwargs.items():
+            subcls = _FlowSpecComponentBase.lookup_type_name(k)
+            rule = subcls.from_str(str(v))
+            rules.extend(rule)
+        rules.sort(key=lambda x: x.type)
+        return cls(route_dist=route_dist, rules=rules)
+
+    @classmethod
+    def from_user(cls, route_dist, **kwargs):
+        """
+        Utility method for creating a NLRI instance.
+
+        This function returns a NLRI instance from human readable format value.
+
+        :param route_dist: Route Distinguisher.
+        :param kwargs: See :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv4NLRI`
+
+        Example::
+
+            >>> msg = bgp.FlowSpecIPv4NLRI.from_user(
+            ...     route_dist='65000:1000',
+            ...     dst_prefix='10.0.0.0/24',
+            ...     src_prefix='20.0.0.1/24',
+            ...     ip_proto=6,
+            ...     port='80 | 8000',
+            ...     dst_port='>9000 & <9050',
+            ...     src_port='>=8500 & <=9000',
+            ...     icmp_type=0,
+            ...     icmp_code=6,
+            ...     tcp_flags='SYN+ACK & !=URGENT',
+            ...     packet_len=1000,
+            ...     dscp='22 | 24',
+            ...     fragment='LF | ==FF')
+            >>>
+        """
+        return cls._from_user(route_dist, **kwargs)
 
 
 class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
