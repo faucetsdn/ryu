@@ -3853,7 +3853,14 @@ class BGPEvpnEsImportRTExtendedCommunity(_ExtendedCommunity):
 @_ExtendedCommunity.register_type(_ExtendedCommunity.FLOWSPEC_TRAFFIC_RATE)
 class BGPFlowSpecTrafficRateCommunity(_ExtendedCommunity):
     """
-    Flow Specification Traffic Filtering Actions for Traffic Rate
+    Flow Specification Traffic Filtering Actions for Traffic Rate.
+
+    ========================== ===============================================
+    Attribute                  Description
+    ========================== ===============================================
+    as_number                  Autonomous System number.
+    rate_info                  rate information.
+    ========================== ===============================================
     """
     # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -3866,6 +3873,7 @@ class BGPFlowSpecTrafficRateCommunity(_ExtendedCommunity):
 
     def __init__(self, **kwargs):
         super(BGPFlowSpecTrafficRateCommunity, self).__init__()
+        kwargs['subtype'] = self.SUBTYPE_FLOWSPEC_TRAFFIC_RATE
         self.do_init(BGPFlowSpecTrafficRateCommunity, self, kwargs)
 
     @classmethod
@@ -3886,7 +3894,15 @@ class BGPFlowSpecTrafficRateCommunity(_ExtendedCommunity):
 @_ExtendedCommunity.register_type(_ExtendedCommunity.FLOWSPEC_TRAFFIC_ACTION)
 class BGPFlowSpecTrafficActionCommunity(_ExtendedCommunity):
     """
-    Flow Specification Traffic Filtering Actions for Traffic Action
+    Flow Specification Traffic Filtering Actions for Traffic Action.
+
+    ========================== ===============================================
+    Attribute                  Description
+    ========================== ===============================================
+    action                     Apply action.
+                               The supported action are
+                               ``SAMPLE`` and ``TERMINAL``.
+    ========================== ===============================================
     """
     # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -3908,21 +3924,40 @@ class BGPFlowSpecTrafficActionCommunity(_ExtendedCommunity):
 
     def __init__(self, **kwargs):
         super(BGPFlowSpecTrafficActionCommunity, self).__init__()
+        kwargs['subtype'] = self.SUBTYPE_FLOWSPEC_TRAFFIC_ACTION
         self.do_init(BGPFlowSpecTrafficActionCommunity, self, kwargs)
 
 
 @_ExtendedCommunity.register_type(_ExtendedCommunity.FLOWSPEC_REDIRECT)
 class BGPFlowSpecRedirectCommunity(BGPTwoOctetAsSpecificExtendedCommunity):
     """
-    Flow Specification Traffic Filtering Actions for Redirect
+    Flow Specification Traffic Filtering Actions for Redirect.
+
+    ========================== ===============================================
+    Attribute                  Description
+    ========================== ===============================================
+    as_number                  Autonomous System number.
+    local_administrator        Local Administrator.
+    ========================== ===============================================
     """
+
+    def __init__(self, **kwargs):
+        super(BGPTwoOctetAsSpecificExtendedCommunity, self).__init__()
+        kwargs['subtype'] = self.SUBTYPE_FLOWSPEC_REDIRECT
+        self.do_init(BGPTwoOctetAsSpecificExtendedCommunity, self, kwargs)
 
 
 @_ExtendedCommunity.register_type(
     _ExtendedCommunity.FLOWSPEC_TRAFFIC_REMARKING)
 class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
     """
-    Flow Specification Traffic Filtering Actions for Traffic Marking
+    Flow Specification Traffic Filtering Actions for Traffic Marking.
+
+    ========================== ===============================================
+    Attribute                  Description
+    ========================== ===============================================
+    dscp                       Differentiated Services Code Point.
+    ========================== ===============================================
     """
     # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -3935,6 +3970,7 @@ class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
 
     def __init__(self, **kwargs):
         super(BGPFlowSpecTrafficMarkingCommunity, self).__init__()
+        kwargs['subtype'] = self.SUBTYPE_FLOWSPEC_TRAFFIC_REMARKING
         self.do_init(BGPFlowSpecTrafficMarkingCommunity, self, kwargs)
 
     @classmethod
