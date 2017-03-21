@@ -572,8 +572,8 @@ RF_IPv6_VPN = RouteFamily(addr_family.IP6, subaddr_family.MPLS_VPN)
 RF_IPv4_MPLS = RouteFamily(addr_family.IP, subaddr_family.MPLS_LABEL)
 RF_IPv6_MPLS = RouteFamily(addr_family.IP6, subaddr_family.MPLS_LABEL)
 RF_L2_EVPN = RouteFamily(addr_family.L2VPN, subaddr_family.EVPN)
-RF_IPv4_FLOW_SPEC = RouteFamily(addr_family.IP, subaddr_family.IP_FLOW_SPEC)
-RF_VPNv4_FLOW_SPEC = RouteFamily(addr_family.IP, subaddr_family.VPN_FLOW_SPEC)
+RF_IPv4_FLOWSPEC = RouteFamily(addr_family.IP, subaddr_family.IP_FLOWSPEC)
+RF_VPNv4_FLOWSPEC = RouteFamily(addr_family.IP, subaddr_family.VPN_FLOWSPEC)
 RF_RTC_UC = RouteFamily(addr_family.IP,
                         subaddr_family.ROUTE_TARGET_CONSTRAINTS)
 
@@ -585,8 +585,8 @@ _rf_map = {
     (addr_family.IP, subaddr_family.MPLS_LABEL): RF_IPv4_MPLS,
     (addr_family.IP6, subaddr_family.MPLS_LABEL): RF_IPv6_MPLS,
     (addr_family.L2VPN, subaddr_family.EVPN): RF_L2_EVPN,
-    (addr_family.IP, subaddr_family.IP_FLOW_SPEC): RF_IPv4_FLOW_SPEC,
-    (addr_family.IP, subaddr_family.VPN_FLOW_SPEC): RF_VPNv4_FLOW_SPEC,
+    (addr_family.IP, subaddr_family.IP_FLOWSPEC): RF_IPv4_FLOWSPEC,
+    (addr_family.IP, subaddr_family.VPN_FLOWSPEC): RF_VPNv4_FLOWSPEC,
     (addr_family.IP, subaddr_family.ROUTE_TARGET_CONSTRAINTS): RF_RTC_UC
 }
 
@@ -2025,7 +2025,7 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
         kwargs = {'length': length}
         rest = buf[offset:offset + length]
 
-        if cls.ROUTE_FAMILY.safi == subaddr_family.VPN_FLOW_SPEC:
+        if cls.ROUTE_FAMILY.safi == subaddr_family.VPN_FLOWSPEC:
             route_dist = _RouteDistinguisher.parser(rest[:8])
             kwargs['route_dist'] = route_dist.formatted_str
             rest = rest[8:]
@@ -2050,7 +2050,7 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
     def serialize(self):
         rules_bin = b''
 
-        if self.ROUTE_FAMILY.safi == subaddr_family.VPN_FLOW_SPEC:
+        if self.ROUTE_FAMILY.safi == subaddr_family.VPN_FLOWSPEC:
             route_dist = _RouteDistinguisher.from_str(self.route_dist)
             rules_bin += route_dist.serialize()
 
@@ -2089,7 +2089,7 @@ class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
     """
     Flow Specification NLRI class for IPv4 [RFC 5575]
     """
-    ROUTE_FAMILY = RF_IPv4_FLOW_SPEC
+    ROUTE_FAMILY = RF_IPv4_FLOWSPEC
 
     @classmethod
     def from_user(cls, **kwargs):
@@ -2198,7 +2198,7 @@ class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
     # +-----------------------------------+
     # |     NLRI value  (variable)        |
     # +-----------------------------------+
-    ROUTE_FAMILY = RF_VPNv4_FLOW_SPEC
+    ROUTE_FAMILY = RF_VPNv4_FLOWSPEC
 
     def __init__(self, length=0, route_dist=None, rules=None):
         super(FlowSpecVPNv4NLRI, self).__init__(length, rules)
@@ -2771,8 +2771,8 @@ _ADDR_CLASSES = {
     _addr_class_key(RF_IPv4_VPN): LabelledVPNIPAddrPrefix,
     _addr_class_key(RF_IPv6_VPN): LabelledVPNIP6AddrPrefix,
     _addr_class_key(RF_L2_EVPN): EvpnNLRI,
-    _addr_class_key(RF_IPv4_FLOW_SPEC): FlowSpecIPv4NLRI,
-    _addr_class_key(RF_VPNv4_FLOW_SPEC): FlowSpecVPNv4NLRI,
+    _addr_class_key(RF_IPv4_FLOWSPEC): FlowSpecIPv4NLRI,
+    _addr_class_key(RF_VPNv4_FLOWSPEC): FlowSpecVPNv4NLRI,
     _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
 }
 
