@@ -2332,7 +2332,8 @@ class _FlowSpecPrefixBase(_FlowSpecComponentBase, IPAddrPrefix):
     def __init__(self, length, addr, type_=None):
         super(_FlowSpecPrefixBase, self).__init__(type_)
         self.length = length
-        self.addr = addr
+        prefix = "%s/%s" % (addr, length)
+        self.addr = str(netaddr.ip.IPNetwork(prefix).network)
 
     @classmethod
     def parse_body(cls, buf):
