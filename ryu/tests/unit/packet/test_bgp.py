@@ -448,3 +448,136 @@ class Test_bgp(unittest.TestCase):
         jsondict = msg1.to_jsondict()
         msg2 = bgp.BGPUpdate.from_jsondict(jsondict['BGPUpdate'])
         eq_(str(msg1), str(msg2))
+
+    def test_user_interface(self):
+        rules = [
+            # dst_prefix='10.0.0.0/24
+            bgp.FlowSpecDestPrefix(addr='10.0.0.0', length=24),
+            # src_prefix='20.0.0.1/24'
+            bgp.FlowSpecSrcPrefix(addr='20.0.0.0', length=24),
+            # ip_proto='6'
+            bgp.FlowSpecIPProtocol(
+                operator=bgp.FlowSpecIPProtocol.EQ, value=6),
+            # port='>=8000'
+            bgp.FlowSpecPort(
+                operator=(bgp.FlowSpecPort.GT | bgp.FlowSpecPort.EQ),
+                value=8000),
+            # port='&<=9000'
+            bgp.FlowSpecPort(
+                operator=(bgp.FlowSpecPort.AND | bgp.FlowSpecPort.LT |
+                          bgp.FlowSpecPort.EQ),
+                value=9000),
+            # port='==80'
+            bgp.FlowSpecPort(operator=bgp.FlowSpecPort.EQ, value=80),
+            # dst_port=8080
+            bgp.FlowSpecDestPort(operator=bgp.FlowSpecDestPort.EQ, value=8080),
+            # dst_port='>9000'
+            bgp.FlowSpecDestPort(operator=bgp.FlowSpecDestPort.GT, value=9000),
+            # dst_port='&<9050'
+            bgp.FlowSpecDestPort(
+                operator=(bgp.FlowSpecDestPort.AND | bgp.FlowSpecDestPort.LT),
+                value=9050),
+            # dst_port='<=1000'
+            bgp.FlowSpecDestPort(
+                operator=(bgp.FlowSpecDestPort.LT | bgp.FlowSpecDestPort.EQ),
+                value=1000),
+            # src_port='<=9090'
+            bgp.FlowSpecSrcPort(
+                operator=(bgp.FlowSpecSrcPort.LT | bgp.FlowSpecSrcPort.EQ),
+                value=9090),
+            # src_port='& >=9080'
+            bgp.FlowSpecSrcPort(
+                operator=(bgp.FlowSpecSrcPort.AND | bgp.FlowSpecSrcPort.GT |
+                          bgp.FlowSpecSrcPort.EQ),
+                value=9080),
+            # src_port='<10100'
+            bgp.FlowSpecSrcPort(
+                operator=bgp.FlowSpecSrcPort.LT, value=10100),
+            # src_port='>10000'
+            bgp.FlowSpecSrcPort(
+                operator=(bgp.FlowSpecSrcPort.AND | bgp.FlowSpecSrcPort.GT),
+                value=10000),
+            # icmp_type=0
+            bgp.FlowSpecIcmpType(operator=bgp.FlowSpecIcmpType.EQ, value=0),
+            # icmp_code=6
+            bgp.FlowSpecIcmpCode(operator=bgp.FlowSpecIcmpCode.EQ, value=6),
+            # tcp_flags='ACK+FIN'
+            bgp.FlowSpecTCPFlags(
+                operator=0,  # Partial match
+                value=(bgp.FlowSpecTCPFlags.SYN | bgp.FlowSpecTCPFlags.ACK)),
+            # tcp_flags='&!=URGENT'
+            bgp.FlowSpecTCPFlags(
+                operator=(bgp.FlowSpecTCPFlags.AND | bgp.FlowSpecTCPFlags.NOT),
+                value=bgp.FlowSpecTCPFlags.URGENT),
+            # packet_len=1000
+            bgp.FlowSpecPacketLen(
+                operator=bgp.FlowSpecPacketLen.EQ, value=1000),
+            # packet_len=1100
+            bgp.FlowSpecPacketLen(
+                operator=(bgp.FlowSpecTCPFlags.AND | bgp.FlowSpecPacketLen.EQ),
+                value=1100),
+            # dscp=22
+            bgp.FlowSpecDSCP(operator=bgp.FlowSpecDSCP.EQ, value=22),
+            # dscp=24
+            bgp.FlowSpecDSCP(operator=bgp.FlowSpecDSCP.EQ, value=24),
+            # fragment='LF'
+            bgp.FlowSpecFragment(
+                operator=0,  # Partial match
+                value=bgp.FlowSpecFragment.LF),
+            # fragment='==FF'
+            bgp.FlowSpecFragment(
+                operator=bgp.FlowSpecFragment.MATCH,
+                value=bgp.FlowSpecFragment.FF),
+            # fragment='&==ISF'
+            bgp.FlowSpecFragment(
+                operator=(bgp.FlowSpecFragment.AND |
+                          bgp.FlowSpecFragment.MATCH),
+                value=bgp.FlowSpecFragment.ISF),
+            # fragment='!=DF'
+            bgp.FlowSpecFragment(
+                operator=bgp.FlowSpecFragment.NOT,
+                value=bgp.FlowSpecFragment.DF)]
+
+        msg = bgp.FlowSpecIPv4NLRI.from_user(
+            dst_prefix='10.0.0.0/24',
+            src_prefix='20.0.0.0/24',
+            ip_proto='6',
+            port='>=8000 & <=9000 | ==80',
+            dst_port='8080 >9000&<9050 | <=1000',
+            src_port='<=9090 & >=9080 <10100 & >10000',
+            icmp_type=0,
+            icmp_code=6,
+            tcp_flags='SYN+ACK & !=URGENT',
+            packet_len='1000 & 1100',
+            dscp='22 24',
+            fragment='LF ==FF&==ISF | !=DF')
+        msg2 = bgp.FlowSpecIPv4NLRI(rules=rules)
+        binmsg = msg.serialize()
+        binmsg2 = msg2.serialize()
+        eq_(str(msg), str(msg2))
+        eq_(binary_str(binmsg), binary_str(binmsg2))
+        msg3, rest = bgp.FlowSpecIPv4NLRI.parser(binmsg)
+        eq_(str(msg), str(msg3))
+        eq_(rest, b'')
+
+        msg = bgp.FlowSpecVPNv4NLRI.from_user(
+            dst_prefix='10.0.0.0/24',
+            src_prefix='20.0.0.0/24',
+            ip_proto='6',
+            port='>=8000 & <=9000 | ==80',
+            dst_port='8080 >9000&<9050 | <=1000',
+            src_port='<=9090 & >=9080 <10100 & >10000',
+            icmp_type=0,
+            icmp_code=6,
+            tcp_flags='SYN+ACK & !=URGENT',
+            packet_len='1000 & 1100',
+            dscp='22 24',
+            fragment='LF ==FF&==ISF | !=DF')
+        msg2 = bgp.FlowSpecVPNv4NLRI(rules=rules)
+        binmsg = msg.serialize()
+        binmsg2 = msg2.serialize()
+        eq_(str(msg), str(msg2))
+        eq_(binary_str(binmsg), binary_str(binmsg2))
+        msg3, rest = bgp.FlowSpecVPNv4NLRI.parser(binmsg)
+        eq_(str(msg), str(msg3))
+        eq_(rest, b'')
