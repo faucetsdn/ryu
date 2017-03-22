@@ -1107,7 +1107,7 @@ def mod_port_behavior(dp, port_config):
 
 def set_role(dp, role):
     r = UTIL.ofp_role_from_user(role.get('role', dp.ofproto.OFPCR_ROLE_EQUAL))
-    role_request = dp.ofproto_parser.OFPRoleRequest(dp, r, 0)
+    role_request = dp.ofproto_parser.OFPRoleRequest(dp, r, None, 0)
     ofctl_utils.send_msg(dp, role_request, LOG)
 
 
