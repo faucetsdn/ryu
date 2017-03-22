@@ -763,6 +763,10 @@ def get_port_desc(dp, waiters):
     return {str(dp.id): descs}
 
 
+def get_role(dp, waiters, to_user=True):
+    return ofctl_utils.get_role(dp, waiters, to_user)
+
+
 def mod_flow_entry(dp, flow, cmd):
     cookie = str_to_int(flow.get('cookie', 0))
     cookie_mask = str_to_int(flow.get('cookie_mask', 0))

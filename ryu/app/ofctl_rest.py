@@ -416,6 +416,10 @@ class StatsController(ControllerBase):
         else:
             return ofctl.get_port_desc(dp, self.waiters, port_no)
 
+    @stats_method
+    def get_role(self, req, dp, ofctl, **kwargs):
+        return ofctl.get_role(dp, self.waiters)
+
     @command_method
     def mod_flow_entry(self, req, dp, ofctl, flow, cmd, **kwargs):
         cmd_convert = {
@@ -674,6 +678,11 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='get_port_desc',
                        conditions=dict(method=['GET']))
 
+        uri = path + '/role/{dpid}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_role',
+                       conditions=dict(method=['GET']))
+
         uri = path + '/flowentry/{cmd}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='mod_flow_entry',
@@ -751,7 +760,9 @@ class RestStatsApi(app_manager.RyuApp):
         lock.set()
 
     @set_ev_cls([ofp_event.EventOFPSwitchFeatures,
-                 ofp_event.EventOFPQueueGetConfigReply], MAIN_DISPATCHER)
+                 ofp_event.EventOFPQueueGetConfigReply,
+                 ofp_event.EventOFPRoleReply,
+                 ], MAIN_DISPATCHER)
     def features_reply_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath

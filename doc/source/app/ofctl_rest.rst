@@ -1794,6 +1794,72 @@ Get meter features stats
         }
 
 
+Get role
+--------
+
+    Get the current role of the controller from the switch.
+
+    Usage:
+
+        ======= =========================
+        Method  GET
+        URI     /stats/role/<dpid>
+        ======= =========================
+
+    Response message body(Openflow1.4 or earlier):
+
+        ============= ============================= =========
+        Attribute     Description                   Example
+        ============= ============================= =========
+        dpid          Datapath ID                   1
+        role          One of OFPCR_ROLE_*           "EQUAL"
+        generation_id Master Election Generation Id 0
+        ============= ============================= =========
+
+    Response message body(Openflow1.5 or later):
+
+        ============= ============================= =========
+        Attribute     Description                   Example
+        ============= ============================= =========
+        dpid          Datapath ID                   1
+        role          One of OFPCR_ROLE_*           "EQUAL"
+        short_id      ID number for the controller  0
+        generation_id Master Election Generation Id 0
+        ============= ============================= =========
+
+    Example of use::
+
+        $ curl -X GET http://localhost:8080/stats/role/1
+
+    Response (Openflow1.4 or earlier):
+
+    .. code-block:: javascript
+
+        {
+            "1": [
+                {
+                    "generation_id": 0,
+                    "role": "EQUAL"
+                }
+            ]
+        }
+
+
+    Response (Openflow1.5 or later):
+
+    .. code-block:: javascript
+
+        {
+            "1": [
+                {
+                    "generation_id": 0,
+                    "role": "EQUAL",
+                    "short_id": 0
+                }
+            ]
+        }
+
+
 Update the switch stats
 =======================
 

@@ -266,6 +266,22 @@ def str_to_int(str_num):
     return int(str(str_num), 0)
 
 
+def get_role(dp, waiters, to_user):
+    stats = dp.ofproto_parser.OFPRoleRequest(
+        dp, dp.ofproto.OFPCR_ROLE_NOCHANGE, generation_id=0)
+    msgs = []
+    send_stats_request(dp, stats, waiters, msgs, LOG)
+    descs = []
+
+    for msg in msgs:
+        d = msg.to_jsondict()[msg.__class__.__name__]
+        if to_user:
+            d['role'] = OFCtlUtil(dp.ofproto).ofp_role_to_user(d['role'])
+        descs.append(d)
+
+    return {str(dp.id): descs}
+
+
 class OFCtlUtil(object):
 
     def __init__(self, ofproto):
@@ -430,3 +446,6 @@ class OFCtlUtil(object):
 
     def ofp_role_from_user(self, role):
         return self._reserved_num_from_user(role, 'OFPCR_ROLE_')
+
+    def ofp_role_to_user(self, role):
+        return self._reserved_num_to_user(role, 'OFPCR_ROLE_')
