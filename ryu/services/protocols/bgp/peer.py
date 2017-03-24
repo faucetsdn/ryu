@@ -1046,7 +1046,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 next_hop = path.nexthop
                 # RFC 4271 allows us to change next_hop
                 # if configured to announce its own ip address.
-                if self._neigh_conf.is_next_hop_self:
+                # Also if the BGP route is configured without next_hop,
+                # we use path._session_next_hop() as next_hop.
+                if (self._neigh_conf.is_next_hop_self
+                        or (path.is_local() and not path.has_nexthop())):
                     next_hop = self._session_next_hop(path)
                     LOG.debug('using %s as a next_hop address instead'
                               ' of path.nexthop %s', next_hop, path.nexthop)
