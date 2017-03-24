@@ -128,7 +128,7 @@ class SentRoutes(Command):
             if v.get('timestamp'):
                 time = strftime("%Y/%m/%d %H:%M:%S", v.get('timestamp'))
             ret += cls.fmtstr.format(path_status, time, prefix, labels,
-                                     next_hop, str(med), str(localpref),
+                                     str(next_hop), str(med), str(localpref),
                                      ' '.join(map(str, aspath)))
         return ret
 

@@ -11,7 +11,16 @@ from .route_formatter_mixin import RouteFormatterMixin
 
 
 class RibBase(Command, RouteFormatterMixin):
-    supported_families = ['ipv4', 'ipv6', 'vpnv4', 'rtfilter', 'vpnv6', 'evpn']
+    supported_families = [
+        'ipv4',
+        'ipv6',
+        'vpnv4',
+        'vpnv6',
+        'rtfilter',
+        'evpn',
+        'ipv4fs',
+        'vpnv4fs',
+    ]
 
 
 class Rib(RibBase):

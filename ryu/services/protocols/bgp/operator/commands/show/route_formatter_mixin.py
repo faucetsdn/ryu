@@ -42,7 +42,7 @@ class RouteFormatterMixin(object):
 
             # Append path info to String buffer.
             buff.write(cls.fmtstr.format(path_status, prefix, str(labels),
-                                         next_hop, bpr, str(med),
+                                         str(next_hop), bpr, str(med),
                                          str(localpref),
                                          ' '.join(map(str, aspath))))
 
