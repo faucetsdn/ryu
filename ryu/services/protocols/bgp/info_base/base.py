@@ -843,8 +843,7 @@ class Path(object):
         return self._source is None
 
     def has_nexthop(self):
-        return not (not self._nexthop or self._nexthop == '0.0.0.0' or
-                    self._nexthop == '::')
+        return self._nexthop and self._nexthop not in ('0.0.0.0', '::')
 
     def __str__(self):
         return (
