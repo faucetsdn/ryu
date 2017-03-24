@@ -28,6 +28,7 @@ from ryu.lib.packet.bgp import BGPPathAttributeAsPath
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
@@ -35,13 +36,21 @@ from ryu.lib.packet.bgp import EvpnLACPEsi
 from ryu.lib.packet.bgp import EvpnEthernetAutoDiscoveryNLRI
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
+from ryu.lib.packet.bgp import FlowSpecIPv4NLRI
+from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAX_ET
 from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_LACP
+from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_IPV4
+from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_VPNV4
+from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_TA_SAMPLE
+from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_TA_TERMINAL
 from ryu.services.protocols.bgp.core import BgpCoreError
 from ryu.services.protocols.bgp.core_managers import table_manager
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4_FLOWSPEC
+from ryu.services.protocols.bgp.utils.bgp import create_v4flowspec_actions
 
 
 LOG = logging.getLogger(__name__)
@@ -430,4 +439,247 @@ class Test_TableCoreManager(unittest.TestCase):
             next_hop=None,
             is_withdraw=True,
             expected_next_hop='::',
+        )
+
+    @mock.patch(
+        'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
+        mock.MagicMock(return_value=None))
+    def _test_update_flowspec_vrf_table(self, flowspec_family, route_family,
+                                        route_dist, rules, prefix,
+                                        is_withdraw, actions=None):
+        # Instantiate TableCoreManager
+        tbl_mng = table_manager.TableCoreManager(None, None)
+        vrf_table_mock = mock.MagicMock()
+        tbl_mng._tables = {(route_dist, route_family): vrf_table_mock}
+
+        # Test
+        tbl_mng.update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_dist=route_dist,
+            rules=rules,
+            actions=actions,
+            is_withdraw=is_withdraw,
+        )
+
+        # Check
+        call_args_list = vrf_table_mock.insert_vrffs_path.call_args_list
+        ok_(len(
+            call_args_list) == 1)  # insert_vrffs_path should be called once
+        args, kwargs = call_args_list[0]
+        ok_(len(args) == 0)  # no positional argument
+        eq_(prefix, kwargs['nlri'].prefix)
+        eq_(is_withdraw, kwargs['is_withdraw'])
+
+    def test_update_flowspec_vrf_table_vpnv4(self):
+        flowspec_family = 'vpnv4fs'
+        route_family = 'ipv4fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '10.70.1.0/24',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    def test_update_flowspec_vrf_table_vpnv4_without_actions(self):
+        flowspec_family = 'vpnv4fs'
+        route_family = 'ipv4fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '10.70.1.0/24',
+        }
+        prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_vpnv4_invalid_actions(self):
+        flowspec_family = 'vpnv4fs'
+        route_family = 'ipv4fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '10.70.1.0/24',
+        }
+        actions = {
+            'invalid_actions': {
+                'invalid_param': 10,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_vpnv4_invalid_flowspec_family(self):
+        flowspec_family = 'invalid'
+        route_family = 'ipv4fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '10.70.1.0/24',
+        }
+        prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_vpnv4_invalid_route_family(self):
+        flowspec_family = 'vpnv4fs'
+        route_family = 'invalid'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '10.70.1.0/24',
+        }
+        prefix = 'ipv4fs(dst_prefix:10.70.1.0/24)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @mock.patch(
+        'ryu.services.protocols.bgp.core_managers.TableCoreManager.__init__',
+        mock.MagicMock(return_value=None))
+    @mock.patch(
+        'ryu.services.protocols.bgp.core_managers.TableCoreManager.learn_path')
+    def _test_update_flowspec_global_table(self, learn_path_mock,
+                                           flowspec_family, rules, prefix,
+                                           is_withdraw, actions=None):
+        # Instantiate TableCoreManager
+        tbl_mng = table_manager.TableCoreManager(None, None)
+
+        # Test
+        tbl_mng.update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            actions=actions,
+            is_withdraw=is_withdraw,
+        )
+
+        # Check
+        call_args_list = learn_path_mock.call_args_list
+        ok_(len(call_args_list) == 1)  # learn_path should be called once
+        args, kwargs = call_args_list[0]
+        ok_(len(kwargs) == 0)  # no keyword argument
+        output_path = args[0]
+        eq_(None, output_path.source)
+        eq_(prefix, output_path.nlri.prefix)
+        eq_(None, output_path.nexthop)
+        eq_(is_withdraw, output_path.is_withdraw)
+
+    def test_update_flowspec_global_table_ipv4(self):
+        flowspec_family = 'ipv4fs'
+        rules = {
+            'dst_prefix': '10.60.1.0/24',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:10.60.1.0/24)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    def test_update_flowspec_global_table_ipv4_without_actions(self):
+        flowspec_family = 'ipv4fs'
+        rules = {
+            'dst_prefix': '10.60.1.0/24',
+        }
+        prefix = 'ipv4fs(dst_prefix:10.60.1.0/24)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_global_table_ipv4_invalid_actions(self):
+        flowspec_family = 'ipv4fs'
+        rules = {
+            'dst_prefix': '10.60.1.0/24',
+        }
+        actions = {
+            'invalid_actions': {
+                'invalid_param': 10,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:10.60.1.0/24)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_global_table_ipv4_invalid_flowspec_family(self):
+        flowspec_family = 'invalid'
+        rules = {
+            'dst_prefix': '10.60.1.0/24',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:10.60.1.0/24)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
         )
