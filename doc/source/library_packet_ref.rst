@@ -145,10 +145,20 @@ Protocol Header classes
    :members:
 .. autoclass:: ryu.lib.packet.bgp.EvpnASBasedEsi
    :members:
+
 .. autoclass:: ryu.lib.packet.bgp.FlowSpecIPv4NLRI
    :members:
 .. autoclass:: ryu.lib.packet.bgp.FlowSpecVPNv4NLRI
    :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPFlowSpecTrafficRateCommunity
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPFlowSpecTrafficActionCommunity
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPFlowSpecRedirectCommunity
+   :members:
+.. autoclass:: ryu.lib.packet.bgp.BGPFlowSpecTrafficMarkingCommunity
+   :members:
+
 
 .. automodule:: ryu.lib.packet.bmp
    :members:
