@@ -15,10 +15,16 @@ from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Table
 from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Table
 from ryu.services.protocols.bgp.info_base.vrfevpn import VrfEvpnTable
 from ryu.services.protocols.bgp.info_base.evpn import EvpnTable
+from ryu.services.protocols.bgp.info_base.ipv4fs import IPv4FlowSpecPath
+from ryu.services.protocols.bgp.info_base.ipv4fs import IPv4FlowSpecTable
+from ryu.services.protocols.bgp.info_base.vpnv4fs import VPNv4FlowSpecTable
+from ryu.services.protocols.bgp.info_base.vrf4fs import Vrf4FlowSpecTable
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4_FLOWSPEC
 from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
+from ryu.services.protocols.bgp.utils.bgp import create_v4flowspec_actions
 
 from ryu.lib import type_desc
 from ryu.lib.packet.bgp import RF_IPv4_UC
@@ -26,12 +32,16 @@ from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_L2_EVPN
+from ryu.lib.packet.bgp import RF_IPv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_VPNv4_FLOWSPEC
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
+from ryu.lib.packet.bgp import BGPPathAttributeExtendedCommunities
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
+from ryu.lib.packet.bgp import BGP_ATTR_TYPE_EXTENDED_COMMUNITIES
 from ryu.lib.packet.bgp import EvpnEsi
 from ryu.lib.packet.bgp import EvpnArbitraryEsi
 from ryu.lib.packet.bgp import EvpnNLRI
@@ -39,6 +49,7 @@ from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
+from ryu.lib.packet.bgp import FlowSpecIPv4NLRI
 
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4_prefix
@@ -119,6 +130,8 @@ class TableCoreManager(object):
             vpn_table = self.get_vpn6_table()
         elif vrf_table.route_family == VrfEvpnTable.ROUTE_FAMILY:
             vpn_table = self.get_evpn_table()
+        elif vrf_table.route_family == Vrf4FlowSpecTable.ROUTE_FAMILY:
+            vpn_table = self.get_vpnv4fs_table()
         else:
             raise ValueError('Invalid VRF table route family: %s' %
                              vrf_table.route_family)
@@ -185,6 +198,10 @@ class TableCoreManager(object):
             global_table = self.get_vpn6_table()
         elif route_family == RF_L2_EVPN:
             global_table = self.get_evpn_table()
+        elif route_family == RF_IPv4_FLOWSPEC:
+            global_table = self.get_ipv4fs_table()
+        elif route_family == RF_VPNv4_FLOWSPEC:
+            global_table = self.get_vpnv4fs_table()
         elif route_family == RF_RTC_UC:
             global_table = self.get_rtc_table()
 
@@ -295,6 +312,36 @@ class TableCoreManager(object):
         self._next_vpnv4_label += 1
         return lbl
 
+    def get_ipv4fs_table(self):
+        """Returns global IPv4 Flow Specification table.
+
+        Creates the table if it does not exist.
+        """
+        ipv4fs_table = self._global_tables.get(RF_IPv4_FLOWSPEC)
+        # Lazy initialization of the table.
+        if not ipv4fs_table:
+            ipv4fs_table = IPv4FlowSpecTable(self._core_service,
+                                             self._signal_bus)
+            self._global_tables[RF_IPv4_FLOWSPEC] = ipv4fs_table
+            self._tables[(None, RF_IPv4_FLOWSPEC)] = ipv4fs_table
+
+        return ipv4fs_table
+
+    def get_vpnv4fs_table(self):
+        """Returns global VPNv4 Flow Specification table.
+
+        Creates the table if it does not exist.
+        """
+        vpnv4fs_table = self._global_tables.get(RF_VPNv4_FLOWSPEC)
+        # Lazy initialization of the table.
+        if not vpnv4fs_table:
+            vpnv4fs_table = VPNv4FlowSpecTable(self._core_service,
+                                               self._signal_bus)
+            self._global_tables[RF_VPNv4_FLOWSPEC] = vpnv4fs_table
+            self._tables[(None, RF_VPNv4_FLOWSPEC)] = vpnv4fs_table
+
+        return vpnv4fs_table
+
     def get_nexthop_label(self, label_key):
         return self._next_hop_label.get(label_key, None)
 
@@ -374,6 +421,8 @@ class TableCoreManager(object):
             vrf_table = Vrf6Table
         elif route_family == VRF_RF_L2_EVPN:
             vrf_table = VrfEvpnTable
+        elif route_family == VRF_RF_IPV4_FLOWSPEC:
+            vrf_table = Vrf4FlowSpecTable
         else:
             raise ValueError('Unsupported route family for VRF: %s' %
                              route_family)
@@ -457,6 +506,8 @@ class TableCoreManager(object):
             route_family = RF_IPv6_UC
         elif vpn_path.route_family == RF_L2_EVPN:
             route_family = RF_L2_EVPN
+        elif vpn_path.route_family == RF_VPNv4_FLOWSPEC:
+            route_family = RF_IPv4_FLOWSPEC
         else:
             raise ValueError('Unsupported route family for VRF: %s' %
                              vpn_path.route_family)
@@ -580,6 +631,49 @@ class TableCoreManager(object):
             vni=vni, tunnel_type=tunnel_type,
             pmsi_tunnel_type=pmsi_tunnel_type)
 
+    def update_flowspec_vrf_table(self, flowspec_family, route_dist, rules,
+                                  actions=None, is_withdraw=False):
+        """Update a BGP route in the VRF table for Flow Specification.
+
+        ``flowspec_family`` specifies one of the flowspec family name.
+
+        ``route_dist`` specifies a route distinguisher value.
+
+        ``rules`` specifies NLRIs of Flow Specification as
+        a dictionary type value.
+
+        `` actions`` specifies Traffic Filtering Actions of
+        Flow Specification as a dictionary type value.
+
+        If `is_withdraw` is False, which is the default, add a BGP route
+        to the VRF table identified by `route_dist`.
+        If `is_withdraw` is True, remove a BGP route from the VRF table.
+        """
+        from ryu.services.protocols.bgp.core import BgpCoreError
+        from ryu.services.protocols.bgp.api.prefix import FLOWSPEC_FAMILY_VPNV4
+
+        if flowspec_family == FLOWSPEC_FAMILY_VPNV4:
+            vrf_table = self._tables.get((route_dist, VRF_RF_IPV4_FLOWSPEC))
+            prefix = FlowSpecIPv4NLRI.from_user(**rules)
+            try:
+                communities = create_v4flowspec_actions(actions)
+            except ValueError as e:
+                raise BgpCoreError(desc=str(e))
+        else:
+            raise BgpCoreError(
+                desc='Unsupported flowspec_family %s' % flowspec_family)
+
+        if vrf_table is None:
+            raise BgpCoreError(
+                desc='VRF table does not exist: route_dist=%s, '
+                     'flowspec_family=%s' % (route_dist, flowspec_family))
+
+        # We do not check if we have a path to given prefix, we issue
+        # withdrawal. Hence multiple withdrawals have not side effect.
+        vrf_table.insert_vrffs_path(
+            nlri=prefix, communities=communities,
+            is_withdraw=is_withdraw)
+
     def update_global_table(self, prefix, next_hop=None, is_withdraw=False):
         """Update a BGP route in the Global table for the given `prefix`
         with the given `next_hop`.
@@ -616,7 +710,62 @@ class TableCoreManager(object):
                      pattrs=pathattrs, nexthop=next_hop,
                      is_withdraw=is_withdraw)
 
-        # add to global ipv4 table and propagates to neighbors
+        # add to global table and propagates to neighbors
+        self.learn_path(new_path)
+
+    def update_flowspec_global_table(self, flowspec_family, rules,
+                                     actions=None, is_withdraw=False):
+        """Update a BGP route in the Global table for Flow Specification.
+
+        ``flowspec_family`` specifies one of the Flow Specification
+         family name.
+
+        ``rules`` specifies NLRIs of Flow Specification as
+        a dictionary type value.
+
+        `` actions`` specifies Traffic Filtering Actions of
+        Flow Specification as a dictionary type value.
+
+        If `is_withdraw` is False, which is the default, add a BGP route
+        to the Global table.
+        If `is_withdraw` is True, remove a BGP route from the Global table.
+        """
+
+        from ryu.services.protocols.bgp.core import BgpCoreError
+        from ryu.services.protocols.bgp.api.prefix import FLOWSPEC_FAMILY_IPV4
+
+        src_ver_num = 1
+        peer = None
+
+        # set mandatory path attributes
+        origin = BGPPathAttributeOrigin(BGP_ATTR_ORIGIN_IGP)
+        aspath = BGPPathAttributeAsPath([[]])
+
+        pathattrs = OrderedDict()
+        pathattrs[BGP_ATTR_TYPE_ORIGIN] = origin
+        pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
+
+        if flowspec_family == FLOWSPEC_FAMILY_IPV4:
+            _nlri = FlowSpecIPv4NLRI.from_user(**rules)
+            p = IPv4FlowSpecPath
+
+            try:
+                communities = create_v4flowspec_actions(actions)
+            except ValueError as e:
+                raise BgpCoreError(desc=str(e))
+
+            if communities:
+                pathattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = (
+                    BGPPathAttributeExtendedCommunities(
+                        communities=communities))
+        else:
+            raise BgpCoreError(
+                desc='Unsupported flowspec family %s' % flowspec_family)
+
+        new_path = p(peer, _nlri, src_ver_num,
+                     pattrs=pathattrs, is_withdraw=is_withdraw)
+
+        # add to global table and propagates to neighbors
         self.learn_path(new_path)
 
     def clean_stale_routes(self, peer, route_family=None):

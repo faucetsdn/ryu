@@ -20,6 +20,9 @@ import logging
 
 from ryu.services.protocols.bgp.api.base import register
 from ryu.services.protocols.bgp.api.base import RegisterWithArgChecks
+from ryu.services.protocols.bgp.api.base import FLOWSPEC_FAMILY
+from ryu.services.protocols.bgp.api.base import FLOWSPEC_RULES
+from ryu.services.protocols.bgp.api.base import FLOWSPEC_ACTIONS
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
 from ryu.services.protocols.bgp.rtconf.base import ConfWithId
 from ryu.services.protocols.bgp.rtconf.base import RuntimeConfigError
@@ -297,3 +300,26 @@ def bmp_start(host, port):
 def bmp_stop(host, port):
     core = CORE_MANAGER.get_core_service()
     return core.stop_bmp(host, port)
+
+
+# =============================================================================
+# BGP Flow Specification Routes related APIs
+# =============================================================================
+
+@RegisterWithArgChecks(
+    name='flowspec.add',
+    req_args=[FLOWSPEC_FAMILY, FLOWSPEC_RULES],
+    opt_args=[FLOWSPEC_ACTIONS])
+def add_flowspec(flowspec_family, rules, **kwargs):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.update_flowspec_global_table(flowspec_family, rules, **kwargs)
+    return True
+
+
+@RegisterWithArgChecks(
+    name='flowspec.del',
+    req_args=[FLOWSPEC_FAMILY, FLOWSPEC_RULES])
+def del_flowspec(flowspec_family, rules):
+    tm = CORE_MANAGER.get_core_service().table_manager
+    tm.update_flowspec_global_table(flowspec_family, rules, is_withdraw=True)
+    return True

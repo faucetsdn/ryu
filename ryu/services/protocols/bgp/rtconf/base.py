@@ -46,6 +46,8 @@ CAP_MBGP_IPV6 = 'cap_mbgp_ipv6'
 CAP_MBGP_VPNV4 = 'cap_mbgp_vpnv4'
 CAP_MBGP_VPNV6 = 'cap_mbgp_vpnv6'
 CAP_MBGP_EVPN = 'cap_mbgp_evpn'
+CAP_MBGP_IPV4FS = 'cap_mbgp_ipv4fs'
+CAP_MBGP_VPNV4FS = 'cap_mbgp_vpnv4fs'
 CAP_RTC = 'cap_rtc'
 RTC_AS = 'rtc_as'
 HOLD_TIME = 'hold_time'
@@ -646,6 +648,24 @@ def validate_cap_mbgp_evpn(cmevpn):
         raise ConfigTypeError(desc='Invalid Ethernet VPN capability '
                               'settings: %s. Boolean value expected' % cmevpn)
     return cmevpn
+
+
+@validate(name=CAP_MBGP_IPV4FS)
+def validate_cap_mbgp_ipv4fs(cmv4fs):
+    if not isinstance(cmv4fs, bool):
+        raise ConfigTypeError(desc='Invalid MP-BGP '
+                              'IPv4 Flow Specification capability '
+                              'settings: %s. Boolean value expected' % cmv4fs)
+    return cmv4fs
+
+
+@validate(name=CAP_MBGP_VPNV4FS)
+def validate_cap_mbgp_vpnv4fs(cmv4fs):
+    if not isinstance(cmv4fs, bool):
+        raise ConfigTypeError(desc='Invalid MP-BGP '
+                              'VPNv4 Flow Specification capability '
+                              'settings: %s. Boolean value expected' % cmv4fs)
+    return cmv4fs
 
 
 @validate(name=CAP_RTC)

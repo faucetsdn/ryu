@@ -54,6 +54,9 @@ MPLS_LABELS = 'mpls_labels'
 TUNNEL_TYPE = 'tunnel_type'
 EVPN_VNI = 'vni'
 PMSI_TUNNEL_TYPE = 'pmsi_tunnel_type'
+FLOWSPEC_FAMILY = 'flowspec_family'
+FLOWSPEC_RULES = 'rules'
+FLOWSPEC_ACTIONS = 'actions'
 
 # API call registry
 _CALL_REGISTRY = {}

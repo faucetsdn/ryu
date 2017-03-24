@@ -331,6 +331,8 @@ class RyuBGPSpeaker(RyuApp):
                 prefix_add = self.speaker.prefix_add
             elif 'route_type' in route_settings:
                 prefix_add = self.speaker.evpn_prefix_add
+            elif 'flowspec_family' in route_settings:
+                prefix_add = self.speaker.flowspec_prefix_add
             else:
                 LOG.debug('Skip invalid route settings: %s', route_settings)
                 continue

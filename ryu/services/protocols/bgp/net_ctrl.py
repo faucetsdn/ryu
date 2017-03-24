@@ -25,6 +25,8 @@ import traceback
 
 import msgpack
 
+from ryu.lib.packet import safi as subaddr_family
+
 from ryu.services.protocols.bgp import api
 from ryu.services.protocols.bgp.api.base import ApiException
 from ryu.services.protocols.bgp.api.base import NEXT_HOP
@@ -268,8 +270,11 @@ def _create_prefix_notification(outgoing_msg, rpc_session):
         params = [{ROUTE_DISTINGUISHER: outgoing_msg.route_dist,
                    PREFIX: vpn_nlri.prefix,
                    NEXT_HOP: path.nexthop,
-                   VPN_LABEL: path.label_list[0],
                    VRF_RF: VrfConf.rf_2_vrf_rf(path.route_family)}]
+        if path.nlri.ROUTE_FAMILY.safi not in (subaddr_family.IP_FLOWSPEC,
+                                               subaddr_family.VPN_FLOWSPEC):
+            params[VPN_LABEL] = path.label_list[0]
+
         if not path.is_withdraw:
             # Create notification to NetworkController.
             rpc_msg = rpc_session.create_notification(
