@@ -24,6 +24,7 @@ RFC 4271 BGP-4
 
 import abc
 import base64
+import collections
 import copy
 import functools
 import io
@@ -2003,6 +2004,7 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
     _LENGTH_LONG_FMT = '!H'
     LENGTH_LONG_SIZE = struct.calcsize(_LENGTH_LONG_FMT)
     _LENGTH_THRESHOLD = 0xf000
+    FLOWSPEC_FAMILY = ''
 
     def __init__(self, length=0, rules=None):
         self.length = length
@@ -2084,12 +2086,36 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
         rules.sort(key=lambda x: x.type)
         return cls(rules=rules)
 
+    @property
+    def prefix(self):
+        def _format(i):
+            pairs = []
+            i.rules.sort(key=lambda x: x.type)
+            previous_type = None
+            for r in i.rules:
+                if r.type == previous_type:
+                    if r.to_str()[0] != '&':
+                        pairs[-1] += '|'
+                    pairs[-1] += r.to_str()
+                else:
+                    pairs.append('%s:%s' % (r.COMPONENT_NAME, r.to_str()))
+                previous_type = r.type
+
+            return ','.join(pairs)
+
+        return '%s(%s)' % (self.FLOWSPEC_FAMILY, _format(self))
+
+    @property
+    def formatted_nlri_str(self):
+        return self.prefix
+
 
 class FlowSpecIPv4NLRI(_FlowSpecNLRIBase):
     """
     Flow Specification NLRI class for IPv4 [RFC 5575]
     """
     ROUTE_FAMILY = RF_IPv4_FLOWSPEC
+    FLOWSPEC_FAMILY = 'ipv4fs'
 
     @classmethod
     def from_user(cls, **kwargs):
@@ -2199,6 +2225,7 @@ class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
     # |     NLRI value  (variable)        |
     # +-----------------------------------+
     ROUTE_FAMILY = RF_VPNv4_FLOWSPEC
+    FLOWSPEC_FAMILY = 'vpnv4fs'
 
     def __init__(self, length=0, route_dist=None, rules=None):
         super(FlowSpecVPNv4NLRI, self).__init__(length, rules)
@@ -2244,6 +2271,10 @@ class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
             >>>
         """
         return cls._from_user(route_dist, **kwargs)
+
+    @property
+    def formatted_nlri_str(self):
+        return '%s:%s' % (self.route_dist, self.prefix)
 
 
 class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
@@ -2348,6 +2379,13 @@ class _FlowSpecPrefixBase(_FlowSpecComponentBase, IPAddrPrefix):
         addr, length = value.split('/')
         rule.append(cls(int(length), addr))
         return rule
+
+    @property
+    def value(self):
+        return "%s/%s" % (self.addr, self.length)
+
+    def to_str(self):
+        return self.value
 
 
 @_FlowSpecComponentBase.register_type(
@@ -2497,6 +2535,20 @@ class _FlowSpecNumeric(_FlowSpecOperatorBase):
             raise ValueError('Invalid params: %s="%s"' % (
                 cls.COMPONENT_NAME, value))
 
+    def to_str(self):
+        string = ""
+        if self.operator & self.AND:
+            string += "&"
+
+        operator = self.operator & (self.LT | self.GT | self.EQ)
+        for k, v in self._comparison_conditions.items():
+            if operator == v:
+                string += k
+
+        string += str(self.value)
+
+        return string
+
     @classmethod
     def normalize_operator(cls, operator):
         if operator & (cls.LT | cls.GT | cls.EQ):
@@ -2523,6 +2575,8 @@ class _FlowSpecBitmask(_FlowSpecOperatorBase):
         '==': MATCH,
     }
 
+    _bitmask_flags = {}
+
     @classmethod
     def _to_value(cls, value):
         try:
@@ -2530,6 +2584,24 @@ class _FlowSpecBitmask(_FlowSpecOperatorBase):
         except KeyError:
             raise ValueError('Invalid params: %s="%s"' % (
                 cls.COMPONENT_NAME, value))
+
+    def to_str(self):
+        string = ""
+        if self.operator & self.AND:
+            string += "&"
+
+        operator = self.operator & (self.NOT | self.MATCH)
+        for k, v in self._comparison_conditions.items():
+            if operator == v:
+                string += k
+
+        plus = ""
+        for k, v in self._bitmask_flags.items():
+            if self.value & k:
+                string += plus + v
+                plus = "+"
+
+        return string
 
 
 @_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PROTOCOL)
@@ -2610,6 +2682,16 @@ class FlowSpecTCPFlags(_FlowSpecBitmask):
     SYN = 1 << 1
     FIN = 1 << 0
 
+    _bitmask_flags = collections.OrderedDict()
+    _bitmask_flags[SYN] = 'SYN'
+    _bitmask_flags[ACK] = 'ACK'
+    _bitmask_flags[FIN] = 'FIN'
+    _bitmask_flags[RST] = 'RST'
+    _bitmask_flags[PUSH] = 'PUSH'
+    _bitmask_flags[URGENT] = 'URGENT'
+    _bitmask_flags[ECN] = 'ECN'
+    _bitmask_flags[CWR] = 'CWR'
+
 
 @_FlowSpecComponentBase.register_type(
     _FlowSpecComponentBase.TYPE_PACKET_LENGTH)
@@ -2659,6 +2741,12 @@ class FlowSpecFragment(_FlowSpecBitmask):
     FF = 1 << 2
     ISF = 1 << 1
     DF = 1 << 0
+
+    _bitmask_flags = collections.OrderedDict()
+    _bitmask_flags[LF] = 'LF'
+    _bitmask_flags[FF] = 'FF'
+    _bitmask_flags[ISF] = 'ISF'
+    _bitmask_flags[DF] = 'DF'
 
 
 @functools.total_ordering
@@ -3870,6 +3958,7 @@ class BGPFlowSpecTrafficRateCommunity(_ExtendedCommunity):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _VALUE_PACK_STR = '!BHf'
     _VALUE_FIELDS = ['subtype', 'as_number', 'rate_info']
+    ACTION_NAME = 'traffic_rate'
 
     def __init__(self, **kwargs):
         super(BGPFlowSpecTrafficRateCommunity, self).__init__()
@@ -3919,6 +4008,7 @@ class BGPFlowSpecTrafficActionCommunity(_ExtendedCommunity):
 
     _VALUE_PACK_STR = '!B5xB'
     _VALUE_FIELDS = ['subtype', 'action']
+    ACTION_NAME = 'traffic_action'
     SAMPLE = 1 << 1
     TERMINAL = 1 << 0
 
@@ -3940,6 +4030,7 @@ class BGPFlowSpecRedirectCommunity(BGPTwoOctetAsSpecificExtendedCommunity):
     local_administrator        Local Administrator.
     ========================== ===============================================
     """
+    ACTION_NAME = 'redirect'
 
     def __init__(self, **kwargs):
         super(BGPTwoOctetAsSpecificExtendedCommunity, self).__init__()
@@ -3967,6 +4058,7 @@ class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _VALUE_PACK_STR = '!B5xB'
     _VALUE_FIELDS = ['subtype', 'dscp']
+    ACTION_NAME = 'traffic_marking'
 
     def __init__(self, **kwargs):
         super(BGPFlowSpecTrafficMarkingCommunity, self).__init__()
