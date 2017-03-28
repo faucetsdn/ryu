@@ -277,6 +277,18 @@ NX_NAT_RANGE_IPV6_MAX = 1 << 3
 NX_NAT_RANGE_PROTO_MIN = 1 << 4
 NX_NAT_RANGE_PROTO_MAX = 1 << 5
 
+# nx ip_frag constants
+FLOW_NW_FRAG_ANY = 1 << 0    # Set for any IP frag.
+FLOW_NW_FRAG_LATER = 1 << 1  # Set for IP frag with nonzero offset.
+FLOW_NW_FRAG_MASK = FLOW_NW_FRAG_ANY | FLOW_NW_FRAG_LATER
+
+# nx ip_frag match values
+NXM_IP_FRAG_NO = (0, FLOW_NW_FRAG_MASK)
+NXM_IP_FRAG_YES = (FLOW_NW_FRAG_ANY, FLOW_NW_FRAG_ANY)
+NXM_IP_FRAG_FIRST = (FLOW_NW_FRAG_ANY, FLOW_NW_FRAG_MASK)
+NXM_IP_FRAG_LATER = (FLOW_NW_FRAG_LATER, FLOW_NW_FRAG_LATER)
+NXM_IP_FRAG_NOT_LATER = (0, FLOW_NW_FRAG_LATER)
+
 
 def ofs_nbits(start, end):
     """
