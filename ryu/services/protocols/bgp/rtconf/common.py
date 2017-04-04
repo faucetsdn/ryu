@@ -41,6 +41,7 @@ CLUSTER_ID = 'cluster_id'
 LABEL_RANGE = 'label_range'
 LABEL_RANGE_MAX = 'max'
 LABEL_RANGE_MIN = 'min'
+LOCAL_PREF = 'local_pref'
 
 # Similar to Cisco command 'allowas-in'. Allows the local ASN in the path.
 # Facilitates auto rd, auto rt import/export
@@ -85,6 +86,7 @@ DEFAULT_TCP_CONN_TIMEOUT = 30
 DEFAULT_BGP_CONN_RETRY_TIME = 30
 DEFAULT_MED = 0
 DEFAULT_MAX_PATH_EXT_RTFILTER_ALL = True
+DEFAULT_LOCAL_PREF = 100
 
 
 @validate(name=ALLOW_LOCAL_AS_IN_COUNT)
@@ -219,6 +221,15 @@ def validate_max_path_ext_rtfilter_all(max_path_ext_rtfilter_all):
     return max_path_ext_rtfilter_all
 
 
+@validate(name=LOCAL_PREF)
+def validate_local_pref(local_pref):
+    if not isinstance(local_pref, numbers.Integral):
+        raise ConfigTypeError(desc=('Invalid local_pref'
+                                    ' configuration value %s' %
+                                    local_pref))
+    return local_pref
+
+
 class CommonConf(BaseConf):
     """Encapsulates configurations applicable to all peer sessions.
 
@@ -238,7 +249,8 @@ class CommonConf(BaseConf):
                                    BGP_CONN_RETRY_TIME,
                                    MAX_PATH_EXT_RTFILTER_ALL,
                                    ALLOW_LOCAL_AS_IN_COUNT,
-                                   CLUSTER_ID])
+                                   CLUSTER_ID,
+                                   LOCAL_PREF])
 
     def __init__(self, **kwargs):
         super(CommonConf, self).__init__(**kwargs)
@@ -264,6 +276,8 @@ class CommonConf(BaseConf):
             **kwargs)
         self._settings[CLUSTER_ID] = compute_optional_conf(
             CLUSTER_ID, kwargs[ROUTER_ID], **kwargs)
+        self._settings[LOCAL_PREF] = compute_optional_conf(
+            LOCAL_PREF, DEFAULT_LOCAL_PREF, **kwargs)
 
     # =========================================================================
     # Required attributes
@@ -315,6 +329,10 @@ class CommonConf(BaseConf):
     @property
     def max_path_ext_rtfilter_all(self):
         return self._settings[MAX_PATH_EXT_RTFILTER_ALL]
+
+    @property
+    def local_pref(self):
+        return self._settings[LOCAL_PREF]
 
     @classmethod
     def get_opt_settings(self):

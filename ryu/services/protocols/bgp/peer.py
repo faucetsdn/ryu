@@ -1162,8 +1162,10 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 # For iBGP peers we are required to send local-pref attribute
                 # for connected or local prefixes. We check if the path matches
                 # attribute_maps and set local-pref value.
-                # If the path doesn't match, we set default local-pref 100.
-                localpref_attr = BGPPathAttributeLocalPref(100)
+                # If the path doesn't match, we set default local-pref given
+                # from the user. The default value is 100.
+                localpref_attr = BGPPathAttributeLocalPref(
+                    self._common_conf.local_pref)
                 key = const.ATTR_MAPS_LABEL_DEFAULT
 
                 if isinstance(path, (Vpnv4Path, Vpnv6Path)):

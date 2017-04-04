@@ -72,6 +72,8 @@ from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import ALLOW_LOCAL_AS_IN_COUNT
+from ryu.services.protocols.bgp.rtconf.common import LOCAL_PREF
+from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LOCAL_PREF
 from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4
@@ -198,7 +200,8 @@ class BGPSpeaker(object):
                  ssh_port=None, ssh_host=None, ssh_host_key=None,
                  label_range=DEFAULT_LABEL_RANGE,
                  allow_local_as_in_count=0,
-                 cluster_id=None):
+                 cluster_id=None,
+                 local_pref=DEFAULT_LOCAL_PREF):
         """Create a new BGPSpeaker object with as_number and router_id to
         listen on bgp_server_port.
 
@@ -256,6 +259,9 @@ class BGPSpeaker(object):
         ``cluster_id`` specifies the cluster identifier for Route Reflector.
         It must be the string representation of an IPv4 address.
         If omitted, "router_id" is used for this field.
+
+        ``local_pref`` specifies the default local preference. It must be an
+        integer.
         """
 
         super(BGPSpeaker, self).__init__()
@@ -269,6 +275,7 @@ class BGPSpeaker(object):
             LABEL_RANGE: label_range,
             ALLOW_LOCAL_AS_IN_COUNT: allow_local_as_in_count,
             CLUSTER_ID: cluster_id,
+            LOCAL_PREF: local_pref,
         }
         self._core_start(settings)
         self._init_signal_listeners()

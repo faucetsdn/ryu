@@ -30,6 +30,9 @@ BGP = {
     # BGP Router ID.
     'router_id': '172.17.0.1',
 
+    # Default local preference
+    'local_pref': 100,
+
     # List of BGP neighbors.
     # The parameters for each neighbor are the same as the arguments of
     # BGPSpeaker.neighbor_add() method.

@@ -43,6 +43,8 @@ from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
 from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
+from ryu.services.protocols.bgp.rtconf.common import LOCAL_PREF
+from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LOCAL_PREF
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv6
 
@@ -262,6 +264,8 @@ class RyuBGPSpeaker(RyuApp):
             LABEL_RANGE, DEFAULT_LABEL_RANGE)
         bgp_settings['allow_local_as_in_count'] = settings.get(
             'allow_local_as_in_count', 0)
+        bgp_settings[LOCAL_PREF] = settings.get(
+            LOCAL_PREF, DEFAULT_LOCAL_PREF)
 
         # Create BGPSpeaker instance.
         LOG.debug('Starting BGPSpeaker...')
