@@ -33,6 +33,7 @@ from ryu.lib import stringify
 from ryu.lib import type_desc
 from . import packet_base
 from . import bgp
+from . import safi as packet_safi
 
 
 LOG = logging.getLogger(__name__)
@@ -774,20 +775,25 @@ class ZebraMessage(packet_base.PacketBase):
             'marker=%d, version=%d' % (marker, version))
 
     @classmethod
-    def parser(cls, buf):
+    def _parser_impl(cls, buf, body_parser='parse'):
         buf = six.binary_type(buf)
         (length, version, vrf_id, command,
          body_buf) = cls.parse_header(buf)
 
         if body_buf:
             body_cls = _ZebraMessageBody.lookup_command(command)
-            body = body_cls.parse(body_buf)
+            _parser = getattr(body_cls, body_parser)
+            body = _parser(body_buf)
         else:
             body = None
 
         rest = buf[length:]
 
         return cls(length, version, vrf_id, command, body), cls, rest
+
+    @classmethod
+    def parser(cls, buf):
+        return cls._parser_impl(buf)
 
     def serialize_header(self, body_len):
         if self.version == 0:
@@ -821,6 +827,16 @@ class ZebraMessage(packet_base.PacketBase):
         return self.serialize_header(len(body)) + body
 
 
+class _ZebraMessageFromZebra(ZebraMessage):
+    """
+    This class is corresponding to the message sent from Zebra daemon.
+    """
+
+    @classmethod
+    def parser(cls, buf):
+        return cls._parser_impl(buf, body_parser='parse_from_zebra')
+
+
 # Alias
 zebra = ZebraMessage
 
@@ -843,6 +859,10 @@ class _ZebraMessageBody(type_desc.TypeDisp, stringify.StringifyMixin):
     @classmethod
     def parse(cls, buf):
         return cls()
+
+    @classmethod
+    def parse_from_zebra(cls, buf):
+        return cls.parse(buf)
 
     def serialize(self):
         return b''
@@ -1155,8 +1175,14 @@ class _ZebraIPRoute(_ZebraMessageBody):
     """
     Base class for ZEBRA_IPV4_ROUTE_* and ZEBRA_IPV6_ROUTE_*
     message body.
+
+    .. Note::
+
+        Zebra IPv4/IPv6 Route message have asymmetric structure.
+        If the message sent from Zebra Daemon, set 'from_zebra=True' to
+        create an instance of this class.
     """
-    # Zebra IPv4/IPv6 Route message body:
+    # Zebra IPv4/IPv6 Route message body (Protocol Daemons -> Zebra Daemon):
     #  0                   1                   2                   3
     #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1178,33 +1204,93 @@ class _ZebraIPRoute(_ZebraMessageBody):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | (TAG)                                                         |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    _HEADER_FMT = '!BBBH'  # type, flags, message, safi
+    #
+    # Zebra IPv4/IPv6 Route message body (Zebra Daemon -> Protocol Daemons):
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Route Type    | Flags         | Message       |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | IPv4/v6 Prefix (Variable)                                     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Nexthop Num) |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Nexthops (Variable))                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (IFIndex Num) |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Interface indexes)                                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Distance)    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Metric)                                                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (MTU)                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (TAG)                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!BBB'  # type, flags, message
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _SAFI_FMT = '!H'  # safi
+    SAFI_SIZE = struct.calcsize(_SAFI_FMT)
+    _NUM_FMT = '!B'  # nexthop_num or ifindex_num
+    NUM_SIZE = struct.calcsize(_NUM_FMT)
+    _IFINDEX_FMT = '!I'  # ifindex
+    IFINDEX_SIZE = struct.calcsize(_IFINDEX_FMT)
 
     # API type specific constants
     _FAMILY = None  # either socket.AF_INET or socket.AF_INET6
 
-    def __init__(self, route_type, flags, message, safi, prefix,
-                 nexthops=None,
+    def __init__(self, route_type, flags, message, safi=None, prefix=None,
+                 nexthops=None, ifindexes=None,
                  distance=None, metric=None, mtu=None, tag=None,
-                 _tail=None):
+                 from_zebra=False):
         super(_ZebraIPRoute, self).__init__()
         self.route_type = route_type
         self.flags = flags
         self.message = message
-        self.safi = safi
+
+        # SAFI should be included if this message sent to Zebra.
+        if from_zebra:
+            self.safi = None
+        else:
+            self.safi = safi or packet_safi.UNICAST
+
+        assert prefix is not None
         if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
             prefix = prefix.prefix
         self.prefix = prefix
+
+        # Nexthops should be a list of str representations of IP address
+        # if this message sent from Zebra, otherwise a list of _Nexthop
+        # subclasses.
         nexthops = nexthops or []
-        for nexthop in nexthops:
-            assert isinstance(nexthop, _NextHop)
+        if from_zebra:
+            for nexthop in nexthops:
+                assert (netaddr.valid_ipv4(nexthop)
+                        or netaddr.valid_ipv6(nexthop))
+        else:
+            for nexthop in nexthops:
+                assert isinstance(nexthop, _NextHop)
         self.nexthops = nexthops
+
+        # Interface indexes should be included if this message sent from
+        # Zebra.
+        if from_zebra:
+            ifindexes = ifindexes or []
+            for ifindex in ifindexes:
+                assert isinstance(ifindex, six.integer_types)
+            self.ifindexes = ifindexes
+        else:
+            self.ifindexes = None
+
         self.distance = distance
         self.metric = metric
         self.mtu = mtu
         self.tag = tag
-        self._tail = _tail or b''
+
+        # is this message sent from Zebra message or not.
+        self.from_zebra = from_zebra
 
     @classmethod
     def _parse_message_option(cls, message, flag, fmt, buf):
@@ -1215,14 +1301,44 @@ class _ZebraIPRoute(_ZebraMessageBody):
             return None, buf
 
     @classmethod
-    def parse(cls, buf):
-        (route_type, flags, message, safi) = struct.unpack_from(
+    def _parse_impl(cls, buf, from_zebra=False):
+        (route_type, flags, message,) = struct.unpack_from(
             cls._HEADER_FMT, buf)
         rest = buf[cls.HEADER_SIZE:]
 
+        if from_zebra:
+            safi = None
+        else:
+            (safi,) = struct.unpack_from(cls._SAFI_FMT, rest)
+            rest = rest[cls.SAFI_SIZE:]
+
         prefix, rest = _parse_ip_prefix(cls._FAMILY, rest)
 
-        nexthops, rest = _parse_nexthops(rest)
+        if from_zebra and message & ZAPI_MESSAGE_NEXTHOP:
+            nexthops = []
+            (nexthop_num,) = struct.unpack_from(cls._NUM_FMT, rest)
+            rest = rest[cls.NUM_SIZE:]
+            if cls._FAMILY == socket.AF_INET:
+                for _ in range(nexthop_num):
+                    nexthop = addrconv.ipv4.bin_to_text(rest[:4])
+                    nexthops.append(nexthop)
+                    rest = rest[4:]
+            else:  # cls._FAMILY == socket.AF_INET6:
+                for _ in range(nexthop_num):
+                    nexthop = addrconv.ipv6.bin_to_text(rest[:16])
+                    nexthops.append(nexthop)
+                    rest = rest[16:]
+        else:
+            nexthops, rest = _parse_nexthops(rest)
+
+        ifindexes = []
+        if from_zebra and message & ZAPI_MESSAGE_IFINDEX:
+            (ifindex_num,) = struct.unpack_from(cls._NUM_FMT, rest)
+            rest = rest[cls.NUM_SIZE:]
+            for _ in range(ifindex_num):
+                (ifindex,) = struct.unpack_from(cls._IFINDEX_FMT, rest)
+                ifindexes.append(ifindex)
+                rest = rest[cls.IFINDEX_SIZE:]
 
         distance, rest = cls._parse_message_option(
             message, ZAPI_MESSAGE_DISTANCE, '!B', rest)
@@ -1233,9 +1349,18 @@ class _ZebraIPRoute(_ZebraMessageBody):
         tag, rest = cls._parse_message_option(
             message, ZAPI_MESSAGE_TAG, '!I', rest)
 
-        return cls(route_type, flags, message, safi,
-                   prefix, nexthops,
-                   distance, metric, mtu, tag, _tail=rest)
+        return cls(route_type, flags, message, safi, prefix,
+                   nexthops, ifindexes,
+                   distance, metric, mtu, tag,
+                   from_zebra=from_zebra)
+
+    @classmethod
+    def parse(cls, buf):
+        return cls._parse_impl(buf)
+
+    @classmethod
+    def parse_from_zebra(cls, buf):
+        return cls._parse_impl(buf, from_zebra=True)
 
     def _serialize_message_option(self, option, flag, fmt):
         if option is None:
@@ -1249,9 +1374,22 @@ class _ZebraIPRoute(_ZebraMessageBody):
     def serialize(self):
         prefix = _serialize_ip_prefix(self.prefix)
 
-        nexthops = _serialize_nexthops(self.nexthops)
+        nexthops = b''
         if self.nexthops:
             self.message |= ZAPI_MESSAGE_NEXTHOP  # fixup
+            if self.from_zebra:
+                nexthops += struct.pack(self._NUM_FMT, len(self.nexthops))
+                for nexthop in self.nexthops:
+                    nexthops += ip.text_to_bin(nexthop)
+            else:
+                nexthops = _serialize_nexthops(self.nexthops)
+
+        ifindexes = b''
+        if self.ifindexes and self.from_zebra:
+            self.message |= ZAPI_MESSAGE_IFINDEX  # fixup
+            ifindexes += struct.pack(self._NUM_FMT, len(self.ifindexes))
+            for ifindex in self.ifindexes:
+                ifindexes += struct.pack(self._IFINDEX_FMT, ifindex)
 
         options = self._serialize_message_option(
             self.distance, ZAPI_MESSAGE_DISTANCE, '!B')
@@ -1263,10 +1401,11 @@ class _ZebraIPRoute(_ZebraMessageBody):
             self.tag, ZAPI_MESSAGE_TAG, '!I')
 
         header = struct.pack(
-            self._HEADER_FMT,
-            self.route_type, self.flags, self.message, self.safi)
+            self._HEADER_FMT, self.route_type, self.flags, self.message)
+        if not self.from_zebra:
+            header += struct.pack(self._SAFI_FMT, self.safi)
 
-        return header + prefix + nexthops + options + self._tail
+        return header + prefix + nexthops + ifindexes + options
 
 
 class _ZebraIPv4Route(_ZebraIPRoute):

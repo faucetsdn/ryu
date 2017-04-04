@@ -171,7 +171,7 @@ class ZServer(object):
                         recv_len = length - len(buf)
                         break
 
-                    msg, _, buf = zebra.ZebraMessage.parser(buf)
+                    msg, _, buf = zebra._ZebraMessageFromZebra.parser(buf)
 
                     ev = event.message_to_event(self.client, msg)
                     if ev:

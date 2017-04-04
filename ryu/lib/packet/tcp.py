@@ -120,7 +120,9 @@ class tcp(packet_base.PacketBase):
         elif(src_port in [OFP_TCP_PORT, OFP_SSL_PORT_OLD] or
              dst_port in [OFP_TCP_PORT, OFP_SSL_PORT_OLD]):
             return openflow.openflow
-        elif zebra.ZEBRA_PORT in [src_port, dst_port]:
+        elif src_port == zebra.ZEBRA_PORT:
+            return zebra._ZebraMessageFromZebra
+        elif dst_port == zebra.ZEBRA_PORT:
             return zebra.ZebraMessage
         else:
             return None
