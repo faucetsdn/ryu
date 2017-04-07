@@ -106,6 +106,16 @@ class LLDPBasicTLV(stringify.StringifyMixin):
 
 
 class lldp(packet_base.PacketBase):
+    """LLDPDU encoder/decoder class.
+
+    An instance has the following attributes at least.
+
+    ============== =====================================
+    Attribute      Description
+    ============== =====================================
+    tlvs           List of TLV instance.
+    ============== =====================================
+    """
     _tlv_parsers = {}
 
     def __init__(self, tlvs):
@@ -180,6 +190,14 @@ class lldp(packet_base.PacketBase):
 
 @lldp.set_tlv_type(LLDP_TLV_END)
 class End(LLDPBasicTLV):
+    """End TLV encoder/decoder class
+
+    ============== =====================================
+    Attribute      Description
+    ============== =====================================
+    buf            Binary data to parse.
+    ============== =====================================
+    """
     def __init__(self, buf=None, *args, **kwargs):
         super(End, self).__init__(buf, *args, **kwargs)
         if buf:
@@ -194,6 +212,17 @@ class End(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_CHASSIS_ID)
 class ChassisID(LLDPBasicTLV):
+    """Chassis ID TLV encoder/decoder class
+
+    ============== =====================================
+    Attribute      Description
+    ============== =====================================
+    buf            Binary data to parse.
+    subtype        Subtype.
+    chassis_id     Chassis id corresponding to subtype.
+    ============== =====================================
+    """
+
     _PACK_STR = '!B'
     _PACK_SIZE = struct.calcsize(_PACK_STR)
     # subtype id(1 octet) + chassis id length(1 - 255 octet)
@@ -228,6 +257,16 @@ class ChassisID(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_PORT_ID)
 class PortID(LLDPBasicTLV):
+    """Port ID TLV encoder/decoder class
+
+    ============== =====================================
+    Attribute      Description
+    ============== =====================================
+    buf            Binary data to parse.
+    subtype        Subtype.
+    port_id        Port ID corresponding to subtype.
+    ============== =====================================
+    """
     _PACK_STR = '!B'
     _PACK_SIZE = struct.calcsize(_PACK_STR)
 
@@ -263,6 +302,15 @@ class PortID(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_TTL)
 class TTL(LLDPBasicTLV):
+    """Time To Live TLV encoder/decoder class
+
+    ============== =====================================
+    Attribute      Description
+    ============== =====================================
+    buf            Binary data to parse.
+    ttl            Time To Live.
+    ============== =====================================
+    """
     _PACK_STR = '!H'
     _PACK_SIZE = struct.calcsize(_PACK_STR)
     _LEN_MIN = _PACK_SIZE
@@ -285,6 +333,15 @@ class TTL(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_PORT_DESCRIPTION)
 class PortDescription(LLDPBasicTLV):
+    """Port description TLV encoder/decoder class
+
+    ================= =====================================
+    Attribute         Description
+    ================= =====================================
+    buf               Binary data to parse.
+    port_description  Port description.
+    ================= =====================================
+    """
     _LEN_MAX = 255
 
     def __init__(self, buf=None, *args, **kwargs):
@@ -311,6 +368,15 @@ class PortDescription(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_SYSTEM_NAME)
 class SystemName(LLDPBasicTLV):
+    """System name TLV encoder/decoder class
+
+    ================= =====================================
+    Attribute         Description
+    ================= =====================================
+    buf               Binary data to parse.
+    system_name       System name.
+    ================= =====================================
+    """
     _LEN_MAX = 255
 
     def __init__(self, buf=None, *args, **kwargs):
@@ -337,6 +403,15 @@ class SystemName(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_SYSTEM_DESCRIPTION)
 class SystemDescription(LLDPBasicTLV):
+    """System description TLV encoder/decoder class
+
+    =================== =====================================
+    Attribute           Description
+    =================== =====================================
+    buf                 Binary data to parse.
+    system_description  System description.
+    =================== =====================================
+    """
     _LEN_MAX = 255
 
     def __init__(self, buf=None, *args, **kwargs):
@@ -363,6 +438,17 @@ class SystemDescription(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_SYSTEM_CAPABILITIES)
 class SystemCapabilities(LLDPBasicTLV):
+    """System Capabilities TLV encoder/decoder class
+
+    ================= =====================================
+    Attribute         Description
+    ================= =====================================
+    buf               Binary data to parse.
+    subtype           Subtype.
+    system_cap        System Capabilities.
+    enabled_cap       Enabled Capabilities.
+    ================= =====================================
+    """
     # chassis subtype(1) + system cap(2) + enabled cap(2)
     _PACK_STR = '!BHH'
     _PACK_SIZE = struct.calcsize(_PACK_STR)
@@ -402,6 +488,19 @@ class SystemCapabilities(LLDPBasicTLV):
 
 @lldp.set_tlv_type(LLDP_TLV_MANAGEMENT_ADDRESS)
 class ManagementAddress(LLDPBasicTLV):
+    """Management Address TLV encoder/decoder class
+
+    ================= =====================================
+    Attribute         Description
+    ================= =====================================
+    buf               Binary data to parse.
+    addr_subtype      Address type.
+    addr              Device address.
+    intf_subtype      Interface type.
+    intf_num          Interface number.
+    oid               Object ID.
+    ================= =====================================
+    """
     _LEN_MIN = 9
     _LEN_MAX = 167
 
@@ -463,12 +562,22 @@ class ManagementAddress(LLDPBasicTLV):
                 self.addr_len <= self._ADDR_LEN_MAX)
 
     def _oid_len_valid(self):
-        return (self._OID_LEN_MIN <= self.oid_len and
-                self.oid_len <= self._OID_LEN_MAX)
+        return self._OID_LEN_MIN <= self.oid_len <= self._OID_LEN_MAX
 
 
 @lldp.set_tlv_type(LLDP_TLV_ORGANIZATIONALLY_SPECIFIC)
 class OrganizationallySpecific(LLDPBasicTLV):
+    """Organizationally Specific TLV encoder/decoder class
+
+    ================= =============================================
+    Attribute         Description
+    ================= =============================================
+    buf               Binary data to parse.
+    oui               Organizationally unique ID.
+    subtype           Organizationally defined subtype.
+    info              Organizationally defined information string.
+    ================= =============================================
+    """
     _PACK_STR = '!3sB'
     _PACK_SIZE = struct.calcsize(_PACK_STR)
     _LEN_MIN = _PACK_SIZE
