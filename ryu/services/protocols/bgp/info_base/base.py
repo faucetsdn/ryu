@@ -1060,20 +1060,17 @@ class ASPathFilter(Filter):
 
     Meaning of each policy is as follows:
 
-    * POLICY_TOP
-        Filter checks if the specified AS number is at the top of
-        AS_PATH attribute.
-
-    * POLICY_END
-        Filter checks is the specified AS number
-        is at the last of AS_PATH attribute.
-
-    * POLICY_INCLUDE
-        Filter checks if specified AS number
-        exists in AS_PATH attribute
-
-    * POLICY_NOT_INCLUDE
-        Opposite to POLICY_INCLUDE
+    ================== ==================================================
+    Policy             Description
+    ================== ==================================================
+    POLICY_TOP         Filter checks if the specified AS number
+                       is at the top of AS_PATH attribute.
+    POLICY_END         Filter checks is the specified AS number
+                       is at the last of AS_PATH attribute.
+    POLICY_INCLUDE     Filter checks if specified AS number exists
+                       in AS_PATH attribute.
+    POLICY_NOT_INCLUDE Opposite to POLICY_INCLUDE.
+    ================== ==================================================
     """
 
     POLICY_TOP = 2
