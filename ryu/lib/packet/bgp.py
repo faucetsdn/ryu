@@ -4597,18 +4597,20 @@ class BGPOpen(BGPMessage):
     ========================== ===============================================
     marker                     Marker field.  Ignored when encoding.
     len                        Length field.  Ignored when encoding.
-    type                       Type field.  The default is BGP_MSG_OPEN.
-    version                    Version field.  The default is 4.
-    my_as                      My Autonomous System field.  2 octet unsigned
-                               integer.
-    hold_time                  Hold Time field.  2 octet unsigned integer.
-                               The default is 0.
-    bgp_identifier             BGP Identifier field.  An IPv4 address.
+    type                       Type field.
+    version                    Version field.
+    my_as                      My Autonomous System field.
+                               2 octet unsigned integer.
+    hold_time                  Hold Time field.
+                               2 octet unsigned integer.
+    bgp_identifier             BGP Identifier field.
+                               An IPv4 address.
                                For example, '192.0.2.1'
     opt_param_len              Optional Parameters Length field.
                                Ignored when encoding.
-    opt_param                  Optional Parameters field.  A list of
-                               BGPOptParam instances.  The default is [].
+    opt_param                  Optional Parameters field.
+                               A list of BGPOptParam instances.
+                               The default is [].
     ========================== ===============================================
     """
 
@@ -4701,16 +4703,16 @@ class BGPUpdate(BGPMessage):
     ========================== ===============================================
     marker                     Marker field.  Ignored when encoding.
     len                        Length field.  Ignored when encoding.
-    type                       Type field.  The default is BGP_MSG_UPDATE.
+    type                       Type field.
     withdrawn_routes_len       Withdrawn Routes Length field.
                                Ignored when encoding.
-    withdrawn_routes           Withdrawn Routes field.  A list of
-                               BGPWithdrawnRoute instances.
+    withdrawn_routes           Withdrawn Routes field.
+                               A list of BGPWithdrawnRoute instances.
                                The default is [].
     total_path_attribute_len   Total Path Attribute Length field.
                                Ignored when encoding.
-    path_attributes            Path Attributes field.  A list of
-                               BGPPathAttribute instances.
+    path_attributes            Path Attributes field.
+                               A list of BGPPathAttribute instances.
                                The default is [].
     nlri                       Network Layer Reachability Information field.
                                A list of BGPNLRI instances.
@@ -4820,7 +4822,7 @@ class BGPKeepAlive(BGPMessage):
     ========================== ===============================================
     marker                     Marker field.  Ignored when encoding.
     len                        Length field.  Ignored when encoding.
-    type                       Type field.  The default is BGP_MSG_KEEPALIVE.
+    type                       Type field.
     ========================== ===============================================
     """
 
@@ -4852,11 +4854,10 @@ class BGPNotification(BGPMessage):
     ========================== ===============================================
     marker                     Marker field.  Ignored when encoding.
     len                        Length field.  Ignored when encoding.
-    type                       Type field.  The default is
-                               BGP_MSG_NOTIFICATION.
+    type                       Type field.
     error_code                 Error code field.
     error_subcode              Error subcode field.
-    data                       Data field.  The default is ''.
+    data                       Data field.
     ========================== ===============================================
     """
 
@@ -4945,8 +4946,7 @@ class BGPRouteRefresh(BGPMessage):
     ========================== ===============================================
     marker                     Marker field.  Ignored when encoding.
     len                        Length field.  Ignored when encoding.
-    type                       Type field.  The default is
-                               BGP_MSG_ROUTE_REFRESH.
+    type                       Type field.
     afi                        Address Family Identifier
     safi                       Subsequent Address Family Identifier
     ========================== ===============================================
