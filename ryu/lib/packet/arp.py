@@ -37,19 +37,19 @@ class arp(packet_base.PacketBase):
     MAC addresses are represented as a string like '08:60:6e:7f:74:e7'.
     __init__ takes the corresponding args in this order.
 
-    ============== ==================== =====================
-    Attribute      Description          Example
-    ============== ==================== =====================
-    hwtype         ar$hrd
-    proto          ar$pro
-    hlen           ar$hln
-    plen           ar$pln
-    opcode         ar$op
-    src_mac        ar$sha               '08:60:6e:7f:74:e7'
-    src_ip         ar$spa               '192.0.2.1'
-    dst_mac        ar$tha               '00:00:00:00:00:00'
-    dst_ip         ar$tpa               '192.0.2.2'
-    ============== ==================== =====================
+    ============== ===================================== =====================
+    Attribute      Description                           Example
+    ============== ===================================== =====================
+    hwtype         Hardware address.
+    proto          Protocol address.
+    hlen           byte length of each hardware address.
+    plen           byte length of each protocol address.
+    opcode         operation codes.
+    src_mac        Hardware address of sender.           '08:60:6e:7f:74:e7'
+    src_ip         Protocol address of sender.           '192.0.2.1'
+    dst_mac        Hardware address of target.           '00:00:00:00:00:00'
+    dst_ip         Protocol address of target.           '192.0.2.2'
+    ============== ===================================== =====================
     """
 
     _PACK_STR = '!HHBBH6s4s6s4s'
