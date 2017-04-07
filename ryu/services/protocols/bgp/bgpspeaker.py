@@ -683,14 +683,20 @@ class BGPSpeaker(object):
 
         # Set route type specific arguments
         if route_type == EVPN_ETH_AUTO_DISCOVERY:
-            # REDUNDANCY_MODE is parameter for extended community
             kwargs.update({
                 EVPN_ESI: esi,
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
-                REDUNDANCY_MODE: redundancy_mode,
             })
             if vni is not None:
                 kwargs[EVPN_VNI] = vni
+            # Set Redundancy Mode Attribute arguments
+            if redundancy_mode in [
+                    REDUNDANCY_MODE_ALL_ACTIVE,
+                    REDUNDANCY_MODE_SINGLE_ACTIVE]:
+                kwargs[REDUNDANCY_MODE] = redundancy_mode
+            elif redundancy_mode is not None:
+                raise ValueError('Unsupported Redundancy Mode: %s' %
+                                 redundancy_mode)
         elif route_type == EVPN_MAC_IP_ADV_ROUTE:
             kwargs.update({
                 EVPN_ESI: esi,

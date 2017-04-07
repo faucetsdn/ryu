@@ -127,8 +127,7 @@ SUPPORTTED_FLOWSPEC_ACTIONS = (
 # Constants for ESI Label extended community
 REDUNDANCY_MODE_ALL_ACTIVE = 'all_active'
 REDUNDANCY_MODE_SINGLE_ACTIVE = 'single_active'
-REDUNDANCY_MODE_TYPES = [
-    None,
+SUPPORTED_REDUNDANCY_MODES = [
     REDUNDANCY_MODE_ALL_ACTIVE,
     REDUNDANCY_MODE_SINGLE_ACTIVE,
 ]
@@ -206,7 +205,7 @@ def is_valid_ethernet_tag_id(ethernet_tag_id):
 
 @validate(name=REDUNDANCY_MODE)
 def is_valid_redundancy_mode(redundancy_mode):
-    if redundancy_mode not in REDUNDANCY_MODE_TYPES:
+    if redundancy_mode not in SUPPORTED_REDUNDANCY_MODES:
         raise ConfigValueError(conf_name=REDUNDANCY_MODE,
                                conf_value=redundancy_mode)
 
