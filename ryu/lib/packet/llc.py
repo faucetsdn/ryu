@@ -19,7 +19,7 @@ Logical Link Control(LLC, IEEE 802.2) parser/serializer
 http://standards.ieee.org/getieee802/download/802.2-1998.pdf
 
 
-LLC format
+LLC format::
 
     +-----------------+--------------+
     | DSAP address    | 8 bits       |
@@ -30,7 +30,7 @@ LLC format
     +-----------------+--------------+
 
 
-DSAP address field
+DSAP address field::
 
       LSB
     +-----+---+---+---+---+---+---+---+
@@ -40,7 +40,7 @@ DSAP address field
      I/G bit = 1 : Group DSA
      D : DSAP address
 
-SSAP address field
+SSAP address field::
 
       LSB
     +-----+---+---+---+---+---+---+---+
@@ -51,27 +51,30 @@ SSAP address field
      S : SSAP address
 
 
-Control field
+Control field:
 
- Information transfer
- command/response
- (I-format PDU)
+Information transfer
+command/response
+(I-format PDU)::
+
       1   2   3   4   5   6   7   8    9   10-16
     +---+---+---+---+---+---+---+---+-----+------+
     | 0 |           N(S)            | P/F | N(R) |
     +---+---+---+---+---+---+---+---+-----+------+
 
- Supervisory
- commands/responses
- (S-format PDUs)
+Supervisory
+commands/responses
+(S-format PDUs)::
+
       1   2   3   4   5   6   7   8    9   10-16
     +---+---+---+---+---+---+---+---+-----+------+
     | 1   0 | S   S | 0   0   0   0 | P/F | N(R) |
     +---+---+---+---+---+---+---+---+-----+------+
 
- Unnumbered
- commands/responses
- (U-format PDUs)
+Unnumbered
+commands/responses
+(U-format PDUs)::
+
       1   2   3    4    5    6   7    8
     +---+---+----+---+-----+---+----+---+
     | 1   1 | M1  M1 | P/F | M2  M2  M2 |
@@ -83,7 +86,6 @@ Control field
     M1/M2: modifier function bit
     P/F  : poll bit - command LLC PDUs
            final bit - response LLC PDUs
-
 """
 
 

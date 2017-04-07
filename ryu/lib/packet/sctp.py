@@ -385,7 +385,9 @@ class chunk_data(chunk):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Payload Data (DATA) chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -465,7 +467,9 @@ class chunk_init(chunk_init_base):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Initiation (INIT) chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -515,7 +519,9 @@ class chunk_init_ack(chunk_init_base):
     sub encoder/decoder class for Initiation Acknowledgement (INIT ACK)
     chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -565,7 +571,9 @@ class chunk_sack(chunk):
     sub encoder/decoder class for Selective Acknowledgement (SACK) chunk
     (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -660,7 +668,9 @@ class chunk_heartbeat(chunk_heartbeat_base):
     sub encoder/decoder class for Heartbeat Request (HEARTBEAT) chunk
     (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -703,7 +713,9 @@ class chunk_heartbeat_ack(chunk_heartbeat_base):
     sub encoder/decoder class for Heartbeat Acknowledgement
     (HEARTBEAT ACK) chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -745,7 +757,9 @@ class chunk_abort(chunk):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Abort Association (ABORT) chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -822,7 +836,9 @@ class chunk_shutdown(chunk):
     sub encoder/decoder class for Shutdown Association (SHUTDOWN) chunk
     (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -875,7 +891,9 @@ class chunk_shutdown_ack(chunk_ack_base):
     sub encoder/decoder class for Shutdown Acknowledgement (SHUTDOWN ACK)
     chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -902,7 +920,9 @@ class chunk_error(chunk):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Operation Error (ERROR) chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -974,7 +994,9 @@ class chunk_cookie_echo(chunk):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Cookie Echo (COOKIE ECHO) chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1035,7 +1057,9 @@ class chunk_cookie_ack(chunk_ack_base):
     sub encoder/decoder class for Cookie Acknowledgement (COOKIE ACK)
     chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1062,7 +1086,9 @@ class chunk_ecn_echo(chunk_ecn_base):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for ECN-Echo chunk (RFC 4960 Appendix A.).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1090,7 +1116,9 @@ class chunk_cwr(chunk_ecn_base):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for CWR chunk (RFC 4960 Appendix A.).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1119,7 +1147,9 @@ class chunk_shutdown_complete(chunk):
     sub encoder/decoder class for Shutdown Complete (SHUTDOWN COMPLETE)
     chunk (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.sctp.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.sctp
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1239,8 +1269,10 @@ class cause_invalid_stream_id(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Invalid Stream Identifier (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1286,8 +1318,10 @@ class cause_missing_param(cause):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Missing Mandatory Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1356,8 +1390,10 @@ class cause_stale_cookie(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Stale Cookie Error (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1385,8 +1421,10 @@ class cause_out_of_resource(cause):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Out of Resource (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1418,8 +1456,10 @@ class cause_unresolvable_addr(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Unresolvable Address (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1483,8 +1523,10 @@ class cause_unrecognized_chunk(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Unrecognized Chunk Type (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1512,8 +1554,10 @@ class cause_invalid_param(cause):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Invalid Mandatory Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1545,8 +1589,10 @@ class cause_unrecognized_param(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Unrecognized Parameters (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1574,8 +1620,10 @@ class cause_no_userdata(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for No User Data (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1605,8 +1653,10 @@ class cause_cookie_while_shutdown(cause):
     sub encoder/decoder class for Cookie Received While Shutting Down
     (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1639,8 +1689,10 @@ class cause_restart_with_new_addr(cause_with_value):
     sub encoder/decoder class for Restart of an Association with New
     Addresses (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1712,8 +1764,10 @@ class cause_user_initiated_abort(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for User-Initiated Abort (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1741,8 +1795,10 @@ class cause_protocol_violation(cause_with_value):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Protocol Violation (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_abort and
-                      ryu.lib.packet.sctp.chunk_error.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_abort
+    - ryu.lib.packet.sctp.chunk_error
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1819,8 +1875,10 @@ class param_heartbeat(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Heartbeat Info Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_heartbeat and
-                      ryu.lib.packet.sctp.chunk_heartbeat_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_heartbeat
+    - ryu.lib.packet.sctp.chunk_heartbeat_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1847,7 +1905,9 @@ class param_state_cookie(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for State Cookie Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1874,7 +1934,9 @@ class param_unrecognized_param(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Unrecognized Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1901,7 +1963,9 @@ class param_cookie_preserve(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Cookie Preservative Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1947,8 +2011,10 @@ class param_ecn(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for ECN Parameter (RFC 4960 Appendix A.).
 
-    This is used with ryu.lib.packet.sctp.chunk_init and
-                      ryu.lib.packet.sctp.chunk_init_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init
+    - ryu.lib.packet.sctp.chunk_init_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -1983,8 +2049,10 @@ class param_host_addr(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Host Name Address Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init and
-                      ryu.lib.packet.sctp.chunk_init_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init
+    - ryu.lib.packet.sctp.chunk_init_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -2011,7 +2079,9 @@ class param_supported_addr(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for Supported Address Types Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -2075,8 +2145,10 @@ class param_ipv4(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for IPv4 Address Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init and
-                      ryu.lib.packet.sctp.chunk_init_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init
+    - ryu.lib.packet.sctp.chunk_init_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -2130,8 +2202,10 @@ class param_ipv6(param):
     """Stream Control Transmission Protocol (SCTP)
     sub encoder/decoder class for IPv6 Address Parameter (RFC 4960).
 
-    This is used with ryu.lib.packet.sctp.chunk_init and
-                      ryu.lib.packet.sctp.chunk_init_ack.
+    This class is used with the following.
+
+    - ryu.lib.packet.sctp.chunk_init
+    - ryu.lib.packet.sctp.chunk_init_ack
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.

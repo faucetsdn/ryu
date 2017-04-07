@@ -19,22 +19,32 @@ Link Layer Discovery Protocol(LLDP, IEEE 802.1AB)
 http://standards.ieee.org/getieee802/download/802.1AB-2009.pdf
 
 
-basic TLV format
+basic TLV format::
 
-octets | 1          | 2             | 3 ...             n + 2 |
-       --------------------------------------------------------
-       | TLV type | TLV information | TLV information string  |
-       | (7bits)  | string length   | ( 0 <= n <= 511 octets) |
-       |          | (9bits)         |                         |
-       --------------------------------------------------------
-bits   |8        2|1|8             1|
+    octets | 1          | 2             | 3 ...             n + 2 |
+           --------------------------------------------------------
+           | TLV type | TLV information | TLV information string  |
+           | (7bits)  | string length   | (0-507 octets)          |
+           |          | (9bits)         |                         |
+           --------------------------------------------------------
+    bits   |8        2|1|8             1|
 
 
-LLDPDU format
+Organizationally specific TLV format::
 
- ------------------------------------------------------------------------
- | Chassis ID | Port ID | TTL | optional TLV | ... | optional TLV | End |
- ------------------------------------------------------------------------
+    octets | 1          | 2        | 3 ...  5 | 6       | 7 ...    n + 6 |
+           ---------------------------------------------------------------
+           | TLV type | Length     | OUI      | Subtype | Infomation     |
+           | (7bits)  | (9bits)    | (24bits) | (8bits) | (0-507 octets) |
+           ---------------------------------------------------------------
+    bits   |8        2|1|8        1|
+
+
+LLDPDU format::
+
+    ------------------------------------------------------------------------
+    | Chassis ID | Port ID | TTL | optional TLV | ... | optional TLV | End |
+    ------------------------------------------------------------------------
 
 Chasis ID, Port ID, TTL, End are mandatory
 optional TLV may be inserted in any order

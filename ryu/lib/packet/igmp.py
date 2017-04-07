@@ -16,8 +16,7 @@
 """
 Internet Group Management Protocol(IGMP) packet parser/serializer
 
-RFC 1112
-IGMP v1 format
+[RFC 1112] IGMP v1 format::
 
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -27,8 +26,7 @@ IGMP v1 format
    |                         Group Address                         |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-RFC 2236
-IGMP v2 format
+[RFC 2236] IGMP v2 format::
 
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -38,8 +36,7 @@ IGMP v2 format
    |                         Group Address                         |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-RFC 3376
-IGMP v3 Membership Query format
+[RFC 3376] IGMP v3 Membership Query format::
 
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -60,7 +57,7 @@ IGMP v3 Membership Query format
    |                       Source Address [N]                      |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-IGMP v3 Membership Report format
+IGMP v3 Membership Report format::
 
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -92,7 +89,7 @@ IGMP v3 Membership Report format
    |                                                               |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-where each Group Record has the following internal format:
+Where each Group Record has the following internal format::
 
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |  Record Type  |  Aux Data Len |     Number of Sources (N)     |

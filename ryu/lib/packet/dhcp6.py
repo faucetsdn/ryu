@@ -16,47 +16,45 @@
 """
 DHCPv6 packet parser/serializer
 
-RFC 3315
-DHCP packet format
+[RFC 3315] DHCPv6 packet format:
 
 The following diagram illustrates the format of DHCP messages sent
-between clients and servers:
+between clients and servers::
 
-\ 0                   1                   2                   3
-\ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    msg_type   |               transaction_id                  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-.                            options                            .
-.                           (variable)                          .
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |    msg_type   |               transaction_id                  |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    .                            options                            .
+    .                           (variable)                          .
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-There are two relay agent messages, which share the following format:
+There are two relay agent messages, which share the following format::
 
-\ 0                   1                   2                   3
-\ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    msg_type   |   hop_count   |                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-|                                                               |
-|                         link_address                          |
-|                                                               |
-|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-|                               |                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-|                                                               |
-|                         peer_address                          |
-|                                                               |
-|                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-|                               |                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-.                                                               .
-.            options (variable number and length)   ....        .
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |    msg_type   |   hop_count   |                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+    |                                                               |
+    |                         link_address                          |
+    |                                                               |
+    |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    |                               |                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+    |                                                               |
+    |                         peer_address                          |
+    |                                                               |
+    |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    |                               |                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+    .                                                               .
+    .            options (variable number and length)   ....        .
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 """
 import random
 import struct
@@ -202,7 +200,6 @@ class options(stringify.StringifyMixin):
     """DHCP (RFC 3315) options encoder/decoder class.
 
     This is used with ryu.lib.packet.dhcp6.dhcp6.
-
     """
 
     def __init__(self, option_list=None, options_len=0):
@@ -242,16 +239,16 @@ class option(stringify.StringifyMixin):
     Most of them are same to the on-wire counterparts but in host byte order.
     __init__ takes the corresponding args in this order.
 
-    The format of DHCP options is:
+    The format of DHCP options is::
 
-    \ 0                   1                   2                   3
-    \ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |          option-code          |           option-len          |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                          option-data                          |
-    |                      (option-len octets)                      |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         0                   1                   2                   3
+         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |          option-code          |           option-len          |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |                          option-data                          |
+        |                      (option-len octets)                      |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
     ============== ====================
     Attribute      Description
