@@ -225,7 +225,7 @@ class options(stringify.StringifyMixin):
         return cls(opt_parse_list, len(buf))
 
     def serialize(self):
-        seri_opt = ""
+        seri_opt = bytes()
         for opt in self.option_list:
             seri_opt += opt.serialize()
         if self.options_len == 0:
