@@ -29,6 +29,10 @@ LOG = logging.getLogger('ryu.lib.hub')
 
 if HUB_TYPE == 'eventlet':
     import eventlet
+    # HACK:
+    # sleep() is the workaround for the following issue.
+    # https://github.com/eventlet/eventlet/issues/401
+    eventlet.sleep()
     import eventlet.event
     import eventlet.queue
     import eventlet.semaphore
