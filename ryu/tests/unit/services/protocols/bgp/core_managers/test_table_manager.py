@@ -683,3 +683,168 @@ class Test_TableCoreManager(unittest.TestCase):
             is_withdraw=False,
             actions=actions,
         )
+
+    def test_update_flowspec_global_table_ipv6(self):
+        flowspec_family = 'ipv6fs'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'ipv6fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    def test_update_flowspec_global_table_ipv6_without_actions(self):
+        flowspec_family = 'ipv6fs'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        prefix = 'ipv6fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_global_table_ipv6_invalid_actions(self):
+        flowspec_family = 'ipv6fs'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        actions = {
+            'invalid_actions': {
+                'invalid_param': 10,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_global_table_ipv6_invalid_flowspec_family(self):
+        flowspec_family = 'invalid'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'ipv4fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_global_table(
+            flowspec_family=flowspec_family,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    def test_update_flowspec_vrf_table_vpnv6(self):
+        flowspec_family = 'vpnv6fs'
+        route_family = 'ipv6fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'ipv6fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    def test_update_flowspec_vrf_table_vpnv6_without_actions(self):
+        flowspec_family = 'vpnv6fs'
+        route_family = 'ipv6fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        prefix = 'ipv6fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_vpnv6_invalid_actions(self):
+        flowspec_family = 'vpnv6fs'
+        route_family = 'ipv6fs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        actions = {
+            'invalid_actions': {
+                'invalid_param': 10,
+            },
+        }
+        prefix = 'ipv6fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_vpnv6_invalid_route_family(self):
+        flowspec_family = 'vpnv6fs'
+        route_family = 'invalid'
+        route_dist = '65001:100'
+        rules = {
+            'dst_prefix': '2001::3/128/32',
+        }
+        prefix = 'ipv4fs(dst_prefix:2001::3/128/32)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
