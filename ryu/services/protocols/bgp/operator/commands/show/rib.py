@@ -22,6 +22,7 @@ class RibBase(Command, RouteFormatterMixin):
         'ipv6fs',
         'vpnv4fs',
         'vpnv6fs',
+        'l2vpnfs',
     ]
 
 
