@@ -4,6 +4,7 @@ from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V4
 from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V6
 from ryu.services.protocols.bgp.bgpspeaker import RF_L2_EVPN
 from ryu.services.protocols.bgp.bgpspeaker import RF_VPNV4_FLOWSPEC
+from ryu.services.protocols.bgp.bgpspeaker import RF_VPNV6_FLOWSPEC
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_MAX_ET
 from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_LACP
 from ryu.services.protocols.bgp.bgpspeaker import ESI_TYPE_MAC_BASED
@@ -14,7 +15,9 @@ from ryu.services.protocols.bgp.bgpspeaker import EVPN_MULTICAST_ETAG_ROUTE
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_ETH_SEGMENT
 from ryu.services.protocols.bgp.bgpspeaker import EVPN_IP_PREFIX_ROUTE
 from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_IPV4
+from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_IPV6
 from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_VPNV4
+from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_FAMILY_VPNV6
 from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_TA_SAMPLE
 from ryu.services.protocols.bgp.bgpspeaker import FLOWSPEC_TA_TERMINAL
 from ryu.services.protocols.bgp.bgpspeaker import REDUNDANCY_MODE_SINGLE_ACTIVE
@@ -54,7 +57,9 @@ BGP = {
             'address': '172.17.0.4',
             'remote_as': 65001,
             'enable_ipv4fs': True,
+            'enable_ipv6fs': True,
             'enable_vpnv4fs': True,
+            'enable_vpnv6fs': True,
         },
     ],
 
@@ -83,12 +88,19 @@ BGP = {
             'export_rts': ['65001:200'],
             'route_family': RF_L2_EVPN,
         },
-        # Example of VRF for FlowSpec
+        # Example of VRF for IPv4 FlowSpec
         {
             'route_dist': '65001:250',
             'import_rts': ['65001:250'],
             'export_rts': ['65001:250'],
             'route_family': RF_VPNV4_FLOWSPEC,
+        },
+        # Example of VRF for IPv6 FlowSpec
+        {
+            'route_dist': '65001:300',
+            'import_rts': ['65001:300'],
+            'export_rts': ['65001:300'],
+            'route_family': RF_VPNV6_FLOWSPEC,
         },
     ],
 
@@ -218,6 +230,77 @@ BGP = {
                 'packet_len': 1000,
                 'dscp': '22 | 24',
                 'fragment': 'LF | ==FF',
+            },
+            'actions': {
+                'traffic_rate': {
+                    'as_number': 0,
+                    'rate_info': 100.0,
+                },
+                'traffic_action': {
+                    'action': FLOWSPEC_TA_SAMPLE | FLOWSPEC_TA_TERMINAL,
+                },
+                'redirect': {
+                    'as_number': 10,
+                    'local_administrator': 100,
+                },
+                'traffic_marking': {
+                    'dscp': 24,
+                }
+            },
+        },
+        # Example of Flow Specification IPv6 prefix
+        {
+            'flowspec_family': FLOWSPEC_FAMILY_IPV6,
+            'rules': {
+                'dst_prefix': '2001::1/128/32',
+                'src_prefix': '3001::2/128',
+                'next_header': 6,
+                'port': '80 | 8000',
+                'dst_port': '>9000 & <9050',
+                'src_port': '>=8500 & <=9000',
+                'icmp_type': 0,
+                'icmp_code': 6,
+                'tcp_flags': 'SYN+ACK & !=URGENT',
+                'packet_len': 1000,
+                'dscp': '22 | 24',
+                'fragment': 'LF | ==FF',
+                'flow_label': 100,
+            },
+            'actions': {
+                'traffic_rate': {
+                    'as_number': 0,
+                    'rate_info': 100.0,
+                },
+                'traffic_action': {
+                    'action': FLOWSPEC_TA_SAMPLE | FLOWSPEC_TA_TERMINAL,
+                },
+                'redirect': {
+                    'as_number': 10,
+                    'local_administrator': 100,
+                },
+                'traffic_marking': {
+                    'dscp': 24,
+                }
+            },
+        },
+        # Example of Flow Specification VPNv6 prefix
+        {
+            'flowspec_family': FLOWSPEC_FAMILY_VPNV6,
+            'route_dist': '65001:300',
+            'rules': {
+                'dst_prefix': '2001::1/128/32',
+                'src_prefix': '3001::2/128',
+                'next_header': 6,
+                'port': '80 | 8000',
+                'dst_port': '>9000 & <9050',
+                'src_port': '>=8500 & <=9000',
+                'icmp_type': 0,
+                'icmp_code': 6,
+                'tcp_flags': 'SYN+ACK & !=URGENT',
+                'packet_len': 1000,
+                'dscp': '22 | 24',
+                'fragment': 'LF | ==FF',
+                'flow_label': 100,
             },
             'actions': {
                 'traffic_rate': {

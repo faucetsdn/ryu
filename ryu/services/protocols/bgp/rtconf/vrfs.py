@@ -24,6 +24,7 @@ from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_IPv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_IPv6_FLOWSPEC
 
 from ryu.services.protocols.bgp.utils import validation
 from ryu.services.protocols.bgp.base import get_validator
@@ -61,11 +62,13 @@ VRF_RF_IPV4 = 'ipv4'
 VRF_RF_IPV6 = 'ipv6'
 VRF_RF_L2_EVPN = 'evpn'
 VRF_RF_IPV4_FLOWSPEC = 'ipv4fs'
+VRF_RF_IPV6_FLOWSPEC = 'ipv6fs'
 SUPPORTED_VRF_RF = (
     VRF_RF_IPV4,
     VRF_RF_IPV6,
     VRF_RF_L2_EVPN,
     VRF_RF_IPV4_FLOWSPEC,
+    VRF_RF_IPV6_FLOWSPEC,
 )
 
 
@@ -235,6 +238,8 @@ class VrfConf(ConfWithId, ConfWithStats):
             return RF_L2_EVPN
         elif vrf_rf == VRF_RF_IPV4_FLOWSPEC:
             return RF_IPv4_FLOWSPEC
+        elif vrf_rf == VRF_RF_IPV6_FLOWSPEC:
+            return RF_IPv6_FLOWSPEC
         else:
             raise ValueError('Unsupported VRF route family given %s' % vrf_rf)
 
@@ -248,6 +253,8 @@ class VrfConf(ConfWithId, ConfWithStats):
             return VRF_RF_L2_EVPN
         elif route_family == RF_IPv4_FLOWSPEC:
             return VRF_RF_IPV4_FLOWSPEC
+        elif route_family == RF_IPv6_FLOWSPEC:
+            return VRF_RF_IPV6_FLOWSPEC
         else:
             raise ValueError('No supported mapping for route family '
                              'to vrf_route_family exists for %s' %

@@ -58,6 +58,8 @@ from ryu.services.protocols.bgp.api.prefix import (
     FLOWSPEC_FAMILY,
     FLOWSPEC_FAMILY_IPV4,
     FLOWSPEC_FAMILY_VPNV4,
+    FLOWSPEC_FAMILY_IPV6,
+    FLOWSPEC_FAMILY_VPNV6,
     FLOWSPEC_RULES,
     FLOWSPEC_ACTIONS)
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
@@ -82,18 +84,24 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_EVPN
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4FS
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4FS
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_ENHANCED_REFRESH
 from ryu.services.protocols.bgp.rtconf.base import CAP_FOUR_OCTET_AS_NUMBER
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
 from ryu.services.protocols.bgp.rtconf.base import SITE_OF_ORIGINS
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV6
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV6
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_EVPN
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_IPV4FS
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CAP_MBGP_VPNV4FS
+from ryu.services.protocols.bgp.rtconf.neighbors import (
+    DEFAULT_CAP_MBGP_IPV4,
+    DEFAULT_CAP_MBGP_IPV6,
+    DEFAULT_CAP_MBGP_VPNV4,
+    DEFAULT_CAP_MBGP_VPNV6,
+    DEFAULT_CAP_MBGP_EVPN,
+    DEFAULT_CAP_MBGP_IPV4FS,
+    DEFAULT_CAP_MBGP_IPV6FS,
+    DEFAULT_CAP_MBGP_VPNV4FS,
+    DEFAULT_CAP_MBGP_VPNV6FS,
+)
 from ryu.services.protocols.bgp.rtconf.neighbors import (
     DEFAULT_CAP_ENHANCED_REFRESH, DEFAULT_CAP_FOUR_OCTET_AS_NUMBER)
 from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
@@ -122,6 +130,7 @@ RF_VPN_V4 = vrfs.VRF_RF_IPV4
 RF_VPN_V6 = vrfs.VRF_RF_IPV6
 RF_L2_EVPN = vrfs.VRF_RF_L2_EVPN
 RF_VPNV4_FLOWSPEC = vrfs.VRF_RF_IPV4_FLOWSPEC
+RF_VPNV6_FLOWSPEC = vrfs.VRF_RF_IPV6_FLOWSPEC
 
 # Constants for the Traffic Filtering Actions of Flow Specification.
 FLOWSPEC_TA_SAMPLE = BGPFlowSpecTrafficActionCommunity.SAMPLE
@@ -354,7 +363,9 @@ class BGPSpeaker(object):
                      enable_vpnv6=DEFAULT_CAP_MBGP_VPNV6,
                      enable_evpn=DEFAULT_CAP_MBGP_EVPN,
                      enable_ipv4fs=DEFAULT_CAP_MBGP_IPV4FS,
+                     enable_ipv6fs=DEFAULT_CAP_MBGP_IPV6FS,
                      enable_vpnv4fs=DEFAULT_CAP_MBGP_VPNV4FS,
+                     enable_vpnv6fs=DEFAULT_CAP_MBGP_VPNV6FS,
                      enable_enhanced_refresh=DEFAULT_CAP_ENHANCED_REFRESH,
                      enable_four_octet_as_number=DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
                      next_hop=None, password=None, multi_exit_disc=None,
@@ -394,7 +405,13 @@ class BGPSpeaker(object):
         ``enable_ipv4fs`` enables IPv4 Flow Specification address family
         for this neighbor.
 
+        ``enable_ipv6fs`` enables IPv6 Flow Specification address family
+        for this neighbor.
+
         ``enable_vpnv4fs`` enables VPNv4 Flow Specification address family
+        for this neighbor.
+
+        ``enable_vpnv6fs`` enables VPNv6 Flow Specification address family
         for this neighbor.
 
         ``enable_enhanced_refresh`` enables Enhanced Route Refresh for this
@@ -457,7 +474,9 @@ class BGPSpeaker(object):
             CAP_MBGP_VPNV6: enable_vpnv6,
             CAP_MBGP_EVPN: enable_evpn,
             CAP_MBGP_IPV4FS: enable_ipv4fs,
+            CAP_MBGP_IPV6FS: enable_ipv6fs,
             CAP_MBGP_VPNV4FS: enable_vpnv4fs,
+            CAP_MBGP_VPNV6FS: enable_vpnv6fs,
         }
 
         if multi_exit_disc:
@@ -821,7 +840,9 @@ class BGPSpeaker(object):
         This parameter must be one of the following.
 
         - FLOWSPEC_FAMILY_IPV4  = 'ipv4fs'
+        - FLOWSPEC_FAMILY_IPV6  = 'ipv6fs'
         - FLOWSPEC_FAMILY_VPNV4 = 'vpnv4fs'
+        - FLOWSPEC_FAMILY_VPNV6 = 'vpnv6fs'
 
         ``rules`` specifies NLRIs of Flow Specification as
         a dictionary type value.
@@ -829,13 +850,16 @@ class BGPSpeaker(object):
         see `from_user()` method of the following classes.
 
         - :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv4NLRI`
+        - :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv6NLRI`
         - :py:mod:`ryu.lib.packet.bgp.FlowSpecVPNv4NLRI`
+        - :py:mod:`ryu.lib.packet.bgp.FlowSpecVPNv6NLRI`
 
         ``route_dist`` specifies a route distinguisher value.
         This parameter is required only if flowspec_family is one of the
         following address family.
 
         - FLOWSPEC_FAMILY_VPNV4 = 'vpnv4fs'
+        - FLOWSPEC_FAMILY_VPNV6 = 'vpnv6fs'
 
         ``actions`` specifies Traffic Filtering Actions of
         Flow Specification as a dictionary type value.
@@ -903,7 +927,7 @@ class BGPSpeaker(object):
             FLOWSPEC_ACTIONS: actions or {},
         }
 
-        if flowspec_family == FLOWSPEC_FAMILY_VPNV4:
+        if flowspec_family in [FLOWSPEC_FAMILY_VPNV4, FLOWSPEC_FAMILY_VPNV6]:
             func_name = 'flowspec.add_local'
             kwargs.update({ROUTE_DISTINGUISHER: route_dist})
 
@@ -927,7 +951,7 @@ class BGPSpeaker(object):
             FLOWSPEC_RULES: rules,
         }
 
-        if flowspec_family == FLOWSPEC_FAMILY_VPNV4:
+        if flowspec_family in [FLOWSPEC_FAMILY_VPNV4, FLOWSPEC_FAMILY_VPNV6]:
             func_name = 'flowspec.del_local'
             kwargs.update({ROUTE_DISTINGUISHER: route_dist})
 
@@ -953,6 +977,7 @@ class BGPSpeaker(object):
         - RF_VPN_V6           = 'ipv6'
         - RF_L2_EVPN          = 'evpn'
         - RF_VPNV4_FLOWSPEC   = 'ipv4fs'
+        - RF_VPNV6_FLOWSPEC   = 'ipv6fs'
 
         ``multi_exit_disc`` specifies multi exit discriminator (MED) value.
         It must be an integer.

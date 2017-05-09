@@ -27,7 +27,9 @@ from ryu.lib.packet.bgp import EvpnEthernetSegmentNLRI
 from ryu.lib.packet.bgp import EvpnIpPrefixNLRI
 from ryu.lib.packet.bgp import BGPPathAttributePmsiTunnel
 from ryu.lib.packet.bgp import FlowSpecIPv4NLRI
+from ryu.lib.packet.bgp import FlowSpecIPv6NLRI
 from ryu.lib.packet.bgp import FlowSpecVPNv4NLRI
+from ryu.lib.packet.bgp import FlowSpecVPNv6NLRI
 from ryu.lib.packet.bgp import BGPFlowSpecTrafficRateCommunity
 from ryu.lib.packet.bgp import BGPFlowSpecTrafficActionCommunity
 from ryu.lib.packet.bgp import BGPFlowSpecRedirectCommunity
@@ -103,10 +105,14 @@ SUPPORTED_EVPN_ROUTE_TYPES = [
 
 # Constants used in API calls for Flow Specification
 FLOWSPEC_FAMILY_IPV4 = FlowSpecIPv4NLRI.FLOWSPEC_FAMILY
+FLOWSPEC_FAMILY_IPV6 = FlowSpecIPv6NLRI.FLOWSPEC_FAMILY
 FLOWSPEC_FAMILY_VPNV4 = FlowSpecVPNv4NLRI.FLOWSPEC_FAMILY
+FLOWSPEC_FAMILY_VPNV6 = FlowSpecVPNv6NLRI.FLOWSPEC_FAMILY
 SUPPORTED_FLOWSPEC_FAMILIES = (
     FLOWSPEC_FAMILY_IPV4,
+    FLOWSPEC_FAMILY_IPV6,
     FLOWSPEC_FAMILY_VPNV4,
+    FLOWSPEC_FAMILY_VPNV6,
 )
 
 # Constants for the Traffic Filtering Actions of Flow Specification

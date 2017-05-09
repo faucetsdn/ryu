@@ -97,11 +97,15 @@ class FlexinetOutgoingRoute(object):
         from ryu.services.protocols.bgp.info_base.vrf4 import Vrf4Path
         from ryu.services.protocols.bgp.info_base.vrf6 import Vrf6Path
         from ryu.services.protocols.bgp.info_base.vrfevpn import VrfEvpnPath
-        from ryu.services.protocols.bgp.info_base.vrf4fs import Vrf4FlowSpecPath
+        from ryu.services.protocols.bgp.info_base.vrf4fs import (
+            Vrf4FlowSpecPath)
+        from ryu.services.protocols.bgp.info_base.vrf6fs import (
+            Vrf6FlowSpecPath)
         assert path.route_family in (Vrf4Path.ROUTE_FAMILY,
                                      Vrf6Path.ROUTE_FAMILY,
                                      VrfEvpnPath.ROUTE_FAMILY,
-                                     Vrf4FlowSpecPath.ROUTE_FAMILY)
+                                     Vrf4FlowSpecPath.ROUTE_FAMILY,
+                                     Vrf6FlowSpecPath.ROUTE_FAMILY)
 
         self.sink = None
         self._path = path

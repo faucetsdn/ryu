@@ -19,12 +19,18 @@ from ryu.services.protocols.bgp.info_base.ipv4fs import IPv4FlowSpecPath
 from ryu.services.protocols.bgp.info_base.ipv4fs import IPv4FlowSpecTable
 from ryu.services.protocols.bgp.info_base.vpnv4fs import VPNv4FlowSpecTable
 from ryu.services.protocols.bgp.info_base.vrf4fs import Vrf4FlowSpecTable
+from ryu.services.protocols.bgp.info_base.ipv6fs import IPv6FlowSpecPath
+from ryu.services.protocols.bgp.info_base.ipv6fs import IPv6FlowSpecTable
+from ryu.services.protocols.bgp.info_base.vpnv6fs import VPNv6FlowSpecTable
+from ryu.services.protocols.bgp.info_base.vrf6fs import Vrf6FlowSpecTable
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_L2_EVPN
 from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV4_FLOWSPEC
+from ryu.services.protocols.bgp.rtconf.vrfs import VRF_RF_IPV6_FLOWSPEC
 from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
 from ryu.services.protocols.bgp.utils.bgp import create_v4flowspec_actions
+from ryu.services.protocols.bgp.utils.bgp import create_v6flowspec_actions
 
 from ryu.lib import type_desc
 from ryu.lib.packet.bgp import RF_IPv4_UC
@@ -33,7 +39,9 @@ from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_IPv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_IPv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_VPNv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_VPNv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGPPathAttributeOrigin
 from ryu.lib.packet.bgp import BGPPathAttributeAsPath
@@ -50,6 +58,7 @@ from ryu.lib.packet.bgp import EvpnInclusiveMulticastEthernetTagNLRI
 from ryu.lib.packet.bgp import IPAddrPrefix
 from ryu.lib.packet.bgp import IP6AddrPrefix
 from ryu.lib.packet.bgp import FlowSpecIPv4NLRI
+from ryu.lib.packet.bgp import FlowSpecIPv6NLRI
 
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4_prefix
@@ -132,6 +141,8 @@ class TableCoreManager(object):
             vpn_table = self.get_evpn_table()
         elif vrf_table.route_family == Vrf4FlowSpecTable.ROUTE_FAMILY:
             vpn_table = self.get_vpnv4fs_table()
+        elif vrf_table.route_family == Vrf6FlowSpecTable.ROUTE_FAMILY:
+            vpn_table = self.get_vpnv6fs_table()
         else:
             raise ValueError('Invalid VRF table route family: %s' %
                              vrf_table.route_family)
@@ -200,8 +211,12 @@ class TableCoreManager(object):
             global_table = self.get_evpn_table()
         elif route_family == RF_IPv4_FLOWSPEC:
             global_table = self.get_ipv4fs_table()
+        elif route_family == RF_IPv6_FLOWSPEC:
+            global_table = self.get_ipv6fs_table()
         elif route_family == RF_VPNv4_FLOWSPEC:
             global_table = self.get_vpnv4fs_table()
+        elif route_family == RF_VPNv6_FLOWSPEC:
+            global_table = self.get_vpnv6fs_table()
         elif route_family == RF_RTC_UC:
             global_table = self.get_rtc_table()
 
@@ -327,6 +342,21 @@ class TableCoreManager(object):
 
         return ipv4fs_table
 
+    def get_ipv6fs_table(self):
+        """Returns global IPv6 Flow Specification table.
+
+        Creates the table if it does not exist.
+        """
+        ipv6fs_table = self._global_tables.get(RF_IPv6_FLOWSPEC)
+        # Lazy initialization of the table.
+        if not ipv6fs_table:
+            ipv6fs_table = IPv6FlowSpecTable(self._core_service,
+                                             self._signal_bus)
+            self._global_tables[RF_IPv6_FLOWSPEC] = ipv6fs_table
+            self._tables[(None, RF_IPv6_FLOWSPEC)] = ipv6fs_table
+
+        return ipv6fs_table
+
     def get_vpnv4fs_table(self):
         """Returns global VPNv4 Flow Specification table.
 
@@ -341,6 +371,21 @@ class TableCoreManager(object):
             self._tables[(None, RF_VPNv4_FLOWSPEC)] = vpnv4fs_table
 
         return vpnv4fs_table
+
+    def get_vpnv6fs_table(self):
+        """Returns global VPNv6 Flow Specification table.
+
+        Creates the table if it does not exist.
+        """
+        vpnv6fs_table = self._global_tables.get(RF_VPNv6_FLOWSPEC)
+        # Lazy initialization of the table.
+        if not vpnv6fs_table:
+            vpnv6fs_table = VPNv6FlowSpecTable(self._core_service,
+                                               self._signal_bus)
+            self._global_tables[RF_VPNv6_FLOWSPEC] = vpnv6fs_table
+            self._tables[(None, RF_VPNv6_FLOWSPEC)] = vpnv6fs_table
+
+        return vpnv6fs_table
 
     def get_nexthop_label(self, label_key):
         return self._next_hop_label.get(label_key, None)
@@ -423,6 +468,8 @@ class TableCoreManager(object):
             vrf_table = VrfEvpnTable
         elif route_family == VRF_RF_IPV4_FLOWSPEC:
             vrf_table = Vrf4FlowSpecTable
+        elif route_family == VRF_RF_IPV6_FLOWSPEC:
+            vrf_table = Vrf6FlowSpecTable
         else:
             raise ValueError('Unsupported route family for VRF: %s' %
                              route_family)
@@ -508,6 +555,8 @@ class TableCoreManager(object):
             route_family = RF_L2_EVPN
         elif vpn_path.route_family == RF_VPNv4_FLOWSPEC:
             route_family = RF_IPv4_FLOWSPEC
+        elif vpn_path.route_family == RF_VPNv6_FLOWSPEC:
+            route_family = RF_IPv6_FLOWSPEC
         else:
             raise ValueError('Unsupported route family for VRF: %s' %
                              vpn_path.route_family)
@@ -650,13 +699,23 @@ class TableCoreManager(object):
         If `is_withdraw` is True, remove a BGP route from the VRF table.
         """
         from ryu.services.protocols.bgp.core import BgpCoreError
-        from ryu.services.protocols.bgp.api.prefix import FLOWSPEC_FAMILY_VPNV4
+        from ryu.services.protocols.bgp.api.prefix import (
+            FLOWSPEC_FAMILY_VPNV4,
+            FLOWSPEC_FAMILY_VPNV6,
+        )
 
         if flowspec_family == FLOWSPEC_FAMILY_VPNV4:
             vrf_table = self._tables.get((route_dist, VRF_RF_IPV4_FLOWSPEC))
             prefix = FlowSpecIPv4NLRI.from_user(**rules)
             try:
                 communities = create_v4flowspec_actions(actions)
+            except ValueError as e:
+                raise BgpCoreError(desc=str(e))
+        elif flowspec_family == FLOWSPEC_FAMILY_VPNV6:
+            vrf_table = self._tables.get((route_dist, VRF_RF_IPV6_FLOWSPEC))
+            prefix = FlowSpecIPv6NLRI.from_user(**rules)
+            try:
+                communities = create_v6flowspec_actions(actions)
             except ValueError as e:
                 raise BgpCoreError(desc=str(e))
         else:
@@ -732,7 +791,10 @@ class TableCoreManager(object):
         """
 
         from ryu.services.protocols.bgp.core import BgpCoreError
-        from ryu.services.protocols.bgp.api.prefix import FLOWSPEC_FAMILY_IPV4
+        from ryu.services.protocols.bgp.api.prefix import (
+            FLOWSPEC_FAMILY_IPV4,
+            FLOWSPEC_FAMILY_IPV6,
+        )
 
         src_ver_num = 1
         peer = None
@@ -751,6 +813,19 @@ class TableCoreManager(object):
 
             try:
                 communities = create_v4flowspec_actions(actions)
+            except ValueError as e:
+                raise BgpCoreError(desc=str(e))
+
+            if communities:
+                pathattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = (
+                    BGPPathAttributeExtendedCommunities(
+                        communities=communities))
+        elif flowspec_family == FLOWSPEC_FAMILY_IPV6:
+            _nlri = FlowSpecIPv6NLRI.from_user(**rules)
+            p = IPv6FlowSpecPath
+
+            try:
+                communities = create_v6flowspec_actions(actions)
             except ValueError as e:
                 raise BgpCoreError(desc=str(e))
 

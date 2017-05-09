@@ -28,7 +28,9 @@ from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_IPv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_IPv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_VPNv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_VPNv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGPOptParamCapabilityFourOctetAsNumber
 from ryu.lib.packet.bgp import BGPOptParamCapabilityEnhancedRouteRefresh
@@ -51,7 +53,9 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_EVPN
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4FS
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4FS
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_REFRESH
 from ryu.services.protocols.bgp.rtconf.base import CAP_RTC
 from ryu.services.protocols.bgp.rtconf.base import compute_optional_conf
@@ -110,7 +114,9 @@ DEFAULT_CAP_MBGP_VPNV4 = False
 DEFAULT_CAP_MBGP_VPNV6 = False
 DEFAULT_CAP_MBGP_EVPN = False
 DEFAULT_CAP_MBGP_IPV4FS = False
+DEFAULT_CAP_MBGP_IPV6FS = False
 DEFAULT_CAP_MBGP_VPNV4FS = False
+DEFAULT_CAP_MBGP_VPNV6FS = False
 DEFAULT_HOLD_TIME = 40
 DEFAULT_ENABLED = True
 DEFAULT_CAP_RTC = False
@@ -325,6 +331,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    CAP_MBGP_VPNV4, CAP_MBGP_VPNV6,
                                    CAP_RTC, CAP_MBGP_EVPN,
                                    CAP_MBGP_IPV4FS, CAP_MBGP_VPNV4FS,
+                                   CAP_MBGP_IPV6FS, CAP_MBGP_VPNV6FS,
                                    RTC_AS, HOLD_TIME,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
@@ -359,8 +366,12 @@ class NeighborConf(ConfWithId, ConfWithStats):
             CAP_MBGP_VPNV6, DEFAULT_CAP_MBGP_VPNV6, **kwargs)
         self._settings[CAP_MBGP_IPV4FS] = compute_optional_conf(
             CAP_MBGP_IPV4FS, DEFAULT_CAP_MBGP_IPV4FS, **kwargs)
+        self._settings[CAP_MBGP_IPV6FS] = compute_optional_conf(
+            CAP_MBGP_IPV6FS, DEFAULT_CAP_MBGP_IPV6FS, **kwargs)
         self._settings[CAP_MBGP_VPNV4FS] = compute_optional_conf(
             CAP_MBGP_VPNV4FS, DEFAULT_CAP_MBGP_VPNV4FS, **kwargs)
+        self._settings[CAP_MBGP_VPNV6FS] = compute_optional_conf(
+            CAP_MBGP_VPNV6FS, DEFAULT_CAP_MBGP_VPNV6FS, **kwargs)
         self._settings[HOLD_TIME] = compute_optional_conf(
             HOLD_TIME, DEFAULT_HOLD_TIME, **kwargs)
         self._settings[ENABLED] = compute_optional_conf(
@@ -535,8 +546,16 @@ class NeighborConf(ConfWithId, ConfWithStats):
         return self._settings[CAP_MBGP_IPV4FS]
 
     @property
+    def cap_mbgp_ipv6fs(self):
+        return self._settings[CAP_MBGP_IPV6FS]
+
+    @property
     def cap_mbgp_vpnv4fs(self):
         return self._settings[CAP_MBGP_VPNV4FS]
+
+    @property
+    def cap_mbgp_vpnv6fs(self):
+        return self._settings[CAP_MBGP_VPNV6FS]
 
     @property
     def cap_rtc(self):
@@ -667,10 +686,20 @@ class NeighborConf(ConfWithId, ConfWithStats):
                 BGPOptParamCapabilityMultiprotocol(
                     RF_IPv4_FLOWSPEC.afi, RF_IPv4_FLOWSPEC.safi))
 
+        if self.cap_mbgp_ipv6fs:
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_IPv6_FLOWSPEC.afi, RF_IPv6_FLOWSPEC.safi))
+
         if self.cap_mbgp_vpnv4fs:
             mbgp_caps.append(
                 BGPOptParamCapabilityMultiprotocol(
                     RF_VPNv4_FLOWSPEC.afi, RF_VPNv4_FLOWSPEC.safi))
+
+        if self.cap_mbgp_vpnv6fs:
+            mbgp_caps.append(
+                BGPOptParamCapabilityMultiprotocol(
+                    RF_VPNv6_FLOWSPEC.afi, RF_VPNv6_FLOWSPEC.safi))
 
         if mbgp_caps:
             capabilities[BGP_CAP_MULTIPROTOCOL] = mbgp_caps
