@@ -44,9 +44,8 @@ class Test_import_module(unittest.TestCase):
         eq_("this is ccc", ccc.name)
         ddd = import_module('./lib/test_mod/ddd/mod.py')
         # Note: When importing a module by filename, if module file name
-        # is duplicated, import_module returns a module instance which is
-        # imported before.
-        eq_("this is ccc", ddd.name)
+        # is duplicated, import_module reload (override) a module instance.
+        eq_("this is ddd", ddd.name)
 
     def test_import_same_module1(self):
         from ryu.tests.unit.lib.test_mod import eee as eee1

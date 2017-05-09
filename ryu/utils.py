@@ -80,29 +80,34 @@ def _find_loaded_module(modpath):
     return None
 
 
-def import_module(modname):
+def _import_module_file(path):
+    abspath = os.path.abspath(path)
+    # Backup original sys.path before appending path to file
+    original_path = list(sys.path)
+    sys.path.append(os.path.dirname(abspath))
+    modname = chop_py_suffix(os.path.basename(abspath))
     try:
-        # Import module with python module path
-        # e.g.) modname = 'module.path.module_name'
-        return importlib.import_module(modname)
-    except (ImportError, TypeError):
-        # In this block, we retry to import module when modname is filename
-        # e.g.) modname = 'module/path/module_name.py'
-        abspath = os.path.abspath(modname)
-        # Check if specified modname is already imported
-        mod = _find_loaded_module(abspath)
-        if mod:
-            return mod
-        # Backup original sys.path before appending path to file
-        original_path = list(sys.path)
-        sys.path.append(os.path.dirname(abspath))
-        # Remove python suffix
-        name = chop_py_suffix(os.path.basename(modname))
-        # Retry to import
-        mod = importlib.import_module(name)
-        # Restore sys.path
+        return load_source(modname, abspath)
+    finally:
+        # Restore original sys.path
         sys.path = original_path
-        return mod
+
+
+def import_module(modname):
+    if os.path.exists(modname):
+        try:
+            # Try to import module since 'modname' is a valid path to a file
+            # e.g.) modname = './path/to/module/name.py'
+            return _import_module_file(modname)
+        except SyntaxError:
+            # The file didn't parse as valid Python code, try
+            # importing module assuming 'modname' is a Python module name
+            # e.g.) modname = 'path.to.module.name'
+            return importlib.import_module(modname)
+    else:
+        # Import module assuming 'modname' is a Python module name
+        # e.g.) modname = 'path.to.module.name'
+        return importlib.import_module(modname)
 
 
 def round_up(x, y):
