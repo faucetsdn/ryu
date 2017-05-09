@@ -848,3 +848,90 @@ class Test_TableCoreManager(unittest.TestCase):
             prefix=prefix,
             is_withdraw=False,
         )
+
+    def test_update_flowspec_vrf_table_l2vpn(self):
+        flowspec_family = 'l2vpnfs'
+        route_family = 'l2vpnfs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_mac': '12:34:56:78:9a:bc',
+        }
+        actions = {
+            'traffic_rate': {
+                'as_number': 0,
+                'rate_info': 100.0,
+            },
+        }
+        prefix = 'l2vpnfs(dst_mac:12:34:56:78:9a:bc)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    def test_update_flowspec_vrf_table_l2vpn_without_actions(self):
+        flowspec_family = 'l2vpnfs'
+        route_family = 'l2vpnfs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_mac': '12:34:56:78:9a:bc',
+        }
+        prefix = 'l2vpnfs(dst_mac:12:34:56:78:9a:bc)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_l2vpn_invalid_actions(self):
+        flowspec_family = 'l2vpnfs'
+        route_family = 'l2vpnfs'
+        route_dist = '65001:100'
+        rules = {
+            'dst_mac': '12:34:56:78:9a:bc',
+        }
+        actions = {
+            'invalid_actions': {
+                'invalid_param': 10,
+            },
+        }
+        prefix = 'l2vpnfs(dst_mac:12:34:56:78:9a:bc)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+            actions=actions,
+        )
+
+    @raises(BgpCoreError)
+    def test_update_flowspec_vrf_table_l2vpn_invalid_route_family(self):
+        flowspec_family = 'l2vpnfs'
+        route_family = 'invalid'
+        route_dist = '65001:100'
+        rules = {
+            'dst_mac': '12:34:56:78:9a:bc',
+        }
+        prefix = 'l2vpnfs(dst_mac:12:34:56:78:9a:bc)'
+
+        self._test_update_flowspec_vrf_table(
+            flowspec_family=flowspec_family,
+            route_family=route_family,
+            route_dist=route_dist,
+            rules=rules,
+            prefix=prefix,
+            is_withdraw=False,
+        )
