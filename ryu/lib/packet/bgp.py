@@ -577,6 +577,8 @@ RF_IPv4_FLOWSPEC = RouteFamily(addr_family.IP, subaddr_family.IP_FLOWSPEC)
 RF_IPv6_FLOWSPEC = RouteFamily(addr_family.IP6, subaddr_family.IP_FLOWSPEC)
 RF_VPNv4_FLOWSPEC = RouteFamily(addr_family.IP, subaddr_family.VPN_FLOWSPEC)
 RF_VPNv6_FLOWSPEC = RouteFamily(addr_family.IP6, subaddr_family.VPN_FLOWSPEC)
+RF_L2VPN_FLOWSPEC = RouteFamily(
+    addr_family.L2VPN, subaddr_family.VPN_FLOWSPEC)
 RF_RTC_UC = RouteFamily(addr_family.IP,
                         subaddr_family.ROUTE_TARGET_CONSTRAINTS)
 
@@ -592,6 +594,7 @@ _rf_map = {
     (addr_family.IP6, subaddr_family.IP_FLOWSPEC): RF_IPv6_FLOWSPEC,
     (addr_family.IP, subaddr_family.VPN_FLOWSPEC): RF_VPNv4_FLOWSPEC,
     (addr_family.IP6, subaddr_family.VPN_FLOWSPEC): RF_VPNv6_FLOWSPEC,
+    (addr_family.L2VPN, subaddr_family.VPN_FLOWSPEC): RF_L2VPN_FLOWSPEC,
     (addr_family.IP, subaddr_family.ROUTE_TARGET_CONSTRAINTS): RF_RTC_UC
 }
 
@@ -2385,6 +2388,74 @@ class FlowSpecVPNv6NLRI(_FlowSpecNLRIBase):
         return '%s:%s' % (self.route_dist, self.prefix)
 
 
+class FlowSpecL2VPNNLRI(_FlowSpecNLRIBase):
+    """
+    Flow Specification NLRI class for L2VPN [draft-ietf-idr-flowspec-l2vpn-05]
+    """
+
+    # flow-spec NLRI:
+    # +-----------------------------------+
+    # |    length (0xnn or 0xfn nn)       |
+    # +-----------------------------------+
+    # |     RD   (8 octets)               |
+    # +-----------------------------------+
+    # |     NLRI value  (variable)        |
+    # +-----------------------------------+
+    ROUTE_FAMILY = RF_L2VPN_FLOWSPEC
+    FLOWSPEC_FAMILY = 'l2vpnfs'
+
+    def __init__(self, length=0, route_dist=None, rules=None):
+        super(FlowSpecL2VPNNLRI, self).__init__(length, rules)
+        assert route_dist is not None
+        self.route_dist = route_dist
+
+    @classmethod
+    def _from_user(cls, route_dist, **kwargs):
+        rules = []
+        for k, v in kwargs.items():
+            subcls = _FlowSpecComponentBase.lookup_type_name(
+                k, cls.ROUTE_FAMILY.afi)
+            rule = subcls.from_str(str(v))
+            rules.extend(rule)
+        rules.sort(key=lambda x: x.type)
+        return cls(route_dist=route_dist, rules=rules)
+
+    @classmethod
+    def from_user(cls, route_dist, **kwargs):
+        """
+        Utility method for creating a L2VPN NLRI instance.
+
+        This function returns a L2VPN NLRI instance
+        from human readable format value.
+
+        :param kwargs: The following arguments are available.
+
+        ============== ============= ========= ==============================
+        Argument       Value         Operator  Description
+        ============== ============= ========= ==============================
+        ether_type     Integer       Numeric   Ethernet Type.
+        src_mac        Mac Address   Nothing   Source Mac address.
+        dst_mac        Mac Address   Nothing   Destination Mac address.
+        llc_ssap       Integer       Numeric   Source Service Access Point
+                                               in LLC.
+        llc_dsap       Integer       Numeric   Destination Service Access
+                                               Point in LLC.
+        llc_control    Integer       Numeric   Control field in LLC.
+        snap           Integer       Numeric   Sub-Network Access Protocol
+                                               field.
+        vlan_id        Integer       Numeric   VLAN ID.
+        vlan_cos       Integer       Numeric   VLAN COS field.
+        inner_vlan_id  Integer       Numeric   Inner VLAN ID.
+        inner_vlan_cos Integer       Numeric   Inner VLAN COS field.
+        ============== ============= ========= ==============================
+        """
+        return cls._from_user(route_dist, **kwargs)
+
+    @property
+    def formatted_nlri_str(self):
+        return '%s:%s' % (self.route_dist, self.prefix)
+
+
 class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
     """
     Base class for Flow Specification NLRI component
@@ -2474,6 +2545,23 @@ class _FlowSpecIPv6Component(_FlowSpecComponentBase):
     TYPE_DIFFSERV_CODE_POINT = 0x0b
     TYPE_FRAGMENT = 0x0c
     TYPE_FLOW_LABEL = 0x0d
+
+
+class _FlowSpecL2VPNComponent(_FlowSpecComponentBase):
+    """
+    Base class for Flow Specification for L2VPN NLRI component
+    """
+    TYPE_ETHER_TYPE = 0x0e
+    TYPE_SOURCE_MAC = 0x0f
+    TYPE_DESTINATION_MAC = 0x10
+    TYPE_LLC_DSAP = 0x11
+    TYPE_LLC_SSAP = 0x12
+    TYPE_LLC_CONTROL = 0x13
+    TYPE_SNAP = 0x14
+    TYPE_VLAN_ID = 0x15
+    TYPE_VLAN_COS = 0x16
+    TYPE_INNER_VLAN_ID = 0x17
+    TYPE_INNER_VLAN_COS = 0x18
 
 
 @_FlowSpecComponentBase.register_unknown_type()
@@ -2577,6 +2665,44 @@ class _FlowSpecIPv6PrefixBase(_FlowSpecIPv6Component, IP6AddrPrefix):
     @property
     def value(self):
         return "%s/%s/%s" % (self.addr, self.length, self.offset)
+
+    def to_str(self):
+        return self.value
+
+
+class _FlowSpecL2VPNPrefixBase(_FlowSpecL2VPNComponent):
+    """
+    Prefix base class for Flow Specification NLRI component
+    """
+    _PACK_STR = "!B6s"
+
+    def __init__(self, length, addr, type_=None):
+        super(_FlowSpecL2VPNPrefixBase, self).__init__(type_)
+        self.length = length
+        self.addr = addr.lower()
+
+    @classmethod
+    def parse_body(cls, buf):
+        (length, addr) = struct.unpack_from(
+            cls._PACK_STR, six.binary_type(buf))
+        rest = buf[struct.calcsize(cls._PACK_STR):]
+        addr = addrconv.mac.bin_to_text(addr)
+        return cls(length=length, addr=addr), rest
+
+    def serialize(self):
+        addr = addrconv.mac.text_to_bin(self.addr)
+        return struct.pack(self._PACK_STR, self.length, addr)
+
+    def serialize_body(self):
+        return self.serialize()
+
+    @classmethod
+    def from_str(cls, value):
+        return [cls(len(value.split(':')), value)]
+
+    @property
+    def value(self):
+        return self.addr
 
     def to_str(self):
         return self.value
@@ -3027,6 +3153,116 @@ class FlowSpecIPv6Fragment(_FlowSpecBitmask):
 
 
 @_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_ETHER_TYPE, addr_family.L2VPN)
+class FlowSpecEtherType(_FlowSpecNumeric):
+    """Ethernet Type field in an Ethernet frame.
+
+    Set the 2 byte value of an Ethernet Type field at value.
+    """
+    COMPONENT_NAME = 'ether_type'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_SOURCE_MAC, addr_family.L2VPN)
+class FlowSpecSourceMac(_FlowSpecL2VPNPrefixBase):
+    """Source Mac Address.
+
+    Set the Mac Address at value.
+    """
+    COMPONENT_NAME = 'src_mac'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_DESTINATION_MAC, addr_family.L2VPN)
+class FlowSpecDestinationMac(_FlowSpecL2VPNPrefixBase):
+    """Destination Mac Address.
+
+    Set the Mac Address at value.
+    """
+    COMPONENT_NAME = 'dst_mac'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_LLC_DSAP, addr_family.L2VPN)
+class FlowSpecLLCDSAP(_FlowSpecNumeric):
+    """Destination SAP field in LLC header in an Ethernet frame.
+
+    Set the 2 byte value of an Destination SAP at value.
+    """
+    COMPONENT_NAME = 'llc_dsap'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_LLC_SSAP, addr_family.L2VPN)
+class FlowSpecLLCSSAP(_FlowSpecNumeric):
+    """Source SAP field in LLC header in an Ethernet frame.
+
+    Set the 2 byte value of an Source SAP at value.
+    """
+    COMPONENT_NAME = 'llc_ssap'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_LLC_CONTROL, addr_family.L2VPN)
+class FlowSpecLLCControl(_FlowSpecNumeric):
+    """Control field in LLC header in an Ethernet frame.
+
+    Set the Contorol field at value.
+    """
+    COMPONENT_NAME = 'llc_control'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_SNAP, addr_family.L2VPN)
+class FlowSpecSNAP(_FlowSpecNumeric):
+    """Sub-Network Access Protocol field in an Ethernet frame.
+
+    Set the 5 byte SNAP field at value.
+    """
+    COMPONENT_NAME = 'snap'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_VLAN_ID, addr_family.L2VPN)
+class FlowSpecVLANID(_FlowSpecNumeric):
+    """VLAN ID.
+
+    Set VLAN ID at value.
+    """
+    COMPONENT_NAME = 'vlan_id'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_VLAN_COS, addr_family.L2VPN)
+class FlowSpecVLANCoS(_FlowSpecNumeric):
+    """VLAN CoS Fields in an Ethernet frame.
+
+    Set the 3 bit CoS field at value.
+    """
+    COMPONENT_NAME = 'vlan_cos'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_INNER_VLAN_ID, addr_family.L2VPN)
+class FlowSpecInnerVLANID(_FlowSpecNumeric):
+    """Inner VLAN ID.
+
+    Set VLAN ID at value.
+    """
+    COMPONENT_NAME = 'inner_vlan_id'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecL2VPNComponent.TYPE_INNER_VLAN_COS, addr_family.L2VPN)
+class FlowSpecInnerVLANCoS(_FlowSpecNumeric):
+    """VLAN CoS Fields in an Inner Ethernet frame.
+
+    Set the 3 bit CoS field at value..
+    """
+    COMPONENT_NAME = 'inner_vlan_cos'
+
+
+@_FlowSpecComponentBase.register_type(
     _FlowSpecIPv6Component.TYPE_FLOW_LABEL, addr_family.IP6)
 class FlowSpecIPv6FlowLabel(_FlowSpecNumeric):
     COMPONENT_NAME = 'flow_label'
@@ -3146,6 +3382,7 @@ _ADDR_CLASSES = {
     _addr_class_key(RF_IPv6_FLOWSPEC): FlowSpecIPv6NLRI,
     _addr_class_key(RF_VPNv4_FLOWSPEC): FlowSpecVPNv4NLRI,
     _addr_class_key(RF_VPNv6_FLOWSPEC): FlowSpecVPNv6NLRI,
+    _addr_class_key(RF_L2VPN_FLOWSPEC): FlowSpecL2VPNNLRI,
     _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
 }
 
@@ -3955,14 +4192,19 @@ class _ExtendedCommunity(StringifyMixin, TypeDisp, _Value):
     EVPN_ESI_LABEL = (EVPN, SUBTYPE_EVPN_ESI_LABEL)
     EVPN_ES_IMPORT_RT = (EVPN, SUBTYPE_EVPN_ES_IMPORT_RT)
     FLOWSPEC = 0x80
+    FLOWSPEC_L2VPN = 0x08
     SUBTYPE_FLOWSPEC_TRAFFIC_RATE = 0x06
     SUBTYPE_FLOWSPEC_TRAFFIC_ACTION = 0x07
     SUBTYPE_FLOWSPEC_REDIRECT = 0x08
     SUBTYPE_FLOWSPEC_TRAFFIC_REMARKING = 0x09
+    SUBTYPE_FLOWSPEC_VLAN_ACTION = 0x0a
+    SUBTYPE_FLOWSPEC_TPID_ACTION = 0x0b
     FLOWSPEC_TRAFFIC_RATE = (FLOWSPEC, SUBTYPE_FLOWSPEC_TRAFFIC_RATE)
     FLOWSPEC_TRAFFIC_ACTION = (FLOWSPEC, SUBTYPE_FLOWSPEC_TRAFFIC_ACTION)
     FLOWSPEC_REDIRECT = (FLOWSPEC, SUBTYPE_FLOWSPEC_REDIRECT)
     FLOWSPEC_TRAFFIC_REMARKING = (FLOWSPEC, SUBTYPE_FLOWSPEC_TRAFFIC_REMARKING)
+    FLOWSPEC_VLAN_ACTION = (FLOWSPEC_L2VPN, SUBTYPE_FLOWSPEC_VLAN_ACTION)
+    FLOWSPEC_TPID_ACTION = (FLOWSPEC_L2VPN, SUBTYPE_FLOWSPEC_TPID_ACTION)
 
     def __init__(self, type_=None):
         if type_ is None:
@@ -4365,6 +4607,135 @@ class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
 # TODO
 # Implement "Redirect-IPv6" [draft-ietf-idr-flow-spec-v6-08]
 
+
+@_ExtendedCommunity.register_type(
+    _ExtendedCommunity.FLOWSPEC_VLAN_ACTION)
+class BGPFlowSpecVlanActionCommunity(_ExtendedCommunity):
+    """
+    Flow Specification Vlan Actions.
+    ========= ===============================================
+    Attribute Description
+    ========= ===============================================
+    actions_1 Bit representation of actions.
+              Supported actions are
+              ``POP``, ``PUSH``, ``SWAP``, ``REWRITE_INNER``, ``REWRITE_OUTER``.
+    actions_2 Same as ``actions_1``.
+    vlan_1    VLAN ID used by ``actions_1``.
+    cos_1     Class of Service used by ``actions_1``.
+    vlan_2    VLAN ID used by ``actions_2``.
+    cos_2     Class of Service used by ``actions_2``.
+    ========= ===============================================
+    """
+    # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Type=0x08     | Sub-Type=0x0a |PO1|PU1|SW1|RT1|RO1|...|PO2|...|
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |       VLAN ID1      |  COS1 |0|       VLAN ID2      |  COS2 |0|
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _VALUE_PACK_STR = '!BBBHH'
+    _VALUE_FIELDS = [
+        'subtype',
+        'actions_1',
+        'actions_2',
+        'vlan_1',
+        'vlan_2',
+        'cos_1',
+        'cos_2']
+    ACTION_NAME = 'vlan_action'
+    _COS_MASK = 0x07
+
+    POP = 1 << 7
+    PUSH = 1 << 6
+    SWAP = 1 << 5
+    REWRITE_INNER = 1 << 4
+    REWRITE_OUTER = 1 << 3
+
+    def __init__(self, **kwargs):
+        super(BGPFlowSpecVlanActionCommunity, self).__init__()
+        kwargs['subtype'] = self.SUBTYPE_FLOWSPEC_VLAN_ACTION
+        self.do_init(BGPFlowSpecVlanActionCommunity, self, kwargs)
+
+    @classmethod
+    def parse_value(cls, buf):
+        (subtype, actions_1, actions_2,
+         vlan_cos_1, vlan_cos_2) = struct.unpack_from(cls._VALUE_PACK_STR, buf)
+
+        return {
+            'subtype': subtype,
+            'actions_1': actions_1,
+            'vlan_1': int(vlan_cos_1 >> 4),
+            'cos_1': int((vlan_cos_1 >> 1) & cls._COS_MASK),
+            'actions_2': actions_2,
+            'vlan_2': int(vlan_cos_2 >> 4),
+            'cos_2': int((vlan_cos_2 >> 1) & cls._COS_MASK)
+        }
+
+    def serialize_value(self):
+        return struct.pack(
+            self._VALUE_PACK_STR,
+            self.subtype,
+            self.actions_1,
+            self.actions_2,
+            (self.vlan_1 << 4) + (self.cos_1 << 1),
+            (self.vlan_2 << 4) + (self.cos_2 << 1),
+        )
+
+
+@_ExtendedCommunity.register_type(
+    _ExtendedCommunity.FLOWSPEC_TPID_ACTION)
+class BGPFlowSpecTPIDActionCommunity(_ExtendedCommunity):
+    """
+    Flow Specification TPID Actions.
+    ========= =========================================================
+    Attribute Description
+    ========= =========================================================
+    actions   Bit representation of actions.
+              Supported actions are
+              ``TI(inner TPID action)`` and ``TO(outer TPID action)``.
+    tpid_1    TPID used by ``TI``.
+    tpid_2    TPID used by ``TO``.
+    ========= =========================================================
+    """
+    # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Type=0x08     | Sub-Type=0x0b   |TI|TO|      Reserved=0       |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |             TPID1               |             TPID2           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _VALUE_PACK_STR = '!BHHH'
+    _VALUE_FIELDS = ['subtype', 'actions', 'tpid_1', 'tpid_2']
+    ACTION_NAME = 'tpid_action'
+
+    TI = 1 << 15
+    TO = 1 << 14
+
+    def __init__(self, **kwargs):
+        super(BGPFlowSpecTPIDActionCommunity, self).__init__()
+        kwargs['subtype'] = self.SUBTYPE_FLOWSPEC_TPID_ACTION
+        self.do_init(BGPFlowSpecTPIDActionCommunity, self, kwargs)
+
+    @classmethod
+    def parse_value(cls, buf):
+        (subtype, actions, tpid_1, tpid_2) = struct.unpack_from(
+            cls._VALUE_PACK_STR, buf)
+
+        return {
+            'subtype': subtype,
+            'actions': actions,
+            'tpid_1': tpid_1,
+            'tpid_2': tpid_2,
+        }
+
+    def serialize_value(self):
+        return struct.pack(
+            self._VALUE_PACK_STR,
+            self.subtype,
+            self.actions,
+            self.tpid_1,
+            self.tpid_2,
+        )
+
+
 @_ExtendedCommunity.register_unknown_type()
 class BGPUnknownExtendedCommunity(_ExtendedCommunity):
     _VALUE_PACK_STR = '!7s'  # opaque value
@@ -4466,6 +4837,8 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         elif (afi == addr_family.IP6
               or (rf == RF_L2_EVPN and next_hop_len >= 16)):
             next_hop = cls.parse_next_hop_ipv6(next_hop_bin, 16)
+        elif rf == RF_L2VPN_FLOWSPEC:
+            next_hop = []
         else:
             raise ValueError('Invalid address family: afi=%d, safi=%d'
                              % (afi, safi))
