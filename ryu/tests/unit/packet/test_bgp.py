@@ -109,6 +109,34 @@ RULES_BASE = [
     bgp.FlowSpecDSCP(operator=bgp.FlowSpecDSCP.EQ, value=24),
 ]
 
+RULES_L2VPN_BASE = [
+    # ether_type=0x0800
+    bgp.FlowSpecEtherType(operator=bgp.FlowSpecEtherType.EQ, value=0x0800),
+    # source_mac='12:34:56:78:90:AB'
+    bgp.FlowSpecSourceMac(addr='12:34:56:78:90:AB', length=6),
+    # dest_mac='DE:EF:C0:FF:EE:DD'
+    bgp.FlowSpecDestinationMac(addr='BE:EF:C0:FF:EE:DD', length=6),
+    # llc_dsap=0x42
+    bgp.FlowSpecLLCDSAP(operator=bgp.FlowSpecLLCDSAP.EQ, value=0x42),
+    # llc_ssap=0x42
+    bgp.FlowSpecLLCSSAP(operator=bgp.FlowSpecLLCSSAP.EQ, value=0x42),
+    # llc_control=100
+    bgp.FlowSpecLLCControl(operator=bgp.FlowSpecLLCControl.EQ, value=100),
+    # snap=0x12345
+    bgp.FlowSpecSNAP(operator=bgp.FlowSpecSNAP.EQ, value=0x12345),
+    # vlan_id='>4000'
+    bgp.FlowSpecVLANID(operator=bgp.FlowSpecVLANID.GT, value=4000),
+    # vlan_cos='>=3'
+    bgp.FlowSpecVLANCoS(
+        operator=(bgp.FlowSpecVLANCoS.GT | bgp.FlowSpecVLANCoS.EQ), value=3),
+    # inner_vlan_id='<3000'
+    bgp.FlowSpecInnerVLANID(operator=bgp.FlowSpecInnerVLANID.LT, value=3000),
+    # inner_vlan_cos='<=5'
+    bgp.FlowSpecInnerVLANCoS(
+        operator=(bgp.FlowSpecInnerVLANCoS.LT | bgp.FlowSpecInnerVLANCoS.EQ),
+        value=5),
+]
+
 
 class Test_bgp(unittest.TestCase):
     """ Test case for ryu.lib.packet.bgp
@@ -352,6 +380,7 @@ class Test_bgp(unittest.TestCase):
             'flowspec_nlri_vpn4',
             'flowspec_nlri_ipv6',
             'flowspec_nlri_vpn6',
+            'flowspec_nlri_l2vpn',
             'flowspec_action_traffic_rate',
             'flowspec_action_traffic_action',
             'flowspec_action_redirect',
@@ -371,6 +400,33 @@ class Test_bgp(unittest.TestCase):
                 pkt.serialize()
                 eq_(buf, pkt.data,
                     "b'%s' != b'%s'" % (binary_str(buf), binary_str(pkt.data)))
+
+    def test_vlan_action_parser(self):
+        action = bgp.BGPFlowSpecVlanActionCommunity(
+            actions_1=(bgp.BGPFlowSpecVlanActionCommunity.POP |
+                       bgp.BGPFlowSpecVlanActionCommunity.SWAP),
+            vlan_1=3000,
+            cos_1=3,
+            actions_2=bgp.BGPFlowSpecVlanActionCommunity.PUSH,
+            vlan_2=4000,
+            cos_2=2,
+        )
+        binmsg = action.serialize()
+        msg, rest = bgp.BGPFlowSpecVlanActionCommunity.parse(binmsg)
+        eq_(str(action), str(msg))
+        eq_(rest, b'')
+
+    def test_tpid_action_parser(self):
+        action = bgp.BGPFlowSpecTPIDActionCommunity(
+            actions=(bgp.BGPFlowSpecTPIDActionCommunity.TI |
+                     bgp.BGPFlowSpecTPIDActionCommunity.TO),
+            tpid_1=5,
+            tpid_2=6,
+        )
+        binmsg = action.serialize()
+        msg, rest = bgp.BGPFlowSpecTPIDActionCommunity.parse(binmsg)
+        eq_(str(action), str(msg))
+        eq_(rest, b'')
 
     def test_json1(self):
         opt_param = [bgp.BGPOptParamCapabilityUnknown(cap_code=200,
@@ -728,5 +784,30 @@ class Test_bgp(unittest.TestCase):
         eq_(str(msg), str(msg2))
         eq_(binary_str(binmsg), binary_str(binmsg2))
         msg3, rest = bgp.FlowSpecVPNv6NLRI.parser(binmsg)
+        eq_(str(msg), str(msg3))
+        eq_(rest, b'')
+
+    def test_flowspec_user_interface_l2vpn(self):
+        rules = RULES_L2VPN_BASE
+        msg = bgp.FlowSpecL2VPNNLRI.from_user(
+            route_dist='65001:250',
+            ether_type=0x0800,
+            src_mac='12:34:56:78:90:AB',
+            dst_mac='BE:EF:C0:FF:EE:DD',
+            llc_dsap=0x42,
+            llc_ssap=0x42,
+            llc_control=100,
+            snap=0x12345,
+            vlan_id='>4000',
+            vlan_cos='>=3',
+            inner_vlan_id='<3000',
+            inner_vlan_cos='<=5',
+        )
+        msg2 = bgp.FlowSpecL2VPNNLRI(route_dist='65001:250', rules=rules)
+        binmsg = msg.serialize()
+        binmsg2 = msg2.serialize()
+        eq_(str(msg), str(msg2))
+        eq_(binary_str(binmsg), binary_str(binmsg2))
+        msg3, rest = bgp.FlowSpecL2VPNNLRI.parser(binmsg)
         eq_(str(msg), str(msg3))
         eq_(rest, b'')
