@@ -32,6 +32,7 @@ from ryu.lib.packet.bgp import (
     RF_IPv6_FLOWSPEC,
     RF_VPNv4_FLOWSPEC,
     RF_VPNv6_FLOWSPEC,
+    RF_L2VPN_FLOWSPEC,
     RF_RTC_UC,
     RouteTargetMembershipNLRI,
     BGP_ATTR_TYPE_MULTI_EXIT_DISC,
@@ -49,6 +50,8 @@ from ryu.lib.packet.bgp import (
     BGPFlowSpecTrafficActionCommunity,
     BGPFlowSpecRedirectCommunity,
     BGPFlowSpecTrafficMarkingCommunity,
+    BGPFlowSpecVlanActionCommunity,
+    BGPFlowSpecTPIDActionCommunity,
 )
 from ryu.services.protocols.bgp.info_base.rtc import RtcPath
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
@@ -60,6 +63,7 @@ from ryu.services.protocols.bgp.info_base.ipv4fs import IPv4FlowSpecPath
 from ryu.services.protocols.bgp.info_base.ipv6fs import IPv6FlowSpecPath
 from ryu.services.protocols.bgp.info_base.vpnv4fs import VPNv4FlowSpecPath
 from ryu.services.protocols.bgp.info_base.vpnv6fs import VPNv6FlowSpecPath
+from ryu.services.protocols.bgp.info_base.l2vpnfs import L2VPNFlowSpecPath
 
 
 LOG = logging.getLogger('utils.bgp')
@@ -74,6 +78,7 @@ _ROUTE_FAMILY_TO_PATH_MAP = {RF_IPv4_UC: Ipv4Path,
                              RF_IPv6_FLOWSPEC: IPv6FlowSpecPath,
                              RF_VPNv4_FLOWSPEC: VPNv4FlowSpecPath,
                              RF_VPNv6_FLOWSPEC: VPNv6FlowSpecPath,
+                             RF_L2VPN_FLOWSPEC: L2VPNFlowSpecPath,
                              RF_RTC_UC: RtcPath}
 
 
@@ -244,6 +249,32 @@ def create_v6flowspec_actions(actions=None):
         FLOWSPEC_ACTION_TRAFFIC_ACTION: BGPFlowSpecTrafficActionCommunity,
         FLOWSPEC_ACTION_REDIRECT: BGPFlowSpecRedirectCommunity,
         FLOWSPEC_ACTION_TRAFFIC_MARKING: BGPFlowSpecTrafficMarkingCommunity,
+    }
+
+    return _create_actions(actions, action_types)
+
+
+def create_l2vpnflowspec_actions(actions=None):
+    """
+    Create list of traffic filtering actions for L2VPN Flow Specification.
+    """
+    from ryu.services.protocols.bgp.api.prefix import (
+        FLOWSPEC_ACTION_TRAFFIC_RATE,
+        FLOWSPEC_ACTION_TRAFFIC_ACTION,
+        FLOWSPEC_ACTION_REDIRECT,
+        FLOWSPEC_ACTION_TRAFFIC_MARKING,
+        FLOWSPEC_ACTION_VLAN,
+        FLOWSPEC_ACTION_TPID,
+    )
+
+    # Supported action type for L2VPN.
+    action_types = {
+        FLOWSPEC_ACTION_TRAFFIC_RATE: BGPFlowSpecTrafficRateCommunity,
+        FLOWSPEC_ACTION_TRAFFIC_ACTION: BGPFlowSpecTrafficActionCommunity,
+        FLOWSPEC_ACTION_REDIRECT: BGPFlowSpecRedirectCommunity,
+        FLOWSPEC_ACTION_TRAFFIC_MARKING: BGPFlowSpecTrafficMarkingCommunity,
+        FLOWSPEC_ACTION_VLAN: BGPFlowSpecVlanActionCommunity,
+        FLOWSPEC_ACTION_TPID: BGPFlowSpecTPIDActionCommunity,
     }
 
     return _create_actions(actions, action_types)

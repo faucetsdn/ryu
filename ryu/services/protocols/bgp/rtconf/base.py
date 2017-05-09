@@ -50,6 +50,7 @@ CAP_MBGP_IPV4FS = 'cap_mbgp_ipv4fs'
 CAP_MBGP_IPV6FS = 'cap_mbgp_ipv6fs'
 CAP_MBGP_VPNV4FS = 'cap_mbgp_vpnv4fs'
 CAP_MBGP_VPNV6FS = 'cap_mbgp_vpnv6fs'
+CAP_MBGP_L2VPNFS = 'cap_mbgp_l2vpnfs'
 CAP_RTC = 'cap_rtc'
 RTC_AS = 'rtc_as'
 HOLD_TIME = 'hold_time'
@@ -686,6 +687,15 @@ def validate_cap_mbgp_vpnv66fs(cmv6fs):
                               'VPNv6 Flow Specification capability '
                               'settings: %s. Boolean value expected' % cmv6fs)
     return cmv6fs
+
+
+@validate(name=CAP_MBGP_L2VPNFS)
+def validate_cap_mbgp_l2vpnfs(cml2fs):
+    if not isinstance(cml2fs, bool):
+        raise ConfigTypeError(desc='Invalid MP-BGP '
+                              'L2VPN Flow Specification capability '
+                              'settings: %s. Boolean value expected' % cml2fs)
+    return cml2fs
 
 
 @validate(name=CAP_RTC)

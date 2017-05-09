@@ -18,7 +18,11 @@
 
 import netaddr
 from ryu.lib import hub
-from ryu.lib.packet.bgp import BGPFlowSpecTrafficActionCommunity
+from ryu.lib.packet.bgp import (
+    BGPFlowSpecTrafficActionCommunity,
+    BGPFlowSpecVlanActionCommunity,
+    BGPFlowSpecTPIDActionCommunity,
+)
 
 from ryu.services.protocols.bgp.core_manager import CORE_MANAGER
 from ryu.services.protocols.bgp.signals.emit import BgpSignalBus
@@ -60,6 +64,7 @@ from ryu.services.protocols.bgp.api.prefix import (
     FLOWSPEC_FAMILY_VPNV4,
     FLOWSPEC_FAMILY_IPV6,
     FLOWSPEC_FAMILY_VPNV6,
+    FLOWSPEC_FAMILY_L2VPN,
     FLOWSPEC_RULES,
     FLOWSPEC_ACTIONS)
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
@@ -87,6 +92,7 @@ from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV4FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_IPV6FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV4FS
 from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_VPNV6FS
+from ryu.services.protocols.bgp.rtconf.base import CAP_MBGP_L2VPNFS
 from ryu.services.protocols.bgp.rtconf.base import CAP_ENHANCED_REFRESH
 from ryu.services.protocols.bgp.rtconf.base import CAP_FOUR_OCTET_AS_NUMBER
 from ryu.services.protocols.bgp.rtconf.base import MULTI_EXIT_DISC
@@ -101,6 +107,7 @@ from ryu.services.protocols.bgp.rtconf.neighbors import (
     DEFAULT_CAP_MBGP_IPV6FS,
     DEFAULT_CAP_MBGP_VPNV4FS,
     DEFAULT_CAP_MBGP_VPNV6FS,
+    DEFAULT_CAP_MBGP_L2VPNFS,
 )
 from ryu.services.protocols.bgp.rtconf.neighbors import (
     DEFAULT_CAP_ENHANCED_REFRESH, DEFAULT_CAP_FOUR_OCTET_AS_NUMBER)
@@ -131,10 +138,22 @@ RF_VPN_V6 = vrfs.VRF_RF_IPV6
 RF_L2_EVPN = vrfs.VRF_RF_L2_EVPN
 RF_VPNV4_FLOWSPEC = vrfs.VRF_RF_IPV4_FLOWSPEC
 RF_VPNV6_FLOWSPEC = vrfs.VRF_RF_IPV6_FLOWSPEC
+RF_L2VPN_FLOWSPEC = vrfs.VRF_RF_L2VPN_FLOWSPEC
 
 # Constants for the Traffic Filtering Actions of Flow Specification.
 FLOWSPEC_TA_SAMPLE = BGPFlowSpecTrafficActionCommunity.SAMPLE
 FLOWSPEC_TA_TERMINAL = BGPFlowSpecTrafficActionCommunity.TERMINAL
+
+# Constants for the VLAN Actions of Flow Specification.
+FLOWSPEC_VLAN_POP = BGPFlowSpecVlanActionCommunity.POP
+FLOWSPEC_VLAN_PUSH = BGPFlowSpecVlanActionCommunity.PUSH
+FLOWSPEC_VLAN_SWAP = BGPFlowSpecVlanActionCommunity.SWAP
+FLOWSPEC_VLAN_RW_INNER = BGPFlowSpecVlanActionCommunity.REWRITE_INNER
+FLOWSPEC_VLAN_RW_OUTER = BGPFlowSpecVlanActionCommunity.REWRITE_OUTER
+
+# Constants for the TPID Actions of Flow Specification.
+FLOWSPEC_TPID_TI = BGPFlowSpecTPIDActionCommunity.TI
+FLOWSPEC_TPID_TO = BGPFlowSpecTPIDActionCommunity.TO
 
 
 class EventPrefix(object):
@@ -366,6 +385,7 @@ class BGPSpeaker(object):
                      enable_ipv6fs=DEFAULT_CAP_MBGP_IPV6FS,
                      enable_vpnv4fs=DEFAULT_CAP_MBGP_VPNV4FS,
                      enable_vpnv6fs=DEFAULT_CAP_MBGP_VPNV6FS,
+                     enable_l2vpnfs=DEFAULT_CAP_MBGP_L2VPNFS,
                      enable_enhanced_refresh=DEFAULT_CAP_ENHANCED_REFRESH,
                      enable_four_octet_as_number=DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
                      next_hop=None, password=None, multi_exit_disc=None,
@@ -412,6 +432,9 @@ class BGPSpeaker(object):
         for this neighbor.
 
         ``enable_vpnv6fs`` enables VPNv6 Flow Specification address family
+        for this neighbor.
+
+        ``enable_l2vpnfs`` enables L2VPN Flow Specification address family
         for this neighbor.
 
         ``enable_enhanced_refresh`` enables Enhanced Route Refresh for this
@@ -477,6 +500,7 @@ class BGPSpeaker(object):
             CAP_MBGP_IPV6FS: enable_ipv6fs,
             CAP_MBGP_VPNV4FS: enable_vpnv4fs,
             CAP_MBGP_VPNV6FS: enable_vpnv6fs,
+            CAP_MBGP_L2VPNFS: enable_l2vpnfs,
         }
 
         if multi_exit_disc:
@@ -843,6 +867,7 @@ class BGPSpeaker(object):
         - FLOWSPEC_FAMILY_IPV6  = 'ipv6fs'
         - FLOWSPEC_FAMILY_VPNV4 = 'vpnv4fs'
         - FLOWSPEC_FAMILY_VPNV6 = 'vpnv6fs'
+        - FLOWSPEC_FAMILY_L2VPN = 'l2vpnfs'
 
         ``rules`` specifies NLRIs of Flow Specification as
         a dictionary type value.
@@ -853,6 +878,7 @@ class BGPSpeaker(object):
         - :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv6NLRI`
         - :py:mod:`ryu.lib.packet.bgp.FlowSpecVPNv4NLRI`
         - :py:mod:`ryu.lib.packet.bgp.FlowSpecVPNv6NLRI`
+        - :py:mod:`ryu.lib.packet.bgp.FlowSpecL2VPNNLRI`
 
         ``route_dist`` specifies a route distinguisher value.
         This parameter is required only if flowspec_family is one of the
@@ -860,6 +886,7 @@ class BGPSpeaker(object):
 
         - FLOWSPEC_FAMILY_VPNV4 = 'vpnv4fs'
         - FLOWSPEC_FAMILY_VPNV6 = 'vpnv6fs'
+        - FLOWSPEC_FAMILY_L2VPN = 'l2vpnfs'
 
         ``actions`` specifies Traffic Filtering Actions of
         Flow Specification as a dictionary type value.
@@ -875,6 +902,8 @@ class BGPSpeaker(object):
         traffic_action  :py:mod:`ryu.lib.packet.bgp.BGPFlowSpecTrafficActionCommunity`
         redirect        :py:mod:`ryu.lib.packet.bgp.BGPFlowSpecRedirectCommunity`
         traffic_marking :py:mod:`ryu.lib.packet.bgp.BGPFlowSpecTrafficMarkingCommunity`
+        vlan_action     :py:mod:`ryu.lib.packet.bgp.BGPFlowSpecVlanActionCommunity`
+        tpid_action     :py:mod:`ryu.lib.packet.bgp.BGPFlowSpecTPIDActionCommunity`
         =============== ===============================================================
 
         Example(IPv4)::
@@ -927,7 +956,8 @@ class BGPSpeaker(object):
             FLOWSPEC_ACTIONS: actions or {},
         }
 
-        if flowspec_family in [FLOWSPEC_FAMILY_VPNV4, FLOWSPEC_FAMILY_VPNV6]:
+        if flowspec_family in [FLOWSPEC_FAMILY_VPNV4, FLOWSPEC_FAMILY_VPNV6,
+                               FLOWSPEC_FAMILY_L2VPN]:
             func_name = 'flowspec.add_local'
             kwargs.update({ROUTE_DISTINGUISHER: route_dist})
 
@@ -951,7 +981,8 @@ class BGPSpeaker(object):
             FLOWSPEC_RULES: rules,
         }
 
-        if flowspec_family in [FLOWSPEC_FAMILY_VPNV4, FLOWSPEC_FAMILY_VPNV6]:
+        if flowspec_family in [FLOWSPEC_FAMILY_VPNV4, FLOWSPEC_FAMILY_VPNV6,
+                               FLOWSPEC_FAMILY_L2VPN]:
             func_name = 'flowspec.del_local'
             kwargs.update({ROUTE_DISTINGUISHER: route_dist})
 
@@ -978,6 +1009,7 @@ class BGPSpeaker(object):
         - RF_L2_EVPN          = 'evpn'
         - RF_VPNV4_FLOWSPEC   = 'ipv4fs'
         - RF_VPNV6_FLOWSPEC   = 'ipv6fs'
+        - RF_L2VPN_FLOWSPEC   = 'l2vpnfs'
 
         ``multi_exit_disc`` specifies multi exit discriminator (MED) value.
         It must be an integer.

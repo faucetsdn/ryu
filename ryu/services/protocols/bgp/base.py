@@ -40,6 +40,7 @@ from ryu.lib.packet.bgp import RF_IPv4_FLOWSPEC
 from ryu.lib.packet.bgp import RF_IPv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_VPNv4_FLOWSPEC
 from ryu.lib.packet.bgp import RF_VPNv6_FLOWSPEC
+from ryu.lib.packet.bgp import RF_L2VPN_FLOWSPEC
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.services.protocols.bgp.utils.circlist import CircularListType
 from ryu.services.protocols.bgp.utils.evtlet import LoopingCall
@@ -64,6 +65,7 @@ SUPPORTED_GLOBAL_RF = {
     RF_IPv6_FLOWSPEC,
     RF_VPNv4_FLOWSPEC,
     RF_VPNv6_FLOWSPEC,
+    RF_L2VPN_FLOWSPEC,
 }
 
 

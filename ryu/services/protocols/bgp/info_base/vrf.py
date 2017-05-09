@@ -39,7 +39,10 @@ from ryu.lib.packet.bgp import PmsiTunnelIdIngressReplication
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import EvpnMacIPAdvertisementNLRI
 from ryu.lib.packet.bgp import EvpnIpPrefixNLRI
-from ryu.lib.packet.safi import IP_FLOWSPEC
+from ryu.lib.packet.safi import (
+    IP_FLOWSPEC,
+    VPN_FLOWSPEC,
+)
 
 from ryu.services.protocols.bgp.base import OrderedDict
 from ryu.services.protocols.bgp.constants import VPN_TABLE
@@ -168,7 +171,7 @@ class VrfTable(Table):
             # Because NLRI class is the same if the route family is EVPN,
             # we re-use the NLRI instance.
             vrf_nlri = vpn_path.nlri
-        elif self.ROUTE_FAMILY.safi == IP_FLOWSPEC:
+        elif self.ROUTE_FAMILY.safi in [IP_FLOWSPEC, VPN_FLOWSPEC]:
             vrf_nlri = self.NLRI_CLASS(rules=vpn_path.nlri.rules)
         else:  # self.VPN_ROUTE_FAMILY in [RF_IPv4_VPN, RF_IPv6_VPN]
             # Copy NLRI instance
@@ -526,7 +529,7 @@ class VrfPath(Path):
                 - `label_list`: (list) List of labels for this path.
             Note: other parameters are as documented in super class.
         """
-        if self.ROUTE_FAMILY.safi == IP_FLOWSPEC:
+        if self.ROUTE_FAMILY.safi in [IP_FLOWSPEC, VPN_FLOWSPEC]:
             nexthop = '0.0.0.0'
 
         Path.__init__(self, source, nlri, src_ver_num, pattrs, nexthop,
@@ -584,7 +587,7 @@ class VrfPath(Path):
             # we re-use the NLRI instance.
             vpn_nlri = self._nlri
 
-        elif self.ROUTE_FAMILY.safi == IP_FLOWSPEC:
+        elif self.ROUTE_FAMILY.safi in [IP_FLOWSPEC, VPN_FLOWSPEC]:
             vpn_nlri = self.VPN_NLRI_CLASS(route_dist=route_dist,
                                            rules=self.nlri.rules)
 
