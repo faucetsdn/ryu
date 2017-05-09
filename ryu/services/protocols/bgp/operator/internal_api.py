@@ -8,7 +8,9 @@ from ryu.lib.packet.bgp import RF_IPv4_VPN
 from ryu.lib.packet.bgp import RF_IPv6_VPN
 from ryu.lib.packet.bgp import RF_L2_EVPN
 from ryu.lib.packet.bgp import RF_IPv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_IPv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_VPNv4_FLOWSPEC
+from ryu.lib.packet.bgp import RF_VPNv6_FLOWSPEC
 from ryu.lib.packet.bgp import RF_RTC_UC
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_ORIGIN
 from ryu.lib.packet.bgp import BGP_ATTR_TYPE_AS_PATH
@@ -87,7 +89,9 @@ class InternalApi(object):
             'vpnv6': RF_IPv6_VPN,
             'evpn': RF_L2_EVPN,
             'ipv4fs': RF_IPv4_FLOWSPEC,
+            'ipv6fs': RF_IPv6_FLOWSPEC,
             'vpnv4fs': RF_VPNv4_FLOWSPEC,
+            'vpnv6fs': RF_VPNv6_FLOWSPEC,
             'rtfilter': RF_RTC_UC
         }
         if addr_family not in rfs:
