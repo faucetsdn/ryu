@@ -574,7 +574,9 @@ RF_IPv4_MPLS = RouteFamily(addr_family.IP, subaddr_family.MPLS_LABEL)
 RF_IPv6_MPLS = RouteFamily(addr_family.IP6, subaddr_family.MPLS_LABEL)
 RF_L2_EVPN = RouteFamily(addr_family.L2VPN, subaddr_family.EVPN)
 RF_IPv4_FLOWSPEC = RouteFamily(addr_family.IP, subaddr_family.IP_FLOWSPEC)
+RF_IPv6_FLOWSPEC = RouteFamily(addr_family.IP6, subaddr_family.IP_FLOWSPEC)
 RF_VPNv4_FLOWSPEC = RouteFamily(addr_family.IP, subaddr_family.VPN_FLOWSPEC)
+RF_VPNv6_FLOWSPEC = RouteFamily(addr_family.IP6, subaddr_family.VPN_FLOWSPEC)
 RF_RTC_UC = RouteFamily(addr_family.IP,
                         subaddr_family.ROUTE_TARGET_CONSTRAINTS)
 
@@ -587,7 +589,9 @@ _rf_map = {
     (addr_family.IP6, subaddr_family.MPLS_LABEL): RF_IPv6_MPLS,
     (addr_family.L2VPN, subaddr_family.EVPN): RF_L2_EVPN,
     (addr_family.IP, subaddr_family.IP_FLOWSPEC): RF_IPv4_FLOWSPEC,
+    (addr_family.IP6, subaddr_family.IP_FLOWSPEC): RF_IPv6_FLOWSPEC,
     (addr_family.IP, subaddr_family.VPN_FLOWSPEC): RF_VPNv4_FLOWSPEC,
+    (addr_family.IP6, subaddr_family.VPN_FLOWSPEC): RF_VPNv6_FLOWSPEC,
     (addr_family.IP, subaddr_family.ROUTE_TARGET_CONSTRAINTS): RF_RTC_UC
 }
 
@@ -2035,7 +2039,8 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
         rules = []
 
         while rest:
-            subcls, rest = _FlowSpecComponentBase.parse_header(rest)
+            subcls, rest = _FlowSpecComponentBase.parse_header(
+                rest, cls.ROUTE_FAMILY.afi)
 
             while rest:
                 rule, rest = subcls.parse_body(rest)
@@ -2080,7 +2085,8 @@ class _FlowSpecNLRIBase(StringifyMixin, TypeDisp):
     def _from_user(cls, **kwargs):
         rules = []
         for k, v in kwargs.items():
-            subcls = _FlowSpecComponentBase.lookup_type_name(k)
+            subcls = _FlowSpecComponentBase.lookup_type_name(
+                k, cls.ROUTE_FAMILY.afi)
             rule = subcls.from_str(str(v))
             rules.extend(rule)
         rules.sort(key=lambda x: x.type)
@@ -2236,7 +2242,8 @@ class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
     def _from_user(cls, route_dist, **kwargs):
         rules = []
         for k, v in kwargs.items():
-            subcls = _FlowSpecComponentBase.lookup_type_name(k)
+            subcls = _FlowSpecComponentBase.lookup_type_name(
+                k, cls.ROUTE_FAMILY.afi)
             rule = subcls.from_str(str(v))
             rules.extend(rule)
         rules.sort(key=lambda x: x.type)
@@ -2277,6 +2284,107 @@ class FlowSpecVPNv4NLRI(_FlowSpecNLRIBase):
         return '%s:%s' % (self.route_dist, self.prefix)
 
 
+class FlowSpecIPv6NLRI(_FlowSpecNLRIBase):
+    """
+    Flow Specification NLRI class for IPv6 [RFC draft-ietf-idr-flow-spec-v6-08]
+    """
+    ROUTE_FAMILY = RF_IPv6_FLOWSPEC
+    FLOWSPEC_FAMILY = 'ipv6fs'
+
+    @classmethod
+    def from_user(cls, **kwargs):
+        """
+        Utility method for creating a NLRI instance.
+
+        This function returns a NLRI instance from human readable format value.
+
+        :param kwargs: The following arguments are available.
+
+        =========== ============= ========= ==============================
+        Argument    Value         Operator  Description
+        =========== ============= ========= ==============================
+        dst_prefix  IPv6 Prefix   Nothing   Destination Prefix.
+        src_prefix  IPv6 Prefix   Nothing   Source Prefix.
+        next_header Integer       Numeric   Next Header.
+        port        Integer       Numeric   Port number.
+        dst_port    Integer       Numeric   Destination port number.
+        src_port    Integer       Numeric   Source port number.
+        icmp_type   Integer       Numeric   ICMP type.
+        icmp_code   Integer       Numeric   ICMP code.
+        tcp_flags   Fixed string  Bitmask   TCP flags.
+                                            Supported values are
+                                            ``CWR``, ``ECN``, ``URGENT``,
+                                            ``ACK``, ``PUSH``, ``RST``,
+                                            ``SYN`` and ``FIN``.
+        packet_len  Integer       Numeric   Packet length.
+        dscp        Integer       Numeric   Differentiated Services
+                                            Code Point.
+        fragment    Fixed string  Bitmask   Fragment.
+                                            Supported values are
+                                            ``ISF`` (Is a fragment),
+                                            ``FF`` (First fragment) and
+                                            ``LF`` (Last fragment)
+        flow_label   Intefer      Numeric   Flow Label.
+        =========== ============= ========= ==============================
+
+        .. Note::
+
+            For ``dst_prefix`` and ``src_prefix``, you can give "offset" value
+            like this: ``2001::2/128/32``. At this case, ``offset`` is 32.
+            ``offset`` can be omitted, then ``offset`` is treated as 0.
+        """
+        return cls._from_user(**kwargs)
+
+
+class FlowSpecVPNv6NLRI(_FlowSpecNLRIBase):
+    """
+    Flow Specification NLRI class for VPNv6 [draft-ietf-idr-flow-spec-v6-08]
+    """
+
+    # flow-spec NLRI:
+    # +-----------------------------------+
+    # |    length (0xnn or 0xfn nn)       |
+    # +-----------------------------------+
+    # |     RD   (8 octets)               |
+    # +-----------------------------------+
+    # |     NLRI value  (variable)        |
+    # +-----------------------------------+
+    ROUTE_FAMILY = RF_VPNv6_FLOWSPEC
+    FLOWSPEC_FAMILY = 'vpnv6fs'
+
+    def __init__(self, length=0, route_dist=None, rules=None):
+        super(FlowSpecVPNv6NLRI, self).__init__(length, rules)
+        assert route_dist is not None
+        self.route_dist = route_dist
+
+    @classmethod
+    def _from_user(cls, route_dist, **kwargs):
+        rules = []
+        for k, v in kwargs.items():
+            subcls = _FlowSpecComponentBase.lookup_type_name(
+                k, cls.ROUTE_FAMILY.afi)
+            rule = subcls.from_str(str(v))
+            rules.extend(rule)
+        rules.sort(key=lambda x: x.type)
+        return cls(route_dist=route_dist, rules=rules)
+
+    @classmethod
+    def from_user(cls, route_dist, **kwargs):
+        """
+        Utility method for creating a NLRI instance.
+
+        This function returns a NLRI instance from human readable format value.
+
+        :param route_dist: Route Distinguisher.
+        :param kwargs: See :py:mod:`ryu.lib.packet.bgp.FlowSpecIPv6NLRI`
+        """
+        return cls._from_user(route_dist, **kwargs)
+
+    @property
+    def formatted_nlri_str(self):
+        return '%s:%s' % (self.route_dist, self.prefix)
+
+
 class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
     """
     Base class for Flow Specification NLRI component
@@ -2286,6 +2394,55 @@ class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
     _BASE_STR = '!B'
     _BASE_STR_SIZE = struct.calcsize(_BASE_STR)
 
+    # Dictionary of COMPONENT_NAME to subclass.
+    # e.g.)
+    #   _NAMES = {'dst_prefix': FlowSpecDestPrefix, ...}
+    _NAMES = {}
+
+    def __init__(self, type_=None):
+        if type_ is None:
+            type_, _ = self._rev_lookup_type(self.__class__)
+        self.type = type_
+
+    @classmethod
+    def register_type(cls, type_, afi):
+        cls._TYPES = cls._TYPES.copy()
+        cls._NAMES = cls._NAMES.copy()
+
+        def _register_type(subcls):
+            cls._TYPES[(type_, afi)] = subcls
+            cls._NAMES[(subcls.COMPONENT_NAME, afi)] = subcls
+            cls._REV_TYPES = None
+            return subcls
+
+        return _register_type
+
+    @classmethod
+    def lookup_type_name(cls, type_name, afi):
+        return cls._NAMES[(type_name, afi)]
+
+    @classmethod
+    def _lookup_type(cls, type_, afi):
+        try:
+            return cls._TYPES[(type_, afi)]
+        except KeyError:
+            return cls._UNKNOWN_TYPE
+
+    @classmethod
+    def parse_header(cls, rest, afi):
+        (type_,) = struct.unpack_from(
+            cls._BASE_STR, six.binary_type(rest))
+        rest = rest[cls._BASE_STR_SIZE:]
+        return cls._lookup_type(type_, afi), rest
+
+    def serialize_header(self):
+        return struct.pack(self._BASE_STR, self.type)
+
+
+class _FlowSpecIPv4Component(_FlowSpecComponentBase):
+    """
+    Base class for Flow Specification for IPv4 NLRI component
+    """
     TYPE_DESTINATION_PREFIX = 0x01
     TYPE_SOURCE_PREFIX = 0x02
     TYPE_PROTOCOL = 0x03
@@ -2299,42 +2456,24 @@ class _FlowSpecComponentBase(StringifyMixin, TypeDisp):
     TYPE_DIFFSERV_CODE_POINT = 0x0b
     TYPE_FRAGMENT = 0x0c
 
-    # Dictionary of COMPONENT_NAME to subclass.
-    # e.g.)
-    #   _NAMES = {'dst_prefix': FlowSpecDestPrefix, ...}
-    _NAMES = {}
 
-    def __init__(self, type_=None):
-        if type_ is None:
-            type_ = self._rev_lookup_type(self.__class__)
-        self.type = type_
-
-    @classmethod
-    def register_type(cls, type_):
-        cls._TYPES = cls._TYPES.copy()
-        cls._NAMES = cls._NAMES.copy()
-
-        def _register_type(subcls):
-            cls._TYPES[type_] = subcls
-            cls._NAMES[subcls.COMPONENT_NAME] = subcls
-            cls._REV_TYPES = None
-            return subcls
-
-        return _register_type
-
-    @classmethod
-    def lookup_type_name(cls, type_name):
-        return cls._NAMES[type_name]
-
-    @classmethod
-    def parse_header(cls, rest):
-        (type_,) = struct.unpack_from(
-            cls._BASE_STR, six.binary_type(rest))
-        rest = rest[cls._BASE_STR_SIZE:]
-        return cls._lookup_type(type_), rest
-
-    def serialize_header(self):
-        return struct.pack(self._BASE_STR, self.type)
+class _FlowSpecIPv6Component(_FlowSpecComponentBase):
+    """
+    Base class for Flow Specification for IPv6 NLRI component
+    """
+    TYPE_DESTINATION_PREFIX = 0x01
+    TYPE_SOURCE_PREFIX = 0x02
+    TYPE_NEXT_HEADER = 0x03
+    TYPE_PORT = 0x04
+    TYPE_DESTINATION_PORT = 0x05
+    TYPE_SOURCE_PORT = 0x06
+    TYPE_ICMP = 0x07
+    TYPE_ICMP_CODE = 0x08
+    TYPE_TCP_FLAGS = 0x09
+    TYPE_PACKET_LENGTH = 0x0a
+    TYPE_DIFFSERV_CODE_POINT = 0x0b
+    TYPE_FRAGMENT = 0x0c
+    TYPE_FLOW_LABEL = 0x0d
 
 
 @_FlowSpecComponentBase.register_unknown_type()
@@ -2355,7 +2494,7 @@ class FlowSpecComponentUnknown(_FlowSpecComponentBase):
         return self.buf
 
 
-class _FlowSpecPrefixBase(_FlowSpecComponentBase, IPAddrPrefix):
+class _FlowSpecPrefixBase(_FlowSpecIPv4Component, IPAddrPrefix):
     """
     Prefix base class for Flow Specification NLRI component
     """
@@ -2388,8 +2527,63 @@ class _FlowSpecPrefixBase(_FlowSpecComponentBase, IPAddrPrefix):
         return self.value
 
 
+class _FlowSpecIPv6PrefixBase(_FlowSpecIPv6Component, IP6AddrPrefix):
+    """
+    Prefix base class for Flow Specification NLRI component
+    """
+    _PACK_STR = '!BB'  # length, offset
+
+    def __init__(self, length, addr, offset=0, type_=None):
+        super(_FlowSpecIPv6PrefixBase, self).__init__(type_)
+        self.length = length
+        self.offset = offset
+        prefix = "%s/%s" % (addr, length)
+        self.addr = str(netaddr.ip.IPNetwork(prefix).network)
+
+    @classmethod
+    def parser(cls, buf):
+        (length, offset) = struct.unpack_from(
+            cls._PACK_STR, six.binary_type(buf))
+        rest = buf[struct.calcsize(cls._PACK_STR):]
+        byte_length = (length + 7) // 8
+        addr = cls._from_bin(rest[:byte_length])
+        rest = rest[byte_length:]
+        return cls(length=length, offset=offset, addr=addr), rest
+
+    @classmethod
+    def parse_body(cls, buf):
+        return cls.parser(buf)
+
+    def serialize(self):
+        byte_length = (self.length + 7) // 8
+        bin_addr = self._to_bin(self.addr)[:byte_length]
+        buf = bytearray()
+        msg_pack_into(self._PACK_STR, buf, 0, self.length, self.offset)
+        return buf + bin_addr
+
+    def serialize_body(self):
+        return self.serialize()
+
+    @classmethod
+    def from_str(cls, value):
+        rule = []
+        values = value.split('/')
+        if len(values) == 3:
+            rule.append(cls(int(values[1]), values[0], offset=int(values[2])))
+        else:
+            rule.append(cls(int(values[1]), values[0]))
+        return rule
+
+    @property
+    def value(self):
+        return "%s/%s/%s" % (self.addr, self.length, self.offset)
+
+    def to_str(self):
+        return self.value
+
+
 @_FlowSpecComponentBase.register_type(
-    _FlowSpecComponentBase.TYPE_DESTINATION_PREFIX)
+    _FlowSpecIPv4Component.TYPE_DESTINATION_PREFIX, addr_family.IP)
 class FlowSpecDestPrefix(_FlowSpecPrefixBase):
     """
     Destination Prefix for Flow Specification NLRI component
@@ -2398,10 +2592,28 @@ class FlowSpecDestPrefix(_FlowSpecPrefixBase):
 
 
 @_FlowSpecComponentBase.register_type(
-    _FlowSpecComponentBase.TYPE_SOURCE_PREFIX)
+    _FlowSpecIPv4Component.TYPE_SOURCE_PREFIX, addr_family.IP)
 class FlowSpecSrcPrefix(_FlowSpecPrefixBase):
     """
     Source Prefix for Flow Specification NLRI component
+    """
+    COMPONENT_NAME = 'src_prefix'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_DESTINATION_PREFIX, addr_family.IP6)
+class FlowSpecIPv6DestPrefix(_FlowSpecIPv6PrefixBase):
+    """
+    IPv6 destination Prefix for Flow Specification NLRI component
+    """
+    COMPONENT_NAME = 'dst_prefix'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_SOURCE_PREFIX, addr_family.IP6)
+class FlowSpecIPv6SrcPrefix(_FlowSpecIPv6PrefixBase):
+    """
+    IPv6 source Prefix for Flow Specification NLRI component
     """
     COMPONENT_NAME = 'src_prefix'
 
@@ -2604,7 +2816,8 @@ class _FlowSpecBitmask(_FlowSpecOperatorBase):
         return string
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PROTOCOL)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_PROTOCOL, addr_family.IP)
 class FlowSpecIPProtocol(_FlowSpecNumeric):
     """IP Protocol for Flow Specification NLRI component
 
@@ -2613,7 +2826,20 @@ class FlowSpecIPProtocol(_FlowSpecNumeric):
     COMPONENT_NAME = 'ip_proto'
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_PORT)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_NEXT_HEADER, addr_family.IP6)
+class FlowSpecNextHeader(_FlowSpecNumeric):
+    """Next Header value in IPv6 packets
+
+    Set the IP protocol number at value
+    """
+    COMPONENT_NAME = 'next_header'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_PORT, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_PORT, addr_family.IP6)
 class FlowSpecPort(_FlowSpecNumeric):
     """Port number for Flow Specification NLRI component
 
@@ -2623,7 +2849,9 @@ class FlowSpecPort(_FlowSpecNumeric):
 
 
 @_FlowSpecComponentBase.register_type(
-    _FlowSpecComponentBase.TYPE_DESTINATION_PORT)
+    _FlowSpecIPv4Component.TYPE_DESTINATION_PORT, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_DESTINATION_PORT, addr_family.IP6)
 class FlowSpecDestPort(_FlowSpecNumeric):
     """Destination port number for Flow Specification NLRI component
 
@@ -2632,7 +2860,10 @@ class FlowSpecDestPort(_FlowSpecNumeric):
     COMPONENT_NAME = 'dst_port'
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_SOURCE_PORT)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_SOURCE_PORT, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_SOURCE_PORT, addr_family.IP6)
 class FlowSpecSrcPort(_FlowSpecNumeric):
     """Source port number for Flow Specification NLRI component
 
@@ -2641,7 +2872,10 @@ class FlowSpecSrcPort(_FlowSpecNumeric):
     COMPONENT_NAME = 'src_port'
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_ICMP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_ICMP, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_ICMP, addr_family.IP6)
 class FlowSpecIcmpType(_FlowSpecNumeric):
     """ICMP type for Flow Specification NLRI component
 
@@ -2650,7 +2884,10 @@ class FlowSpecIcmpType(_FlowSpecNumeric):
     COMPONENT_NAME = 'icmp_type'
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_ICMP_CODE)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_ICMP_CODE, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_ICMP_CODE, addr_family.IP6)
 class FlowSpecIcmpCode(_FlowSpecNumeric):
     """ICMP code Flow Specification NLRI component
 
@@ -2659,7 +2896,10 @@ class FlowSpecIcmpCode(_FlowSpecNumeric):
     COMPONENT_NAME = 'icmp_code'
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_TCP_FLAGS)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_TCP_FLAGS, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_TCP_FLAGS, addr_family.IP6)
 class FlowSpecTCPFlags(_FlowSpecBitmask):
     """TCP flags for Flow Specification NLRI component
 
@@ -2694,7 +2934,9 @@ class FlowSpecTCPFlags(_FlowSpecBitmask):
 
 
 @_FlowSpecComponentBase.register_type(
-    _FlowSpecComponentBase.TYPE_PACKET_LENGTH)
+    _FlowSpecIPv4Component.TYPE_PACKET_LENGTH, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_PACKET_LENGTH, addr_family.IP6)
 class FlowSpecPacketLen(_FlowSpecNumeric):
     """Packet length for Flow Specification NLRI component
 
@@ -2704,7 +2946,9 @@ class FlowSpecPacketLen(_FlowSpecNumeric):
 
 
 @_FlowSpecComponentBase.register_type(
-    _FlowSpecComponentBase.TYPE_DIFFSERV_CODE_POINT)
+    _FlowSpecIPv4Component.TYPE_DIFFSERV_CODE_POINT, addr_family.IP)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_DIFFSERV_CODE_POINT, addr_family.IP6)
 class FlowSpecDSCP(_FlowSpecNumeric):
     """Diffserv Code Point for Flow Specification NLRI component
 
@@ -2713,7 +2957,8 @@ class FlowSpecDSCP(_FlowSpecNumeric):
     COMPONENT_NAME = 'dscp'
 
 
-@_FlowSpecComponentBase.register_type(_FlowSpecComponentBase.TYPE_FRAGMENT)
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv4Component.TYPE_FRAGMENT, addr_family.IP)
 class FlowSpecFragment(_FlowSpecBitmask):
     """Fragment for Flow Specification NLRI component
 
@@ -2747,6 +2992,43 @@ class FlowSpecFragment(_FlowSpecBitmask):
     _bitmask_flags[FF] = 'FF'
     _bitmask_flags[ISF] = 'ISF'
     _bitmask_flags[DF] = 'DF'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_FRAGMENT, addr_family.IP6)
+class FlowSpecIPv6Fragment(_FlowSpecBitmask):
+    """Fragment for Flow Specification for IPv6 NLRI component
+
+    ========== ===============================================
+    Attribute  Description
+    ========== ===============================================
+    LF         Last fragment
+    FF         First fragment
+    ISF        Is a fragment
+    ========== ===============================================
+    """
+    COMPONENT_NAME = 'fragment'
+
+    # bitmask format
+    #  0   1   2   3   4   5   6   7
+    # +---+---+---+---+---+---+---+---+
+    # |   Reserved    |LF |FF |IsF| 0 |
+    # +---+---+---+---+---+---+---+---+
+
+    LF = 1 << 3
+    FF = 1 << 2
+    ISF = 1 << 1
+
+    _bitmask_flags = collections.OrderedDict()
+    _bitmask_flags[LF] = 'LF'
+    _bitmask_flags[FF] = 'FF'
+    _bitmask_flags[ISF] = 'ISF'
+
+
+@_FlowSpecComponentBase.register_type(
+    _FlowSpecIPv6Component.TYPE_FLOW_LABEL, addr_family.IP6)
+class FlowSpecIPv6FlowLabel(_FlowSpecNumeric):
+    COMPONENT_NAME = 'flow_label'
 
 
 @functools.total_ordering
@@ -2860,7 +3142,9 @@ _ADDR_CLASSES = {
     _addr_class_key(RF_IPv6_VPN): LabelledVPNIP6AddrPrefix,
     _addr_class_key(RF_L2_EVPN): EvpnNLRI,
     _addr_class_key(RF_IPv4_FLOWSPEC): FlowSpecIPv4NLRI,
+    _addr_class_key(RF_IPv6_FLOWSPEC): FlowSpecIPv6NLRI,
     _addr_class_key(RF_VPNv4_FLOWSPEC): FlowSpecVPNv4NLRI,
+    _addr_class_key(RF_VPNv6_FLOWSPEC): FlowSpecVPNv6NLRI,
     _addr_class_key(RF_RTC_UC): RouteTargetMembershipNLRI,
 }
 
@@ -4076,6 +4360,9 @@ class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
     def serialize_value(self):
         return struct.pack(self._VALUE_PACK_STR, self.subtype, self.dscp)
 
+
+# TODO
+# Implement "Redirect-IPv6" [draft-ietf-idr-flow-spec-v6-08]
 
 @_ExtendedCommunity.register_unknown_type()
 class BGPUnknownExtendedCommunity(_ExtendedCommunity):
