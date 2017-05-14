@@ -363,7 +363,7 @@ def del_port_by_name(manager, system_id, bridge_name, port_name):
 
 
 def set_controller(manager, system_id, bridge_name,
-                   target, controller_info=None):
+                   target, controller_info=dict()):
     def _set_controller(tables, insert):
         bridge = _get_bridge(tables, bridge_name)
 
