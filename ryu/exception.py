@@ -52,6 +52,10 @@ class OFPTruncatedMessage(RyuException):
         super(OFPTruncatedMessage, self).__init__(msg, **kwargs)
 
 
+class OFPInvalidActionString(RyuException):
+    message = 'unable to parse: %(action_str)s'
+
+
 class NetworkNotFound(RyuException):
     message = 'no such network id %(network_id)s'
 

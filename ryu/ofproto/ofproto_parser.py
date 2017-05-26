@@ -125,6 +125,58 @@ def ofp_msg_from_jsondict(dp, jsondict):
         return cls.from_jsondict(v, datapath=dp)
 
 
+def ofp_instruction_from_jsondict(dp, jsonlist, encap=True):
+    """
+    This function is intended to be used with
+    ryu.lib.ofctl_string.ofp_instruction_from_str.
+    It is very similar to ofp_msg_from_jsondict, but works on
+    a list of OFPInstructions/OFPActions. It also encapsulates
+    OFPAction into OFPInstructionActions, as >OF1.0 OFPFlowMod
+    requires that.
+
+    This function takes the following arguments.
+
+    ======== ==================================================
+    Argument Description
+    ======== ==================================================
+    dp       An instance of ryu.controller.Datapath.
+    jsonlist A list of JSON style dictionaries.
+    encap    Encapsulate OFPAction into OFPInstructionActions.
+             Must be false for OF10.
+    ======== ==================================================
+    """
+    proto = dp.ofproto
+    parser = dp.ofproto_parser
+    result = []
+    for jsondict in jsonlist:
+        assert len(jsondict) == 1
+        k, v = list(jsondict.items())[0]
+        cls = getattr(parser, k)
+        if not issubclass(cls, parser.OFPAction):
+            ofpinst = getattr(parser, 'OFPInstruction', None)
+            if not ofpinst or not issubclass(cls, ofpinst):
+                raise ValueError("Supplied jsondict is of wrong type: %s",
+                                 jsondict)
+        result.append(cls.from_jsondict(v))
+
+    if not encap:
+        return result
+    insts = []
+    actions = []
+    result.append(None)  # sentinel
+    for act_or_inst in result:
+        if isinstance(act_or_inst, parser.OFPAction):
+            actions.append(act_or_inst)
+        else:
+            if actions:
+                insts.append(parser.OFPInstructionActions(
+                    proto.OFPIT_APPLY_ACTIONS, actions))
+                actions = []
+            if act_or_inst is not None:
+                insts.append(act_or_inst)
+    return insts
+
+
 class StringifyMixin(stringify.StringifyMixin):
     _class_prefixes = ["OFP", "ONF", "MT", "NX"]
 
