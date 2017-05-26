@@ -269,6 +269,11 @@ NX_LEARN_DST_OUTPUT = 2 << 11  # Add OFPAT_OUTPUT action.
 NX_LEARN_DST_RESERVED = 3 << 11  # Not yet defined.
 NX_LEARN_DST_MASK = 3 << 11
 
+# nx_ct constants
+NX_CT_F_COMMIT = 1 << 0
+NX_CT_F_FORCE = 1 << 1
+NX_CT_RECIRC_NONE = 0xff  # OFPTT_ALL
+
 # nx_nat constants
 NX_NAT_RANGE_IPV4_MIN = 1 << 0
 NX_NAT_RANGE_IPV4_MAX = 1 << 1
