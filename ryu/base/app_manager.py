@@ -23,20 +23,20 @@ The central management of Ryu applications.
 
 """
 
+import gc
 import inspect
 import itertools
 import logging
-import sys
 import os
-import gc
+import sys
 
 from ryu import cfg
 from ryu import utils
 from ryu.app import wsgi
-from ryu.controller.handler import register_instance, get_dependent_services
-from ryu.controller.controller import Datapath
 from ryu.controller import event
+from ryu.controller.controller import Datapath
 from ryu.controller.event import EventRequestBase, EventReplyBase
+from ryu.controller.handler import register_instance, get_dependent_services
 from ryu.lib import hub
 from ryu.ofproto import ofproto_protocol
 
@@ -153,8 +153,8 @@ class RyuApp(object):
     def __init__(self, *_args, **_kwargs):
         super(RyuApp, self).__init__()
         self.name = self.__class__.__name__
-        self.event_handlers = {}        # ev_cls -> handlers:list
-        self.observers = {}     # ev_cls -> observer-name -> states:set
+        self.event_handlers = {}  # ev_cls -> handlers:list
+        self.observers = {}  # ev_cls -> observer-name -> states:set
         self.threads = []
         self.main_thread = None
         self.events = hub.Queue(128)
@@ -168,6 +168,7 @@ class RyuApp(object):
         # prevent accidental creation of instances of this class outside RyuApp
         class _EventThreadStop(event.EventBase):
             pass
+
         self._event_stop = _EventThreadStop()
         self.is_active = True
 
@@ -387,6 +388,7 @@ class AppManager(object):
         self.contexts_cls = {}
         self.contexts = {}
         self.close_sem = hub.Semaphore()
+        self.seq = []
 
     def load_app(self, name):
         mod = utils.import_module(name)
@@ -403,6 +405,7 @@ class AppManager(object):
         app_lists = [app for app
                      in itertools.chain.from_iterable(app.split(',')
                                                       for app in app_lists)]
+        edges = set()
         while len(app_lists) > 0:
             app_cls_name = app_lists.pop(0)
 
@@ -435,6 +438,53 @@ class AppManager(object):
             if services:
                 app_lists.extend([s for s in set(services)
                                   if s not in app_lists])
+            # Interdependence info
+            for i in services:
+                edges.add((app_cls_name, i))
+
+        # cal topo seq
+        def topo(seq):
+            seq = list(set(seq))
+            m = {}
+            cnt = {}
+            for p in seq:
+                if p[0] not in m.keys()():
+                    m[p[0]] = set()
+                if p[0] not in cnt.keys()():
+                    cnt[p[0]] = 0
+                if p[1] not in cnt.keys()():
+                    cnt[p[1]] = 0
+                m[p[0]].add(p[1])
+                cnt[p[1]] += 1
+            toposeq = []
+            q = []
+            for i in cnt.keys()():
+                if cnt[i] == 0:
+                    q.append(i)
+
+            if len(q) == 0:
+                raise Exception("Interdependence error")
+
+            while len(q) > 0:
+                cur = q[0]
+                toposeq.append(cur)
+                q = q[1:]
+                if cur not in m.keys():
+                    continue
+                for i in m[cur]:
+                    cnt[i] -= 1
+                    if cnt[i] == 0:
+                        q.append(i)
+
+            if len(cnt.keys()) != len(toposeq):
+                raise Exception("Interdependence error")
+            # reverse to get start seq
+            return toposeq[::-1]
+
+        try:
+            self.seq = [i for i in topo(edges) if i not in context_modules]
+        except Exception as e:
+            self.seq = []
 
     def create_contexts(self):
         for key, cls in self.contexts_cls.items():
@@ -505,8 +555,13 @@ class AppManager(object):
         return app
 
     def instantiate_apps(self, *args, **kwargs):
-        for app_name, cls in self.applications_cls.items():
-            self._instantiate(app_name, cls, *args, **kwargs)
+        if len(self.seq) == 0:
+            for app_name, cls in self.applications_cls.items():
+                self._instantiate(app_name, cls, *args, **kwargs)
+        else:
+            # modify the start seq
+            for app_name in self.seq:
+                self._instantiate(app_name, self.applications_cls[app_name], *args, **kwargs)
 
         self._update_bricks()
         self.report_bricks()
