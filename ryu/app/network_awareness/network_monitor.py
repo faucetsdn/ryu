@@ -221,7 +221,7 @@ class NetworkMonitor(app_manager.RyuApp):
 
     def _get_free_bw(self, capacity, speed):
         # BW:Mbit/s
-        return max((capacity - speed * 8)/10**3, 0)
+        return max(capacity/10**3 - speed * 8/10**6, 0)
 
     def _get_time(self, sec, nsec):
         return sec + nsec / (10 ** 9)
