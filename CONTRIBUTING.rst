@@ -37,28 +37,34 @@ features (it's not a must though).
 
 Python version and libraries
 ============================
-* Python 2.6+
-  As RHEL 6 adopted python 2.6, features only for 2.7+ should be avoided.
+* Python 2.7, 3.4, 3.5:
 
-* standard library + widely used library
-  Basically widely used == OpenStack adopted
-  As usual there are exceptions. gevents. Or python binding library for other
+  Ryu supports multiple Python version.  CI tests on Travis-CI is running
+  on these versions.
+
+* standard library + widely used library:
+
+  Basically widely used == OpenStack adopted.
+  As usual there are exceptions.  Or python binding library for other
   component.
 
 Coding style guide
 ==================
-* pep8
-  As python is used, PEP8 is would be hopefully mandatory for
-  http://www.python.org/dev/peps/pep-0008/
+* pep8:
 
-* pylint
+  As python is used, PEP8 is would be hopefully mandatory for
+  https://www.python.org/dev/peps/pep-0008/
+
+* pylint:
+
   Although pylint is useful for finding bugs, but pylint score not very
   important for now because we're still at early development stage.
+  https://www.pylint.org/
 
-* Google python style guide is very helpful
-  http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+* Google python style guide is very helpful:
+  http://google.github.io/styleguide/pyguide.html
 
-  Guidelines derived from Guido's Recommendations
+* Guidelines derived from Guido's Recommendations:
 
   =============================   =================   ========
   Type                            Public              Internal
@@ -76,10 +82,11 @@ Coding style guide
   Local Variables                 lower_with_under
   =============================   =================   ========
 
-* OpenStack Nova style guide
+* OpenStack Nova style guide:
   https://github.com/openstack/nova/blob/master/HACKING.rst
 
-* JSON files
+* JSON files:
+
   Ryu source tree has JSON files under ryu/tests/unit/ofproto/json.
   They are used by unit tests.  To make patches easier to read,
   they are normalized using tools/normalize_json.py.  Please re-run
