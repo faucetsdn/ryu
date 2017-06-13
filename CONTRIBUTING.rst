@@ -22,9 +22,15 @@ style.
 
 Please check your changes with pep8 and run unittests to make sure
 that they don't break the existing features. The following command
-does both for you:
+does both for you.
 
-fujita@rose:~/git/ryu$ ./run_tests.sh
+.. code-block:: bash
+
+  # Install dependencies of tests
+  $ pip install -r tools/test-requires
+
+  # Execute unit tests and pep8
+  $ ./run_tests.sh
 
 Of course, you are encouraged to add unittests when you add new
 features (it's not a must though).
