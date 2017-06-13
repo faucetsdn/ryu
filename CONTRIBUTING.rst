@@ -5,12 +5,20 @@ How to Get Your Change Into Ryu
 Submitting a change
 ===================
 
-Send patches to ryu-devel@lists.sourceforge.net. Please don't use 'pull
-request' on github. We expect you to send a patch in Linux kernel
-development style. If you are not familiar with it, please read the
-following document:
+Send patches to ryu-devel@lists.sourceforge.net. Please don't use "Pull
+Request" on GitHub. We expect you to send patches in "git-format-patch"
+style.
 
-https://www.kernel.org/doc/Documentation/SubmittingPatches
+.. code-block:: bash
+
+  # "N" means the number of commits to be included
+  $ git format-patch -s HEAD~N
+
+  # To add cover (e.g., [PATCH 0/X]), specify "--cover-letter" option
+  $ git format-patch -s --cover-letter HEAD~N
+
+  # You can send patches by "git send-email" command
+  $ git send-email --to="ryu-devel@lists.sourceforge.net" *.patch
 
 Please check your changes with pep8 and run unittests to make sure
 that they don't break the existing features. The following command
