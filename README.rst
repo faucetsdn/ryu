@@ -47,6 +47,16 @@ If you want to use the functionalities, please install requirements::
 Please refer to tools/optional-requires for details.
 
 
+Prerequisites
+=============
+If you got some error messages at installation step, please confirm
+dependencies for building required Python packages.
+
+On Ubuntu(16.04 LTS or later)::
+
+  % apt install gcc python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev zlib1g-dev
+
+
 Support
 =======
 Ryu Official site is `<http://osrg.github.io/ryu/>`_.
