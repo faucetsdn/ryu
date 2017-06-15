@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import sys
+
 from ryu.lib import hub
 hub.patch(thread=False)
 
@@ -43,10 +46,28 @@ CONF.register_cli_opts([
     cfg.BoolOpt('enable-debugger', default=False,
                 help='don\'t overwrite Python standard threading library'
                 '(use only for debugging)'),
+    cfg.StrOpt('user-flags', default=None,
+               help='Additional flags file for user applications'),
 ])
 
 
+def _parse_user_flags():
+    """
+    Parses user-flags file and loads it to register user defined options.
+    """
+    try:
+        idx = list(sys.argv).index('--user-flags')
+        user_flags_file = sys.argv[idx + 1]
+    except (ValueError, IndexError):
+        user_flags_file = ''
+
+    if user_flags_file and os.path.isfile(user_flags_file):
+        from ryu.utils import _import_module_file
+        _import_module_file(user_flags_file)
+
+
 def main(args=None, prog=None):
+    _parse_user_flags()
     try:
         CONF(args=args, prog=prog,
              project='ryu', version='ryu-manager %s' % version,
@@ -65,7 +86,6 @@ def main(args=None, prog=None):
         hub.patch(thread=True)
 
     if CONF.pid_file:
-        import os
         with open(CONF.pid_file, 'w') as pid_file:
             pid_file.write(str(os.getpid()))
 
