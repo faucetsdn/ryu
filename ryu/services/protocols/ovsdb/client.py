@@ -155,12 +155,12 @@ def _filter_schema(schema, schema_tables, exclude_table_columns):
     """
 
     tables = {}
-    for tbl_name, tbl_data in schema['tables'].iteritems():
+    for tbl_name, tbl_data in schema['tables'].items():
         if not schema_tables or tbl_name in schema_tables:
             columns = {}
 
             exclude_columns = exclude_table_columns.get(tbl_name, [])
-            for col_name, col_data in tbl_data['columns'].iteritems():
+            for col_name, col_data in tbl_data['columns'].items():
                 if col_name in exclude_columns:
                     continue
 
