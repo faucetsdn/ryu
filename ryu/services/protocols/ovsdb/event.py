@@ -119,13 +119,17 @@ class EventModifyReply(ryu_event.EventReplyBase):
 
 
 class EventNewOVSDBConnection(ryu_event.EventBase):
-    def __init__(self, system_id):
+    def __init__(self, client):
         super(EventNewOVSDBConnection, self).__init__()
-        self.system_id = system_id
+        self.client = client
 
     def __str__(self):
         return '%s<system_id=%s>' % (self.__class__.__name__,
-                                     self.system_id)
+                                     self.client.system_id)
+
+    @property
+    def system_id(self):
+        return self.client.system_id
 
 
 class EventReadRequest(ryu_event.EventRequestBase):

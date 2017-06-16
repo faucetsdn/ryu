@@ -146,7 +146,7 @@ class OVSDB(app_manager.RyuApp):
         if app:
             self._clients[app.name] = app
             app.start()
-            ev = event.EventNewOVSDBConnection(app.system_id)
+            ev = event.EventNewOVSDBConnection(app)
             self.send_event_to_observers(ev)
 
         else:
