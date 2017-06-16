@@ -20,6 +20,7 @@ on a bridge.
     import uuid
 
     from ryu.base import app_manager
+    from ryu.controller.handler import set_ev_cls
     from ryu.services.protocols.ovsdb import api as ovsdb
     from ryu.services.protocols.ovsdb import event as ovsdb_event
 
@@ -28,8 +29,11 @@ on a bridge.
         @set_ev_cls(ovsdb_event.EventNewOVSDBConnection)
         def handle_new_ovsdb_connection(self, ev):
             system_id = ev.system_id
+            addr = ev.client.address
             self.logger.info('New OVSDB connection from system id %s',
-                             systemd_id)
+                             system_id)
+            self.logger.info('The connection address id %s',
+                             addr)
 
         def create_port(self, system_id, bridge_name, name):
             new_iface_uuid = uuid.uuid4()
