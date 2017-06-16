@@ -12,12 +12,11 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ryu.lib import dpid as dpidlib
-from ryu.services.protocols.ovsdb import event as ovsdb_event
-
-import six
 
 import uuid
+
+from ryu.lib import dpid as dpidlib
+from ryu.services.protocols.ovsdb import event as ovsdb_event
 
 
 def _get_table_row(table, attr_name, attr_value, tables):
@@ -381,7 +380,7 @@ def set_controller(manager, system_id, bridge_name,
             controller.connection_mode = ['out-of-band']
 
         if controller_info:
-            for key, val in six.iteritems(controller_info):
+            for key, val in controller_info.items():
                 setattr(controller, key, val)
 
         bridge.controller = [controller]
@@ -421,11 +420,11 @@ def create_port(manager, system_id, bridge_name, port_info, iface_info=None,
             port_info['name'] = default_port_name
 
         iface = insert(tables['Interface'], iface_insert_uuid)
-        for key, val in six.iteritems(iface_info):
+        for key, val in iface_info.items():
             setattr(iface, key, val)
 
         port = insert(tables['Port'], port_insert_uuid)
-        for key, val in six.iteritems(port_info):
+        for key, val in port_info.items():
             setattr(port, key, val)
 
         port.interfaces = [iface]
