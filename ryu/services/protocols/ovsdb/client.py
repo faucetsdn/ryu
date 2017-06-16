@@ -286,7 +286,8 @@ class RemoteOvsdb(app_manager.RyuApp):
     @classmethod
     def factory(cls, sock, address, probe_interval=None, min_backoff=None,
                 max_backoff=None, schema_tables=None,
-                schema_exclude_columns={}, *args, **kwargs):
+                schema_exclude_columns=None, *args, **kwargs):
+        schema_exclude_columns = schema_exclude_columns or {}
         ovs_stream = stream.Stream(sock, None, None)
         connection = jsonrpc.Connection(ovs_stream)
         schemas = discover_schemas(connection)
