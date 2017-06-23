@@ -83,7 +83,7 @@ class TestVSCtl(unittest.TestCase):
     def _docker_inspect_ip_addr(cls, container):
         return _run(
             'docker inspect --format="{{.NetworkSettings.IPAddress}}" %s' %
-            container)[0]
+            container)[0].strip('"')
 
     @classmethod
     def _set_up_mn_container(cls):
