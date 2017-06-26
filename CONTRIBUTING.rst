@@ -87,7 +87,7 @@ Coding style guide
 
 * JSON files:
 
-  Ryu source tree has JSON files under ryu/tests/unit/ofproto/json.
+  Ryu source tree has JSON files under tests/unit/ofproto/json.
   They are used by unit tests.  To make patches easier to read,
   they are normalized using tools/normalize_json.py.  Please re-run
   the script before committing changes to these JSON files.

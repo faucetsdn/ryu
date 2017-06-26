@@ -122,5 +122,5 @@ switch? Move to `the next step
 can learn from the existing Ryu applications at `ryu/app
 <https://github.com/osrg/ryu/blob/master/ryu/app/>`_ directory and
 `integrated tests
-<https://github.com/osrg/ryu/blob/master/ryu/tests/integrated/>`_
+<https://github.com/osrg/ryu/blob/master/tests/integrated/>`_
 directory.

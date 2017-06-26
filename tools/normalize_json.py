@@ -17,7 +17,7 @@
 # limitations under the License.
 
 # usage example:
-# for x in ../ryu/tests/unit/ofproto/json/**/*.json;do echo $x;./normalize_json.py < $x > xx&& mv xx $x;done
+# for x in ../tests/unit/ofproto/json/**/*.json;do echo $x;./normalize_json.py < $x > xx&& mv xx $x;done
 
 import json
 import sys
