@@ -90,7 +90,7 @@ run_tests() {
 run_pylint() {
   echo "Running pylint ..."
   PYLINT_OPTIONS="--rcfile=.pylintrc --output-format=parseable"
-  PYLINT_INCLUDE="ryu bin/ryu bin/ryu-manager tests/integrated tests/packet_data_generator3 tests/unit"
+  PYLINT_INCLUDE="ryu bin/ryu bin/ryu-manager ryu/tests/bin/ryu-client"
   export PYTHONPATH=$PYTHONPATH:.ryu
   PYLINT_LOG=pylint.log
 
@@ -115,11 +115,11 @@ run_pep8() {
 run_integrated() {
   echo "Running integrated test ..."
 
-  INTEGRATED_TEST_RUNNER="./tests/integrated/run_tests_with_ovs12.py"
+  INTEGRATED_TEST_RUNNER="./ryu/tests/integrated/run_tests_with_ovs12.py"
   sudo PYTHONPATH=. nosetests -s $INTEGRATED_TEST_RUNNER 
 }
 #NOSETESTS="nosetests $noseopts $noseargs"
-NOSETESTS="${PYTHON} ./tests/run_tests.py $noseopts $noseargs"
+NOSETESTS="${PYTHON} ./ryu/tests/run_tests.py $noseopts $noseargs"
 
 #if [ -n "$PLUGIN_DIR" ]
 #then

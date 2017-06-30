@@ -9,8 +9,8 @@ Running integrated tests
 
 Some testing scripts are available.
 
-* tests/integrated/test_vrrp_linux_multi.py
-* tests/integrated/test_vrrp_multi.py
+* ryu/tests/integrated/test_vrrp_linux_multi.py
+* ryu/tests/integrated/test_vrrp_multi.py
 
 Each files include how to run in the comment.
 Please refer to it.
