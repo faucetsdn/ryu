@@ -333,6 +333,7 @@ class RemoteOvsdb(app_manager.RyuApp):
         fsm.set_name(name)
 
         kwargs = kwargs.copy()
+        kwargs['socket'] = sock
         kwargs['address'] = address
         kwargs['idl'] = idl
         kwargs['name'] = name
@@ -359,6 +360,7 @@ class RemoteOvsdb(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(RemoteOvsdb, self).__init__(*args, **kwargs)
+        self.socket = kwargs['socket']
         self.address = kwargs['address']
         self._idl = kwargs['idl']
         self.system_id = kwargs['system_id']
