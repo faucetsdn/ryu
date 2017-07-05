@@ -149,3 +149,19 @@ class Test_OfctlString(unittest.TestCase):
                         {'len': 8,
                          'table_id': 33,
                          'type': 1}})
+
+    def test_multi_unordered(self):
+        self._test_str(self.fake_dp_of15,
+                       'pop_vlan,goto_table:33,output:1',
+                       {'OFPInstructionActions':
+                        {'actions': [{'OFPActionPopVlan': {'len': 8,
+                                                           'type': 18}},
+                                     {'OFPActionOutput': {'len': 16,
+                                                          'max_len': 65509,
+                                                          'port': 1,
+                                                          'type': 0}}],
+                         'type': 4}},
+                       {'OFPInstructionGotoTable':
+                        {'len': 8,
+                         'table_id': 33,
+                         'type': 1}})

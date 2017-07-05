@@ -147,12 +147,17 @@ def ofp_instruction_from_jsondict(dp, jsonlist, encap=True):
     """
     proto = dp.ofproto
     parser = dp.ofproto_parser
+    actions = []
     result = []
     for jsondict in jsonlist:
         assert len(jsondict) == 1
         k, v = list(jsondict.items())[0]
         cls = getattr(parser, k)
-        if not issubclass(cls, parser.OFPAction):
+        if issubclass(cls, parser.OFPAction):
+            if encap:
+                actions.append(cls.from_jsondict(v))
+                continue
+        else:
             ofpinst = getattr(parser, 'OFPInstruction', None)
             if not ofpinst or not issubclass(cls, ofpinst):
                 raise ValueError("Supplied jsondict is of wrong type: %s",
@@ -161,20 +166,13 @@ def ofp_instruction_from_jsondict(dp, jsonlist, encap=True):
 
     if not encap:
         return result
-    insts = []
-    actions = []
-    result.append(None)  # sentinel
-    for act_or_inst in result:
-        if isinstance(act_or_inst, parser.OFPAction):
-            actions.append(act_or_inst)
-        else:
-            if actions:
-                insts.append(parser.OFPInstructionActions(
-                    proto.OFPIT_APPLY_ACTIONS, actions))
-                actions = []
-            if act_or_inst is not None:
-                insts.append(act_or_inst)
-    return insts
+
+    if actions:
+        # Although the OpenFlow spec says Apply Actions is executed first,
+        # let's place it in the head as a precaution.
+        result = [parser.OFPInstructionActions(
+            proto.OFPIT_APPLY_ACTIONS, actions)] + result
+    return result
 
 
 class StringifyMixin(stringify.StringifyMixin):
