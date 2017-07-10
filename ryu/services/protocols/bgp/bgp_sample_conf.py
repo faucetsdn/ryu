@@ -1,3 +1,6 @@
+
+from __future__ import absolute_import
+
 import os
 
 from ryu.services.protocols.bgp.bgpspeaker import RF_VPN_V4
