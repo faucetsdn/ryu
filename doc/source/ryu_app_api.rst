@@ -11,7 +11,7 @@ Threads, events, and event queues
 Ryu applications are single-threaded entities which implement
 various functionalities in Ryu.  Events are messages between them.
 
-Ryu applications send asynchronous events each other.
+Ryu applications send asynchronous events to each other.
 Besides that, there are some Ryu-internal event sources which
 are not Ryu applications.  One of examples of such event sources
 is OpenFlow controller.
@@ -22,11 +22,11 @@ between Ryu applications.
 Each Ryu application has a receive queue for events.
 The queue is FIFO and preserves the order of events.
 Each Ryu application has a thread for event processing.
-The thread keep draining the receive queue by dequeueing an event
+The thread keeps draining the receive queue by dequeueing an event
 and calling the appropritate event handler for the event type.
 Because the event handler is called in the context of
-the event processing thread, it should be careful for blocking.
-I.e. while an event handler is blocked, no further events for
+the event processing thread, it should be careful when blocking.
+While an event handler is blocked, no further events for
 the Ryu application will be processed.
 
 There are kinds of events which are used to implement synchronous
@@ -82,7 +82,7 @@ For example, EventOFPPacketIn for packet-in message.
 The OpenFlow controller part of Ryu automatically decodes OpenFlow messages
 received from switches and send these events to Ryu applications which
 expressed an interest using ryu.controller.handler.set_ev_cls.
-OpenFlow event classes are subclass of the following class.
+OpenFlow event classes are subclasses of the following class.
 
 .. autoclass:: ryu.controller.ofp_event.EventOFPMsgBase
 
