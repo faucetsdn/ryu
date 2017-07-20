@@ -271,15 +271,24 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         self.logger.debug(
             "EventOFPErrorMsg received.\n"
             "version=%s, msg_type=%s, msg_len=%s, xid=%s\n"
-            " `-- msg_type: %s\n"
-            "OFPErrorMsg(type=%s, code=%s, data=b'%s')\n"
-            " |-- type: %s\n"
-            " |-- code: %s",
+            " `-- msg_type: %s",
             hex(msg.version), hex(msg.msg_type), hex(msg.msg_len),
-            hex(msg.xid), ofp.ofp_msg_type_to_str(msg.msg_type),
-            hex(msg.type), hex(msg.code), utils.binary_str(msg.data),
-            ofp.ofp_error_type_to_str(msg.type),
-            ofp.ofp_error_code_to_str(msg.type, msg.code))
+            hex(msg.xid),
+            ofp.ofp_msg_type_to_str(msg.msg_type))
+        if msg.type == ofp.OFPET_EXPERIMENTER:
+            self.logger.debug(
+                "OFPErrorExperimenterMsg(type=%s, exp_type=%s,"
+                " experimenter=%s, data=b'%s')",
+                hex(msg.type), hex(msg.exp_type),
+                hex(msg.experimenter), utils.binary_str(msg.data))
+        else:
+            self.logger.debug(
+                "OFPErrorMsg(type=%s, code=%s, data=b'%s')\n"
+                " |-- type: %s\n"
+                " |-- code: %s",
+                hex(msg.type), hex(msg.code), utils.binary_str(msg.data),
+                ofp.ofp_error_type_to_str(msg.type),
+                ofp.ofp_error_code_to_str(msg.type, msg.code))
         if msg.type == ofp.OFPET_HELLO_FAILED:
             self.logger.debug(
                 " `-- data: %s", msg.data.decode('ascii'))

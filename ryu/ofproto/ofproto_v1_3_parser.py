@@ -214,6 +214,16 @@ class OFPErrorMsg(MsgBase):
     OFPET_EXPERIMENTER            N/A
     ============================= ===========
 
+    If ``type == OFPET_EXPERIMENTER``, this message has also the following
+    attributes.
+
+    ============= ======================================================
+    Attribute     Description
+    ============= ======================================================
+    exp_type      Experimenter defined type
+    experimenter  Experimenter ID
+    ============= ======================================================
+
     Example::
 
         @set_ev_cls(ofp_event.EventOFPErrorMsg,
@@ -225,60 +235,67 @@ class OFPErrorMsg(MsgBase):
                               'message=%s',
                               msg.type, msg.code, utils.hex_array(msg.data))
     """
-    def __init__(self, datapath, type_=None, code=None, data=None):
+    def __init__(self, datapath, type_=None, code=None, data=None, **kwargs):
         super(OFPErrorMsg, self).__init__(datapath)
         self.type = type_
         self.code = code
         self.data = data
+        if self.type == ofproto.OFPET_EXPERIMENTER:
+            self.exp_type = kwargs.get('exp_type', None)
+            self.experimenter = kwargs.get('experimenter', None)
 
     @classmethod
     def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
         type_, = struct.unpack_from('!H', six.binary_type(buf),
                                     ofproto.OFP_HEADER_SIZE)
-        if type_ == ofproto.OFPET_EXPERIMENTER:
-            return OFPErrorExperimenterMsg.parser(datapath, version, msg_type,
-                                                  msg_len, xid, buf)
         msg = super(OFPErrorMsg, cls).parser(datapath, version, msg_type,
                                              msg_len, xid, buf)
-        msg.type, msg.code = struct.unpack_from(
-            ofproto.OFP_ERROR_MSG_PACK_STR, msg.buf,
-            ofproto.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto.OFP_ERROR_MSG_SIZE:]
+        if type_ == ofproto.OFPET_EXPERIMENTER:
+            (msg.type, msg.exp_type, msg.experimenter,
+             msg.data) = cls.parse_experimenter_body(buf)
+        else:
+            (msg.type, msg.code,
+             msg.data) = cls.parse_body(buf)
         return msg
-
-    def _serialize_body(self):
-        assert self.data is not None
-        msg_pack_into(ofproto.OFP_ERROR_MSG_PACK_STR, self.buf,
-                      ofproto.OFP_HEADER_SIZE, self.type, self.code)
-        self.buf += self.data
-
-
-class OFPErrorExperimenterMsg(MsgBase):
-    def __init__(self, datapath, type_=None, exp_type=None, experimenter=None,
-                 data=None):
-        super(OFPErrorExperimenterMsg, self).__init__(datapath)
-        self.type = ofproto.OFPET_EXPERIMENTER
-        self.exp_type = exp_type
-        self.experimenter = experimenter
-        self.data = data
 
     @classmethod
-    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
-        cls.cls_msg_type = msg_type
-        msg = super(OFPErrorExperimenterMsg, cls).parser(
-            datapath, version, msg_type, msg_len, xid, buf)
-        msg.type, msg.exp_type, msg.experimenter = struct.unpack_from(
-            ofproto.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR, msg.buf,
+    def parse_body(cls, buf):
+        type_, code = struct.unpack_from(
+            ofproto.OFP_ERROR_MSG_PACK_STR, buf,
             ofproto.OFP_HEADER_SIZE)
-        msg.data = msg.buf[ofproto.OFP_ERROR_EXPERIMENTER_MSG_SIZE:]
-        return msg
+        data = buf[ofproto.OFP_ERROR_MSG_SIZE:]
+        return type_, code, data
+
+    @classmethod
+    def parse_experimenter_body(cls, buf):
+        type_, exp_type, experimenter = struct.unpack_from(
+            ofproto.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR, buf,
+            ofproto.OFP_HEADER_SIZE)
+        data = buf[ofproto.OFP_ERROR_EXPERIMENTER_MSG_SIZE:]
+        return type_, exp_type, experimenter, data
 
     def _serialize_body(self):
         assert self.data is not None
-        msg_pack_into(ofproto.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR,
-                      self.buf, ofproto.OFP_HEADER_SIZE,
-                      self.type, self.exp_type, self.experimenter)
-        self.buf += self.data
+        if self.type == ofproto.OFPET_EXPERIMENTER:
+            msg_pack_into(ofproto.OFP_ERROR_EXPERIMENTER_MSG_PACK_STR,
+                          self.buf, ofproto.OFP_HEADER_SIZE,
+                          self.type, self.exp_type, self.experimenter)
+            self.buf += self.data
+        else:
+            msg_pack_into(ofproto.OFP_ERROR_MSG_PACK_STR,
+                          self.buf, ofproto.OFP_HEADER_SIZE,
+                          self.type, self.code)
+            self.buf += self.data
+
+
+# For the backward compatibility
+def OFPErrorExperimenterMsg(datapath, type_=None, exp_type=None,
+                            experimenter=None, data=None):
+    msg = OFPErrorMsg(datapath, data=data)
+    msg.type = ofproto.OFPET_EXPERIMENTER
+    msg.exp_type = exp_type
+    msg.experimenter = experimenter
+    return msg
 
 
 @_register_parser
