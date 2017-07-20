@@ -828,7 +828,7 @@ class TestOFPErrorMsg(unittest.TestCase):
         self._test_serialize(type_, code, data)
 
     def test_serialize_max(self):
-        type_ = 65535
+        type_ = 65534  # 65535 collides OFPET_EXPERIMENTER
         code = 65535
         data = b'Error Message.'.ljust(65523)
         self._test_serialize(type_, code, data)
@@ -1242,7 +1242,7 @@ class TestOFPErrorExperimenterMsg(unittest.TestCase):
         if data is not None:
             buf += data
 
-        res = OFPErrorExperimenterMsg.parser(
+        res = OFPErrorMsg.parser(
             object, version, msg_type, msg_len, xid, buf)
 
         eq_(res.version, version)
