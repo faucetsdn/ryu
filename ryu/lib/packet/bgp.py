@@ -4613,6 +4613,7 @@ class BGPFlowSpecTrafficMarkingCommunity(_ExtendedCommunity):
 class BGPFlowSpecVlanActionCommunity(_ExtendedCommunity):
     """
     Flow Specification Vlan Actions.
+
     ========= ===============================================
     Attribute Description
     ========= ===============================================
@@ -4686,6 +4687,7 @@ class BGPFlowSpecVlanActionCommunity(_ExtendedCommunity):
 class BGPFlowSpecTPIDActionCommunity(_ExtendedCommunity):
     """
     Flow Specification TPID Actions.
+
     ========= =========================================================
     Attribute Description
     ========= =========================================================
