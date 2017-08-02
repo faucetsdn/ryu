@@ -363,7 +363,7 @@ class nd_router_advert(stringify.StringifyMixin):
             if cls_ is not None:
                 option = cls_.parser(buf, offset)
             else:
-                option = buf[offset:offset + (length * 8 - 2)]
+                option = buf[offset:offset + (length * 8)]
             options.append(option)
             offset += len(option)
         msg = cls(ch_l, res >> 6, rou_l, rea_t, ret_t, options)
