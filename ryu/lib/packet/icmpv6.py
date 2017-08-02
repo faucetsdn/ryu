@@ -206,7 +206,9 @@ class nd_neighbor(stringify.StringifyMixin):
         offset += cls._MIN_LEN
         option = None
         if len(buf) > offset:
-            (type_, ) = struct.unpack_from('!B', buf, offset)
+            (type_, length) = struct.unpack_from('!BB', buf, offset)
+            if length == 0:
+                raise struct.error('Invalid length: {len}'.format(len=length))
             cls_ = cls._ND_OPTION_TYPES.get(type_)
             if cls_ is not None:
                 option = cls_.parser(buf, offset)
@@ -277,7 +279,9 @@ class nd_router_solicit(stringify.StringifyMixin):
         offset += cls._MIN_LEN
         option = None
         if len(buf) > offset:
-            (type_, ) = struct.unpack_from('!B', buf, offset)
+            (type_, length) = struct.unpack_from('!BB', buf, offset)
+            if length == 0:
+                raise struct.error('Invalid length: {len}'.format(len=length))
             cls_ = cls._ND_OPTION_TYPES.get(type_)
             if cls_ is not None:
                 option = cls_.parser(buf, offset)
@@ -359,6 +363,8 @@ class nd_router_advert(stringify.StringifyMixin):
         options = []
         while len(buf) > offset:
             (type_, length) = struct.unpack_from('!BB', buf, offset)
+            if length == 0:
+                raise struct.error('Invalid length: {len}'.format(len=length))
             cls_ = cls._ND_OPTION_TYPES.get(type_)
             if cls_ is not None:
                 option = cls_.parser(buf, offset)
