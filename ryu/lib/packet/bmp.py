@@ -208,7 +208,7 @@ class BMPPeerMessage(BMPMessage):
         if peer_flags & (1 << 7):
             peer_address = addrconv.ipv6.bin_to_text(peer_address)
         else:
-            peer_address = addrconv.ipv4.bin_to_text(peer_address[:4])
+            peer_address = addrconv.ipv4.bin_to_text(peer_address[-4:])
 
         peer_bgp_id = addrconv.ipv4.bin_to_text(peer_bgp_id)
 
@@ -234,7 +234,8 @@ class BMPPeerMessage(BMPMessage):
             flags |= (1 << 7)
             peer_address = addrconv.ipv6.text_to_bin(self.peer_address)
         else:
-            peer_address = addrconv.ipv4.text_to_bin(self.peer_address)
+            peer_address = struct.pack(
+                '!12x4s', addrconv.ipv4.text_to_bin(self.peer_address))
 
         peer_bgp_id = addrconv.ipv4.text_to_bin(self.peer_bgp_id)
 
@@ -562,7 +563,7 @@ class BMPPeerUpNotification(BMPPeerMessage):
          remote_port) = struct.unpack_from(cls._PACK_STR, six.binary_type(rest))
 
         if '.' in kwargs['peer_address']:
-            local_address = addrconv.ipv4.bin_to_text(local_address[:4])
+            local_address = addrconv.ipv4.bin_to_text(local_address[-4:])
         elif ':' in kwargs['peer_address']:
             local_address = addrconv.ipv6.bin_to_text(local_address)
         else:
@@ -586,7 +587,8 @@ class BMPPeerUpNotification(BMPPeerMessage):
         msg = super(BMPPeerUpNotification, self).serialize_tail()
 
         if '.' in self.local_address:
-            local_address = addrconv.ipv4.text_to_bin(self.local_address)
+            local_address = struct.pack(
+                '!12x4s', addrconv.ipv4.text_to_bin(self.local_address))
         elif ':' in self.local_address:
             local_address = addrconv.ipv6.text_to_bin(self.local_address)
         else:
