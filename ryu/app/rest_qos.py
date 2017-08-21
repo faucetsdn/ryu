@@ -557,6 +557,22 @@ class QoS(object):
         self.vlan_list[VLANID_NONE] = 0  # for VLAN=None
         self.dp = dp
         self.version = dp.ofproto.OFP_VERSION
+        # Dictionary of port name to Queue config.
+        # e.g.)
+        # self.queue_list = {
+        #     "s1-eth1": {
+        #         "0": {
+        #             "config": {
+        #                 "max-rate": "600000"
+        #             }
+        #         },
+        #         "1": {
+        #             "config": {
+        #                 "min-rate": "900000"
+        #             }
+        #         }
+        #     }
+        # }
         self.queue_list = {}
         self.CONF = CONF
         self.ovsdb_addr = None
@@ -665,7 +681,15 @@ class QoS(object):
                    'details': 'ovs_bridge is not exists'}
             return REST_COMMAND_RESULT, msg
 
-        self.queue_list.clear()
+        port_name = rest.get(REST_PORT_NAME, None)
+        vif_ports = self.ovs_bridge.get_port_name_list()
+
+        if port_name is not None:
+            if port_name not in vif_ports:
+                raise ValueError('%s port is not exists' % port_name)
+            vif_ports = [port_name]
+
+        queue_list = {}
         queue_type = rest.get(REST_QUEUE_TYPE, 'linux-htb')
         parent_max_rate = rest.get(REST_QUEUE_MAX_RATE, None)
         queues = rest.get(REST_QUEUES, [])
@@ -683,16 +707,8 @@ class QoS(object):
                 config['min-rate'] = min_rate
             if len(config):
                 queue_config.append(config)
-            self.queue_list[queue_id] = {'config': config}
+            queue_list[queue_id] = {'config': config}
             queue_id += 1
-
-        port_name = rest.get(REST_PORT_NAME, None)
-        vif_ports = self.ovs_bridge.get_port_name_list()
-
-        if port_name is not None:
-            if port_name not in vif_ports:
-                raise ValueError('%s port is not exists' % port_name)
-            vif_ports = [port_name]
 
         for port_name in vif_ports:
             try:
@@ -701,9 +717,10 @@ class QoS(object):
                                         queues=queue_config)
             except Exception as msg:
                 raise ValueError(msg)
+            self.queue_list[port_name] = queue_list
 
         msg = {'result': 'success',
-               'details': self.queue_list}
+               'details': queue_list}
 
         return REST_COMMAND_RESULT, msg
 
@@ -718,9 +735,9 @@ class QoS(object):
 
     @rest_command
     def delete_queue(self, rest, vlan_id):
-        self.queue_list.clear()
         if self._delete_queue():
             msg = 'success'
+            self.queue_list.clear()
         else:
             msg = 'failure'
 
