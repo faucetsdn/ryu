@@ -717,7 +717,6 @@ class Switches(app_manager.RyuApp):
             # LOG.debug('A port was deleted.' +
             #           '(datapath id = %s, port number = %s)',
             #           dp.id, ofpport.port_no)
-            self.port_state[dp.id].remove(ofpport.port_no)
             self.send_event_to_observers(
                 event.EventPortDelete(Port(dp.id, dp.ofproto, ofpport)))
 
@@ -729,6 +728,8 @@ class Switches(app_manager.RyuApp):
                 self.ports.del_port(port)
                 self._link_down(port)
                 self.lldp_event.set()
+
+            self.port_state[dp.id].remove(ofpport.port_no)
 
         else:
             assert reason == dp.ofproto.OFPPR_MODIFY
