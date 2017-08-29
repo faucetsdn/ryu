@@ -300,7 +300,7 @@ class RemoteOvsdb(app_manager.RyuApp):
                                       schema_exclude_columns)
 
         fsm = reconnect.Reconnect(now())
-        fsm.set_name('%s:%s' % address)
+        fsm.set_name('%s:%s' % address[:2])
         fsm.enable(now())
         fsm.set_passive(True, now())
         fsm.set_max_tries(-1)
@@ -390,8 +390,8 @@ class RemoteOvsdb(app_manager.RyuApp):
             if proxy_ev_cls:
                 self.send_event_to_observers(proxy_ev_cls(ev))
         except Exception:
-            self.logger.exception('Error submitting specific event for OVSDB',
-                                  self.system_id)
+            self.logger.exception(
+                'Error submitting specific event for OVSDB %s', self.system_id)
 
     def _idl_loop(self):
         while self.is_active:
