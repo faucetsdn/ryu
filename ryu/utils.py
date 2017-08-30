@@ -20,8 +20,6 @@ import os
 import sys
 
 import six
-from pip import req as pip_req
-from pip.download import PipSession
 
 
 LOG = logging.getLogger('ryu.utils')
@@ -142,6 +140,9 @@ def parse_requirements(requirements_files=None):
      is ['requirements.txt', 'tools/pip-requires'].
     :return: List of requirements.
     """
+    from pip import req as pip_req
+    from pip.download import PipSession
+
     requirements_files = requirements_files or [
         'requirements.txt',
         'tools/pip-requires',
