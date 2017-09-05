@@ -347,6 +347,11 @@ BFD_STATUS_UNKNOWN = 1 << 0
 BFD_STATUS_DOWN = 1 << 1
 BFD_STATUS_UP = 1 << 2
 
+# Constants in frr/lib/vrf.h
+
+# VRF name length
+VRF_NAMSIZ = 36
+
 
 # Utility functions/classes
 
@@ -3012,11 +3017,75 @@ class ZebraRedistributeIPv6Delete(_ZebraRedistributeIPv6):
     """
 
 
-# TODO:
-# Implement the following messages:
-#  - FRR_ZEBRA_VRF_ADD
-#  - FRR_ZEBRA_VRF_DELETE
-#  - FRR_ZEBRA_INTERFACE_VRF_UPDATE
+class _ZebraVrf(_ZebraMessageBody):
+    """
+    Base class for FRR_ZEBRA_VRF_ADD and FRR_ZEBRA_VRF_DELETE message body.
+    """
+    # Zebra VRF Add/Delete message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | VRF Name (VRF_NAMSIZ bytes length)                            |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!%ds' % VRF_NAMSIZ
+
+    def __init__(self, vrf_name):
+        super(_ZebraVrf, self).__init__()
+        self.vrf_name = vrf_name
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_FRR_VERSION):
+        vrf_name_bin = buf[:VRF_NAMSIZ]
+        vrf_name = str(six.text_type(vrf_name_bin.strip(b'\x00'), 'ascii'))
+
+        return cls(vrf_name)
+
+    def serialize(self, version=_DEFAULT_FRR_VERSION):
+        return struct.pack(self._HEADER_FMT, self.vrf_name.encode('ascii'))
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_VRF_ADD)
+class ZebraVrfAdd(_ZebraVrf):
+    """
+    Message body class for FRR_ZEBRA_VRF_ADD.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_VRF_DELETE)
+class ZebraVrfDelete(_ZebraVrf):
+    """
+    Message body class for FRR_ZEBRA_VRF_DELETE.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_VRF_UPDATE)
+class ZebraInterfaceVrfUpdate(_ZebraMessageBody):
+    """
+    Message body class for FRR_ZEBRA_INTERFACE_VRF_UPDATE.
+    """
+    # Zebra Interface VRF Update message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Interface Index                                               |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | VRF ID                        |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!IH'  # ifindex, vrf_id
+
+    def __init__(self, ifindex, vrf_id):
+        super(ZebraInterfaceVrfUpdate, self).__init__()
+        self.ifindex = ifindex
+        self.vrf_id = vrf_id
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_FRR_VERSION):
+        (ifindex, vrf_id) = struct.unpack_from(cls._HEADER_FMT, buf)
+
+        return cls(ifindex, vrf_id)
+
+    def serialize(self, version=_DEFAULT_FRR_VERSION):
+        return struct.pack(self._HEADER_FMT, self.ifindex, self.vrf_id)
 
 
 class _ZebraBfdClient(_ZebraMessageBody):
