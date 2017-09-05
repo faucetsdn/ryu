@@ -3122,10 +3122,52 @@ class ZebraBfdClientRegister(_ZebraBfdClient):
     """
 
 
+class _ZebraInterfaceRadv(_ZebraMessageBody):
+    """
+    Base class for FRR_ZEBRA_INTERFACE_*_RADV message body.
+    """
+    # Zebra interface Router Advertisement message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Interface Index                                               |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | RA Interval                                                   |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!II'  # ifindex, interval
+    HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+
+    def __init__(self, ifindex, interval):
+        super(_ZebraInterfaceRadv, self).__init__()
+        self.ifindex = ifindex
+        self.interval = interval
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_FRR_VERSION):
+        (ifindex, interval,) = struct.unpack_from(cls._HEADER_FMT, buf)
+
+        return cls(ifindex, interval)
+
+    def serialize(self, version=_DEFAULT_FRR_VERSION):
+        return struct.pack(self._HEADER_FMT, self.ifindex, self.interval)
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_ENABLE_RADV)
+class ZebraInterfaceEnableRadv(_ZebraInterfaceRadv):
+    """
+    Message body class for FRR_ZEBRA_INTERFACE_ENABLE_RADV.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_DISABLE_RADV)
+class ZebraInterfaceDisableRadv(_ZebraInterfaceRadv):
+    """
+    Message body class for FRR_ZEBRA_INTERFACE_DISABLE_RADV.
+    """
+
+
 # TODO:
 # Implement the following messages:
-#  - FRR_ZEBRA_INTERFACE_ENABLE_RADV
-#  - FRR_ZEBRA_INTERFACE_DISABLE_RADV
 #  - FRR_ZEBRA_MPLS_LABELS_ADD
 #  - FRR_ZEBRA_MPLS_LABELS_DELETE
 
