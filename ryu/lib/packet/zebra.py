@@ -834,7 +834,7 @@ class _ZebraMessageFromZebra(ZebraMessage):
 
     @classmethod
     def parser(cls, buf):
-        return cls._parser_impl(buf, body_parser='parse_from_zebra')
+        return ZebraMessage._parser_impl(buf, body_parser='parse_from_zebra')
 
 
 # Alias
