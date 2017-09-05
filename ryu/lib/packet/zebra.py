@@ -515,8 +515,6 @@ class _NextHop(type_desc.TypeDisp, stringify.StringifyMixin):
         self.ifindex = ifindex
         self.ifname = ifname
         self.addr = addr
-        if type_ is None:
-            type_ = self._rev_lookup_type(self.__class__)
         self.type = type_
 
     @classmethod
@@ -529,33 +527,60 @@ class _NextHop(type_desc.TypeDisp, stringify.StringifyMixin):
         if subcls is None:
             raise struct.error('unsupported Nexthop type: %d' % type_)
 
-        return subcls.parse(rest)
+        nexthop, rest = subcls.parse(rest)
+        nexthop.type = type_
+        return nexthop, rest
 
     @abc.abstractmethod
     def _serialize(self):
         return b''
 
-    def serialize(self):
+    def serialize(self, version=_DEFAULT_VERSION):
+        if self.type is None:
+            if version <= 3:
+                nh_cls = _NextHop
+            elif version == 4:
+                nh_cls = _FrrNextHop
+            else:
+                raise ValueError(
+                    'Unsupported Zebra protocol version: %d' % version)
+            self.type = nh_cls._rev_lookup_type(self.__class__)
         return struct.pack(self._HEADER_FMT, self.type) + self._serialize()
+
+
+@six.add_metaclass(abc.ABCMeta)
+class _FrrNextHop(_NextHop):
+    """
+    Base class for Zebra Nexthop structure for translating nexthop types
+    on FRRouting.
+    """
 
 
 _NEXTHOP_COUNT_FMT = '!B'  # nexthop_count
 _NEXTHOP_COUNT_SIZE = struct.calcsize(_NEXTHOP_COUNT_FMT)
 
 
-def _parse_nexthops(buf):
+def _parse_nexthops(buf, version=_DEFAULT_VERSION):
     (nexthop_count,) = struct.unpack_from(_NEXTHOP_COUNT_FMT, buf)
     rest = buf[_NEXTHOP_COUNT_SIZE:]
 
+    if version <= 3:
+        nh_cls = _NextHop
+    elif version == 4:
+        nh_cls = _FrrNextHop
+    else:
+        raise struct.error(
+            'Unsupported Zebra protocol version: %d' % version)
+
     nexthops = []
     for _ in range(nexthop_count):
-        nexthop, rest = _NextHop.parse(rest)
+        nexthop, rest = nh_cls.parse(rest)
         nexthops.append(nexthop)
 
     return nexthops, rest
 
 
-def _serialize_nexthops(nexthops):
+def _serialize_nexthops(nexthops, version=_DEFAULT_VERSION):
     nexthop_count = len(nexthops)
     buf = struct.pack(_NEXTHOP_COUNT_FMT, nexthop_count)
 
@@ -563,11 +588,12 @@ def _serialize_nexthops(nexthops):
         return buf
 
     for nexthop in nexthops:
-        buf += nexthop.serialize()
+        buf += nexthop.serialize(version=version)
 
     return buf
 
 
+@_FrrNextHop.register_type(FRR_ZEBRA_NEXTHOP_IFINDEX)
 @_NextHop.register_type(ZEBRA_NEXTHOP_IFINDEX)
 class NextHopIFIndex(_NextHop):
     """
@@ -606,6 +632,7 @@ class NextHopIFName(_NextHop):
         return struct.pack(self._BODY_FMT, self.ifindex)
 
 
+@_FrrNextHop.register_type(FRR_ZEBRA_NEXTHOP_IPV4)
 @_NextHop.register_type(ZEBRA_NEXTHOP_IPV4)
 class NextHopIPv4(_NextHop):
     """
@@ -625,6 +652,7 @@ class NextHopIPv4(_NextHop):
         return addrconv.ipv4.text_to_bin(self.addr)
 
 
+@_FrrNextHop.register_type(FRR_ZEBRA_NEXTHOP_IPV4_IFINDEX)
 @_NextHop.register_type(ZEBRA_NEXTHOP_IPV4_IFINDEX)
 class NextHopIPv4IFIndex(_NextHop):
     """
@@ -669,6 +697,7 @@ class NextHopIPv4IFName(_NextHop):
         return struct.pack(self._BODY_FMT, addr, self.ifindex)
 
 
+@_FrrNextHop.register_type(FRR_ZEBRA_NEXTHOP_IPV6)
 @_NextHop.register_type(ZEBRA_NEXTHOP_IPV6)
 class NextHopIPv6(_NextHop):
     """
@@ -688,6 +717,7 @@ class NextHopIPv6(_NextHop):
         return addrconv.ipv6.text_to_bin(self.addr)
 
 
+@_FrrNextHop.register_type(FRR_ZEBRA_NEXTHOP_IPV6_IFINDEX)
 @_NextHop.register_type(ZEBRA_NEXTHOP_IPV6_IFINDEX)
 class NextHopIPv6IFIndex(_NextHop):
     """
@@ -732,6 +762,7 @@ class NextHopIPv6IFName(_NextHop):
         return struct.pack(self._BODY_FMT, addr, self.ifindex)
 
 
+@_FrrNextHop.register_type(FRR_ZEBRA_NEXTHOP_BLACKHOLE)
 @_NextHop.register_type(ZEBRA_NEXTHOP_BLACKHOLE)
 class NextHopBlackhole(_NextHop):
     """
@@ -760,6 +791,7 @@ class RegisteredNexthop(stringify.StringifyMixin):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _HEADER_FMT = '!?H'
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    # Note: connected is renamed to flags on FRRouting.
 
     def __init__(self, connected, family, prefix):
         super(RegisteredNexthop, self).__init__()
@@ -768,6 +800,14 @@ class RegisteredNexthop(stringify.StringifyMixin):
         if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
             prefix = prefix.prefix
         self.prefix = prefix
+
+    @property
+    def flags(self):
+        return self.connected
+
+    @flags.setter
+    def flags(self, v):
+        self.connected = v
 
     @classmethod
     def parse(cls, buf):
@@ -868,7 +908,9 @@ class ZebraMessage(packet_base.PacketBase):
     V3_HEADER_SIZE = struct.calcsize(_V3_HEADER_FMT)
 
     # Note: Marker should be 0xff(=255) in the version>=1 header.
+    # Also, FRRouting uses the different marker value.
     _MARKER = 0xff
+    _LT_MARKER = 0xfe
 
     def __init__(self, length=None, version=_DEFAULT_VERSION,
                  vrf_id=0, command=None, body=None):
@@ -876,14 +918,15 @@ class ZebraMessage(packet_base.PacketBase):
         self.length = length
         self.version = version
         self.vrf_id = vrf_id
-        if body is None:
-            assert command is not None
-        else:
-            assert isinstance(body, _ZebraMessageBody)
-            if command is None:
-                command = _ZebraMessageBody.rev_lookup_command(body.__class__)
         self.command = command
         self.body = body
+
+    def _fill_command(self):
+        assert isinstance(self.body, _ZebraMessageBody)
+        body_base_cls = _ZebraMessageBody
+        if self.version == 4:
+            body_base_cls = _FrrZebraMessageBody
+        self.command = body_base_cls.rev_lookup_command(self.body.__class__)
 
     @classmethod
     def get_header_size(cls, version):
@@ -891,7 +934,7 @@ class ZebraMessage(packet_base.PacketBase):
             return cls.V0_HEADER_SIZE
         elif version in [1, 2]:
             return cls.V1_HEADER_SIZE
-        elif version == 3:
+        elif version in [3, 4]:
             return cls.V3_HEADER_SIZE
         else:
             raise ValueError(
@@ -901,7 +944,7 @@ class ZebraMessage(packet_base.PacketBase):
     @classmethod
     def parse_header(cls, buf):
         (length, marker) = struct.unpack_from(cls._V0_HEADER_FMT, buf)
-        if marker != cls._MARKER:
+        if marker not in [cls._MARKER, cls._LT_MARKER]:
             command = marker
             body_buf = buf[cls.V0_HEADER_SIZE:length]
             # version=0, vrf_id=0
@@ -916,7 +959,7 @@ class ZebraMessage(packet_base.PacketBase):
 
         (length, marker, version, vrf_id, command) = struct.unpack_from(
             cls._V3_HEADER_FMT, buf)
-        if version == 3:
+        if version == 3 or (version == 4 and marker == cls._LT_MARKER):
             body_buf = buf[cls.V3_HEADER_SIZE:length]
             return length, version, vrf_id, command, body_buf
 
@@ -925,19 +968,32 @@ class ZebraMessage(packet_base.PacketBase):
             'marker=%d, version=%d' % (marker, version))
 
     @classmethod
-    def _parser_impl(cls, buf, body_parser='parse'):
+    def get_body_class(cls, version, command):
+        if version == 4:
+            return _FrrZebraMessageBody.lookup_command(command)
+        else:
+            return _ZebraMessageBody.lookup_command(command)
+
+    @classmethod
+    def _parser_impl(cls, buf, from_zebra=False):
         buf = six.binary_type(buf)
         (length, version, vrf_id, command,
          body_buf) = cls.parse_header(buf)
 
         if body_buf:
-            body_cls = _ZebraMessageBody.lookup_command(command)
-            _parser = getattr(body_cls, body_parser)
-            body = _parser(body_buf, version=version)
+            body_cls = cls.get_body_class(version, command)
+            if from_zebra:
+                body = body_cls.parse_from_zebra(body_buf, version=version)
+            else:
+                body = body_cls.parse(body_buf, version=version)
         else:
             body = None
 
         rest = buf[length:]
+
+        if from_zebra:
+            return (cls(length, version, vrf_id, command, body),
+                    _ZebraMessageFromZebra, rest)
 
         return cls(length, version, vrf_id, command, body), cls, rest
 
@@ -957,11 +1013,15 @@ class ZebraMessage(packet_base.PacketBase):
                 self._V1_HEADER_FMT,
                 self.length, self._MARKER, self.version,
                 self.command)
-        elif self.version == 3:
+        elif self.version in [3, 4]:
+            if self.version == 3:
+                _marker = self._MARKER
+            else:  # self.version == 4
+                _marker = self._LT_MARKER
             self.length = self.V3_HEADER_SIZE + body_len  # fixup
             return struct.pack(
                 self._V3_HEADER_FMT,
-                self.length, self._MARKER, self.version,
+                self.length, _marker, self.version,
                 self.vrf_id, self.command)
         else:
             raise ValueError(
@@ -969,10 +1029,13 @@ class ZebraMessage(packet_base.PacketBase):
                 % self.version)
 
     def serialize(self, _payload=None, _prev=None):
-        if isinstance(self.body, _ZebraMessageBody):
-            body = self.body.serialize(version=self.version)
-        else:
+        if self.body is None:
+            assert self.command is not None
             body = b''
+        else:
+            assert isinstance(self.body, _ZebraMessageBody)
+            self._fill_command()  # fixup
+            body = self.body.serialize(version=self.version)
 
         return self.serialize_header(len(body)) + body
 
@@ -984,7 +1047,7 @@ class _ZebraMessageFromZebra(ZebraMessage):
 
     @classmethod
     def parser(cls, buf):
-        return ZebraMessage._parser_impl(buf, body_parser='parse_from_zebra')
+        return ZebraMessage._parser_impl(buf, from_zebra=True)
 
 
 # Alias
@@ -1018,6 +1081,13 @@ class _ZebraMessageBody(type_desc.TypeDisp, stringify.StringifyMixin):
         return b''
 
 
+class _FrrZebraMessageBody(_ZebraMessageBody):
+    """
+    Pseudo message body class for translating message types on FRRouting.
+    """
+
+
+@_FrrZebraMessageBody.register_unknown_type()
 @_ZebraMessageBody.register_unknown_type()
 class ZebraUnknownMessage(_ZebraMessageBody):
     """
@@ -1059,6 +1129,8 @@ class _ZebraInterface(_ZebraMessageBody):
     # | Interface flags                                               |
     # |                                                               |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (PTM Enable)  | (PTM Status)  | v4(FRRouting)
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Metric                                                        |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Interface's MTU for IPv4                                      |
@@ -1087,14 +1159,19 @@ class _ZebraInterface(_ZebraMessageBody):
     # ll_type, hw_addr_len
     _V3_HEADER_FMT = '!%dsIBQIIIIII' % INTERFACE_NAMSIZE
     V3_HEADER_SIZE = struct.calcsize(_V3_HEADER_FMT)
+    # ifname, ifindex, status, if_flags, ptm_enable, ptm_status, metric,
+    # ifmtu, ifmtu6, bandwidth, ll_type, hw_addr_len
+    _V4_HEADER_FMT = '!%dsIBQBBIIIIII' % INTERFACE_NAMSIZE
+    V4_HEADER_SIZE = struct.calcsize(_V4_HEADER_FMT)
 
     # link_params_state (whether a link-params follows)
     _LP_STATE_FMT = '!?'
     LP_STATE_SIZE = struct.calcsize(_LP_STATE_FMT)
     # See InterfaceLinkParams class for Link params structure
 
-    def __init__(self, ifname, ifindex, status, if_flags,
-                 metric, ifmtu, ifmtu6, bandwidth,
+    def __init__(self, ifname=None, ifindex=None, status=None, if_flags=None,
+                 ptm_enable=None, ptm_status=None,
+                 metric=None, ifmtu=None, ifmtu6=None, bandwidth=None,
                  ll_type=None, hw_addr_len=0, hw_addr=None,
                  link_params=None):
         super(_ZebraInterface, self).__init__()
@@ -1102,6 +1179,8 @@ class _ZebraInterface(_ZebraMessageBody):
         self.ifindex = ifindex
         self.status = status
         self.if_flags = if_flags
+        self.ptm_enable = ptm_enable
+        self.ptm_status = ptm_status
         self.metric = metric
         self.ifmtu = ifmtu
         self.ifmtu6 = ifmtu6
@@ -1116,17 +1195,28 @@ class _ZebraInterface(_ZebraMessageBody):
 
     @classmethod
     def parse(cls, buf, version=_DEFAULT_VERSION):
+        ptm_enable = None
+        ptm_status = None
         ll_type = None
         if version <= 2:
             (ifname, ifindex, status, if_flags, metric,
              ifmtu, ifmtu6, bandwidth,
              hw_addr_len) = struct.unpack_from(cls._HEADER_FMT, buf)
             rest = buf[cls.HEADER_SIZE:]
-        else:
+        elif version == 3:
             (ifname, ifindex, status, if_flags, metric,
              ifmtu, ifmtu6, bandwidth, ll_type,
              hw_addr_len) = struct.unpack_from(cls._V3_HEADER_FMT, buf)
             rest = buf[cls.V3_HEADER_SIZE:]
+        elif version == 4:
+            (ifname, ifindex, status, if_flags, ptm_enable, ptm_status,
+             metric, ifmtu, ifmtu6, bandwidth, ll_type,
+             hw_addr_len) = struct.unpack_from(cls._V4_HEADER_FMT, buf)
+            rest = buf[cls.V4_HEADER_SIZE:]
+        else:
+            raise struct.error(
+                'Unsupported Zebra protocol version: %d'
+                % version)
         ifname = str(six.text_type(ifname.strip(b'\x00'), 'ascii'))
 
         hw_addr_len = min(hw_addr_len, INTERFACE_HWADDR_MAX)
@@ -1141,9 +1231,9 @@ class _ZebraInterface(_ZebraMessageBody):
             hw_addr = hw_addr_bin
 
         if not rest:
-            return cls(ifname, ifindex, status, if_flags, metric,
-                       ifmtu, ifmtu6, bandwidth, ll_type,
-                       hw_addr_len, hw_addr)
+            return cls(ifname, ifindex, status, if_flags,
+                       ptm_enable, ptm_status, metric, ifmtu, ifmtu6,
+                       bandwidth, ll_type, hw_addr_len, hw_addr)
 
         (link_param_state,) = struct.unpack_from(cls._LP_STATE_FMT, rest)
         rest = rest[cls.LP_STATE_SIZE:]
@@ -1153,10 +1243,15 @@ class _ZebraInterface(_ZebraMessageBody):
         else:
             link_params = None
 
-        return cls(ifname, ifindex, status, if_flags, metric, ifmtu, ifmtu6,
-                   bandwidth, ll_type, hw_addr_len, hw_addr, link_params)
+        return cls(ifname, ifindex, status, if_flags,
+                   ptm_enable, ptm_status, metric, ifmtu, ifmtu6,
+                   bandwidth, ll_type, hw_addr_len, hw_addr,
+                   link_params)
 
     def serialize(self, version=_DEFAULT_VERSION):
+        if self.ifname is None:
+            # Case for sending message to Zebra
+            return b''
         # fixup
         if netaddr.valid_mac(self.hw_addr):
             # MAC address
@@ -1173,12 +1268,23 @@ class _ZebraInterface(_ZebraMessageBody):
                 self.ifname.encode('ascii'), self.ifindex, self.status,
                 self.if_flags, self.metric, self.ifmtu, self.ifmtu6,
                 self.bandwidth, hw_addr_len) + hw_addr
-        else:
+        elif version == 3:
             buf = struct.pack(
                 self._V3_HEADER_FMT,
                 self.ifname.encode('ascii'), self.ifindex, self.status,
                 self.if_flags, self.metric, self.ifmtu, self.ifmtu6,
                 self.bandwidth, self.ll_type, hw_addr_len) + hw_addr
+        elif version == 4:
+            buf = struct.pack(
+                self._V4_HEADER_FMT,
+                self.ifname.encode('ascii'), self.ifindex, self.status,
+                self.if_flags, self.ptm_enable, self.ptm_status, self.metric,
+                self.ifmtu, self.ifmtu6,
+                self.bandwidth, self.ll_type, hw_addr_len) + hw_addr
+        else:
+            raise ValueError(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
         if isinstance(self.link_params, InterfaceLinkParams):
             buf += struct.pack(self._LP_STATE_FMT, True)
@@ -1189,6 +1295,7 @@ class _ZebraInterface(_ZebraMessageBody):
         return buf
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_ADD)
 class ZebraInterfaceAdd(_ZebraInterface):
     """
@@ -1196,6 +1303,7 @@ class ZebraInterfaceAdd(_ZebraInterface):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_DELETE)
 class ZebraInterfaceDelete(_ZebraInterface):
     """
@@ -1290,6 +1398,7 @@ class _ZebraInterfaceAddress(_ZebraMessageBody):
         return buf + body_bin
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_ADDRESS_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_ADDRESS_ADD)
 class ZebraInterfaceAddressAdd(_ZebraInterfaceAddress):
     """
@@ -1297,6 +1406,7 @@ class ZebraInterfaceAddressAdd(_ZebraInterfaceAddress):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_ADDRESS_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_ADDRESS_DELETE)
 class ZebraInterfaceAddressDelete(_ZebraInterfaceAddress):
     """
@@ -1304,6 +1414,7 @@ class ZebraInterfaceAddressDelete(_ZebraInterfaceAddress):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_UP)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_UP)
 class ZebraInterfaceUp(_ZebraInterface):
     """
@@ -1311,6 +1422,7 @@ class ZebraInterfaceUp(_ZebraInterface):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_DOWN)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_DOWN)
 class ZebraInterfaceDown(_ZebraInterface):
     """
@@ -1353,6 +1465,32 @@ class _ZebraIPRoute(_ZebraMessageBody):
     # | (TAG)                                                         |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     #
+    # Zebra IPv4/IPv6 Route message body on FRRouting
+    # (Protocol Daemons -> Zebra Daemon):
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Route Type    | Instance                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Flags                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Message       | SAFI                          |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | IPv4/v6 Prefix (Variable)                                     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Nexthop Num   |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Nexthops (Variable)                                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Distance)    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Metric)                                                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (TAG)                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (MTU)                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    #
     # Zebra IPv4/IPv6 Route message body (Zebra Daemon -> Protocol Daemons):
     #  0                   1                   2                   3
     #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -1377,8 +1515,38 @@ class _ZebraIPRoute(_ZebraMessageBody):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | (TAG)                                                         |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    #
+    # Zebra IPv4/IPv6 Route message body on FRRouting
+    # (Zebra Daemon -> Protocol Daemons):
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Route Type    | Instance                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Flags                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Message       |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | IPv4/v6 Prefix (Variable)                                     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Nexthop Num) |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Nexthops (Variable))                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (IFIndex Num) |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Interface indexes)                                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Distance)    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Metric)                                                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (TAG)                                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _HEADER_FMT = '!BBB'  # type, flags, message
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _V4_HEADER_FMT = '!BHIB'  # type, instance, flags, message
+    V4_HEADER_SIZE = struct.calcsize(_V4_HEADER_FMT)
     _SAFI_FMT = '!H'  # safi
     SAFI_SIZE = struct.calcsize(_SAFI_FMT)
     _NUM_FMT = '!B'  # nexthop_num or ifindex_num
@@ -1392,9 +1560,10 @@ class _ZebraIPRoute(_ZebraMessageBody):
     def __init__(self, route_type, flags, message, safi=None, prefix=None,
                  nexthops=None, ifindexes=None,
                  distance=None, metric=None, mtu=None, tag=None,
-                 from_zebra=False):
+                 instance=None, from_zebra=False):
         super(_ZebraIPRoute, self).__init__()
         self.route_type = route_type
+        self.instance = instance
         self.flags = flags
         self.message = message
 
@@ -1445,14 +1614,24 @@ class _ZebraIPRoute(_ZebraMessageBody):
         if message & flag:
             (option,) = struct.unpack_from(fmt, buf)
             return option, buf[struct.calcsize(fmt):]
-        else:
-            return None, buf
+
+        return None, buf
 
     @classmethod
     def _parse_impl(cls, buf, version=_DEFAULT_VERSION, from_zebra=False):
-        (route_type, flags, message,) = struct.unpack_from(
-            cls._HEADER_FMT, buf)
-        rest = buf[cls.HEADER_SIZE:]
+        instance = None
+        if version <= 3:
+            (route_type, flags, message,) = struct.unpack_from(
+                cls._HEADER_FMT, buf)
+            rest = buf[cls.HEADER_SIZE:]
+        elif version == 4:
+            (route_type, instance, flags, message,) = struct.unpack_from(
+                cls._V4_HEADER_FMT, buf)
+            rest = buf[cls.V4_HEADER_SIZE:]
+        else:
+            raise struct.error(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
         if from_zebra:
             safi = None
@@ -1477,7 +1656,7 @@ class _ZebraIPRoute(_ZebraMessageBody):
                     nexthops.append(nexthop)
                     rest = rest[16:]
         else:
-            nexthops, rest = _parse_nexthops(rest)
+            nexthops, rest = _parse_nexthops(rest, version)
 
         ifindexes = []
         if from_zebra and message & ZAPI_MESSAGE_IFINDEX:
@@ -1488,19 +1667,33 @@ class _ZebraIPRoute(_ZebraMessageBody):
                 ifindexes.append(ifindex)
                 rest = rest[cls.IFINDEX_SIZE:]
 
-        distance, rest = cls._parse_message_option(
-            message, ZAPI_MESSAGE_DISTANCE, '!B', rest)
-        metric, rest = cls._parse_message_option(
-            message, ZAPI_MESSAGE_METRIC, '!I', rest)
-        mtu, rest = cls._parse_message_option(
-            message, ZAPI_MESSAGE_MTU, '!I', rest)
-        tag, rest = cls._parse_message_option(
-            message, ZAPI_MESSAGE_TAG, '!I', rest)
+        if version <= 3:
+            distance, rest = cls._parse_message_option(
+                message, ZAPI_MESSAGE_DISTANCE, '!B', rest)
+            metric, rest = cls._parse_message_option(
+                message, ZAPI_MESSAGE_METRIC, '!I', rest)
+            mtu, rest = cls._parse_message_option(
+                message, ZAPI_MESSAGE_MTU, '!I', rest)
+            tag, rest = cls._parse_message_option(
+                message, ZAPI_MESSAGE_TAG, '!I', rest)
+        elif version == 4:
+            distance, rest = cls._parse_message_option(
+                message, FRR_ZAPI_MESSAGE_DISTANCE, '!B', rest)
+            metric, rest = cls._parse_message_option(
+                message, FRR_ZAPI_MESSAGE_METRIC, '!I', rest)
+            tag, rest = cls._parse_message_option(
+                message, FRR_ZAPI_MESSAGE_TAG, '!I', rest)
+            mtu, rest = cls._parse_message_option(
+                message, FRR_ZAPI_MESSAGE_MTU, '!I', rest)
+        else:
+            raise struct.error(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
         return cls(route_type, flags, message, safi, prefix,
                    nexthops, ifindexes,
                    distance, metric, mtu, tag,
-                   from_zebra=from_zebra)
+                   instance, from_zebra=from_zebra)
 
     @classmethod
     def parse(cls, buf, version=_DEFAULT_VERSION):
@@ -1523,14 +1716,14 @@ class _ZebraIPRoute(_ZebraMessageBody):
         prefix = _serialize_ip_prefix(self.prefix)
 
         nexthops = b''
-        if self.nexthops:
+        if self.from_zebra and self.nexthops:
             self.message |= ZAPI_MESSAGE_NEXTHOP  # fixup
-            if self.from_zebra:
-                nexthops += struct.pack(self._NUM_FMT, len(self.nexthops))
-                for nexthop in self.nexthops:
-                    nexthops += ip.text_to_bin(nexthop)
-            else:
-                nexthops = _serialize_nexthops(self.nexthops)
+            nexthops += struct.pack(self._NUM_FMT, len(self.nexthops))
+            for nexthop in self.nexthops:
+                nexthops += ip.text_to_bin(nexthop)
+        else:
+            self.message |= ZAPI_MESSAGE_NEXTHOP  # fixup
+            nexthops = _serialize_nexthops(self.nexthops, version=version)
 
         ifindexes = b''
         if self.ifindexes and self.from_zebra:
@@ -1539,17 +1732,35 @@ class _ZebraIPRoute(_ZebraMessageBody):
             for ifindex in self.ifindexes:
                 ifindexes += struct.pack(self._IFINDEX_FMT, ifindex)
 
-        options = self._serialize_message_option(
-            self.distance, ZAPI_MESSAGE_DISTANCE, '!B')
-        options += self._serialize_message_option(
-            self.metric, ZAPI_MESSAGE_METRIC, '!I')
-        options += self._serialize_message_option(
-            self.mtu, ZAPI_MESSAGE_MTU, '!I')
-        options += self._serialize_message_option(
-            self.tag, ZAPI_MESSAGE_TAG, '!I')
+        if version <= 3:
+            options = self._serialize_message_option(
+                self.distance, ZAPI_MESSAGE_DISTANCE, '!B')
+            options += self._serialize_message_option(
+                self.metric, ZAPI_MESSAGE_METRIC, '!I')
+            options += self._serialize_message_option(
+                self.mtu, ZAPI_MESSAGE_MTU, '!I')
+            options += self._serialize_message_option(
+                self.tag, ZAPI_MESSAGE_TAG, '!I')
+            header = struct.pack(
+                self._HEADER_FMT,
+                self.route_type, self.flags, self.message)
+        elif version == 4:
+            options = self._serialize_message_option(
+                self.distance, FRR_ZAPI_MESSAGE_DISTANCE, '!B')
+            options += self._serialize_message_option(
+                self.metric, FRR_ZAPI_MESSAGE_METRIC, '!I')
+            options += self._serialize_message_option(
+                self.tag, FRR_ZAPI_MESSAGE_TAG, '!I')
+            options += self._serialize_message_option(
+                self.mtu, FRR_ZAPI_MESSAGE_MTU, '!I')
+            header = struct.pack(
+                self._V4_HEADER_FMT,
+                self.route_type, self.instance, self.flags, self.message)
+        else:
+            raise ValueError(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
-        header = struct.pack(
-            self._HEADER_FMT, self.route_type, self.flags, self.message)
         if not self.from_zebra:
             header += struct.pack(self._SAFI_FMT, self.safi)
 
@@ -1563,6 +1774,7 @@ class _ZebraIPv4Route(_ZebraIPRoute):
     _FAMILY = socket.AF_INET
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV4_ROUTE_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_ROUTE_ADD)
 class ZebraIPv4RouteAdd(_ZebraIPv4Route):
     """
@@ -1570,6 +1782,7 @@ class ZebraIPv4RouteAdd(_ZebraIPv4Route):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV4_ROUTE_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_ROUTE_DELETE)
 class ZebraIPv4RouteDelete(_ZebraIPv4Route):
     """
@@ -1584,6 +1797,7 @@ class _ZebraIPv6Route(_ZebraIPRoute):
     _FAMILY = socket.AF_INET6
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV6_ROUTE_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_IPV6_ROUTE_ADD)
 class ZebraIPv6RouteAdd(_ZebraIPv6Route):
     """
@@ -1591,10 +1805,18 @@ class ZebraIPv6RouteAdd(_ZebraIPv6Route):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV6_ROUTE_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_IPV6_ROUTE_DELETE)
 class ZebraIPv6RouteDelete(_ZebraIPv6Route):
     """
     Message body class for ZEBRA_IPV6_ROUTE_DELETE.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV4_ROUTE_IPV6_NEXTHOP_ADD)
+class ZebraIPv4RouteIPv6NexthopAdd(_ZebraIPv4Route):
+    """
+    Message body class for FRR_ZEBRA_IPV4_ROUTE_IPV6_NEXTHOP_ADD.
     """
 
 
@@ -1610,23 +1832,53 @@ class _ZebraRedistribute(_ZebraMessageBody):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Route Type    |
     # +-+-+-+-+-+-+-+-+
-    _HEADER_FMT = '!B'
+    #
+    # Zebra Redistribute message body on FRRouting:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | AFI           | Route Type    | Instance                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    _HEADER_FMT = '!B'  # route_type
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _V4_HEADER_FMT = '!BBH'  # afi, route_type, instance
+    V4_HEADER_SIZE = struct.calcsize(_V4_HEADER_FMT)
 
-    def __init__(self, route_type):
+    def __init__(self, route_type, afi=None, instance=None):
         super(_ZebraRedistribute, self).__init__()
+        self.afi = afi
         self.route_type = route_type
+        self.instance = instance
 
     @classmethod
     def parse(cls, buf, version=_DEFAULT_VERSION):
-        (route_type,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        afi = None
+        instance = None
+        if version <= 3:
+            (route_type,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        elif version == 4:
+            (afi, route_type,
+             instance) = struct.unpack_from(cls._V4_HEADER_FMT, buf)
+        else:
+            raise struct.error(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
-        return cls(route_type)
+        return cls(route_type, afi, instance)
 
     def serialize(self, version=_DEFAULT_VERSION):
-        return struct.pack(self._HEADER_FMT, self.route_type)
+        if version <= 3:
+            return struct.pack(self._HEADER_FMT, self.route_type)
+        elif version == 4:
+            return struct.pack(self._V4_HEADER_FMT,
+                               self.afi, self.route_type, self.instance)
+        else:
+            raise ValueError(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_REDISTRIBUTE_ADD)
 class ZebraRedistributeAdd(_ZebraRedistribute):
     """
@@ -1634,6 +1886,7 @@ class ZebraRedistributeAdd(_ZebraRedistribute):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_REDISTRIBUTE_DELETE)
 class ZebraRedistributeDelete(_ZebraRedistribute):
     """
@@ -1649,6 +1902,7 @@ class _ZebraRedistributeDefault(_ZebraMessageBody):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_DEFAULT_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_REDISTRIBUTE_DEFAULT_ADD)
 class ZebraRedistributeDefaultAdd(_ZebraRedistribute):
     """
@@ -1656,6 +1910,7 @@ class ZebraRedistributeDefaultAdd(_ZebraRedistribute):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_DEFAULT_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_REDISTRIBUTE_DEFAULT_DELETE)
 class ZebraRedistributeDefaultDelete(_ZebraRedistribute):
     """
@@ -1711,7 +1966,7 @@ class _ZebraIPNexthopLookup(_ZebraMessageBody):
 
         nexthops = None
         if rest:
-            nexthops, rest = _parse_nexthops(rest)
+            nexthops, rest = _parse_nexthops(rest, version)
 
         return cls(addr, metric, nexthops)
 
@@ -1723,7 +1978,7 @@ class _ZebraIPNexthopLookup(_ZebraMessageBody):
 
         buf += struct.pack(self._METRIC_FMT, self.metric)
 
-        return buf + _serialize_nexthops(self.nexthops)
+        return buf + _serialize_nexthops(self.nexthops, version=version)
 
 
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_NEXTHOP_LOOKUP)
@@ -1820,7 +2075,7 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
         (metric,) = struct.unpack_from(cls._METRIC_FMT, rest)
         rest = rest[cls.METRIC_SIZE:]
 
-        nexthops, rest = _parse_nexthops(rest)
+        nexthops, rest = _parse_nexthops(rest, version)
 
         return cls(prefix, metric, nexthops, from_zebra=True)
 
@@ -1849,7 +2104,7 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
 
         buf += struct.pack(self._METRIC_FMT, self.metric)
 
-        return buf + _serialize_nexthops(self.nexthops)
+        return buf + _serialize_nexthops(self.nexthops, version=version)
 
 
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_IMPORT_LOOKUP)
@@ -1875,6 +2130,7 @@ class ZebraIPv6ImportLookup(_ZebraIPImportLookup):
 # class ZebraInterfaceRename(_ZebraMessageBody):
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_ROUTER_ID_ADD)
 @_ZebraMessageBody.register_type(ZEBRA_ROUTER_ID_ADD)
 class ZebraRouterIDAdd(_ZebraMessageBody):
     """
@@ -1882,6 +2138,7 @@ class ZebraRouterIDAdd(_ZebraMessageBody):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_ROUTER_ID_DELETE)
 @_ZebraMessageBody.register_type(ZEBRA_ROUTER_ID_DELETE)
 class ZebraRouterIDDelete(_ZebraMessageBody):
     """
@@ -1889,6 +2146,7 @@ class ZebraRouterIDDelete(_ZebraMessageBody):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_ROUTER_ID_UPDATE)
 @_ZebraMessageBody.register_type(ZEBRA_ROUTER_ID_UPDATE)
 class ZebraRouterIDUpdate(_ZebraMessageBody):
     """
@@ -1953,6 +2211,7 @@ class ZebraRouterIDUpdate(_ZebraMessageBody):
         return struct.pack(self._FAMILY_FMT, self.family) + body_bin
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_HELLO)
 @_ZebraMessageBody.register_type(ZEBRA_HELLO)
 class ZebraHello(_ZebraMessageBody):
     """
@@ -1962,25 +2221,43 @@ class ZebraHello(_ZebraMessageBody):
     #  0                   1                   2                   3
     #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    # | Route Type    |
-    # +-+-+-+-+-+-+-+-+
-    _HEADER_FMT = '!B'
+    # | Route Type    | (Instance): v4(FRRouting)     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!B'  # route_type
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _V4_HEADER_FMT = '!BH'  # route_type, instance
+    V4_HEADER_SIZE = struct.calcsize(_V4_HEADER_FMT)
 
-    def __init__(self, route_type=ZEBRA_ROUTE_MAX):
+    def __init__(self, route_type, instance=None):
         super(ZebraHello, self).__init__()
         self.route_type = route_type
+        self.instance = instance
 
     @classmethod
     def parse(cls, buf, version=_DEFAULT_VERSION):
-        route_type = None
-        if buf:
+        instance = None
+        if version <= 3:
             (route_type,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        elif version == 4:
+            (route_type,
+             instance) = struct.unpack_from(cls._V4_HEADER_FMT, buf)
+        else:
+            raise struct.error(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
-        return cls(route_type)
+        return cls(route_type, instance)
 
     def serialize(self, version=_DEFAULT_VERSION):
-        return struct.pack(self._HEADER_FMT, self.route_type)
+        if version <= 3:
+            return struct.pack(self._HEADER_FMT, self.route_type)
+        elif version == 4:
+            return struct.pack(self._V4_HEADER_FMT,
+                               self.route_type, self.instance)
+        else:
+            raise ValueError(
+                'Unsupported Zebra protocol version: %d'
+                % version)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -2003,14 +2280,14 @@ class _ZebraIPNexthopLookupMRib(_ZebraMessageBody):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Nexthops (Variable)                                           |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    _DISTANCE_METRIC_FMT = '!I'  # metric
+    _DISTANCE_METRIC_FMT = '!BI'  # distance, metric
     DISTANCE_METRIC_SIZE = struct.calcsize(_DISTANCE_METRIC_FMT)
 
     # Message type specific constants
     ADDR_CLS = None  # either addrconv.ipv4 or addrconv.ipv6
     ADDR_LEN = None  # IP address length in bytes
 
-    def __init__(self, addr, distance, metric, nexthops=None):
+    def __init__(self, addr, distance=None, metric=None, nexthops=None):
         super(_ZebraIPNexthopLookupMRib, self).__init__()
         assert netaddr.valid_ipv4(addr) or netaddr.valid_ipv6(addr)
         self.addr = addr
@@ -2026,22 +2303,30 @@ class _ZebraIPNexthopLookupMRib(_ZebraMessageBody):
         addr = cls.ADDR_CLS.bin_to_text(buf[:cls.ADDR_LEN])
         rest = buf[cls.ADDR_LEN:]
 
-        (metric,) = struct.unpack_from(cls._DISTANCE_METRIC_FMT, rest)
+        if not rest:
+            return cls(addr)
+
+        (distance,
+         metric) = struct.unpack_from(cls._DISTANCE_METRIC_FMT, rest)
         rest = rest[cls.DISTANCE_METRIC_SIZE:]
 
-        nexthops, rest = _parse_nexthops(rest)
+        nexthops, rest = _parse_nexthops(rest, version)
 
-        return cls(addr, metric, nexthops)
+        return cls(addr, distance, metric, nexthops)
 
     def serialize(self, version=_DEFAULT_VERSION):
         buf = self.ADDR_CLS.text_to_bin(self.addr)
 
+        if self.distance is None or self.metric is None:
+            return buf
+
         buf += struct.pack(
             self._DISTANCE_METRIC_FMT, self.distance, self.metric)
 
-        return buf + _serialize_nexthops(self.nexthops)
+        return buf + _serialize_nexthops(self.nexthops, version=version)
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV4_NEXTHOP_LOOKUP_MRIB)
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_NEXTHOP_LOOKUP_MRIB)
 class ZebraIPv4NexthopLookupMRib(_ZebraIPNexthopLookupMRib):
     """
@@ -2051,6 +2336,7 @@ class ZebraIPv4NexthopLookupMRib(_ZebraIPNexthopLookupMRib):
     ADDR_LEN = 4
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_VRF_UNREGISTER)
 @_ZebraMessageBody.register_type(ZEBRA_VRF_UNREGISTER)
 class ZebraVrfUnregister(_ZebraMessageBody):
     """
@@ -2058,6 +2344,7 @@ class ZebraVrfUnregister(_ZebraMessageBody):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_LINK_PARAMS)
 @_ZebraMessageBody.register_type(ZEBRA_INTERFACE_LINK_PARAMS)
 class ZebraInterfaceLinkParams(_ZebraMessageBody):
     """
@@ -2128,6 +2415,7 @@ class _ZebraNexthopRegister(_ZebraMessageBody):
         return buf
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_NEXTHOP_REGISTER)
 @_ZebraMessageBody.register_type(ZEBRA_NEXTHOP_REGISTER)
 class ZebraNexthopRegister(_ZebraNexthopRegister):
     """
@@ -2135,6 +2423,7 @@ class ZebraNexthopRegister(_ZebraNexthopRegister):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_NEXTHOP_UNREGISTER)
 @_ZebraMessageBody.register_type(ZEBRA_NEXTHOP_UNREGISTER)
 class ZebraNexthopUnregister(_ZebraNexthopRegister):
     """
@@ -2142,6 +2431,7 @@ class ZebraNexthopUnregister(_ZebraNexthopRegister):
     """
 
 
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_NEXTHOP_UPDATE)
 @_ZebraMessageBody.register_type(ZEBRA_NEXTHOP_UPDATE)
 class ZebraNexthopUpdate(_ZebraMessageBody):
     """
@@ -2188,7 +2478,7 @@ class ZebraNexthopUpdate(_ZebraMessageBody):
         (metric,) = struct.unpack_from(cls._METRIC_FMT, rest)
         rest = rest[cls.METRIC_SIZE:]
 
-        nexthops, rest = _parse_nexthops(rest)
+        nexthops, rest = _parse_nexthops(rest, version)
 
         return cls(family, prefix, metric, nexthops)
 
@@ -2207,4 +2497,173 @@ class ZebraNexthopUpdate(_ZebraMessageBody):
 
         buf += struct.pack(self._METRIC_FMT, self.metric)
 
-        return buf + _serialize_nexthops(self.nexthops)
+        return buf + _serialize_nexthops(self.nexthops, version=version)
+
+
+# TODO:
+# Implement the following messages:
+#  - FRR_ZEBRA_INTERFACE_NBR_ADDRESS_ADD
+#  - FRR_ZEBRA_INTERFACE_NBR_ADDRESS_DELETE
+#  - FRR_ZEBRA_INTERFACE_BFD_DEST_UPDATE
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IMPORT_ROUTE_REGISTER)
+class ZebraImportRouteRegister(_ZebraNexthopRegister):
+    """
+    Message body class for FRR_ZEBRA_IMPORT_ROUTE_REGISTER.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IMPORT_ROUTE_UNREGISTER)
+class ZebraImportRouteUnregister(_ZebraNexthopRegister):
+    """
+    Message body class for FRR_ZEBRA_IMPORT_ROUTE_UNREGISTER.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IMPORT_CHECK_UPDATE)
+class ZebraImportCheckUpdate(ZebraNexthopUpdate):
+    """
+    Message body class for FRR_ZEBRA_IMPORT_CHECK_UPDATE.
+    """
+
+
+# TODO:
+# Implement the following messages:
+#  - FRR_ZEBRA_BFD_DEST_REGISTER
+#  - FRR_ZEBRA_BFD_DEST_DEREGISTER
+#  - FRR_ZEBRA_BFD_DEST_UPDATE
+#  - FRR_ZEBRA_BFD_DEST_REPLAY
+
+
+class _ZebraRedistributeIPv4(_ZebraIPRoute):
+    """
+    Base class for FRR_ZEBRA_REDISTRIBUTE_IPV4_* message body.
+    """
+    _FAMILY = socket.AF_INET
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_IPV4_ADD)
+class ZebraRedistributeIPv4Add(_ZebraRedistributeIPv4):
+    """
+    Message body class for FRR_ZEBRA_IPV4_ROUTE_ADD.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_IPV4_DEL)
+class ZebraRedistributeIPv4Delete(_ZebraRedistributeIPv4):
+    """
+    Message body class for FRR_ZEBRA_IPV4_ROUTE_DELETE.
+    """
+
+
+class _ZebraRedistributeIPv6(_ZebraIPRoute):
+    """
+    Base class for FRR_ZEBRA_REDISTRIBUTE_IPV6_* message body.
+    """
+    _FAMILY = socket.AF_INET6
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_IPV6_ADD)
+class ZebraRedistributeIPv6Add(_ZebraRedistributeIPv6):
+    """
+    Message body class for FRR_ZEBRA_REDISTRIBUTE_IPV6_ADD.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_REDISTRIBUTE_IPV6_DEL)
+class ZebraRedistributeIPv6Delete(_ZebraRedistributeIPv6):
+    """
+    Message body class for FRR_ZEBRA_REDISTRIBUTE_IPV6_DEL.
+    """
+
+
+# TODO:
+# Implement the following messages:
+#  - FRR_ZEBRA_VRF_ADD
+#  - FRR_ZEBRA_VRF_DELETE
+#  - FRR_ZEBRA_INTERFACE_VRF_UPDATE
+
+
+class _ZebraBfdClient(_ZebraMessageBody):
+    """
+    Base class for FRR_ZEBRA_BFD_CLIENT_*.
+    """
+    # Zebra BFD Client message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | PID                                                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!I'  # pid
+    HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+
+    def __init__(self, pid):
+        super(_ZebraBfdClient, self).__init__()
+        self.pid = pid
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_FRR_VERSION):
+        (pid,) = struct.unpack_from(cls._HEADER_FMT, buf)
+
+        return cls(pid)
+
+    def serialize(self, version=_DEFAULT_FRR_VERSION):
+        return struct.pack(self._HEADER_FMT, self.pid)
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_BFD_CLIENT_REGISTER)
+class ZebraBfdClientRegister(_ZebraBfdClient):
+    """
+    Message body class for FRR_ZEBRA_BFD_CLIENT_REGISTER.
+    """
+
+
+# TODO:
+# Implement the following messages:
+#  - FRR_ZEBRA_INTERFACE_ENABLE_RADV
+#  - FRR_ZEBRA_INTERFACE_DISABLE_RADV
+#  - FRR_ZEBRA_MPLS_LABELS_ADD
+#  - FRR_ZEBRA_MPLS_LABELS_DELETE
+
+
+class _ZebraIPv4Nexthop(_ZebraIPRoute):
+    """
+    Base class for FRR_ZEBRA_IPV4_NEXTHOP_* message body.
+    """
+    _FAMILY = socket.AF_INET
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV4_NEXTHOP_ADD)
+class ZebraIPv4NexthopAdd(_ZebraIPv4Nexthop):
+    """
+    Message body class for FRR_ZEBRA_IPV4_NEXTHOP_ADD.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV4_NEXTHOP_DELETE)
+class ZebraIPv4NexthopDelete(_ZebraIPv4Nexthop):
+    """
+    Message body class for FRR_ZEBRA_IPV4_NEXTHOP_DELETE.
+    """
+
+
+class _ZebraIPv6Nexthop(_ZebraIPRoute):
+    """
+    Base class for FRR_ZEBRA_IPV6_NEXTHOP_* message body.
+    """
+    _FAMILY = socket.AF_INET6
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV6_NEXTHOP_ADD)
+class ZebraIPv6NexthopAdd(_ZebraIPv6Nexthop):
+    """
+    Message body class for FRR_ZEBRA_IPV6_NEXTHOP_ADD.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_IPV6_NEXTHOP_DELETE)
+class ZebraIPv6NexthopDelete(_ZebraIPv6Nexthop):
+    """
+    Message body class for FRR_ZEBRA_IPV6_NEXTHOP_DELETE.
+    """
