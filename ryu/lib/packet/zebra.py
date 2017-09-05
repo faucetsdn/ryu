@@ -1629,12 +1629,29 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
     """
     Base class for ZEBRA_IPV4_IMPORT_LOOKUP and
     ZEBRA_IPV6_IMPORT_LOOKUP message body.
+
+    .. Note::
+
+        Zebra IPv4/v6 Import Lookup message have asymmetric structure.
+        If the message sent from Zebra Daemon, set 'from_zebra=True' to
+        create an instance of this class.
     """
-    # Zebra IPv4/v6 Import Lookup message body:
+    # Zebra IPv4/v6 Import Lookup message body
+    # (Protocol Daemons -> Zebra Daemon):
     #  0                   1                   2                   3
     #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    # | IPv4/v6 prefix                                                |
+    # | Prefix Len    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | IPv4/v6 Prefix (4 bytes or 16 bytes)                          |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    #
+    # Zebra IPv4/v6 Import Lookup message body
+    # (Zebra Daemons -> Protocol Daemon):
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | IPv4/v6 Prefix (4 bytes or 16 bytes)                          |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Metric                                                        |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1642,6 +1659,8 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Nexthops (Variable)                                           |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _PREFIX_LEN_FMT = '!B'  # prefix_len
+    PREFIX_LEN_SIZE = struct.calcsize(_PREFIX_LEN_FMT)
     _METRIC_FMT = '!I'  # metric
     METRIC_SIZE = struct.calcsize(_METRIC_FMT)
 
@@ -1649,37 +1668,64 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
     PREFIX_CLS = None  # either addrconv.ipv4 or addrconv.ipv6
     PREFIX_LEN = None  # IP prefix length in bytes
 
-    def __init__(self, prefix, metric=None, nexthops=None):
+    def __init__(self, prefix, metric=None, nexthops=None,
+                 from_zebra=False):
         super(_ZebraIPImportLookup, self).__init__()
-        assert netaddr.valid_ipv4(prefix) or netaddr.valid_ipv6(prefix)
+        if not from_zebra:
+            assert ip.valid_ipv4(prefix) or ip.valid_ipv6(prefix)
+        else:
+            if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+                prefix = prefix.prefix
+            else:
+                assert netaddr.valid_ipv4(prefix) or netaddr.valid_ipv6(prefix)
         self.prefix = prefix
         self.metric = metric
         nexthops = nexthops or []
         for nexthop in nexthops:
             assert isinstance(nexthop, _NextHop)
         self.nexthops = nexthops
+        self.from_zebra = from_zebra
+
+    @classmethod
+    def parse_impl(cls, buf, version=_DEFAULT_VERSION, from_zebra=False):
+        if not from_zebra:
+            (prefix_len,) = struct.unpack_from(cls._PREFIX_LEN_FMT, buf)
+            rest = buf[cls.PREFIX_LEN_SIZE:]
+            prefix = cls.PREFIX_CLS.bin_to_text(rest[:cls.PREFIX_LEN])
+            return cls('%s/%d' % (prefix, prefix_len), from_zebra=False)
+
+        prefix = cls.PREFIX_CLS.bin_to_text(buf[:cls.PREFIX_LEN])
+        rest = buf[4:]
+
+        (metric,) = struct.unpack_from(cls._METRIC_FMT, rest)
+        rest = rest[cls.METRIC_SIZE:]
+
+        nexthops, rest = _parse_nexthops(rest)
+
+        return cls(prefix, metric, nexthops, from_zebra=True)
 
     @classmethod
     def parse(cls, buf, version=_DEFAULT_VERSION):
-        prefix = cls.PREFIX_CLS.bin_to_text(buf[:cls.PREFIX_LEN])
-        rest = buf[cls.PREFIX_LEN:]
+        return cls.parse_impl(buf, version=version, from_zebra=False)
 
-        metric = None
-        if rest:
-            (metric,) = struct.unpack_from(cls._METRIC_FMT, rest)
-            rest = rest[cls.METRIC_SIZE:]
-
-        nexthops = None
-        if rest:
-            nexthops, rest = _parse_nexthops(rest)
-
-        return cls(prefix, metric, nexthops)
+    @classmethod
+    def parse_from_zebra(cls, buf, version=_DEFAULT_VERSION):
+        return cls.parse_impl(buf, version=version, from_zebra=True)
 
     def serialize(self, version=_DEFAULT_VERSION):
-        buf = self.PREFIX_CLS.text_to_bin(self.prefix)
+        if not self.from_zebra:
+            if ip.valid_ipv4(self.prefix) or ip.valid_ipv6(self.prefix):
+                prefix, prefix_len = self.prefix.split('/')
+                return struct.pack(
+                    self._PREFIX_LEN_FMT,
+                    int(prefix_len)) + self.PREFIX_CLS.text_to_bin(prefix)
+            else:
+                raise ValueError('Invalid prefix: %s' % self.prefix)
 
-        if self.metric is None:
-            return buf
+        if netaddr.valid_ipv4(self.prefix) or netaddr.valid_ipv6(self.prefix):
+            buf = self.PREFIX_CLS.text_to_bin(self.prefix)
+        else:
+            raise ValueError('Invalid prefix: %s' % self.prefix)
 
         buf += struct.pack(self._METRIC_FMT, self.metric)
 
