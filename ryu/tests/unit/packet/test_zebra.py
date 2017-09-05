@@ -43,6 +43,7 @@ class Test_zebra(unittest.TestCase):
         files = [
             'zebra_v2',
             'zebra_v3',
+            'zebra_v4_frr_v2',  # API version 4 on FRRouting v2.0
         ]
 
         for f in files:
