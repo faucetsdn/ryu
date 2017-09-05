@@ -340,6 +340,13 @@ ZEBRA_PTM_STATUS_DOWN = 0
 ZEBRA_PTM_STATUS_UP = 1
 ZEBRA_PTM_STATUS_UNKNOWN = 2
 
+# Constants in frr/lib/bfd.h
+
+# BFD status
+BFD_STATUS_UNKNOWN = 1 << 0
+BFD_STATUS_DOWN = 1 << 1
+BFD_STATUS_UP = 1 << 2
+
 
 # Utility functions/classes
 
@@ -2575,9 +2582,80 @@ class ZebraInterfaceNbrAddressDelete(_ZebraInterfaceNbrAddress):
     """
 
 
-# TODO:
-# Implement the following messages:
-#  - FRR_ZEBRA_INTERFACE_BFD_DEST_UPDATE
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_INTERFACE_BFD_DEST_UPDATE)
+class ZebraInterfaceBfdDestinationUpdate(_ZebraMessageBody):
+    """
+    Message body class for FRR_ZEBRA_INTERFACE_BFD_DEST_UPDATE.
+    """
+    # Zebra Interface BFD Destination Update message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Interface index                                               |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Dst Family    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Dst IPv4/v6 prefix                                            |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Dst Plen      |
+    # +-+-+-+-+-+-+-+-+
+    # | Status        |
+    # +-+-+-+-+-+-+-+-+
+    # | Src Family    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Source IPv4/v6 prefix                                         |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Src Plen      |
+    # +-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!I'  # ifindex
+    HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _STATUS_FMT = '!B'  # status
+    STATUS_SIZE = struct.calcsize(_STATUS_FMT)
+
+    def __init__(self, ifindex, dst_family, dst_prefix, status,
+                 src_family, src_prefix):
+        super(ZebraInterfaceBfdDestinationUpdate, self).__init__()
+        self.ifindex = ifindex
+        self.dst_family = dst_family
+        if isinstance(dst_prefix, (IPv4Prefix, IPv6Prefix)):
+            dst_prefix = dst_prefix.prefix
+        self.dst_prefix = dst_prefix
+        self.status = status
+        self.src_family = src_family
+        if isinstance(src_prefix, (IPv4Prefix, IPv6Prefix)):
+            src_prefix = src_prefix.prefix
+        self.src_prefix = src_prefix
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_VERSION):
+        (ifindex,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        rest = buf[cls.HEADER_SIZE:]
+
+        (dst_family, dst_prefix,
+         rest) = _parse_zebra_family_prefix(rest)
+
+        (status,) = struct.unpack_from(cls._STATUS_FMT, rest)
+        rest = rest[cls.STATUS_SIZE:]
+
+        (src_family, src_prefix,
+         _) = _parse_zebra_family_prefix(rest)
+
+        return cls(ifindex, dst_family, dst_prefix, status,
+                   src_family, src_prefix)
+
+    def serialize(self, version=_DEFAULT_VERSION):
+        (self.dst_family,  # fixup
+         dst_bin) = _serialize_zebra_family_prefix(self.dst_prefix)
+
+        status_bin = struct.pack(
+            self._STATUS_FMT, self.status)
+
+        (self.src_family,  # fixup
+         src_bin) = _serialize_zebra_family_prefix(self.src_prefix)
+
+        return struct.pack(
+            self._HEADER_FMT,
+            self.ifindex) + dst_bin + status_bin + src_bin
 
 
 @_FrrZebraMessageBody.register_type(FRR_ZEBRA_IMPORT_ROUTE_REGISTER)
@@ -2601,12 +2679,295 @@ class ZebraImportCheckUpdate(ZebraNexthopUpdate):
     """
 
 
-# TODO:
-# Implement the following messages:
-#  - FRR_ZEBRA_BFD_DEST_REGISTER
-#  - FRR_ZEBRA_BFD_DEST_DEREGISTER
-#  - FRR_ZEBRA_BFD_DEST_UPDATE
-#  - FRR_ZEBRA_BFD_DEST_REPLAY
+class _ZebraBfdDestination(_ZebraMessageBody):
+    """
+    Base class for FRR_ZEBRA_BFD_DEST_REGISTER and
+    FRR_ZEBRA_BFD_DEST_UPDATE message body.
+    """
+    # Zebra BFD Destination message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | PID                                                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Destination Family            |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Destination IPv4/v6 prefix (4 bytes or 16 bytes)              |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Min RX Timer                                                  |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Min TX Timer                                                  |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Detect Mult   |
+    # +-+-+-+-+-+-+-+-+
+    # | Multi Hop     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Source Family                 |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Source IPv4/v6 prefix  (4 bytes or 16 bytes)                  |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (MultiHopCnt) | if Multi Hop enabled
+    # +-+-+-+-+-+-+-+-+
+    # | (IFName Len)  | if Multi Hop disabled
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (Interface Name (Variable)) if Multi Hop disabled             |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!I'  # pid
+    HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _FAMILY_FMT = '!H'
+    FAMILY_SIZE = struct.calcsize(_FAMILY_FMT)
+    _BODY_FMT = '!IIBB'  # min_rx_timer, min_tx_timer, detect_mult, multi_hop
+    BODY_SIZE = struct.calcsize(_BODY_FMT)
+    _FOOTER_FMT = '!B'  # multi_hop_count or ifname_len
+    FOOTER_SIZE = struct.calcsize(_FOOTER_FMT)
+
+    def __init__(self, pid, dst_family, dst_prefix,
+                 min_rx_timer, min_tx_timer, detect_mult,
+                 multi_hop, src_family, src_prefix,
+                 multi_hop_count=None, ifname=None):
+        super(_ZebraBfdDestination, self).__init__()
+        self.pid = pid
+        self.dst_family = dst_family
+        assert (netaddr.valid_ipv4(dst_prefix) or
+                netaddr.valid_ipv6(dst_prefix))
+        self.dst_prefix = dst_prefix
+        self.min_rx_timer = min_rx_timer
+        self.min_tx_timer = min_tx_timer
+        self.detect_mult = detect_mult
+        self.multi_hop = multi_hop
+        self.src_family = src_family
+        assert (netaddr.valid_ipv4(src_prefix) or
+                netaddr.valid_ipv6(src_prefix))
+        self.src_prefix = src_prefix
+        self.multi_hop_count = multi_hop_count
+        self.ifname = ifname
+
+    @classmethod
+    def _parse_family_prefix(cls, buf):
+        (family,) = struct.unpack_from(cls._FAMILY_FMT, buf)
+        rest = buf[cls.FAMILY_SIZE:]
+
+        if socket.AF_INET == family:
+            return family, addrconv.ipv4.bin_to_text(rest[:4]), rest[4:]
+        elif socket.AF_INET6 == family:
+            return family, addrconv.ipv6.bin_to_text(rest[:16]), rest[16:]
+
+        raise struct.error('Unsupported family: %d' % family)
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_VERSION):
+        (pid,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        rest = buf[cls.HEADER_SIZE:]
+
+        (dst_family, dst_prefix,
+         rest) = cls._parse_family_prefix(rest)
+
+        (min_rx_timer, min_tx_timer, detect_mult,
+         multi_hop) = struct.unpack_from(cls._BODY_FMT, rest)
+        rest = rest[cls.BODY_SIZE:]
+
+        (src_family, src_prefix,
+         rest) = cls._parse_family_prefix(rest)
+
+        multi_hop_count = None
+        ifname = None
+        if multi_hop:
+            (multi_hop_count,) = struct.unpack_from(cls._FOOTER_FMT, rest)
+        else:
+            (ifname_len,) = struct.unpack_from(cls._FOOTER_FMT, rest)
+            ifname_bin = rest[cls.FOOTER_SIZE:cls.FOOTER_SIZE + ifname_len]
+            ifname = str(six.text_type(ifname_bin.strip(b'\x00'), 'ascii'))
+
+        return cls(pid, dst_family, dst_prefix,
+                   min_rx_timer, min_tx_timer, detect_mult,
+                   multi_hop, src_family, src_prefix,
+                   multi_hop_count, ifname)
+
+    def _serialize_family_prefix(self, prefix):
+        if netaddr.valid_ipv4(prefix):
+            family = socket.AF_INET
+            return (family,
+                    struct.pack(self._FAMILY_FMT, family)
+                    + addrconv.ipv4.text_to_bin(prefix))
+        elif netaddr.valid_ipv6(prefix):
+            family = socket.AF_INET6
+            return (family,
+                    struct.pack(self._FAMILY_FMT, family)
+                    + addrconv.ipv6.text_to_bin(prefix))
+
+        raise ValueError('Invalid prefix: %s' % prefix)
+
+    def serialize(self, version=_DEFAULT_VERSION):
+        (self.dst_family,  # fixup
+         dst_bin) = self._serialize_family_prefix(self.dst_prefix)
+
+        body_bin = struct.pack(
+            self._BODY_FMT,
+            self.min_rx_timer, self.min_tx_timer, self.detect_mult,
+            self.multi_hop)
+
+        (self.src_family,  # fixup
+         src_bin) = self._serialize_family_prefix(self.src_prefix)
+
+        if self.multi_hop:
+            footer_bin = struct.pack(
+                self._FOOTER_FMT, self.multi_hop_count)
+        else:
+            ifname_bin = self.ifname.encode('ascii')
+            footer_bin = struct.pack(
+                self._FOOTER_FMT, len(ifname_bin)) + ifname_bin
+
+        return struct.pack(
+            self._HEADER_FMT,
+            self.pid) + dst_bin + body_bin + src_bin + footer_bin
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_BFD_DEST_REGISTER)
+class ZebraBfdDestinationRegister(_ZebraBfdDestination):
+    """
+    Message body class for FRR_ZEBRA_BFD_DEST_REGISTER.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_BFD_DEST_DEREGISTER)
+class ZebraBfdDestinationDeregister(_ZebraMessageBody):
+    """
+    Message body class for FRR_ZEBRA_BFD_DEST_DEREGISTER.
+    """
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | PID                                                           |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Family                        |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Destination IPv4/v6 prefix (4 bytes or 16 bytes)              |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Multi Hop     |
+    # +-+-+-+-+-+-+-+-+
+    # | Family        |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Source IPv4/v6 prefix  (4 bytes or 16 bytes)                  |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (MultiHopCnt) | if Multi Hop enabled
+    # +-+-+-+-+-+-+-+-+
+    # | (IF Name Len) | if Multi Hop disabled
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (IF Name (Variable)) if Multi Hop disabled                    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!I'  # pid
+    HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _FAMILY_FMT = '!H'
+    FAMILY_SIZE = struct.calcsize(_FAMILY_FMT)
+    _BODY_FMT = '!B'  # multi_hop
+    BODY_SIZE = struct.calcsize(_BODY_FMT)
+    _FOOTER_FMT = '!B'  # multi_hop_count or ifname_len
+    FOOTER_SIZE = struct.calcsize(_FOOTER_FMT)
+
+    def __init__(self, pid, dst_family, dst_prefix,
+                 multi_hop, src_family, src_prefix,
+                 multi_hop_count=None, ifname=None):
+        super(ZebraBfdDestinationDeregister, self).__init__()
+        self.pid = pid
+        self.dst_family = dst_family
+        assert (netaddr.valid_ipv4(dst_prefix) or
+                netaddr.valid_ipv6(dst_prefix))
+        self.dst_prefix = dst_prefix
+        self.multi_hop = multi_hop
+        self.src_family = src_family
+        assert (netaddr.valid_ipv4(src_prefix) or
+                netaddr.valid_ipv6(src_prefix))
+        self.src_prefix = src_prefix
+        self.multi_hop_count = multi_hop_count
+        self.ifname = ifname
+
+    @classmethod
+    def _parse_family_prefix(cls, buf):
+        (family,) = struct.unpack_from(cls._FAMILY_FMT, buf)
+        rest = buf[cls.FAMILY_SIZE:]
+
+        if socket.AF_INET == family:
+            return family, addrconv.ipv4.bin_to_text(rest[:4]), rest[4:]
+        elif socket.AF_INET6 == family:
+            return family, addrconv.ipv6.bin_to_text(rest[:16]), rest[16:]
+
+        raise struct.error('Unsupported family: %d' % family)
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_VERSION):
+        (pid,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        rest = buf[cls.HEADER_SIZE:]
+
+        (dst_family, dst_prefix,
+         rest) = cls._parse_family_prefix(rest)
+
+        (multi_hop,) = struct.unpack_from(cls._BODY_FMT, rest)
+        rest = rest[cls.BODY_SIZE:]
+
+        (src_family, src_prefix,
+         rest) = cls._parse_family_prefix(rest)
+
+        multi_hop_count = None
+        ifname = None
+        if multi_hop:
+            (multi_hop_count,) = struct.unpack_from(cls._FOOTER_FMT, rest)
+        else:
+            (ifname_len,) = struct.unpack_from(cls._FOOTER_FMT, rest)
+            ifname_bin = rest[cls.FOOTER_SIZE:cls.FOOTER_SIZE + ifname_len]
+            ifname = str(six.text_type(ifname_bin.strip(b'\x00'), 'ascii'))
+
+        return cls(pid, dst_family, dst_prefix,
+                   multi_hop, src_family, src_prefix,
+                   multi_hop_count, ifname)
+
+    def _serialize_family_prefix(self, prefix):
+        if netaddr.valid_ipv4(prefix):
+            family = socket.AF_INET
+            return (family,
+                    struct.pack(self._FAMILY_FMT, family)
+                    + addrconv.ipv4.text_to_bin(prefix))
+        elif netaddr.valid_ipv6(prefix):
+            family = socket.AF_INET6
+            return (family,
+                    struct.pack(self._FAMILY_FMT, family)
+                    + addrconv.ipv6.text_to_bin(prefix))
+
+        raise ValueError('Invalid prefix: %s' % prefix)
+
+    def serialize(self, version=_DEFAULT_VERSION):
+        (self.dst_family,  # fixup
+         dst_bin) = self._serialize_family_prefix(self.dst_prefix)
+
+        body_bin = struct.pack(self._BODY_FMT, self.multi_hop)
+
+        (self.src_family,  # fixup
+         src_bin) = self._serialize_family_prefix(self.src_prefix)
+
+        if self.multi_hop:
+            footer_bin = struct.pack(
+                self._FOOTER_FMT, self.multi_hop_count)
+        else:
+            ifname_bin = self.ifname.encode('ascii')
+            footer_bin = struct.pack(
+                self._FOOTER_FMT, len(ifname_bin)) + ifname_bin
+
+        return struct.pack(
+            self._HEADER_FMT,
+            self.pid) + dst_bin + body_bin + src_bin + footer_bin
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_BFD_DEST_UPDATE)
+class ZebraBfdDestinationUpdate(_ZebraBfdDestination):
+    """
+    Message body class for FRR_ZEBRA_BFD_DEST_UPDATE.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_BFD_DEST_REPLAY)
+class ZebraBfdDestinationReply(_ZebraMessageBody):
+    """
+    Message body class for FRR_ZEBRA_BFD_DEST_REPLAY.
+    """
 
 
 class _ZebraRedistributeIPv4(_ZebraIPRoute):
