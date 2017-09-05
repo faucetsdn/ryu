@@ -352,6 +352,22 @@ BFD_STATUS_UP = 1 << 2
 # VRF name length
 VRF_NAMSIZ = 36
 
+# Constants in frr/lib/mpls.h
+
+# Reserved MPLS label values
+MPLS_V4_EXP_NULL_LABEL = 0
+MPLS_RA_LABEL = 1
+MPLS_V6_EXP_NULL_LABEL = 2
+MPLS_IMP_NULL_LABEL = 3
+MPLS_ENTROPY_LABEL_INDICATOR = 7
+MPLS_GAL_LABEL = 13
+MPLS_OAM_ALERT_LABEL = 14
+MPLS_EXTENSION_LABEL = 15
+MPLS_MIN_RESERVED_LABEL = 0
+MPLS_MAX_RESERVED_LABEL = 15
+MPLS_MIN_UNRESERVED_LABEL = 16
+MPLS_MAX_UNRESERVED_LABEL = 1048575
+
 
 # Utility functions/classes
 
@@ -3166,10 +3182,147 @@ class ZebraInterfaceDisableRadv(_ZebraInterfaceRadv):
     """
 
 
-# TODO:
-# Implement the following messages:
-#  - FRR_ZEBRA_MPLS_LABELS_ADD
-#  - FRR_ZEBRA_MPLS_LABELS_DELETE
+class _ZebraMplsLabels(_ZebraMessageBody):
+    """
+    Base class for ZEBRA_MPLS_LABELS_* message body.
+    """
+    # Zebra MPLS Labels message body:
+    #  0                   1                   2                   3
+    #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Route Type    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Family                                                        |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | IPv4/v6 Prefix (4 bytes/16 bytes)                             |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Prefix Len    |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Gate IPv4/v6 Address (4 bytes/16 bytes)                       |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Distance      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | In Label                                                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | Out Label                                                     |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    _HEADER_FMT = '!B'  # route_type
+    HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _FAMILY_FMT = '!I'
+    FAMILY_SIZE = struct.calcsize(_FAMILY_FMT)
+    _IPV4_PREFIX_FMT = '!4sB'  # prefix, prefix_len
+    _IPV6_PREFIX_FMT = '!16sB'
+    IPV4_PREFIX_SIZE = struct.calcsize(_IPV4_PREFIX_FMT)
+    IPV6_PREFIX_SIZE = struct.calcsize(_IPV6_PREFIX_FMT)
+    _FAMILY_IPV4_PREFIX_FMT = '!I4sB'
+    _FAMILY_IPV6_PREFIX_FMT = '!I16sB'
+    _BODY_FMT = '!BII'  # distance, in_label, out_label
+
+    def __init__(self, route_type, family, prefix, gate_addr,
+                 distance, in_label, out_label):
+        super(_ZebraMplsLabels, self).__init__()
+        self.route_type = route_type
+        self.family = family
+        if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
+            prefix = prefix.prefix
+        self.prefix = prefix
+        assert netaddr.valid_ipv4(gate_addr) or netaddr.valid_ipv6(gate_addr)
+        self.gate_addr = gate_addr
+        self.distance = distance
+        self.in_label = in_label
+        self.out_label = out_label
+
+    @classmethod
+    def _parse_family_prefix(cls, buf):
+        (family,) = struct.unpack_from(cls._FAMILY_FMT, buf)
+        rest = buf[cls.FAMILY_SIZE:]
+
+        if socket.AF_INET == family:
+            (prefix, p_len) = struct.unpack_from(cls._IPV4_PREFIX_FMT, rest)
+            prefix = '%s/%d' % (addrconv.ipv4.bin_to_text(prefix), p_len)
+            rest = rest[cls.IPV4_PREFIX_SIZE:]
+        elif socket.AF_INET6 == family:
+            (prefix, p_len) = struct.unpack_from(cls._IPV6_PREFIX_FMT, rest)
+            prefix = '%s/%d' % (addrconv.ipv6.bin_to_text(prefix), p_len)
+            rest = rest[cls.IPV6_PREFIX_SIZE:]
+        else:
+            raise struct.error('Unsupported family: %d' % family)
+
+        return family, prefix, rest
+
+    @classmethod
+    def parse(cls, buf, version=_DEFAULT_FRR_VERSION):
+        (route_type,) = struct.unpack_from(cls._HEADER_FMT, buf)
+        rest = buf[cls.HEADER_SIZE:]
+
+        (family, prefix, rest) = cls._parse_family_prefix(rest)
+
+        if family == socket.AF_INET:
+            gate_addr = addrconv.ipv4.bin_to_text(rest[:4])
+            rest = rest[4:]
+        elif family == socket.AF_INET6:
+            gate_addr = addrconv.ipv6.bin_to_text(rest[:16])
+            rest = rest[16:]
+        else:
+            raise struct.error('Unsupported family: %d' % family)
+
+        (distance, in_label,
+         out_label) = struct.unpack_from(cls._BODY_FMT, rest)
+
+        return cls(route_type, family, prefix, gate_addr,
+                   distance, in_label, out_label)
+
+    def _serialize_family_prefix(self, prefix):
+        if ip.valid_ipv4(prefix):
+            family = socket.AF_INET  # fixup
+            prefix_addr, prefix_num = prefix.split('/')
+            return family, struct.pack(
+                self._FAMILY_IPV4_PREFIX_FMT,
+                family,
+                addrconv.ipv4.text_to_bin(prefix_addr),
+                int(prefix_num))
+        elif ip.valid_ipv6(prefix):
+            family = socket.AF_INET6  # fixup
+            prefix_addr, prefix_num = prefix.split('/')
+            return family, struct.pack(
+                self._FAMILY_IPV6_PREFIX_FMT,
+                family,
+                addrconv.ipv6.text_to_bin(prefix_addr),
+                int(prefix_num))
+
+        raise ValueError('Invalid prefix: %s' % prefix)
+
+    def serialize(self, version=_DEFAULT_FRR_VERSION):
+        (self.family,  # fixup
+         prefix_bin) = self._serialize_family_prefix(self.prefix)
+
+        if self.family == socket.AF_INET:
+            gate_addr_bin = addrconv.ipv4.text_to_bin(self.gate_addr)
+        elif self.family == socket.AF_INET6:
+            gate_addr_bin = addrconv.ipv6.text_to_bin(self.gate_addr)
+        else:
+            raise ValueError('Unsupported family: %d' % self.family)
+
+        body_bin = struct.pack(
+            self._BODY_FMT, self.distance, self.in_label, self.out_label)
+
+        return struct.pack(
+            self._HEADER_FMT,
+            self.route_type) + prefix_bin + gate_addr_bin + body_bin
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_MPLS_LABELS_ADD)
+class ZebraMplsLabelsAdd(_ZebraMplsLabels):
+    """
+    Message body class for FRR_ZEBRA_MPLS_LABELS_ADD.
+    """
+
+
+@_FrrZebraMessageBody.register_type(FRR_ZEBRA_MPLS_LABELS_DELETE)
+class ZebraMplsLabelsDelete(_ZebraMplsLabels):
+    """
+    Message body class for FRR_ZEBRA_MPLS_LABELS_DELETE.
+    """
 
 
 class _ZebraIPv4Nexthop(_ZebraIPRoute):
