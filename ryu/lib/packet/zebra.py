@@ -263,7 +263,10 @@ class InterfaceLinkParams(stringify.StringifyMixin):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | (float) Maximum Reservable Bandwidth                          |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    # | (float) Unreserved Bandwidth per Class Type * MAX_CLASS_TYPE  |
+    # | Number of Unreserved Bandwidth Classes (max is MAX_CLASS_TYPE)|
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # | (float) Unreserved Bandwidth per Class Type                   |
+    # |  ...  repeats Number of Unreserved Bandwidth Classes times    |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | Administrative group                                          |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -287,10 +290,14 @@ class InterfaceLinkParams(stringify.StringifyMixin):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # | (float) Utilized Bandwidth                                    |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    _HEADER_FMT = '!IIff'
+    # lp_status, te_metric, max_bw, max_reserved_bw, bw_cls_num
+    _HEADER_FMT = '!IIffI'
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
     _REPEATED_FMT = '!f'
     REPEATED_SIZE = struct.calcsize(_REPEATED_FMT)
+    # admin_group, remote_as, remote_ip,
+    # average_delay, min_delay, max_delay, delay_var,
+    #  pkt_loss, residual_bw, average_bw, utilized_bw
     _FOOTER_FMT = '!II4sIIIIffff'
     FOOTER_SIZE = struct.calcsize(_FOOTER_FMT)
 
@@ -321,12 +328,14 @@ class InterfaceLinkParams(stringify.StringifyMixin):
 
     @classmethod
     def parse(cls, buf):
-        (lp_status, te_metric, max_bw,
-         max_reserved_bw) = struct.unpack_from(cls._HEADER_FMT, buf)
+        (lp_status, te_metric, max_bw, max_reserved_bw,
+         bw_cls_num) = struct.unpack_from(cls._HEADER_FMT, buf)
+        if MAX_CLASS_TYPE < bw_cls_num:
+            bw_cls_num = MAX_CLASS_TYPE
         offset = cls.HEADER_SIZE
 
         unreserved_bw = []
-        for _ in range(MAX_CLASS_TYPE):
+        for _ in range(bw_cls_num):
             (u_bw,) = struct.unpack_from(cls._REPEATED_FMT, buf, offset)
             unreserved_bw.append(u_bw)
             offset += cls.REPEATED_SIZE
@@ -347,7 +356,7 @@ class InterfaceLinkParams(stringify.StringifyMixin):
     def serialize(self):
         buf = struct.pack(
             self._HEADER_FMT, self.lp_status, self.te_metric, self.max_bw,
-            self.max_reserved_bw)
+            self.max_reserved_bw, len(self.unreserved_bw))
 
         for u_bw in self.unreserved_bw:
             buf += struct.pack(self._REPEATED_FMT, u_bw)
