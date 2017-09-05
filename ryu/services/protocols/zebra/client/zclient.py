@@ -116,15 +116,17 @@ class ZServer(object):
         self.client.send_msg(
             zebra.ZebraMessage(
                 version=self.client.zserv_ver,
-                body=zebra.ZebraHello(self.client.route_type)))
+                body=zebra.ZebraHello(
+                    route_type=self.client.route_type,
+                    instance=0)))
         self.client.send_msg(
             zebra.ZebraMessage(
                 version=self.client.zserv_ver,
-                command=zebra.ZEBRA_ROUTER_ID_ADD))
+                body=zebra.ZebraRouterIDAdd()))
         self.client.send_msg(
             zebra.ZebraMessage(
                 version=self.client.zserv_ver,
-                command=zebra.ZEBRA_INTERFACE_ADD))
+                body=zebra.ZebraInterfaceAdd()))
 
         self.client.send_event_to_observers(
             zclient_event.EventZServConnected(self))
@@ -285,7 +287,8 @@ class ZClient(RyuApp):
                 distance=distance,
                 metric=metric,
                 mtu=mtu,
-                tag=tag))
+                tag=tag,
+                instance=0))
         self.send_msg(msg)
 
         return msg

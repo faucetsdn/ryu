@@ -277,6 +277,8 @@ class ZServer(RyuApp):
                     ifindex=intf.ifindex,
                     status=intf.status,
                     if_flags=intf.flags,
+                    ptm_enable=zebra.ZEBRA_IF_PTM_ENABLE_OFF,
+                    ptm_status=zebra.ZEBRA_PTM_STATUS_UNKNOWN,
                     metric=intf.metric,
                     ifmtu=intf.ifmtu,
                     ifmtu6=intf.ifmtu6,

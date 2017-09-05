@@ -90,7 +90,7 @@ def message_to_event(zclient, msg):
     if not isinstance(msg, zebra.ZebraMessage):
         return None
 
-    body_cls = zebra._ZebraMessageBody.lookup_command(msg.command)
+    body_cls = msg.get_body_class(msg.version, msg.command)
     ev_cls = getattr(MOD, _event_name(body_cls), None)
     if ev_cls is None:
         return None
