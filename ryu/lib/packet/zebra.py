@@ -1845,7 +1845,7 @@ class _ZebraIPNexthopLookupMRib(_ZebraMessageBody):
         buf += struct.pack(
             self._DISTANCE_METRIC_FMT, self.distance, self.metric)
 
-        return buf + self._serialize_nexthops(self.nexthops)
+        return buf + _serialize_nexthops(self.nexthops)
 
 
 @_ZebraMessageBody.register_type(ZEBRA_IPV4_NEXTHOP_LOOKUP_MRIB)
