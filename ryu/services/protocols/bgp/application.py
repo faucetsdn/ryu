@@ -33,18 +33,8 @@ from ryu.services.protocols.bgp.net_ctrl import NET_CONTROLLER
 from ryu.services.protocols.bgp.net_ctrl import NC_RPC_BIND_IP
 from ryu.services.protocols.bgp.net_ctrl import NC_RPC_BIND_PORT
 from ryu.services.protocols.bgp.rtconf.base import RuntimeConfigError
-from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
-from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_PORT
-from ryu.services.protocols.bgp.rtconf.common import (
-    DEFAULT_REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_STALEPATH_TIME)
-from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LABEL_RANGE
-from ryu.services.protocols.bgp.rtconf.common import LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
-from ryu.services.protocols.bgp.rtconf.common import REFRESH_MAX_EOR_TIME
-from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
-from ryu.services.protocols.bgp.rtconf.common import LOCAL_PREF
-from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LOCAL_PREF
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv6
 
@@ -234,54 +224,45 @@ class RyuBGPSpeaker(RyuApp):
         """
         Starts BGPSpeaker using the given settings.
         """
-        # Settings for starting BGPSpeaker
-        bgp_settings = {}
-
-        # Get required settings.
-        try:
-            bgp_settings['as_number'] = settings.get(LOCAL_AS)
-            bgp_settings['router_id'] = settings.get(ROUTER_ID)
-        except KeyError as e:
-            raise ApplicationException(
-                desc='Required BGP configuration missing: %s' % e)
+        # Check required settings.
+        _required_settings = (
+            LOCAL_AS,
+            ROUTER_ID,
+        )
+        for required in _required_settings:
+            if required not in settings:
+                raise ApplicationException(
+                    desc='Required BGP configuration missing: %s' % required)
 
         # Set event notify handlers if no corresponding handler specified.
-        bgp_settings['best_path_change_handler'] = settings.get(
+        settings.setdefault(
             'best_path_change_handler', self._notify_best_path_changed_event)
-        bgp_settings['peer_down_handler'] = settings.get(
+        settings.setdefault(
             'peer_down_handler', self._notify_peer_down_event)
-        bgp_settings['peer_up_handler'] = settings.get(
+        settings.setdefault(
             'peer_up_handler', self._notify_peer_up_event)
 
-        # Get optional settings.
-        bgp_settings[BGP_SERVER_PORT] = settings.get(
-            BGP_SERVER_PORT, DEFAULT_BGP_SERVER_PORT)
-        bgp_settings[REFRESH_STALEPATH_TIME] = settings.get(
-            REFRESH_STALEPATH_TIME, DEFAULT_REFRESH_STALEPATH_TIME)
-        bgp_settings[REFRESH_MAX_EOR_TIME] = settings.get(
-            REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_MAX_EOR_TIME)
-        bgp_settings[LABEL_RANGE] = settings.get(
-            LABEL_RANGE, DEFAULT_LABEL_RANGE)
-        bgp_settings['allow_local_as_in_count'] = settings.get(
-            'allow_local_as_in_count', 0)
-        bgp_settings[LOCAL_PREF] = settings.get(
-            LOCAL_PREF, DEFAULT_LOCAL_PREF)
+        # Pop settings other than creating BGPSpeaker instance.
+        neighbors_settings = settings.pop('neighbors', [])
+        vrfs_settings = settings.pop('vrfs', [])
+        routes_settings = settings.pop('routes', [])
 
         # Create BGPSpeaker instance.
         LOG.debug('Starting BGPSpeaker...')
-        self.speaker = BGPSpeaker(**bgp_settings)
+        settings.setdefault('as_number', settings.pop(LOCAL_AS))
+        self.speaker = BGPSpeaker(**settings)
 
         # Add neighbors.
         LOG.debug('Adding neighbors...')
-        self._add_neighbors(settings.get('neighbors', []))
+        self._add_neighbors(neighbors_settings)
 
         # Add VRFs.
         LOG.debug('Adding VRFs...')
-        self._add_vrfs(settings.get('vrfs', []))
+        self._add_vrfs(vrfs_settings)
 
-        # Add Networks
+        # Add routes
         LOG.debug('Adding routes...')
-        self._add_routes(settings.get('routes', []))
+        self._add_routes(routes_settings)
 
     def _notify_best_path_changed_event(self, ev):
         ev = EventBestPathChanged(ev.path, ev.is_withdraw)
