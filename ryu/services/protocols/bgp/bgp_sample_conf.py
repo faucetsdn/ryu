@@ -48,6 +48,9 @@ BGP = {
     # Default local preference
     'local_pref': 100,
 
+    # List of TCP listen host addresses.
+    'bgp_server_hosts': ['0.0.0.0', '::'],
+
     # List of BGP neighbors.
     # The parameters for each neighbor are the same as the arguments of
     # BGPSpeaker.neighbor_add() method.

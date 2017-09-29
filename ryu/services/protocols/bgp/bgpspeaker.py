@@ -70,7 +70,9 @@ from ryu.services.protocols.bgp.api.prefix import (
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import CLUSTER_ID
+from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_HOSTS
 from ryu.services.protocols.bgp.rtconf.common import BGP_SERVER_PORT
+from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_HOSTS
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_BGP_SERVER_PORT
 from ryu.services.protocols.bgp.rtconf.common import (
     DEFAULT_REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_STALEPATH_TIME)
@@ -218,6 +220,7 @@ class EventPrefix(object):
 
 class BGPSpeaker(object):
     def __init__(self, as_number, router_id,
+                 bgp_server_hosts=DEFAULT_BGP_SERVER_HOSTS,
                  bgp_server_port=DEFAULT_BGP_SERVER_PORT,
                  refresh_stalepath_time=DEFAULT_REFRESH_STALEPATH_TIME,
                  refresh_max_eor_time=DEFAULT_REFRESH_MAX_EOR_TIME,
@@ -238,6 +241,8 @@ class BGPSpeaker(object):
 
         ``router_id`` specifies BGP router identifier. It must be the
         string representation of an IPv4 address (e.g. 10.0.0.1).
+
+        ``bgp_server_host`` specifies a list of TCP listen host addresses.
 
         ``bgp_server_port`` specifies TCP listen port number. 179 is
         used if not specified.
@@ -297,6 +302,7 @@ class BGPSpeaker(object):
         settings = {
             LOCAL_AS: as_number,
             ROUTER_ID: router_id,
+            BGP_SERVER_HOSTS: bgp_server_hosts,
             BGP_SERVER_PORT: bgp_server_port,
             REFRESH_STALEPATH_TIME: refresh_stalepath_time,
             REFRESH_MAX_EOR_TIME: refresh_max_eor_time,

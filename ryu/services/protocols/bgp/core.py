@@ -224,17 +224,17 @@ class CoreService(Factory, Activity):
             self._spawn_activity(peer, self.start_protocol)
 
         # Reactively establish bgp-session with peer by listening on
-        # server port for connection requests.
-        server_addr = (CORE_IP, self._common_config.bgp_server_port)
+        # the given server hosts and port for connection requests.
         waiter = kwargs.pop('waiter')
         waiter.set()
+        self.listen_sockets = {}
         if self._common_config.bgp_server_port != 0:
-            server_thread, sockets = self._listen_tcp(server_addr,
-                                                      self.start_protocol)
-            self.listen_sockets = sockets
-            server_thread.wait()
-        else:
-            self.listen_sockets = {}
+            for host in self._common_config.bgp_server_hosts:
+                server_thread, sockets = self._listen_tcp(
+                    (host, self._common_config.bgp_server_port),
+                    self.start_protocol)
+                self.listen_sockets.update(sockets)
+                server_thread.wait()
         processor_thread.wait()
 
     # ========================================================================

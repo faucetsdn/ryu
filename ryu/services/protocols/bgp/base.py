@@ -363,7 +363,7 @@ class Activity(object):
 
         For each connection `server_factory` starts a new protocol.
         """
-        info = socket.getaddrinfo(None, loc_addr[1], socket.AF_UNSPEC,
+        info = socket.getaddrinfo(loc_addr[0], loc_addr[1], socket.AF_UNSPEC,
                                   socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
         listen_sockets = {}
         for res in info:

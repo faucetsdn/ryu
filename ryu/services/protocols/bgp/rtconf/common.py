@@ -19,6 +19,8 @@
 import logging
 import numbers
 
+import netaddr
+
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_asn
 
@@ -72,6 +74,7 @@ REFRESH_STALEPATH_TIME = 'refresh_stalepath_time'
 REFRESH_MAX_EOR_TIME = 'refresh_max_eor_time'
 
 BGP_CONN_RETRY_TIME = 'bgp_conn_retry_time'
+BGP_SERVER_HOSTS = 'bgp_server_hosts'
 BGP_SERVER_PORT = 'bgp_server_port'
 TCP_CONN_TIMEOUT = 'tcp_conn_timeout'
 MAX_PATH_EXT_RTFILTER_ALL = 'maximum_paths_external_rtfilter_all'
@@ -81,6 +84,7 @@ MAX_PATH_EXT_RTFILTER_ALL = 'maximum_paths_external_rtfilter_all'
 DEFAULT_LABEL_RANGE = (100, 100000)
 DEFAULT_REFRESH_STALEPATH_TIME = 0
 DEFAULT_REFRESH_MAX_EOR_TIME = 0
+DEFAULT_BGP_SERVER_HOSTS = ('0.0.0.0', '::')
 DEFAULT_BGP_SERVER_PORT = 179
 DEFAULT_TCP_CONN_TIMEOUT = 30
 DEFAULT_BGP_CONN_RETRY_TIME = 30
@@ -170,6 +174,17 @@ def validate_label_range(label_range):
     return label_range
 
 
+@validate(name=BGP_SERVER_HOSTS)
+def validate_bgp_server_hosts(hosts):
+    for host in hosts:
+        if (not netaddr.valid_ipv4(host) and
+                not netaddr.valid_ipv6(host)):
+            raise ConfigTypeError(desc=('Invalid bgp sever hosts '
+                                        'configuration value %s' % hosts))
+
+    return hosts
+
+
 @validate(name=BGP_SERVER_PORT)
 def validate_bgp_server_port(server_port):
     if not isinstance(server_port, numbers.Integral):
@@ -243,8 +258,8 @@ class CommonConf(BaseConf):
     REQUIRED_SETTINGS = frozenset([ROUTER_ID, LOCAL_AS])
 
     OPTIONAL_SETTINGS = frozenset([REFRESH_STALEPATH_TIME,
-                                   REFRESH_MAX_EOR_TIME,
-                                   LABEL_RANGE, BGP_SERVER_PORT,
+                                   REFRESH_MAX_EOR_TIME, LABEL_RANGE,
+                                   BGP_SERVER_HOSTS, BGP_SERVER_PORT,
                                    TCP_CONN_TIMEOUT,
                                    BGP_CONN_RETRY_TIME,
                                    MAX_PATH_EXT_RTFILTER_ALL,
@@ -265,6 +280,8 @@ class CommonConf(BaseConf):
             REFRESH_STALEPATH_TIME, DEFAULT_REFRESH_STALEPATH_TIME, **kwargs)
         self._settings[REFRESH_MAX_EOR_TIME] = compute_optional_conf(
             REFRESH_MAX_EOR_TIME, DEFAULT_REFRESH_MAX_EOR_TIME, **kwargs)
+        self._settings[BGP_SERVER_HOSTS] = compute_optional_conf(
+            BGP_SERVER_HOSTS, DEFAULT_BGP_SERVER_HOSTS, **kwargs)
         self._settings[BGP_SERVER_PORT] = compute_optional_conf(
             BGP_SERVER_PORT, DEFAULT_BGP_SERVER_PORT, **kwargs)
         self._settings[TCP_CONN_TIMEOUT] = compute_optional_conf(
@@ -321,6 +338,10 @@ class CommonConf(BaseConf):
     @property
     def label_range(self):
         return self._settings[LABEL_RANGE]
+
+    @property
+    def bgp_server_hosts(self):
+        return self._settings[BGP_SERVER_HOSTS]
 
     @property
     def bgp_server_port(self):
