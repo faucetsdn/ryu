@@ -51,11 +51,13 @@ from ryu.ofproto import ofproto_parser
 class OFPHandler(ryu.base.app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(OFPHandler, self).__init__(*args, **kwargs)
-        self.name = 'ofp_event'
+        self.name = ofp_event.NAME
+        self.controller = None
 
     def start(self):
         super(OFPHandler, self).start()
-        return hub.spawn(OpenFlowController())
+        self.controller = OpenFlowController()
+        return hub.spawn(self.controller)
 
     def _hello_failed(self, datapath, error_desc):
         self.logger.error(error_desc)

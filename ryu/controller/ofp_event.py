@@ -26,6 +26,9 @@ from ryu import ofproto
 from . import event
 
 
+NAME = 'ofp_event'
+
+
 class EventOFPMsgBase(event.EventBase):
     """
     The base class of OpenFlow event class.

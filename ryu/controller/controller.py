@@ -66,7 +66,7 @@ CONF.register_cli_opts([
     cfg.StrOpt('ca-certs', default=None, help='CA certificates'),
     cfg.ListOpt('ofp-switch-address-list', item_type=str, default=[],
                 help='list of IP address and port pairs (default empty). '
-                     'e.g., "127.0.0.1:6653,127.0.0.1:6633"'),
+                     'e.g., "127.0.0.1:6653,[::1]:6653"'),
     cfg.IntOpt('ofp-switch-connect-interval',
                default=DEFAULT_OFP_SW_CON_INTERVAL,
                help='interval in seconds to connect to switches '
@@ -133,6 +133,12 @@ class OpenFlowController(object):
             self.ofp_tcp_listen_port = CONF.ofp_tcp_listen_port
             self.ofp_ssl_listen_port = CONF.ofp_ssl_listen_port
 
+        # Example:
+        # self._clients = {
+        #     ('127.0.0.1', 6653): <instance of StreamClient>,
+        # }
+        self._clients = {}
+
     # entry point
     def __call__(self):
         # LOG.debug('call')
@@ -147,6 +153,12 @@ class OpenFlowController(object):
         interval = interval or CONF.ofp_switch_connect_interval
         client = hub.StreamClient(addr)
         hub.spawn(client.connect_loop, datapath_connection_factory, interval)
+        self._clients[addr] = client
+
+    def stop_client_loop(self, addr):
+        client = self._clients.get(addr, None)
+        if client is not None:
+            client.stop()
 
     def server_loop(self, ofp_tcp_listen_port, ofp_ssl_listen_port):
         if CONF.ctl_privkey is not None and CONF.ctl_cert is not None:
