@@ -24,9 +24,11 @@ import json
 import os
 import sys
 import warnings
-import unittest
 import logging
 import random
+import unittest
+
+from nose.tools import eq_, raises
 
 from ryu.base import app_manager  # To suppress cyclic import
 from ryu.controller import controller
@@ -37,6 +39,38 @@ from ryu.ofproto import ofproto_v1_0_parser
 
 
 LOG = logging.getLogger('test_controller')
+
+
+class TestUtils(unittest.TestCase):
+    """
+    Test cases for utilities defined in controller module.
+    """
+
+    def test_split_addr_with_ipv4(self):
+        addr, port = controller._split_addr('127.0.0.1:6653')
+        eq_('127.0.0.1', addr)
+        eq_(6653, port)
+
+    def test_split_addr_with_ipv6(self):
+        addr, port = controller._split_addr('[::1]:6653')
+        eq_('::1', addr)
+        eq_(6653, port)
+
+    @raises(ValueError)
+    def test_split_addr_with_invalid_addr(self):
+        controller._split_addr('127.0.0.1')
+
+    @raises(ValueError)
+    def test_split_addr_with_invalid_ipv4_addr(self):
+        controller._split_addr('xxx.xxx.xxx.xxx:6653')
+
+    @raises(ValueError)
+    def test_split_addr_with_invalid_ipv6_addr(self):
+        controller._split_addr('[::xxxx]:6653')
+
+    @raises(ValueError)
+    def test_split_addr_with_non_bracketed_ipv6_addr(self):
+        controller._split_addr('::1:6653')
 
 
 class Test_Datapath(unittest.TestCase):
