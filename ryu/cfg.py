@@ -36,6 +36,7 @@ CONF = oslo_config.cfg.ConfigOpts()
 
 from oslo_config.cfg import ConfigOpts
 
+from oslo_config.cfg import Opt
 from oslo_config.cfg import BoolOpt
 from oslo_config.cfg import IntOpt
 from oslo_config.cfg import ListOpt
