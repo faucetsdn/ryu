@@ -46,9 +46,8 @@ class ShortestForwarding(app_manager.RyuApp):
     """
         ShortestForwarding is a Ryu app for forwarding packets in shortest
         path.
-        This App does not defined the path computation method.
-        To get shortest path, this module depends on network awareness,
-        network monitor and network delay detecttor modules.
+        The shortest path computation is done by module network awareness,
+        network monitor and network delay detector.
     """
 
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
