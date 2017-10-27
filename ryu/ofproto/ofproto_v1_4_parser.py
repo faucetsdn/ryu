@@ -5598,6 +5598,7 @@ class OFPSetAsync(MsgBase):
         self.buf += bin_props
 
 
+@_register_parser
 @_set_msg_type(ofproto.OFPT_BUNDLE_CONTROL)
 class OFPBundleCtrlMsg(MsgBase):
     """
@@ -5637,7 +5638,8 @@ class OFPBundleCtrlMsg(MsgBase):
                                               [ofp.OFPBF_ATOMIC], [])
             datapath.send_msg(req)
     """
-    def __init__(self, datapath, bundle_id, type_, flags, properties):
+    def __init__(self, datapath, bundle_id=None, type_=None, flags=None,
+                 properties=None):
         super(OFPBundleCtrlMsg, self).__init__(datapath)
         self.bundle_id = bundle_id
         self.type = type_
@@ -5653,6 +5655,25 @@ class OFPBundleCtrlMsg(MsgBase):
                       self.buf, ofproto.OFP_HEADER_SIZE, self.bundle_id,
                       self.type, self.flags)
         self.buf += bin_props
+
+    @classmethod
+    def parser(cls, datapath, version, msg_type, msg_len, xid, buf):
+        msg = super(OFPBundleCtrlMsg, cls).parser(datapath, version,
+                                                  msg_type, msg_len,
+                                                  xid, buf)
+        (bundle_id, type_, flags) = struct.unpack_from(
+            ofproto.OFP_BUNDLE_CTRL_MSG_PACK_STR, buf,
+            ofproto.OFP_HEADER_SIZE)
+        msg.bundle_id = bundle_id
+        msg.type = type_
+        msg.flags = flags
+        msg.properties = []
+        rest = msg.buf[ofproto.OFP_BUNDLE_CTRL_MSG_SIZE:]
+        while rest:
+            p, rest = OFPBundleProp.parse(rest)
+            msg.properties.append(p)
+
+        return msg
 
 
 @_set_msg_type(ofproto.OFPT_BUNDLE_ADD_MESSAGE)

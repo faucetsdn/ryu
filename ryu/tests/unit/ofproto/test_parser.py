@@ -118,7 +118,7 @@ implemented = {
         ofproto_v1_4.OFPT_ROLE_STATUS: (True, False),
         ofproto_v1_4.OFPT_TABLE_STATUS: (True, False),
         ofproto_v1_4.OFPT_REQUESTFORWARD: (True, True),
-        ofproto_v1_4.OFPT_BUNDLE_CONTROL: (False, True),
+        ofproto_v1_4.OFPT_BUNDLE_CONTROL: (True, True),
         ofproto_v1_4.OFPT_BUNDLE_ADD_MESSAGE: (False, True),
     },
     6: {
