@@ -25,6 +25,8 @@ from ryu import cfg
 import ryu.exception as ryu_exc
 import ryu.lib.dpid as dpid_lib
 import ryu.lib.ovs.vsctl as ovs_vsctl
+from ryu.lib.ovs.vsctl import valid_ovsdb_addr
+
 
 LOG = logging.getLogger(__name__)
 
@@ -95,6 +97,7 @@ class OVSBridge(object):
                  exception=None):
         super(OVSBridge, self).__init__()
         self.datapath_id = datapath_id
+        self.ovsdb_addr = ovsdb_addr
         self.vsctl = ovs_vsctl.VSCtl(ovsdb_addr)
         self.timeout = timeout or CONF.ovsdb_timeout
         self.exception = exception
@@ -105,6 +108,8 @@ class OVSBridge(object):
         self.vsctl.run_command(commands, self.timeout, self.exception)
 
     def init(self):
+        if not valid_ovsdb_addr(self.ovsdb_addr):
+            raise ValueError('Invalid OVSDB address: %s' % self.ovsdb_addr)
         if self.br_name is None:
             self.br_name = self._get_bridge_name()
 

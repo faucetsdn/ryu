@@ -20,6 +20,7 @@ from __future__ import print_function
 import logging
 import operator
 import os
+import re
 import sys
 import weakref
 
@@ -37,11 +38,47 @@ from ovs import stream
 from ovs.db import idl
 
 from ryu.lib import hub
+from ryu.lib import ip
 from ryu.lib.ovs import vswitch_idl
 from ryu.lib.stringify import StringifyMixin
 
 
 LOG = logging.getLogger(__name__)       # use ovs.vlog?
+
+
+def valid_ovsdb_addr(addr):
+    """
+    Returns True if the given addr is valid OVSDB server address, otherwise
+    False.
+
+    The valid formats are:
+
+    - unix:file
+    - tcp:ip:port
+    - ssl:ip:port
+
+    If ip is IPv6 address, wrap ip with brackets (e.g., ssl:[::1]:6640).
+
+    :param addr: str value of OVSDB server address.
+    :return: True if valid, otherwise False.
+    """
+    # Assumes Unix socket format: "unix:file"
+    m = re.match('unix:(\S+)', addr)
+    if m:
+        file = m.group(1)
+        return os.path.isfile(file)
+    # Assumes TCP/SSL socket format: "tcp:ip:port" or "ssl:ip:port"
+    m = re.match('(tcp|ssl):(\S+):(\d+)', addr)
+    if m:
+        address = m.group(2)
+        port = m.group(3)
+        if '[' in address:
+            address = address.strip('[').strip(']')
+            return ip.valid_ipv6(address) and port.isdigit()
+        else:
+            return ip.valid_ipv4(address) and port.isdigit()
+    # Assumes invalid format or unsupported type
+    return False
 
 
 # for debug
