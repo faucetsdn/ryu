@@ -96,6 +96,16 @@ class SshServer(paramiko.ServerInterface):
         super(SshServer, self).__init__()
         self.sock = sock
         self.addr = addr
+        self.is_connected = True
+
+        # For pylint
+        self.buf = None
+        self.chan = None
+        self.curpos = None
+        self.histindex = None
+        self.history = None
+        self.prompted = None
+        self.promptlen = None
 
         # tweak InternalApi and RootCmd for non-bgp related commands
         self.api = InternalApi(log_handler=logging.StreamHandler(sys.stderr))
@@ -109,17 +119,6 @@ class SshServer(paramiko.ServerInterface):
         host_key = find_ssh_server_key()
         self.transport.add_server_key(host_key)
         self.transport.start_server(server=self)
-
-        self.is_connected = True
-
-        # For pylint
-        self.buf = None
-        self.chan = None
-        self.curpos = None
-        self.histindex = None
-        self.history = None
-        self.prompted = None
-        self.promptlen = None
 
     def check_auth_none(self, username):
         return paramiko.AUTH_SUCCESSFUL
@@ -260,7 +259,8 @@ class SshServer(paramiko.ServerInterface):
         self.curpos = curpos
         self._movcursor(curpos)
 
-    def _startnewline(self, prompt=None, buf=''):
+    def _startnewline(self, prompt=None, buf=None):
+        buf = buf or []
         if not prompt and self.prompted:
             prompt = self.PROMPT
         if isinstance(buf, str):
