@@ -86,6 +86,13 @@ DEFAULT_ZSERV_ROUTER_ID = '1.1.1.1'
 # should be None.
 DEFAULT_ZSERV_FRR_VERSION = '0.0'
 
+# Hack: In oslo_config.cfg.Opt, ConfigType might access __class__ attribute
+# for equal comparison, but on Python 2, LooseVersion does not have __class__
+# attribute and it causes AttributeError. So here inject __class__ attribute
+# into LooseVersion class.
+if not hasattr(LooseVersion, '__class__'):
+    LooseVersion.__class__ = LooseVersion
+
 CONF.register_cli_opts([
     cfg.StrOpt(
         'server-host', default=DEFAULT_ZSERV_HOST,
