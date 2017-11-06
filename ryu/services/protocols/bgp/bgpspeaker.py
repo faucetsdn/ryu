@@ -18,6 +18,7 @@
 
 import netaddr
 from ryu.lib import hub
+from ryu.lib import ip
 from ryu.lib.packet.bgp import (
     BGPFlowSpecTrafficActionCommunity,
     BGPFlowSpecVlanActionCommunity,
@@ -627,7 +628,7 @@ class BGPSpeaker(object):
             networks[ROUTE_FAMILY] = rf
             networks[PREFIX] = p
 
-            if rf == vrfs.VRF_RF_IPV6 and netaddr.valid_ipv4(next_hop):
+            if rf == vrfs.VRF_RF_IPV6 and ip.valid_ipv4(next_hop):
                 # convert the next_hop to IPv4-Mapped IPv6 Address
                 networks[NEXT_HOP] = \
                     str(netaddr.IPAddress(next_hop).ipv6())
@@ -1353,10 +1354,10 @@ class BGPSpeaker(object):
         If the address is IPv4 address, return IPv4 route_family
         and the prefix itself.
         """
-        ip, masklen = prefix.split('/')
-        if netaddr.valid_ipv6(ip):
+        addr, masklen = prefix.split('/')
+        if ip.valid_ipv6(addr):
             # normalize IPv6 address
-            ipv6_prefix = str(netaddr.IPAddress(ip)) + '/' + masklen
+            ipv6_prefix = str(netaddr.IPAddress(addr)) + '/' + masklen
             return vrfs.VRF_RF_IPV6, ipv6_prefix
         else:
             return vrfs.VRF_RF_IPV4, prefix

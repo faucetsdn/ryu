@@ -189,7 +189,7 @@ def create_rt_extended_community(value, subtype=2):
             subtype=subtype,
             as_number=int(global_admin),
             local_administrator=local_admin)
-    elif netaddr.valid_ipv4(global_admin):
+    elif ip.valid_ipv4(global_admin):
         ext_com = BGPIPv4AddressSpecificExtendedCommunity(
             subtype=subtype,
             ipv4_address=global_admin,

@@ -540,7 +540,7 @@ class InterfaceLinkParams(stringify.StringifyMixin):
         self.unreserved_bw = unreserved_bw
         self.admin_group = admin_group
         self.remote_as = remote_as
-        assert netaddr.valid_ipv4(remote_ip)
+        assert ip.valid_ipv4(remote_ip)
         self.remote_ip = remote_ip
         self.average_delay = average_delay
         self.min_delay = min_delay
@@ -1501,7 +1501,7 @@ class _ZebraInterfaceAddress(_ZebraMessageBody):
         if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
             prefix = prefix.prefix
         self.prefix = prefix
-        assert netaddr.valid_ipv4(dest) or netaddr.valid_ipv6(dest)
+        assert ip.valid_ipv4(dest) or ip.valid_ipv6(dest)
         self.dest = dest
 
     @classmethod
@@ -1524,7 +1524,7 @@ class _ZebraInterfaceAddress(_ZebraMessageBody):
         (self.family,  # fixup
          body_bin) = _serialize_zebra_family_prefix(self.prefix)
 
-        if netaddr.valid_ipv4(self.dest):
+        if ip.valid_ipv4(self.dest):
             body_bin += addrconv.ipv4.text_to_bin(self.dest)
         elif ip.valid_ipv6(self.prefix):
             body_bin += addrconv.ipv6.text_to_bin(self.dest)
@@ -1731,8 +1731,7 @@ class _ZebraIPRoute(_ZebraMessageBody):
         nexthops = nexthops or []
         if from_zebra:
             for nexthop in nexthops:
-                assert (netaddr.valid_ipv4(nexthop)
-                        or netaddr.valid_ipv6(nexthop))
+                assert ip.valid_ipv4(nexthop) or ip.valid_ipv6(nexthop)
         else:
             for nexthop in nexthops:
                 assert isinstance(nexthop, _NextHop)
@@ -2099,7 +2098,7 @@ class _ZebraIPNexthopLookup(_ZebraMessageBody):
 
     def __init__(self, addr, metric=None, nexthops=None):
         super(_ZebraIPNexthopLookup, self).__init__()
-        assert netaddr.valid_ipv4(addr) or netaddr.valid_ipv6(addr)
+        assert ip.valid_ipv4(addr) or ip.valid_ipv6(addr)
         self.addr = addr
         self.metric = metric
         nexthops = nexthops or []
@@ -2206,7 +2205,7 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
             if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
                 prefix = prefix.prefix
             else:
-                assert netaddr.valid_ipv4(prefix) or netaddr.valid_ipv6(prefix)
+                assert ip.valid_ipv4(prefix) or ip.valid_ipv6(prefix)
         self.prefix = prefix
         self.metric = metric
         nexthops = nexthops or []
@@ -2251,7 +2250,7 @@ class _ZebraIPImportLookup(_ZebraMessageBody):
             else:
                 raise ValueError('Invalid prefix: %s' % self.prefix)
 
-        if netaddr.valid_ipv4(self.prefix) or netaddr.valid_ipv6(self.prefix):
+        if ip.valid_ipv4(self.prefix) or ip.valid_ipv6(self.prefix):
             buf = self.PREFIX_CLS.text_to_bin(self.prefix)
         else:
             raise ValueError('Invalid prefix: %s' % self.prefix)
@@ -2415,7 +2414,7 @@ class _ZebraIPNexthopLookupMRib(_ZebraMessageBody):
 
     def __init__(self, addr, distance=None, metric=None, nexthops=None):
         super(_ZebraIPNexthopLookupMRib, self).__init__()
-        assert netaddr.valid_ipv4(addr) or netaddr.valid_ipv6(addr)
+        assert ip.valid_ipv4(addr) or ip.valid_ipv6(addr)
         self.addr = addr
         self.distance = distance
         self.metric = metric
@@ -2846,16 +2845,14 @@ class _ZebraBfdDestination(_ZebraMessageBody):
         super(_ZebraBfdDestination, self).__init__()
         self.pid = pid
         self.dst_family = dst_family
-        assert (netaddr.valid_ipv4(dst_prefix) or
-                netaddr.valid_ipv6(dst_prefix))
+        assert ip.valid_ipv4(dst_prefix) or ip.valid_ipv6(dst_prefix)
         self.dst_prefix = dst_prefix
         self.min_rx_timer = min_rx_timer
         self.min_tx_timer = min_tx_timer
         self.detect_mult = detect_mult
         self.multi_hop = multi_hop
         self.src_family = src_family
-        assert (netaddr.valid_ipv4(src_prefix) or
-                netaddr.valid_ipv6(src_prefix))
+        assert ip.valid_ipv4(src_prefix) or ip.valid_ipv6(src_prefix)
         self.src_prefix = src_prefix
         self.multi_hop_count = multi_hop_count
         self.ifname = ifname
@@ -2902,12 +2899,12 @@ class _ZebraBfdDestination(_ZebraMessageBody):
                    multi_hop_count, ifname)
 
     def _serialize_family_prefix(self, prefix):
-        if netaddr.valid_ipv4(prefix):
+        if ip.valid_ipv4(prefix):
             family = socket.AF_INET
             return (family,
                     struct.pack(self._FAMILY_FMT, family)
                     + addrconv.ipv4.text_to_bin(prefix))
-        elif netaddr.valid_ipv6(prefix):
+        elif ip.valid_ipv6(prefix):
             family = socket.AF_INET6
             return (family,
                     struct.pack(self._FAMILY_FMT, family)
@@ -2988,13 +2985,11 @@ class ZebraBfdDestinationDeregister(_ZebraMessageBody):
         super(ZebraBfdDestinationDeregister, self).__init__()
         self.pid = pid
         self.dst_family = dst_family
-        assert (netaddr.valid_ipv4(dst_prefix) or
-                netaddr.valid_ipv6(dst_prefix))
+        assert ip.valid_ipv4(dst_prefix) or ip.valid_ipv6(dst_prefix)
         self.dst_prefix = dst_prefix
         self.multi_hop = multi_hop
         self.src_family = src_family
-        assert (netaddr.valid_ipv4(src_prefix) or
-                netaddr.valid_ipv6(src_prefix))
+        assert ip.valid_ipv4(src_prefix) or ip.valid_ipv6(src_prefix)
         self.src_prefix = src_prefix
         self.multi_hop_count = multi_hop_count
         self.ifname = ifname
@@ -3039,12 +3034,12 @@ class ZebraBfdDestinationDeregister(_ZebraMessageBody):
                    multi_hop_count, ifname)
 
     def _serialize_family_prefix(self, prefix):
-        if netaddr.valid_ipv4(prefix):
+        if ip.valid_ipv4(prefix):
             family = socket.AF_INET
             return (family,
                     struct.pack(self._FAMILY_FMT, family)
                     + addrconv.ipv4.text_to_bin(prefix))
-        elif netaddr.valid_ipv6(prefix):
+        elif ip.valid_ipv6(prefix):
             family = socket.AF_INET6
             return (family,
                     struct.pack(self._FAMILY_FMT, family)
@@ -3327,7 +3322,7 @@ class _ZebraMplsLabels(_ZebraMessageBody):
         if isinstance(prefix, (IPv4Prefix, IPv6Prefix)):
             prefix = prefix.prefix
         self.prefix = prefix
-        assert netaddr.valid_ipv4(gate_addr) or netaddr.valid_ipv6(gate_addr)
+        assert ip.valid_ipv4(gate_addr) or ip.valid_ipv6(gate_addr)
         self.gate_addr = gate_addr
         if _is_frr_version_ge(_FRR_VERSION_3_0):
             assert ifindex is not None

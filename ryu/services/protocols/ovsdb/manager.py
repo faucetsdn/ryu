@@ -15,11 +15,11 @@
 
 import ssl
 import socket
-import netaddr
 
 from ryu import cfg
 from ryu.base import app_manager
 from ryu.lib import hub
+from ryu.lib import ip
 from ryu.services.protocols.ovsdb import client
 from ryu.services.protocols.ovsdb import event
 from ryu.controller import handler
@@ -92,7 +92,7 @@ class OVSDB(app_manager.RyuApp):
                 sock.close()
                 continue
 
-            if netaddr.valid_ipv6(client_address[0]):
+            if ip.valid_ipv6(client_address[0]):
                 self.logger.debug(
                     'New connection from [%s]:%s' % client_address[:2])
             else:
@@ -164,7 +164,7 @@ class OVSDB(app_manager.RyuApp):
             sock.close()
 
     def start(self):
-        if netaddr.valid_ipv6(self._address):
+        if ip.valid_ipv6(self._address):
             server = hub.listen(
                 (self._address, self._port), family=socket.AF_INET6)
         else:
@@ -183,7 +183,7 @@ class OVSDB(app_manager.RyuApp):
 
         self._server = server
 
-        if netaddr.valid_ipv6(self._address):
+        if ip.valid_ipv6(self._address):
             self.logger.info(
                 'Listening on [%s]:%s for clients', self._address, self._port)
         else:

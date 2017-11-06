@@ -38,6 +38,7 @@ from ryu.services.protocols.bgp.utils.bgp import create_v6flowspec_actions
 from ryu.services.protocols.bgp.utils.bgp import create_l2vpnflowspec_actions
 
 from ryu.lib import type_desc
+from ryu.lib import ip
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
@@ -790,15 +791,15 @@ class TableCoreManager(object):
         pathattrs[BGP_ATTR_TYPE_AS_PATH] = aspath
 
         net = netaddr.IPNetwork(prefix)
-        ip = str(net.ip)
+        addr = str(net.ip)
         masklen = net.prefixlen
-        if netaddr.valid_ipv4(ip):
-            _nlri = IPAddrPrefix(masklen, ip)
+        if ip.valid_ipv4(addr):
+            _nlri = IPAddrPrefix(masklen, addr)
             if next_hop is None:
                 next_hop = '0.0.0.0'
             p = Ipv4Path
         else:
-            _nlri = IP6AddrPrefix(masklen, ip)
+            _nlri = IP6AddrPrefix(masklen, addr)
             if next_hop is None:
                 next_hop = '::'
             p = Ipv6Path

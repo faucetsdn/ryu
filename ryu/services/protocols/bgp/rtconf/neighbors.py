@@ -22,6 +22,8 @@ import numbers
 
 import netaddr
 
+from ryu.lib import ip
+
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
 from ryu.lib.packet.bgp import RF_IPv4_VPN
@@ -160,7 +162,7 @@ def validate_changes(changes):
 
 
 def valid_ip_address(addr):
-    if not netaddr.valid_ipv4(addr) and not netaddr.valid_ipv6(addr):
+    if not ip.valid_ipv4(addr) and not ip.valid_ipv6(addr):
         return False
     return True
 

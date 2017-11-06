@@ -30,6 +30,7 @@ import six
 
 from ryu.lib import hub
 from ryu.lib import sockopt
+from ryu.lib import ip
 from ryu.lib.hub import Timeout
 from ryu.lib.packet.bgp import RF_IPv4_UC
 from ryu.lib.packet.bgp import RF_IPv6_UC
@@ -410,7 +411,7 @@ class Activity(object):
         The socket is bound to `bind_address` if specified.
         """
         LOG.debug('Connect TCP called for %s:%s', peer_addr[0], peer_addr[1])
-        if netaddr.valid_ipv4(peer_addr[0]):
+        if ip.valid_ipv4(peer_addr[0]):
             family = socket.AF_INET
         else:
             family = socket.AF_INET6

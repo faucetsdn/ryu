@@ -45,6 +45,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, DEAD_DISPATCHER
 
 from ryu.lib.dpid import dpid_to_str
+from ryu.lib import ip
 
 LOG = logging.getLogger('ryu.controller.controller')
 
@@ -110,9 +111,9 @@ def _split_addr(addr):
     addr, port = pair
     if addr.startswith('[') and addr.endswith(']'):
         addr = addr.lstrip('[').rstrip(']')
-        if not netaddr.valid_ipv6(addr):
+        if not ip.valid_ipv6(addr):
             raise e
-    elif not netaddr.valid_ipv4(addr):
+    elif not ip.valid_ipv4(addr):
         raise e
 
     return addr, int(port, 0)

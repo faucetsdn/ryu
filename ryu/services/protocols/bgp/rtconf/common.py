@@ -19,7 +19,7 @@
 import logging
 import numbers
 
-import netaddr
+from ryu.lib import ip
 
 from ryu.services.protocols.bgp.utils.validation import is_valid_ipv4
 from ryu.services.protocols.bgp.utils.validation import is_valid_asn
@@ -177,8 +177,7 @@ def validate_label_range(label_range):
 @validate(name=BGP_SERVER_HOSTS)
 def validate_bgp_server_hosts(hosts):
     for host in hosts:
-        if (not netaddr.valid_ipv4(host) and
-                not netaddr.valid_ipv6(host)):
+        if not ip.valid_ipv4(host) and not ip.valid_ipv6(host):
             raise ConfigTypeError(desc=('Invalid bgp sever hosts '
                                         'configuration value %s' % hosts))
 
