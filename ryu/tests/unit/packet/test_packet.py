@@ -1365,7 +1365,7 @@ class TestPacket(unittest.TestCase):
         icmpv6_values = {'type_': 0,
                          'code': 0,
                          'csum': p_icmpv6.csum,
-                         'data': None}
+                         'data': b''}
         _icmpv6_str = ','.join(['%s=%s' % (k, repr(icmpv6_values[k]))
                                 for k, _ in inspect.getmembers(p_icmpv6)
                                 if k in icmpv6_values])

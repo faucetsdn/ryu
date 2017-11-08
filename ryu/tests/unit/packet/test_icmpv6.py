@@ -69,7 +69,7 @@ class Test_icmpv6_header(unittest.TestCase):
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
         eq_(msg.csum, self.csum)
-        eq_(msg.data, None)
+        eq_(msg.data, b'')
         eq_(n, None)
 
     def test_serialize(self):

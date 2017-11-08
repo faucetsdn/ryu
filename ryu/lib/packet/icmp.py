@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
 import struct
+
+import six
 
 from . import packet_base
 from . import packet_utils
@@ -77,7 +80,7 @@ class icmp(packet_base.PacketBase):
             return cls
         return _register_icmp_type
 
-    def __init__(self, type_=ICMP_ECHO_REQUEST, code=0, csum=0, data=None):
+    def __init__(self, type_=ICMP_ECHO_REQUEST, code=0, csum=0, data=b''):
         super(icmp, self).__init__()
         self.type = type_
         self.code = code
@@ -103,8 +106,9 @@ class icmp(packet_base.PacketBase):
         hdr = bytearray(struct.pack(icmp._PACK_STR, self.type,
                                     self.code, self.csum))
 
-        if self.data is not None:
+        if self.data:
             if self.type in icmp._ICMP_TYPES:
+                assert isinstance(self.data, _ICMPv4Payload)
                 hdr += self.data.serialize()
             else:
                 hdr += self.data
@@ -122,8 +126,15 @@ class icmp(packet_base.PacketBase):
         return self._MIN_LEN + len(self.data)
 
 
+@six.add_metaclass(abc.ABCMeta)
+class _ICMPv4Payload(stringify.StringifyMixin):
+    """
+    Base class for the payload of ICMPv4 packet.
+    """
+
+
 @icmp.register_icmp_type(ICMP_ECHO_REPLY, ICMP_ECHO_REQUEST)
-class echo(stringify.StringifyMixin):
+class echo(_ICMPv4Payload):
     """ICMP sub encoder/decoder class for Echo and Echo Reply messages.
 
     This is used with ryu.lib.packet.icmp.icmp for
@@ -181,7 +192,7 @@ class echo(stringify.StringifyMixin):
 
 
 @icmp.register_icmp_type(ICMP_DEST_UNREACH)
-class dest_unreach(stringify.StringifyMixin):
+class dest_unreach(_ICMPv4Payload):
     """ICMP sub encoder/decoder class for Destination Unreachable Message.
 
     This is used with ryu.lib.packet.icmp.icmp for
@@ -252,7 +263,7 @@ class dest_unreach(stringify.StringifyMixin):
 
 
 @icmp.register_icmp_type(ICMP_TIME_EXCEEDED)
-class TimeExceeded(stringify.StringifyMixin):
+class TimeExceeded(_ICMPv4Payload):
     """ICMP sub encoder/decoder class for Time Exceeded Message.
 
     This is used with ryu.lib.packet.icmp.icmp for
@@ -278,7 +289,7 @@ class TimeExceeded(stringify.StringifyMixin):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, data_len=0, data=None):
-        if ((data_len >= 0) and (data_len <= 255)):
+        if (data_len >= 0) and (data_len <= 255):
             self.data_len = data_len
         else:
             raise ValueError('Specified data length (%d) is invalid.' % data_len)
