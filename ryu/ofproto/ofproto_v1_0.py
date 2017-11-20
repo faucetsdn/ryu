@@ -51,6 +51,7 @@ OFPP_ALL = 0xfffc       # All physical ports except input port.
 OFPP_CONTROLLER = 0xfffd        # Send to controller.
 OFPP_LOCAL = 0xfffe     # Local openflow "port".
 OFPP_NONE = 0xffff      # Not associated with a physical port.
+OFPT_ALL = 0xffff       # All physical ports. In fact this is a bug from the spec of openflow1.0. Already been replaced to OFPP_ANY in openflow 1.1.0
 
 # enum ofp_type
 OFPT_HELLO = 0  # Symmetric message
