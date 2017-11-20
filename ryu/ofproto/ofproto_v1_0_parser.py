@@ -2197,12 +2197,12 @@ class OFPFlowStatsReply(OFPStatsReply):
                              'idle_timeout=%d hard_timeout=%d '
                              'cookie=%d packet_count=%d byte_count=%d '
                              'actions=%s' %
-                             (stat.table_id,
+                             (stat.table_id, stat.match,
                               stat.duration_sec, stat.duration_nsec,
                               stat.priority,
                               stat.idle_timeout, stat.hard_timeout,
                               stat.cookie, stat.packet_count, stat.byte_count,
-                              stat.match, stat.actions))
+                              stat.actions))
             self.logger.debug('FlowStats: %s', flows)
     """
     def __init__(self, datapath):
