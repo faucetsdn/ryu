@@ -6131,7 +6131,8 @@ class OFPGroupMod(MsgBase):
             datapath.send_msg(req)
     """
     def __init__(self, datapath, command=ofproto.OFPGC_ADD,
-                 type_=ofproto.OFPGT_ALL, group_id=0, command_bucket_id=0,
+                 type_=ofproto.OFPGT_ALL, group_id=0,
+                 command_bucket_id=ofproto.OFPG_BUCKET_ALL,
                  buckets=None, properties=None, bucket_array_len=None):
         buckets = buckets if buckets else []
         properties = properties if properties else []
