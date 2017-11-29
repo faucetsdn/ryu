@@ -868,6 +868,11 @@ class Switches(app_manager.RyuApp):
             self.hosts.add(host)
             ev = event.EventHostAdd(host)
             self.send_event_to_observers(ev)
+        elif self.hosts[host_mac].port != port:
+            # assumes the host is moved to another port
+            ev = event.EventHostMove(src=self.hosts[host_mac], dst=host)
+            self.hosts[host_mac] = host
+            self.send_event_to_observers(ev)
 
         # arp packet, update ip address
         if eth.ethertype == ether_types.ETH_TYPE_ARP:

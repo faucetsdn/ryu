@@ -170,4 +170,24 @@ class EventHostAdd(EventHostBase):
     def __init__(self, host):
         super(EventHostAdd, self).__init__(host)
 
+
+# Note: Currently, EventHostDelete will never be raised, because we have no
+# appropriate way to detect the disconnection of hosts. Just defined for
+# future use.
+class EventHostDelete(EventHostBase):
+    def __init__(self, host):
+        super(EventHostDelete, self).__init__(host)
+
+
+class EventHostMove(event.EventBase):
+    def __init__(self, src, dst):
+        super(EventHostMove, self).__init__()
+        self.src = src
+        self.dst = dst
+
+    def __str__(self):
+        return '%s<src=%s, dst=%s>' % (
+            self.__class__.__name__, self.src, self.dst)
+
+
 handler.register_service('ryu.topology.switches')
