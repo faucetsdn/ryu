@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import getopt
 import os
+import re
 import six
 from six.moves import socketserver
 import subprocess
@@ -283,6 +284,18 @@ if __name__ == '__main__':
 
     if not os.access(ofctl_cmd, os.X_OK):
         raise Exception("%s is not executable" % ofctl_cmd)
+    ovs_version = subprocess.Popen([ofctl_cmd, '--version'],
+                                   stdout=subprocess.PIPE)
+    has_names = False
+    try:
+        ver_tuple = re.search('\s(\d+)\.(\d+)(\.\d*|\s*$)',
+                              ovs_version.stdout.readline().decode()).groups()
+        if int(ver_tuple[0]) > 2 or \
+           int(ver_tuple[0]) == 2 and int(ver_tuple[1]) >= 8:
+            has_names = True
+    except AttributeError:
+        pass
+
     outpath = '../packet_data'
     socketdir = tempfile.mkdtemp()
     socketname = os.path.join(socketdir, 'ovs')
@@ -297,6 +310,8 @@ if __name__ == '__main__':
             cmdargs = [ofctl_cmd, '-O', 'OpenFlow%2d' % (v + 9)]
             if verbose:
                 cmdargs.append('-v')
+            if has_names:
+                cmdargs.append('--no-names')
             cmdargs.append(msg['cmd'])
             cmdargs.append('unix:%s' % socketname)
             cmdargs.append('\n'.join(msg['args']))
