@@ -21,6 +21,7 @@ This module also implements some of extensions shown in
 "OpenFlow Extensions for 1.3.X Pack 1".
 Namely, the following extensions are implemented.
 
+    - EXT-230 Bundle Extension (without bundle properties)
     - EXT-236 Bad flow entry priority error Extension
     - EXT-237 Set async config error Extension
     - EXT-256 PBB UCA header field Extension
@@ -30,7 +31,6 @@ Namely, the following extensions are implemented.
 The following extensions are partially implemented.
 
     - EXT-187 Flow entry notifications Extension (ONFMP_FLOW_MONITOR only)
-    - EXT-230 Bundle Extension (Error codes only)
     - EXT-232 Table synchronisation Extension (Error codes only)
 
 The following extensions are not implemented yet.
@@ -77,6 +77,15 @@ def _register_parser(cls):
     assert cls.cls_msg_type not in _MSG_PARSERS
     _MSG_PARSERS[cls.cls_msg_type] = cls.parser
     return cls
+
+
+def _register_exp_type(experimenter, exp_type):
+    assert exp_type not in OFPExperimenter._subtypes
+
+    def _wrapper(cls):
+        OFPExperimenter._subtypes[(experimenter, exp_type)] = cls
+        return cls
+    return _wrapper
 
 
 @ofproto_parser.register_msg_parser(ofproto.OFP_VERSION)
@@ -402,6 +411,8 @@ class OFPExperimenter(MsgBase):
     data          Experimenter defined arbitrary additional data
     ============= =========================================================
     """
+    _subtypes = {}
+
     def __init__(self, datapath, experimenter=None, exp_type=None, data=None):
         super(OFPExperimenter, self).__init__(datapath)
         self.experimenter = experimenter
@@ -417,6 +428,13 @@ class OFPExperimenter(MsgBase):
             ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR, msg.buf,
             ofproto.OFP_HEADER_SIZE)
         msg.data = msg.buf[ofproto.OFP_EXPERIMENTER_HEADER_SIZE:]
+        if (msg.experimenter, msg.exp_type) in cls._subtypes:
+            new_msg = cls._subtypes[
+                (msg.experimenter, msg.exp_type)].parser_subtype(msg)
+            new_msg.set_headers(msg.version, msg.msg_type, msg.msg_len,
+                                msg.xid)
+            new_msg.set_buf(msg.buf)
+            return new_msg
 
         return msg
 
@@ -6243,6 +6261,154 @@ class OFPSetAsync(MsgBase):
                       self.packet_in_mask[0], self.packet_in_mask[1],
                       self.port_status_mask[0], self.port_status_mask[1],
                       self.flow_removed_mask[0], self.flow_removed_mask[1])
+
+
+@_register_exp_type(ofproto_common.ONF_EXPERIMENTER_ID,
+                    ofproto.ONF_ET_BUNDLE_CONTROL)
+class ONFBundleCtrlMsg(OFPExperimenter):
+    """
+    Bundle control message
+
+    The controller uses this message to create, destroy and commit bundles
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    bundle_id        Id of the bundle
+    type             One of the following values.
+
+                     | ONF_BCT_OPEN_REQUEST
+                     | ONF_BCT_OPEN_REPLY
+                     | ONF_BCT_CLOSE_REQUEST
+                     | ONF_BCT_CLOSE_REPLY
+                     | ONF_BCT_COMMIT_REQUEST
+                     | ONF_BCT_COMMIT_REPLY
+                     | ONF_BCT_DISCARD_REQUEST
+                     | ONF_BCT_DISCARD_REPLY
+    flags            Bitmap of the following flags.
+
+                     | ONF_BF_ATOMIC
+                     | ONF_BF_ORDERED
+    properties       List of ``OFPBundleProp`` subclass instance
+    ================ ======================================================
+
+    Example::
+
+        def send_bundle_control(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            req = ofp_parser.ONFBundleCtrlMsg(datapath, 7,
+                                              ofp.ONF_BCT_OPEN_REQUEST,
+                                              ofp.ONF_BF_ATOMIC, [])
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, bundle_id=None, type_=None, flags=None,
+                 properties=None):
+        super(ONFBundleCtrlMsg, self).__init__(
+            datapath, ofproto_common.ONF_EXPERIMENTER_ID,
+            ofproto.ONF_ET_BUNDLE_CONTROL)
+        self.bundle_id = bundle_id
+        self.type = type_
+        self.flags = flags
+        self.properties = properties
+
+    def _serialize_body(self):
+        bin_props = bytearray()
+        for p in self.properties:
+            bin_props += p.serialize()
+
+        msg_pack_into(ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        msg_pack_into(ofproto.ONF_BUNDLE_CTRL_PACK_STR,
+                      self.buf, ofproto.OFP_EXPERIMENTER_HEADER_SIZE,
+                      self.bundle_id, self.type, self.flags)
+        self.buf += bin_props
+
+    @classmethod
+    def parser_subtype(cls, super_msg):
+        (bundle_id, type_, flags) = struct.unpack_from(
+            ofproto.ONF_BUNDLE_CTRL_PACK_STR, super_msg.data)
+        msg = cls(super_msg.datapath, bundle_id, type_, flags)
+        msg.properties = []
+        rest = super_msg.data[ofproto.ONF_BUNDLE_CTRL_SIZE:]
+        while rest:
+            p, rest = OFPBundleProp.parse(rest)
+            msg.properties.append(p)
+
+        return msg
+
+
+class ONFBundleAddMsg(OFPExperimenter):
+    """
+    Bundle add message
+
+    The controller uses this message to add a message to a bundle
+
+    ================ ======================================================
+    Attribute        Description
+    ================ ======================================================
+    bundle_id        Id of the bundle
+    flags            Bitmap of the following flags.
+
+                     | ONF_BF_ATOMIC
+                     | ONF_BF_ORDERED
+    message          ``MsgBase`` subclass instance
+    properties       List of ``OFPBundleProp`` subclass instance
+    ================ ======================================================
+
+    Example::
+
+        def send_bundle_add_message(self, datapath):
+            ofp = datapath.ofproto
+            ofp_parser = datapath.ofproto_parser
+
+            msg = ofp_parser.OFPRoleRequest(datapath, ofp.OFPCR_ROLE_EQUAL, 0)
+
+            req = ofp_parser.OFPBundleAddMsg(datapath, 7, ofp.ONF_BF_ATOMIC,
+                                             msg, [])
+            datapath.send_msg(req)
+    """
+    def __init__(self, datapath, bundle_id, flags, message, properties):
+        super(ONFBundleAddMsg, self).__init__(
+            datapath, ofproto_common.ONF_EXPERIMENTER_ID,
+            ofproto.ONF_ET_BUNDLE_ADD_MESSAGE)
+        self.bundle_id = bundle_id
+        self.flags = flags
+        self.message = message
+        self.properties = properties
+
+    def _serialize_body(self):
+        # The xid of the inner message must be the same as
+        # that of the outer message (OF1.3 Bundle Extension 3.3)
+        if self.message.xid != self.xid:
+            self.message.set_xid(self.xid)
+
+        # Message
+        self.message.serialize()
+        tail_buf = self.message.buf
+
+        # Pad
+        if len(self.properties) > 0:
+            message_len = len(tail_buf)
+            pad_len = utils.round_up(message_len, 8) - message_len
+            msg_pack_into("%dx" % pad_len, tail_buf, message_len)
+
+        # Properties
+        for p in self.properties:
+            tail_buf += p.serialize()
+
+        # Head
+        msg_pack_into(ofproto.OFP_EXPERIMENTER_HEADER_PACK_STR,
+                      self.buf, ofproto.OFP_HEADER_SIZE,
+                      self.experimenter, self.exp_type)
+        msg_pack_into(ofproto.ONF_BUNDLE_ADD_MSG_PACK_STR,
+                      self.buf, ofproto.OFP_EXPERIMENTER_HEADER_SIZE,
+                      self.bundle_id, self.flags)
+
+        # Finish
+        self.buf += tail_buf
 
 
 nx_actions.generate(
