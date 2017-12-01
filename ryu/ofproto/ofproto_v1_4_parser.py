@@ -5635,7 +5635,7 @@ class OFPBundleCtrlMsg(MsgBase):
 
             req = ofp_parser.OFPBundleCtrlMsg(datapath, 7,
                                               ofp.OFPBCT_OPEN_REQUEST,
-                                              [ofp.OFPBF_ATOMIC], [])
+                                              ofp.OFPBF_ATOMIC, [])
             datapath.send_msg(req)
     """
     def __init__(self, datapath, bundle_id=None, type_=None, flags=None,
@@ -5679,9 +5679,9 @@ class OFPBundleCtrlMsg(MsgBase):
 @_set_msg_type(ofproto.OFPT_BUNDLE_ADD_MESSAGE)
 class OFPBundleAddMsg(MsgInMsgBase):
     """
-    Bundle control message
+    Bundle add message
 
-    The controller uses this message to create, destroy and commit bundles
+    The controller uses this message to add a message to a bundle
 
     ================ ======================================================
     Attribute        Description
@@ -5703,7 +5703,7 @@ class OFPBundleAddMsg(MsgInMsgBase):
 
             msg = ofp_parser.OFPRoleRequest(datapath, ofp.OFPCR_ROLE_EQUAL, 0)
 
-            req = ofp_parser.OFPBundleAddMsg(datapath, 7, [ofp.OFPBF_ATOMIC],
+            req = ofp_parser.OFPBundleAddMsg(datapath, 7, ofp.OFPBF_ATOMIC,
                                              msg, [])
             datapath.send_msg(req)
     """
