@@ -220,6 +220,14 @@ MESSAGES = [
      'args': (['priority=100'] +
               ['actions=output(port=8080,max_len=1024)'])},
 
+    {'name': 'bundle-add',
+     'versions': [4],
+     'bundled': True,
+     'cmd': 'add-flow',
+     'args': ['table=33',
+              'dl_vlan=1234',
+              'actions=strip_vlan,goto_table:100']},
+
 
     # ToDo: The following actions are not eligible
     # {'name': 'action_regload2'},
@@ -231,6 +239,11 @@ buf = []
 
 class MyHandler(socketserver.BaseRequestHandler):
     verbose = False
+
+    @staticmethod
+    def _add_msg_to_buf(data, msg_len):
+        # HACK: Clear xid into zero
+        buf.append(data[:4] + b'\x00\x00\x00\x00' + data[8:msg_len])
 
     def handle(self):
         desc = ofproto_protocol.ProtocolDesc()
@@ -256,14 +269,24 @@ class MyHandler(socketserver.BaseRequestHandler):
                 hello.serialize()
                 self.request.send(hello.buf)
             elif msg_type == desc.ofproto.OFPT_FLOW_MOD:
-                # HACK: Clear xid into zero
-                buf.append(data[:4] + b'\x00\x00\x00\x00' + data[8:msg_len])
+                self._add_msg_to_buf(data, msg_len)
+            elif version == 4 and msg_type == desc.ofproto.OFPT_EXPERIMENTER:
+                # This is for OF13 Ext-230 bundle
+                # TODO: support bundle for OF>1.3
+                exp = desc.ofproto_parser.OFPExperimenter.parser(
+                    object(), version, msg_type, msg_len, xid, data)
+                self._add_msg_to_buf(data, msg_len)
+                if isinstance(exp, desc.ofproto_parser.ONFBundleCtrlMsg):
+                    ctrlrep = desc.ofproto_parser.ONFBundleCtrlMsg(
+                        desc, exp.bundle_id, exp.type + 1, 0, [])
+                    ctrlrep.xid = xid
+                    ctrlrep.serialize()
+                    self.request.send(ctrlrep.buf)
             elif msg_type == desc.ofproto.OFPT_BARRIER_REQUEST:
                 brep = desc.ofproto_parser.OFPBarrierReply(desc)
                 brep.xid = xid
                 brep.serialize()
                 self.request.send(brep.buf)
-                break
 
 
 class MyVerboseHandler(MyHandler):
@@ -306,12 +329,15 @@ if __name__ == '__main__':
         print("Serving at %s" % socketname)
 
     for msg in MESSAGES:
+        bundled = msg.get('bundled', False)
         for v in msg['versions']:
             cmdargs = [ofctl_cmd, '-O', 'OpenFlow%2d' % (v + 9)]
             if verbose:
                 cmdargs.append('-v')
             if has_names:
                 cmdargs.append('--no-names')
+            if bundled:
+                cmdargs.append('--bundle')
             cmdargs.append(msg['cmd'])
             cmdargs.append('unix:%s' % socketname)
             cmdargs.append('\n'.join(msg['args']))
@@ -322,14 +348,20 @@ if __name__ == '__main__':
             t.start()
             server.handle_request()
             if debug:
-                print(buf.pop())
+                for buf1 in buf:
+                    print(buf1)
+                buf = []
             else:
-                outf = os.path.join(
-                    outpath, "of%d" % (v + 9),
-                    "ovs-ofctl-of%d-%s.packet" % (v + 9, msg['name']))
-                print("Writing %s..." % outf)
-                with open(outf, 'wb') as f:
-                    f.write(buf.pop())
+                for i, buf1 in enumerate(buf):
+                    suffix = ('-%d' % (i + 1)) if i else ''
+                    outf = os.path.join(
+                        outpath, "of%d" % (v + 9),
+                        "ovs-ofctl-of%d-%s%s.packet" % (
+                            v + 9, msg['name'], suffix))
+                    print("Writing %s..." % outf)
+                    with open(outf, 'wb') as f:
+                        f.write(buf1)
+                buf = []
             try:
                 t.join()
             except TimeoutExpired as e:
