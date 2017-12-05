@@ -74,6 +74,8 @@ class tcp(packet_base.PacketBase):
     option         List of ``TCPOption`` sub-classes or an bytearray
                    containing options. \
                    None if no options.
+    padding        Separate between Head and Payload Data
+    Payload        Add Payload to TCP PACKET
     ============== ====================
     """
 
@@ -81,7 +83,7 @@ class tcp(packet_base.PacketBase):
     _MIN_LEN = struct.calcsize(_PACK_STR)
 
     def __init__(self, src_port=1, dst_port=1, seq=0, ack=0, offset=0,
-                 bits=0, window_size=0, csum=0, urgent=0, option=None):
+                 bits=0, window_size=0, csum=0, urgent=0, option=None, payload=None):
         super(tcp, self).__init__()
         self.src_port = src_port
         self.dst_port = dst_port
@@ -93,6 +95,8 @@ class tcp(packet_base.PacketBase):
         self.csum = csum
         self.urgent = urgent
         self.option = option
+        self.padding = '000000000000'
+        self.payload_tcp = payload
 
     def __len__(self):
         return self.offset * 4
