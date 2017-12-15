@@ -5964,14 +5964,16 @@ class OFPActionCopyField(OFPAction):
         return cls(n_bits, src_offset, dst_offset, oxm_ids, type_, len_)
 
     def serialize(self, buf, offset):
-        oxm_ids_buf = bytearray()
+        oxm_ids_buf = b''
         for i in self.oxm_ids:
             oxm_ids_buf += i.serialize()
-        self.len += len(oxm_ids_buf)
+        action_len = ofproto.OFP_ACTION_COPY_FIELD_SIZE + len(oxm_ids_buf)
+        self.len = utils.round_up(action_len, 8)
+        pad_len = self.len - action_len
         msg_pack_into(ofproto.OFP_ACTION_COPY_FIELD_PACK_STR, buf,
                       offset, self.type, self.len,
                       self.n_bits, self.src_offset, self.dst_offset)
-        buf += oxm_ids_buf
+        buf += oxm_ids_buf + b'\x00' * pad_len
 
 
 @OFPAction.register_action_type(ofproto.OFPAT_METER,
