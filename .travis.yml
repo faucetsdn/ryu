@@ -8,6 +8,7 @@ env:
   - TOX_ENV=py35
   - TOX_ENV=pypy26
   - TOX_ENV=pycodestyle
+  - TOX_ENV=autopep8
 
 services:
   - docker

@@ -20,19 +20,24 @@ style.
   # You can send patches by "git send-email" command
   $ git send-email --to="ryu-devel@lists.sourceforge.net" *.patch
 
-Please check your changes with pycodestyle(pep8) and run unittests to make sure
-that they don't break the existing features. The following command
-does both for you.
+Please check your changes with autopep8, pycodestyle(pep8) and running
+unit tests to make sure that they don't break the existing features.
+The following command does all for you.
 
 .. code-block:: bash
 
   # Install dependencies of tests
   $ pip install -r tools/test-requires
 
+  # Execute autopep8
+  # Also, it is convenient to add settings of your editor or IDE for
+  # applying autopep8 automatically.
+  $ autopep8 --recursive --in-place ryu/
+
   # Execute unit tests and pycodestyle(pep8)
   $ ./run_tests.sh
 
-Of course, you are encouraged to add unittests when you add new
+Of course, you are encouraged to add unit tests when you add new
 features (it's not a must though).
 
 Python version and libraries
