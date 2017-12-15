@@ -5948,7 +5948,16 @@ class OFPActionCopyField(OFPAction):
         self.n_bits = n_bits
         self.src_offset = src_offset
         self.dst_offset = dst_offset
-        self.oxm_ids = oxm_ids
+        assert len(oxm_ids) == 2
+        self.oxm_ids = []
+        for i in oxm_ids:
+            if isinstance(i, OFPOxmId):
+                i.hasmask = False  # fixup
+                self.oxm_ids.append(i)
+            elif isinstance(i, six.text_type):
+                self.oxm_ids.append(OFPOxmId(i, hasmask=False))
+            else:
+                raise ValueError('invalid value for oxm_ids: %s' % oxm_ids)
 
     @classmethod
     def parser(cls, buf, offset):
