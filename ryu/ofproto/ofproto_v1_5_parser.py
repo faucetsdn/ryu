@@ -2183,6 +2183,10 @@ class OFPTableFeaturePropNextTables(OFPTableFeatureProp):
 #     oxm_length   always 0
 #   ovs:
 #     seems in flux as of writing this [20141003]
+# updtate: OVS checks the oxm_length strictly which contained in
+# the OFPAT_COPY_FIELD action when using OpenFlow 1.5, so here composes the
+# payload length as the oxm_length (if has mask, it will be doubled, still
+# unclear though).
 class OFPOxmId(StringifyMixin):
     _PACK_STR = '!I'  # oxm header
     _EXPERIMENTER_ID_PACK_STR = '!I'
@@ -2220,10 +2224,10 @@ class OFPOxmId(StringifyMixin):
             return cls(type_=type_, hasmask=hasmask, length=length), rest
 
     def serialize(self):
-        # fixup
-        self.length = 0  # XXX see the comment on OFPOxmId
-
-        (n, _v, _m) = ofproto.oxm_from_user(self.type, None)
+        n, t = ofproto.oxm_get_field_info_by_name(self.type)
+        if not self.length:
+            # XXX see the comment on OFPOxmId
+            self.length = t.size * 2 if self.hasmask else t.size
         oxm = (n << (1 + 8)) | (self.hasmask << 8) | self.length
         buf = bytearray()
         msg_pack_into(self._PACK_STR, buf, 0, oxm)
