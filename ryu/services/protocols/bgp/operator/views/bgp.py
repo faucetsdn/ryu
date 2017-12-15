@@ -278,9 +278,11 @@ class RouteFamilyView(OperatorDetailView):
     afi = fields.DataField('afi')
     safi = fields.DataField('safi')
 
+
 ##################################################################
 # Declarations of list and dict views based on detail views above
 ##################################################################
+
 PeerListView = create_list_view_class(PeerDetailView, 'PeerListView')
 PeerDictView = create_dict_view_class(PeerDetailView, 'PeerDictView')
 

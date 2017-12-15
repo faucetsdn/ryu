@@ -292,6 +292,7 @@ class MyHandler(socketserver.BaseRequestHandler):
 class MyVerboseHandler(MyHandler):
     verbose = True
 
+
 if __name__ == '__main__':
     optlist, args = getopt.getopt(sys.argv[1:], 'dvo:')
     debug = False

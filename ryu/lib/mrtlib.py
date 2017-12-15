@@ -236,6 +236,7 @@ class UnknownMrtMessage(MrtMessage):
     def serialize(self):
         return self.buf
 
+
 # Registers self to unknown(default) type
 UnknownMrtMessage._UNKNOWN_TYPE = UnknownMrtMessage
 
@@ -297,6 +298,7 @@ class Ospf2MrtRecord(MrtCommonRecord):
         super(Ospf2MrtRecord, self).__init__(
             message=message, timestamp=timestamp, type_=type_,
             subtype=subtype, length=length)
+
 
 # Registers self to unknown(default) type
 Ospf2MrtMessage._UNKNOWN_TYPE = Ospf2MrtMessage

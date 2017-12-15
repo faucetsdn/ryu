@@ -57,6 +57,7 @@ def _get_requirements(files):
 
     return requirements
 
+
 OPENSTACK_REQUIREMENTS = _get_requirements(OPENSTACK_REQUIREMENTS_FILES)
 RYU_REQUIREMENTS = _get_requirements(RYU_REQUIREMENTS_FILES)
 

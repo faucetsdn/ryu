@@ -69,5 +69,6 @@ class _CoreManager(Activity):
         self._check_started()
         return self._vrfs_conf
 
+
 # _CoreManager instance that manages core bgp service and configuration data.
 CORE_MANAGER = _CoreManager()

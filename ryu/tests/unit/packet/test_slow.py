@@ -147,16 +147,16 @@ class Test_slow(unittest.TestCase):
         not_implemented_buf = pack(
             slow._PACK_STR, SLOW_SUBTYPE_MARKER) + self.buf[1:]
         (instance, nexttype, last) = slow.parser(not_implemented_buf)
-        assert None == instance
-        assert None == nexttype
-        assert None != last
+        assert instance is None
+        assert nexttype is None
+        assert last is not None
 
     def test_invalid_subtype(self):
         invalid_buf = b'\xff' + self.buf[1:]
         (instance, nexttype, last) = slow.parser(invalid_buf)
-        assert None == instance
-        assert None == nexttype
-        assert None != last
+        assert instance is None
+        assert nexttype is None
+        assert last is not None
 
 
 class Test_lacp(unittest.TestCase):

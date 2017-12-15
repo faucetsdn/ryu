@@ -307,4 +307,5 @@ def _add_tests():
     assert (cases ==
             set(unittest.defaultTestLoader.getTestCaseNames(Test_Parser)))
 
+
 _add_tests()

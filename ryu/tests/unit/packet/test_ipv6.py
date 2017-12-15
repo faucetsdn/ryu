@@ -795,13 +795,13 @@ class Test_routing(unittest.TestCase):
         not_implemented_buf = struct.pack(
             '!BBBBBB2x', 0, 6, ipv6.routing.ROUTING_TYPE_2, 0, 0, 0)
         instance = ipv6.routing.parser(not_implemented_buf)
-        assert None == instance
+        assert None is instance
 
     def test_invalid_type(self):
         invalid_type = 99
         invalid_buf = struct.pack('!BBBBBB2x', 0, 6, invalid_type, 0, 0, 0)
         instance = ipv6.routing.parser(invalid_buf)
-        assert None == instance
+        assert None is instance
 
 
 class Test_routing_type3(unittest.TestCase):

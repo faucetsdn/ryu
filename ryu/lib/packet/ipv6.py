@@ -143,6 +143,7 @@ class ipv6(packet_base.PacketBase):
             ext_hdrs_len += len(ext_hdr)
         return self._MIN_LEN + ext_hdrs_len
 
+
 ipv6.register_packet_type(icmpv6.icmpv6, inet.IPPROTO_ICMPV6)
 ipv6.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
 ipv6.register_packet_type(udp.udp, inet.IPPROTO_UDP)

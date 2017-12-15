@@ -154,6 +154,7 @@ class BgpProcessor(Activity):
         # Wake-up processing thread if sleeping.
         self.dest_que_evt.set()
 
+
 # =============================================================================
 # Best path computation related utilities.
 # =============================================================================

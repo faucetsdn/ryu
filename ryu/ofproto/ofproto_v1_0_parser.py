@@ -822,6 +822,7 @@ class OFPActionVendor(OFPAction):
         msg_pack_into(ofproto.OFP_ACTION_VENDOR_HEADER_PACK_STR,
                       buf, offset, self.type, self.len, self.vendor)
 
+
 # OpenFlow1.2 or later compatible
 OFPActionExperimenter = OFPActionVendor
 

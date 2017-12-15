@@ -428,6 +428,7 @@ def nxm_nx_reg(idx):
 def nxm_nx_reg_w(idx):
     return nxm_header_w(0x0001, idx, 4)
 
+
 NXM_HEADER_PACK_STRING = '!I'
 
 #

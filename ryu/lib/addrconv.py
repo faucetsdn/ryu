@@ -40,6 +40,7 @@ class AddressConverter(object):
         return str(self._addr(self._strat.packed_to_int(bin),
                               **self._addr_kwargs))
 
+
 ipv4 = AddressConverter(netaddr.IPAddress, netaddr.strategy.ipv4,
                         fallback=netaddr.IPNetwork, version=4)
 ipv6 = AddressConverter(netaddr.IPAddress, netaddr.strategy.ipv6,
@@ -48,5 +49,7 @@ ipv6 = AddressConverter(netaddr.IPAddress, netaddr.strategy.ipv6,
 
 class mac_mydialect(netaddr.mac_unix):
     word_fmt = '%.2x'
+
+
 mac = AddressConverter(netaddr.EUI, netaddr.strategy.eui48, version=48,
                        dialect=mac_mydialect)
