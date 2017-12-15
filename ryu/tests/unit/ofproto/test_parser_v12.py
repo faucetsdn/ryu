@@ -6392,6 +6392,7 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
 class TestOFPBarrierRequest(unittest.TestCase):
     """ Test case for ofproto_v1_2_parser.OFPBarrierRequest
     """
+
     def test_serialize(self):
         c = OFPBarrierRequest(_Datapath)
         c.serialize()

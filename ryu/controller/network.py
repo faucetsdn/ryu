@@ -109,6 +109,7 @@ class EventMacAddress(event.EventBase):
 
 class Networks(dict):
     "network_id -> set of (dpid, port_no)"
+
     def __init__(self, f):
         super(Networks, self).__init__()
         self.send_event = f
@@ -200,6 +201,7 @@ class Port(object):
 
 class DPIDs(dict):
     """dpid -> port_no -> Port(port_no, network_id, mac_address)"""
+
     def __init__(self, f, nw_id_unknown):
         super(DPIDs, self).__init__()
         self.send_event = f
@@ -306,6 +308,7 @@ MacPort = collections.namedtuple('MacPort', ('dpid', 'port_no'))
 
 class MacToPort(collections.defaultdict):
     """mac_address -> set of MacPort(dpid, port_no)"""
+
     def __init__(self):
         super(MacToPort, self).__init__(set)
 
@@ -324,6 +327,7 @@ class MacToPort(collections.defaultdict):
 
 class MacAddresses(dict):
     """network_id -> mac_address -> set of (dpid, port_no)"""
+
     def add_port(self, network_id, dpid, port_no, mac_address):
         mac2port = self.setdefault(network_id, MacToPort())
         mac2port.add_port(dpid, port_no, mac_address)

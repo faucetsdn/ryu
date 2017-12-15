@@ -208,6 +208,7 @@ class End(LLDPBasicTLV):
     buf            Binary data to parse.
     ============== =====================================
     """
+
     def __init__(self, buf=None, *args, **kwargs):
         super(End, self).__init__(buf, *args, **kwargs)
         if buf:

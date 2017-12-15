@@ -53,6 +53,7 @@ class VRRPInterfaceMonitorNetworkDevice(monitor.VRRPInterfaceMonitor):
     This module uses raw socket so that privilege(CAP_NET_ADMIN capability)
     is required.
     """
+
     def __init__(self, *args, **kwargs):
         super(VRRPInterfaceMonitorNetworkDevice, self).__init__(*args,
                                                                 **kwargs)

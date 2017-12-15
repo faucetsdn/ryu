@@ -36,6 +36,7 @@ LOG = logging.getLogger(__name__)
 class Test_slow(unittest.TestCase):
     """ Test case for Slow Protocol
     """
+
     def setUp(self):
         self.subtype = SLOW_SUBTYPE_LACP
         self.version = lacp.LACP_VERSION_NUMBER

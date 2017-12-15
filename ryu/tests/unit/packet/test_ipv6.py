@@ -760,7 +760,7 @@ class Test_routing(unittest.TestCase):
                      "2001:db8:dead::3"]
         # calculate pad
         self.pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                    (16 - self.cmpe) % 8)) % 8
+                         (16 - self.cmpe) % 8)) % 8
         # create buf
         self.form = '!BBBBBB2x16s16s16s'
         self.buf = struct.pack(self.form, self.nxt, self.size,
@@ -818,7 +818,7 @@ class Test_routing_type3(unittest.TestCase):
                      "2001:db8:dead::3"]
         # calculate pad
         self.pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                    (16 - self.cmpe) % 8)) % 8
+                         (16 - self.cmpe) % 8)) % 8
 
         self.routing = ipv6.routing_type3(
             self.nxt, self.size, self.type_, self.seg, self.cmpi,

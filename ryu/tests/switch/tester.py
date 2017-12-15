@@ -1034,7 +1034,7 @@ class OfTester(app_manager.RyuApp):
             self.logger.debug("margin:[%s]", margin)
             if math.fabs(measured_value - expected_value) > margin:
                 msgs.append('{0} {1:.2f}{2}'.format(fields,
-                            measured_value / elapsed_sec / conv, unit))
+                                                    measured_value / elapsed_sec / conv, unit))
 
         if msgs:
             raise TestFailure(self.state, detail=', '.join(msgs))
@@ -1289,6 +1289,7 @@ class OpenFlowSw(object):
 
 class TestPatterns(dict):
     """ List of Test class objects. """
+
     def __init__(self, test_dir, logger):
         super(TestPatterns, self).__init__()
         self.logger = logger
@@ -1316,6 +1317,7 @@ class TestPatterns(dict):
 
 class TestFile(stringify.StringifyMixin):
     """Test File object include Test objects."""
+
     def __init__(self, path, logger):
         super(TestFile, self).__init__()
         self.logger = logger

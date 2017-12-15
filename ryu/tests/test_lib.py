@@ -79,6 +79,7 @@ class _Win32Colorizer(object):
     """
     See _AnsiColorizer docstring.
     """
+
     def __init__(self, stream):
         from win32console import GetStdHandle, STD_OUT_HANDLE
         from win32console import FOREGROUND_RED, FOREGROUND_BLUE
@@ -127,6 +128,7 @@ class _NullColorizer(object):
     """
     See _AnsiColorizer docstring.
     """
+
     def __init__(self, stream):
         self.stream = stream
 

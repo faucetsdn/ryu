@@ -248,7 +248,7 @@ class dest_unreach(_ICMPv4Payload):
 
     def serialize(self):
         hdr = bytearray(struct.pack(dest_unreach._PACK_STR,
-                        self.data_len, self.mtu))
+                                    self.data_len, self.mtu))
 
         if self.data is not None:
             hdr += self.data

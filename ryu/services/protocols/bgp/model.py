@@ -27,6 +27,7 @@ LOG = logging.getLogger('bgpspeaker.model')
 
 class Counter(object):
     """Simple counter for keeping count of several keys."""
+
     def __init__(self):
         self._counters = {}
 

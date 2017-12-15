@@ -819,6 +819,7 @@ class NeighborsConf(BaseConf):
 class NeighborConfListener(ConfWithIdListener, ConfWithStatsListener):
     """Base listener for change events to a specific neighbors' configurations.
     """
+
     def __init__(self, neigh_conf):
         super(NeighborConfListener, self).__init__(neigh_conf)
         neigh_conf.add_listener(NeighborConf.UPDATE_ENABLED_EVT,

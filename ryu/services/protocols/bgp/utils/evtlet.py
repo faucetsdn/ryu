@@ -39,6 +39,7 @@ class EventletIOFactory(object):
 class LoopingCall(object):
     """Call a function repeatedly.
     """
+
     def __init__(self, funct, *args, **kwargs):
         self._funct = funct
         self._args = args

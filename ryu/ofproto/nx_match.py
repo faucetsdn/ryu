@@ -122,6 +122,7 @@ class FlowWildcards(ofproto_parser.StringifyMixin):
 class ClsRule(ofproto_parser.StringifyMixin):
     """describe a matching rule for OF 1.0 OFPMatch (and NX).
     """
+
     def __init__(self, **kwargs):
         self.wc = FlowWildcards()
         self.flow = Flow()
@@ -399,6 +400,7 @@ class ClsRule(ofproto_parser.StringifyMixin):
 
 def _set_nxm_headers(nxm_headers):
     '''Annotate corresponding NXM header'''
+
     def _set_nxm_headers_dec(self):
         self.nxm_headers = nxm_headers
         return self

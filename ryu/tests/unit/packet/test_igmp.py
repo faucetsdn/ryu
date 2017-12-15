@@ -43,6 +43,7 @@ LOG = logging.getLogger(__name__)
 class Test_igmp(unittest.TestCase):
     """ Test case for Internet Group Management Protocol
     """
+
     def setUp(self):
         self.msgtype = IGMP_TYPE_QUERY
         self.maxresp = 100
@@ -170,6 +171,7 @@ class Test_igmp(unittest.TestCase):
 class Test_igmpv3_query(unittest.TestCase):
     """ Test case for Internet Group Management Protocol v3
     Membership Query Message"""
+
     def setUp(self):
         self.msgtype = IGMP_TYPE_QUERY
         self.maxresp = 100
@@ -440,6 +442,7 @@ class Test_igmpv3_query(unittest.TestCase):
 class Test_igmpv3_report(unittest.TestCase):
     """ Test case for Internet Group Management Protocol v3
     Membership Report Message"""
+
     def setUp(self):
         self.msgtype = IGMP_TYPE_REPORT_V3
         self.csum = 0
@@ -705,6 +708,7 @@ class Test_igmpv3_report(unittest.TestCase):
 class Test_igmpv3_report_group(unittest.TestCase):
     """Test case for Group Records of
     Internet Group Management Protocol v3 Membership Report Message"""
+
     def setUp(self):
         self.type_ = MODE_IS_INCLUDE
         self.aux_len = 0

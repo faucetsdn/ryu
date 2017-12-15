@@ -72,6 +72,7 @@ class BFDSession(object):
 
     An instance maintains a BFD session.
     """
+
     def __init__(self, app, my_discr, dpid, ofport,
                  src_mac, src_ip, src_port,
                  dst_mac="FF:FF:FF:FF:FF:FF", dst_ip="255.255.255.255",
@@ -639,6 +640,7 @@ class EventBFDSessionStateChanged(event.EventBase):
     """
     An event class that notifies the state change of a BFD session.
     """
+
     def __init__(self, session, old_state, new_state):
         super(EventBFDSessionStateChanged, self).__init__()
         self.session = session

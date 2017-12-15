@@ -45,6 +45,7 @@ class VRFFlowSpecTable(VrfTable):
     Keeps destination imported to given VRF Flow Specification
     in represents.
     """
+
     def insert_vrffs_path(self, nlri, communities, is_withdraw=False):
         assert nlri
         assert isinstance(communities, list)

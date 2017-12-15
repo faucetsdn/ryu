@@ -807,8 +807,8 @@ class mldv2_query(mld):
     def serialize(self):
         s_qrv = self.s_flg << 3 | self.qrv
         buf = bytearray(struct.pack(self._PACK_STR, self.maxresp,
-                        addrconv.ipv6.text_to_bin(self.address), s_qrv,
-                        self.qqic, self.num))
+                                    addrconv.ipv6.text_to_bin(self.address), s_qrv,
+                                    self.qqic, self.num))
         for src in self.srcs:
             buf.extend(struct.pack('16s', addrconv.ipv6.text_to_bin(src)))
         if 0 == self.num:
@@ -951,8 +951,8 @@ class mldv2_report_group(stringify.StringifyMixin):
 
     def serialize(self):
         buf = bytearray(struct.pack(self._PACK_STR, self.type_,
-                        self.aux_len, self.num,
-                        addrconv.ipv6.text_to_bin(self.address)))
+                                    self.aux_len, self.num,
+                                    addrconv.ipv6.text_to_bin(self.address)))
         for src in self.srcs:
             buf.extend(struct.pack('16s', addrconv.ipv6.text_to_bin(src)))
         if 0 == self.num:

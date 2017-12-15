@@ -197,7 +197,7 @@ class OfctlService(app_manager.RyuApp):
             self.logger.error('unknown error xid %s', msg.xid)
             return
         if ((not isinstance(ev, ofp_event.EventOFPErrorMsg)) and
-           (req.reply_cls is None or not isinstance(ev.msg, req.reply_cls))):
+                (req.reply_cls is None or not isinstance(ev.msg, req.reply_cls))):
             self.logger.error('unexpected reply %s for xid %s', ev, msg.xid)
             return
         try:

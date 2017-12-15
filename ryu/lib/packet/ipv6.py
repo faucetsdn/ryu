@@ -154,6 +154,7 @@ ipv6.register_packet_type(gre.gre, inet.IPPROTO_GRE)
 @six.add_metaclass(abc.ABCMeta)
 class header(stringify.StringifyMixin):
     """extension header abstract class."""
+
     def __init__(self, nxt):
         self.nxt = nxt
 
@@ -434,7 +435,7 @@ class routing_type3(header):
         assert isinstance(adrs, list)
         self.adrs = adrs
         self._pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                     (16 - self.cmpe) % 8)) % 8
+                          (16 - self.cmpe) % 8)) % 8
 
     @classmethod
     def _get_size(cls, size):

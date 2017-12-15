@@ -23,6 +23,7 @@ from ryu.lib.packet import ospf
 class Test_ospf(unittest.TestCase):
     """ Test case for ryu.lib.packet.ospf
     """
+
     def setUp(self):
         pass
 

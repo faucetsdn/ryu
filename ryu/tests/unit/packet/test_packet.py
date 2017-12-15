@@ -254,8 +254,8 @@ class TestPacket(unittest.TestCase):
                        'vid': 3,
                        'ethertype': ether.ETH_TYPE_ARP}
         _vlan_str = ','.join(['%s=%s' % (k, repr(vlan_values[k]))
-                             for k, v in inspect.getmembers(p_vlan)
-                             if k in vlan_values])
+                              for k, v in inspect.getmembers(p_vlan)
+                              if k in vlan_values])
         vlan_str = '%s(%s)' % (vlan.vlan.__name__, _vlan_str)
 
         arp_values = {'hwtype': 1,
@@ -709,7 +709,7 @@ class TestPacket(unittest.TestCase):
                        'payload_id': 0,
                        'payload_data': self.payload}
         _data_str = ','.join(['%s=%s' % (k, repr(data_values[k]))
-                             for k in sorted(data_values.keys())])
+                              for k in sorted(data_values.keys())])
         data_str = '[%s(%s)]' % (sctp.chunk_data.__name__, _data_str)
 
         sctp_values = {'src_port': 1,
@@ -718,8 +718,8 @@ class TestPacket(unittest.TestCase):
                        'csum': repr(p_sctp.csum),
                        'chunks': data_str}
         _sctp_str = ','.join(['%s=%s' % (k, sctp_values[k])
-                             for k, _ in inspect.getmembers(p_sctp)
-                             if k in sctp_values])
+                              for k, _ in inspect.getmembers(p_sctp)
+                              if k in sctp_values])
         sctp_str = '%s(%s)' % (sctp.sctp.__name__, _sctp_str)
 
         pkt_str = '%s, %s, %s' % (eth_str, ipv4_str, sctp_str)
@@ -1245,7 +1245,7 @@ class TestPacket(unittest.TestCase):
                        'payload_id': 0,
                        'payload_data': self.payload}
         _data_str = ','.join(['%s=%s' % (k, repr(data_values[k]))
-                             for k in sorted(data_values.keys())])
+                              for k in sorted(data_values.keys())])
         data_str = '[%s(%s)]' % (sctp.chunk_data.__name__, _data_str)
 
         sctp_values = {'src_port': 1,
@@ -1254,8 +1254,8 @@ class TestPacket(unittest.TestCase):
                        'csum': repr(p_sctp.csum),
                        'chunks': data_str}
         _sctp_str = ','.join(['%s=%s' % (k, sctp_values[k])
-                             for k, _ in inspect.getmembers(p_sctp)
-                             if k in sctp_values])
+                              for k, _ in inspect.getmembers(p_sctp)
+                              if k in sctp_values])
         sctp_str = '%s(%s)' % (sctp.sctp.__name__, _sctp_str)
 
         pkt_str = '%s, %s, %s' % (eth_str, ipv6_str, sctp_str)
@@ -1496,8 +1496,8 @@ class TestPacket(unittest.TestCase):
                        'pf_bit': 0,
                        'modifier_function2': 0}
         _ctrl_str = ','.join(['%s=%s' % (k, repr(ctrl_values[k]))
-                             for k, v in inspect.getmembers(p_llc.control)
-                             if k in ctrl_values])
+                              for k, v in inspect.getmembers(p_llc.control)
+                              if k in ctrl_values])
         ctrl_str = '%s(%s)' % (llc.ControlFormatU.__name__, _ctrl_str)
 
         llc_values = {'dsap_addr': repr(llc.SAP_BPDU),
@@ -1524,8 +1524,8 @@ class TestPacket(unittest.TestCase):
                        'hello_time': float(2),
                        'forward_delay': float(15)}
         _bpdu_str = ','.join(['%s=%s' % (k, repr(bpdu_values[k]))
-                             for k, v in inspect.getmembers(p_bpdu)
-                             if k in bpdu_values])
+                              for k, v in inspect.getmembers(p_bpdu)
+                              if k in bpdu_values])
         bpdu_str = '%s(%s)' % (bpdu.ConfigurationBPDUs.__name__, _bpdu_str)
 
         pkt_str = '%s, %s, %s' % (eth_str, llc_str, bpdu_str)
