@@ -20,7 +20,7 @@ style.
   # You can send patches by "git send-email" command
   $ git send-email --to="ryu-devel@lists.sourceforge.net" *.patch
 
-Please check your changes with pep8 and run unittests to make sure
+Please check your changes with pycodestyle(pep8) and run unittests to make sure
 that they don't break the existing features. The following command
 does both for you.
 
@@ -29,7 +29,7 @@ does both for you.
   # Install dependencies of tests
   $ pip install -r tools/test-requires
 
-  # Execute unit tests and pep8
+  # Execute unit tests and pycodestyle(pep8)
   $ ./run_tests.sh
 
 Of course, you are encouraged to add unittests when you add new
