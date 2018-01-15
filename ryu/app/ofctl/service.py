@@ -99,15 +99,13 @@ class OfctlService(app_manager.RyuApp):
 
     @set_ev_cls(event.GetDatapathRequest, MAIN_DISPATCHER)
     def _handle_get_datapath(self, req):
-        id = req.dpid
-        assert isinstance(id, numbers.Integral)
-        try:
-            datapath = self._switches[id].datapath
-        except KeyError:
-            datapath = None
-        self.logger.debug('dpid %s -> datapath %s', id, datapath)
-        rep = event.Reply(result=datapath)
-        self.reply_to_request(req, rep)
+        result = None
+        if req.dpid is None:
+            result = [v.datapath for v in self._switches.values()]
+        else:
+            if req.dpid in self._switches:
+                result = self._switches[req.dpid].datapath
+        self.reply_to_request(req, event.Reply(result=result))
 
     @set_ev_cls(event.SendMsgRequest, MAIN_DISPATCHER)
     def _handle_send_msg(self, req):
