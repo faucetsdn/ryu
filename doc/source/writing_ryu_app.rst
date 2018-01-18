@@ -41,7 +41,7 @@ application. In fact, you can run this Ryu application::
    instantiating app /Users/fujita/l2.py
 
 
-All you have to do is defining needs a new subclass of RyuApp to run
+All you have to do is define a new subclass of RyuApp to run
 your Python script as a Ryu application.
 
 Next let's add the functionality of sending a received packet to all
