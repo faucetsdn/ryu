@@ -62,6 +62,7 @@ Integration with Other Applications
 following events to other Ryu applications.
 
     - ``EventBestPathChanged``
+    - ``EventAdjRibInChanged``
     - ``EventPeerDown``
     - ``EventPeerUp``
 
@@ -191,6 +192,33 @@ class EventBestPathChanged(EventBase):
         self.is_withdraw = is_withdraw
 
 
+class EventAdjRibInChanged(EventBase):
+    """
+    Event called when any adj-RIB-in path is changed due to UPDATE messages
+    or remote peer's down.
+
+    This event is the wrapper for ``adj_rib_in_change_handler`` of
+    ``bgpspeaker.BGPSpeaker``.
+
+    ``path`` attribute contains an instance of ``info_base.base.Path``
+    subclasses.
+
+    If ``is_withdraw`` attribute is ``True``, ``path`` attribute has the
+    information of the withdraw route.
+
+    ``peer_ip`` is the peer's IP address who sent this path.
+
+    ``peer_as`` is the peer's AS number who sent this path.
+    """
+
+    def __init__(self, path, is_withdraw, peer_ip, peer_as):
+        super(EventAdjRibInChanged, self).__init__()
+        self.path = path
+        self.is_withdraw = is_withdraw
+        self.peer_ip = peer_ip
+        self.peer_as = peer_as
+
+
 class EventPeerDown(EventBase):
     """
     Event called when the session to the remote peer goes down.
@@ -233,6 +261,7 @@ class RyuBGPSpeaker(RyuApp):
     """
     _EVENTS = [
         EventBestPathChanged,
+        EventAdjRibInChanged,
         EventPeerDown,
         EventPeerUp,
     ]
@@ -300,6 +329,8 @@ class RyuBGPSpeaker(RyuApp):
         settings.setdefault(
             'best_path_change_handler', self._notify_best_path_changed_event)
         settings.setdefault(
+            'adj_rib_in_change_handler', self._notify_adj_rib_in_changed_event)
+        settings.setdefault(
             'peer_down_handler', self._notify_peer_down_event)
         settings.setdefault(
             'peer_up_handler', self._notify_peer_up_event)
@@ -328,6 +359,10 @@ class RyuBGPSpeaker(RyuApp):
 
     def _notify_best_path_changed_event(self, ev):
         ev = EventBestPathChanged(ev.path, ev.is_withdraw)
+        self.send_event_to_observers(ev)
+
+    def _notify_adj_rib_in_changed_event(self, ev, peer_ip, peer_as):
+        ev = EventAdjRibInChanged(ev.path, ev.is_withdraw, peer_ip, peer_as)
         self.send_event_to_observers(ev)
 
     def _notify_peer_down_event(self, remote_ip, remote_as):

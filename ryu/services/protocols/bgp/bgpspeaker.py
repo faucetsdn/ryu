@@ -68,6 +68,7 @@ from ryu.services.protocols.bgp.api.prefix import (
     FLOWSPEC_FAMILY_L2VPN,
     FLOWSPEC_RULES,
     FLOWSPEC_ACTIONS)
+from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import CLUSTER_ID
@@ -226,6 +227,7 @@ class BGPSpeaker(object):
                  refresh_stalepath_time=DEFAULT_REFRESH_STALEPATH_TIME,
                  refresh_max_eor_time=DEFAULT_REFRESH_MAX_EOR_TIME,
                  best_path_change_handler=None,
+                 adj_rib_in_change_handler=None,
                  peer_down_handler=None,
                  peer_up_handler=None,
                  ssh_console=False,
@@ -262,6 +264,12 @@ class BGPSpeaker(object):
         best remote path is changed due to an update message or remote
         peer down. The handler is supposed to take one argument, the
         instance of an EventPrefix class instance.
+
+        ``adj_rib_in_change_handler``, if specified, is called when any
+        adj-RIB-in path is changed due to an update message or remote
+        peer down. The given handler should take three argument, the
+        instance of an EventPrefix class instance, str type peer's IP address
+        and int type peer's AS number.
 
         ``peer_down_handler``, if specified, is called when BGP peering
         session goes down.
@@ -315,6 +323,7 @@ class BGPSpeaker(object):
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
+        self._adj_rib_in_change_handler = adj_rib_in_change_handler
         self._peer_down_handler = peer_down_handler
         self._peer_up_handler = peer_up_handler
         if ssh_console:
@@ -351,12 +360,27 @@ class BGPSpeaker(object):
         if self._best_path_change_handler:
             self._best_path_change_handler(ev)
 
+    def _notify_adj_rib_in_changed(self, peer, route):
+        if not isinstance(route, ReceivedRoute):
+            return
+
+        if self._adj_rib_in_change_handler:
+            self._adj_rib_in_change_handler(
+                EventPrefix(route.path, route.path.is_withdraw),
+                peer.ip_address, peer.remote_as)
+
     def _init_signal_listeners(self):
         CORE_MANAGER.get_core_service()._signal_bus.register_listener(
             BgpSignalBus.BGP_BEST_PATH_CHANGED,
             lambda _, info:
             self._notify_best_path_changed(info['path'],
                                            info['is_withdraw'])
+        )
+        CORE_MANAGER.get_core_service()._signal_bus.register_listener(
+            BgpSignalBus.BGP_ADJ_RIB_IN_CHANGED,
+            lambda _, info:
+            self._notify_adj_rib_in_changed(info['peer'],
+                                            info['received_route'])
         )
         CORE_MANAGER.get_core_service()._signal_bus.register_listener(
             BgpSignalBus.BGP_ADJ_DOWN,
