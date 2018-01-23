@@ -221,6 +221,75 @@ class EventPrefix(object):
 
 
 class BGPSpeaker(object):
+    """Class to provide the APIs of Ryu BGP Speaker.
+
+    ``as_number`` specifies an Autonomous Number. It must be an integer
+    between 1 and 65535.
+
+    ``router_id`` specifies BGP router identifier. It must be the
+    string representation of an IPv4 address (e.g. 10.0.0.1).
+
+    ``bgp_server_host`` specifies a list of TCP listen host addresses.
+
+    ``bgp_server_port`` specifies TCP listen port number. 179 is
+    used if not specified.
+
+    ``refresh_stalepath_time`` causes the BGP speaker to remove
+    stale routes from the BGP table after the timer expires, even
+    if the speaker does not receive a Router-Refresh End-of-RIB
+    message. This feature is disabled (not implemented yet).
+
+    ``refresh_max_eor_time`` causes the BGP speaker to generate a
+    Route-Refresh End-of-RIB message if it was not able to
+    generate one due to route flapping. This feature is disabled
+    (not implemented yet).
+
+    ``best_path_change_handler``, if specified, is called when any
+    best remote path is changed due to an update message or remote
+    peer down. The handler is supposed to take one argument, the
+    instance of an EventPrefix class instance.
+
+    ``adj_rib_in_change_handler``, if specified, is called when any
+    adj-RIB-in path is changed due to an update message or remote
+    peer down. The given handler should take three argument, the
+    instance of an EventPrefix class instance, str type peer's IP address
+    and int type peer's AS number.
+
+    ``peer_down_handler``, if specified, is called when BGP peering
+    session goes down.
+
+    ``peer_up_handler``, if specified, is called when BGP peering
+    session goes up.
+
+    ``ssh_console`` specifies whether or not SSH CLI need to be started.
+
+    ``ssh_port`` specifies the port number for SSH CLI server.
+    The default is bgp.operator.ssh.DEFAULT_SSH_PORT.
+
+    ``ssh_host`` specifies the IP address for SSH CLI server.
+    The default is bgp.operator.ssh.DEFAULT_SSH_HOST.
+
+    ``ssh_host_key`` specifies the path to the host key added to
+    the keys list used by SSH CLI server.
+    The default is bgp.operator.ssh.DEFAULT_SSH_HOST_KEY.
+
+    ``label_range`` specifies the range of MPLS labels generated
+    automatically.
+
+    ``allow_local_as_in_count`` maximum number of local AS number
+    occurrences in AS_PATH.  This option is useful for e.g.  auto RD/RT
+    configurations in leaf/spine architecture with shared AS numbers.
+    The default is 0 and means "local AS number is not allowed in
+    AS_PATH".  To allow local AS, 3 is recommended (Cisco's default).
+
+    ``cluster_id`` specifies the cluster identifier for Route Reflector.
+    It must be the string representation of an IPv4 address.
+    If omitted, "router_id" is used for this field.
+
+    ``local_pref`` specifies the default local preference. It must be an
+    integer.
+    """
+
     def __init__(self, as_number, router_id,
                  bgp_server_hosts=DEFAULT_BGP_SERVER_HOSTS,
                  bgp_server_port=DEFAULT_BGP_SERVER_PORT,
@@ -236,76 +305,6 @@ class BGPSpeaker(object):
                  allow_local_as_in_count=0,
                  cluster_id=None,
                  local_pref=DEFAULT_LOCAL_PREF):
-        """Create a new BGPSpeaker object with as_number and router_id to
-        listen on bgp_server_port.
-
-        ``as_number`` specifies an Autonomous Number. It must be an integer
-        between 1 and 65535.
-
-        ``router_id`` specifies BGP router identifier. It must be the
-        string representation of an IPv4 address (e.g. 10.0.0.1).
-
-        ``bgp_server_host`` specifies a list of TCP listen host addresses.
-
-        ``bgp_server_port`` specifies TCP listen port number. 179 is
-        used if not specified.
-
-        ``refresh_stalepath_time`` causes the BGP speaker to remove
-        stale routes from the BGP table after the timer expires, even
-        if the speaker does not receive a Router-Refresh End-of-RIB
-        message. This feature is disabled (not implemented yet).
-
-        ``refresh_max_eor_time`` causes the BGP speaker to generate a
-        Route-Refresh End-of-RIB message if it was not able to
-        generate one due to route flapping. This feature is disabled
-        (not implemented yet).
-
-        ``best_path_change_handler``, if specified, is called when any
-        best remote path is changed due to an update message or remote
-        peer down. The handler is supposed to take one argument, the
-        instance of an EventPrefix class instance.
-
-        ``adj_rib_in_change_handler``, if specified, is called when any
-        adj-RIB-in path is changed due to an update message or remote
-        peer down. The given handler should take three argument, the
-        instance of an EventPrefix class instance, str type peer's IP address
-        and int type peer's AS number.
-
-        ``peer_down_handler``, if specified, is called when BGP peering
-        session goes down.
-
-        ``peer_up_handler``, if specified, is called when BGP peering
-        session goes up.
-
-        ``ssh_console`` specifies whether or not SSH CLI need to be started.
-
-        ``ssh_port`` specifies the port number for SSH CLI server.
-        The default is bgp.operator.ssh.DEFAULT_SSH_PORT.
-
-        ``ssh_host`` specifies the IP address for SSH CLI server.
-        The default is bgp.operator.ssh.DEFAULT_SSH_HOST.
-
-        ``ssh_host_key`` specifies the path to the host key added to
-        the keys list used by SSH CLI server.
-        The default is bgp.operator.ssh.DEFAULT_SSH_HOST_KEY.
-
-        ``label_range`` specifies the range of MPLS labels generated
-        automatically.
-
-        ``allow_local_as_in_count`` maximum number of local AS number
-        occurrences in AS_PATH.  This option is useful for e.g.  auto RD/RT
-        configurations in leaf/spine architecture with shared AS numbers.
-        The default is 0 and means "local AS number is not allowed in
-        AS_PATH".  To allow local AS, 3 is recommended (Cisco's default).
-
-        ``cluster_id`` specifies the cluster identifier for Route Reflector.
-        It must be the string representation of an IPv4 address.
-        If omitted, "router_id" is used for this field.
-
-        ``local_pref`` specifies the default local preference. It must be an
-        integer.
-        """
-
         super(BGPSpeaker, self).__init__()
 
         settings = {
