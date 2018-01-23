@@ -104,6 +104,11 @@ Usage Example::
     $ ryu-manager my_bgp_app.py \\
         --bgp-app-config-file ryu/services/protocols/bgp/bgp_sample_conf.py
 
+.. note::
+
+    For the APIs for ``ryu.services.protocols.bgp.bgpspeaker.BGPSpeaker``,
+    please refer to :doc:`../library_bgp_speaker_ref`.
+
 API Reference
 =============
 """
