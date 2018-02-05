@@ -1563,7 +1563,9 @@ class VSCtl(object):
         self._pre_add_port(ctx, columns)
 
     def _cmd_add_port(self, ctx, command):
-        may_exist = command.has_option('--may_exist')
+        # '--may_exist' is a typo but for backword compatibility
+        may_exist = (command.has_option('--may_exist')
+                     or command.has_option('--may-exist'))
 
         br_name = command.args[0]
         port_name = command.args[1]
@@ -1577,7 +1579,9 @@ class VSCtl(object):
                      False, iface_names, settings)
 
     def _cmd_add_bond(self, ctx, command):
-        may_exist = command.has_option('--may_exist')
+        # '--may_exist' is a typo but for backword compatibility
+        may_exist = (command.has_option('--may_exist')
+                     or command.has_option('--may-exist'))
         fake_iface = command.has_option('--fake-iface')
 
         br_name = command.args[0]
