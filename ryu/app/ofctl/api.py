@@ -78,11 +78,11 @@ def send_msg(app, msg, reply_cls=None, reply_multi=False):
 
             def _my_handler(self, ev):
                 # ...(snip)...
-        msg = parser.OFPPortDescStatsRequest(datapath=datapath)
+                msg = parser.OFPPortDescStatsRequest(datapath=datapath)
                 result = ofctl_api.send_msg(
                     self, msg,
-                                    reply_cls=parser.OFPPortDescStatsReply,
-                                    reply_multi=True)
+                    reply_cls=parser.OFPPortDescStatsReply,
+                    reply_multi=True)
     """
     return app.send_request(event.SendMsgRequest(msg=msg,
                                                  reply_cls=reply_cls,
