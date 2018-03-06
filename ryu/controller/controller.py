@@ -27,7 +27,7 @@ import logging
 import random
 from socket import IPPROTO_TCP
 from socket import TCP_NODELAY
-from socket import SHUT_RDWR
+from socket import SHUT_WR
 from socket import timeout as SocketTimeout
 import ssl
 
@@ -196,12 +196,10 @@ def _deactivate(method):
             method(self)
         finally:
             try:
-                self.socket.shutdown(SHUT_RDWR)
-            except (EOFError, IOError):
+                self.socket.close()
+            except IOError:
                 pass
 
-            if not self.is_active:
-                self.socket.close()
     return deactivate
 
 
@@ -279,14 +277,24 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self._ports = None
         self.flow_format = ofproto_v1_0.NXFF_OPENFLOW10
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
+        self.state = None  # for pylint
         self.set_state(HANDSHAKE_DISPATCHER)
 
-    @_deactivate
+    def _close_write(self):
+        # Note: Close only further sends in order to wait for the switch to
+        # disconnect this connection.
+        try:
+            self.socket.shutdown(SHUT_WR)
+        except (EOFError, IOError):
+            pass
+
     def close(self):
-        if self.state != DEAD_DISPATCHER:
-            self.set_state(DEAD_DISPATCHER)
+        self.set_state(DEAD_DISPATCHER)
+        self._close_write()
 
     def set_state(self, state):
+        if self.state == state:
+            return
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
@@ -386,8 +394,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                     self._send_q_sem.release()
             except hub.QueueEmpty:
                 pass
-            # Finally, ensure the _recv_loop terminates.
-            self.close()
+            # Finally, disallow further sends.
+            self._close_write()
 
     def send(self, buf, close_socket=False):
         msg_enqueued = False
