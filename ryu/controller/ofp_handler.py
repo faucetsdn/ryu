@@ -65,7 +65,7 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         error_msg.type = datapath.ofproto.OFPET_HELLO_FAILED
         error_msg.code = datapath.ofproto.OFPHFC_INCOMPATIBLE
         error_msg.data = error_desc
-        datapath.send_msg(error_msg)
+        datapath.send_msg(error_msg, close_socket=True)
 
     @set_ev_handler(ofp_event.EventOFPHello, HANDSHAKE_DISPATCHER)
     def hello_handler(self, ev):
