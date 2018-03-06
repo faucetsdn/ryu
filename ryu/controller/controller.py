@@ -362,9 +362,11 @@ class Datapath(ofproto_protocol.ProtocolDesc):
     def _send_loop(self):
         try:
             while self.state != DEAD_DISPATCHER:
-                buf = self.send_q.get()
+                buf, close_socket = self.send_q.get()
                 self._send_q_sem.release()
                 self.socket.sendall(buf)
+                if close_socket:
+                    break
         except SocketTimeout:
             LOG.debug("Socket timed out while sending data to switch at address %s",
                       self.address)
@@ -387,11 +389,11 @@ class Datapath(ofproto_protocol.ProtocolDesc):
             # Finally, ensure the _recv_loop terminates.
             self.close()
 
-    def send(self, buf):
+    def send(self, buf, close_socket=False):
         msg_enqueued = False
         self._send_q_sem.acquire()
         if self.send_q:
-            self.send_q.put(buf)
+            self.send_q.put((buf, close_socket))
             msg_enqueued = True
         else:
             self._send_q_sem.release()
@@ -406,13 +408,13 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         msg.set_xid(self.xid)
         return self.xid
 
-    def send_msg(self, msg):
+    def send_msg(self, msg, close_socket=False):
         assert isinstance(msg, self.ofproto_parser.MsgBase)
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
         # LOG.debug('send_msg %s', msg)
-        return self.send(msg.buf)
+        return self.send(msg.buf, close_socket=close_socket)
 
     def _echo_request_loop(self):
         if not self.max_unreplied_echo_requests:
