@@ -251,6 +251,8 @@ class OFPErrorMsg(MsgBase):
         super(OFPErrorMsg, self).__init__(datapath)
         self.type = type_
         self.code = code
+        if isinstance(data, six.string_types):
+            data = data.encode('ascii')
         self.data = data
         if self.type == ofproto.OFPET_EXPERIMENTER:
             self.exp_type = kwargs.get('exp_type', None)

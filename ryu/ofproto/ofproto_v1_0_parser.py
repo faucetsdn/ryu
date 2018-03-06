@@ -1258,6 +1258,8 @@ class OFPErrorMsg(MsgBase):
         super(OFPErrorMsg, self).__init__(datapath)
         self.type = type_
         self.code = code
+        if isinstance(data, six.string_types):
+            data = data.encode('ascii')
         self.data = data
 
     @classmethod
