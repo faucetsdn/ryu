@@ -23,15 +23,17 @@ The main component of OpenFlow controller.
 """
 
 import contextlib
-from ryu import cfg
 import logging
+import random
+from socket import IPPROTO_TCP
+from socket import TCP_NODELAY
+from socket import SHUT_RDWR
+from socket import timeout as SocketTimeout
+import ssl
+
+from ryu import cfg
 from ryu.lib import hub
 from ryu.lib.hub import StreamServer
-import random
-import ssl
-from socket import IPPROTO_TCP, TCP_NODELAY, SHUT_RDWR, timeout as SocketTimeout
-
-import netaddr
 
 import ryu.base.app_manager
 
@@ -300,7 +302,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         while self.state != DEAD_DISPATCHER:
             try:
                 read_len = min_read_len
-                if (remaining_read_len > min_read_len):
+                if remaining_read_len > min_read_len:
                     read_len = remaining_read_len
                 ret = self.socket.recv(read_len)
             except SocketTimeout:
@@ -312,14 +314,14 @@ class Datapath(ofproto_protocol.ProtocolDesc):
             except (EOFError, IOError):
                 break
 
-            if len(ret) == 0:
+            if not ret:
                 break
 
             buf += ret
             buf_len = len(buf)
             while buf_len >= min_read_len:
                 (version, msg_type, msg_len, xid) = ofproto_parser.header(buf)
-                if (msg_len < min_read_len):
+                if msg_len < min_read_len:
                     # Someone isn't playing nicely; log it, and try something sane.
                     LOG.debug("Message with invalid length %s received from switch at address %s",
                               msg_len, self.address)
@@ -335,7 +337,9 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                     ev = ofp_event.ofp_msg_to_ev(msg)
                     self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                    dispatchers = lambda x: x.callers[ev.__class__].dispatchers
+                    def dispatchers(x):
+                        return x.callers[ev.__class__].dispatchers
+
                     handlers = [handler for handler in
                                 self.ofp_brick.get_handlers(ev) if
                                 self.state in dispatchers(handler)]
@@ -424,7 +428,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
     def acknowledge_echo_reply(self, xid):
         try:
             self.unreplied_echo_requests.remove(xid)
-        except:
+        except ValueError:
             pass
 
     def serve(self):
