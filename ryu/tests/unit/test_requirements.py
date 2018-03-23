@@ -19,8 +19,6 @@ import sys
 import unittest
 
 import pkg_resources
-from pip.req import parse_requirements
-from pip.download import PipSession
 from six.moves import urllib
 
 from nose.tools import ok_
@@ -28,7 +26,7 @@ from nose.tools import ok_
 
 LOG = logging.getLogger(__name__)
 
-MOD_DIR = os.path.dirname(sys.modules[__name__].__file__)
+MOD_DIR = os.path.dirname('file://' + sys.modules[__name__].__file__)
 _RYU_REQUIREMENTS_FILES = [
     '../../../tools/pip-requires',
     '../../../tools/optional-requires',
@@ -51,9 +49,10 @@ OPENSTACK_REQUIREMENTS_FILES = [
 def _get_requirements(files):
     requirements = {}
     for f in files:
-        req = parse_requirements(f, session=PipSession())
-        for r in req:
-            requirements[r.name] = str(r.req)
+        response = urllib.request.urlopen(f)
+        contents = response.read().decode('utf-8')
+        for r in pkg_resources.parse_requirements(contents):
+            requirements[r.name] = str(r)
 
     return requirements
 
@@ -82,5 +81,5 @@ class TestRequirements(unittest.TestCase):
         except pkg_resources.VersionConflict as e:
             LOG.exception(
                 'Some requirements of Ryu are conflicting with that of '
-                'OpenStack project: %s' % OPENSTACK_REQUIREMENTS_REPO)
+                'OpenStack project: %s', OPENSTACK_REQUIREMENTS_REPO)
             raise e
