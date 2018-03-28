@@ -322,3 +322,7 @@ class OfctlActionConverter(object):
                                 'recirc_table': recirc_table,
                                 'alg': alg,
                                 'actions': ct_actions})
+
+    @classmethod
+    def ct_clear(cls, ofproto, action_str):
+        return dict(NXActionCTClear={})
