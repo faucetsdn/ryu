@@ -264,6 +264,12 @@ class Ospf2MrtMessage(MrtMessage):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _HEADER_FMT = '!4s4s'
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    _TYPE = {
+        'ascii': [
+            'remote_ip',
+            'local_ip',
+        ],
+    }
 
     def __init__(self, remote_ip, local_ip, ospf_message):
         self.remote_ip = remote_ip
@@ -328,6 +334,12 @@ class TableDumpMrtMessage(MrtMessage):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _HEADER_FMT = ''  # should be defined in subclass
     HEADER_SIZE = 0
+    _TYPE = {
+        'ascii': [
+            'prefix',
+            'peer_ip',
+        ],
+    }
 
     def __init__(self, view_num, seq_num, prefix, prefix_len, status,
                  originated_time, peer_ip, peer_as, bgp_attributes,
@@ -457,6 +469,11 @@ class TableDump2PeerIndexTableMrtMessage(TableDump2MrtMessage):
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
     _PEER_COUNT_FMT = '!H'
     PEER_COUNT_SIZE = struct.calcsize(_PEER_COUNT_FMT)
+    _TYPE = {
+        'ascii': [
+            'bgp_id',
+        ],
+    }
 
     def __init__(self, bgp_id, peer_entries,
                  view_name='', view_name_len=None, peer_count=None):
@@ -539,6 +556,13 @@ class MrtPeer(stringify.StringifyMixin):
     #  Bit 7: Peer IP Address family:  0 = IPv4(4 bytes),  1 = IPv6(16 bytes)
     IP_ADDR_FAMILY_BIT = 1 << 0
     AS_NUMBER_SIZE_BIT = 1 << 1
+
+    _TYPE = {
+        'ascii': [
+            'bgp_id',
+            'ip_addr',
+        ],
+    }
 
     def __init__(self, bgp_id, ip_addr, as_num, type_=0):
         self.type = type_
@@ -937,6 +961,12 @@ class Bgp4MpMrtMessage(MrtMessage):
     """
     MRT Message for the BGP4MP Type.
     """
+    _TYPE = {
+        'ascii': [
+            'peer_ip',
+            'local_ip',
+        ],
+    }
 
 
 @MrtRecord.register_type(MrtRecord.TYPE_BGP4MP)
