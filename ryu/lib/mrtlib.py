@@ -667,22 +667,44 @@ class TableDump2AfiSafiSpecificRibMrtMessage(TableDump2MrtMessage):
 
 @TableDump2MrtMessage.register_type(
     TableDump2MrtRecord.SUBTYPE_RIB_IPV4_UNICAST)
-@TableDump2MrtMessage.register_type(
-    TableDump2MrtRecord.SUBTYPE_RIB_IPV4_MULTICAST)
-class TableDump2RibIPv4UnicastMrtMessage(TableDump2AfiSafiSpecificRibMrtMessage):
+class TableDump2RibIPv4UnicastMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
     """
     MRT Message for the TABLE_DUMP_V2 Type and the
-    RIB_IPV4_UNICAST/SUBTYPE_RIB_IPV4_MULTICAST subtype.
+    SUBTYPE_RIB_IPV4_UNICAST subtype.
+    """
+    _PREFIX_CLS = bgp.IPAddrPrefix
+
+
+@TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_IPV4_MULTICAST)
+class TableDump2RibIPv4MulticastMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the
+    SUBTYPE_RIB_IPV4_MULTICAST subtype.
     """
     _PREFIX_CLS = bgp.IPAddrPrefix
 
 
 @TableDump2MrtMessage.register_type(
     TableDump2MrtRecord.SUBTYPE_RIB_IPV6_UNICAST)
-class TableDump2RibIPv6UnicastMrtMessage(TableDump2AfiSafiSpecificRibMrtMessage):
+class TableDump2RibIPv6UnicastMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
     """
     MRT Message for the TABLE_DUMP_V2 Type and the
-    RIB_IPV6_UNICAST/SUBTYPE_RIB_IPV6_MULTICAST subtype.
+    SUBTYPE_RIB_IPV6_MULTICAST subtype.
+    """
+    _PREFIX_CLS = bgp.IP6AddrPrefix
+
+
+@TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_IPV6_MULTICAST)
+class TableDump2RibIPv6MulticastMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the
+    SUBTYPE_RIB_IPV6_MULTICAST subtype.
     """
     _PREFIX_CLS = bgp.IP6AddrPrefix
 
