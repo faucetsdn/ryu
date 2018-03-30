@@ -431,6 +431,11 @@ class TableDump2MrtRecord(MrtCommonRecord):
     SUBTYPE_RIB_IPV6_UNICAST = 4
     SUBTYPE_RIB_IPV6_MULTICAST = 5
     SUBTYPE_RIB_GENERIC = 6
+    SUBTYPE_RIB_IPV4_UNICAST_ADDPATH = 8
+    SUBTYPE_RIB_IPV4_MULTICAST_ADDPATH = 9
+    SUBTYPE_RIB_IPV6_UNICAST_ADDPATH = 10
+    SUBTYPE_RIB_IPV6_MULTICAST_ADDPATH = 11
+    SUBTYPE_RIB_GENERIC_ADDPATH = 12
 
 
 @TableDump2MrtMessage.register_type(
@@ -595,7 +600,8 @@ class TableDump2AfiSafiSpecificRibMrtMessage(TableDump2MrtMessage):
     RIB subtypes.
 
     The AFI/SAFI-specific RIB subtypes consist of the RIB_IPV4_UNICAST,
-    RIB_IPV4_MULTICAST, RIB_IPV6_UNICAST, and RIB_IPV6_MULTICAST subtypes.
+    RIB_IPV4_MULTICAST, RIB_IPV6_UNICAST, RIB_IPV6_MULTICAST and their
+    additional-path version subtypes.
     """
     #  0                   1                   2                   3
     #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -614,6 +620,9 @@ class TableDump2AfiSafiSpecificRibMrtMessage(TableDump2MrtMessage):
     # Parser class to parse the Prefix field
     _PREFIX_CLS = None  # should be defined in subclass
 
+    # Is additional-path version?
+    _IS_ADDPATH = False
+
     def __init__(self, seq_num, prefix, rib_entries, entry_count=None):
         self.seq_num = seq_num
         assert isinstance(prefix, self._PREFIX_CLS)
@@ -631,7 +640,7 @@ class TableDump2AfiSafiSpecificRibMrtMessage(TableDump2MrtMessage):
         rest = buf[2:]
         rib_entries = []
         for i in range(entry_count):
-            r, rest = MrtRibEntry.parse(rest)
+            r, rest = MrtRibEntry.parse(rest, is_addpath=cls._IS_ADDPATH)
             rib_entries.insert(i, r)
 
         return entry_count, rib_entries, rest
@@ -710,10 +719,61 @@ class TableDump2RibIPv6MulticastMrtMessage(
 
 
 @TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_IPV4_UNICAST_ADDPATH)
+class TableDump2RibIPv4UnicastAddPathMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the
+    SUBTYPE_RIB_IPV4_UNICAST_ADDPATH subtype.
+    """
+    _PREFIX_CLS = bgp.IPAddrPrefix
+    _IS_ADDPATH = True
+
+
+@TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_IPV4_MULTICAST_ADDPATH)
+class TableDump2RibIPv4MulticastAddPathMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the
+    SUBTYPE_RIB_IPV4_MULTICAST_ADDPATH subtype.
+    """
+    _PREFIX_CLS = bgp.IPAddrPrefix
+    _IS_ADDPATH = True
+
+
+@TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_IPV6_UNICAST_ADDPATH)
+class TableDump2RibIPv6UnicastAddPathMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the
+    SUBTYPE_RIB_IPV6_UNICAST_ADDPATH subtype.
+    """
+    _PREFIX_CLS = bgp.IP6AddrPrefix
+    _IS_ADDPATH = True
+
+
+@TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_IPV6_MULTICAST_ADDPATH)
+class TableDump2RibIPv6MulticastAddPathMrtMessage(
+        TableDump2AfiSafiSpecificRibMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the
+    SUBTYPE_RIB_IPV6_MULTICAST_ADDPATH subtype.
+    """
+    _PREFIX_CLS = bgp.IP6AddrPrefix
+    _IS_ADDPATH = True
+
+
+@TableDump2MrtMessage.register_type(
     TableDump2MrtRecord.SUBTYPE_RIB_GENERIC)
 class TableDump2RibGenericMrtMessage(TableDump2MrtMessage):
     """
-    MRT Message for the TABLE_DUMP_V2 Type and the RIB_GENERIC subtype.
+    MRT Message for the TABLE_DUMP_V2 Type and the generic RIB subtypes.
+
+    The generic RIB subtypes consist of the RIB_GENERIC and
+    RIB_GENERIC_ADDPATH subtypes.
     """
     #  0                   1                   2                   3
     #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -728,6 +788,9 @@ class TableDump2RibGenericMrtMessage(TableDump2MrtMessage):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     _HEADER_FMT = '!IHB'
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+
+    # Is additional-path version?
+    _IS_ADDPATH = False
 
     def __init__(self, seq_num, afi, safi, nlri, rib_entries,
                  entry_count=None):
@@ -749,7 +812,7 @@ class TableDump2RibGenericMrtMessage(TableDump2MrtMessage):
         rest = buf[2:]
         rib_entries = []
         for i in range(entry_count):
-            r, rest = MrtRibEntry.parse(rest)
+            r, rest = MrtRibEntry.parse(rest, is_addpath=cls._IS_ADDPATH)
             rib_entries.insert(i, r)
 
         return entry_count, rib_entries, rest
@@ -784,6 +847,16 @@ class TableDump2RibGenericMrtMessage(TableDump2MrtMessage):
                            self.afi, self.safi) + nlri_bin + rib_bin
 
 
+@TableDump2MrtMessage.register_type(
+    TableDump2MrtRecord.SUBTYPE_RIB_GENERIC_ADDPATH)
+class TableDump2RibGenericAddPathMrtMessage(TableDump2RibGenericMrtMessage):
+    """
+    MRT Message for the TABLE_DUMP_V2 Type and the RIB_GENERIC_ADDPATH
+    subtype.
+    """
+    _IS_ADDPATH = True
+
+
 class MrtRibEntry(stringify.StringifyMixin):
     """
     MRT RIB Entry.
@@ -795,15 +868,21 @@ class MrtRibEntry(stringify.StringifyMixin):
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # |                         Originated Time                       |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # |                        (Path Identifier)                      |
+    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # |      Attribute Length         |
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     # |                    BGP Attributes... (variable)
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    # peer_index, originated_time, attr_len
     _HEADER_FMT = '!HIH'
     HEADER_SIZE = struct.calcsize(_HEADER_FMT)
+    # peer_index, originated_time, path_id, attr_len
+    _HEADER_FMT_ADDPATH = '!HIIH'
+    HEADER_SIZE_ADDPATH = struct.calcsize(_HEADER_FMT_ADDPATH)
 
     def __init__(self, peer_index, originated_time, bgp_attributes,
-                 attr_len=None):
+                 attr_len=None, path_id=None):
         self.peer_index = peer_index
         self.originated_time = originated_time
         assert isinstance(bgp_attributes, (list, tuple))
@@ -811,20 +890,28 @@ class MrtRibEntry(stringify.StringifyMixin):
             assert isinstance(attr, bgp._PathAttribute)
         self.bgp_attributes = bgp_attributes
         self.attr_len = attr_len
+        self.path_id = path_id
 
     @classmethod
-    def parse(cls, buf):
-        (peer_index, originated_time, attr_len) = struct.unpack_from(
-            cls._HEADER_FMT, buf)
+    def parse(cls, buf, is_addpath=False):
+        path_id = None
+        if not is_addpath:
+            (peer_index, originated_time,
+             attr_len) = struct.unpack_from(cls._HEADER_FMT, buf)
+            _header_size = cls.HEADER_SIZE
+        else:
+            (peer_index, originated_time, path_id,
+             attr_len) = struct.unpack_from(cls._HEADER_FMT_ADDPATH, buf)
+            _header_size = cls.HEADER_SIZE_ADDPATH
 
-        bgp_attr_bin = buf[cls.HEADER_SIZE:cls.HEADER_SIZE + attr_len]
+        bgp_attr_bin = buf[_header_size:_header_size + attr_len]
         bgp_attributes = []
         while bgp_attr_bin:
             attr, bgp_attr_bin = bgp._PathAttribute.parser(bgp_attr_bin)
             bgp_attributes.append(attr)
 
         return cls(peer_index, originated_time, bgp_attributes,
-                   attr_len), buf[cls.HEADER_SIZE + attr_len:]
+                   attr_len, path_id), buf[_header_size + attr_len:]
 
     def serialize(self):
         bgp_attrs_bin = bytearray()
@@ -832,10 +919,17 @@ class MrtRibEntry(stringify.StringifyMixin):
             bgp_attrs_bin += attr.serialize()
         self.attr_len = len(bgp_attrs_bin)  # fixup
 
-        return struct.pack(self._HEADER_FMT,
-                           self.peer_index,
-                           self.originated_time,
-                           self.attr_len) + bgp_attrs_bin
+        if self.path_id is None:
+            return struct.pack(self._HEADER_FMT,
+                               self.peer_index,
+                               self.originated_time,
+                               self.attr_len) + bgp_attrs_bin
+        else:
+            return struct.pack(self._HEADER_FMT_ADDPATH,
+                               self.peer_index,
+                               self.originated_time,
+                               self.path_id,
+                               self.attr_len) + bgp_attrs_bin
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -856,6 +950,10 @@ class Bgp4MpMrtRecord(MrtCommonRecord):
     SUBTYPE_BGP4MP_STATE_CHANGE_AS4 = 5
     SUBTYPE_BGP4MP_MESSAGE_LOCAL = 6
     SUBTYPE_BGP4MP_MESSAGE_AS4_LOCAL = 7
+    SUBTYPE_BGP4MP_MESSAGE_ADDPATH = 8
+    SUBTYPE_BGP4MP_MESSAGE_AS4_ADDPATH = 9
+    SUBTYPE_BGP4MP_MESSAGE_LOCAL_ADDPATH = 10
+    SUBTYPE_BGP4MP_MESSAGE_AS4_LOCAL_ADDPATH = 11
 
 
 @MrtRecord.register_type(MrtRecord.TYPE_BGP4MP_ET)
@@ -869,6 +967,10 @@ class Bgp4MpEtMrtRecord(ExtendedTimestampMrtRecord):
     SUBTYPE_BGP4MP_STATE_CHANGE_AS4 = 5
     SUBTYPE_BGP4MP_MESSAGE_LOCAL = 6
     SUBTYPE_BGP4MP_MESSAGE_AS4_LOCAL = 7
+    SUBTYPE_BGP4MP_MESSAGE_ADDPATH = 8
+    SUBTYPE_BGP4MP_MESSAGE_AS4_ADDPATH = 9
+    SUBTYPE_BGP4MP_MESSAGE_LOCAL_ADDPATH = 10
+    SUBTYPE_BGP4MP_MESSAGE_AS4_LOCAL_ADDPATH = 11
 
 
 @Bgp4MpMrtMessage.register_type(
