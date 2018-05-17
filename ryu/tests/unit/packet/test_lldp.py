@@ -227,8 +227,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
                     + b'\x73\x74\x65\x72\x20\x30\x35\x2f' \
                     + b'\x32\x37\x2f\x30\x35\x20\x30\x34' \
                     + b'\x3a\x35\x33\x3a\x31\x31\x00\x0e' \
-                    + b'\x05\x01\x00\x14\x00\x14\x10\x0e' \
-                    + b'\x07' \
+                    + b'\x04\x00\x14\x00\x14\x10\x0e\x07' \
                     + b'\x06\x00\x01\x30\xf9\xad\xa0\x02' \
                     + b'\x00\x00\x03\xe9\x00\xfe\x07\x00' \
                     + b'\x12\x0f\x02\x07\x01\x00\xfe\x09' \
@@ -274,7 +273,6 @@ class TestLLDPOptionalTLV(unittest.TestCase):
 
         # SystemCapabilities
         eq_(tlvs[6].tlv_type, lldp.LLDP_TLV_SYSTEM_CAPABILITIES)
-        eq_(tlvs[6].subtype, lldp.ChassisID.SUB_CHASSIS_COMPONENT)
         eq_(tlvs[6].system_cap & lldp.SystemCapabilities.CAP_MAC_BRIDGE,
             lldp.SystemCapabilities.CAP_MAC_BRIDGE)
         eq_(tlvs[6].enabled_cap & lldp.SystemCapabilities.CAP_MAC_BRIDGE,
