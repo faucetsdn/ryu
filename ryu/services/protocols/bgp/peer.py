@@ -2000,8 +2000,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Open/Notification messages are currently handled by protocol and
             # nothing is done inside peer, so should not see them here.
             raise ValueError('Peer does not support handling of %s'
-                             ' message during % state' %
-                             (msg, self.state.bgp_state()))
+                             ' message during %s state' %
+                             (msg, self.state.bgp_state))
 
     def _handle_err_sor_msg(self, afi, safi):
         # Check if ERR capability is enabled for this peer.
