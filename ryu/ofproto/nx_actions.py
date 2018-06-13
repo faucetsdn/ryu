@@ -561,10 +561,9 @@ def generate(ofp_name, ofpp_name):
         And equivalent to the followings action of ovs-ofctl command.
 
         .. note::
-            ovs-ofctl command of the OpenFlow1.0 is different from that
-            of OpenFlow1.2 or later.
-
-        OpenFlow1.0
+            This actions is supported by
+            ``OFPActionSetField``
+            in OpenFlow1.2 or later.
 
         ..
           set_tunnel:id
@@ -573,16 +572,6 @@ def generate(ofp_name, ofpp_name):
         +------------------------+
         | **set_tunnel**\:\ *id* |
         +------------------------+
-
-        OpenFlow1.2 or later
-
-        ..
-          set_field:value->tun_id
-        ..
-
-        +-----------------------------------+
-        | **set_field**\:\ *value*\->tun_id |
-        +-----------------------------------+
 
         ================ ======================================================
         Attribute        Description
@@ -609,10 +598,9 @@ def generate(ofp_name, ofpp_name):
         And equivalent to the followings action of ovs-ofctl command.
 
         .. note::
-            ovs-ofctl command of the OpenFlow1.0 is different from that
-            of OpenFlow1.2 or later.
-
-        OpenFlow1.0
+            This actions is supported by
+            ``OFPActionSetField``
+            in OpenFlow1.2 or later.
 
         ..
           set_tunnel64:id
@@ -621,16 +609,6 @@ def generate(ofp_name, ofpp_name):
         +--------------------------+
         | **set_tunnel64**\:\ *id* |
         +--------------------------+
-
-        OpenFlow1.2 or later
-
-        ..
-          set_field:value->tun_id
-        ..
-
-        +-----------------------------------+
-        | **set_field**\:\ *value*\->tun_id |
-        +-----------------------------------+
 
         ================ ======================================================
         Attribute        Description
