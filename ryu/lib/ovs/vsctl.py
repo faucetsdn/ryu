@@ -66,12 +66,12 @@ def valid_ovsdb_addr(addr):
     :return: True if valid, otherwise False.
     """
     # Assumes Unix socket format: "unix:file"
-    m = re.match('unix:(\S+)', addr)
+    m = re.match(r'unix:(\S+)', addr)
     if m:
         file = m.group(1)
         return os.path.isfile(file)
     # Assumes TCP/SSL socket format: "tcp:ip:port" or "ssl:ip:port"
-    m = re.match('(tcp|ssl):(\S+):(\d+)', addr)
+    m = re.match(r'(tcp|ssl):(\S+):(\d+)', addr)
     if m:
         address = m.group(2)
         port = m.group(3)

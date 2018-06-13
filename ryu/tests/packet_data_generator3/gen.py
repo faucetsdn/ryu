@@ -319,7 +319,7 @@ if __name__ == '__main__':
                                    stdout=subprocess.PIPE)
     has_names = False
     try:
-        ver_tuple = re.search('\s(\d+)\.(\d+)(\.\d*|\s*$)',
+        ver_tuple = re.search(r'\s(\d+)\.(\d+)(\.\d*|\s*$)',
                               ovs_version.stdout.readline().decode()).groups()
         if int(ver_tuple[0]) > 2 or \
            int(ver_tuple[0]) == 2 and int(ver_tuple[1]) >= 8:

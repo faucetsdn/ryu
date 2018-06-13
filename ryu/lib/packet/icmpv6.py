@@ -75,7 +75,7 @@ BLOCK_OLD_SOURCES = 6
 
 
 class icmpv6(packet_base.PacketBase):
-    """ICMPv6 (RFC 2463) header encoder/decoder class.
+    r"""ICMPv6 (RFC 2463) header encoder/decoder class.
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -553,7 +553,7 @@ class nd_option_tla(nd_option_la):
 
 @nd_router_advert.register_nd_option_type
 class nd_option_pi(nd_option):
-    """ICMPv6 sub encoder/decoder class for Neighbor discovery
+    r"""ICMPv6 sub encoder/decoder class for Neighbor discovery
     Prefix Information Option. (RFC 4861)
 
     This is used with ryu.lib.packet.icmpv6.nd_router_advert.
@@ -884,7 +884,7 @@ class mldv2_report(mld):
 
 
 class mldv2_report_group(stringify.StringifyMixin):
-    """
+    r"""
     ICMPv6 sub encoder/decoder class for MLD v2 Lister Report Group
     Record messages. (RFC 3810)
 

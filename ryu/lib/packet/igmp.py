@@ -391,7 +391,7 @@ class igmpv3_report(igmp):
 
 
 class igmpv3_report_group(stringify.StringifyMixin):
-    """
+    r"""
     Internet Group Management Protocol(IGMP, RFC 3376)
     Membership Report Group Record message encoder/decoder class.
 

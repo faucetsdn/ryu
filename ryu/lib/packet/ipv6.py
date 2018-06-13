@@ -274,7 +274,7 @@ class dst_opts(opt_header):
 
 
 class option(stringify.StringifyMixin):
-    """IPv6 (RFC 2460) Options header encoder/decoder class.
+    r"""IPv6 (RFC 2460) Options header encoder/decoder class.
 
     This is used with ryu.lib.packet.ipv6.hop_opts or
                       ryu.lib.packet.ipv6.dst_opts.
@@ -496,7 +496,7 @@ class routing_type3(header):
 
 @ipv6.register_header_type(inet.IPPROTO_FRAGMENT)
 class fragment(header):
-    """IPv6 (RFC 2460) fragment header encoder/decoder class.
+    r"""IPv6 (RFC 2460) fragment header encoder/decoder class.
 
     This is used with ryu.lib.packet.ipv6.ipv6.
 

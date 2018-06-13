@@ -39,7 +39,7 @@ def ofp_instruction_from_str(ofproto, action_str):
     action_str  An action string.
     =========== =================================================
     """
-    action_re = re.compile("([a-z_]+)(\([^)]*\)|[^a-z_,()][^,()]*)*")
+    action_re = re.compile(r"([a-z_]+)(\([^)]*\)|[^a-z_,()][^,()]*)*")
     result = []
     while len(action_str):
         m = action_re.match(action_str)
@@ -303,7 +303,7 @@ class OfctlActionConverter(object):
                     if k == 'table':
                         recirc_table = str_to_int(v)
                     elif k == 'zone':
-                        m = re.search('\[(\d*)\.\.(\d*)\]', v)
+                        m = re.search(r'\[(\d*)\.\.(\d*)\]', v)
                         if m:
                             zone_ofs_nbits = nicira_ext.ofs_nbits(
                                 int(m.group(1)), int(m.group(2)))

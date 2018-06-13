@@ -298,7 +298,7 @@ NXM_IP_FRAG_NOT_LATER = (0, FLOW_NW_FRAG_LATER)
 
 
 def ofs_nbits(start, end):
-    """
+    r"""
     The utility method for ofs_nbits
 
     This method is used in the class to set the ofs_nbits.
