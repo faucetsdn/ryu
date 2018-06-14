@@ -320,7 +320,6 @@ class TestLLDPOptionalTLV(unittest.TestCase):
             system_description=b'Summit300-48 - Version 7.4e.1 (Build 5) '
                                + b'by Release_Master 05/27/05 04:53:11\x00')
         tlv_system_capabilities = lldp.SystemCapabilities(
-            subtype=lldp.ChassisID.SUB_CHASSIS_COMPONENT,
             system_cap=0x14,
             enabled_cap=0x14)
         tlv_management_address = lldp.ManagementAddress(
@@ -358,7 +357,6 @@ class TestLLDPOptionalTLV(unittest.TestCase):
             system_description=b'Summit300-48 - Version 7.4e.1 (Build 5) '
                                + b'by Release_Master 05/27/05 04:53:11\x00')
         sys_cap = lldp.SystemCapabilities(
-            subtype=lldp.ChassisID.SUB_CHASSIS_COMPONENT,
             system_cap=0x14,
             enabled_cap=0x14)
         man_addr = lldp.ManagementAddress(
@@ -432,8 +430,7 @@ class TestLLDPOptionalTLV(unittest.TestCase):
                                        _sys_desc_str)
 
         # SystemCapabilities string
-        sys_cap_values = {'subtype': lldp.ChassisID.SUB_CHASSIS_COMPONENT,
-                          'system_cap': 0x14,
+        sys_cap_values = {'system_cap': 0x14,
                           'enabled_cap': 0x14,
                           'len': sys_cap.len,
                           'typelen': sys_cap.typelen}
@@ -513,7 +510,6 @@ class TestLLDPOptionalTLV(unittest.TestCase):
             system_description=b'Summit300-48 - Version 7.4e.1 (Build 5) '
                                + b'by Release_Master 05/27/05 04:53:11\x00')
         sys_cap = lldp.SystemCapabilities(
-            subtype=lldp.ChassisID.SUB_CHASSIS_COMPONENT,
             system_cap=0x14,
             enabled_cap=0x14)
         man_addr = lldp.ManagementAddress(
