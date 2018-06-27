@@ -1283,7 +1283,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 else:
                     bind_addr = None
                 peer_address = (self._neigh_conf.ip_address,
-                                const.STD_BGP_SERVER_PORT_NUM)
+                                self._neigh_conf.port)
 
                 if bind_addr:
                     LOG.debug('%s trying to connect from'

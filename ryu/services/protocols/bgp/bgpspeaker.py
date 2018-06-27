@@ -112,21 +112,23 @@ from ryu.services.protocols.bgp.rtconf.neighbors import (
     DEFAULT_CAP_MBGP_VPNV4FS,
     DEFAULT_CAP_MBGP_VPNV6FS,
     DEFAULT_CAP_MBGP_L2VPNFS,
+    DEFAULT_CAP_ENHANCED_REFRESH,
+    DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
+    DEFAULT_CONNECT_MODE,
+    REMOTE_PORT,
+    DEFAULT_BGP_PORT,
+    PEER_NEXT_HOP,
+    PASSWORD,
+    DEFAULT_IS_ROUTE_SERVER_CLIENT,
+    IS_ROUTE_SERVER_CLIENT,
+    DEFAULT_IS_ROUTE_REFLECTOR_CLIENT,
+    IS_ROUTE_REFLECTOR_CLIENT,
+    DEFAULT_IS_NEXT_HOP_SELF,
+    IS_NEXT_HOP_SELF,
+    CONNECT_MODE,
+    LOCAL_ADDRESS,
+    LOCAL_PORT,
 )
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_CAP_ENHANCED_REFRESH, DEFAULT_CAP_FOUR_OCTET_AS_NUMBER)
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
-from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
-from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_IS_ROUTE_SERVER_CLIENT, IS_ROUTE_SERVER_CLIENT)
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_IS_ROUTE_REFLECTOR_CLIENT, IS_ROUTE_REFLECTOR_CLIENT)
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_IS_NEXT_HOP_SELF, IS_NEXT_HOP_SELF)
-from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE
-from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
-from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
 from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
 from ryu.services.protocols.bgp.info_base.base import Filter
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
@@ -406,6 +408,7 @@ class BGPSpeaker(object):
         call('core.stop')
 
     def neighbor_add(self, address, remote_as,
+                     remote_port=DEFAULT_BGP_PORT,
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
                      enable_ipv6=DEFAULT_CAP_MBGP_IPV6,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
@@ -436,6 +439,8 @@ class BGPSpeaker(object):
 
         ``remote_as`` specifies the AS number of the peer. It must be
         an integer between 1 and 65535.
+
+        ``remote_port`` specifies the TCP port number of the peer.
 
         ``enable_ipv4`` enables IPv4 address family for this
         neighbor.
@@ -513,6 +518,7 @@ class BGPSpeaker(object):
         bgp_neighbor = {
             neighbors.IP_ADDRESS: address,
             neighbors.REMOTE_AS: remote_as,
+            REMOTE_PORT: remote_port,
             PEER_NEXT_HOP: next_hop,
             PASSWORD: password,
             IS_ROUTE_SERVER_CLIENT: is_route_server_client,

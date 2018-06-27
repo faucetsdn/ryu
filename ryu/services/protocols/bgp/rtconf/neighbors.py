@@ -45,6 +45,7 @@ from ryu.lib.packet.bgp import BGP_CAP_MULTIPROTOCOL
 from ryu.lib.packet.bgp import BGP_CAP_ROUTE_REFRESH
 
 from ryu.services.protocols.bgp.base import OrderedDict
+from ryu.services.protocols.bgp.constants import STD_BGP_SERVER_PORT_NUM
 from ryu.services.protocols.bgp.rtconf.base import ADVERTISE_PEER_AS
 from ryu.services.protocols.bgp.rtconf.base import BaseConf
 from ryu.services.protocols.bgp.rtconf.base import BaseConfListener
@@ -88,6 +89,7 @@ LOG = logging.getLogger('bgpspeaker.rtconf.neighbor')
 # Various neighbor settings.
 REMOTE_AS = 'remote_as'
 IP_ADDRESS = 'ip_address'
+REMOTE_PORT = 'remote_port'
 ENABLED = 'enabled'
 CHANGES = 'changes'
 LOCAL_ADDRESS = 'local_address'
@@ -108,6 +110,7 @@ CONNECT_MODE_PASSIVE = 'passive'
 CONNECT_MODE_BOTH = 'both'
 
 # Default value constants.
+DEFAULT_BGP_PORT = STD_BGP_SERVER_PORT_NUM
 DEFAULT_CAP_GR_NULL = True
 DEFAULT_CAP_REFRESH = True
 DEFAULT_CAP_ENHANCED_REFRESH = False
@@ -211,6 +214,13 @@ def validate_remote_as(asn):
     if not is_valid_asn(asn):
         raise ConfigValueError(desc='Invalid remote as value %s' % asn)
     return asn
+
+
+@validate(name=REMOTE_PORT)
+def validate_remote_port(port):
+    if not isinstance(port, numbers.Integral):
+        raise ConfigTypeError(desc='Invalid remote port: %s' % port)
+    return port
 
 
 def valid_prefix_filter(filter_):
@@ -339,7 +349,7 @@ class NeighborConf(ConfWithId, ConfWithStats):
                                    CAP_MBGP_IPV4FS, CAP_MBGP_VPNV4FS,
                                    CAP_MBGP_IPV6FS, CAP_MBGP_VPNV6FS,
                                    CAP_MBGP_L2VPNFS,
-                                   RTC_AS, HOLD_TIME,
+                                   RTC_AS, HOLD_TIME, REMOTE_PORT,
                                    ENABLED, MULTI_EXIT_DISC, MAX_PREFIXES,
                                    ADVERTISE_PEER_AS, SITE_OF_ORIGINS,
                                    LOCAL_ADDRESS, LOCAL_PORT, LOCAL_AS,
@@ -406,6 +416,8 @@ class NeighborConf(ConfWithId, ConfWithStats):
             DEFAULT_IS_NEXT_HOP_SELF, **kwargs)
         self._settings[CONNECT_MODE] = compute_optional_conf(
             CONNECT_MODE, DEFAULT_CONNECT_MODE, **kwargs)
+        self._settings[REMOTE_PORT] = compute_optional_conf(
+            REMOTE_PORT, DEFAULT_BGP_PORT, **kwargs)
 
         # We do not have valid default MED value.
         # If no MED attribute is provided then we do not have to use MED.
@@ -482,6 +494,10 @@ class NeighborConf(ConfWithId, ConfWithStats):
     @property
     def ip_address(self):
         return self._settings[IP_ADDRESS]
+
+    @property
+    def port(self):
+        return self._settings[REMOTE_PORT]
 
     @property
     def host_bind_ip(self):
