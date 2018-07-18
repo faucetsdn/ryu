@@ -171,7 +171,8 @@ class OVSBridge(object):
         """
         command = ovs_vsctl.VSCtlCommand('get-controller', [self.br_name])
         self.run_command([command])
-        return command.result[0]
+        result = command.result
+        return result[0] if len(result) == 1 else result
 
     def set_controller(self, controllers):
         """
