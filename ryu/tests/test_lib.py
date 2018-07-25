@@ -267,6 +267,8 @@ def add_method(cls, method_name, method):
     method.__name__ = method_name
     if six.PY3:
         methodtype = types.MethodType(method, cls)
+        if not hasattr(method, "__qualname__"):
+            method.__qualname__ = "%s.%s" % (cls.__qualname__, method_name)
     else:
         methodtype = types.MethodType(method, None, cls)
     setattr(cls, method_name, methodtype)
