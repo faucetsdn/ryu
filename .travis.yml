@@ -1,14 +1,31 @@
 language: python
-python:
-  - "3.5"  # Python 3.5 still needs to be installed on Travis-CI
 
-env:
-  - TOX_ENV=py27
-  - TOX_ENV=py34
-  - TOX_ENV=py35
-  - TOX_ENV=pypy26
-  - TOX_ENV=pycodestyle
-  - TOX_ENV=autopep8
+matrix:
+  include:
+    - python: 3.6
+      env: TOX_ENV=pycodestyle
+    - python: 3.6
+      env: TOX_ENV=py36
+    - python: 3.6
+      env: TOX_ENV=autopep8
+
+    - python: 2.7
+      env: TOX_ENV=pycodestyle
+    - python: 2.7
+      env: TOX_ENV=py27
+
+    - python: 3.4
+      env: TOX_ENV=py34
+
+    - python: 3.5
+      env: TOX_ENV=py35
+
+    - python: 3.7-dev
+      env: TOX_ENV=py37
+
+# This is disabled because of trouble running on travis CI.
+#    - python: pypy
+#      env: TOX_ENV=pypy
 
 services:
   - docker
