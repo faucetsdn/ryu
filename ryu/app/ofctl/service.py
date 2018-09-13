@@ -112,6 +112,7 @@ class OfctlService(app_manager.RyuApp):
         msg = req.msg
         datapath = msg.datapath
         parser = datapath.ofproto_parser
+        is_barrier = isinstance(msg, parser.OFPBarrierRequest)
 
         try:
             si = self._switches[datapath.id]
@@ -130,7 +131,16 @@ class OfctlService(app_manager.RyuApp):
             si.xids[xid] = req
             si.barriers[barrier_xid] = xid
 
-        if isinstance(req.msg, parser.OFPBarrierRequest):
+        def _cancel(barrier_xid, exc):
+            xid = si.barriers.pop(barrier_xid)
+            si.results.pop(xid)
+            si.xids.pop(xid)
+            if not is_barrier and req.reply_cls is not None:
+                self._unobserve_msg(req.reply_cls)
+            self.logger.error('failed to send message <%s>', msg)
+            self.reply_to_request(req, event.Reply(exception=exc))
+
+        if is_barrier:
             barrier = msg
             datapath.set_xid(barrier)
             _store_xid(barrier.xid, barrier.xid)
@@ -141,9 +151,13 @@ class OfctlService(app_manager.RyuApp):
             barrier = datapath.ofproto_parser.OFPBarrierRequest(datapath)
             datapath.set_xid(barrier)
             _store_xid(msg.xid, barrier.xid)
-            datapath.send_msg(msg)
+            if not datapath.send_msg(msg):
+                return _cancel(barrier.xid,
+                               exception.InvalidDatapath(result=datapath.id))
 
-        datapath.send_msg(barrier)
+        if not datapath.send_msg(barrier):
+            return _cancel(barrier.xid,
+                           exception.InvalidDatapath(result=datapath.id))
 
     @set_ev_cls(ofp_event.EventOFPBarrierReply, MAIN_DISPATCHER)
     def _handle_barrier(self, ev):
