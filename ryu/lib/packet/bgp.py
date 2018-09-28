@@ -782,7 +782,16 @@ class _LabelledAddrPrefix(_AddrPrefix):
     # Routes field should be set to 0x800000.  (Of course, terminating the
     # BGP session also withdraws all the previously advertised routes.)
     #
-    _WITHDRAW_LABEL = 0x800000
+    # RFC8227
+    # 2.4 How to Explicitly Withdraw the Binding of a Label to a Prefix
+    # [RFC3107] also made it possible to withdraw a binding without specifying
+    # the label explicitly, by setting the Compatibility field to 0x800000.
+    # However, some implementations set it to 0x000000. In order to ensure
+    # backwards compatibility, it is RECOMMENDED by this document that the
+    # Compatibility field be set to 0x800000, but it is REQUIRED that it be
+    # ignored upon reception.
+    #
+    _WITHDRAW_LABELS = [0x800000, 0x000000]
 
     def __init__(self, length, addr, labels=None, **kwargs):
         labels = labels if labels else []
@@ -823,7 +832,7 @@ class _LabelledAddrPrefix(_AddrPrefix):
         labels = addr[0]
         rest = addr[1:]
         labels = [x << 4 for x in labels]
-        if labels and labels[-1] != cls._WITHDRAW_LABEL:
+        if labels and labels[-1] not in cls._WITHDRAW_LABELS:
             labels[-1] |= 1  # bottom of stack
         bin_labels = list(cls._label_to_bin(l) for l in labels)
         return bytes(reduce(lambda x, y: x + y, bin_labels,
@@ -837,7 +846,7 @@ class _LabelledAddrPrefix(_AddrPrefix):
             while True:
                 (label, bin_) = cls._label_from_bin(bin_)
                 labels.append(label)
-                if label & 1 or label == cls._WITHDRAW_LABEL:
+                if label & 1 or label in cls._WITHDRAW_LABELS:
                     break
             assert length > struct.calcsize(cls._LABEL_PACK_STR) * len(labels)
         except struct.error:
@@ -857,7 +866,7 @@ class _LabelledAddrPrefix(_AddrPrefix):
         while True:
             (label, rest) = cls._label_from_bin(rest)
             labels.append(label >> 4)
-            if label & 1 or label == cls._WITHDRAW_LABEL:
+            if label & 1 or label in cls._WITHDRAW_LABELS:
                 break
         return (labels,) + cls._prefix_from_bin(rest)
 
