@@ -21,6 +21,7 @@ from . import dhcp
 from . import dhcp6
 from . import vxlan
 from . import geneve
+from . import radius
 
 
 class udp(packet_base.PacketBase):
@@ -65,6 +66,8 @@ class udp(packet_base.PacketBase):
             return vxlan.vxlan
         if dst_port == geneve.UDP_DST_PORT:
             return geneve.geneve
+        if dst_port == radius.UDP_DST_PORT:
+            return radius.radius
         return None
 
     @classmethod
