@@ -18,12 +18,12 @@ from __future__ import absolute_import
 import logging
 import socket
 
-import netaddr
 from sqlalchemy import Column
 from sqlalchemy import Boolean
 from sqlalchemy import Integer
 from sqlalchemy import String
 
+from ryu.lib import ip
 from ryu.lib.packet import safi as packet_safi
 from ryu.lib.packet import zebra
 
@@ -150,9 +150,9 @@ def ip_route_add(session, destination, device=None, gateway='', source='',
 
     dest_addr, dest_prefix_num = destination.split('/')
     dest_prefix_num = int(dest_prefix_num)
-    if netaddr.valid_ipv4(dest_addr) and 0 <= dest_prefix_num <= 32:
+    if ip.valid_ipv4(dest_addr) and 0 <= dest_prefix_num <= 32:
         family = socket.AF_INET
-    elif netaddr.valid_ipv6(dest_addr) and 0 <= dest_prefix_num <= 128:
+    elif ip.valid_ipv6(dest_addr) and 0 <= dest_prefix_num <= 128:
         family = socket.AF_INET6
     else:
         LOG.debug('Invalid IP address for "prefix": %s', destination)

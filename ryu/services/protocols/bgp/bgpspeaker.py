@@ -18,6 +18,7 @@
 
 import netaddr
 from ryu.lib import hub
+from ryu.lib import ip
 from ryu.lib.packet.bgp import (
     BGPFlowSpecTrafficActionCommunity,
     BGPFlowSpecVlanActionCommunity,
@@ -67,6 +68,7 @@ from ryu.services.protocols.bgp.api.prefix import (
     FLOWSPEC_FAMILY_L2VPN,
     FLOWSPEC_RULES,
     FLOWSPEC_ACTIONS)
+from ryu.services.protocols.bgp.model import ReceivedRoute
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_AS
 from ryu.services.protocols.bgp.rtconf.common import ROUTER_ID
 from ryu.services.protocols.bgp.rtconf.common import CLUSTER_ID
@@ -110,21 +112,23 @@ from ryu.services.protocols.bgp.rtconf.neighbors import (
     DEFAULT_CAP_MBGP_VPNV4FS,
     DEFAULT_CAP_MBGP_VPNV6FS,
     DEFAULT_CAP_MBGP_L2VPNFS,
+    DEFAULT_CAP_ENHANCED_REFRESH,
+    DEFAULT_CAP_FOUR_OCTET_AS_NUMBER,
+    DEFAULT_CONNECT_MODE,
+    REMOTE_PORT,
+    DEFAULT_BGP_PORT,
+    PEER_NEXT_HOP,
+    PASSWORD,
+    DEFAULT_IS_ROUTE_SERVER_CLIENT,
+    IS_ROUTE_SERVER_CLIENT,
+    DEFAULT_IS_ROUTE_REFLECTOR_CLIENT,
+    IS_ROUTE_REFLECTOR_CLIENT,
+    DEFAULT_IS_NEXT_HOP_SELF,
+    IS_NEXT_HOP_SELF,
+    CONNECT_MODE,
+    LOCAL_ADDRESS,
+    LOCAL_PORT,
 )
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_CAP_ENHANCED_REFRESH, DEFAULT_CAP_FOUR_OCTET_AS_NUMBER)
-from ryu.services.protocols.bgp.rtconf.neighbors import DEFAULT_CONNECT_MODE
-from ryu.services.protocols.bgp.rtconf.neighbors import PEER_NEXT_HOP
-from ryu.services.protocols.bgp.rtconf.neighbors import PASSWORD
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_IS_ROUTE_SERVER_CLIENT, IS_ROUTE_SERVER_CLIENT)
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_IS_ROUTE_REFLECTOR_CLIENT, IS_ROUTE_REFLECTOR_CLIENT)
-from ryu.services.protocols.bgp.rtconf.neighbors import (
-    DEFAULT_IS_NEXT_HOP_SELF, IS_NEXT_HOP_SELF)
-from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE
-from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_ADDRESS
-from ryu.services.protocols.bgp.rtconf.neighbors import LOCAL_PORT
 from ryu.services.protocols.bgp.rtconf.vrfs import SUPPORTED_VRF_RF
 from ryu.services.protocols.bgp.info_base.base import Filter
 from ryu.services.protocols.bgp.info_base.ipv4 import Ipv4Path
@@ -219,12 +223,82 @@ class EventPrefix(object):
 
 
 class BGPSpeaker(object):
+    """Class to provide the APIs of Ryu BGP Speaker.
+
+    ``as_number`` specifies an Autonomous Number. It must be an integer
+    between 1 and 65535.
+
+    ``router_id`` specifies BGP router identifier. It must be the
+    string representation of an IPv4 address (e.g. 10.0.0.1).
+
+    ``bgp_server_host`` specifies a list of TCP listen host addresses.
+
+    ``bgp_server_port`` specifies TCP listen port number. 179 is
+    used if not specified.
+
+    ``refresh_stalepath_time`` causes the BGP speaker to remove
+    stale routes from the BGP table after the timer expires, even
+    if the speaker does not receive a Router-Refresh End-of-RIB
+    message. This feature is disabled (not implemented yet).
+
+    ``refresh_max_eor_time`` causes the BGP speaker to generate a
+    Route-Refresh End-of-RIB message if it was not able to
+    generate one due to route flapping. This feature is disabled
+    (not implemented yet).
+
+    ``best_path_change_handler``, if specified, is called when any
+    best remote path is changed due to an update message or remote
+    peer down. The handler is supposed to take one argument, the
+    instance of an EventPrefix class instance.
+
+    ``adj_rib_in_change_handler``, if specified, is called when any
+    adj-RIB-in path is changed due to an update message or remote
+    peer down. The given handler should take three argument, the
+    instance of an EventPrefix class instance, str type peer's IP address
+    and int type peer's AS number.
+
+    ``peer_down_handler``, if specified, is called when BGP peering
+    session goes down.
+
+    ``peer_up_handler``, if specified, is called when BGP peering
+    session goes up.
+
+    ``ssh_console`` specifies whether or not SSH CLI need to be started.
+
+    ``ssh_port`` specifies the port number for SSH CLI server.
+    The default is bgp.operator.ssh.DEFAULT_SSH_PORT.
+
+    ``ssh_host`` specifies the IP address for SSH CLI server.
+    The default is bgp.operator.ssh.DEFAULT_SSH_HOST.
+
+    ``ssh_host_key`` specifies the path to the host key added to
+    the keys list used by SSH CLI server.
+    The default is bgp.operator.ssh.DEFAULT_SSH_HOST_KEY.
+
+    ``label_range`` specifies the range of MPLS labels generated
+    automatically.
+
+    ``allow_local_as_in_count`` maximum number of local AS number
+    occurrences in AS_PATH.  This option is useful for e.g.  auto RD/RT
+    configurations in leaf/spine architecture with shared AS numbers.
+    The default is 0 and means "local AS number is not allowed in
+    AS_PATH".  To allow local AS, 3 is recommended (Cisco's default).
+
+    ``cluster_id`` specifies the cluster identifier for Route Reflector.
+    It must be the string representation of an IPv4 address.
+    If omitted, "router_id" is used for this field.
+
+    ``local_pref`` specifies the default local preference. It must be an
+    integer.
+    """
+
     def __init__(self, as_number, router_id,
                  bgp_server_hosts=DEFAULT_BGP_SERVER_HOSTS,
                  bgp_server_port=DEFAULT_BGP_SERVER_PORT,
                  refresh_stalepath_time=DEFAULT_REFRESH_STALEPATH_TIME,
                  refresh_max_eor_time=DEFAULT_REFRESH_MAX_EOR_TIME,
                  best_path_change_handler=None,
+                 adj_rib_in_change_handler=None,
                  peer_down_handler=None,
                  peer_up_handler=None,
                  ssh_console=False,
@@ -233,70 +307,6 @@ class BGPSpeaker(object):
                  allow_local_as_in_count=0,
                  cluster_id=None,
                  local_pref=DEFAULT_LOCAL_PREF):
-        """Create a new BGPSpeaker object with as_number and router_id to
-        listen on bgp_server_port.
-
-        ``as_number`` specifies an Autonomous Number. It must be an integer
-        between 1 and 65535.
-
-        ``router_id`` specifies BGP router identifier. It must be the
-        string representation of an IPv4 address (e.g. 10.0.0.1).
-
-        ``bgp_server_host`` specifies a list of TCP listen host addresses.
-
-        ``bgp_server_port`` specifies TCP listen port number. 179 is
-        used if not specified.
-
-        ``refresh_stalepath_time`` causes the BGP speaker to remove
-        stale routes from the BGP table after the timer expires, even
-        if the speaker does not receive a Router-Refresh End-of-RIB
-        message. This feature is disabled (not implemented yet).
-
-        ``refresh_max_eor_time`` causes the BGP speaker to generate a
-        Route-Refresh End-of-RIB message if it was not able to
-        generate one due to route flapping. This feature is disabled
-        (not implemented yet).
-
-        ``best_path_change_handler``, if specified, is called when any
-        best remote path is changed due to an update message or remote
-        peer down. The handler is supposed to take one argument, the
-        instance of an EventPrefix class instance.
-
-        ``peer_down_handler``, if specified, is called when BGP peering
-        session goes down.
-
-        ``peer_up_handler``, if specified, is called when BGP peering
-        session goes up.
-
-        ``ssh_console`` specifies whether or not SSH CLI need to be started.
-
-        ``ssh_port`` specifies the port number for SSH CLI server.
-        The default is bgp.operator.ssh.DEFAULT_SSH_PORT.
-
-        ``ssh_host`` specifies the IP address for SSH CLI server.
-        The default is bgp.operator.ssh.DEFAULT_SSH_HOST.
-
-        ``ssh_host_key`` specifies the path to the host key added to
-        the keys list used by SSH CLI server.
-        The default is bgp.operator.ssh.DEFAULT_SSH_HOST_KEY.
-
-        ``label_range`` specifies the range of MPLS labels generated
-        automatically.
-
-        ``allow_local_as_in_count`` maximum number of local AS number
-        occurrences in AS_PATH.  This option is useful for e.g.  auto RD/RT
-        configurations in leaf/spine architecture with shared AS numbers.
-        The default is 0 and means "local AS number is not allowed in
-        AS_PATH".  To allow local AS, 3 is recommended (Cisco's default).
-
-        ``cluster_id`` specifies the cluster identifier for Route Reflector.
-        It must be the string representation of an IPv4 address.
-        If omitted, "router_id" is used for this field.
-
-        ``local_pref`` specifies the default local preference. It must be an
-        integer.
-        """
-
         super(BGPSpeaker, self).__init__()
 
         settings = {
@@ -314,6 +324,7 @@ class BGPSpeaker(object):
         self._core_start(settings)
         self._init_signal_listeners()
         self._best_path_change_handler = best_path_change_handler
+        self._adj_rib_in_change_handler = adj_rib_in_change_handler
         self._peer_down_handler = peer_down_handler
         self._peer_up_handler = peer_up_handler
         if ssh_console:
@@ -350,12 +361,27 @@ class BGPSpeaker(object):
         if self._best_path_change_handler:
             self._best_path_change_handler(ev)
 
+    def _notify_adj_rib_in_changed(self, peer, route):
+        if not isinstance(route, ReceivedRoute):
+            return
+
+        if self._adj_rib_in_change_handler:
+            self._adj_rib_in_change_handler(
+                EventPrefix(route.path, route.path.is_withdraw),
+                peer.ip_address, peer.remote_as)
+
     def _init_signal_listeners(self):
         CORE_MANAGER.get_core_service()._signal_bus.register_listener(
             BgpSignalBus.BGP_BEST_PATH_CHANGED,
             lambda _, info:
             self._notify_best_path_changed(info['path'],
                                            info['is_withdraw'])
+        )
+        CORE_MANAGER.get_core_service()._signal_bus.register_listener(
+            BgpSignalBus.BGP_ADJ_RIB_IN_CHANGED,
+            lambda _, info:
+            self._notify_adj_rib_in_changed(info['peer'],
+                                            info['received_route'])
         )
         CORE_MANAGER.get_core_service()._signal_bus.register_listener(
             BgpSignalBus.BGP_ADJ_DOWN,
@@ -382,6 +408,7 @@ class BGPSpeaker(object):
         call('core.stop')
 
     def neighbor_add(self, address, remote_as,
+                     remote_port=DEFAULT_BGP_PORT,
                      enable_ipv4=DEFAULT_CAP_MBGP_IPV4,
                      enable_ipv6=DEFAULT_CAP_MBGP_IPV6,
                      enable_vpnv4=DEFAULT_CAP_MBGP_VPNV4,
@@ -412,6 +439,8 @@ class BGPSpeaker(object):
 
         ``remote_as`` specifies the AS number of the peer. It must be
         an integer between 1 and 65535.
+
+        ``remote_port`` specifies the TCP port number of the peer.
 
         ``enable_ipv4`` enables IPv4 address family for this
         neighbor.
@@ -489,6 +518,7 @@ class BGPSpeaker(object):
         bgp_neighbor = {
             neighbors.IP_ADDRESS: address,
             neighbors.REMOTE_AS: remote_as,
+            REMOTE_PORT: remote_port,
             PEER_NEXT_HOP: next_hop,
             PASSWORD: password,
             IS_ROUTE_SERVER_CLIENT: is_route_server_client,
@@ -627,7 +657,7 @@ class BGPSpeaker(object):
             networks[ROUTE_FAMILY] = rf
             networks[PREFIX] = p
 
-            if rf == vrfs.VRF_RF_IPV6 and netaddr.valid_ipv4(next_hop):
+            if rf == vrfs.VRF_RF_IPV6 and ip.valid_ipv4(next_hop):
                 # convert the next_hop to IPv4-Mapped IPv6 Address
                 networks[NEXT_HOP] = \
                     str(netaddr.IPAddress(next_hop).ipv6())
@@ -1353,10 +1383,10 @@ class BGPSpeaker(object):
         If the address is IPv4 address, return IPv4 route_family
         and the prefix itself.
         """
-        ip, masklen = prefix.split('/')
-        if netaddr.valid_ipv6(ip):
+        addr, masklen = prefix.split('/')
+        if ip.valid_ipv6(addr):
             # normalize IPv6 address
-            ipv6_prefix = str(netaddr.IPAddress(ip)) + '/' + masklen
+            ipv6_prefix = str(netaddr.IPAddress(addr)) + '/' + masklen
             return vrfs.VRF_RF_IPV6, ipv6_prefix
         else:
             return vrfs.VRF_RF_IPV4, prefix

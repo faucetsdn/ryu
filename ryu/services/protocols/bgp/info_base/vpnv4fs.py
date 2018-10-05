@@ -58,7 +58,7 @@ class VPNv4FlowSpecPath(VpnPath):
         # Set dummy IP address.
         kwargs['nexthop'] = '0.0.0.0'
         super(VPNv4FlowSpecPath, self).__init__(*args, **kwargs)
-        from ryu.services.protocols.bgp.info_base.vrf4fs import(
+        from ryu.services.protocols.bgp.info_base.vrf4fs import (
             Vrf4FlowSpecPath)
         self.VRF_PATH_CLASS = Vrf4FlowSpecPath
         # Because the IPv4 Flow Specification does not require nexthop,

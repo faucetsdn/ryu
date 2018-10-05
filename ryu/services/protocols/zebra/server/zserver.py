@@ -23,13 +23,12 @@ import os
 import socket
 import struct
 
-import netaddr
-
 from ryu import cfg
 from ryu.base import app_manager
 from ryu.base.app_manager import RyuApp
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
+from ryu.lib import ip
 from ryu.lib.packet import zebra
 
 from ryu.services.protocols.zebra import db
@@ -169,9 +168,9 @@ def zclient_connection_factory(sock, addr):
 
 
 def detect_address_family(host):
-    if netaddr.valid_ipv4(host):
+    if ip.valid_ipv4(host):
         return socket.AF_INET
-    elif netaddr.valid_ipv6(host):
+    elif ip.valid_ipv6(host):
         return socket.AF_INET6
     elif os.path.isdir(os.path.dirname(host)):
         return socket.AF_UNIX

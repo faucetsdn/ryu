@@ -15,6 +15,11 @@
 
 from __future__ import print_function
 
+try:
+    import mock  # Python 2
+except ImportError:
+    from unittest import mock  # Python 3
+
 import os
 import socket
 import sys
@@ -36,37 +41,53 @@ PCAP_DATA_DIR = os.path.join(
     '../../packet_data/pcap/')
 
 
+_patch_frr_v2 = mock.patch(
+    'ryu.lib.packet.zebra._is_frr_version_ge',
+    mock.MagicMock(side_effect=lambda x: x == zebra._FRR_VERSION_2_0))
+
+
 class Test_zebra(unittest.TestCase):
     """
     Test case for ryu.lib.packet.zebra.
     """
 
-    def test_pcap(self):
+    @staticmethod
+    def _test_pcap_single(f):
+        zebra_pcap_file = os.path.join(PCAP_DATA_DIR, f + '.pcap')
+        # print('*** testing %s' % zebra_pcap_file)
+
+        for _, buf in pcaplib.Reader(open(zebra_pcap_file, 'rb')):
+            # Checks if Zebra message can be parsed as expected.
+            pkt = packet.Packet(buf)
+            zebra_pkts = pkt.get_protocols(zebra.ZebraMessage)
+            for zebra_pkt in zebra_pkts:
+                ok_(isinstance(zebra_pkt, zebra.ZebraMessage),
+                    'Failed to parse Zebra message: %s' % pkt)
+            ok_(not isinstance(pkt.protocols[-1],
+                               (six.binary_type, bytearray)),
+                'Some messages could not be parsed in %s: %s' % (f, pkt))
+
+            # Checks if Zebra message can be serialized as expected.
+            pkt.serialize()
+            eq_(binary_str(buf), binary_str(pkt.data))
+
+    def test_pcap_quagga(self):
         files = [
             'zebra_v2',
             'zebra_v3',
+        ]
+
+        for f in files:
+            self._test_pcap_single(f)
+
+    @_patch_frr_v2
+    def test_pcap_frr_v2(self):
+        files = [
             'zebra_v4_frr_v2',  # API version 4 on FRRouting v2.0
         ]
 
         for f in files:
-            zebra_pcap_file = os.path.join(PCAP_DATA_DIR, f + '.pcap')
-            # print('*** testing %s' % zebra_pcap_file)
-
-            for _, buf in pcaplib.Reader(open(zebra_pcap_file, 'rb')):
-                # Checks if Zebra message can be parsed as expected.
-                pkt = packet.Packet(buf)
-                zebra_pkts = pkt.get_protocols(zebra.ZebraMessage)
-                for zebra_pkt in zebra_pkts:
-                    ok_(isinstance(zebra_pkt, zebra.ZebraMessage),
-                        'Failed to parse Zebra message: %s' % pkt)
-                ok_(not isinstance(pkt.protocols[-1],
-                                   (six.binary_type, bytearray)),
-                    'Some messages could not be parsed: %s' % pkt)
-
-                # Checks if Zebra message can be serialized as expected.
-                pkt.serialize()
-                eq_(buf, pkt.data,
-                    "b'%s' != b'%s'" % (binary_str(buf), binary_str(pkt.data)))
+            self._test_pcap_single(f)
 
 
 class TestZebraMessage(unittest.TestCase):
@@ -227,6 +248,7 @@ class TestZebraNexthopUpdateIPv6(unittest.TestCase):
     nexthop_type = zebra.ZEBRA_NEXTHOP_IFINDEX
     ifindex = 2
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraNexthopUpdate.parse(self.buf)
 
@@ -253,6 +275,7 @@ class TestZebraInterfaceNbrAddressAdd(unittest.TestCase):
     family = socket.AF_INET
     prefix = '192.168.1.0/24'
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraInterfaceNbrAddressAdd.parse(self.buf)
 
@@ -283,6 +306,7 @@ class TestZebraInterfaceBfdDestinationUpdate(unittest.TestCase):
     src_family = socket.AF_INET
     src_prefix = '192.168.1.2/24'
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraInterfaceBfdDestinationUpdate.parse(self.buf)
 
@@ -323,6 +347,7 @@ class TestZebraBfdDestinationRegisterMultiHopEnabled(unittest.TestCase):
     multi_hop_count = 5
     ifname = None
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraBfdDestinationRegister.parse(self.buf)
 
@@ -369,6 +394,7 @@ class TestZebraBfdDestinationRegisterMultiHopDisabled(unittest.TestCase):
     multi_hop_count = None
     ifname = 'eth0'
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraBfdDestinationRegister.parse(self.buf)
 
@@ -420,6 +446,7 @@ class TestZebraBfdDestinationRegisterMultiHopEnabledIPv6(unittest.TestCase):
     multi_hop_count = 5
     ifname = None
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraBfdDestinationRegister.parse(self.buf)
 
@@ -459,6 +486,7 @@ class TestZebraBfdDestinationDeregisterMultiHopEnabled(unittest.TestCase):
     multi_hop_count = 5
     ifname = None
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraBfdDestinationDeregister.parse(self.buf)
 
@@ -496,6 +524,7 @@ class TestZebraBfdDestinationDeregisterMultiHopDisabled(unittest.TestCase):
     multi_hop_count = None
     ifname = 'eth0'
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraBfdDestinationDeregister.parse(self.buf)
 
@@ -538,6 +567,7 @@ class TestZebraBfdDestinationDeregisterMultiHopEnabledIPv6(unittest.TestCase):
     multi_hop_count = 5
     ifname = None
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraBfdDestinationDeregister.parse(self.buf)
 
@@ -569,6 +599,7 @@ class TestZebraVrfAdd(unittest.TestCase):
     )
     vrf_name = 'VRF1'
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraVrfAdd.parse(self.buf)
 
@@ -587,6 +618,7 @@ class TestZebraInterfaceVrfUpdate(unittest.TestCase):
     ifindex = 1
     vrf_id = 2
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraInterfaceVrfUpdate.parse(self.buf)
 
@@ -606,6 +638,7 @@ class TestZebraInterfaceEnableRadv(unittest.TestCase):
     ifindex = 1
     interval = 0x100
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraInterfaceEnableRadv.parse(self.buf)
 
@@ -636,6 +669,7 @@ class TestZebraMplsLabelsAddIPv4(unittest.TestCase):
     in_label = 100
     out_label = zebra.MPLS_IMP_NULL_LABEL
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraMplsLabelsAdd.parse(self.buf)
 
@@ -677,6 +711,7 @@ class TestZebraMplsLabelsAddIPv6(unittest.TestCase):
     in_label = 100
     out_label = zebra.MPLS_IMP_NULL_LABEL
 
+    @_patch_frr_v2
     def test_parser(self):
         body = zebra.ZebraMplsLabelsAdd.parse(self.buf)
 

@@ -425,7 +425,8 @@ class QoSController(ControllerBase):
     @staticmethod
     def delete_ovsdb_addr(dpid):
         ofs = QoSController._OFS_LIST.get(dpid, None)
-        ofs.set_ovsdb_addr(dpid, None)
+        if ofs is not None:
+            ofs.set_ovsdb_addr(dpid, None)
 
     @route('qos_switch', BASE_URL + '/queue/{switchid}',
            methods=['GET'], requirements=REQUIREMENTS)
@@ -600,25 +601,22 @@ class QoS(object):
         self.ofctl.mod_flow_entry(self.dp, flow, cmd)
 
     def set_ovsdb_addr(self, dpid, ovsdb_addr):
-        # easy check if the address format valid
-        _proto, _host, _port = ovsdb_addr.split(':')
-
         old_address = self.ovsdb_addr
         if old_address == ovsdb_addr:
             return
-        if ovsdb_addr is None:
+        elif ovsdb_addr is None:
+            # Determine deleting OVSDB address was requested.
             if self.ovs_bridge:
-                self.ovs_bridge.del_controller()
                 self.ovs_bridge = None
             return
+
+        ovs_bridge = bridge.OVSBridge(self.CONF, dpid, ovsdb_addr)
+        try:
+            ovs_bridge.init()
+        except:
+            raise ValueError('ovsdb addr is not available.')
         self.ovsdb_addr = ovsdb_addr
-        if self.ovs_bridge is None:
-            ovs_bridge = bridge.OVSBridge(self.CONF, dpid, ovsdb_addr)
-            self.ovs_bridge = ovs_bridge
-            try:
-                ovs_bridge.init()
-            except:
-                raise ValueError('ovsdb addr is not available.')
+        self.ovs_bridge = ovs_bridge
 
     def _update_vlan_list(self, vlan_list):
         for vlan_id in self.vlan_list.keys():
@@ -1149,13 +1147,13 @@ class Action(object):
         if REST_ACTION in flow:
             actions = []
             for act in flow[REST_ACTION]:
-                field_value = re.search('SET_FIELD: \{ip_dscp:(\d+)', act)
+                field_value = re.search(r'SET_FIELD: \{ip_dscp:(\d+)', act)
                 if field_value:
                     actions.append({REST_ACTION_MARK: field_value.group(1)})
-                meter_value = re.search('METER:(\d+)', act)
+                meter_value = re.search(r'METER:(\d+)', act)
                 if meter_value:
                     actions.append({REST_ACTION_METER: meter_value.group(1)})
-                queue_value = re.search('SET_QUEUE:(\d+)', act)
+                queue_value = re.search(r'SET_QUEUE:(\d+)', act)
                 if queue_value:
                     actions.append({REST_ACTION_QUEUE: queue_value.group(1)})
             action = {REST_ACTION: actions}

@@ -91,8 +91,8 @@ class RunTest(tester.TestFlowBase):
             s_val = s_val.value
 
         if name and s_val != value:
-                return "Value error. send:%s=%s val:%s" \
-                    % (name, value, s_val)
+            return "Value error. send:%s=%s val:%s" \
+                % (name, value, s_val)
 
         return True
 

@@ -16,8 +16,7 @@
 
 import logging
 import os
-
-import netaddr
+from ryu.lib import ip
 
 
 # We don't bother to use cfg.py because monkey patch needs to be
@@ -116,7 +115,7 @@ if HUB_TYPE == 'eventlet':
             assert backlog is None
             assert spawn == 'default'
 
-            if netaddr.valid_ipv6(listen_info[0]):
+            if ip.valid_ipv6(listen_info[0]):
                 self.server = eventlet.listen(listen_info,
                                               family=socket.AF_INET6)
             elif os.path.isdir(os.path.dirname(listen_info[0])):
@@ -142,7 +141,7 @@ if HUB_TYPE == 'eventlet':
 
     class StreamClient(object):
         def __init__(self, addr, timeout=None, **ssl_args):
-            assert netaddr.valid_ipv4(addr[0]) or netaddr.valid_ipv6(addr[0])
+            assert ip.valid_ipv4(addr[0]) or ip.valid_ipv6(addr[0])
             self.addr = addr
             self.timeout = timeout
             self.ssl_args = ssl_args

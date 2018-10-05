@@ -32,5 +32,6 @@ OFP_SSL_PORT_OLD = 6633
 # Vendor/Experimenter IDs
 # https://rs.opennetworking.org/wiki/display/PUBLIC/ONF+Registry
 NX_EXPERIMENTER_ID = 0x00002320  # Nicira
+NX_NSH_EXPERIMENTER_ID = 0x005ad650  # Nicira Ext for Network Service Header
 BSN_EXPERIMENTER_ID = 0x005c16c7  # Big Switch Networks
 ONF_EXPERIMENTER_ID = 0x4f4e4600  # OpenFlow Extensions for 1.3.X Pack 1

@@ -44,6 +44,7 @@ from ryu.services.protocols.bgp.rtconf.neighbors import CONNECT_MODE_ACTIVE
 from ryu.services.protocols.bgp.utils import stats
 from ryu.services.protocols.bgp.bmp import BMPClient
 from ryu.lib import sockopt
+from ryu.lib import ip
 
 
 LOG = logging.getLogger('bgpspeaker.core')
@@ -369,7 +370,7 @@ class CoreService(Factory, Activity):
             sink.enque_outgoing_msg(out_route)
 
     def _set_password(self, address, password):
-        if netaddr.valid_ipv4(address):
+        if ip.valid_ipv4(address):
             family = socket.AF_INET
         else:
             family = socket.AF_INET6

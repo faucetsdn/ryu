@@ -358,7 +358,7 @@ def del_port_by_uuid(manager, system_id, bridge_name, port_uuid):
 
 def del_port_by_name(manager, system_id, bridge_name, port_name):
     return del_port(manager, system_id, bridge_name,
-                    lambda tables, _: _get_port(tables, port_name))
+                    lambda tables: _get_port(tables, port_name))
 
 
 def set_controller(manager, system_id, bridge_name,

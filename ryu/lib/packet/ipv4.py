@@ -142,6 +142,7 @@ class ipv4(packet_base.PacketBase):
         struct.pack_into('!H', hdr, 10, self.csum)
         return hdr
 
+
 ipv4.register_packet_type(icmp.icmp, inet.IPPROTO_ICMP)
 ipv4.register_packet_type(igmp.igmp, inet.IPPROTO_IGMP)
 ipv4.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)

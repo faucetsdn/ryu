@@ -21,6 +21,7 @@ import netaddr
 
 from ryu.base import app_manager
 from ryu.lib import hub
+from ryu.lib import ip
 from . import ofp_event
 
 
@@ -39,7 +40,7 @@ def register_switch_address(addr, interval=None):
     :param interval: Interval in seconds to try to connect to switch
     """
     assert len(addr) == 2
-    assert netaddr.valid_ipv4(addr[0]) or netaddr.valid_ipv6(addr[0])
+    assert ip.valid_ipv4(addr[0]) or ip.valid_ipv6(addr[0])
     ofp_handler = app_manager.lookup_service_brick(ofp_event.NAME)
     _TMP_ADDRESSES[addr] = interval
 

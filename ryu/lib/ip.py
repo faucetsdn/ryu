@@ -84,7 +84,7 @@ def ipv4_to_str(ip):
     :param ip: binary or int type representation of IPv4 address
     :return: IPv4 address string
     """
-    if isinstance(ip, int):
+    if isinstance(ip, numbers.Integral):
         return addrconv.ipv4.bin_to_text(struct.pack("!I", ip))
     else:
         return addrconv.ipv4.bin_to_text(ip)

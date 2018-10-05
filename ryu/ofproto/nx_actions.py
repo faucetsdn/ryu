@@ -248,7 +248,7 @@ def generate(ofp_name, ofpp_name):
 
     # For OpenFlow1.0 only
     class NXActionSetQueue(NXAction):
-        """
+        r"""
         Set queue action
 
         This action sets the queue that should be used to queue
@@ -338,7 +338,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionRegLoad(NXAction):
-        """
+        r"""
         Load literal value action
 
         This action loads a literal value into a field or part of a field.
@@ -405,7 +405,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionRegLoad2(NXAction):
-        """
+        r"""
         Load literal value action
 
         This action loads a literal value into a field or part of a field.
@@ -474,7 +474,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionNote(NXAction):
-        """
+        r"""
         Note action
 
         This action does nothing at all.
@@ -553,7 +553,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionSetTunnel(_NXActionSetTunnelBase):
-        """
+        r"""
         Set Tunnel action
 
         This action sets the identifier (such as GRE) to the specified id.
@@ -561,10 +561,9 @@ def generate(ofp_name, ofpp_name):
         And equivalent to the followings action of ovs-ofctl command.
 
         .. note::
-            ovs-ofctl command of the OpenFlow1.0 is different from that
-            of OpenFlow1.2 or later.
-
-        OpenFlow1.0
+            This actions is supported by
+            ``OFPActionSetField``
+            in OpenFlow1.2 or later.
 
         ..
           set_tunnel:id
@@ -573,16 +572,6 @@ def generate(ofp_name, ofpp_name):
         +------------------------+
         | **set_tunnel**\:\ *id* |
         +------------------------+
-
-        OpenFlow1.2 or later
-
-        ..
-          set_field:value->tun_id
-        ..
-
-        +-----------------------------------+
-        | **set_field**\:\ *value*\->tun_id |
-        +-----------------------------------+
 
         ================ ======================================================
         Attribute        Description
@@ -600,7 +589,7 @@ def generate(ofp_name, ofpp_name):
         _fmt_str = '!2xI'
 
     class NXActionSetTunnel64(_NXActionSetTunnelBase):
-        """
+        r"""
         Set Tunnel action
 
         This action outputs to a port that encapsulates
@@ -609,10 +598,9 @@ def generate(ofp_name, ofpp_name):
         And equivalent to the followings action of ovs-ofctl command.
 
         .. note::
-            ovs-ofctl command of the OpenFlow1.0 is different from that
-            of OpenFlow1.2 or later.
-
-        OpenFlow1.0
+            This actions is supported by
+            ``OFPActionSetField``
+            in OpenFlow1.2 or later.
 
         ..
           set_tunnel64:id
@@ -621,16 +609,6 @@ def generate(ofp_name, ofpp_name):
         +--------------------------+
         | **set_tunnel64**\:\ *id* |
         +--------------------------+
-
-        OpenFlow1.2 or later
-
-        ..
-          set_field:value->tun_id
-        ..
-
-        +-----------------------------------+
-        | **set_field**\:\ *value*\->tun_id |
-        +-----------------------------------+
 
         ================ ======================================================
         Attribute        Description
@@ -648,7 +626,7 @@ def generate(ofp_name, ofpp_name):
         _fmt_str = '!6xQ'
 
     class NXActionRegMove(NXAction):
-        """
+        r"""
         Move register action
 
         This action copies the src to dst.
@@ -737,7 +715,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionResubmit(NXAction):
-        """
+        r"""
         Resubmit action
 
         This action searches one of the switch's flow tables.
@@ -786,7 +764,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionResubmitTable(NXAction):
-        """
+        r"""
         Resubmit action
 
         This action searches one of the switch's flow tables.
@@ -840,7 +818,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionOutputReg(NXAction):
-        """
+        r"""
         Add output action
 
         This action outputs the packet to the OpenFlow port number read from
@@ -914,7 +892,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionOutputReg2(NXAction):
-        """
+        r"""
         Add output action
 
         This action outputs the packet to the OpenFlow port number read from
@@ -996,7 +974,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionLearn(NXAction):
-        """
+        r"""
         Adds or modifies flow action
 
         This action adds or modifies a flow in OpenFlow table.
@@ -1260,7 +1238,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionController(NXAction):
-        """
+        r"""
         Send packet in message action
 
         This action sends the packet to the OpenFlow controller as
@@ -1325,7 +1303,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionController2(NXAction):
-        """
+        r"""
         Send packet in message action
 
         This action sends the packet to the OpenFlow controller as
@@ -1571,7 +1549,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionDecTtlCntIds(NXAction):
-        """
+        r"""
         Decrement TTL action
 
         This action decrements TTL of IPv4 packet or
@@ -1682,7 +1660,7 @@ def generate(ofp_name, ofpp_name):
 
     # For OpenFlow1.0 only
     class NXActionPushMpls(NXActionMplsBase):
-        """
+        r"""
         Push MPLS action
 
         This action pushes a new MPLS header to the packet.
@@ -1717,7 +1695,7 @@ def generate(ofp_name, ofpp_name):
 
     # For OpenFlow1.0 only
     class NXActionPopMpls(NXActionMplsBase):
-        """
+        r"""
         Pop MPLS action
 
         This action pops the MPLS header from the packet.
@@ -1752,7 +1730,7 @@ def generate(ofp_name, ofpp_name):
 
     # For OpenFlow1.0 only
     class NXActionSetMplsTtl(NXAction):
-        """
+        r"""
         Set MPLS TTL action
 
         This action sets the MPLS TTL.
@@ -1851,7 +1829,7 @@ def generate(ofp_name, ofpp_name):
 
     # For OpenFlow1.0 only
     class NXActionSetMplsLabel(NXAction):
-        """
+        r"""
         Set MPLS Lavel action
 
         This action sets the MPLS Label.
@@ -1906,7 +1884,7 @@ def generate(ofp_name, ofpp_name):
 
     # For OpenFlow1.0 only
     class NXActionSetMplsTc(NXAction):
-        """
+        r"""
         Set MPLS Tc action
 
         This action sets the MPLS Tc.
@@ -2000,7 +1978,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionStackPush(NXActionStackBase):
-        """
+        r"""
         Push field action
 
         This action pushes field to top of the stack.
@@ -2032,7 +2010,7 @@ def generate(ofp_name, ofpp_name):
         _subtype = nicira_ext.NXAST_STACK_PUSH
 
     class NXActionStackPop(NXActionStackBase):
-        """
+        r"""
         Pop field action
 
         This action pops field from top of the stack.
@@ -2064,7 +2042,7 @@ def generate(ofp_name, ofpp_name):
         _subtype = nicira_ext.NXAST_STACK_POP
 
     class NXActionSample(NXAction):
-        """
+        r"""
         Sample packets action
 
         This action samples packets and sends one sample for
@@ -2137,7 +2115,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionSample2(NXAction):
-        """
+        r"""
         Sample packets action
 
         This action samples packets and sends one sample for
@@ -2218,7 +2196,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionFinTimeout(NXAction):
-        """
+        r"""
         Change TCP timeout action
 
         This action changes the idle timeout or hard timeout or
@@ -2279,7 +2257,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionConjunction(NXAction):
-        """
+        r"""
         Conjunctive matches action
 
         This action ties groups of individual OpenFlow flows into
@@ -2342,7 +2320,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionMultipath(NXAction):
-        """
+        r"""
         Select multipath link action
 
         This action selects multipath link based on the specified parameters.
@@ -2528,7 +2506,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionBundle(_NXActionBundleBase):
-        """
+        r"""
         Select bundle link action
 
         This action selects bundle link based on the specified parameters.
@@ -2581,7 +2559,7 @@ def generate(ofp_name, ofpp_name):
                 ofs_nbits=0, dst=0, slaves=slaves)
 
     class NXActionBundleLoad(_NXActionBundleBase):
-        """
+        r"""
         Select bundle link action
 
         This action has the same behavior as the bundle action,
@@ -2642,7 +2620,7 @@ def generate(ofp_name, ofpp_name):
                 ofs_nbits, dst, slaves)
 
     class NXActionCT(NXAction):
-        """
+        r"""
         Pass traffic to the connection tracker action
 
         This action sends the packet through the connection tracker.
@@ -2766,8 +2744,45 @@ def generate(ofp_name, ofpp_name):
                 a.serialize(data, len(data))
             return data
 
-    class NXActionNAT(NXAction):
+    class NXActionCTClear(NXAction):
         """
+        Clear connection tracking state action
+
+        This action clears connection tracking state from packets.
+
+        And equivalent to the followings action of ovs-ofctl command.
+
+        ..
+          ct_clear
+        ..
+
+        +--------------+
+        | **ct_clear** |
+        +--------------+
+
+        Example::
+
+            actions += [parser.NXActionCTClear()]
+        """
+        _subtype = nicira_ext.NXAST_CT_CLEAR
+
+        _fmt_str = '!6x'
+
+        def __init__(self,
+                     type_=None, len_=None, experimenter=None, subtype=None):
+            super(NXActionCTClear, self).__init__()
+
+        @classmethod
+        def parser(cls, buf):
+            return cls()
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0)
+            return data
+
+    class NXActionNAT(NXAction):
+        r"""
         Network address translation action
 
         This action sends the packet through the connection tracker.
@@ -2930,7 +2945,7 @@ def generate(ofp_name, ofpp_name):
             return data
 
     class NXActionOutputTrunc(NXAction):
-        """
+        r"""
         Truncate output action
 
         This action truncate a packet into the specified size and outputs it.
@@ -2984,6 +2999,41 @@ def generate(ofp_name, ofpp_name):
                           self.max_len)
             return data
 
+    class NXActionDecNshTtl(NXAction):
+        """
+        Decrement NSH TTL action
+
+        This action decrements the TTL in the Network Service Header(NSH).
+
+        This action was added in OVS v2.9.
+
+        And equivalent to the followings action of ovs-ofctl command.
+
+        ::
+
+            dec_nsh_ttl
+
+        Example::
+
+            actions += [parser.NXActionDecNshTtl()]
+        """
+        _subtype = nicira_ext.NXAST_DEC_NSH_TTL
+
+        _fmt_str = '!6x'
+
+        def __init__(self,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionDecNshTtl, self).__init__()
+
+        @classmethod
+        def parser(cls, buf):
+            return cls()
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0)
+            return data
+
     def add_attr(k, v):
         v.__module__ = ofpp.__name__  # Necessary for stringify stuff
         setattr(ofpp, k, v)
@@ -3026,12 +3076,14 @@ def generate(ofp_name, ofpp_name):
         'NXActionBundle',
         'NXActionBundleLoad',
         'NXActionCT',
+        'NXActionCTClear',
         'NXActionNAT',
         'NXActionOutputTrunc',
         '_NXFlowSpec',  # exported for testing
         'NXFlowSpecMatch',
         'NXFlowSpecLoad',
         'NXFlowSpecOutput',
+        'NXActionDecNshTtl',
     ]
     vars = locals()
     for name in classes:

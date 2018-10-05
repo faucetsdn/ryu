@@ -65,6 +65,7 @@
 # +-------------------------------+---------------+
 
 from ryu.ofproto.oxx_fields import (
+    _get_field_info_by_name,
     _from_user,
     _from_user_header,
     _to_user,
@@ -131,6 +132,10 @@ class NiciraExperimenter(_Experimenter):
     experimenter_id = ofproto_common.NX_EXPERIMENTER_ID
 
 
+class NiciraNshExperimenter(_Experimenter):
+    experimenter_id = ofproto_common.NX_NSH_EXPERIMENTER_ID
+
+
 class NiciraExtended0(_OxmClass):
     """Nicira Extended Match (NXM_0)
 
@@ -177,6 +182,8 @@ def generate(modname):
     num_to_field = dict((f.num, f) for f in mod.oxm_types)
 
     # create functions by using oxx_fields module.
+    add_attr('oxm_get_field_info_by_name',
+             functools.partial(_get_field_info_by_name, oxx, name_to_field))
     add_attr('oxm_from_user',
              functools.partial(_from_user, oxx, name_to_field))
     add_attr('oxm_from_user_header',

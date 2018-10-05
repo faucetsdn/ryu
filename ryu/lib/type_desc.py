@@ -44,6 +44,7 @@ class IntDescr(TypeDescr):
             i //= 256
         return binary
 
+
 Int1 = IntDescr(1)
 Int2 = IntDescr(2)
 Int3 = IntDescr(3)
@@ -90,6 +91,7 @@ class IntDescrMlt(TypeDescr):
                 i //= 256
             binary += b
         return binary
+
 
 Int4Double = IntDescrMlt(4, 2)
 

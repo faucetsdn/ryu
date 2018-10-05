@@ -23,15 +23,17 @@ The main component of OpenFlow controller.
 """
 
 import contextlib
-from ryu import cfg
 import logging
+import random
+from socket import IPPROTO_TCP
+from socket import TCP_NODELAY
+from socket import SHUT_WR
+from socket import timeout as SocketTimeout
+import ssl
+
+from ryu import cfg
 from ryu.lib import hub
 from ryu.lib.hub import StreamServer
-import random
-import ssl
-from socket import IPPROTO_TCP, TCP_NODELAY, SHUT_RDWR, timeout as SocketTimeout
-
-import netaddr
 
 import ryu.base.app_manager
 
@@ -45,6 +47,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, DEAD_DISPATCHER
 
 from ryu.lib.dpid import dpid_to_str
+from ryu.lib import ip
 
 LOG = logging.getLogger('ryu.controller.controller')
 
@@ -110,9 +113,9 @@ def _split_addr(addr):
     addr, port = pair
     if addr.startswith('[') and addr.endswith(']'):
         addr = addr.lstrip('[').rstrip(']')
-        if not netaddr.valid_ipv6(addr):
+        if not ip.valid_ipv6(addr):
             raise e
-    elif not netaddr.valid_ipv4(addr):
+    elif not ip.valid_ipv4(addr):
         raise e
 
     return addr, int(port, 0)
@@ -193,12 +196,10 @@ def _deactivate(method):
             method(self)
         finally:
             try:
-                self.socket.shutdown(SHUT_RDWR)
-            except (EOFError, IOError):
+                self.socket.close()
+            except IOError:
                 pass
 
-            if not self.is_active:
-                self.socket.close()
     return deactivate
 
 
@@ -276,14 +277,24 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self._ports = None
         self.flow_format = ofproto_v1_0.NXFF_OPENFLOW10
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
+        self.state = None  # for pylint
         self.set_state(HANDSHAKE_DISPATCHER)
 
-    @_deactivate
+    def _close_write(self):
+        # Note: Close only further sends in order to wait for the switch to
+        # disconnect this connection.
+        try:
+            self.socket.shutdown(SHUT_WR)
+        except (EOFError, IOError):
+            pass
+
     def close(self):
-        if self.state != DEAD_DISPATCHER:
-            self.set_state(DEAD_DISPATCHER)
+        self.set_state(DEAD_DISPATCHER)
+        self._close_write()
 
     def set_state(self, state):
+        if self.state == state:
+            return
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
@@ -299,7 +310,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         while self.state != DEAD_DISPATCHER:
             try:
                 read_len = min_read_len
-                if (remaining_read_len > min_read_len):
+                if remaining_read_len > min_read_len:
                     read_len = remaining_read_len
                 ret = self.socket.recv(read_len)
             except SocketTimeout:
@@ -311,14 +322,14 @@ class Datapath(ofproto_protocol.ProtocolDesc):
             except (EOFError, IOError):
                 break
 
-            if len(ret) == 0:
+            if not ret:
                 break
 
             buf += ret
             buf_len = len(buf)
             while buf_len >= min_read_len:
                 (version, msg_type, msg_len, xid) = ofproto_parser.header(buf)
-                if (msg_len < min_read_len):
+                if msg_len < min_read_len:
                     # Someone isn't playing nicely; log it, and try something sane.
                     LOG.debug("Message with invalid length %s received from switch at address %s",
                               msg_len, self.address)
@@ -334,7 +345,9 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                     ev = ofp_event.ofp_msg_to_ev(msg)
                     self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                    dispatchers = lambda x: x.callers[ev.__class__].dispatchers
+                    def dispatchers(x):
+                        return x.callers[ev.__class__].dispatchers
+
                     handlers = [handler for handler in
                                 self.ofp_brick.get_handlers(ev) if
                                 self.state in dispatchers(handler)]
@@ -357,9 +370,11 @@ class Datapath(ofproto_protocol.ProtocolDesc):
     def _send_loop(self):
         try:
             while self.state != DEAD_DISPATCHER:
-                buf = self.send_q.get()
+                buf, close_socket = self.send_q.get()
                 self._send_q_sem.release()
                 self.socket.sendall(buf)
+                if close_socket:
+                    break
         except SocketTimeout:
             LOG.debug("Socket timed out while sending data to switch at address %s",
                       self.address)
@@ -379,14 +394,14 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                     self._send_q_sem.release()
             except hub.QueueEmpty:
                 pass
-            # Finally, ensure the _recv_loop terminates.
-            self.close()
+            # Finally, disallow further sends.
+            self._close_write()
 
-    def send(self, buf):
+    def send(self, buf, close_socket=False):
         msg_enqueued = False
         self._send_q_sem.acquire()
         if self.send_q:
-            self.send_q.put(buf)
+            self.send_q.put((buf, close_socket))
             msg_enqueued = True
         else:
             self._send_q_sem.release()
@@ -401,13 +416,13 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         msg.set_xid(self.xid)
         return self.xid
 
-    def send_msg(self, msg):
+    def send_msg(self, msg, close_socket=False):
         assert isinstance(msg, self.ofproto_parser.MsgBase)
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
         # LOG.debug('send_msg %s', msg)
-        return self.send(msg.buf)
+        return self.send(msg.buf, close_socket=close_socket)
 
     def _echo_request_loop(self):
         if not self.max_unreplied_echo_requests:
@@ -423,7 +438,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
     def acknowledge_echo_reply(self, xid):
         try:
             self.unreplied_echo_requests.remove(xid)
-        except:
+        except ValueError:
             pass
 
     def serve(self):

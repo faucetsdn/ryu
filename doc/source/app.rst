@@ -12,3 +12,4 @@ Others provide some functionalities to other Ryu applications.
    app/ofctl.rst
    app/ofctl_rest.rst
    app/rest_vtep.rst
+   app/bgp_application.rst

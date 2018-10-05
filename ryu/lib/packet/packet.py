@@ -185,5 +185,6 @@ def _PacketBase__div__(self, trailer):
     pkt.add_protocol(trailer)
     return pkt
 
+
 packet_base.PacketBase.__div__ = _PacketBase__div__
 packet_base.PacketBase.__truediv__ = _PacketBase__div__

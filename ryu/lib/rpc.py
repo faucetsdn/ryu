@@ -37,6 +37,7 @@ class MessageEncoder(object):
     """msgpack-rpc encoder/decoder.
     intended to be transport-agnostic.
     """
+
     def __init__(self):
         super(MessageEncoder, self).__init__()
         self._packer = msgpack.Packer(encoding='utf-8', use_bin_type=True)
@@ -91,6 +92,7 @@ class EndPoint(object):
     """An endpoint
     *sock* is a socket-like.  it can be either blocking or non-blocking.
     """
+
     def __init__(self, sock, encoder=None, disp_table=None):
         if encoder is None:
             encoder = MessageEncoder()
@@ -236,6 +238,7 @@ class EndPoint(object):
 class RPCError(Exception):
     """an error from server
     """
+
     def __init__(self, error):
         super(RPCError, self).__init__()
         self._error = error
@@ -251,6 +254,7 @@ class Client(object):
     """a convenient class for a pure rpc client
     *sock* is a socket-like.  it should be blocking.
     """
+
     def __init__(self, sock, encoder=None, notification_callback=None):
         self._endpoint = EndPoint(sock, encoder)
         if notification_callback is None:

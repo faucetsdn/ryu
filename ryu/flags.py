@@ -17,6 +17,8 @@
 global flags
 """
 
+from distutils.version import LooseVersion
+
 from ryu import cfg
 
 CONF = cfg.CONF
@@ -80,6 +82,16 @@ DEFAULT_ZSERV_CLIENT_ROUTE_TYPE = 'BGP'
 DEFAULT_ZSERV_INTERVAL = 10
 DEFAULT_ZSERV_DATABASE = 'sqlite:///zebra.db'
 DEFAULT_ZSERV_ROUTER_ID = '1.1.1.1'
+# For the backward compatibility with Quagga, the default FRRouting version
+# should be None.
+DEFAULT_ZSERV_FRR_VERSION = '0.0'
+
+# Hack: In oslo_config.cfg.Opt, ConfigType might access __class__ attribute
+# for equal comparison, but on Python 2, LooseVersion does not have __class__
+# attribute and it causes AttributeError. So here inject __class__ attribute
+# into LooseVersion class.
+if not hasattr(LooseVersion, '__class__'):
+    LooseVersion.__class__ = LooseVersion
 
 CONF.register_cli_opts([
     cfg.StrOpt(
@@ -111,4 +123,7 @@ CONF.register_cli_opts([
         'router-id', default=DEFAULT_ZSERV_ROUTER_ID,
         help='Initial Router ID used by Zebra protocol service '
              '(default: %s)' % DEFAULT_ZSERV_ROUTER_ID),
+    cfg.Opt(
+        'frr-version', LooseVersion, default=DEFAULT_ZSERV_FRR_VERSION,
+        help='FRRouting version when integrated with FRRouting (e.g., 3.0)'),
 ], group='zapi')

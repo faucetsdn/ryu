@@ -21,8 +21,6 @@ import os
 import socket
 import struct
 
-import netaddr
-
 from ryu import cfg
 from ryu.base.app_manager import RyuApp
 from ryu.lib import hub
@@ -51,8 +49,7 @@ def create_connection(address):
     """
     host, _port = address
 
-    if (netaddr.valid_ipv4(host)
-            or netaddr.valid_ipv6(host)):
+    if ip.valid_ipv4(host) or ip.valid_ipv6(host):
         return socket.create_connection(address)
     elif os.path.exists(host):
         sock = None
@@ -268,9 +265,9 @@ class ZClient(RyuApp):
 
         nexthop_list = []
         for nexthop in nexthops:
-            if netaddr.valid_ipv4(nexthop):
+            if ip.valid_ipv4(nexthop):
                 nexthop_list.append(zebra.NextHopIPv4(addr=nexthop))
-            elif netaddr.valid_ipv6(nexthop):
+            elif ip.valid_ipv6(nexthop):
                 nexthop_list.append(zebra.NextHopIPv6(addr=nexthop))
             else:
                 raise ValueError('Invalid nexthop: %s' % nexthop)

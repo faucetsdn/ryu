@@ -695,6 +695,7 @@ class OSPFMessage(packet_base.PacketBase, type_desc.TypeDisp):
         struct.pack_into("!H", buf, 12, csum)
         return buf
 
+
 # alias
 ospf = OSPFMessage
 

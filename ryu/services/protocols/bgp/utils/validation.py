@@ -20,7 +20,7 @@ import numbers
 import re
 import socket
 
-import netaddr
+from ryu.lib import ip
 
 
 def is_valid_mac(mac):
@@ -60,7 +60,7 @@ def is_valid_ipv4(ipv4):
         - valid address: 10.0.0.1, 192.168.0.1
         - invalid address: 11.0.0, 192:168:0:1, etc.
     """
-    return netaddr.valid_ipv4(ipv4)
+    return ip.valid_ipv4(ipv4)
 
 
 def is_valid_ipv4_prefix(ipv4_prefix):
@@ -84,7 +84,7 @@ def is_valid_ipv4_prefix(ipv4_prefix):
 def is_valid_ipv6(ipv6):
     """Returns True if given `ipv6` is a valid IPv6 address
     """
-    return netaddr.valid_ipv6(ipv6)
+    return ip.valid_ipv6(ipv6)
 
 
 def is_valid_ipv6_prefix(ipv6_prefix):

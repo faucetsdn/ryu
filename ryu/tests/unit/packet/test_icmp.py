@@ -45,7 +45,7 @@ class Test_icmp(unittest.TestCase):
         self.type_ = icmp.ICMP_ECHO_REQUEST
         self.code = 0
         self.csum = 0
-        self.data = None
+        self.data = b''
 
         self.ic = icmp.icmp(self.type_, self.code, self.csum, self.data)
 

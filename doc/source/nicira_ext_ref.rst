@@ -54,6 +54,7 @@ The followings shows the supported NXAction classes in OpenFlow1.0 or later
 .. autoclass:: NXActionCT
 .. autoclass:: NXActionNAT
 .. autoclass:: NXActionOutputTrunc
+.. autoclass:: NXActionDecNshTtl
 .. autoclass:: NXFlowSpecMatch
 .. autoclass:: NXFlowSpecLoad
 .. autoclass:: NXFlowSpecOutput

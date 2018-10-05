@@ -98,6 +98,7 @@ class EventTunnelPort(event.EventBase):
     add_del     True for adding a tunnel.  False for removal.
     =========== ===============================================================
     """
+
     def __init__(self, dpid, port_no, remote_dpid, add_del):
         super(EventTunnelPort, self).__init__()
         self.dpid = dpid
@@ -108,6 +109,7 @@ class EventTunnelPort(event.EventBase):
 
 class TunnelKeys(dict):
     """network id(uuid) <-> tunnel key(32bit unsigned int)"""
+
     def __init__(self, f):
         super(TunnelKeys, self).__init__()
         self.send_event = f
@@ -151,6 +153,7 @@ class TunnelKeys(dict):
 
 class DPIDs(object):
     """dpid -> port_no -> remote_dpid"""
+
     def __init__(self, f):
         super(DPIDs, self).__init__()
         self.dpids = collections.defaultdict(dict)

@@ -69,7 +69,7 @@ BMP_PEER_DOWN_REASON_REMOTE_NO_NOTIFICATION = 4
 
 
 class BMPMessage(packet_base.PacketBase, TypeDisp):
-    """Base class for BGP Monitoring Protocol messages.
+    r"""Base class for BGP Monitoring Protocol messages.
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte
@@ -141,7 +141,7 @@ class BMPMessage(packet_base.PacketBase, TypeDisp):
 
 
 class BMPPeerMessage(BMPMessage):
-    """BMP Message with Per Peer Header
+    r"""BMP Message with Per Peer Header
 
     Following BMP Messages contain Per Peer Header after Common BMP Header.
 
@@ -250,7 +250,7 @@ class BMPPeerMessage(BMPMessage):
 
 @BMPMessage.register_type(BMP_MSG_ROUTE_MONITORING)
 class BMPRouteMonitoring(BMPPeerMessage):
-    """BMP Route Monitoring Message
+    r"""BMP Route Monitoring Message
 
     ========================== ===============================================
     Attribute                  Description
@@ -308,7 +308,7 @@ class BMPRouteMonitoring(BMPPeerMessage):
 
 @BMPMessage.register_type(BMP_MSG_STATISTICS_REPORT)
 class BMPStatisticsReport(BMPPeerMessage):
-    """BMP Statistics Report Message
+    r"""BMP Statistics Report Message
 
     ========================== ===============================================
     Attribute                  Description
@@ -424,7 +424,7 @@ class BMPStatisticsReport(BMPPeerMessage):
 
 @BMPMessage.register_type(BMP_MSG_PEER_DOWN_NOTIFICATION)
 class BMPPeerDownNotification(BMPPeerMessage):
-    """BMP Peer Down Notification Message
+    r"""BMP Peer Down Notification Message
 
     ========================== ===============================================
     Attribute                  Description
@@ -498,7 +498,7 @@ class BMPPeerDownNotification(BMPPeerMessage):
 
 @BMPMessage.register_type(BMP_MSG_PEER_UP_NOTIFICATION)
 class BMPPeerUpNotification(BMPPeerMessage):
-    """BMP Peer Up Notification Message
+    r"""BMP Peer Up Notification Message
 
     ========================== ===============================================
     Attribute                  Description
@@ -605,7 +605,7 @@ class BMPPeerUpNotification(BMPPeerMessage):
 
 @BMPMessage.register_type(BMP_MSG_INITIATION)
 class BMPInitiation(BMPMessage):
-    """BMP Initiation Message
+    r"""BMP Initiation Message
 
     ========================== ===============================================
     Attribute                  Description
@@ -669,7 +669,7 @@ class BMPInitiation(BMPMessage):
 
 @BMPMessage.register_type(BMP_MSG_TERMINATION)
 class BMPTermination(BMPMessage):
-    """BMP Termination Message
+    r"""BMP Termination Message
 
     ========================== ===============================================
     Attribute                  Description

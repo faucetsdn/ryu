@@ -30,6 +30,7 @@ class EventRequestBase(EventBase):
     """
     The base class for synchronous request for RyuApp.send_request.
     """
+
     def __init__(self):
         super(EventRequestBase, self).__init__()
         self.dst = None  # app.name of provide the event.
@@ -42,6 +43,7 @@ class EventReplyBase(EventBase):
     """
     The base class for synchronous request reply for RyuApp.send_reply.
     """
+
     def __init__(self, dst):
         super(EventReplyBase, self).__init__()
         self.dst = dst

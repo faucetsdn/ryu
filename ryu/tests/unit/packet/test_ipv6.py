@@ -760,7 +760,7 @@ class Test_routing(unittest.TestCase):
                      "2001:db8:dead::3"]
         # calculate pad
         self.pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                    (16 - self.cmpe) % 8)) % 8
+                         (16 - self.cmpe) % 8)) % 8
         # create buf
         self.form = '!BBBBBB2x16s16s16s'
         self.buf = struct.pack(self.form, self.nxt, self.size,
@@ -795,13 +795,13 @@ class Test_routing(unittest.TestCase):
         not_implemented_buf = struct.pack(
             '!BBBBBB2x', 0, 6, ipv6.routing.ROUTING_TYPE_2, 0, 0, 0)
         instance = ipv6.routing.parser(not_implemented_buf)
-        assert None == instance
+        assert None is instance
 
     def test_invalid_type(self):
         invalid_type = 99
         invalid_buf = struct.pack('!BBBBBB2x', 0, 6, invalid_type, 0, 0, 0)
         instance = ipv6.routing.parser(invalid_buf)
-        assert None == instance
+        assert None is instance
 
 
 class Test_routing_type3(unittest.TestCase):
@@ -818,7 +818,7 @@ class Test_routing_type3(unittest.TestCase):
                      "2001:db8:dead::3"]
         # calculate pad
         self.pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                    (16 - self.cmpe) % 8)) % 8
+                         (16 - self.cmpe) % 8)) % 8
 
         self.routing = ipv6.routing_type3(
             self.nxt, self.size, self.type_, self.seg, self.cmpi,

@@ -69,7 +69,7 @@ class Test_icmpv6_header(unittest.TestCase):
         eq_(msg.type_, self.type_)
         eq_(msg.code, self.code)
         eq_(msg.csum, self.csum)
-        eq_(msg.data, None)
+        eq_(msg.data, b'')
         eq_(n, None)
 
     def test_serialize(self):
@@ -84,7 +84,7 @@ class Test_icmpv6_header(unittest.TestCase):
         eq_(code, self.code)
         eq_(csum, self.csum)
 
-    @raises(Exception)
+    @raises(struct.error)
     def test_malformed_icmpv6(self):
         m_short_buf = self.buf[1:self.icmp._MIN_LEN]
         self.icmp.parser(m_short_buf)
@@ -1048,8 +1048,8 @@ class Test_icmpv6_membership_query(unittest.TestCase):
         mld_values = {'maxresp': self.maxresp,
                       'address': self.address}
         _mld_str = ','.join(['%s=%s' % (k, repr(mld_values[k]))
-                            for k, v in inspect.getmembers(ml)
-                            if k in mld_values])
+                             for k, v in inspect.getmembers(ml)
+                             if k in mld_values])
         mld_str = '%s(%s)' % (icmpv6.mld.__name__, _mld_str)
 
         icmp_values = {'type_': repr(self.type_),
@@ -1309,8 +1309,8 @@ class Test_mldv2_query(unittest.TestCase):
                       'num': self.num,
                       'srcs': self.srcs}
         _mld_str = ','.join(['%s=%s' % (k, repr(mld_values[k]))
-                            for k, v in inspect.getmembers(self.mld)
-                            if k in mld_values])
+                             for k, v in inspect.getmembers(self.mld)
+                             if k in mld_values])
         mld_str = '%s(%s)' % (icmpv6.mldv2_query.__name__, _mld_str)
 
         icmp_values = {'type_': repr(self.type_),
@@ -1329,29 +1329,31 @@ class Test_mldv2_query(unittest.TestCase):
         self.setUp_with_srcs()
         self.test_to_string()
 
-    @raises(Exception)
+    @raises(AssertionError)
     def test_num_larger_than_srcs(self):
         self.srcs = ['ff80::1', 'ff80::2', 'ff80::3']
         self.num = len(self.srcs) + 1
-        self.buf = pack(icmpv6.mldv2_query._PACK_STR, self.maxresp,
-                        addrconv.ipv6.text_to_bin(self.address),
-                        self.s_qrv, self.qqic, self.num)
+        self.buf = struct.pack(
+            icmpv6.mldv2_query._PACK_STR,
+            self.maxresp, addrconv.ipv6.text_to_bin(self.address),
+            self.s_qrv, self.qqic, self.num)
         for src in self.srcs:
-            self.buf += pack('16s', addrconv.ipv6.text_to_bin(src))
+            self.buf += struct.pack('16s', addrconv.ipv6.text_to_bin(src))
         self.mld = icmpv6.mldv2_query(
             self.maxresp, self.address, self.s_flg, self.qrv, self.qqic,
             self.num, self.srcs)
         self.test_parser()
 
-    @raises(Exception)
+    @raises(AssertionError)
     def test_num_smaller_than_srcs(self):
         self.srcs = ['ff80::1', 'ff80::2', 'ff80::3']
         self.num = len(self.srcs) - 1
-        self.buf = pack(icmpv6.mldv2_query._PACK_STR, self.maxresp,
-                        addrconv.ipv6.text_to_bin(self.address),
-                        self.s_qrv, self.qqic, self.num)
+        self.buf = struct.pack(
+            icmpv6.mldv2_query._PACK_STR,
+            self.maxresp, addrconv.ipv6.text_to_bin(self.address),
+            self.s_qrv, self.qqic, self.num)
         for src in self.srcs:
-            self.buf += pack('16s', addrconv.ipv6.text_to_bin(src))
+            self.buf += struct.pack('16s', addrconv.ipv6.text_to_bin(src))
         self.mld = icmpv6.mldv2_query(
             self.maxresp, self.address, self.s_flg, self.qrv, self.qqic,
             self.num, self.srcs)
@@ -1576,8 +1578,8 @@ class Test_mldv2_report(unittest.TestCase):
         mld_values = {'record_num': self.record_num,
                       'records': self.records}
         _mld_str = ','.join(['%s=%s' % (k, repr(mld_values[k]))
-                            for k, v in inspect.getmembers(self.mld)
-                            if k in mld_values])
+                             for k, v in inspect.getmembers(self.mld)
+                             if k in mld_values])
         mld_str = '%s(%s)' % (icmpv6.mldv2_report.__name__, _mld_str)
 
         icmp_values = {'type_': repr(self.type_),
@@ -1596,7 +1598,7 @@ class Test_mldv2_report(unittest.TestCase):
         self.setUp_with_records()
         self.test_to_string()
 
-    @raises(Exception)
+    @raises(AssertionError)
     def test_record_num_larger_than_records(self):
         self.record1 = icmpv6.mldv2_report_group(
             icmpv6.MODE_IS_INCLUDE, 0, 0, 'ff00::1')
@@ -1620,7 +1622,7 @@ class Test_mldv2_report(unittest.TestCase):
         self.mld = icmpv6.mldv2_report(self.record_num, self.records)
         self.test_parser()
 
-    @raises(Exception)
+    @raises(AssertionError)
     def test_record_num_smaller_than_records(self):
         self.record1 = icmpv6.mldv2_report_group(
             icmpv6.MODE_IS_INCLUDE, 0, 0, 'ff00::1')
@@ -1923,7 +1925,7 @@ class Test_mldv2_report_group(unittest.TestCase):
         self.setUp_with_srcs_and_aux()
         eq_(len(self.mld), 76)
 
-    @raises
+    @raises(AssertionError)
     def test_num_larger_than_srcs(self):
         self.srcs = ['fe80::1', 'fe80::2', 'fe80::3']
         self.num = len(self.srcs) + 1
@@ -1931,13 +1933,13 @@ class Test_mldv2_report_group(unittest.TestCase):
             icmpv6.mldv2_report_group._PACK_STR, self.type_, self.aux_len,
             self.num, addrconv.ipv6.text_to_bin(self.address))
         for src in self.srcs:
-            self.buf += pack('16s', addrconv.ipv6.text_to_bin(src))
+            self.buf += struct.pack('16s', addrconv.ipv6.text_to_bin(src))
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address,
             self.srcs, self.aux)
         self.test_parser()
 
-    @raises
+    @raises(AssertionError)
     def test_num_smaller_than_srcs(self):
         self.srcs = ['fe80::1', 'fe80::2', 'fe80::3']
         self.num = len(self.srcs) - 1
@@ -1945,13 +1947,13 @@ class Test_mldv2_report_group(unittest.TestCase):
             icmpv6.mldv2_report_group._PACK_STR, self.type_, self.aux_len,
             self.num, addrconv.ipv6.text_to_bin(self.address))
         for src in self.srcs:
-            self.buf += pack('16s', addrconv.ipv6.text_to_bin(src))
+            self.buf += struct.pack('16s', addrconv.ipv6.text_to_bin(src))
         self.mld = icmpv6.mldv2_report_group(
             self.type_, self.aux_len, self.num, self.address,
             self.srcs, self.aux)
         self.test_parser()
 
-    @raises
+    @raises(struct.error)
     def test_aux_len_larger_than_aux(self):
         self.aux = b'\x01\x02\x03\x04\x05\x06\x07\x08'
         self.aux_len = len(self.aux) // 4 + 1
@@ -1964,7 +1966,7 @@ class Test_mldv2_report_group(unittest.TestCase):
             self.srcs, self.aux)
         self.test_parser()
 
-    @raises
+    @raises(AssertionError)
     def test_aux_len_smaller_than_aux(self):
         self.aux = b'\x01\x02\x03\x04\x05\x06\x07\x08'
         self.aux_len = len(self.aux) // 4 - 1

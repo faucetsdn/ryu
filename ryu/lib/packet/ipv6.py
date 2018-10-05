@@ -143,6 +143,7 @@ class ipv6(packet_base.PacketBase):
             ext_hdrs_len += len(ext_hdr)
         return self._MIN_LEN + ext_hdrs_len
 
+
 ipv6.register_packet_type(icmpv6.icmpv6, inet.IPPROTO_ICMPV6)
 ipv6.register_packet_type(tcp.tcp, inet.IPPROTO_TCP)
 ipv6.register_packet_type(udp.udp, inet.IPPROTO_UDP)
@@ -153,6 +154,7 @@ ipv6.register_packet_type(gre.gre, inet.IPPROTO_GRE)
 @six.add_metaclass(abc.ABCMeta)
 class header(stringify.StringifyMixin):
     """extension header abstract class."""
+
     def __init__(self, nxt):
         self.nxt = nxt
 
@@ -272,7 +274,7 @@ class dst_opts(opt_header):
 
 
 class option(stringify.StringifyMixin):
-    """IPv6 (RFC 2460) Options header encoder/decoder class.
+    r"""IPv6 (RFC 2460) Options header encoder/decoder class.
 
     This is used with ryu.lib.packet.ipv6.hop_opts or
                       ryu.lib.packet.ipv6.dst_opts.
@@ -433,7 +435,7 @@ class routing_type3(header):
         assert isinstance(adrs, list)
         self.adrs = adrs
         self._pad = (8 - ((len(self.adrs) - 1) * (16 - self.cmpi) +
-                     (16 - self.cmpe) % 8)) % 8
+                          (16 - self.cmpe) % 8)) % 8
 
     @classmethod
     def _get_size(cls, size):
@@ -494,7 +496,7 @@ class routing_type3(header):
 
 @ipv6.register_header_type(inet.IPPROTO_FRAGMENT)
 class fragment(header):
-    """IPv6 (RFC 2460) fragment header encoder/decoder class.
+    r"""IPv6 (RFC 2460) fragment header encoder/decoder class.
 
     This is used with ryu.lib.packet.ipv6.ipv6.
 

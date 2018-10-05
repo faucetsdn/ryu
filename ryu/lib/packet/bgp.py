@@ -565,6 +565,7 @@ class RouteFamily(StringifyMixin):
     def __hash__(self):
         return hash((self.afi, self.safi))
 
+
 # Route Family Singleton
 RF_IPv4_UC = RouteFamily(addr_family.IP, subaddr_family.UNICAST)
 RF_IPv6_UC = RouteFamily(addr_family.IP6, subaddr_family.UNICAST)
@@ -4771,7 +4772,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         if not isinstance(next_hop, (list, tuple)):
             next_hop = [next_hop]
         for n in next_hop:
-            if not netaddr.valid_ipv4(n) and not netaddr.valid_ipv6(n):
+            if not ip.valid_ipv4(n) and not ip.valid_ipv6(n):
                 raise ValueError('Invalid address for next_hop: %s' % n)
         # Note: For the backward compatibility, stores the first next_hop
         # address and all next_hop addresses separately.
@@ -4890,7 +4891,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
 
     @next_hop.setter
     def next_hop(self, addr):
-        if not netaddr.valid_ipv4(addr) and not netaddr.valid_ipv6(addr):
+        if not ip.valid_ipv4(addr) and not ip.valid_ipv6(addr):
             raise ValueError('Invalid address for next_hop: %s' % addr)
         self._next_hop = addr
         self.next_hop_list[0] = addr
@@ -4904,7 +4905,7 @@ class BGPPathAttributeMpReachNLRI(_PathAttribute):
         if not isinstance(addr_list, (list, tuple)):
             addr_list = [addr_list]
         for addr in addr_list:
-            if not netaddr.valid_ipv4(addr) and not netaddr.valid_ipv6(addr):
+            if not ip.valid_ipv4(addr) and not ip.valid_ipv6(addr):
                 raise ValueError('Invalid address for next_hop: %s' % addr)
         self._next_hop = addr_list[0]
         self._next_hop_list = addr_list

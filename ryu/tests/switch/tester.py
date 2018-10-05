@@ -47,13 +47,31 @@ from ryu.ofproto import ofproto_v1_5
 
 # import all packet libraries.
 PKT_LIB_PATH = 'ryu.lib.packet'
+CLSNAME_ALIASES = {
+    ('ryu.lib.packet.ipv6', 'option'): 'ipv6option',
+    ('ryu.lib.packet.icmpv6', 'echo'): 'icmpv6echo',
+    ('ryu.lib.packet.bgp', 'StreamParser'): '',
+    ('ryu.lib.packet.bgp', 'StringifyMixin'): '',
+    ('ryu.lib.packet.dhcp', 'option'): 'dhcpoption',
+    ('ryu.lib.packet.dhcp', 'options'): 'dhcpoptions',
+    ('ryu.lib.packet.ospf', 'StringifyMixin'): ''
+}
+
 for modname, moddef in sys.modules.items():
     if not modname.startswith(PKT_LIB_PATH) or not moddef:
         continue
     for (clsname, clsdef, ) in inspect.getmembers(moddef):
         if not inspect.isclass(clsdef):
             continue
-        exec('from %s import %s' % (modname, clsname))
+        clsname_alias = CLSNAME_ALIASES.get((modname, clsname))
+        if clsname_alias == '':
+            continue
+        elif clsname_alias is not None:
+            exec('from %s import %s as %s' % (modname, clsname, clsname_alias))
+        else:
+            assert clsname not in globals(), (
+                "%s.%s already defined" % (modname, clsname))
+            exec('from %s import %s' % (modname, clsname))
 
 
 """ Required test network:
@@ -1034,7 +1052,7 @@ class OfTester(app_manager.RyuApp):
             self.logger.debug("margin:[%s]", margin)
             if math.fabs(measured_value - expected_value) > margin:
                 msgs.append('{0} {1:.2f}{2}'.format(fields,
-                            measured_value / elapsed_sec / conv, unit))
+                                                    measured_value / elapsed_sec / conv, unit))
 
         if msgs:
             raise TestFailure(self.state, detail=', '.join(msgs))
@@ -1289,6 +1307,7 @@ class OpenFlowSw(object):
 
 class TestPatterns(dict):
     """ List of Test class objects. """
+
     def __init__(self, test_dir, logger):
         super(TestPatterns, self).__init__()
         self.logger = logger
@@ -1316,6 +1335,7 @@ class TestPatterns(dict):
 
 class TestFile(stringify.StringifyMixin):
     """Test File object include Test objects."""
+
     def __init__(self, path, logger):
         super(TestFile, self).__init__()
         self.logger = logger
