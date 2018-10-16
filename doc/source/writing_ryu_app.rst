@@ -5,21 +5,21 @@ The First Application
 Whetting Your Appetite
 ======================
 
-If you want to manage the network gears (switches, routers, etc) at
-your way, you need to write your Ryu application. Your application
-tells Ryu how you want to manage the gears. Then Ryu configures the
-gears by using OpenFlow protocol, etc.
+If you want to manage network gear (switches, routers, etc) your
+own way, you just need to write your own Ryu application. Your application
+tells Ryu how you want to manage the gear. Then Ryu configures the
+gear by using OpenFlow protocol, etc.
 
-Writing Ryu application is easy. It's just Python scripts.
+Writing Ryu applications is easy. They're just Python scripts.
 
 
 Start Writing
 =============
 
-We show a Ryu application that make OpenFlow switches work as a dumb
+Here we show a Ryu application that makes an OpenFlow switch work as a dumb
 layer 2 switch.
 
-Open a text editor creating a new file with the following content:
+Open a text editor and create a new file with the following content:
 
 .. code-block:: python
    
@@ -29,9 +29,9 @@ Open a text editor creating a new file with the following content:
        def __init__(self, *args, **kwargs):
            super(L2Switch, self).__init__(*args, **kwargs)
 
-Ryu application is just a Python script so you can save the file with
-any name, extensions, and any place you want. Let's name the file
-'l2.py' at your home directory.
+Ryu applications are just Python scripts so you can save the file with
+any name, any extension, and any place you want. Let's name the file
+'l2.py' in your home directory.
 
 This application does nothing useful yet, however it's a complete Ryu
 application. In fact, you can run this Ryu application::
@@ -41,10 +41,10 @@ application. In fact, you can run this Ryu application::
    instantiating app /Users/fujita/l2.py
 
 
-All you have to do is defining needs a new subclass of RyuApp to run
+All you have to do is define a new subclass of RyuApp to run
 your Python script as a Ryu application.
 
-Next let's add the functionality of sending a received packet to all
+Next let's add some functionality that sends a received packet to all
 the ports.
 
 .. code-block:: python
@@ -75,18 +75,18 @@ the ports.
            dp.send_msg(out)
 
 
-A new method 'packet_in_handler' is added to L2Switch class. This is
-called when Ryu receives an OpenFlow packet_in message. The trick is
+A new method 'packet_in_handler' is added to the L2Switch class. This is
+called when Ryu receives an OpenFlow packet_in message. The trick is the
 'set_ev_cls' decorator. This decorator tells Ryu when the decorated
 function should be called.
 
-The first argument of the decorator indicates an event that makes
-function called. As you expect easily, every time Ryu gets a
+The first argument of the decorator indicates which type of event this
+function should be called for. As you might expect, every time Ryu gets a
 packet_in message, this function is called.
 
-The second argument indicates the state of the switch. Probably, you
+The second argument indicates the state of the switch. You probably
 want to ignore packet_in messages before the negotiation between Ryu
-and the switch finishes. Using 'MAIN_DISPATCHER' as the second
+and the switch is finished. Using 'MAIN_DISPATCHER' as the second
 argument means this function is called only after the negotiation
 completes.
 
@@ -103,20 +103,20 @@ Ready for the second half.
 
 * OFPActionOutput class is used with a packet_out message to specify a
   switch port that you want to send the packet out of. This
-  application need a switch to send out of all the ports so OFPP_FLOOD
-  constant is used.
+  application uses the OFPP_FLOOD flag to indicate that the packet should
+  be sent out on all ports.
 
 * OFPPacketOut class is used to build a packet_out message.
 
 * If you call Datapath class's send_msg method with a OpenFlow message
-  class object, Ryu builds and send the on-wire data format to the switch.
+  class object, Ryu builds and sends the on-wire data format to the switch.
 
 
-Here, you finished implementing your first Ryu application. You are ready to
-run this Ryu application that does something useful.
+There, you finished implementing your first Ryu application. You are ready to
+run a Ryu application that does something useful.
 
 
-A dumb l2 switch is too dumb? You want to implement a learning l2
+Is a dumb L2 switch is too dumb? You want to implement a learning L2
 switch? Move to `the next step
 <https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py>`_. You
 can learn from the existing Ryu applications at `ryu/app

@@ -2,7 +2,7 @@ What's Ryu
 ==========
 Ryu is a component-based software defined networking framework.
 
-Ryu provides software components with well defined API that make it
+Ryu provides software components with well defined API's that make it
 easy for developers to create new network management and control
 applications. Ryu supports various protocols for managing network
 devices, such as OpenFlow, Netconf, OF-config, etc. About OpenFlow,
@@ -33,14 +33,14 @@ After writing your application, just type::
 Optional Requirements
 =====================
 
-Some functionalities of ryu requires extra packages:
+Some functions of ryu require extra packages:
 
 - OF-Config requires lxml and ncclient
 - NETCONF requires paramiko
 - BGP speaker (SSH console) requires paramiko
 - Zebra protocol service (database) requires SQLAlchemy
 
-If you want to use the functionalities, please install requirements::
+If you want to use these functions, please install the requirements::
 
     % pip install -r tools/optional-requires
 
@@ -49,8 +49,8 @@ Please refer to tools/optional-requires for details.
 
 Prerequisites
 =============
-If you got some error messages at installation step, please confirm
-dependencies for building required Python packages.
+If you got some error messages at the installation stage, please confirm
+dependencies for building the required Python packages.
 
 On Ubuntu(16.04 LTS or later)::
 
