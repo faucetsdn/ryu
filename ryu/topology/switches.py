@@ -38,7 +38,7 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_2
 from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_4
-
+from ryu.ofproto import ofproto_v1_5
 
 LOG = logging.getLogger(__name__)
 
@@ -495,7 +495,7 @@ class LLDPPacket(object):
 
 class Switches(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION, ofproto_v1_2.OFP_VERSION,
-                    ofproto_v1_3.OFP_VERSION, ofproto_v1_4.OFP_VERSION]
+                    ofproto_v1_3.OFP_VERSION, ofproto_v1_4.OFP_VERSION, ofproto_v1_5.OFP_VERSION]
     _EVENTS = [event.EventSwitchEnter, event.EventSwitchLeave,
                event.EventSwitchReconnected,
                event.EventPortAdd, event.EventPortDelete,
@@ -910,11 +910,21 @@ class Switches(app_manager.RyuApp):
         if dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
             dp.send_packet_out(actions=actions, data=port_data.lldp_data)
-        elif dp.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION >= ofproto_v1_2.OFP_VERSION and dp.ofproto.OFP_VERSION <= ofproto_v1_4.OFP_VERSION:
             actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
             out = dp.ofproto_parser.OFPPacketOut(
                 datapath=dp, in_port=dp.ofproto.OFPP_CONTROLLER,
                 buffer_id=dp.ofproto.OFP_NO_BUFFER, actions=actions,
+                data=port_data.lldp_data)
+            dp.send_msg(out)
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_5.OFP_VERSION:
+            actions = [dp.ofproto_parser.OFPActionOutput(port.port_no)]
+            match = dp.ofproto_parser.OFPMatch(in_port=dp.ofproto.OFPP_CONTROLLER)
+            out = dp.ofproto_parser.OFPPacketOut(
+                datapath=dp,
+                buffer_id=dp.ofproto.OFP_NO_BUFFER,
+                match=match,
+                actions=actions,
                 data=port_data.lldp_data)
             dp.send_msg(out)
         else:
