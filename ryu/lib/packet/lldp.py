@@ -51,10 +51,11 @@ optional TLV may be inserted in any order
 """
 
 import struct
+import logging
 from ryu.lib import stringify
 from ryu.lib.packet import packet_base
 
-
+LOG = logging.getLogger('ryu.lib.packet.lldp')
 # LLDP destination MAC address
 LLDP_MAC_NEAREST_BRIDGE = '01:80:c2:00:00:0e'
 LLDP_MAC_NEAREST_NON_TPMR_BRIDGE = '01:80:c2:00:00:03'
@@ -263,7 +264,15 @@ class ChassisID(LLDPBasicTLV):
             self.typelen = (self.tlv_type << LLDP_TLV_TYPE_SHIFT) | self.len
 
     def serialize(self):
-        return struct.pack('!HB', self.typelen, self.subtype) + self.chassis_id
+        if isinstance(self.chassis_id, str):
+            chassis_id = bytes(self.chassis_id, encoding="utf8")
+        elif isinstance(self.chassis_id, bytes):
+            chassis_id = self.chassis_id
+        else:
+            LOG.info("Not support this type:", type(self.chassis_id))
+            exit(1)
+
+        return struct.pack('!HB', self.typelen, self.subtype,) + chassis_id
 
 
 @lldp.set_tlv_type(LLDP_TLV_PORT_ID)
@@ -308,7 +317,14 @@ class PortID(LLDPBasicTLV):
             self.typelen = (self.tlv_type << LLDP_TLV_TYPE_SHIFT) | self.len
 
     def serialize(self):
-        return struct.pack('!HB', self.typelen, self.subtype) + self.port_id
+        if isinstance(self.port_id, str):
+            port_id = bytes(self.port_id, encoding="utf8")
+        elif isinstance(self.port_id, bytes):
+            port_id = self.port_id
+        else:
+            LOG.info("Not support this type:", type(self.port_id))
+            exit(1)
+        return struct.pack('!HB', self.typelen, self.subtype) + port_id
 
 
 @lldp.set_tlv_type(LLDP_TLV_TTL)
