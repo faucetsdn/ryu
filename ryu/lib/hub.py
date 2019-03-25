@@ -42,6 +42,7 @@ if HUB_TYPE == 'eventlet':
     import ssl
     import socket
     import traceback
+    import sys
 
     getcurrent = eventlet.getcurrent
     patch = eventlet.monkey_patch
@@ -128,7 +129,17 @@ if HUB_TYPE == 'eventlet':
             if ssl_args:
                 def wrap_and_handle(sock, addr):
                     ssl_args.setdefault('server_side', True)
-                    handle(ssl.wrap_socket(sock, **ssl_args), addr)
+                    if 'ssl_ctx' in ssl_args:
+                        ctx = ssl_args.pop('ssl_ctx')
+                        ctx.load_cert_chain(ssl_args.pop('certfile'),
+                                            ssl_args.pop('keyfile'))
+                        if 'cert_reqs' in ssl_args:
+                            ctx.verify_mode = ssl_args.pop('cert_reqs')
+                        if 'ca_certs' in ssl_args:
+                            ctx.load_verify_locations(ssl_args.pop('ca_certs'))
+                        handle(ctx.wrap_socket(sock, **ssl_args), addr)
+                    else:
+                        handle(ssl.wrap_socket(sock, **ssl_args), addr)
 
                 self.handle = wrap_and_handle
             else:
