@@ -788,7 +788,7 @@ def generate(ofp_name, ofpp_name):
 
         Example::
 
-            actions += [parser.NXActionResubmit(in_port=8080,
+            actions += [parser.NXActionResubmitTable(in_port=8080,
                                                 table_id=10)]
         """
         _subtype = nicira_ext.NXAST_RESUBMIT_TABLE
