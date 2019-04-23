@@ -114,7 +114,7 @@ class OVSBridge(object):
     """
 
     def __init__(self, CONF, datapath_id, ovsdb_addr, timeout=None,
-                 exception=None, br_name=None ):
+                 exception=None, br_name=None):
         super(OVSBridge, self).__init__()
         self.datapath_id = datapath_id
         self.ovsdb_addr = ovsdb_addr
