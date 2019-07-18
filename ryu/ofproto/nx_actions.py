@@ -3034,8 +3034,6 @@ def generate(ofp_name, ofpp_name):
             msg_pack_into(self._fmt_str, data, 0, self.hdr_size, self.new_pkt_type)
             return data
 
-
-
     class NXActionEncapNsh(NXAction):
         """
         Encap nsh
