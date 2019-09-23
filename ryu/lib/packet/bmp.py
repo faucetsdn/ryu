@@ -60,6 +60,8 @@ BMP_STAT_TYPE_INV_UPDATE_DUE_TO_ORIGINATOR_ID = 5
 BMP_STAT_TYPE_INV_UPDATE_DUE_TO_AS_CONFED_LOOP = 6
 BMP_STAT_TYPE_ADJ_RIB_IN = 7
 BMP_STAT_TYPE_LOC_RIB = 8
+BMP_STAT_TYPE_ADJ_RIB_OUT = 14
+BMP_STAT_TYPE_EXPORT_RIB = 15
 
 BMP_PEER_DOWN_REASON_UNKNOWN = 0
 BMP_PEER_DOWN_REASON_LOCAL_BGP_NOTIFICATION = 1
@@ -157,7 +159,8 @@ class BMPPeerMessage(BMPMessage):
     type                       Type field.  one of BMP\_MSG\_ constants.
     peer_type                  The type of the peer.
     is_post_policy             Indicate the message reflects the post-policy
-                               Adj-RIB-In
+    is_adj_rib_out             Indicate the message reflects Adj-RIB-Out (defaults
+                               to Adj-RIB-In)
     peer_distinguisher         Use for L3VPN router which can have multiple
                                instance.
     peer_address               The remote IP address associated with the TCP
@@ -179,12 +182,13 @@ class BMPPeerMessage(BMPMessage):
 
     def __init__(self, peer_type, is_post_policy, peer_distinguisher,
                  peer_address, peer_as, peer_bgp_id, timestamp,
-                 version=VERSION, type_=None, len_=None):
+                 version=VERSION, type_=None, len_=None, is_adj_rib_out=False):
         super(BMPPeerMessage, self).__init__(version=version,
                                              len_=len_,
                                              type_=type_)
         self.peer_type = peer_type
         self.is_post_policy = is_post_policy
+        self.is_adj_rib_out = is_adj_rib_out
         self.peer_distinguisher = peer_distinguisher
         self.peer_address = peer_address
         self.peer_as = peer_as
@@ -199,6 +203,11 @@ class BMPPeerMessage(BMPMessage):
                                                       six.binary_type(buf))
 
         rest = buf[struct.calcsize(cls._PEER_HDR_PACK_STR):]
+
+        if peer_flags & (1 << 4):
+            is_adj_rib_out = True
+        else:
+            is_adj_rib_out = False
 
         if peer_flags & (1 << 6):
             is_post_policy = True
@@ -221,11 +230,15 @@ class BMPPeerMessage(BMPMessage):
             "peer_address": peer_address,
             "peer_as": peer_as,
             "peer_bgp_id": peer_bgp_id,
-            "timestamp": timestamp
+            "timestamp": timestamp,
+            "is_adj_rib_out": is_adj_rib_out,
         }, rest
 
     def serialize_tail(self):
         flags = 0
+
+        if self.is_adj_rib_out:
+            flags |= (1 << 4)
 
         if self.is_post_policy:
             flags |= (1 << 6)
@@ -275,7 +288,7 @@ class BMPRouteMonitoring(BMPPeerMessage):
     def __init__(self, bgp_update, peer_type, is_post_policy,
                  peer_distinguisher, peer_address, peer_as, peer_bgp_id,
                  timestamp, version=VERSION, type_=BMP_MSG_ROUTE_MONITORING,
-                 len_=None):
+                 len_=None, is_adj_rib_out=False):
         super(BMPRouteMonitoring,
               self).__init__(peer_type=peer_type,
                              is_post_policy=is_post_policy,
@@ -286,7 +299,8 @@ class BMPRouteMonitoring(BMPPeerMessage):
                              timestamp=timestamp,
                              len_=len_,
                              type_=type_,
-                             version=version)
+                             version=version,
+                             is_adj_rib_out=is_adj_rib_out)
         self.bgp_update = bgp_update
 
     @classmethod
@@ -335,7 +349,8 @@ class BMPStatisticsReport(BMPPeerMessage):
 
     def __init__(self, stats, peer_type, is_post_policy, peer_distinguisher,
                  peer_address, peer_as, peer_bgp_id, timestamp,
-                 version=VERSION, type_=BMP_MSG_STATISTICS_REPORT, len_=None):
+                 version=VERSION, type_=BMP_MSG_STATISTICS_REPORT, len_=None,
+                 is_adj_rib_out=False):
         super(BMPStatisticsReport,
               self).__init__(peer_type=peer_type,
                              is_post_policy=is_post_policy,
@@ -346,7 +361,8 @@ class BMPStatisticsReport(BMPPeerMessage):
                              timestamp=timestamp,
                              len_=len_,
                              type_=type_,
-                             version=version)
+                             version=version,
+                             is_adj_rib_out=is_adj_rib_out)
         self.stats = stats
 
     @classmethod
@@ -381,7 +397,9 @@ class BMPStatisticsReport(BMPPeerMessage):
                type_ == BMP_STAT_TYPE_INV_UPDATE_DUE_TO_AS_CONFED_LOOP:
                 value, = struct.unpack_from('!I', six.binary_type(value))
             elif type_ == BMP_STAT_TYPE_ADJ_RIB_IN or \
-                    type_ == BMP_STAT_TYPE_LOC_RIB:
+                    type_ == BMP_STAT_TYPE_LOC_RIB or \
+                    type_ == BMP_STAT_TYPE_ADJ_RIB_OUT or \
+                    type_ == BMP_STAT_TYPE_EXPORT_RIB:
                 value, = struct.unpack_from('!Q', six.binary_type(value))
 
             buf = buf[cls._MIN_LEN + len_:]
@@ -410,7 +428,9 @@ class BMPStatisticsReport(BMPPeerMessage):
                t == BMP_STAT_TYPE_INV_UPDATE_DUE_TO_AS_CONFED_LOOP:
                 valuepackstr = 'I'
             elif t == BMP_STAT_TYPE_ADJ_RIB_IN or \
-                    t == BMP_STAT_TYPE_LOC_RIB:
+                    t == BMP_STAT_TYPE_LOC_RIB or \
+                    t == BMP_STAT_TYPE_ADJ_RIB_OUT or \
+                    t == BMP_STAT_TYPE_EXPORT_RIB:
                 valuepackstr = 'Q'
             else:
                 continue
@@ -440,7 +460,8 @@ class BMPPeerDownNotification(BMPPeerMessage):
     def __init__(self, reason, data, peer_type, is_post_policy,
                  peer_distinguisher, peer_address, peer_as, peer_bgp_id,
                  timestamp, version=VERSION,
-                 type_=BMP_MSG_PEER_DOWN_NOTIFICATION, len_=None):
+                 type_=BMP_MSG_PEER_DOWN_NOTIFICATION, len_=None,
+                 is_adj_rib_out=False):
 
         super(BMPPeerDownNotification,
               self).__init__(peer_type=peer_type,
@@ -452,7 +473,8 @@ class BMPPeerDownNotification(BMPPeerMessage):
                              timestamp=timestamp,
                              len_=len_,
                              type_=type_,
-                             version=version)
+                             version=version,
+                             is_adj_rib_out=is_adj_rib_out)
 
         self.reason = reason
         self.data = data
@@ -537,7 +559,7 @@ class BMPPeerUpNotification(BMPPeerMessage):
                  peer_type, is_post_policy, peer_distinguisher,
                  peer_address, peer_as, peer_bgp_id, timestamp,
                  version=VERSION, type_=BMP_MSG_PEER_UP_NOTIFICATION,
-                 len_=None):
+                 len_=None, is_adj_rib_out=False):
         super(BMPPeerUpNotification,
               self).__init__(peer_type=peer_type,
                              is_post_policy=is_post_policy,
@@ -548,7 +570,8 @@ class BMPPeerUpNotification(BMPPeerMessage):
                              timestamp=timestamp,
                              len_=len_,
                              type_=type_,
-                             version=version)
+                             version=version,
+                             is_adj_rib_out=is_adj_rib_out)
         self.local_address = local_address
         self.local_port = local_port
         self.remote_port = remote_port
