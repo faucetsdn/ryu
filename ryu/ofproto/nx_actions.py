@@ -3059,7 +3059,7 @@ def generate(ofp_name, ofpp_name):
         def __init__(self,
                      type_=None, len_=None, vendor=None, subtype=None):
             super(NXActionEncapNsh, self).__init__()
-            self.hdr_size = hdr_size
+            self.hdr_size = 0
             self.new_pkt_type = 0x0001894F
 
         @classmethod
@@ -3070,6 +3070,43 @@ def generate(ofp_name, ofpp_name):
             data = bytearray()
             msg_pack_into(self._fmt_str, data, 0, self.hdr_size, self.new_pkt_type)
             return data
+
+
+
+    class NXActionDecap(NXAction):
+        """
+        Decap nsh
+
+        This action decaps package
+
+        And equivalent to the followings action of ovs-ofctl command.
+
+        ::
+
+            decap()
+
+        Example::
+
+            actions += [parser.NXActionDecap()]
+        """
+        _subtype = nicira_ext.NXAST_RAW_DECAP
+
+        _fmt_str = '!2x'
+
+        def __init__(self,
+                     type_=None, len_=None, vendor=None, subtype=None):
+            super(NXActionDecap, self).__init__()
+
+        @classmethod
+        def parser(cls, buf):
+            return cls()
+
+        def serialize_body(self):
+            data = bytearray()
+            msg_pack_into(self._fmt_str, data, 0)
+            return data
+
+
 
     class NXActionDecNshTtl(NXAction):
         """
@@ -3157,6 +3194,7 @@ def generate(ofp_name, ofpp_name):
         'NXFlowSpecOutput',
         'NXActionEncapNsh',
         'NXActionEncapEther',
+        'NXActionDecap',
         'NXActionDecNshTtl',
     ]
     vars = locals()
