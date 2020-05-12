@@ -5,20 +5,8 @@ How to Get Your Change Into Ryu
 Submitting a change
 ===================
 
-Send patches to ryu-devel@lists.sourceforge.net. Please don't use "Pull
-Request" on GitHub. We expect you to send patches in "git-format-patch"
-style.
-
-.. code-block:: bash
-
-  # "N" means the number of commits to be included
-  $ git format-patch -s HEAD~N
-
-  # To add cover (e.g., [PATCH 0/X]), specify "--cover-letter" option
-  $ git format-patch -s --cover-letter HEAD~N
-
-  # You can send patches by "git send-email" command
-  $ git send-email --to="ryu-devel@lists.sourceforge.net" *.patch
+To send patches to ryu, please make a
+`pull request <https://github.com/faucetsdn/ryu>`_ on GitHub.
 
 Please check your changes with autopep8, pycodestyle(pep8) and running
 unit tests to make sure that they don't break the existing features.
@@ -42,7 +30,7 @@ features (it's not a must though).
 
 Python version and libraries
 ============================
-* Python 2.7, 3.4, 3.5:
+* Python 2.7, 3.5, 3.6, 3.7:
 
   Ryu supports multiple Python version.  CI tests on Travis-CI is running
   on these versions.
