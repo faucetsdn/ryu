@@ -14,7 +14,7 @@ Using Ryu Network Operating System with OpenStack as OpenFlow controller
 Ryu cooperates with OpenStack using Quantum Ryu plugin. The plugin is
 available in the official Quantum releases.
 
-For more information, please visit http://github.com/osrg/ryu/wiki/OpenStack .
+For more information, please visit https://github.com/faucetsdn/ryu/wiki/OpenStack .
 We described instructions of the installation / configuration of OpenStack
 with Ryu, and we provide pre-configured VM image to be able to easily try
 OpenStack with Ryu.

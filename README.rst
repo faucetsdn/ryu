@@ -20,7 +20,7 @@ Installing Ryu is quite easy::
 
 If you prefer to install Ryu from the source code::
 
-   % git clone git://github.com/osrg/ryu.git
+   % git clone https://github.com/faucetsdn/ryu.git
    % cd ryu; pip install .
 
 If you want to write your Ryu application, have a look at
@@ -59,7 +59,7 @@ On Ubuntu(16.04 LTS or later)::
 
 Support
 =======
-Ryu Official site is `<http://osrg.github.io/ryu/>`_.
+Ryu Official site is `<https://ryu-sdn.org/>`_.
 
 If you have any
 questions, suggestions, and patches, the mailing list is available at
