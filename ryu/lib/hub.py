@@ -39,7 +39,7 @@ if HUB_TYPE == 'eventlet':
     import eventlet.wsgi
     from eventlet import websocket
     import greenlet
-    import ssl
+    from eventlet.green.OpenSSL import SSL
     import socket
     import traceback
     import sys
@@ -127,24 +127,23 @@ if HUB_TYPE == 'eventlet':
                 self.server = eventlet.listen(listen_info)
 
             if ssl_args:
-                ssl_args.setdefault('server_side', True)
-                if 'ssl_ctx' in ssl_args:
-                    ctx = ssl_args.pop('ssl_ctx')
-                    ctx.load_cert_chain(ssl_args.pop('certfile'),
-                                        ssl_args.pop('keyfile'))
-                    if 'cert_reqs' in ssl_args:
-                        ctx.verify_mode = ssl_args.pop('cert_reqs')
-                    if 'ca_certs' in ssl_args:
-                        ctx.load_verify_locations(ssl_args.pop('ca_certs'))
-                    def wrap_and_handle_ctx(sock, addr):
-                        handle(ctx.wrap_socket(sock, **ssl_args), addr)
-                    self.handle = wrap_and_handle_ctx
-                else:
-                    def wrap_and_handle_ssl(sock, addr):
-                        handle(ssl.wrap_socket(sock, **ssl_args), addr)
-                    self.handle = wrap_and_handle_ssl
-            else:
-                self.handle = handle
+                ssl_ctx = SSL.Context(SSL.SSLv23_METHOD)
+                ssl_ctx.set_options(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 |
+                                    SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 |
+                                    SSL.OP_CIPHER_SERVER_PREFERENCE)
+                # TODO: Set ciphers
+
+                ssl_ctx.use_privatekey_file(ssl_args.pop('keyfile'))
+                ssl_ctx.use_certificate_file(ssl_args.pop('certfile'))
+                if 'cert_reqs' in ssl_args:
+                    ssl_ctx.set_verify(ssl_args.pop('cert_reqs'))
+                if 'ca_certs' in ssl_args:
+                    ssl_ctx.load_verify_locations(ssl_args.pop('ca_certs'))
+
+                def wrap_and_handle_ctx(sock, addr):
+                    handle(SSL.Connection(ssl_ctx, sock), addr)
+
+                self.handle = wrap_and_handle_ctx
 
         def serve_forever(self):
             while True:
