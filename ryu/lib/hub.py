@@ -168,9 +168,6 @@ if HUB_TYPE == 'eventlet':
             except socket.error:
                 return None
 
-            if self.ssl_args:
-                client = ssl.wrap_socket(client, **self.ssl_args)
-
             return client
 
         def connect_loop(self, handle, interval):
