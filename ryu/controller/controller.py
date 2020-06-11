@@ -68,6 +68,7 @@ CONF.register_cli_opts([
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
     cfg.StrOpt('ctl-cert', default=None, help='controller certificate'),
     cfg.StrOpt('ca-certs', default=None, help='CA certificates'),
+    cfg.StrOpt('ciphers', default=None, help='list of ciphers to enable'),
     cfg.ListOpt('ofp-switch-address-list', item_type=str, default=[],
                 help='list of IP address and port pairs (default empty). '
                      'e.g., "127.0.0.1:6653,[::1]:6653"'),
@@ -188,6 +189,9 @@ class OpenFlowController(object):
                 ssl_args = {'ssl_ctx': ssl.SSLContext(getattr(ssl, p))}
                 # Restrict non-safe versions
                 ssl_args['ssl_ctx'].options |= ssl.OP_NO_SSLv3 | ssl.OP_NO_SSLv2
+
+            if CONF.ciphers is not None:
+                ssl_args['ciphers'] = CONF.ciphers
 
             if CONF.ca_certs is not None:
                 server = StreamServer((CONF.ofp_listen_host,
