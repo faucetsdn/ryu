@@ -30,6 +30,7 @@ from socket import TCP_NODELAY
 from socket import SHUT_WR
 from socket import timeout as SocketTimeout
 import ssl
+import sys
 
 from ryu import cfg
 from ryu.lib import hub
@@ -168,6 +169,12 @@ class OpenFlowController(object):
             if not hasattr(ssl, 'SSLContext'):
                 # anything less than python 2.7.9 supports only TLSv1
                 # or less, thus we choose TLSv1
+                ssl_args = {'ssl_version': ssl.PROTOCOL_TLSv1}
+            elif sys.version_info >= (3, 7,):
+                # On Python3.7+ we can't wrap an SSLContext due to this bug:
+                # https://github.com/eventlet/eventlet/issues/526
+                # Lets assume the system has a new enough OpenSSL that
+                # SSL is fully disabled.
                 ssl_args = {'ssl_version': ssl.PROTOCOL_TLSv1}
             else:
                 # from 2.7.9 and versions 3.4+ ssl context creation is
