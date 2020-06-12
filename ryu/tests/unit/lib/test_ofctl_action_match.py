@@ -413,7 +413,7 @@ class Test_ofctl(unittest.TestCase):
                 # without mask
                 eq_(eth, field_value)
             return
-        elif key in['nw_src', 'nw_dst', 'arp_spa', 'arp_tpa']:
+        elif key in ['nw_src', 'nw_dst', 'arp_spa', 'arp_tpa']:
             # IPv4 address
             if test.ver == ofproto_v1_0.OFP_VERSION:
                 ipv4, mask = _to_match_ip(value)
