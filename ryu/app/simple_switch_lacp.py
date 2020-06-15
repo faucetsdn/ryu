@@ -72,7 +72,7 @@ class SimpleSwitchLacp(app_manager.RyuApp):
         ofproto = datapath.ofproto
 
         (dst_, src_, _eth_type) = struct.unpack_from(
-            '!6s6sH', buffer(msg.data), 0)
+            '!6s6sH', bytes(msg.data), 0)
         src = addrconv.mac.bin_to_text(src_)
         dst = addrconv.mac.bin_to_text(dst_)
 

@@ -225,7 +225,7 @@ class MsgBase(StringifyMixin):
         self.xid = xid
 
     def set_buf(self, buf):
-        self.buf = buffer(buf)
+        self.buf = bytes(buf)
 
     def __str__(self):
         def hexify(x):

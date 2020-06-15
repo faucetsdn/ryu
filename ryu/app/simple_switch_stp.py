@@ -82,7 +82,7 @@ class SimpleSwitchStp(app_manager.RyuApp):
         datapath = msg.datapath
         ofproto = datapath.ofproto
 
-        dst, src, _eth_type = struct.unpack_from('!6s6sH', buffer(msg.data), 0)
+        dst, src, _eth_type = struct.unpack_from('!6s6sH', bytes(msg.data), 0)
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
