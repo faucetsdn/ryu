@@ -1048,9 +1048,10 @@ class OFPFlowMod(MsgBase):
 
         instructions = []
         while offset < msg_len:
-            i = OFPInstruction.parser(buf, offset)
-            instructions.append(i)
-            offset += i.len
+            inst = OFPInstruction.parser(buf, offset)
+            if inst:
+                instructions.append(inst)
+                offset += inst.len
         msg.instructions = instructions
 
         return msg
@@ -1071,6 +1072,10 @@ class OFPInstruction(StringifyMixin):
     def parser(cls, buf, offset):
         (type_, len_) = struct.unpack_from('!HH', buf, offset)
         cls_ = cls._INSTRUCTION_TYPES.get(type_)
+
+        if not cls_:
+            return None
+
         return cls_.parser(buf, offset)
 
 
@@ -2021,6 +2026,9 @@ class OFPStatsReply(MsgBase):
             ofproto.OFP_HEADER_SIZE)
         stats_type_cls = cls._STATS_TYPES.get(msg.type)
 
+        if not stats_type_cls:
+            return None
+
         offset = ofproto.OFP_STATS_REPLY_SIZE
         body = []
         while offset < msg_len:
@@ -2278,9 +2286,11 @@ class OFPFlowStats(StringifyMixin):
         instructions = []
         while inst_length > 0:
             inst = OFPInstruction.parser(buf, offset)
-            instructions.append(inst)
-            offset += inst.len
-            inst_length -= inst.len
+
+            if inst:
+                instructions.append(inst)
+                offset += inst.len
+                inst_length -= inst.len
 
         o = cls(table_id, duration_sec, duration_nsec, priority,
                 idle_timeout, hard_timeout, cookie, packet_count,
@@ -3080,6 +3090,10 @@ class OFPQueueProp(OFPQueuePropHeader):
             ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR,
             buf, offset)
         cls_ = cls._QUEUE_PROP_PROPERTIES.get(property_)
+
+        if not cls_:
+            return None
+
         offset += ofproto.OFP_QUEUE_PROP_HEADER_SIZE
         return cls_.parser(buf, offset)
 
@@ -3101,9 +3115,11 @@ class OFPPacketQueue(StringifyMixin):
         properties = []
         while length < len_:
             queue_prop = OFPQueueProp.parser(buf, offset)
-            properties.append(queue_prop)
-            offset += queue_prop.len
-            length += queue_prop.len
+
+            if queue_prop:
+                properties.append(queue_prop)
+                offset += queue_prop.len
+                length += queue_prop.len
         o = cls(queue_id, port, properties)
         o.len = len_
         return o
@@ -4569,7 +4585,7 @@ class MTIPv6(object):
             return cls(header, list(value))
 
     def serialize(self, buf, offset):
-        self.putv6(buf, offset, self.value, self.mask)
+        self.putv6(buf, offset, self.value, self.mask)  # pytype: disable=attribute-error
 
 
 @OFPMatchField.register_field_header([ofproto.OXM_OF_IPV6_SRC,

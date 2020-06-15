@@ -87,6 +87,8 @@ OFPXMC_EXPERIMENTER = 0xffff
 
 
 class _OxmClass(object):
+    _class = None
+
     def __init__(self, name, num, type_):
         self.name = name
         self.oxm_field = num
@@ -107,6 +109,7 @@ class PacketRegs(_OxmClass):
 
 class _Experimenter(_OxmClass):
     _class = OFPXMC_EXPERIMENTER
+    experimenter_id = None
 
     def __init__(self, name, num, type_):
         super(_Experimenter, self).__init__(name, num, type_)

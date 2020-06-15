@@ -173,15 +173,15 @@ class gre(packet_base.PacketBase):
             # the value of the checksum field is zero.
             # Also, because Reserved1 is always 0x00 of 2 bytes,
             # Set in conjunction with checksum.
-            optional += b'\x00' * self._CHECKSUM_LEN
+            optional += bytearray(b'\x00' * self._CHECKSUM_LEN)
 
         if self._key is not None:
             present |= GRE_KEY_FLG
-            optional += struct.pack(self._KEY_PACK_STR, self._key)
+            optional += bytearray(struct.pack(self._KEY_PACK_STR, self._key))
 
         if self.seq_number is not None:
             present |= GRE_SEQUENCE_NUM_FLG
-            optional += struct.pack(self._SEQNUM_PACK_STR, self.seq_number)
+            optional += bytearray(struct.pack(self._SEQNUM_PACK_STR, self.seq_number))
 
         msg_pack_into(self._PACK_STR, hdr, 0, present, self.version,
                       self.protocol)

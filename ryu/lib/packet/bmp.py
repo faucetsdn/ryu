@@ -684,7 +684,7 @@ class BMPInitiation(BMPMessage):
                 value = v['value']
 
             v['len'] = len(value)
-            msg += struct.pack(self._TLV_PACK_STR, v['type'], v['len'])
+            msg += bytearray(struct.pack(self._TLV_PACK_STR, v['type'], v['len']))
             msg += value
 
         return msg
@@ -748,7 +748,7 @@ class BMPTermination(BMPMessage):
             elif v['type'] == BMP_TERM_TYPE_REASON:
                 value = struct.pack('!H', v['value'])
             v['len'] = len(value)
-            msg += struct.pack(self._TLV_PACK_STR, v['type'], v['len'])
+            msg += bytearray(struct.pack(self._TLV_PACK_STR, v['type'], v['len']))
             msg += value
 
         return msg

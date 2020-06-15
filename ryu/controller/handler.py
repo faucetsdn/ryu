@@ -149,6 +149,9 @@ def register_service(service):
     there are applications consuming OFP events.
     """
     frame = inspect.currentframe()
-    m_name = frame.f_back.f_globals['__name__']
-    m = sys.modules[m_name]
-    m._SERVICE_NAME = service
+    if frame:
+        m_name = frame.f_back.f_globals['__name__']
+        m = sys.modules[m_name]
+        m._SERVICE_NAME = service
+    else:
+        LOG.error('error registering service %s', service)

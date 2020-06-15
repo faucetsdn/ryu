@@ -75,7 +75,8 @@ OFPXSC_EXP_HEADER_PACK_STR = '!I'
 
 
 class _OxsClass(object):
-    # _class = OFPXSC_* must be an attribute of subclass.
+    _class = None  # _class = OFPXSC_* must be an attribute of subclass.
+
     def __init__(self, name, num, type_):
         self.name = name
         self.oxs_field = num
@@ -93,7 +94,7 @@ class OpenFlowBasic(_OxsClass):
 
 class _Experimenter(_OxsClass):
     _class = OFPXSC_EXPERIMENTER
-    # experimenter_id must be an attribute of subclass.
+    experimenter_id = None  # experimenter_id must be an attribute of subclass.
 
     def __init__(self, name, num, type_):
         super(_Experimenter, self).__init__(name, num, type_)

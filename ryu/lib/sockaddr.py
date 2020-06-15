@@ -54,7 +54,7 @@ def _hdr(ss_len, af):
 
 def _pad_to(data, total_len):
     pad_len = total_len - len(data)
-    return data + pad_len * '\0'
+    return data + pad_len * b'\0'
 
 
 def sa_in4(addr, port=0):

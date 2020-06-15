@@ -819,7 +819,7 @@ class OFPActionVendor(OFPAction):
                     ): offset + len_]
 
         if vendor == ofproto_common.NX_EXPERIMENTER_ID:
-            obj = NXAction.parse(data)  # noqa
+            obj = NXAction.parse(data)  # noqa  # pytype: disable=name-error
         else:
             cls_ = cls._ACTION_VENDORS.get(vendor, None)
 
@@ -2137,6 +2137,10 @@ class OFPStatsReply(MsgBase):
                                           six.binary_type(buf),
                                           ofproto.OFP_HEADER_SIZE)
         stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
+
+        if not stats_type_cls:
+            return None
+
         msg = stats_type_cls.parser_stats(
             datapath, version, msg_type, msg_len, xid, buf)
         msg.type = type_

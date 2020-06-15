@@ -170,7 +170,8 @@ class PathDetailView(OperatorDetailView):
         ret['origin'] = origin.value if origin else None
         ret['metric'] = metric.value if metric else None
         ret['local_pref'] = local_pref.value if local_pref else None
-        ext = ret['pathattr_map'].get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
+        if ret['pathattr_map']:
+            ext = ret['pathattr_map'].get(BGP_ATTR_TYPE_EXTENDED_COMMUNITIES)
         del ret['pathattr_map']
         if ext:
             ret['rt_list'] = ext.rt_list

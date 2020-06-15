@@ -46,9 +46,10 @@ class PeerManager(object):
     def remove_peer(self, neigh_conf):
         neigh_ip_address = neigh_conf.ip_address
         peer = self._peers.get(neigh_ip_address)
-        peer.stop()
-        del self._peers[neigh_ip_address]
-        self._core_service.on_peer_removed(peer)
+        if peer:
+            peer.stop()
+            del self._peers[neigh_ip_address]
+            self._core_service.on_peer_removed(peer)
 
     def get_by_addr(self, addr):
         return self._peers.get(str(netaddr.IPAddress(addr)))

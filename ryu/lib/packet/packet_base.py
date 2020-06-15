@@ -22,6 +22,7 @@ from ryu.lib import stringify
 class PacketBase(stringify.StringifyMixin):
     """A base class for a protocol (ethernet, ipv4, ...) header."""
     _TYPES = {}
+    _MIN_LEN = None
 
     @classmethod
     def get_packet_type(cls, type_):

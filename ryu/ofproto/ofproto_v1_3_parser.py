@@ -3551,7 +3551,7 @@ class OFPActionExperimenter(OFPAction):
         data = buf[(offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
                     ): offset + len_]
         if experimenter == ofproto_common.NX_EXPERIMENTER_ID:
-            obj = NXAction.parse(data)  # noqa
+            obj = NXAction.parse(data)  # noqa  # pytype: disable=name-error
         else:
             obj = OFPActionExperimenterUnknown(experimenter, data)
         obj.len = len_

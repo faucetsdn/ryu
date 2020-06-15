@@ -112,7 +112,7 @@ class geneve(packet_base.PacketBase):
         return (struct.pack(self._HEADER_FMT,
                             (self.version << 6) | opt_len,
                             self.flags, self.protocol, self.vni << 8)
-                + tunnel_options)
+                + bytes(tunnel_options))
 
 
 class Option(stringify.StringifyMixin, type_desc.TypeDisp):

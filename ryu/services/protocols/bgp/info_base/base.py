@@ -227,6 +227,7 @@ class NonVrfPathProcessingMixin(object):
     def __init__(self):
         self._core_service = None  # not assigned yet
         self._known_path_list = []
+        self._sent_routes = {}
 
     def _best_path_lost(self):
         self._best_path = None
