@@ -26,7 +26,7 @@ from ryu import cfg
 
 import logging
 from ryu import log
-log.early_init_log(logging.DEBUG)
+log.early_init_log(logging.WARNING)
 
 from ryu import flags
 from ryu import version
