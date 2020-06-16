@@ -71,7 +71,7 @@ the ports.
            actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD)]
 
            data = None
-           if msg.buffer_id == ofp.OFP_NO_BUFFER
+           if msg.buffer_id == ofp.OFP_NO_BUFFER:
                 data = msg.data
 
            out = ofp_parser.OFPPacketOut(
