@@ -31,6 +31,7 @@ from socket import SHUT_WR
 from socket import timeout as SocketTimeout
 import ssl
 import sys
+import requests
 
 from ryu import cfg
 from ryu.lib import hub
@@ -49,6 +50,7 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, DEAD_DISPATCHER
 
 from ryu.lib.dpid import dpid_to_str
 from ryu.lib import ip
+
 
 LOG = logging.getLogger('ryu.controller.controller')
 
@@ -447,6 +449,12 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
+        #Dump msg into json
+        msg_dict = msg.to_jsondict()
+        payload = json.dumps(msg_dict)
+        # Send as payload to http dummy url
+        #headers = {'content-type': 'application/json'}
+        #op_http = requests.post('http://localhost:5000/tasks', data=json.dumps(payload), headers=headers)
         # LOG.debug('send_msg %s', msg)
         return self.send(msg.buf, close_socket=close_socket)
 
