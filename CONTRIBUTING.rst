@@ -30,7 +30,7 @@ features (it's not a must though).
 
 Python version and libraries
 ============================
-* Python 3.5, 3.6, 3.7, 3.8:
+* Python 3.5, 3.6, 3.7, 3.8, 3.9:
 
   Ryu supports multiple Python versions.  CI tests on GitHub Actions is running
   on these versions.
