@@ -101,7 +101,7 @@ class RpcSession(Activity):
     def __init__(self, sock, outgoing_msg_sink_iter):
         self.peer_name = str(sock.getpeername())
         super(RpcSession, self).__init__(self.NAME_FMT % self.peer_name)
-        self._packer = msgpack.Packer(encoding='utf-8')
+        self._packer = msgpack.Packer(encoding='utf-8', use_bin_type=True)
         self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
         self._socket = sock
