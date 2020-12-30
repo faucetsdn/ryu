@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9.0.0), python-all (>= 2.6), python-sphinx
 Build-Depends-Indep:
  python-eventlet,
  python-lxml,
- python-msgpack (>= 0.4.0), python-msgpack (< 1.0.0),
+ python-msgpack (>= 0.4.0),
  python-netaddr,
  python-oslo.config (>= 1:1.2.0),
  python-paramiko,
@@ -28,7 +28,7 @@ Section: python
 Depends:
  python-eventlet,
  python-lxml,
- python-msgpack (>= 0.4.0), python-msgpack (< 1.0.0),
+ python-msgpack (>= 0.4.0),
  python-netaddr,
  python-oslo.config (>= 1:1.2.0),
  python-paramiko,
