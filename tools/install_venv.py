@@ -70,29 +70,29 @@ def check_dependencies():
     if not HAS_VIRTUALENV:
         raise Exception('Virtualenv not found. ' + \
                          'Try installing python-virtualenv')
-    print 'done.'
+    print('done.')  # pylint: disable=print-statement
 
 
 def create_virtualenv(venv=VENV, install_pip=False):
     """Creates the virtual environment and installs PIP only into the
     virtual environment
     """
-    print 'Creating venv...',
+    print('Creating venv...')  # pylint: disable=print-statement
 
     install = ['virtualenv', '-q', venv]
     run_command(install)
 
-    print 'done.'
-    print 'Installing pip in virtualenv...',
+    print('done.')  # pylint: disable=print-statement
+    print('Installing pip in virtualenv...')  # pylint: disable=print-statement
     if install_pip and \
             not run_command(['tools/with_venv.sh', 'easy_install',
                              'pip>1.0']):
         die("Failed to install pip.")
-    print 'done.'
+    print('done.')  # pylint: disable=print-statement
 
 
 def install_dependencies(venv=VENV):
-    print 'Installing dependencies with pip (this can take a while)...'
+    print('Installing dependencies with pip (this can take a while)...')  # pylint: disable=print-statement
     run_command(['tools/with_venv.sh', 'pip', 'install', '-r',
                  PIP_REQUIRES], redirect_output=False)
     run_command(['tools/with_venv.sh', 'pip', 'install', '-r',
@@ -126,7 +126,7 @@ def print_help():
 
  Also, make test will automatically use the virtualenv.
     """
-    print help
+    print(help)  # pylint: disable=print-statement
 
 
 def main(argv):
