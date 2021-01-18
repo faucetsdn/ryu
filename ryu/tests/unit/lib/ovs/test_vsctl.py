@@ -35,7 +35,7 @@ LOG = logging.getLogger(__name__)
 DOCKER_IMAGE_MININET = 'osrg/ryu-book'
 
 OVSDB_MANAGER_ADDR = 'ptcp:6640'
-OVSDB_SWITCH_ADDR = 'tcp:%s:6640'
+OVSDB_SWITCH_ADDR = 'tcp:0.0.0.0:6640'
 
 
 def setUpModule():
@@ -93,7 +93,7 @@ class TestVSCtl(unittest.TestCase):
 
     @classmethod
     def _docker_run(cls, image):
-        return _run('docker run --privileged -t -d %s' % image)[0]
+        return _run('docker run --privileged -t -d -p 6640:6640 %s' % image)[0]
 
     @classmethod
     def _docker_stop(cls, container):
@@ -124,7 +124,7 @@ class TestVSCtl(unittest.TestCase):
 
     @classmethod
     def _set_up_vsctl(cls):
-        cls.vsctl = vsctl.VSCtl(OVSDB_SWITCH_ADDR % cls.container_mn_ip)
+        cls.vsctl = vsctl.VSCtl(OVSDB_SWITCH_ADDR)
 
     @classmethod
     def setUpClass(cls):
