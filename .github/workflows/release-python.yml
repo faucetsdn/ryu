@@ -1,0 +1,25 @@
+name: Build python packages for release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  python-package:
+    name: "Build and publish python packages"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Set up python-3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Build python package
+        run: python3 setup.py sdist
+      - name: Publish python package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PASSWORD }}
