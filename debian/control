@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9.0.0), python-all (>= 2.6), python-sphinx
 Build-Depends-Indep:
  python-eventlet,
  python-lxml,
- python-msgpack (>= 0.3.0),
+ python-msgpack (>= 0.4.0),
  python-netaddr,
  python-oslo.config (>= 1:1.2.0),
  python-paramiko,
@@ -17,9 +17,9 @@ Build-Depends-Indep:
  python-pip,
  python-pbr
 Standards-Version: 3.9.5
-Homepage: http://osrg.github.io/ryu/
-Vcs-Git: git://github.com/osrg/ryu.git
-Vcs-Browser: http://github.com/osrg/ryu
+Homepage: https://ryu-sdn.org
+Vcs-Git: git://github.com/faucetsdn/ryu.git
+Vcs-Browser: https://github.com/faucetsdn/ryu
 XS-Python-Version: >= 2.6
 
 Package: python-ryu
@@ -28,7 +28,7 @@ Section: python
 Depends:
  python-eventlet,
  python-lxml,
- python-msgpack (>= 0.3.0),
+ python-msgpack (>= 0.4.0),
  python-netaddr,
  python-oslo.config (>= 1:1.2.0),
  python-paramiko,
