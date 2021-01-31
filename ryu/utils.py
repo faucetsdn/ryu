@@ -126,34 +126,3 @@ def binary_str(data):
     """
     # convert data into bytearray explicitly
     return ''.join('\\x%02x' % byte for byte in bytearray(data))
-
-
-def parse_requirements(requirements_files=None):
-    """
-    Parses requirements files and returns a list of requirements.
-
-    Returned list would be like::
-
-        ['foo', 'bar>=X.X', ...]
-
-    :param requirements_files: List of requirements files. The default
-     is ['requirements.txt', 'tools/pip-requires'].
-    :return: List of requirements.
-    """
-    from pip import req as pip_req
-    from pip.download import PipSession
-
-    requirements_files = requirements_files or [
-        'requirements.txt',
-        'tools/pip-requires',
-    ]
-
-    requirements = []
-    for f in requirements_files:
-        if not os.path.isfile(f):
-            continue
-
-        for r in pip_req.parse_requirements(f, session=PipSession()):
-            requirements.append(str(r.req))
-
-    return requirements

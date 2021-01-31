@@ -132,6 +132,10 @@ class NiciraExperimenter(_Experimenter):
     experimenter_id = ofproto_common.NX_EXPERIMENTER_ID
 
 
+class NiciraNshExperimenter(_Experimenter):
+    experimenter_id = ofproto_common.NX_NSH_EXPERIMENTER_ID
+
+
 class NiciraExtended0(_OxmClass):
     """Nicira Extended Match (NXM_0)
 

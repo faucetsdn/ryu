@@ -14,7 +14,103 @@
 # limitations under the License.
 
 """
-  Defines bases classes to create a BGP application.
+This module provides a convenient application for using Ryu BGPSpeaker and for
+writing your BGP application.
+
+It reads a configuration file which includes settings for neighbors, routes
+and some others.
+Please refer to ``ryu/services/protocols/bgp/bgp_sample_conf.py`` for the
+sample configuration.
+
+Usage Example::
+
+    $ ryu-manager ryu/services/protocols/bgp/application.py \\
+        --bgp-app-config-file ryu/services/protocols/bgp/bgp_sample_conf.py
+
+SSH Console
+===========
+
+You can also use the SSH console and see the RIB and do some operations from
+this console.
+The SSH port and username/password can be configured by the configuration file.
+You can check the help by hitting '?' key in this interface.
+
+Example::
+
+    $ ssh localhost -p 4990
+
+    Hello, this is Ryu BGP speaker (version 4.19).
+
+    bgpd> # Hit '?' key
+     clear - allows to reset BGP connections
+     help - show this help
+     quit - exit this session
+     set - set runtime settings
+     show - shows runtime state information
+    bgpd>
+    bgpd> show rib all
+    Status codes: * valid, > best
+    Origin codes: i - IGP, e - EGP, ? - incomplete
+         Network        Labels   Next Hop   Reason      Metric LocPrf Path
+     *>  10.10.1.0/24   None     0.0.0.0    Only Path                 i
+    bgpd>
+
+Integration with Other Applications
+===================================
+
+``ryu.services.protocols.bgp.application.RyuBGPSpeaker`` will notifies the
+following events to other Ryu applications.
+
+    - ``EventBestPathChanged``
+    - ``EventAdjRibInChanged``
+    - ``EventPeerDown``
+    - ``EventPeerUp``
+
+To catch these events, specify ``@set_ev_cls()`` decorator to the event
+handlers in the Ryu applications.
+
+Example Application::
+
+    # my_bgp_app.py
+
+    from ryu.base import app_manager
+    from ryu.controller.handler import set_ev_cls
+    from ryu.services.protocols.bgp import application as bgp_application
+
+
+    class MyBGPApp(app_manager.RyuApp):
+        _CONTEXTS = {
+            'ryubgpspeaker': bgp_application.RyuBGPSpeaker,
+        }
+
+        def __init__(self, *args, **kwargs):
+            super(MyBGPApp, self).__init__(*args, **kwargs)
+
+            # Stores "ryu.services.protocols.bgp.application.RyuBGPSpeaker"
+            # instance in order to call the APIs of
+            # "ryu.services.protocols.bgp.bgpspeaker.BGPSpeaker" via
+            # "self.app.speaker".
+            # Please note at this time, "BGPSpeaker" is NOT instantiated yet.
+            self.app = kwargs['ryubgpspeaker']
+
+        @set_ev_cls(bgp_application.EventBestPathChanged)
+        def _best_patch_changed_handler(self, ev):
+            self.logger.info(
+                'Best path changed: is_withdraw=%s, path=%s',
+                ev.is_withdraw, ev.path)
+
+Usage Example::
+
+    $ ryu-manager my_bgp_app.py \\
+        --bgp-app-config-file ryu/services/protocols/bgp/bgp_sample_conf.py
+
+.. note::
+
+    For the APIs for ``ryu.services.protocols.bgp.bgpspeaker.BGPSpeaker``,
+    please refer to :doc:`../library_bgp_speaker_ref`.
+
+API Reference
+=============
 """
 
 import logging
@@ -101,6 +197,33 @@ class EventBestPathChanged(EventBase):
         self.is_withdraw = is_withdraw
 
 
+class EventAdjRibInChanged(EventBase):
+    """
+    Event called when any adj-RIB-in path is changed due to UPDATE messages
+    or remote peer's down.
+
+    This event is the wrapper for ``adj_rib_in_change_handler`` of
+    ``bgpspeaker.BGPSpeaker``.
+
+    ``path`` attribute contains an instance of ``info_base.base.Path``
+    subclasses.
+
+    If ``is_withdraw`` attribute is ``True``, ``path`` attribute has the
+    information of the withdraw route.
+
+    ``peer_ip`` is the peer's IP address who sent this path.
+
+    ``peer_as`` is the peer's AS number who sent this path.
+    """
+
+    def __init__(self, path, is_withdraw, peer_ip, peer_as):
+        super(EventAdjRibInChanged, self).__init__()
+        self.path = path
+        self.is_withdraw = is_withdraw
+        self.peer_ip = peer_ip
+        self.peer_as = peer_as
+
+
 class EventPeerDown(EventBase):
     """
     Event called when the session to the remote peer goes down.
@@ -140,37 +263,10 @@ class EventPeerUp(EventBase):
 class RyuBGPSpeaker(RyuApp):
     """
     Base application for implementing BGP applications.
-
-    This application will notifies
-     - ``EventBestPathChanged``
-     - ``EventPeerDown``
-     - ``EventPeerUp``
-    to other BGP applications.
-    To catch these events, specify ``@set_ev_cls()`` decorator to the event
-    handlers in the Ryu applications.
-
-    Example::
-
-        ...
-        from ryu.base import app_manager
-        from ryu.controller.handler import set_ev_cls
-        from ryu.services.protocols.bgp import application as bgp_application
-        ...
-
-        class MyBGPApp(app_manager.RyuApp):
-            _CONTEXTS = {
-                'ryubgpspeaker': bgp_application.RyuBGPSpeaker,
-            }
-
-            ...
-            @set_ev_cls(bgp_application.EventBestPathChanged)
-            def _best_patch_changed_handler(self, ev):
-                self.logger.info(
-                    'Best path changed: is_withdraw=%s, path=%s',
-                    ev.is_withdraw, ev.path)
     """
     _EVENTS = [
         EventBestPathChanged,
+        EventAdjRibInChanged,
         EventPeerDown,
         EventPeerUp,
     ]
@@ -238,6 +334,8 @@ class RyuBGPSpeaker(RyuApp):
         settings.setdefault(
             'best_path_change_handler', self._notify_best_path_changed_event)
         settings.setdefault(
+            'adj_rib_in_change_handler', self._notify_adj_rib_in_changed_event)
+        settings.setdefault(
             'peer_down_handler', self._notify_peer_down_event)
         settings.setdefault(
             'peer_up_handler', self._notify_peer_up_event)
@@ -266,6 +364,10 @@ class RyuBGPSpeaker(RyuApp):
 
     def _notify_best_path_changed_event(self, ev):
         ev = EventBestPathChanged(ev.path, ev.is_withdraw)
+        self.send_event_to_observers(ev)
+
+    def _notify_adj_rib_in_changed_event(self, ev, peer_ip, peer_as):
+        ev = EventAdjRibInChanged(ev.path, ev.is_withdraw, peer_ip, peer_as)
         self.send_event_to_observers(ev)
 
     def _notify_peer_down_event(self, remote_ip, remote_as):

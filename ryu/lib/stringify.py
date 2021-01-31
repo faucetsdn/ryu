@@ -327,7 +327,7 @@ class StringifyMixin(object):
     @classmethod
     def from_jsondict(cls, dict_, decode_string=base64.b64decode,
                       **additional_args):
-        """Create an instance from a JSON style dict.
+        r"""Create an instance from a JSON style dict.
 
         Instantiate this class with parameters specified by the dict.
 

@@ -1147,13 +1147,13 @@ class Action(object):
         if REST_ACTION in flow:
             actions = []
             for act in flow[REST_ACTION]:
-                field_value = re.search('SET_FIELD: \{ip_dscp:(\d+)', act)
+                field_value = re.search(r'SET_FIELD: \{ip_dscp:(\d+)', act)
                 if field_value:
                     actions.append({REST_ACTION_MARK: field_value.group(1)})
-                meter_value = re.search('METER:(\d+)', act)
+                meter_value = re.search(r'METER:(\d+)', act)
                 if meter_value:
                     actions.append({REST_ACTION_METER: meter_value.group(1)})
-                queue_value = re.search('SET_QUEUE:(\d+)', act)
+                queue_value = re.search(r'SET_QUEUE:(\d+)', act)
                 if queue_value:
                     actions.append({REST_ACTION_QUEUE: queue_value.group(1)})
             action = {REST_ACTION: actions}

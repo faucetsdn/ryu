@@ -131,6 +131,13 @@ MESSAGES = [
                'importance=39032'] +
               ['dl_type=0x86dd'] +
               ['actions=ct(commit,nat(dst=2001:1::1-2001:1::ffff)'])},
+    {'name': 'action_ct_clear',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['table=3,',
+               'importance=39032'] +
+              ['dl_type=0x0800,ct_state=+trk'] +
+              ['actions=ct_clear'])},
     {'name': 'action_note',
      'versions': [4],
      'cmd': 'add-flow',
@@ -312,7 +319,7 @@ if __name__ == '__main__':
                                    stdout=subprocess.PIPE)
     has_names = False
     try:
-        ver_tuple = re.search('\s(\d+)\.(\d+)(\.\d*|\s*$)',
+        ver_tuple = re.search(r'\s(\d+)\.(\d+)(\.\d*|\s*$)',
                               ovs_version.stdout.readline().decode()).groups()
         if int(ver_tuple[0]) > 2 or \
            int(ver_tuple[0]) == 2 and int(ver_tuple[1]) >= 8:

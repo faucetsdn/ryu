@@ -165,10 +165,33 @@ class DPSet(app_manager.RyuApp):
     """
     DPSet application manages a set of switches (datapaths)
     connected to this controller.
+
+    Usage Example::
+
+        # ...(snip)...
+        from ryu.controller import dpset
+
+
+        class MyApp(app_manager.RyuApp):
+            _CONTEXTS = {
+                'dpset': dpset.DPSet,
+            }
+
+            def __init__(self, *args, **kwargs):
+                super(MyApp, self).__init__(*args, **kwargs)
+                # Stores DPSet instance to call its API in this app
+                self.dpset = kwargs['dpset']
+
+            def _my_handler(self):
+                # Get the datapath object which has the given dpid
+                dpid = 1
+                dp = self.dpset.get(dpid)
+                if dp is None:
+                    self.logger.info('No such datapath: dpid=%d', dpid)
     """
 
     def __init__(self, *args, **kwargs):
-        super(DPSet, self).__init__()
+        super(DPSet, self).__init__(*args, **kwargs)
         self.name = 'dpset'
 
         self.dps = {}   # datapath_id => class Datapath
@@ -238,9 +261,10 @@ class DPSet(app_manager.RyuApp):
         """
         This method returns a list of tuples which represents
         instances for switches connected to this controller.
-        The tuple consists of a Datapath Id and an instance of
+        The tuple consists of a Datapath ID and an instance of
         ryu.controller.controller.Datapath.
-        A return value looks like the following:
+
+        A return value looks like the following::
 
             [ (dpid_A, Datapath_A), (dpid_B, Datapath_B), ... ]
         """

@@ -60,12 +60,13 @@ class OFPHandler(ryu.base.app_manager.RyuApp):
         return hub.spawn(self.controller)
 
     def _hello_failed(self, datapath, error_desc):
-        self.logger.error(error_desc)
-        error_msg = datapath.ofproto_parser.OFPErrorMsg(datapath)
-        error_msg.type = datapath.ofproto.OFPET_HELLO_FAILED
-        error_msg.code = datapath.ofproto.OFPHFC_INCOMPATIBLE
-        error_msg.data = error_desc
-        datapath.send_msg(error_msg)
+        self.logger.error('%s on datapath %s', error_desc, datapath.address)
+        error_msg = datapath.ofproto_parser.OFPErrorMsg(
+            datapath=datapath,
+            type_=datapath.ofproto.OFPET_HELLO_FAILED,
+            code=datapath.ofproto.OFPHFC_INCOMPATIBLE,
+            data=error_desc)
+        datapath.send_msg(error_msg, close_socket=True)
 
     @set_ev_handler(ofp_event.EventOFPHello, HANDSHAKE_DISPATCHER)
     def hello_handler(self, ev):

@@ -138,13 +138,18 @@ class Test_rpc(unittest.TestCase):
         assert result == obj
         assert isinstance(result, numbers.Integral)
 
-    @raises(TypeError)
     def test_0_call_bytearray(self):
         c = rpc.Client(self._client_sock)
         obj = bytearray(b'foo')
-        result = c.call('resp', [obj])
-        assert result == obj
-        assert isinstance(result, str)
+        # Note: msgpack-python version 0.50 or later supports bytearray
+        # objects, here ignores TypeError for the backward compatibility.
+        try:
+            result = c.call('resp', [obj])
+        except TypeError:
+            # Case with msgpack-python version 0.4.x or earlier.
+            return
+        self.assertEqual(obj, result)
+        self.assertIsInstance(result, six.binary_type)
 
     def test_1_shutdown_wr(self):
         # test if the server shutdown on disconnect

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-slimmed down version of OVSBridge in quantum agent
+Wrapper utility library of :py:mod:`ryu.lib.ovs.vsctl`
 """
 
 import functools
@@ -92,6 +92,26 @@ class TunnelPort(object):
 
 
 class OVSBridge(object):
+    """
+    Class to provide wrapper utilities of :py:mod:`ryu.lib.ovs.vsctl.VSCtl`
+
+    ``CONF`` is a instance of ``oslo_config.cfg.ConfigOpts``.
+    Mostly ``self.CONF`` is sufficient to instantiate this class from your Ryu
+    application.
+
+    ``datapath_id`` specifies Datapath ID of the target OVS instance.
+
+    ``ovsdb_addr`` specifies the address of the OVS instance.
+    Automatically validated when you call ``init()`` method.
+    Refer to :py:mod:`ryu.lib.ovs.vsctl.valid_ovsdb_addr` for the format of
+    this address.
+
+    if ``timeout`` is omitted, ``CONF.ovsdb_timeout`` will be used as the
+    default value.
+
+    Usage of ``timeout`` and ``exception`` is the same with ``timeout_sec``
+    and ``exception`` of :py:mod:`ryu.lib.ovs.vsctl.VSCtl.run_command`.
+    """
 
     def __init__(self, CONF, datapath_id, ovsdb_addr, timeout=None,
                  exception=None):
@@ -105,9 +125,25 @@ class OVSBridge(object):
         self.br_name = None
 
     def run_command(self, commands):
+        """
+        Executes the given commands and sends OVSDB messages.
+
+        ``commands`` must be a list of
+        :py:mod:`ryu.lib.ovs.vsctl.VSCtlCommand`.
+
+        The given ``timeout`` and ``exception`` when instantiation will be used
+        to call :py:mod:`ryu.lib.ovs.vsctl.VSCtl.run_command`.
+        """
         self.vsctl.run_command(commands, self.timeout, self.exception)
 
     def init(self):
+        """
+        Validates the given ``ovsdb_addr`` and connects to OVS instance.
+
+        If failed to connect to OVS instance or the given ``datapath_id`` does
+        not match with the Datapath ID of the connected OVS instance, raises
+        :py:mod:`ryu.lib.ovs.bridge.OVSBridgeNotFound` exception.
+        """
         if not valid_ovsdb_addr(self.ovsdb_addr):
             raise ValueError('Invalid OVSDB address: %s' % self.ovsdb_addr)
         if self.br_name is None:
@@ -126,16 +162,38 @@ class OVSBridge(object):
         return command.result[0].name
 
     def get_controller(self):
+        """
+        Gets the configured OpenFlow controller address.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl get-controller <bridge>
+        """
         command = ovs_vsctl.VSCtlCommand('get-controller', [self.br_name])
         self.run_command([command])
-        return command.result[0]
+        result = command.result
+        return result[0] if len(result) == 1 else result
 
     def set_controller(self, controllers):
+        """
+        Sets the OpenFlow controller address.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl set-controller <bridge> <target>...
+        """
         command = ovs_vsctl.VSCtlCommand('set-controller', [self.br_name])
         command.args.extend(controllers)
         self.run_command([command])
 
     def del_controller(self):
+        """
+        Deletes the configured OpenFlow controller address.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl del-controller <bridge>
+        """
         command = ovs_vsctl.VSCtlCommand('del-controller', [self.br_name])
         self.run_command([command])
 
@@ -245,30 +303,72 @@ class OVSBridge(object):
         self.run_command([command])
 
     def db_get_val(self, table, record, column):
+        """
+        Gets values of 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl get TBL REC COL
+        """
         command = ovs_vsctl.VSCtlCommand('get', (table, record, column))
         self.run_command([command])
         assert len(command.result) == 1
         return command.result[0]
 
     def db_get_map(self, table, record, column):
+        """
+        Gets dict type value of 'column' in 'record' in 'table'.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl get TBL REC COL
+        """
         val = self.db_get_val(table, record, column)
         assert isinstance(val, dict)
         return val
 
     def get_datapath_id(self):
+        """
+        Gets Datapath ID of OVS instance.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl get Bridge <bridge> datapath_id
+        """
         return self.db_get_val('Bridge', self.br_name, 'datapath_id')
 
     def delete_port(self, port_name):
+        """
+        Deletes a port on the OVS instance.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl --if-exists del-port <bridge> <port>
+        """
         command = ovs_vsctl.VSCtlCommand(
             'del-port', (self.br_name, port_name), '--if-exists')
         self.run_command([command])
 
     def get_ofport(self, port_name):
+        """
+        Gets the OpenFlow port number.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl get Interface <port> ofport
+        """
         ofport_list = self.db_get_val('Interface', port_name, 'ofport')
         assert len(ofport_list) == 1
         return int(ofport_list[0])
 
     def get_port_name_list(self):
+        """
+        Gets a list of all ports on OVS instance.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl list-ports <bridge>
+        """
         command = ovs_vsctl.VSCtlCommand('list-ports', (self.br_name, ))
         self.run_command([command])
         return command.result
@@ -297,6 +397,16 @@ class OVSBridge(object):
 
     def add_tunnel_port(self, name, tunnel_type, remote_ip,
                         local_ip=None, key=None, ofport=None):
+        """
+        Creates a tunnel port.
+
+        :param name: Port name to be created
+        :param tunnel_type: Type of tunnel (gre or vxlan)
+        :param remote_ip: Remote IP address of tunnel
+        :param local_ip: Local IP address of tunnel
+        :param key: Key of GRE or VNI of VxLAN
+        :param ofport: Requested OpenFlow port number
+        """
         options = 'remote_ip=%(remote_ip)s' % locals()
         if key:
             options += ',key=%(key)s' % locals()
@@ -314,15 +424,32 @@ class OVSBridge(object):
 
     def add_gre_port(self, name, remote_ip,
                      local_ip=None, key=None, ofport=None):
+        """
+        Creates a GRE tunnel port.
+
+        See the description of ``add_tunnel_port()``.
+        """
         self.add_tunnel_port(name, 'gre', remote_ip,
                              local_ip=local_ip, key=key, ofport=ofport)
 
     def add_vxlan_port(self, name, remote_ip,
                        local_ip=None, key=None, ofport=None):
+        """
+        Creates a VxLAN tunnel port.
+
+        See the description of ``add_tunnel_port()``.
+        """
         self.add_tunnel_port(name, 'vxlan', remote_ip,
                              local_ip=local_ip, key=key, ofport=ofport)
 
     def del_port(self, port_name):
+        """
+        Deletes a port on OVS instance.
+
+        This method is corresponding to the following ovs-vsctl command::
+
+            $ ovs-vsctl del-port <bridge> <port>
+        """
         command = ovs_vsctl.VSCtlCommand('del-port', (self.br_name, port_name))
         self.run_command([command])
 
@@ -396,6 +523,9 @@ class OVSBridge(object):
         return None
 
     def set_qos(self, port_name, type='linux-htb', max_rate=None, queues=None):
+        """
+        Sets a Qos rule and creates Queues on the given port.
+        """
         queues = queues if queues else []
         command_qos = ovs_vsctl.VSCtlCommand(
             'set-qos',
@@ -409,6 +539,9 @@ class OVSBridge(object):
         return None
 
     def del_qos(self, port_name):
+        """
+        Deletes the Qos rule on the given port.
+        """
         command = ovs_vsctl.VSCtlCommand(
             'del-qos',
             [port_name])

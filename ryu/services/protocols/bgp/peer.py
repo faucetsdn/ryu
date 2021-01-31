@@ -989,37 +989,32 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
         elif self.is_route_server_client:
             nlri_list = [path.nlri]
             new_pathattr.extend(pathattr_map.values())
-        elif self.is_route_reflector_client:
-            nlri_list = [path.nlri]
+        else:
+            if self.is_route_reflector_client:
+                # Append ORIGINATOR_ID attribute if not already exist.
+                if BGP_ATTR_TYPE_ORIGINATOR_ID not in pathattr_map:
+                    originator_id = path.source
+                    if originator_id is None:
+                        originator_id = self._common_conf.router_id
+                    elif isinstance(path.source, Peer):
+                        originator_id = path.source.ip_address
+                    new_pathattr.append(
+                        BGPPathAttributeOriginatorId(value=originator_id))
 
-            # Append ORIGINATOR_ID attribute if not already exists.
-            if BGP_ATTR_TYPE_ORIGINATOR_ID not in pathattr_map:
-                originator_id = path.source
-                if originator_id is None:
-                    originator_id = self._common_conf.router_id
-                elif isinstance(path.source, Peer):
-                    originator_id = path.source.ip_address
-                new_pathattr.append(
-                    BGPPathAttributeOriginatorId(value=originator_id))
-
-            # Append CLUSTER_LIST attribute if not already exists.
-            if BGP_ATTR_TYPE_CLUSTER_LIST not in pathattr_map:
-                new_pathattr.append(
-                    BGPPathAttributeClusterList(
-                        [self._common_conf.cluster_id]))
-
-            for t, path_attr in pathattr_map.items():
-                if t == BGP_ATTR_TYPE_CLUSTER_LIST:
-                    # Append own CLUSTER_ID into CLUSTER_LIST attribute
-                    # if already exists.
-                    cluster_list = list(path_attr.value)
+                # Preppend own CLUSTER_ID into CLUSTER_LIST attribute if exist.
+                # Otherwise append CLUSTER_LIST attribute.
+                cluster_lst_attr = pathattr_map.get(BGP_ATTR_TYPE_CLUSTER_LIST)
+                if cluster_lst_attr:
+                    cluster_list = list(cluster_lst_attr.value)
                     if self._common_conf.cluster_id not in cluster_list:
-                        cluster_list.append(self._common_conf.cluster_id)
+                        cluster_list.insert(0, self._common_conf.cluster_id)
                     new_pathattr.append(
                         BGPPathAttributeClusterList(cluster_list))
                 else:
-                    new_pathattr.append(path_attr)
-        else:
+                    new_pathattr.append(
+                        BGPPathAttributeClusterList(
+                            [self._common_conf.cluster_id]))
+
             # Supported and un-supported/unknown attributes.
             origin_attr = None
             nexthop_attr = None
@@ -1288,7 +1283,7 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 else:
                     bind_addr = None
                 peer_address = (self._neigh_conf.ip_address,
-                                const.STD_BGP_SERVER_PORT_NUM)
+                                self._neigh_conf.port)
 
                 if bind_addr:
                     LOG.debug('%s trying to connect from'
@@ -2005,8 +2000,8 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
             # Open/Notification messages are currently handled by protocol and
             # nothing is done inside peer, so should not see them here.
             raise ValueError('Peer does not support handling of %s'
-                             ' message during % state' %
-                             (msg, self.state.bgp_state()))
+                             ' message during %s state' %
+                             (msg, self.state.bgp_state))
 
     def _handle_err_sor_msg(self, afi, safi):
         # Check if ERR capability is enabled for this peer.
