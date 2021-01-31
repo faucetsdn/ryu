@@ -101,8 +101,16 @@ class RpcSession(Activity):
     def __init__(self, sock, outgoing_msg_sink_iter):
         self.peer_name = str(sock.getpeername())
         super(RpcSession, self).__init__(self.NAME_FMT % self.peer_name)
-        self._packer = msgpack.Packer(encoding='utf-8')
-        self._unpacker = msgpack.Unpacker(encoding='utf-8')
+        if msgpack.version >= (1, 0, 0):
+            self._packer = msgpack.Packer()
+            # The strict_map_key=False option is required to use int keys in
+            # maps; it is disabled by default to prevent hash collision denial
+            # of service attacks (hashdos) in scenarios where an attacker can
+            # control the keys to be hashed.
+            self._unpacker = msgpack.Unpacker(strict_map_key=False)
+        else:
+            self._packer = msgpack.Packer(encoding='utf-8', use_bin_type=True)
+            self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
         self._socket = sock
         self._outgoing_msg_sink_iter = outgoing_msg_sink_iter
