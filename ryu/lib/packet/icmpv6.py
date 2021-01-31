@@ -623,6 +623,50 @@ class nd_option_pi(nd_option):
         return six.binary_type(hdr)
 
 
+@nd_router_advert.register_nd_option_type
+class nd_option_mtu(nd_option):
+    """ICMPv6 sub encoder/decoder class for Neighbor discovery
+    MTU Option. (RFC 4861)
+
+    This is used with ryu.lib.packet.icmpv6.nd_router_advert.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    mtu            MTU.
+    ============== ====================
+    """
+
+    _PACK_STR = '!BBHI'
+    _LEN = struct.calcsize(_PACK_STR)
+    _OPTION_LEN = _LEN // 8
+
+    @classmethod
+    def option_type(cls):
+        return ND_OPTION_MTU
+
+    def __init__(self, mtu=1500):
+        super(nd_option_mtu, self).__init__(self.option_type(), 0)
+        self.mtu = mtu
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (_, _, _, mtu) = struct.unpack_from(cls._PACK_STR, buf, offset)
+        msg = cls(mtu)
+        return msg
+
+    def serialize(self):
+        buf = bytearray(struct.pack(
+            self._PACK_STR, self.option_type(), self._OPTION_LEN, 0, self.mtu))
+        return six.binary_type(buf)
+
+
 @icmpv6.register_icmpv6_type(ICMPV6_ECHO_REPLY, ICMPV6_ECHO_REQUEST)
 class echo(_ICMPv6Payload):
     """ICMPv6 sub encoder/decoder class for Echo Request and Echo Reply

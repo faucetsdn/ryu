@@ -191,6 +191,7 @@ class TestOpenFlowController(unittest.TestCase):
         conf_mock.ofp_ssl_listen_port = port
         conf_mock.ofp_listen_host = "127.0.0.1"
         conf_mock.ca_certs = None
+        conf_mock.ciphers = None
         conf_mock.ctl_cert = os.path.join(this_dir, 'cert.crt')
         conf_mock.ctl_privkey = os.path.join(this_dir, 'cert.key')
         c = controller.OpenFlowController()

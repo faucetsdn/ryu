@@ -19,7 +19,7 @@ The test procedure
 * run LINC switch
 * run Ryu test_of_config app
 
-For getting/installing Ryu itself, please refer to http://osrg.github.io/ryu/
+For getting/installing Ryu itself, please refer to https://ryu-sdn.org/
 
 
 Install Erlang environment

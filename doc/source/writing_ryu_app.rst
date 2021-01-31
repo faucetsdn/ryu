@@ -118,9 +118,9 @@ run a Ryu application that does something useful.
 
 Is a dumb L2 switch is too dumb? You want to implement a learning L2
 switch? Move to `the next step
-<https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py>`_. You
+<https://github.com/faucetsdn/ryu/blob/master/ryu/app/simple_switch.py>`_. You
 can learn from the existing Ryu applications at `ryu/app
-<https://github.com/osrg/ryu/blob/master/ryu/app/>`_ directory and
+<https://github.com/faucetsdn/ryu/blob/master/ryu/app/>`_ directory and
 `integrated tests
-<https://github.com/osrg/ryu/blob/master/ryu/tests/integrated/>`_
+<https://github.com/faucetsdn/ryu/blob/master/ryu/tests/integrated/>`_
 directory.
