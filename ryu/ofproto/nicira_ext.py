@@ -62,6 +62,10 @@ NXAST_NAT = 36
 NXAST_CONTROLLER2 = 37
 NXAST_SAMPLE2 = 38
 NXAST_OUTPUT_TRUNC = 39
+NXAST_CT_CLEAR = 43
+NXAST_RAW_ENCAP = 46
+NXAST_RAW_DECAP = 47
+NXAST_DEC_NSH_TTL = 48
 
 NX_ACTION_RESUBMIT_PACK_STR = '!HHIHHB3x'
 NX_ACTION_RESUBMIT_SIZE = 16
@@ -296,7 +300,7 @@ NXM_IP_FRAG_NOT_LATER = (0, FLOW_NW_FRAG_LATER)
 
 
 def ofs_nbits(start, end):
-    """
+    r"""
     The utility method for ofs_nbits
 
     This method is used in the class to set the ofs_nbits.
@@ -427,6 +431,7 @@ def nxm_nx_reg(idx):
 
 def nxm_nx_reg_w(idx):
     return nxm_header_w(0x0001, idx, 4)
+
 
 NXM_HEADER_PACK_STRING = '!I'
 
@@ -589,6 +594,29 @@ tun_ipv6_dst     IPv6 address    Tunnel IPv6 destination address.
                                  eth_type_nxm = 0x86dd (IPv6)
 _recirc_id       Integer 32bit   ID for recirculation.
 _dp_hash         Integer 32bit   Flow hash computed in Datapath.
+nsh_flags        Integer 8bit    Flags field in NSH Base Header.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.8.
+nsh_mdtype       Integer 8bit    Metadata Type in NSH Base Header.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.8.
+nsh_np           Integer 8bit    Next Protocol type in NSH Base Header.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.8.
+nsh_spi          Integer 32bit   Service Path Identifier in NSH Service Path
+                                 Header.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.8.
+nsh_si           Integer 8bit    Service Index in NSH Service Path Header.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.8.
+nsh_c<N>         Integer 32bit   Context fields in NSH Context Header.
+                                 <N> is a number of 1-4.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.8.
+nsh_ttl          Integer 8bit    TTL field in NSH Base Header.
+                                 Requires eth_type_nxm = 0x894f (NSH).
+                                 Since OpenFlow 1.3 and OVS v2.9.
 reg<idx>         Integer 32bit   Packet register.
                                  <idx> is register number 0-15.
 xxreg<idx>       Integer 128bit  Packet extended-extended register.
@@ -682,6 +710,21 @@ oxm_types = [
     # Prefix the name with '_' to indicate this is not intended to be used
     # in wild.
     oxm_fields.NiciraExperimenter('_dp_hash', 0, type_desc.Int4),
+
+    # Nicira Experimenter for Network Service Header
+    oxm_fields.NiciraNshExperimenter('nsh_flags', 1, type_desc.Int1),
+    oxm_fields.NiciraNshExperimenter('nsh_mdtype', 2, type_desc.Int1),
+    oxm_fields.NiciraNshExperimenter('nsh_np', 3, type_desc.Int1),
+    # aka "nsp"
+    oxm_fields.NiciraNshExperimenter('nsh_spi', 4, type_desc.Int4),
+    # aka "nsi"
+    oxm_fields.NiciraNshExperimenter('nsh_si', 5, type_desc.Int1),
+    # aka "nshc<N>"
+    oxm_fields.NiciraNshExperimenter('nsh_c1', 6, type_desc.Int4),
+    oxm_fields.NiciraNshExperimenter('nsh_c2', 7, type_desc.Int4),
+    oxm_fields.NiciraNshExperimenter('nsh_c3', 8, type_desc.Int4),
+    oxm_fields.NiciraNshExperimenter('nsh_c4', 9, type_desc.Int4),
+    oxm_fields.NiciraNshExperimenter('nsh_ttl', 10, type_desc.Int1),
 
     # Support for matching/setting NX registers 0-15
     oxm_fields.NiciraExtended1('reg0', 0, type_desc.Int4),

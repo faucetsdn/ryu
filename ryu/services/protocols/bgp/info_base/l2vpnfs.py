@@ -58,7 +58,7 @@ class L2VPNFlowSpecPath(VpnPath):
         # Set dummy IP address.
         kwargs['nexthop'] = '0.0.0.0'
         super(L2VPNFlowSpecPath, self).__init__(*args, **kwargs)
-        from ryu.services.protocols.bgp.info_base.vrfl2vpnfs import(
+        from ryu.services.protocols.bgp.info_base.vrfl2vpnfs import (
             L2vpnFlowSpecPath)
         self.VRF_PATH_CLASS = L2vpnFlowSpecPath
         # Because the L2VPN Flow Specification does not require nexthop,

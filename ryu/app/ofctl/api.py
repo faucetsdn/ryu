@@ -16,22 +16,37 @@
 
 # client for ryu.app.ofctl.service
 
-import numbers
-
 from ryu.base import app_manager
 from . import event
 
 
-def get_datapath(app, dpid):
+def get_datapath(app, dpid=None):
     """
     Get datapath object by dpid.
 
     :param app: Client RyuApp instance
-    :param dpid: Datapath-id (in integer)
+    :param dpid: Datapath ID (int type) or None to get all datapath objects
 
-    Returns None on error.
+    Returns a object of datapath, a list of datapath objects when no dpid
+    given or None when error.
+
+    Raises an exception if any of the given values is invalid.
+
+    Example::
+
+        # ...(snip)...
+        import ryu.app.ofctl.api as ofctl_api
+
+
+        class MyApp(app_manager.RyuApp):
+
+            def _my_handler(self, ev):
+                # Get all datapath objects
+                result = ofctl_api.get_datapath(self)
+
+                # Get the datapath object which has the given dpid
+                result = ofctl_api.get_datapath(self, dpid=1)
     """
-    assert isinstance(dpid, numbers.Integral)
     return app.send_request(event.GetDatapathRequest(dpid=dpid))()
 
 
@@ -55,12 +70,19 @@ def send_msg(app, msg, reply_cls=None, reply_multi=False):
 
     Example::
 
-        import ryu.app.ofctl.api as api
+        # ...(snip)...
+        import ryu.app.ofctl.api as ofctl_api
 
-        msg = parser.OFPPortDescStatsRequest(datapath=datapath)
-        result = api.send_msg(self, msg,
-                                    reply_cls=parser.OFPPortDescStatsReply,
-                                    reply_multi=True)
+
+        class MyApp(app_manager.RyuApp):
+
+            def _my_handler(self, ev):
+                # ...(snip)...
+                msg = parser.OFPPortDescStatsRequest(datapath=datapath)
+                result = ofctl_api.send_msg(
+                    self, msg,
+                    reply_cls=parser.OFPPortDescStatsReply,
+                    reply_multi=True)
     """
     return app.send_request(event.SendMsgRequest(msg=msg,
                                                  reply_cls=reply_cls,

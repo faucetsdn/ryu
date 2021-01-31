@@ -56,7 +56,7 @@ class GUIServerController(ControllerBase):
         path = "%s/html/" % PATH
         self.static_app = DirectoryApp(path)
 
-    @route('topology', '/{filename:.*}')
+    @route('topology', '/{filename:[^/]*}')
     def static_handler(self, req, **kwargs):
         if kwargs['filename']:
             req.path_info = kwargs['filename']

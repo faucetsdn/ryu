@@ -175,6 +175,7 @@ class OptionDataUnknown(Option):
     """
     Unknown Option Class and Type specific Option
     """
+
     def __init__(self, buf, option_class=None, type_=None, length=0):
         super(OptionDataUnknown, self).__init__(option_class=option_class,
                                                 type_=type_,

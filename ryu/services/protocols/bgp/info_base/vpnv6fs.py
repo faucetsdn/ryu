@@ -58,7 +58,7 @@ class VPNv6FlowSpecPath(VpnPath):
         # Set dummy IP address.
         kwargs['nexthop'] = '::'
         super(VPNv6FlowSpecPath, self).__init__(*args, **kwargs)
-        from ryu.services.protocols.bgp.info_base.vrf6fs import(
+        from ryu.services.protocols.bgp.info_base.vrf6fs import (
             Vrf6FlowSpecPath)
         self.VRF_PATH_CLASS = Vrf6FlowSpecPath
         # Because the IPv6 Flow Specification does not require nexthop,

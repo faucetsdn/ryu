@@ -58,7 +58,7 @@ class Test_Parser_Compat(unittest.TestCase):
         old_eth_src = addrconv.mac.text_to_bin(eth_src)
         old_ipv4_src = unpack('!I', addrconv.ipv4.text_to_bin(ipv4_src))[0]
         old_ipv6_src = list(unpack('!8H',
-                            addrconv.ipv6.text_to_bin(ipv6_src)))
+                                   addrconv.ipv6.text_to_bin(ipv6_src)))
 
         def check(o):
             check_old(o)
@@ -156,5 +156,6 @@ def _add_tests():
         f = functools.partial(_run, name=method_name,
                               ofpp=ofpp)
         test_lib.add_method(Test_Parser_Compat, method_name, f)
+
 
 _add_tests()

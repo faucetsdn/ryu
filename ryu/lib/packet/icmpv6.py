@@ -75,7 +75,7 @@ BLOCK_OLD_SOURCES = 6
 
 
 class icmpv6(packet_base.PacketBase):
-    """ICMPv6 (RFC 2463) header encoder/decoder class.
+    r"""ICMPv6 (RFC 2463) header encoder/decoder class.
 
     An instance has the following attributes at least.
     Most of them are same to the on-wire counterparts but in host byte order.
@@ -553,7 +553,7 @@ class nd_option_tla(nd_option_la):
 
 @nd_router_advert.register_nd_option_type
 class nd_option_pi(nd_option):
-    """ICMPv6 sub encoder/decoder class for Neighbor discovery
+    r"""ICMPv6 sub encoder/decoder class for Neighbor discovery
     Prefix Information Option. (RFC 4861)
 
     This is used with ryu.lib.packet.icmpv6.nd_router_advert.
@@ -621,6 +621,50 @@ class nd_option_pi(nd_option):
             self.length = len(hdr) // 8
             struct.pack_into('!B', hdr, 1, self.length)
         return six.binary_type(hdr)
+
+
+@nd_router_advert.register_nd_option_type
+class nd_option_mtu(nd_option):
+    """ICMPv6 sub encoder/decoder class for Neighbor discovery
+    MTU Option. (RFC 4861)
+
+    This is used with ryu.lib.packet.icmpv6.nd_router_advert.
+
+    An instance has the following attributes at least.
+    Most of them are same to the on-wire counterparts but in host byte order.
+    __init__ takes the corresponding args in this order.
+
+    .. tabularcolumns:: |l|p{35em}|
+
+    ============== ====================
+    Attribute      Description
+    ============== ====================
+    mtu            MTU.
+    ============== ====================
+    """
+
+    _PACK_STR = '!BBHI'
+    _LEN = struct.calcsize(_PACK_STR)
+    _OPTION_LEN = _LEN // 8
+
+    @classmethod
+    def option_type(cls):
+        return ND_OPTION_MTU
+
+    def __init__(self, mtu=1500):
+        super(nd_option_mtu, self).__init__(self.option_type(), 0)
+        self.mtu = mtu
+
+    @classmethod
+    def parser(cls, buf, offset):
+        (_, _, _, mtu) = struct.unpack_from(cls._PACK_STR, buf, offset)
+        msg = cls(mtu)
+        return msg
+
+    def serialize(self):
+        buf = bytearray(struct.pack(
+            self._PACK_STR, self.option_type(), self._OPTION_LEN, 0, self.mtu))
+        return six.binary_type(buf)
 
 
 @icmpv6.register_icmpv6_type(ICMPV6_ECHO_REPLY, ICMPV6_ECHO_REQUEST)
@@ -807,8 +851,8 @@ class mldv2_query(mld):
     def serialize(self):
         s_qrv = self.s_flg << 3 | self.qrv
         buf = bytearray(struct.pack(self._PACK_STR, self.maxresp,
-                        addrconv.ipv6.text_to_bin(self.address), s_qrv,
-                        self.qqic, self.num))
+                                    addrconv.ipv6.text_to_bin(self.address), s_qrv,
+                                    self.qqic, self.num))
         for src in self.srcs:
             buf.extend(struct.pack('16s', addrconv.ipv6.text_to_bin(src)))
         if 0 == self.num:
@@ -884,7 +928,7 @@ class mldv2_report(mld):
 
 
 class mldv2_report_group(stringify.StringifyMixin):
-    """
+    r"""
     ICMPv6 sub encoder/decoder class for MLD v2 Lister Report Group
     Record messages. (RFC 3810)
 
@@ -951,8 +995,8 @@ class mldv2_report_group(stringify.StringifyMixin):
 
     def serialize(self):
         buf = bytearray(struct.pack(self._PACK_STR, self.type_,
-                        self.aux_len, self.num,
-                        addrconv.ipv6.text_to_bin(self.address)))
+                                    self.aux_len, self.num,
+                                    addrconv.ipv6.text_to_bin(self.address)))
         for src in self.srcs:
             buf.extend(struct.pack('16s', addrconv.ipv6.text_to_bin(src)))
         if 0 == self.num:

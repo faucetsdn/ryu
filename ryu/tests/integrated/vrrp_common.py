@@ -94,9 +94,9 @@ class VRRPCommon(app_manager.RyuApp):
                     if i.state == vrrp_event.VRRP_STATE_MASTER:
                         print("bad master:")
                         print('%s %s' % (d[vr[0].instance_name].state,
-                              d[vr[0].instance_name].config.priority))
+                                         d[vr[0].instance_name].config.priority))
                         print('%s %s' % (d[vr[1].instance_name].state,
-                              d[vr[1].instance_name].config.priority))
+                                         d[vr[1].instance_name].config.priority))
                         bad += 1
 #                       assert i.state != vrrp_event.VRRP_STATE_MASTER
             if bad > 0:

@@ -99,6 +99,7 @@ class MissingRequiredConf(RuntimeConfigError):
     """Exception raised when trying to configure with missing required
     settings.
     """
+
     def __init__(self, **kwargs):
         conf_name = kwargs.get('conf_name')
         if conf_name:
@@ -113,6 +114,7 @@ class MissingRequiredConf(RuntimeConfigError):
 class ConfigTypeError(RuntimeConfigError):
     """Exception raised when configuration value type miss-match happens.
     """
+
     def __init__(self, **kwargs):
         conf_name = kwargs.get(CONF_NAME)
         conf_value = kwargs.get(CONF_VALUE)
@@ -133,6 +135,7 @@ class ConfigValueError(RuntimeConfigError):
     """Exception raised when configuration value is of correct type but
     incorrect value.
     """
+
     def __init__(self, **kwargs):
         conf_name = kwargs.get(CONF_NAME)
         conf_value = kwargs.get(CONF_VALUE)

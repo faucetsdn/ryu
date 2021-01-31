@@ -33,6 +33,7 @@ from ryu.lib.packet import slow
 
 class EventPacketIn(event.EventBase):
     """a PacketIn event class using except LACP."""
+
     def __init__(self, msg):
         """initialization."""
         super(EventPacketIn, self).__init__()
@@ -42,6 +43,7 @@ class EventPacketIn(event.EventBase):
 class EventSlaveStateChanged(event.EventBase):
     """a event class that notifies the changes of the statuses of the
     slave i/fs."""
+
     def __init__(self, datapath, port, enabled):
         """initialization."""
         super(EventSlaveStateChanged, self).__init__()

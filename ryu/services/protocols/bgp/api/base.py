@@ -100,6 +100,7 @@ class RegisterWithArgChecks(object):
 
     Does some argument checking and validation of required arguments.
     """
+
     def __init__(self, name, req_args=None, opt_args=None):
         self._name = name
         if not req_args:

@@ -38,6 +38,7 @@ from ryu.lib.packet import igmp
 
 class EventPacketIn(event.EventBase):
     """a PacketIn event class using except IGMP."""
+
     def __init__(self, msg):
         """initialization."""
         super(EventPacketIn, self).__init__()

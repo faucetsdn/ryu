@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import getopt
 import os
+import re
 import six
 from six.moves import socketserver
 import subprocess
@@ -99,37 +100,44 @@ MESSAGES = [
      'versions': [4],
      'cmd': 'add-flow',
      'args': (['table=3',
-              'importance=39032'] +
+               'importance=39032'] +
               STD_MATCH +
               ['actions=resubmit(1234,99)'])},
     {'name': 'action_ct',
      'versions': [4],
      'cmd': 'add-flow',
      'args': (['table=3,',
-              'importance=39032'] +
+               'importance=39032'] +
               ['dl_type=0x0800,ct_state=-trk'] +
               ['actions=ct(table=4,zone=NXM_NX_REG0[4..31])'])},
     {'name': 'action_ct_exec',
      'versions': [4],
      'cmd': 'add-flow',
      'args': (['table=3,',
-              'importance=39032'] +
+               'importance=39032'] +
               ['dl_type=0x0800,ct_state=+trk+est'] +
               ['actions=ct(commit,exec(set_field:0x654321->ct_mark))'])},
     {'name': 'action_ct_nat',
      'versions': [4],
      'cmd': 'add-flow',
      'args': (['table=3,',
-              'importance=39032'] +
+               'importance=39032'] +
               ['dl_type=0x0800'] +
               ['actions=ct(commit,nat(src=10.1.12.0-10.1.13.255:1-1023)'])},
     {'name': 'action_ct_nat_v6',
      'versions': [4],
      'cmd': 'add-flow',
      'args': (['table=3,',
-              'importance=39032'] +
+               'importance=39032'] +
               ['dl_type=0x86dd'] +
               ['actions=ct(commit,nat(dst=2001:1::1-2001:1::ffff)'])},
+    {'name': 'action_ct_clear',
+     'versions': [4],
+     'cmd': 'add-flow',
+     'args': (['table=3,',
+               'importance=39032'] +
+              ['dl_type=0x0800,ct_state=+trk'] +
+              ['actions=ct_clear'])},
     {'name': 'action_note',
      'versions': [4],
      'cmd': 'add-flow',
@@ -219,6 +227,14 @@ MESSAGES = [
      'args': (['priority=100'] +
               ['actions=output(port=8080,max_len=1024)'])},
 
+    {'name': 'bundle-add',
+     'versions': [4],
+     'bundled': True,
+     'cmd': 'add-flow',
+     'args': ['table=33',
+              'dl_vlan=1234',
+              'actions=strip_vlan,goto_table:100']},
+
 
     # ToDo: The following actions are not eligible
     # {'name': 'action_regload2'},
@@ -230,6 +246,11 @@ buf = []
 
 class MyHandler(socketserver.BaseRequestHandler):
     verbose = False
+
+    @staticmethod
+    def _add_msg_to_buf(data, msg_len):
+        # HACK: Clear xid into zero
+        buf.append(data[:4] + b'\x00\x00\x00\x00' + data[8:msg_len])
 
     def handle(self):
         desc = ofproto_protocol.ProtocolDesc()
@@ -255,18 +276,29 @@ class MyHandler(socketserver.BaseRequestHandler):
                 hello.serialize()
                 self.request.send(hello.buf)
             elif msg_type == desc.ofproto.OFPT_FLOW_MOD:
-                # HACK: Clear xid into zero
-                buf.append(data[:4] + b'\x00\x00\x00\x00' + data[8:msg_len])
+                self._add_msg_to_buf(data, msg_len)
+            elif version == 4 and msg_type == desc.ofproto.OFPT_EXPERIMENTER:
+                # This is for OF13 Ext-230 bundle
+                # TODO: support bundle for OF>1.3
+                exp = desc.ofproto_parser.OFPExperimenter.parser(
+                    object(), version, msg_type, msg_len, xid, data)
+                self._add_msg_to_buf(data, msg_len)
+                if isinstance(exp, desc.ofproto_parser.ONFBundleCtrlMsg):
+                    ctrlrep = desc.ofproto_parser.ONFBundleCtrlMsg(
+                        desc, exp.bundle_id, exp.type + 1, 0, [])
+                    ctrlrep.xid = xid
+                    ctrlrep.serialize()
+                    self.request.send(ctrlrep.buf)
             elif msg_type == desc.ofproto.OFPT_BARRIER_REQUEST:
                 brep = desc.ofproto_parser.OFPBarrierReply(desc)
                 brep.xid = xid
                 brep.serialize()
                 self.request.send(brep.buf)
-                break
 
 
 class MyVerboseHandler(MyHandler):
     verbose = True
+
 
 if __name__ == '__main__':
     optlist, args = getopt.getopt(sys.argv[1:], 'dvo:')
@@ -283,6 +315,18 @@ if __name__ == '__main__':
 
     if not os.access(ofctl_cmd, os.X_OK):
         raise Exception("%s is not executable" % ofctl_cmd)
+    ovs_version = subprocess.Popen([ofctl_cmd, '--version'],
+                                   stdout=subprocess.PIPE)
+    has_names = False
+    try:
+        ver_tuple = re.search(r'\s(\d+)\.(\d+)(\.\d*|\s*$)',
+                              ovs_version.stdout.readline().decode()).groups()
+        if int(ver_tuple[0]) > 2 or \
+           int(ver_tuple[0]) == 2 and int(ver_tuple[1]) >= 8:
+            has_names = True
+    except AttributeError:
+        pass
+
     outpath = '../packet_data'
     socketdir = tempfile.mkdtemp()
     socketname = os.path.join(socketdir, 'ovs')
@@ -293,10 +337,15 @@ if __name__ == '__main__':
         print("Serving at %s" % socketname)
 
     for msg in MESSAGES:
+        bundled = msg.get('bundled', False)
         for v in msg['versions']:
             cmdargs = [ofctl_cmd, '-O', 'OpenFlow%2d' % (v + 9)]
             if verbose:
                 cmdargs.append('-v')
+            if has_names:
+                cmdargs.append('--no-names')
+            if bundled:
+                cmdargs.append('--bundle')
             cmdargs.append(msg['cmd'])
             cmdargs.append('unix:%s' % socketname)
             cmdargs.append('\n'.join(msg['args']))
@@ -307,14 +356,20 @@ if __name__ == '__main__':
             t.start()
             server.handle_request()
             if debug:
-                print(buf.pop())
+                for buf1 in buf:
+                    print(buf1)
+                buf = []
             else:
-                outf = os.path.join(
-                    outpath, "of%d" % (v + 9),
-                    "ovs-ofctl-of%d-%s.packet" % (v + 9, msg['name']))
-                print("Writing %s..." % outf)
-                with open(outf, 'wb') as f:
-                    f.write(buf.pop())
+                for i, buf1 in enumerate(buf):
+                    suffix = ('-%d' % (i + 1)) if i else ''
+                    outf = os.path.join(
+                        outpath, "of%d" % (v + 9),
+                        "ovs-ofctl-of%d-%s%s.packet" % (
+                            v + 9, msg['name'], suffix))
+                    print("Writing %s..." % outf)
+                    with open(outf, 'wb') as f:
+                        f.write(buf1)
+                buf = []
             try:
                 t.join()
             except TimeoutExpired as e:

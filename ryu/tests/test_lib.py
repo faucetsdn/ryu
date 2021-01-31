@@ -79,6 +79,7 @@ class _Win32Colorizer(object):
     """
     See _AnsiColorizer docstring.
     """
+
     def __init__(self, stream):
         from win32console import GetStdHandle, STD_OUT_HANDLE
         from win32console import FOREGROUND_RED, FOREGROUND_BLUE
@@ -127,6 +128,7 @@ class _NullColorizer(object):
     """
     See _AnsiColorizer docstring.
     """
+
     def __init__(self, stream):
         self.stream = stream
 
@@ -265,6 +267,8 @@ def add_method(cls, method_name, method):
     method.__name__ = method_name
     if six.PY3:
         methodtype = types.MethodType(method, cls)
+        if not hasattr(method, "__qualname__"):
+            method.__qualname__ = "%s.%s" % (cls.__qualname__, method_name)
     else:
         methodtype = types.MethodType(method, None, cls)
     setattr(cls, method_name, methodtype)

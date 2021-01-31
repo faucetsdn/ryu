@@ -25,6 +25,7 @@ from ryu.services.protocols.bgp.net_ctrl import NOTIFICATION_LOG
 
 class RpcLogHandler(logging.Handler):
     """Outputs log records to `NET_CONTROLLER`."""
+
     def emit(self, record):
         msg = self.format(record)
         NET_CONTROLLER.send_rpc_notification(

@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+``ovs-vsctl`` command like library to speak OVSDB protocol
+"""
 
 from __future__ import print_function
 
@@ -53,9 +56,9 @@ def valid_ovsdb_addr(addr):
 
     The valid formats are:
 
-    - unix:file
-    - tcp:ip:port
-    - ssl:ip:port
+    - ``unix:file``
+    - ``tcp:ip:port``
+    - ``ssl:ip:port``
 
     If ip is IPv6 address, wrap ip with brackets (e.g., ssl:[::1]:6640).
 
@@ -63,12 +66,12 @@ def valid_ovsdb_addr(addr):
     :return: True if valid, otherwise False.
     """
     # Assumes Unix socket format: "unix:file"
-    m = re.match('unix:(\S+)', addr)
+    m = re.match(r'unix:(\S+)', addr)
     if m:
         file = m.group(1)
         return os.path.isfile(file)
     # Assumes TCP/SSL socket format: "tcp:ip:port" or "ssl:ip:port"
-    m = re.match('(tcp|ssl):(\S+):(\d+)', addr)
+    m = re.match(r'(tcp|ssl):(\S+):(\d+)', addr)
     if m:
         address = m.group(2)
         port = m.group(3)
@@ -959,6 +962,34 @@ class _VSCtlTable(object):
 
 
 class VSCtlCommand(StringifyMixin):
+    """
+    Class to describe artgumens similar to those of ``ovs-vsctl`` command.
+
+    ``command`` specifies the command of ``ovs-vsctl``.
+
+    ``args`` specifies a list or tuple of arguments for the given command.
+
+    ``options`` specifies a list or tuple of options for the given command.
+    Please note that NOT all options of ``ovs-vsctl`` are supported.
+    For example, ``--id`` option is not yet supported.
+    This class supports the followings.
+
+    ================= =========================================================
+    Option            Description
+    ================= =========================================================
+    ``--may-exist``   Does nothing when the given port already exists.
+                      The supported commands are ``add-port`` and
+                      ``add-bond``.
+    ``--fake-iface``  Creates a port as a fake interface.
+                      The supported command is ``add-bond``.
+    ``--must-exist``  Raises exception if the given port does not exist.
+                      The supported command is ``del-port``.
+    ``--with-iface``  Takes effect to the interface which has the same name.
+                      The supported command is ``del-port``.
+    ``--if-exists``   Ignores exception when not found.
+                      The supported command is ``get``.
+    ================= =========================================================
+    """
 
     def __init__(self, command, args=None, options=None):
         super(VSCtlCommand, self).__init__()
@@ -978,6 +1009,13 @@ class VSCtlCommand(StringifyMixin):
 
 
 class VSCtl(object):
+    """
+    A class to describe an Open vSwitch instance.
+
+    ``remote`` specifies the address of the OVS instance.
+    :py:mod:`ryu.lib.ovs.vsctl.valid_ovsdb_addr` is a convenient function to
+    validate this address.
+    """
 
     def _reset(self):
         self.schema_helper = None
@@ -1237,6 +1275,19 @@ class VSCtl(object):
         self._do_main(commands)
 
     def run_command(self, commands, timeout_sec=None, exception=None):
+        """
+        Executes the given commands and sends OVSDB messages.
+
+        ``commands`` must be a list of
+        :py:mod:`ryu.lib.ovs.vsctl.VSCtlCommand`.
+
+        If ``timeout_sec`` is specified, raises exception after the given
+        timeout [sec]. Additionally, if ``exception`` is specified, this
+        function will wraps exception using the given exception class.
+
+        Retruns ``None`` but fills ``result`` attribute for each command
+        instance.
+        """
         if timeout_sec is None:
             self._run_command(commands)
         else:
@@ -1563,7 +1614,9 @@ class VSCtl(object):
         self._pre_add_port(ctx, columns)
 
     def _cmd_add_port(self, ctx, command):
-        may_exist = command.has_option('--may_exist')
+        # '--may_exist' is a typo but for backword compatibility
+        may_exist = (command.has_option('--may_exist')
+                     or command.has_option('--may-exist'))
 
         br_name = command.args[0]
         port_name = command.args[1]
@@ -1577,7 +1630,9 @@ class VSCtl(object):
                      False, iface_names, settings)
 
     def _cmd_add_bond(self, ctx, command):
-        may_exist = command.has_option('--may_exist')
+        # '--may_exist' is a typo but for backword compatibility
+        may_exist = (command.has_option('--may_exist')
+                     or command.has_option('--may-exist'))
         fake_iface = command.has_option('--fake-iface')
 
         br_name = command.args[0]

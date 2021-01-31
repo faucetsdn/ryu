@@ -42,6 +42,7 @@ class VRRPInterfaceBase(object):
     NOTE: multiple virtual router can be configured on single port
           See RFC 5798 4.2 Sample Configuration 2
     """
+
     def __init__(self, mac_address, primary_ip_address, vlan_id=None):
         super(VRRPInterfaceBase, self).__init__()
         self.mac_address = mac_address
@@ -115,6 +116,7 @@ class VRRPConfig(object):
     """
     advertmisement_interval is in seconds as float. (Not in centiseconds)
     """
+
     def __init__(self, version=vrrp.VRRP_VERSION_V3, vrid=None,
                  admin_state=True,
                  priority=vrrp.VRRP_PRIORITY_BACKUP_DEFAULT, ip_addresses=None,
@@ -165,6 +167,7 @@ class EventVRRPConfigRequest(event.EventRequestBase):
     """
     Request from management layer to VRRP manager to initialize VRRP Router.
     """
+
     def __init__(self, interface, config):
         super(EventVRRPConfigRequest, self).__init__()
         self.dst = VRRP_MANAGER_NAME
@@ -185,6 +188,7 @@ class EventVRRPShutdownRequest(event.EventRequestBase):
     """
     Request from management layer to VRRP to shutdown VRRP Router.
     """
+
     def __init__(self, instance_name):
         super(EventVRRPShutdownRequest, self).__init__()
         self.instance_name = instance_name
@@ -194,6 +198,7 @@ class EventVRRPStateChanged(event.EventBase):
     """
     Event that this VRRP Router changed its state.
     """
+
     def __init__(self, instance_name, monitor_name, interface, config,
                  old_state, new_state):
         super(EventVRRPStateChanged, self).__init__()
@@ -220,6 +225,7 @@ class EventVRRPListRequest(event.EventRequestBase):
     Event that requests list of configured VRRP router
     instance_name=None means all instances.
     """
+
     def __init__(self, instance_name=None):
         super(EventVRRPListRequest, self).__init__()
         self.instance_name = instance_name
@@ -236,6 +242,7 @@ class EventVRRPConfigChangeRequest(event.EventRequestBase):
     Event that requests to change configuration of a given VRRP router.
     None means no-change.
     """
+
     def __init__(self, instance_name, priority=None,
                  advertisement_interval=None, preempt_mode=None,
                  preempt_delay=None, accept_mode=None):
@@ -255,6 +262,7 @@ class EventVRRPReceived(event.EventBase):
     Event that port manager received valid VRRP packet.
     Usually handed by VRRP Router.
     """
+
     def __init__(self, interface, packet):
         super(EventVRRPReceived, self).__init__()
         self.interface = interface
@@ -265,6 +273,7 @@ class EventVRRPTransmitRequest(event.EventRequestBase):
     """
     Request from VRRP router to port manager to transmit VRRP packet.
     """
+
     def __init__(self, data):
         super(EventVRRPTransmitRequest, self).__init__()
         self.data = data

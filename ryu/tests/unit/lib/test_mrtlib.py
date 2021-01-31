@@ -19,6 +19,7 @@ import bz2
 import io
 import logging
 import os
+import struct
 import sys
 import unittest
 
@@ -605,6 +606,66 @@ class TestMrtlibMrtPeer(unittest.TestCase):
         )
 
         output = peer.serialize()
+
+        eq_(buf, output)
+
+
+class TestMrtlibMrtRibEntry(unittest.TestCase):
+    """
+    Test case for ryu.lib.mrtlib.MrtRibEntry.
+    """
+
+    def test_parse_add_path(self):
+        peer_index = 1
+        originated_time = 2
+        nexthop = '1.1.1.1'
+        bgp_attribute = bgp.BGPPathAttributeNextHop(nexthop)
+        path_id = 3
+        bgp_attr_buf = bgp_attribute.serialize()
+        attr_len = len(bgp_attr_buf)
+        buf = (
+            b'\x00\x01'  # peer_index
+            b'\x00\x00\x00\x02'  # originated_time
+            b'\x00\x00\x00\x03'  # path_id
+            + struct.pack('!H', attr_len)  # attr_len
+            + bgp_attribute.serialize()    # bgp_attributes
+        )
+
+        rib, rest = mrtlib.MrtRibEntry.parse(buf, is_addpath=True)
+
+        eq_(peer_index, rib.peer_index)
+        eq_(originated_time, rib.originated_time)
+        eq_(path_id, rib.path_id)
+        eq_(attr_len, rib.attr_len)
+        eq_(1, len(rib.bgp_attributes))
+        eq_(nexthop, rib.bgp_attributes[0].value)
+        eq_(b'', rest)
+
+    def test_serialize_add_path(self):
+        peer_index = 1
+        originated_time = 2
+        nexthop = '1.1.1.1'
+        bgp_attribute = bgp.BGPPathAttributeNextHop(nexthop)
+        path_id = 3
+        bgp_attr_buf = bgp_attribute.serialize()
+        attr_len = len(bgp_attr_buf)
+        buf = (
+            b'\x00\x01'  # peer_index
+            b'\x00\x00\x00\x02'  # originated_time
+            b'\x00\x00\x00\x03'  # path_id
+            + struct.pack('!H', attr_len)  # attr_len
+            + bgp_attribute.serialize()    # bgp_attributes
+        )
+
+        rib = mrtlib.MrtRibEntry(
+            peer_index=peer_index,
+            originated_time=originated_time,
+            bgp_attributes=[bgp_attribute],
+            # attr_len=attr_len,
+            path_id=path_id,
+        )
+
+        output = rib.serialize()
 
         eq_(buf, output)
 

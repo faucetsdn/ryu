@@ -202,6 +202,45 @@ please check the followings.
                 }
             }
         }
+
+4. Make sure that the IPv6 is enabled on your environment. Some Ryu BGP
+features require the IPv6 connectivity to bind sockets. Mininet seems to
+disable IPv6 on its installation.
+
+    For example::
+
+        $ sysctl net.ipv6.conf.all.disable_ipv6
+        net.ipv6.conf.all.disable_ipv6 = 0  # should NOT be enabled
+
+        $ grep GRUB_CMDLINE_LINUX_DEFAULT /etc/default/grub
+        # please remove "ipv6.disable=1" and reboot
+        GRUB_CMDLINE_LINUX_DEFAULT="ipv6.disable=1 quiet splash"
+
+5. Make sure that your switch using the OpenFlow version 1.3. This application
+supports only the OpenFlow version 1.3.
+
+    For example::
+
+        $ ovs-vsctl get Bridge s1 protocols
+        ["OpenFlow13"]
+
+.. Note::
+
+    At the time of this writing, we use the the following version of Ryu,
+    Open vSwitch and Mininet.
+
+    ::
+
+        $ ryu --version
+        ryu 4.19
+
+        $ ovs-vsctl --version
+        ovs-vsctl (Open vSwitch) 2.5.2  # APT packaged version of Ubuntu 16.04
+        Compiled Oct 17 2017 16:38:57
+        DB Schema 7.12.1
+
+        $ mn --version
+        2.2.1  # APT packaged version of Ubuntu 16.04
 """
 
 import json

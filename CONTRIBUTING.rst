@@ -5,41 +5,34 @@ How to Get Your Change Into Ryu
 Submitting a change
 ===================
 
-Send patches to ryu-devel@lists.sourceforge.net. Please don't use "Pull
-Request" on GitHub. We expect you to send patches in "git-format-patch"
-style.
+To send patches to ryu, please make a
+`pull request <https://github.com/faucetsdn/ryu>`_ on GitHub.
 
-.. code-block:: bash
-
-  # "N" means the number of commits to be included
-  $ git format-patch -s HEAD~N
-
-  # To add cover (e.g., [PATCH 0/X]), specify "--cover-letter" option
-  $ git format-patch -s --cover-letter HEAD~N
-
-  # You can send patches by "git send-email" command
-  $ git send-email --to="ryu-devel@lists.sourceforge.net" *.patch
-
-Please check your changes with pep8 and run unittests to make sure
-that they don't break the existing features. The following command
-does both for you.
+Please check your changes with autopep8, pycodestyle(pep8) and running
+unit tests to make sure that they don't break the existing features.
+The following command does all for you.
 
 .. code-block:: bash
 
   # Install dependencies of tests
   $ pip install -r tools/test-requires
 
-  # Execute unit tests and pep8
+  # Execute autopep8
+  # Also, it is convenient to add settings of your editor or IDE for
+  # applying autopep8 automatically.
+  $ autopep8 --recursive --in-place ryu/
+
+  # Execute unit tests and pycodestyle(pep8)
   $ ./run_tests.sh
 
-Of course, you are encouraged to add unittests when you add new
+Of course, you are encouraged to add unit tests when you add new
 features (it's not a must though).
 
 Python version and libraries
 ============================
-* Python 2.7, 3.4, 3.5:
+* Python 3.5, 3.6, 3.7, 3.8, 3.9:
 
-  Ryu supports multiple Python version.  CI tests on Travis-CI is running
+  Ryu supports multiple Python versions.  CI tests on GitHub Actions is running
   on these versions.
 
 * standard library + widely used library:

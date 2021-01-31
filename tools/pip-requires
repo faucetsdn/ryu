@@ -1,12 +1,12 @@
-# NOTE: OpenStack avoids the newer versions of eventlet, because of the
+# NOTE: OpenStack avoids some versions of eventlet, because of the
 # following issue.
 # https://github.com/eventlet/eventlet/issues/401
-eventlet!=0.18.3,>=0.18.2,!=0.20.1,<0.21.0
-msgpack-python>=0.3.0  # RPC library, BGP speaker(net_cntl)
+eventlet==0.30.0
+msgpack>=0.4.0  # RPC library, BGP speaker(net_cntl)
 netaddr
-oslo.config>=1.15.0
+oslo.config>=2.5.0
 ovs>=2.6.0  # OVSDB
 routes  # wsgi
 six>=1.4.0
-tinyrpc  # RPC library, BGP speaker(net_cntl)
+tinyrpc==0.9.4  # RPC library, BGP speaker(net_cntl)
 webob>=1.2  # wsgi

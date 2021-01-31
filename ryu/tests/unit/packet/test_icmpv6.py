@@ -1048,8 +1048,8 @@ class Test_icmpv6_membership_query(unittest.TestCase):
         mld_values = {'maxresp': self.maxresp,
                       'address': self.address}
         _mld_str = ','.join(['%s=%s' % (k, repr(mld_values[k]))
-                            for k, v in inspect.getmembers(ml)
-                            if k in mld_values])
+                             for k, v in inspect.getmembers(ml)
+                             if k in mld_values])
         mld_str = '%s(%s)' % (icmpv6.mld.__name__, _mld_str)
 
         icmp_values = {'type_': repr(self.type_),
@@ -1309,8 +1309,8 @@ class Test_mldv2_query(unittest.TestCase):
                       'num': self.num,
                       'srcs': self.srcs}
         _mld_str = ','.join(['%s=%s' % (k, repr(mld_values[k]))
-                            for k, v in inspect.getmembers(self.mld)
-                            if k in mld_values])
+                             for k, v in inspect.getmembers(self.mld)
+                             if k in mld_values])
         mld_str = '%s(%s)' % (icmpv6.mldv2_query.__name__, _mld_str)
 
         icmp_values = {'type_': repr(self.type_),
@@ -1578,8 +1578,8 @@ class Test_mldv2_report(unittest.TestCase):
         mld_values = {'record_num': self.record_num,
                       'records': self.records}
         _mld_str = ','.join(['%s=%s' % (k, repr(mld_values[k]))
-                            for k, v in inspect.getmembers(self.mld)
-                            if k in mld_values])
+                             for k, v in inspect.getmembers(self.mld)
+                             if k in mld_values])
         mld_str = '%s(%s)' % (icmpv6.mldv2_report.__name__, _mld_str)
 
         icmp_values = {'type_': repr(self.type_),

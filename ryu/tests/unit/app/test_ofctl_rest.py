@@ -131,6 +131,7 @@ def _add_tests():
             )
             test_lib.add_method(Test_ofctl_rest, name, f)
 
+
 _add_tests()
 
 if __name__ == "__main__":

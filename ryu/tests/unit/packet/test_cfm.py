@@ -307,8 +307,8 @@ class Test_cfm(unittest.TestCase):
     def test_to_string(self):
         cfm_values = {'op': self.message}
         _cfm_str = ','.join(['%s=%s' % (k, cfm_values[k])
-                            for k, v in inspect.getmembers(self.ins)
-                            if k in cfm_values])
+                             for k, v in inspect.getmembers(self.ins)
+                             if k in cfm_values])
         cfm_str = '%s(%s)' % (cfm.cfm.__name__, _cfm_str)
         eq_(str(self.ins), cfm_str)
         eq_(repr(self.ins), cfm_str)

@@ -1,6 +1,7 @@
+autopep8
 coverage
 mock
 nose
-pep8
+pycodestyle
 pylint
 formencode

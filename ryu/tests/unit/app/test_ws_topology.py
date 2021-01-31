@@ -50,5 +50,6 @@ class Test_ws_topology(unittest.TestCase):
         rpc_client_mock1.get_proxy.assert_called_once_with()
         rpc_client_mock2.get_proxy.assert_called_once_with()
 
+
 if __name__ == "__main__":
     unittest.main()

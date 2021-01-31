@@ -92,6 +92,7 @@ class EventModifyRequest(ryu_event.EventRequestBase):
 
         port_uuid = reply.insert_uuids[new_port_uuid]
     """
+
     def __init__(self, system_id, func):
         super(EventModifyRequest, self).__init__()
         self.dst = 'OVSDB'

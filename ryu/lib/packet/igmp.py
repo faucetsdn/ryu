@@ -207,8 +207,8 @@ class igmp(packet_base.PacketBase):
 
     def serialize(self, payload, prev):
         hdr = bytearray(struct.pack(self._PACK_STR, self.msgtype,
-                        trunc(self.maxresp), self.csum,
-                        addrconv.ipv4.text_to_bin(self.address)))
+                                    trunc(self.maxresp), self.csum,
+                                    addrconv.ipv4.text_to_bin(self.address)))
 
         if self.csum == 0:
             self.csum = packet_utils.checksum(hdr)
@@ -297,9 +297,9 @@ class igmpv3_query(igmp):
     def serialize(self, payload, prev):
         s_qrv = self.s_flg << 3 | self.qrv
         buf = bytearray(struct.pack(self._PACK_STR, self.msgtype,
-                        trunc(self.maxresp), self.csum,
-                        addrconv.ipv4.text_to_bin(self.address),
-                        s_qrv, trunc(self.qqic), self.num))
+                                    trunc(self.maxresp), self.csum,
+                                    addrconv.ipv4.text_to_bin(self.address),
+                                    s_qrv, trunc(self.qqic), self.num))
         for src in self.srcs:
             buf.extend(struct.pack('4s', addrconv.ipv4.text_to_bin(src)))
         if 0 == self.num:
@@ -372,7 +372,7 @@ class igmpv3_report(igmp):
 
     def serialize(self, payload, prev):
         buf = bytearray(struct.pack(self._PACK_STR, self.msgtype,
-                        self.csum, self.record_num))
+                                    self.csum, self.record_num))
         for record in self.records:
             buf.extend(record.serialize())
         if 0 == self.record_num:
@@ -391,7 +391,7 @@ class igmpv3_report(igmp):
 
 
 class igmpv3_report_group(stringify.StringifyMixin):
-    """
+    r"""
     Internet Group Management Protocol(IGMP, RFC 3376)
     Membership Report Group Record message encoder/decoder class.
 
@@ -461,8 +461,8 @@ class igmpv3_report_group(stringify.StringifyMixin):
 
     def serialize(self):
         buf = bytearray(struct.pack(self._PACK_STR, self.type_,
-                        self.aux_len, self.num,
-                        addrconv.ipv4.text_to_bin(self.address)))
+                                    self.aux_len, self.num,
+                                    addrconv.ipv4.text_to_bin(self.address)))
         for src in self.srcs:
             buf.extend(struct.pack('4s', addrconv.ipv4.text_to_bin(src)))
         if 0 == self.num:

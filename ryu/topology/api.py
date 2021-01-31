@@ -43,4 +43,5 @@ def get_host(app, dpid=None):
 def get_all_host(app):
     return get_host(app)
 
+
 app_manager.require_app('ryu.topology.switches', api_style=True)
