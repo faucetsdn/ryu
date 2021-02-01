@@ -67,11 +67,16 @@ the ports.
            dp = msg.datapath
            ofp = dp.ofproto
            ofp_parser = dp.ofproto_parser
-   
+
            actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD)]
+
+           data = None
+           if msg.buffer_id == ofp.OFP_NO_BUFFER:
+                data = msg.data
+
            out = ofp_parser.OFPPacketOut(
                datapath=dp, buffer_id=msg.buffer_id, in_port=msg.in_port,
-               actions=actions)
+               actions=actions, data = data)
            dp.send_msg(out)
 
 
