@@ -1,3 +1,4 @@
+-r ../pip-requirements.txt
 # NOTE: OpenStack avoids some versions of eventlet, because of the
 # following issue.
 # https://github.com/eventlet/eventlet/issues/401
