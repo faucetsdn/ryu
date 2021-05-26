@@ -9,5 +9,5 @@ oslo.config>=2.5.0
 ovs>=2.6.0  # OVSDB
 routes  # wsgi
 six>=1.4.0
-tinyrpc==0.9.4  # RPC library, BGP speaker(net_cntl)
+tinyrpc==1.0.4  # RPC library, BGP speaker(net_cntl)
 webob>=1.2  # wsgi
