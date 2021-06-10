@@ -47,7 +47,7 @@ def register_switch_address(addr, interval=None):
     def _retry_loop():
         # Delays registration if ofp_handler is not started yet
         while True:
-            if ofp_handler.controller is not None:
+            if ofp_handler is not None and ofp_handler.controller is not None:
                 for a, i in _TMP_ADDRESSES.items():
                     ofp_handler.controller.spawn_client_loop(a, i)
                     hub.sleep(1)
@@ -69,6 +69,6 @@ def unregister_switch_address(addr):
     """
     ofp_handler = app_manager.lookup_service_brick(ofp_event.NAME)
     # Do nothing if ofp_handler is not started yet
-    if ofp_handler.controller is None:
+    if ofp_handler is None or ofp_handler.controller is None:
         return
     ofp_handler.controller.stop_client_loop(addr)
