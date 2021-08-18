@@ -268,7 +268,7 @@ class cc_message(operation):
         self._opcode = CFM_CC_MESSAGE
         assert rdi in [0, 1]
         self.rdi = rdi
-        assert interval is not 0
+        assert interval != 0
         self.interval = interval
         self.seq_num = seq_num
         assert 1 <= mep_id <= 8191

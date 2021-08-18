@@ -319,7 +319,7 @@ class RemoteOvsdb(app_manager.RyuApp):
 
         fsm.connected(now())
 
-        session = jsonrpc.Session(fsm, connection)
+        session = jsonrpc.Session(fsm, connection, fsm.get_name())
         idl = Idl(session, schemas[0])
 
         system_id = discover_system_id(idl)

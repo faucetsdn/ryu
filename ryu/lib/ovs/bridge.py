@@ -114,7 +114,7 @@ class OVSBridge(object):
     """
 
     def __init__(self, CONF, datapath_id, ovsdb_addr, timeout=None,
-                 exception=None):
+                 exception=None, br_name=None):
         super(OVSBridge, self).__init__()
         self.datapath_id = datapath_id
         self.ovsdb_addr = ovsdb_addr
@@ -122,7 +122,7 @@ class OVSBridge(object):
         self.timeout = timeout or CONF.ovsdb_timeout
         self.exception = exception
 
-        self.br_name = None
+        self.br_name = br_name
 
     def run_command(self, commands):
         """

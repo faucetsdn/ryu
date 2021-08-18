@@ -67,6 +67,7 @@ CONF.register_cli_opts([
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
     cfg.StrOpt('ctl-cert', default=None, help='controller certificate'),
     cfg.StrOpt('ca-certs', default=None, help='CA certificates'),
+    cfg.StrOpt('ciphers', default=None, help='list of ciphers to enable'),
     cfg.ListOpt('ofp-switch-address-list', item_type=str, default=[],
                 help='list of IP address and port pairs (default empty). '
                      'e.g., "127.0.0.1:6653,[::1]:6653"'),
@@ -165,6 +166,26 @@ class OpenFlowController(object):
 
     def server_loop(self, ofp_tcp_listen_port, ofp_ssl_listen_port):
         if CONF.ctl_privkey is not None and CONF.ctl_cert is not None:
+            if not hasattr(ssl, 'SSLContext'):
+                # anything less than python 2.7.9 supports only TLSv1
+                # or less, thus we choose TLSv1
+                ssl_args = {'ssl_version': ssl.PROTOCOL_TLSv1}
+            else:
+                # from 2.7.9 and versions 3.4+ ssl context creation is
+                # supported. Protocol_TLS from 2.7.13 and from 3.5.3
+                # replaced SSLv23. Functionality is similar.
+                if hasattr(ssl, 'PROTOCOL_TLS'):
+                    p = 'PROTOCOL_TLS'
+                else:
+                    p = 'PROTOCOL_SSLv23'
+
+                ssl_args = {'ssl_ctx': ssl.SSLContext(getattr(ssl, p))}
+                # Restrict non-safe versions
+                ssl_args['ssl_ctx'].options |= ssl.OP_NO_SSLv3 | ssl.OP_NO_SSLv2
+
+            if CONF.ciphers is not None:
+                ssl_args['ciphers'] = CONF.ciphers
+
             if CONF.ca_certs is not None:
                 server = StreamServer((CONF.ofp_listen_host,
                                        ofp_ssl_listen_port),
@@ -172,15 +193,13 @@ class OpenFlowController(object):
                                       keyfile=CONF.ctl_privkey,
                                       certfile=CONF.ctl_cert,
                                       cert_reqs=ssl.CERT_REQUIRED,
-                                      ca_certs=CONF.ca_certs,
-                                      ssl_version=ssl.PROTOCOL_TLSv1)
+                                      ca_certs=CONF.ca_certs, **ssl_args)
             else:
                 server = StreamServer((CONF.ofp_listen_host,
                                        ofp_ssl_listen_port),
                                       datapath_connection_factory,
                                       keyfile=CONF.ctl_privkey,
-                                      certfile=CONF.ctl_cert,
-                                      ssl_version=ssl.PROTOCOL_TLSv1)
+                                      certfile=CONF.ctl_cert, **ssl_args)
         else:
             server = StreamServer((CONF.ofp_listen_host,
                                    ofp_tcp_listen_port),
@@ -298,7 +317,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
-        self.ofp_brick.send_event_to_observers(ev, state)
+        if self.ofp_brick is not None:
+            self.ofp_brick.send_event_to_observers(ev, state)
 
     # Low level socket handling layer
     @_deactivate
@@ -343,16 +363,17 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                 # LOG.debug('queue msg %s cls %s', msg, msg.__class__)
                 if msg:
                     ev = ofp_event.ofp_msg_to_ev(msg)
-                    self.ofp_brick.send_event_to_observers(ev, self.state)
+                    if self.ofp_brick is not None:
+                        self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                    def dispatchers(x):
-                        return x.callers[ev.__class__].dispatchers
+                        def dispatchers(x):
+                            return x.callers[ev.__class__].dispatchers
 
-                    handlers = [handler for handler in
-                                self.ofp_brick.get_handlers(ev) if
-                                self.state in dispatchers(handler)]
-                    for handler in handlers:
-                        handler(ev)
+                        handlers = [handler for handler in
+                                    self.ofp_brick.get_handlers(ev) if
+                                    self.state in dispatchers(handler)]
+                        for handler in handlers:
+                            handler(ev)
 
                 buf = buf[msg_len:]
                 buf_len = len(buf)
