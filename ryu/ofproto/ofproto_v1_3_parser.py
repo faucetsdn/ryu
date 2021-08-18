@@ -1754,7 +1754,7 @@ class OFPMatchField(StringifyMixin):
             (value, mask) = struct.unpack_from(pack_str, buf, offset + 4)
         else:
             (value,) = struct.unpack_from(cls.pack_str, buf, offset + 4)
-        return cls(header, value, mask)
+        return cls(header, value, mask)  # pytype: disable=wrong-arg-count
 
     def serialize(self, buf, offset):
         if ofproto.oxm_tlv_header_extract_hasmask(self.header):
@@ -2773,8 +2773,9 @@ class OFPFlowMod(MsgBase):
         try:
             while offset < msg_len:
                 i = OFPInstruction.parser(buf, offset)
-                instructions.append(i)
-                offset += i.len
+                if i is not None:
+                    instructions.append(i)
+                    offset += i.len
         except exception.OFPTruncatedMessage as e:
             instructions.append(e.ofpmsg)
             msg.instructions = instructions
@@ -2805,7 +2806,9 @@ class OFPInstruction(StringifyMixin):
     def parser(cls, buf, offset):
         (type_, len_) = struct.unpack_from('!HH', buf, offset)
         cls_ = cls._INSTRUCTION_TYPES.get(type_)
-        return cls_.parser(buf, offset)
+        if cls_ is not None:
+            return cls_.parser(buf, offset)
+        return None
 
 
 @OFPInstruction.register_instruction_type([ofproto.OFPIT_GOTO_TABLE])
@@ -3551,7 +3554,7 @@ class OFPActionExperimenter(OFPAction):
         data = buf[(offset + ofproto.OFP_ACTION_EXPERIMENTER_HEADER_SIZE
                     ): offset + len_]
         if experimenter == ofproto_common.NX_EXPERIMENTER_ID:
-            obj = NXAction.parse(data)  # noqa
+            obj = NXAction.parse(data)  # pytype: disable=name-error # noqa
         else:
             obj = OFPActionExperimenterUnknown(experimenter, data)
         obj.len = len_
@@ -3932,22 +3935,23 @@ class OFPMultipartReply(MsgBase):
             ofproto.OFP_MULTIPART_REPLY_PACK_STR, six.binary_type(buf),
             ofproto.OFP_HEADER_SIZE)
         stats_type_cls = cls._STATS_MSG_TYPES.get(type_)
-        msg = super(OFPMultipartReply, stats_type_cls).parser(
+        msg = super(OFPMultipartReply, stats_type_cls).parser(  # pytype: disable=attribute-error
             datapath, version, msg_type, msg_len, xid, buf)
         msg.type = type_
         msg.flags = flags
 
-        offset = ofproto.OFP_MULTIPART_REPLY_SIZE
-        body = []
-        while offset < msg_len:
-            b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
-            body.append(b)
-            offset += b.length if hasattr(b, 'length') else b.len
+        if stats_type_cls is not None:
+            offset = ofproto.OFP_MULTIPART_REPLY_SIZE
+            body = []
+            while offset < msg_len:
+                b = stats_type_cls.cls_stats_body_cls.parser(msg.buf, offset)
+                body.append(b)
+                offset += b.length if hasattr(b, 'length') else b.len
 
-        if stats_type_cls.cls_body_single_struct:
-            msg.body = body[0]
-        else:
-            msg.body = body
+            if stats_type_cls.cls_body_single_struct:
+                msg.body = body[0]
+            else:
+                msg.body = body
         return msg
 
 
@@ -4577,12 +4581,13 @@ class OFPGroupStats(StringifyMixin):
         group_stats = cls(*group)
 
         group_stats.bucket_stats = []
-        total_len = group_stats.length + offset
-        offset += ofproto.OFP_GROUP_STATS_SIZE
-        while total_len > offset:
-            b = OFPBucketCounter.parser(buf, offset)
-            group_stats.bucket_stats.append(b)
-            offset += ofproto.OFP_BUCKET_COUNTER_SIZE
+        if group_stats.length is not None:
+            total_len = group_stats.length + offset
+            offset += ofproto.OFP_GROUP_STATS_SIZE
+            while total_len > offset:
+                b = OFPBucketCounter.parser(buf, offset)
+                group_stats.bucket_stats.append(b)
+                offset += ofproto.OFP_BUCKET_COUNTER_SIZE
 
         return group_stats
 
@@ -5770,7 +5775,7 @@ class ONFFlowMonitorRequest(StringifyMixin):
         match_len = match.length
         match_hdr_len = ofproto.OFP_MATCH_SIZE - 4  # exclude pad[4]
         # strip ofp_match header and trailing padding
-        bin_match = bytes(bin_match)[match_hdr_len:match_len]
+        bin_match = bytearray(bin_match)[match_hdr_len:match_len]
         self.match_len = len(bin_match)
 
         buf = bytearray()
@@ -5936,14 +5941,16 @@ class OFPQueueProp(OFPQueuePropHeader):
             ofproto.OFP_QUEUE_PROP_HEADER_PACK_STR,
             buf, offset)
         cls_ = cls._QUEUE_PROP_PROPERTIES.get(property_)
-        p = cls_.parser(buf, offset + ofproto.OFP_QUEUE_PROP_HEADER_SIZE)
-        p.property = property_
-        p.len = len_
-        if property_ == ofproto.OFPQT_EXPERIMENTER:
-            rest = buf[offset + ofproto.OFP_QUEUE_PROP_EXPERIMENTER_SIZE:
-                       offset + len_]
-            p.parse_experimenter_data(rest)
-        return p
+        if cls_ is not None:
+            p = cls_.parser(buf, offset + ofproto.OFP_QUEUE_PROP_HEADER_SIZE)
+            p.property = property_
+            p.len = len_
+            if property_ == ofproto.OFPQT_EXPERIMENTER:
+                rest = buf[offset + ofproto.OFP_QUEUE_PROP_EXPERIMENTER_SIZE:
+                           offset + len_]
+                p.parse_experimenter_data(rest)
+            return p
+        return None
 
 
 @OFPQueueProp.register_property(ofproto.OFPQT_MIN_RATE,
@@ -6017,9 +6024,10 @@ class OFPPacketQueue(StringifyMixin):
         properties = []
         while length < len_:
             queue_prop = OFPQueueProp.parser(buf, offset)
-            properties.append(queue_prop)
-            offset += queue_prop.len
-            length += queue_prop.len
+            if queue_prop is not None:
+                properties.append(queue_prop)
+                offset += queue_prop.len
+                length += queue_prop.len
         o = cls(queue_id, port, properties)
         o.len = len_
         return o
@@ -6340,6 +6348,10 @@ class OFPSetAsync(MsgBase):
                       self.packet_in_mask[0], self.packet_in_mask[1],
                       self.port_status_mask[0], self.port_status_mask[1],
                       self.flow_removed_mask[0], self.flow_removed_mask[1])
+
+
+class OFPBundleProp(OFPPropBase):
+    _TYPES = {}
 
 
 @_register_exp_type(ofproto_common.ONF_EXPERIMENTER_ID,

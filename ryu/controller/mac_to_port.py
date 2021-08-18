@@ -50,7 +50,7 @@ class MacToPortTable(object):
         return self.mac_to_port[dpid].get(mac)
 
     def mac_list(self, dpid, port):
-        return [mac for (mac, port_) in self.mac_to_port.get(dpid).items()
+        return [mac for (mac, port_) in self.mac_to_port.get(dpid, {}).items()
                 if port_ == port]
 
     def mac_del(self, dpid, mac):

@@ -317,7 +317,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
-        self.ofp_brick.send_event_to_observers(ev, state)
+        if self.ofp_brick is not None:
+            self.ofp_brick.send_event_to_observers(ev, state)
 
     # Low level socket handling layer
     @_deactivate
@@ -362,16 +363,17 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                 # LOG.debug('queue msg %s cls %s', msg, msg.__class__)
                 if msg:
                     ev = ofp_event.ofp_msg_to_ev(msg)
-                    self.ofp_brick.send_event_to_observers(ev, self.state)
+                    if self.ofp_brick is not None:
+                        self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                    def dispatchers(x):
-                        return x.callers[ev.__class__].dispatchers
+                        def dispatchers(x):
+                            return x.callers[ev.__class__].dispatchers
 
-                    handlers = [handler for handler in
-                                self.ofp_brick.get_handlers(ev) if
-                                self.state in dispatchers(handler)]
-                    for handler in handlers:
-                        handler(ev)
+                        handlers = [handler for handler in
+                                    self.ofp_brick.get_handlers(ev) if
+                                    self.state in dispatchers(handler)]
+                        for handler in handlers:
+                            handler(ev)
 
                 buf = buf[msg_len:]
                 buf_len = len(buf)
