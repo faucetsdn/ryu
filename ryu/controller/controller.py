@@ -67,6 +67,7 @@ CONF.register_cli_opts([
     cfg.StrOpt('ctl-privkey', default=None, help='controller private key'),
     cfg.StrOpt('ctl-cert', default=None, help='controller certificate'),
     cfg.StrOpt('ca-certs', default=None, help='CA certificates'),
+    cfg.StrOpt('ciphers', default=None, help='list of ciphers to enable'),
     cfg.ListOpt('ofp-switch-address-list', item_type=str, default=[],
                 help='list of IP address and port pairs (default empty). '
                      'e.g., "127.0.0.1:6653,[::1]:6653"'),
@@ -181,6 +182,9 @@ class OpenFlowController(object):
                 ssl_args = {'ssl_ctx': ssl.SSLContext(getattr(ssl, p))}
                 # Restrict non-safe versions
                 ssl_args['ssl_ctx'].options |= ssl.OP_NO_SSLv3 | ssl.OP_NO_SSLv2
+
+            if CONF.ciphers is not None:
+                ssl_args['ciphers'] = CONF.ciphers
 
             if CONF.ca_certs is not None:
                 server = StreamServer((CONF.ofp_listen_host,
@@ -313,7 +317,8 @@ class Datapath(ofproto_protocol.ProtocolDesc):
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
-        self.ofp_brick.send_event_to_observers(ev, state)
+        if self.ofp_brick is not None:
+            self.ofp_brick.send_event_to_observers(ev, state)
 
     # Low level socket handling layer
     @_deactivate
@@ -358,16 +363,17 @@ class Datapath(ofproto_protocol.ProtocolDesc):
                 # LOG.debug('queue msg %s cls %s', msg, msg.__class__)
                 if msg:
                     ev = ofp_event.ofp_msg_to_ev(msg)
-                    self.ofp_brick.send_event_to_observers(ev, self.state)
+                    if self.ofp_brick is not None:
+                        self.ofp_brick.send_event_to_observers(ev, self.state)
 
-                    def dispatchers(x):
-                        return x.callers[ev.__class__].dispatchers
+                        def dispatchers(x):
+                            return x.callers[ev.__class__].dispatchers
 
-                    handlers = [handler for handler in
-                                self.ofp_brick.get_handlers(ev) if
-                                self.state in dispatchers(handler)]
-                    for handler in handlers:
-                        handler(ev)
+                        handlers = [handler for handler in
+                                    self.ofp_brick.get_handlers(ev) if
+                                    self.state in dispatchers(handler)]
+                        for handler in handlers:
+                            handler(ev)
 
                 buf = buf[msg_len:]
                 buf_len = len(buf)

@@ -67,11 +67,16 @@ the ports.
            dp = msg.datapath
            ofp = dp.ofproto
            ofp_parser = dp.ofproto_parser
-   
+
            actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD)]
+
+           data = None
+           if msg.buffer_id == ofp.OFP_NO_BUFFER:
+                data = msg.data
+
            out = ofp_parser.OFPPacketOut(
                datapath=dp, buffer_id=msg.buffer_id, in_port=msg.in_port,
-               actions=actions)
+               actions=actions, data = data)
            dp.send_msg(out)
 
 
@@ -118,9 +123,9 @@ run a Ryu application that does something useful.
 
 Is a dumb L2 switch is too dumb? You want to implement a learning L2
 switch? Move to `the next step
-<https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py>`_. You
+<https://github.com/faucetsdn/ryu/blob/master/ryu/app/simple_switch.py>`_. You
 can learn from the existing Ryu applications at `ryu/app
-<https://github.com/osrg/ryu/blob/master/ryu/app/>`_ directory and
+<https://github.com/faucetsdn/ryu/blob/master/ryu/app/>`_ directory and
 `integrated tests
-<https://github.com/osrg/ryu/blob/master/ryu/tests/integrated/>`_
+<https://github.com/faucetsdn/ryu/blob/master/ryu/tests/integrated/>`_
 directory.
