@@ -1,0 +1,15 @@
+{
+  "separateMajorMinor": false,
+  "schedule": [
+    "after 10pm every weekday",
+    "before 5am every weekday",
+    "every weekend"
+  ],
+  "timezone": "Pacific/Auckland",
+  "extends": [
+    "config:base",
+    ":prHourlyLimit1",
+    ":preserveSemverRanges",
+    "docker:enableMajor"
+  ]
+}

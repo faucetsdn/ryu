@@ -108,8 +108,15 @@ class WebSocketRegistrationWrapper(object):
 
 class _AlreadyHandledResponse(Response):
     # XXX: Eventlet API should not be used directly.
-    from eventlet.wsgi import ALREADY_HANDLED
-    _ALREADY_HANDLED = ALREADY_HANDLED
+    # https://github.com/benoitc/gunicorn/pull/2581
+    from packaging import version
+    import eventlet
+    if version.parse(eventlet.__version__) >= version.parse("0.30.3"):
+        import eventlet.wsgi
+        _ALREADY_HANDLED = getattr(eventlet.wsgi, "ALREADY_HANDLED", None)
+    else:
+        from eventlet.wsgi import ALREADY_HANDLED
+        _ALREADY_HANDLED = ALREADY_HANDLED
 
     def __call__(self, environ, start_response):
         return self._ALREADY_HANDLED
