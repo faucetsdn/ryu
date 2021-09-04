@@ -617,7 +617,8 @@ class TableCoreManager(object):
     def update_vrf_table(self, route_dist, prefix=None, next_hop=None,
                          route_family=None, route_type=None, tunnel_type=None,
                          is_withdraw=False, redundancy_mode=None,
-                         pmsi_tunnel_type=None, **kwargs):
+                         pmsi_tunnel_type=None, tunnel_endpoint_ip=None,
+                         mac_mobility=None, **kwargs):
         """Update a BGP route in the VRF table identified by `route_dist`
         with the given `next_hop`.
 
@@ -636,6 +637,13 @@ class TableCoreManager(object):
          used to encode the multicast tunnel identifier.
         This field is advertised only if route_type is
         EVPN_MULTICAST_ETAG_ROUTE.
+
+        `tunnel_endpoint_ip` specifies a tunnel endpoint IP other than the
+        default local router ID; only used in EVPN_MULTICAST_ETAG_ROUTE
+
+        `mac_mobility` specifies an optional integer sequence number to insert
+        as a MAC Mobility extended community; special value `-1` is used for
+        static MACs (MAC Mobility sequence 0 with STATIC flag set)
 
         Returns assigned VPN label.
         """
@@ -708,6 +716,7 @@ class TableCoreManager(object):
         return vrf_table.insert_vrf_path(
             nlri=prefix, next_hop=next_hop, gen_lbl=gen_lbl,
             is_withdraw=is_withdraw, redundancy_mode=redundancy_mode,
+            mac_mobility=mac_mobility,
             vni=vni, tunnel_type=tunnel_type,
             pmsi_tunnel_type=pmsi_tunnel_type)
 
