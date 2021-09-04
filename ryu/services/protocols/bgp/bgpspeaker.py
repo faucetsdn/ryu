@@ -43,6 +43,8 @@ from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
+from ryu.services.protocols.bgp.api.base import MAC_MOBILITY
+from ryu.services.protocols.bgp.api.base import TUNNEL_ENDPOINT_IP
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAX_ET
 from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_LACP
 from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_L2_BRIDGE
@@ -811,7 +813,7 @@ class BGPSpeaker(object):
 
             # Pass on mac_mobility, must be integer value
             if mac_mobility is not None:
-                kwargs['mac_mobility'] = int(mac_mobility)
+                kwargs[MAC_MOBILITY] = int(mac_mobility)
         elif route_type == EVPN_MULTICAST_ETAG_ROUTE:
             kwargs.update({
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
@@ -830,7 +832,7 @@ class BGPSpeaker(object):
                                  pmsi_tunnel_type)
             # Set non-default tunnel endpoint IP, if provided
             if tunnel_endpoint_ip is not None:
-                kwargs['tunnel_endpoint_ip'] = tunnel_endpoint_ip
+                kwargs[TUNNEL_ENDPOINT_IP] = tunnel_endpoint_ip
         elif route_type == EVPN_ETH_SEGMENT:
             kwargs.update({
                 EVPN_ESI: esi,
@@ -849,7 +851,7 @@ class BGPSpeaker(object):
 
             # Add mac_mobility
             if mac_mobility is not None:
-                kwargs['mac_mobility'] = int(mac_mobility)
+                kwargs[MAC_MOBILITY] = int(mac_mobility)
         else:
             raise ValueError('Unsupported EVPN route type: %s' % route_type)
 
