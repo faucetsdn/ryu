@@ -285,7 +285,7 @@ class Activity(object):
         """Stops all threads spawn by this activity.
         """
         for thread_name, thread in list(self._child_thread_map.items()):
-            if name is not None and thread_name is name:
+            if name is None or thread_name == name:
                 LOG.debug('%s: Stopping child thread %s',
                           self.name, thread_name)
                 thread.kill()
