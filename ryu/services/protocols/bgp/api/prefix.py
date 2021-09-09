@@ -55,6 +55,8 @@ from ryu.services.protocols.bgp.api.base import VPN_LABEL
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
+from ryu.services.protocols.bgp.api.base import MAC_MOBILITY
+from ryu.services.protocols.bgp.api.base import TUNNEL_ENDPOINT_IP
 from ryu.services.protocols.bgp.api.base import FLOWSPEC_FAMILY
 from ryu.services.protocols.bgp.api.base import FLOWSPEC_RULES
 from ryu.services.protocols.bgp.api.base import FLOWSPEC_ACTIONS
@@ -360,7 +362,8 @@ def delete_local(route_dist, prefix, route_family=VRF_RF_IPV4):
                        opt_args=[EVPN_ESI, EVPN_ETHERNET_TAG_ID,
                                  REDUNDANCY_MODE, MAC_ADDR, IP_ADDR, IP_PREFIX,
                                  GW_IP_ADDR, EVPN_VNI, TUNNEL_TYPE,
-                                 PMSI_TUNNEL_TYPE])
+                                 PMSI_TUNNEL_TYPE, TUNNEL_ENDPOINT_IP,
+                                 MAC_MOBILITY])
 def add_evpn_local(route_type, route_dist, next_hop, **kwargs):
     """Adds EVPN route from VRF identified by *route_dist*.
     """

@@ -43,6 +43,8 @@ from ryu.services.protocols.bgp.api.base import ROUTE_FAMILY
 from ryu.services.protocols.bgp.api.base import EVPN_VNI
 from ryu.services.protocols.bgp.api.base import TUNNEL_TYPE
 from ryu.services.protocols.bgp.api.base import PMSI_TUNNEL_TYPE
+from ryu.services.protocols.bgp.api.base import MAC_MOBILITY
+from ryu.services.protocols.bgp.api.base import TUNNEL_ENDPOINT_IP
 from ryu.services.protocols.bgp.api.prefix import EVPN_MAX_ET
 from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_LACP
 from ryu.services.protocols.bgp.api.prefix import ESI_TYPE_L2_BRIDGE
@@ -689,7 +691,7 @@ class BGPSpeaker(object):
                         ethernet_tag_id=None, mac_addr=None, ip_addr=None,
                         ip_prefix=None, gw_ip_addr=None, vni=None,
                         next_hop=None, tunnel_type=None, pmsi_tunnel_type=None,
-                        redundancy_mode=None):
+                        redundancy_mode=None, tunnel_endpoint_ip=None, mac_mobility=None):
         """ This method adds a new EVPN route to be advertised.
 
         ``route_type`` specifies one of the EVPN route type name.
@@ -755,6 +757,15 @@ class BGPSpeaker(object):
 
         - REDUNDANCY_MODE_ALL_ACTIVE    = 'all_active'
         - REDUNDANCY_MODE_SINGLE_ACTIVE = 'single_active'
+
+        ``tunnel_endpoint_ip`` specifies a VTEP IP address other than the
+        local router ID. This attribute is advertised only if route_type is
+        EVPN_MULTICAST_ETAG_ROUTE, and defaults to the local router ID.
+
+        ``mac_mobility`` specifies an optional integer sequence number to use
+        in a MAC Mobility extended community field. The special value '-1' can
+        be used to set the STATIC flag with a 0-value sequence number.
+
         """
         func_name = 'evpn_prefix.add_local'
 
@@ -799,6 +810,10 @@ class BGPSpeaker(object):
             # Set tunnel type specific arguments
             if tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]:
                 kwargs[EVPN_VNI] = vni
+
+            # Pass on mac_mobility, must be integer value
+            if mac_mobility is not None:
+                kwargs[MAC_MOBILITY] = int(mac_mobility)
         elif route_type == EVPN_MULTICAST_ETAG_ROUTE:
             kwargs.update({
                 EVPN_ETHERNET_TAG_ID: ethernet_tag_id,
@@ -815,6 +830,9 @@ class BGPSpeaker(object):
             elif pmsi_tunnel_type is not None:
                 raise ValueError('Unsupported PMSI tunnel type: %s' %
                                  pmsi_tunnel_type)
+            # Set non-default tunnel endpoint IP, if provided
+            if tunnel_endpoint_ip is not None:
+                kwargs[TUNNEL_ENDPOINT_IP] = tunnel_endpoint_ip
         elif route_type == EVPN_ETH_SEGMENT:
             kwargs.update({
                 EVPN_ESI: esi,
@@ -830,6 +848,10 @@ class BGPSpeaker(object):
             # Set tunnel type specific arguments
             if tunnel_type in [TUNNEL_TYPE_VXLAN, TUNNEL_TYPE_NVGRE]:
                 kwargs[EVPN_VNI] = vni
+
+            # Add mac_mobility
+            if mac_mobility is not None:
+                kwargs[MAC_MOBILITY] = int(mac_mobility)
         else:
             raise ValueError('Unsupported EVPN route type: %s' % route_type)
 

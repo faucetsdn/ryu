@@ -306,6 +306,17 @@ class VrfTable(Table):
                                        flags=flags,
                                        mpls_label=label_list[0]))
 
+            # Add MAC Move functionality
+            # see https://datatracker.ietf.org/doc/html/rfc7432#section-7.7
+            mac_mobility_seq = kwargs.get('mac_mobility', None)
+            if mac_mobility_seq is not None:
+                from ryu.lib.packet.bgp import BGPEvpnMacMobilityExtendedCommunity
+                is_static = (mac_mobility_seq == -1)  # Magic value for static MACs
+                communities.append(BGPEvpnMacMobilityExtendedCommunity(
+                    subtype=0,
+                    flags=1 if is_static else 0,  # 0x1 = sticky (static) MAC
+                    sequence_number=mac_mobility_seq if not is_static else 0))
+
             pattrs[BGP_ATTR_TYPE_EXTENDED_COMMUNITIES] = \
                 BGPPathAttributeExtendedCommunities(communities=communities)
             if vrf_conf.multi_exit_disc:
@@ -318,8 +329,9 @@ class VrfTable(Table):
                 from ryu.services.protocols.bgp.api.prefix import (
                     PMSI_TYPE_INGRESS_REP)
                 if pmsi_tunnel_type == PMSI_TYPE_INGRESS_REP:
-                    tunnel_id = PmsiTunnelIdIngressReplication(
-                        tunnel_endpoint_ip=self._core_service.router_id)
+                    # Support other VTEP IP than local router_id
+                    vtep = kwargs.get('tunnel_endpoint_ip', self._core_service.router_id)
+                    tunnel_id = PmsiTunnelIdIngressReplication(tunnel_endpoint_ip=vtep)
                 else:  # pmsi_tunnel_type == PMSI_TYPE_NO_TUNNEL_INFO
                     tunnel_id = None
                 pattrs[BGP_ATTR_TYEP_PMSI_TUNNEL_ATTRIBUTE] = \
