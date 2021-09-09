@@ -36,6 +36,8 @@ from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_IGP
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_EGP
 from ryu.lib.packet.bgp import BGP_ATTR_ORIGIN_INCOMPLETE
 
+from ryu.services.protocols.bgp.constants import VRF_TABLE
+
 LOG = logging.getLogger('bgpspeaker.processor')
 
 
@@ -428,7 +430,7 @@ def _cmp_by_asn(local_asn, path1, path2):
     """
     def get_path_source_asn(path):
         asn = None
-        if path.source is None:
+        if path.source is None or path.source == VRF_TABLE:
             asn = local_asn
         else:
             asn = path.source.remote_as
