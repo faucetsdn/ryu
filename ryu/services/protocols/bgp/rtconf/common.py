@@ -44,6 +44,7 @@ LABEL_RANGE = 'label_range'
 LABEL_RANGE_MAX = 'max'
 LABEL_RANGE_MIN = 'min'
 LOCAL_PREF = 'local_pref'
+NET_NS = 'net_ns'
 
 # Similar to Cisco command 'allowas-in'. Allows the local ASN in the path.
 # Facilitates auto rd, auto rt import/export
@@ -264,7 +265,7 @@ class CommonConf(BaseConf):
                                    MAX_PATH_EXT_RTFILTER_ALL,
                                    ALLOW_LOCAL_AS_IN_COUNT,
                                    CLUSTER_ID,
-                                   LOCAL_PREF])
+                                   LOCAL_PREF, NET_NS])
 
     def __init__(self, **kwargs):
         super(CommonConf, self).__init__(**kwargs)
@@ -294,6 +295,9 @@ class CommonConf(BaseConf):
             CLUSTER_ID, kwargs[ROUTER_ID], **kwargs)
         self._settings[LOCAL_PREF] = compute_optional_conf(
             LOCAL_PREF, DEFAULT_LOCAL_PREF, **kwargs)
+        self._settings[NET_NS] = compute_optional_conf(
+            NET_NS, None, **kwargs)
+
 
     # =========================================================================
     # Required attributes
@@ -353,6 +357,10 @@ class CommonConf(BaseConf):
     @property
     def local_pref(self):
         return self._settings[LOCAL_PREF]
+
+    @property
+    def net_ns(self):
+        return self._settings[NET_NS]
 
     @classmethod
     def get_opt_settings(self):

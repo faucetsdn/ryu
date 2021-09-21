@@ -86,6 +86,7 @@ from ryu.services.protocols.bgp.rtconf.common import REFRESH_STALEPATH_TIME
 from ryu.services.protocols.bgp.rtconf.common import LABEL_RANGE
 from ryu.services.protocols.bgp.rtconf.common import ALLOW_LOCAL_AS_IN_COUNT
 from ryu.services.protocols.bgp.rtconf.common import LOCAL_PREF
+from ryu.services.protocols.bgp.rtconf.common import NET_NS
 from ryu.services.protocols.bgp.rtconf.common import DEFAULT_LOCAL_PREF
 from ryu.services.protocols.bgp.rtconf import neighbors
 from ryu.services.protocols.bgp.rtconf import vrfs
@@ -290,6 +291,9 @@ class BGPSpeaker(object):
     It must be the string representation of an IPv4 address.
     If omitted, "router_id" is used for this field.
 
+    ``net_ns`` specifies a custom network namespace to use. If omitted, the
+    current process namespace is used.
+
     ``local_pref`` specifies the default local preference. It must be an
     integer.
     """
@@ -308,6 +312,7 @@ class BGPSpeaker(object):
                  label_range=DEFAULT_LABEL_RANGE,
                  allow_local_as_in_count=0,
                  cluster_id=None,
+                 net_ns=None, # JvB added
                  local_pref=DEFAULT_LOCAL_PREF):
         super(BGPSpeaker, self).__init__()
 
@@ -322,6 +327,7 @@ class BGPSpeaker(object):
             ALLOW_LOCAL_AS_IN_COUNT: allow_local_as_in_count,
             CLUSTER_ID: cluster_id,
             LOCAL_PREF: local_pref,
+            NET_NS: net_ns,
         }
         self._core_start(settings)
         self._init_signal_listeners()

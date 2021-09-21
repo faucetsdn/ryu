@@ -231,9 +231,17 @@ class CoreService(Factory, Activity):
         self.listen_sockets = {}
         if self._common_config.bgp_server_port != 0:
             for host in self._common_config.bgp_server_hosts:
-                server_thread, sockets = self._listen_tcp(
-                    (host, self._common_config.bgp_server_port),
-                    self.start_protocol)
+                if self._common_conf.net_ns is not None:
+                  import netns
+                  with netns.NetNS(nsname=self._common_conf.net_ns):
+                    server_thread, sockets = self._listen_tcp(
+                        (host, self._common_config.bgp_server_port),
+                        self.start_protocol)
+                else:
+                  server_thread, sockets = self._listen_tcp(
+                      (host, self._common_config.bgp_server_port),
+                      self.start_protocol)
+
                 self.listen_sockets.update(sockets)
                 server_thread.wait()
         processor_thread.wait()

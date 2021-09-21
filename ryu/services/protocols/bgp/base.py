@@ -342,6 +342,7 @@ class Activity(object):
         addr, port = sock.getsockname()[:2]
         return self._canonicalize_ip(addr), str(port)
 
+    # XXX JvB not used
     def _create_listen_socket(self, family, loc_addr):
         s = socket.socket(family)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -365,7 +366,7 @@ class Activity(object):
         For each connection `server_factory` starts a new protocol.
         """
         info = socket.getaddrinfo(loc_addr[0], loc_addr[1], socket.AF_UNSPEC,
-                                  socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
+                                    socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
         listen_sockets = {}
         for res in info:
             af, socktype, proto, _, sa = res
@@ -375,13 +376,11 @@ class Activity(object):
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 if af == socket.AF_INET6:
                     sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
-
                 sock.bind(sa)
                 sock.listen(50)
                 listen_sockets[sa] = sock
             except socket.error as e:
                 LOG.error('Error creating socket: %s', e)
-
                 if sock:
                     sock.close()
 
