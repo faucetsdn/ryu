@@ -90,20 +90,23 @@ def create_path(src_peer, nlri, **kwargs):
 
 
 def clone_path_and_update_med_for_target_neighbor(path, med):
-    assert path # and med # JvB removed, can be None
+"""
+Especially in case of iBGP, the MED can be empty (None)
+"""
+    assert path  # and med # JvB removed, can be None
     route_family = path.route_family
     if route_family not in _ROUTE_FAMILY_TO_PATH_MAP.keys():
         raise ValueError('Clone is not supported for address-family %s' %
                          route_family)
     path_cls = _ROUTE_FAMILY_TO_PATH_MAP.get(route_family)
     pattrs = path.pathattr_map
-    if med: # JvB added
-       pattrs[BGP_ATTR_TYPE_MULTI_EXIT_DISC] = BGPPathAttributeMultiExitDisc(med)
+    if med:  # JvB added
+        pattrs[BGP_ATTR_TYPE_MULTI_EXIT_DISC] = BGPPathAttributeMultiExitDisc(med)
     return path_cls(
         path.source, path.nlri, path.source_version_num,
         pattrs=pattrs, nexthop=path.nexthop,
         is_withdraw=path.is_withdraw,
-        med_set_by_target_neighbor=(med is not None) # JvB conditional
+        med_set_by_target_neighbor=(med is not None)  # JvB add conditional
     )
 
 
