@@ -39,6 +39,7 @@ Some functions of ryu require extra packages:
 - NETCONF requires paramiko
 - BGP speaker (SSH console) requires paramiko
 - Zebra protocol service (database) requires SQLAlchemy
+- Network namespaces for BGP sockets requires netns
 
 If you want to use these functions, please install the requirements::
 
