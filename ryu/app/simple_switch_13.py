@@ -63,7 +63,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     idle_timeout=idle, hard_timeout=hard,
-                                    match=match, instructions=inst
+                                    match=match, instructions=inst,
                                     table_id=tableID)
         datapath.send_msg(mod)
 
