@@ -39,9 +39,7 @@ def action_to_str(act, ofctl_action_to_str):
                                                       src_start, src_end)
 
     elif sub_type == nicira_ext.NXAST_REG_LOAD:
-        start = act.ofs
-        end = start + act.nbits
-        return 'NX_LOAD: {%s[%s..%s]: %x}' % (act.dst, start, end, act.value)
+        return 'NX_LOAD: {%s%s: %x}' % (act.dst, nicira_ext.ofs_nbits_str(act.ofs_nbits), act.value)
 
     elif sub_type == nicira_ext.NXAST_LEARN:
         specs = []

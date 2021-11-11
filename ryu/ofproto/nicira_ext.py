@@ -332,6 +332,17 @@ def ofs_nbits(start, end):
     return (start << 6) + (end - start)
 
 
+def ofs_nbits_str(n):
+    start = 0
+    while True:
+        start += 1
+        if (start << 6) > n:
+            break
+    start -= 1
+    end = n + start - (start << 6)
+    return "[%d..%d]" % (start, end)
+
+
 def nxm_header__(vendor, field, hasmask, length):
     return (vendor << 16) | (field << 9) | (hasmask << 8) | length
 

@@ -19,6 +19,7 @@ import struct
 import time
 from ryu import cfg
 
+from collections import defaultdict
 from ryu.topology import event
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -376,16 +377,16 @@ class LinkState(dict):
     # dict: Link class -> timestamp
     def __init__(self):
         super(LinkState, self).__init__()
-        self._map = {}
+        self._map = defaultdict(lambda: defaultdict(lambda: None))
 
-    def get_peer(self, src):
-        return self._map.get(src, None)
+    def get_peers(self, src):
+        return self._map[src].keys()
 
     def update_link(self, src, dst):
         link = Link(src, dst)
 
         self[link] = time.time()
-        self._map[src] = dst
+        self._map[src][dst] = link
 
         # return if the reverse link is also up or not
         rev_link = Link(dst, src)
@@ -393,7 +394,7 @@ class LinkState(dict):
 
     def link_down(self, link):
         del self[link]
-        del self._map[link.src]
+        del self._map[link.src][link.dst]
 
     def rev_link_set_timestamp(self, rev_link, timestamp):
         # rev_link may or may not in LinkSet
@@ -401,19 +402,20 @@ class LinkState(dict):
             self[rev_link] = timestamp
 
     def port_deleted(self, src):
-        dst = self.get_peer(src)
-        if dst is None:
-            raise KeyError()
+        dsts = self.get_peers(src)
 
-        link = Link(src, dst)
-        rev_link = Link(dst, src)
-        del self[link]
+        rev_link_dsts = []
+        for dst in dsts:
+            link = Link(src, dst)
+            rev_link = Link(dst, src)
+            del self[link]
+            self.pop(rev_link, None)
+            if src in self._map[dst]:
+                del self._map[dst][src]
+                rev_link_dsts.append(dst)
+
         del self._map[src]
-        # reverse link might not exist
-        self.pop(rev_link, None)
-        rev_link_dst = self._map.pop(dst, None)
-
-        return dst, rev_link_dst
+        return dsts, rev_link_dsts
 
 
 class LLDPPacket(object):
@@ -510,7 +512,6 @@ class Switches(app_manager.RyuApp):
     LLDP_SEND_PERIOD_PER_PORT = .9
     TIMEOUT_CHECK_PERIOD = 5.
     LINK_TIMEOUT = TIMEOUT_CHECK_PERIOD * 2
-    LINK_LLDP_DROP = 5
 
     def __init__(self, *args, **kwargs):
         super(Switches, self).__init__(*args, **kwargs)
@@ -577,17 +578,18 @@ class Switches(app_manager.RyuApp):
 
     def _link_down(self, port):
         try:
-            dst, rev_link_dst = self.links.port_deleted(port)
+            dsts, rev_link_dsts = self.links.port_deleted(port)
         except KeyError:
             # LOG.debug('key error. src=%s, dst=%s',
             #           port, self.links.get_peer(port))
             return
-        link = Link(port, dst)
-        self.send_event_to_observers(event.EventLinkDelete(link))
-        if rev_link_dst:
-            rev_link = Link(dst, rev_link_dst)
+        for dst in dsts:
+            link = Link(port, dst)
+            self.send_event_to_observers(event.EventLinkDelete(link))
+        for rev_link_dst in rev_link_dsts:
+            rev_link = Link(rev_link_dst, port)
             self.send_event_to_observers(event.EventLinkDelete(rev_link))
-        self.ports.move_front(dst)
+            self.ports.move_front(rev_link_dst)
 
     def _is_edge_port(self, port):
         for link in self.links:
@@ -803,15 +805,9 @@ class Switches(app_manager.RyuApp):
         if not dst:
             return
 
-        old_peer = self.links.get_peer(src)
         # LOG.debug("Packet-In")
         # LOG.debug("  src=%s", src)
         # LOG.debug("  dst=%s", dst)
-        # LOG.debug("  old_peer=%s", old_peer)
-        if old_peer and old_peer != dst:
-            old_link = Link(src, old_peer)
-            del self.links[old_link]
-            self.send_event_to_observers(event.EventLinkDelete(old_link))
 
         link = Link(src, dst)
         if link not in self.links:
@@ -962,12 +958,7 @@ class Switches(app_manager.RyuApp):
             for (link, timestamp) in self.links.items():
                 # LOG.debug('%s timestamp %d (now %d)', link, timestamp, now)
                 if timestamp + self.LINK_TIMEOUT < now:
-                    src = link.src
-                    if src in self.ports:
-                        port_data = self.ports.get_port(src)
-                        # LOG.debug('port_data %s', port_data)
-                        if port_data.lldp_dropped() > self.LINK_LLDP_DROP:
-                            deleted.append(link)
+                    deleted.append(link)
 
             for link in deleted:
                 self.links.link_down(link)
