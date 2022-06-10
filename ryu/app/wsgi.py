@@ -113,7 +113,7 @@ class _AlreadyHandledResponse(Response):
     import eventlet
     if version.parse(eventlet.__version__) >= version.parse("0.30.3"):
         import eventlet.wsgi
-        _ALREADY_HANDLED = getattr(eventlet.wsgi, "ALREADY_HANDLED", None)
+        _ALREADY_HANDLED = getattr(getattr(eventlet.wsgi, "WSGI_LOCAL", None), "already_handled", None)
     else:
         from eventlet.wsgi import ALREADY_HANDLED
         _ALREADY_HANDLED = ALREADY_HANDLED
