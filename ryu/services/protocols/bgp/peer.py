@@ -1293,11 +1293,23 @@ class Peer(Source, Sink, NeighborConfListener, Activity):
                 tcp_conn_timeout = self._common_conf.tcp_conn_timeout
                 try:
                     password = self._neigh_conf.password
-                    self._connect_tcp(peer_address,
-                                      client_factory,
-                                      time_out=tcp_conn_timeout,
-                                      bind_address=bind_addr,
-                                      password=password)
+
+                    if self._common_conf.net_ns is not None:
+                      import netns
+                      LOG.debug('Connecting to neighbor using netns %s',
+                                self._common_conf.net_ns)
+                      with netns.NetNS(nsname=self._common_conf.net_ns):
+                        self._connect_tcp(peer_address,
+                                          client_factory,
+                                          time_out=tcp_conn_timeout,
+                                          bind_address=bind_addr,
+                                          password=password)
+                    else:
+                      self._connect_tcp(peer_address,
+                                        client_factory,
+                                        time_out=tcp_conn_timeout,
+                                        bind_address=bind_addr,
+                                        password=password)
                 except socket.error:
                     self.state.bgp_state = const.BGP_FSM_ACTIVE
                     if LOG.isEnabledFor(logging.DEBUG):

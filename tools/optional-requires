@@ -3,3 +3,4 @@ ncclient  # OF-Config
 cryptography!=1.5.2  # Required by paramiko
 paramiko  # NETCONF, BGP speaker (SSH console)
 SQLAlchemy>=1.0.10,<1.1.0  # Zebra protocol service
+netns  # Support for network namespaces, optionally used for BGP TCP sockets
