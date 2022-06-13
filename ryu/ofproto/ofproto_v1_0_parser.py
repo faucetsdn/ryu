@@ -3160,7 +3160,7 @@ class OFPPortStatsRequest(OFPStatsRequest):
             ofp = datapath.ofproto
             ofp_parser = datapath.ofproto_parser
 
-            req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
+            req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_NONE)
             datapath.send_msg(req)
     """
 
