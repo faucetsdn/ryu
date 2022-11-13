@@ -56,6 +56,13 @@ On Ubuntu(16.04 LTS or later)::
 
   % apt install gcc python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev zlib1g-dev
 
+On Ubuntu(22.04 LTS):
+
+Install the master version from the eventlet github *before* anything else::
+
+  % pip install https://github.com/eventlet/eventlet/archive/master.zip
+
+And then follow the installation instructions
 
 Support
 =======
