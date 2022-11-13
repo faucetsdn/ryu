@@ -1,3 +1,8 @@
+**PLEASE READ: RYU NOT CURRENTLY MAINTAINED**
+
+    * The Ryu project needs new maintainers - please file an issue if you are able to assist.
+    * see OpenStack's os-ken (`<https://github.com/openstack/os-ken>`_) for a maintained Ryu alternative.
+
 What's Ryu
 ==========
 Ryu is a component-based software defined networking framework.
