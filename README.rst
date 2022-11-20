@@ -1,7 +1,5 @@
-**PLEASE READ: RYU NOT CURRENTLY MAINTAINED**
-
-    * The Ryu project needs new maintainers - please file an issue if you are able to assist.
-    * see OpenStack's os-ken (`<https://github.com/openstack/os-ken>`_) for a maintained Ryu alternative.
+**This fork will install and work with Python 3.10 and earlier**
+   * Tested on Ubuntu 22.04LTS for Python 3.10 and 20.04LTS for earlier Pythons
 
 What's Ryu
 ==========
@@ -71,3 +69,8 @@ questions, suggestions, and patches, the mailing list is available at
 <https://lists.sourceforge.net/lists/listinfo/ryu-devel>`_.
 `The ML archive at Gmane <http://dir.gmane.org/gmane.network.ryu.devel>`_
 is also available.
+
+**PLEASE READ: RYU NOT CURRENTLY MAINTAINED**
+
+    * The Ryu project needs new maintainers - please file an issue if you are able to assist.
+    * see OpenStack's os-ken (`<https://github.com/openstack/os-ken>`_) for a maintained Ryu alternative.
