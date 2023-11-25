@@ -19,14 +19,9 @@ is fully written in Python.
 
 Quick Start
 ===========
-Installing Ryu is quite easy::
-
-   % pip install ryu
-
-If you prefer to install Ryu from the source code::
-
-   % git clone https://github.com/faucetsdn/ryu.git
-   % cd ryu; pip install .
+   % git clone https://github.com/gvrangan/ryu.git
+   % git checkout nixcraft
+   % cd ryu; pip3 install .
 
 If you want to write your Ryu application, have a look at
 `Writing ryu application <http://ryu.readthedocs.io/en/latest/writing_ryu_app.html>`_ document.
