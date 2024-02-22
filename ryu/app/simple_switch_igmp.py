@@ -22,6 +22,7 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.lib import addrconv
 from ryu.lib import igmplib
 from ryu.lib.dpid import str_to_dpid
+from ryu.ofproto.ofproto_parser import buffer
 
 
 class SimpleSwitchIgmp(app_manager.RyuApp):
