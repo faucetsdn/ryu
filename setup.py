@@ -18,7 +18,7 @@ import setuptools
 import ryu.hooks
 
 
-ryu.hooks.save_orig()
+
 setuptools.setup(name='ryu',
                  setup_requires=['pbr'],
                  pbr=True)
