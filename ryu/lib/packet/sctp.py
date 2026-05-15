@@ -217,8 +217,8 @@ class sctp(packet_base.PacketBase):
         ]
 
         crc32 = 0xffffffff
-        for c in str(data):
-            crc32 = (crc32 >> 8) ^ crc_c[(crc32 ^ (ord(c))) & 0xFF]
+        for b in data:
+            crc32 = (crc32 >> 8) ^ crc_c[(crc32 ^ b) & 0xFF]
         crc32 = (~crc32) & 0xffffffff
         return struct.unpack(">I", struct.pack("<I", crc32))[0]
 
