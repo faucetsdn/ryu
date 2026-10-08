@@ -21,9 +21,12 @@ import six
 import struct
 from struct import *
 from nose.tools import *
-from ryu.ofproto import inet
+from ryu.ofproto import ether, inet
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import packet
 from ryu.lib.packet import tcp
 from ryu.lib.packet.ipv4 import ipv4
+from ryu.lib.packet.ipv6 import ipv6
 from ryu.lib.packet import packet_utils
 from ryu.lib import addrconv
 
@@ -84,6 +87,82 @@ class Test_tcp(unittest.TestCase):
         eq_(self.urgent, r1.urgent)
         eq_(self.option, r1.option)
         eq_(None, r2)
+
+    def test_parser_extended_flags(self):
+        payload = b'TCP payload'
+        flags = (tcp.TCP_FIN, tcp.TCP_SYN, tcp.TCP_RST, tcp.TCP_PSH,
+                 tcp.TCP_ACK, tcp.TCP_URG, tcp.TCP_ECE, tcp.TCP_CWR,
+                 tcp.TCP_NS)
+        for bits in range(512):
+            buf = struct.pack(tcp.tcp._PACK_STR, self.src_port,
+                              self.dst_port, self.seq, self.ack,
+                              0x50 | (bits >> 8), bits & 0xff,
+                              self.window_size, self.csum, self.urgent)
+            parsed, next_type, rest = tcp.tcp.parser(buf + payload)
+            eq_(parsed.bits, bits)
+            eq_(parsed.offset, 5)
+            eq_(parsed.option, None)
+            eq_(next_type, None)
+            eq_(rest, payload)
+            for flag in flags:
+                eq_(parsed.has_flags(flag), bool(bits & flag))
+
+    def test_parser_reserved_bits(self):
+        for reserved in range(0, 16, 2):
+            for nonce in (0, 1):
+                buf = struct.pack(tcp.tcp._PACK_STR, self.src_port,
+                                  self.dst_port, self.seq, self.ack,
+                                  0x50 | reserved | nonce, tcp.TCP_ACK,
+                                  self.window_size, self.csum, self.urgent)
+                parsed, _, _ = tcp.tcp.parser(buf)
+                eq_(parsed.offset, 5)
+                expected = tcp.TCP_ACK | (tcp.TCP_NS if nonce else 0)
+                eq_(parsed.bits, expected)
+
+    def test_serialize_extended_flags(self):
+        payload = b'TCP payload'
+        prev = ipv4(proto=inet.IPPROTO_TCP,
+                    src='192.168.10.1', dst='192.168.100.1')
+        layouts = ((0, None, 5), (5, None, 5),
+                   (0, [tcp.TCPOptionWindowScale(shift_cnt=9)], 6),
+                   (7, [tcp.TCPOptionWindowScale(shift_cnt=9)], 7))
+        for bits in range(512):
+            for offset, options, expected_offset in layouts:
+                segment = tcp.tcp(src_port=self.src_port,
+                                  dst_port=self.dst_port, bits=bits,
+                                  offset=offset, option=options)
+                buf = segment.serialize(bytearray(payload), prev)
+                eq_(buf[12], (expected_offset << 4) | (bits >> 8))
+                eq_(buf[13], bits & 0xff)
+                eq_(len(buf), expected_offset * 4)
+                eq_(segment.offset, expected_offset)
+                eq_(packet_utils.checksum_ip(prev, len(buf) + len(payload),
+                                             buf + payload), 0)
+                parsed, _, rest = tcp.tcp.parser(buf + payload)
+                eq_(parsed.bits, bits)
+                eq_(rest, payload)
+
+    def test_packet_extended_flags(self):
+        payload = b'TCP packet payload' * 2
+        headers = ((ether.ETH_TYPE_IP, ipv4(proto=inet.IPPROTO_TCP)),
+                   (ether.ETH_TYPE_IPV6, ipv6(nxt=inet.IPPROTO_TCP)))
+        for ethertype, ip_header in headers:
+            for bits in (0xc2, 0x50, 0x90, 0x1ff):
+                segment = struct.pack(tcp.tcp._PACK_STR, self.src_port,
+                                      self.dst_port, self.seq, self.ack,
+                                      0x50 | (bits >> 8), bits & 0xff,
+                                      self.window_size, self.csum,
+                                      self.urgent)
+                original = packet.Packet()
+                original.add_protocol(ethernet.ethernet(ethertype=ethertype))
+                original.add_protocol(ip_header)
+                original.add_protocol(segment + payload)
+                original.serialize()
+                decoded = packet.Packet(original.data)
+                eq_(decoded.get_protocol(tcp.tcp).bits, bits)
+                eq_(decoded.protocols[-1], payload)
+                decoded.serialize()
+                eq_(decoded.data, original.data)
 
     def test_serialize(self):
         offset = 5
