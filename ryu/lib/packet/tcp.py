@@ -131,8 +131,8 @@ class tcp(packet_base.PacketBase):
     def parser(cls, buf):
         (src_port, dst_port, seq, ack, offset, bits, window_size,
          csum, urgent) = struct.unpack_from(cls._PACK_STR, buf)
+        bits |= (offset & 1) << 8
         offset >>= 4
-        bits &= 0x3f
         length = offset * 4
         if length > tcp._MIN_LEN:
             option_buf = buf[tcp._MIN_LEN:length]
@@ -154,10 +154,10 @@ class tcp(packet_base.PacketBase):
         return msg, cls.get_payload_type(src_port, dst_port), buf[length:]
 
     def serialize(self, payload, prev):
-        offset = self.offset << 4
+        offset = (self.offset << 4) | ((self.bits >> 8) & 1)
         h = bytearray(struct.pack(
             tcp._PACK_STR, self.src_port, self.dst_port, self.seq,
-            self.ack, offset, self.bits, self.window_size, self.csum,
+            self.ack, offset, self.bits & 0xff, self.window_size, self.csum,
             self.urgent))
 
         if self.option:
@@ -179,7 +179,7 @@ class tcp(packet_base.PacketBase):
 
         if self.offset == 0:
             self.offset = len(h) >> 2
-            offset = self.offset << 4
+            offset = (self.offset << 4) | ((self.bits >> 8) & 1)
             struct.pack_into('!B', h, 12, offset)
 
         if self.csum == 0:
